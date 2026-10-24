@@ -7,1155 +7,139 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 `[Unreleased]` into a few bullets under the version heading, keeping every `Breaking:` item by name.
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
-## [Unreleased] (after v0.3.0-alpha.4, 2026-10-24)
+## [Unreleased] (after v0.4.0-beta.1, 2026-10-24)
 
-- PlumixHost hit-tests its whole bounds, so wheel and presses over native solid draws reach the framework (C#-only).
-- Variable-font paragraphs share one HarfBuzz face per typeface instead of copying its tables each time (C#-only).
-- Tests are green under `-c Profile`/`-c Release` again: key-event state resets in every mode (C#-only).
-- Canvas.drawShadow tessellates Skia's ambient and spot shadow meshes at the engine's pixel ratio (painting.dart).
-- Breaking: Stepper composition, index text style, controls and ControlsDetails match Dart 1:1 (stepper.dart).
-- Elevated and selected flat chips keep the 1px transparent side of their M3 defaults (chip.dart).
-- Headless placeholders align against unscaled run metrics and hang from the rounded baseline (C#-only).
-- PaginatedDataTable builds like Dart: the table fills the card, themed header/footer (paginated_data_table.dart).
-- Headless paragraphs allow a line break after a slash before a letter, as ICU does (C#-only).
-- Opacity layers composite their children through a save-layer, as the engine does (C#-only).
-- PaginatedDataTable uses skip_previous/skip_next for its first/last page buttons (paginated_data_table.dart).
-- Zero-width box borders and lines paint as Skia one-device-pixel hairlines (borders.dart).
-- Headless paragraphs place letter-spaced unaligned and aligned lines like SkParagraph (C#-only).
-- ListTile reports a colored box that hides its background and ink, as Dart's debug check does (list_tile.dart).
-- Inactive CupertinoSliverRefreshControl and empty CarouselView slivers are SliverGeometry.Zero (refresh.dart).
-- Checkbox paints its box through the shape and its check as one stroked path (checkbox.dart).
-- Router rebuilds synchronously after a synchronous route setter, so the first route is reported once (router.dart).
-- Magnifier lens radii scale together and the border is painted inside the lens (C#-only).
-- Solid-paint RRect/DRRect/path draws reach Skia as the exact SkPath Dart's canvas uses, conics included (C#-only).
-- Path geometry writes circular and axis-aligned elliptical conics as arcs, keeping Skia's analytic AA (C#-only).
-- Headless paragraphs break too-long words and skip cursive-script letter spacing like SkParagraph (C#-only).
-- Breaking: TextField adds cursor width/radius/opacity, undoController and real min/maxLines (text_field.dart).
-- Breaking: TextField limits the hint to its own maxLines unless the decoration sets hintMaxLines (text_field.dart).
-- Breaking: DesktopTextSelectionToolbarButton text uses Dart's own style and color (desktop_text_selection_toolbar_button.dart).
-- Breaking: VisualDensity.ToString starts with its identity, as Dart's toStringShort does (theme_data.dart).
-- ReorderableListView gives the header the top inset and the footer the bottom one (reorderable_list.dart).
-- The sample uses Plumix.Bloc 0.3.0-alpha.3; 0.1.0-alpha.1 failed at runtime against the current Plumix API.
-- Sample gallery opens pages with MaterialPageRoute and an unknown-route page, as the Dart sample does.
-- Samples: C# colors, strings, button styles and spacing aligned with the Dart sample; Dart pages import material_ui.
-- Headless paragraphs paint the engine's FlutterTest glyphs through Skia (`p`/`É`/.notdef, quarter-pixel x) (C#-only).
-- Headless paragraphs paint at SkParagraph's rounded baseline and centre letter spacing on each glyph (C#-only).
-- Opt-in screen capture of every sample route in both samples for pixel and text comparison (C#-only).
-
-## v0.2.0-alpha.2 … v0.3.0-alpha.4 — 2026-08-20 … 2026-10-24 (not yet collapsed)
-
-- Breaking: Avalonia 12.1.4 is the minimum; paragraphs read its slice-relative, visual-order RTL clusters (C#-only).
-- CI also runs the tests on the newest Avalonia over Plumix built on the minimum, binding every host member (C#-only).
-- Timer.run and timing reports post above Input, so Android's warm-up frame draws behind a spinner (C#-only).
-- Rasterization errors in PlumixHost.Render reach FlutterError.ReportError instead of a blank view (C#-only).
-- Plumix.Android: PlumixMainActivity over public AndroidActivityDelegate (FlutterActivityAndFragmentDelegate.java).
-- Breaking: On Android, Run sets MainViewFactory, not MainView; a recreated Activity reuses the host (C#-only).
-- Breaking: The Android sample is Plumix.Sample.Android; Plumix grants no internals to Plumix.Android (C#-only).
-- SystemNavigator.pop finishes the Activity; PlumixMainActivity follows setFrameworkHandlesBack (FlutterActivity.java).
-- Sample gallery wraps its nested Navigator in NavigatorPopHandler, so Android back pops the open demo page.
-- Breaking: Reorderable APIs, drag lifecycle and axis/drop geometry match Dart (reorderable_list.dart).
-- Explicit host keymaps select their own keyboard pipeline on Windows (C#-only).
-- Breaking: Host clicks get distinct gesture IDs while keeping device IDs (pointer_data_packet_converter.cc).
-- Native DrawPaint preserves GPU shader coordinates; ink demos expose visible ink and slow motion in both samples.
-- Breaking: InkSparkle draws the native turbulence and white-sparkle shader with retained uniforms (ink_sparkle.dart).
-- Linux host key messages carry the typed (shifted) character in `unicodeScalarValues`, as GTK does (C#-only).
-- Breaking: Android system back reaches popRoute via TopLevel.BackRequested, gated by setFrameworkHandlesBack (C#-only).
-- Breaking: The host no longer treats Avalonia's Key.Back (Backspace / Android KEYCODE_DEL) as a back button (C#-only).
-- Android scan-code-less IME keys release a key left pressed, as KeyEmbedderResponder does (C#-only).
-- Breaking: Memory-allocation events cover every Dart publisher and Picture (foundation/memory_allocations.dart).
-- Breaking: _HighlightModeManager split out; default highlight mode uses target platform (focus_manager.dart).
-- Breaking: Native gradient shaders preserve focal circles, decal, sweep tiling and matrices (painting/gradient.dart).
-- Breaking: Cupertino toolbar hairlines and onstage debug traversal match Dart (text_selection_toolbar.dart).
-- Breaking: InputDecoration copy, legacy API, hint/icon layout and counter semantics match Dart (input_decorator.dart).
-- Breaking: Native Path curves, boolean contours, perspective transforms and metrics match Dart (ui/painting.dart).
-- Breaking: Nested paragraph selection and ICU/Intl word boundaries follow Dart (rendering/paragraph.dart; ui/text.dart).
-- Breaking: Glow phases, drag geometry and paint offsets match pinned Dart (widgets/overscroll_indicator.dart).
-- Breaking: Async localization batches defer first frames and report committed locales (widgets/localizations.dart).
-- Breaking: Text-field buckets, controller swaps, form reset and restoration match Dart (text_field.dart).
-- Breaking: Windows host keys preserve shifted characters; windowing errors use Dart newlines (_window.dart).
-- Breaking: CupertinoMenuAnchor subtitle blending, exact colors and swipe lifecycle match Dart (menu_anchor.dart).
-- Breaking: DialogTheme legacy APIs, diagnostics and nullable interpolation match Dart (dialog_theme.dart).
-- Breaking: EditableText autofocus runs once after layout and preserves selection (widgets/editable_text.dart).
-- Breaking: Signed radii, rounded geometry, native superellipse hit tests and RSTransform match Dart (ui/geometry.dart).
-- Breaking: Native paragraph metrics, variable fonts, shadows and text paints match SkParagraph (ui/text.dart).
-- Breaking: Buffered platform channels and traffic profiling match Dart (binding.dart; platform_channel.dart).
-- Breaking: Paragraph inline semantics, span node reuse and scaled widget bounds match Dart (rendering/paragraph.dart).
-- Breaking: Async root restoration, stale-get arbitration and native mobile saved state (services/restoration.dart).
-- Breaking: Role checks, sticky annotation history and checked-state replacement match Dart (semantics/semantics.dart).
-- Breaking: Build scopes preserve scheduler phase; isolated tests run real frames (framework.dart; binding.dart).
-- Test binding frames, semantics, reusable views and shared scroll/slider helpers match flutter_test (binding.dart).
-- Breaking: Animated GIF/WebP/APNG playback, resize and stream lifecycle match Flutter (painting/image_stream.dart).
-- Breaking: Navigator async pops, route futures, pointer cancellation and transitions (navigator.dart; routes.dart).
-- Breaking: Desktop selection handles and SelectableRegion actions/lifecycle match Dart (selectable_region.dart).
-- DesktopTextSelectionControls and native browser selection menus (desktop_text_selection.dart; selectable_region).
-- Breaking: SemanticsRole has all 33 dart:ui values, in Dart's order (dart:ui semantics.dart).
-- ServicesBinding.AccessibilityFocus and its flutter/accessibility didGainFocus handler (services/binding.dart).
-- FocusSemanticEvent (semantics/semantics_event.dart).
-- Navigator moves accessibility focus back after a pop on Android and iOS (widgets/navigator.dart).
-- AccessibilityBridge mirrors a host's semantics tree for the platform bridges (engine accessibility_bridge.cc).
-- PlumixHost exposes semantics to UI Automation, macOS, AT-SPI and Android via Avalonia automation peers (C#-only).
-- iOS host exposes semantics to VoiceOver and reports iOS accessibility features (engine SemanticsObject.mm).
-- Browser host renders semantics as an ARIA overlay behind an Enable accessibility placeholder (web engine semantics).
-- PointerData, PointerDataPacket, PointerChange, PointerSignalKind, OnPointerDataPacket (dart:ui pointer.dart).
-- PointerEventConverter.Expand turns physical pointer packets into logical events (gestures/converter.dart).
-- Hosts report pointer input as physical PointerDataPacket entries on FrameClock's monotonic timeline (C#-only).
-- FlutterHost.PlatformViewHitTested publishes the native hit-test query made on every pointer down (dart:ui).
-- Breaking: SamplingClock reads the monotonic FrameClock.UtcNow, not the wall clock (gestures/binding.dart).
-- Breaking: GestureBinding queues host and packet events while locked and flushes on unlock (gestures/binding.dart).
-- Breaking: Resampled touch events dispatch immediately, not through the pointer queue (gestures/binding.dart).
-- Breaking: Canvas.saveLayer(Rect?, Paint) opens an isolated layer; blend/filter/invert layers rasterize (dart:ui).
-- Canvas.getTransform/getLocalClipBounds/getDestinationClipBounds, skew, cullRect, clipRect clipOp (dart:ui).
-- Breaking: Canvas.drawImage/drawImageRect/drawImageNine take a Paint; colour filters apply to images (dart:ui).
-- Breaking: Canvas clips no longer push an edge mode that overrode later draws' isAntiAlias (C#-only).
-- Breaking: Flow clip layers isolate antiAliasWithSaveLayer children and stop forcing their edge mode (C#-only).
-- Breaking: paintImage, DecorationImage and its painters are strict ports over Canvas (decoration_image.dart).
-- Breaking: DecorationImage.lerp cross-fades additively in a save layer, without clamping (decoration_image.dart).
-- ImageSizeInfo, debugOnPaintImage, debugInvertOversizedImages, debugAssertAllPaintingVarsUnset (painting/debug.dart).
-- invertOversizedImages service extension (rendering/binding.dart).
-- ColorFilter.matrix compares by value and prints like Dart (dart:ui painting.dart).
-- DecoratedBox demo cross-fades a DecorationImage with an inverted-colours toggle in both samples.
-- Text spacing overrides on PlatformDispatcher/MediaQueryData, applyTextStyleOverrides (widgets/media_query.dart).
-- MediaQueryData.applyDisplayCornerRadii and MediaQuery.*Of displayFeatures/systemGestureInsets (media_query.dart).
-- Breaking: MediaQuery accessors depend on their own _MediaQueryAspect; copyWith has no corner radii (media_query.dart).
-- Breaking: Text is a strict port: no flat style parameters, bold/spacing overrides, Locale? locale (widgets/text.dart).
-- Text.semanticsIdentifier/selectionColor, _SelectableTextContainer and its delegate (widgets/text.dart).
-- DefaultTextHeightBehavior (widgets/text.dart).
-- Breaking: RichText.locale is a Locale? that falls back to Localizations.maybeLocaleOf (widgets/basic.dart).
-- EditableText _style bold merge; spacing overrides in its span, strut and IME style (widgets/editable_text.dart).
-- RenderParagraph attributed semantics labels and placeholder child configurations (rendering/paragraph.dart).
-- SelectableText.strutStyle (selectable_text.dart).
-- Avalonia paragraph tries a style's fontFamilyFallback after its family (C#-only).
-- Rich text demo toggles bold text and text spacing overrides in both samples.
-- SystemContextMenu, IOSSystemContextMenuItem*, iOS branch of the field menu builders (system_context_menu.dart).
-- SystemContextMenuController, IOSSystemContextMenuItemData*, ContextMenu.* binding cases (services/text_input.dart).
-- MediaQueryData/PlatformDispatcher.supportsShowingSystemContextMenu (widgets/media_query.dart, dart:ui).
-- TextField demo shows a system-context-menu field with custom items in both samples.
-- Accessibility evaluations and the accessibilityEvaluations extension (widgets/_accessibility_evaluations.dart).
-- ImageByteFormat and Image.toByteData over Avalonia bitmaps (dart:ui painting.dart).
-- SemanticsNode.VisitChildren (semantics/semantics.dart).
-- Breaking: Headless test paragraphs paint glyphs as FlutterTest-font em boxes instead of nothing (C#-only).
-- Seven RawKeyEventData platform classes and RawKeyEvent.fromMessage (services/raw_keyboard*.dart).
-- Keyboard-map tables generated by scripts/generate_keyboard_maps.py (services/keyboard_maps.g.dart).
-- Breaking: KeyEventManager ports transit modes, handleKeyData and handleRawKeyMessage (hardware_keyboard.dart).
-- KeyData/KeyEventType and PlatformDispatcher.onKeyData (dart:ui key.dart); ServicesBinding wires the keyboard.
-- Breaking: HardwareKeyboard.SyncKeyboardState asks flutter/keyboard for the state (hardware_keyboard.dart).
-- Breaking: Hosts send platform flutter/keyevent messages with sided modifiers; HostRawKeyEventData is gone (C#-only).
-- FocusNode/Focus/FocusScope onKey; FocusManager handles whole key messages (widgets/focus_manager.dart).
-- Keyboard demo shows the raw key data class and modifier sides in both samples.
-- Windowing API: window controllers, owner, WindowScope/Registry/Manager, five window widgets (widgets/_window.dart).
-- WindowPositioner placement with flip/slide/resize adjustments (widgets/_window_positioner.dart).
-- AvaloniaWindowingOwner: regular/dialog/tooltip/popup windows as Avalonia windows of their own views (C#-only).
-- showRawDialog opens dialog windows through the WindowRegistry, falling back to a route (widgets/dialog.dart).
-- Breaking: Material showDialog goes through showRawDialog with the full-window dialog wrappers (dialog.dart).
-- isWindowingEnabled/debugEnabledFeatureFlags read FLUTTER_ENABLED_FEATURE_FLAGS (foundation/_features.dart).
-- PlatformDispatcher.views/view(id:); MediaQuery.fromView reads platform settings for every view (dart:ui).
-- Breaking: Hosts share process-wide channels/lifecycle across windows; input hit-tests the view's RenderView (C#-only).
-- Navigator.onPopPage (deprecated in Dart) and Navigator.of resolving a navigator's own context (navigator.dart).
-- debugCheckHasWidgetsLocalizations (widgets/debug.dart); windowing demo in both samples.
-- Breaking: Pop/push route handlers return Task<bool> and await each observer; hosts follow (widgets/binding.dart).
-- PlatformDispatcher locales/onLocaleChanged reach didChangeLocales; computePlatformResolvedLocale (binding.dart).
-- Breaking: WidgetsApp resolves locales via LocalizationsResolver from the platform locales (localizations.dart).
-- Debug stack filters elide element mounting; framework errors report the full CLR stack (widgets/binding.dart).
-- Breaking: PlumixHost is an engine embedder: no own layout/paint; it rasterizes FlutterView.render scenes (C#-only).
-- Breaking: Render-only hosts register views with RendererBinding; semantics follow semanticsEnabled (binding.dart).
-- Breaking: Hot reload runs reassembleApplication under lockEvents; host hooks are gone (foundation/binding.dart).
-- Breaking: WidgetsBinding.PerformReassemble chains renderer/base reassemble and resets error count (binding.dart).
-- BindingBase registers reassemble/exit/vm-service/devtools/platform/brightness extensions (foundation/binding.dart).
-- debugBrightnessOverride replaces MediaQuery.fromView brightness outside release (foundation/debug.dart).
-- firstFrameRasterized, waitUntilFirstFrameRasterized, Flutter.FirstFrame and its extension (widgets/binding.dart).
-- Hosts record and batch FrameTiming reports like the engine's FrameTimingsRecorder/Shell (C#-only).
-- Breaking: PlatformDispatcher metrics/text-scale/brightness slots; theme changes report brightness (binding.dart).
-- Breaking: Binding observers report errors via FlutterError; back-gesture/memory/status-bar paths match (binding.dart).
-- didPushRoute default delegation and unknown navigation methods answer false (widgets/binding.dart).
-- Breaking: PipelineOwner headless conveniences move to a C#-only partial; marker now strict (rendering/object.dart).
-- Harness FlushBuild finalizes in the persistent phase, so disposing states defer overlay rebuilds (framework.dart).
-- Lifecycle demo adds binding-event counters and memory pressure in both samples (widgets/binding.dart).
-- Breaking: Scheduler is now SchedulerBinding.Instance; strategy receives the binding (scheduler/binding.dart).
-- Breaking: Priority is an identity class with KMaxOffset (scheduler/priority.dart).
-- Breaking: lockEvents locks first, unlocks in a microtask; persistent callbacks not deduped (scheduler/binding.dart).
-- Breaking: Microtasks/framework thread move to EventLoop, vsync timer and clock to FrameClock (C#-only).
-- Breaking: PaintingBinding owns cache, codec sizing, memory-pressure eviction and warm-up (painting/binding.dart).
-- Immutable image buffers and static codecs adapt Avalonia; mirrored image demo adds decode/cache probes (dart:ui).
-- Breaking: Scaffold matches Dart ancestor/geometry/sheet errors and nullable FAB defaults (scaffold.dart).
-- Breaking: ScaffoldMessenger matches Dart feature queues, dependency updates and disposal (scaffold.dart).
-- Scaffold slots demo adds mirrored keyboard-inset and resize probes (scaffold.dart).
-- Breaking: Sliders check MediaQuery and relayout labels/overlays on font changes (slider.dart, range_slider.dart).
-- Font-relayout mixin defers/coalesces updates; mirrored slider demos add text scaling (object.dart).
-- Breaking: Time picker restores state and matches Dart input, themes, scaling and dial behavior (time_picker.dart).
-- Breaking: Text controllers use Dart caret/range/composing contracts; Composing is non-null (editable_text.dart).
-- Breaking: UndoHistory uses ValueNotifier; text controllers share storage and nullable history works (undo_history.dart).
-- Breaking: TableBorder uses Dart rounded rings, stroke alignment, paths and side interpolation (table_border.dart).
-- Path copy constructor and Canvas.DrawPath snapshots preserve drawings after path mutation (dart:ui).
-- Breaking: Viewport child extraction restores Dart slot/layout asserts (sliver.dart, two_dimensional_viewport.dart).
-- Two-dimensional element diagnostics and mirrored state-preserving grid counter demo (two_dimensional_viewport.dart).
-- Grid demo uses fixed cell constraints so adjacent cells do not cover the counter in either sample.
-- PlatformMenuBar, menu items/groups/system items and binding delegate (widgets/platform_menu_bar.dart).
-- Breaking: ShortcutSerialization validates arguments with debug-only Dart asserts (platform_menu_bar.dart).
-- Breaking: Shortcut activators expose Dart diagnostics and suppress release key descriptions (shortcuts.dart).
-- PlatformMenuBar demo in both samples; native host menu adapter remains open (widgets/platform_menu_bar.dart).
-- Breaking: Paint checks layers in Dart order; teardown cancels queued work before layer release (object.dart).
-- Breaking: PipelineOwner uses explicit dirty queues and single-pass paint; frame requests match Dart (object.dart).
-- RenderObject exposes initial paint and root-layer replacement for non-view roots (rendering/object.dart).
-- Breaking: WidgetStateTextStyle subclasses TextStyle with lazy resolvers and state maps (widgets/widget_state.dart).
-- Breaking: Input decoration uses plain TextStyle slots and TextField resolves state styles (input_decorator.dart).
-- TextField demo adds subclass input and mapped helper styles in both samples (widgets/widget_state.dart).
-- Breaking: Icon matches Flutter composition, theme styles, scaling, RTL and diagnostics (widgets/icon.dart).
-- IconData adds fallback families and value diagnostics; mirrored demo gains scaling probes (widgets/icon_data.dart).
-- Breaking: AnimationStyle lerp preserves equal curves and whole microseconds (animation/animation_style.dart).
-- Breaking: AnimationStyle filters unset diagnostics; durations print as in Dart (animation/animation_style.dart).
-- Breaking: Built-in linear/decelerate/bounce curve diagnostics retain Dart's private names (animation/curves.dart).
-- AnimationStyle original/blended/disabled switcher demo in both samples (animation/animation_style.dart).
-- WidgetInspector's debug-banner test drives the frame awaited by the extension (widgets/binding.dart).
-- Breaking: Hero uses Flutter's debug-only assertions, measured bounds and diagnostics (widgets/heroes.dart).
-- HeroController checks scope ownership after a frame and dispatches memory events (heroes.dart, navigator.dart).
-- Hero demo adds a linear push/pop flight in both samples (heroes.dart).
-- `TreeSliver<T>`, `TreeSliverNode<T>`, `TreeSliverController`, default builders/animation (widgets/sliver_tree.dart).
-- `RenderTreeSliver`, `TreeSliverNodeParentData`, `TreeSliverIndentationType`, `TreeSliverNodesAnimation` (sliver_tree).
-- `SliverVariedExtentList` is no longer sealed, as Dart's `_SliverTree` subclasses it (widgets/sliver.dart).
-- TreeSliver demo: expand/collapse animation, controller expand/collapse all, indentation, row toggles (both samples).
-- widgets/sliver_tree_test.dart and rendering/sliver_tree_test.dart ported (goldens kept as geometry checks).
-- `WidgetInspector`, `InspectorSelection`, `InspectorButton`, `Enable`/`DisableWidgetInspectorScope` (widget_inspector).
-- `WidgetInspectorService`: object groups, pub roots, tree JSON, layout explorer, screenshots (widget_inspector.dart).
-- `InspectorSerializationDelegate`, `WeakMap`, `debugTransformDebugCreator`, `DevToolsDeepLinkProperty` (same file).
-- The 29 untracked `ext.flutter.inspector.*` extensions and their enums (widget_inspector, service_extensions.dart).
-- `WidgetsBinding` inspector notifiers, `debugExcludeRootWidgetInspector`, `DebugDidSendFirstFrameEvent` (binding.dart).
-- `WidgetsBinding` registers `debugDumpApp`, `showPerformanceOverlay`, `didSendFirstFrameEvent`, `profile*`, banner.
-- Breaking: `WidgetsApp` takes the inspector button builders and wraps debug apps in the root inspector (app.dart).
-- `WidgetsApp.DebugAllowBannerOverride`; `MaterialApp`/`CupertinoApp` pass their inspector buttons (app.dart).
-- Breaking: `Canvas` is unsealed with virtual members, so an implementation can forward calls (dart:ui `Canvas`).
-- dart:developer `postEvent(stream:)`/`inspect` (`DeveloperService`); `FrameData`; `positionDependentBox` (geometry).
-- `FoundationDebug.ActiveDevToolsServerAddress`/`ConnectedVmServiceUri` (foundation/debug.dart).
-- Breaking: `Text` reports Dart's diagnostics properties (`data`, `textAlign`, `softWrap`, ...) (text.dart).
-- WidgetInspector demo: select mode, selection readout, disabled scope (both samples).
-- widget_inspector_test.dart and widget_inspector_structure_error_test.dart ported (untracked-creation tests).
-- `InteractiveViewer` (+ `.Builder`), `TransformationController`, `PanAxis` (widgets/interactive_viewer.dart).
-- vector_math's `Quad` and `Vector3.Dot`/`Cross`; `EdgeInsets.Horizontal`/`Vertical` (edge_insets.dart).
-- `CurvedAnimation`, `TrainHoppingAnimation`, `AnimationController` dispatch memory events (animations.dart).
-- `FrameworkDartTester` gains `TestPointer`, `TrackpadFling`/`TrackpadFlingFrom` and `TestGesture.PanZoom*`.
-- InteractiveViewer demo: pan/zoom with inertia, `PanAxis` cycle, boundary toggle and builder mode (both samples).
-- interactive_viewer_test.dart ported.
-- Breaking: Material date pickers are strict ports of date_picker/calendar_date_picker/date_picker_theme/date.dart.
-- Breaking: `DatePickerDialog`/`DateRangePickerDialog` restore their state; `showDatePicker`/range take `anchorPoint`.
-- Breaking: picker dialogs take `keyboardType`, `TransitionBuilder`, `Icon?` switch icons; `Navigator.pop` closes them.
-- Breaking: date checks are debug-only asserts (faulted `Show*` tasks); picker constructors no longer normalize.
-- Breaking: `CalendarDatePicker` keys via Shortcuts/Actions, `HapticFeedback.vibrate`, `sendAnnouncement`, `Ink` days.
-- Breaking: C#-only `CalendarDay*`/`CalendarYear`/`DateRangeHighlightPainter` and `YearPicker.InitialDate` are gone.
-- Breaking: range picker is Dart's Scaffold/AppBar dialog over a centred `CustomScrollView`; input uses `TextField`s.
-- Breaking: `DatePickerThemeData` is a class (Dart `==`, diagnostics, lazy M2/M3 defaults, widget-or-data input theme).
-- Breaking: `DateTimeRange<T>` is a sealed class with Dart's `==`/`toString`; `CalendarDelegate` defaults are virtual.
-- Breaking: `SelectableDayPredicate` lives in `Plumix.Widgets` (widgets/date.dart); input field takes `keyboardType`.
-- Breaking: `TextField` no longer passes its label/hint as `EditableText.semanticsLabel` (text_field.dart).
-- `InputDecorator`'s border painter is the `foregroundPainter`; `_HelperError` adds Dart's semantics/live region.
-- Breaking: `EditableText` drops its C#-only `Semantics` wrapper and `semanticsLabel`; `RenderEditable` owns the node.
-- Breaking: `TextField` wraps Dart's `IgnorePointer`/`AnimatedBuilder`/`Semantics`; disabled fields are read-only.
-- Breaking: `AppBar` always clamps its title's text scale and adds the primary `SafeArea`, as app_bar.dart does.
-- `FrameworkDartTester` resets the scheduler's lifecycle state per test and evaluates `androidTapTargetGuideline`.
-- Breaking: `FormState.validate` announces the first error (iOS after 1 s) and needs a `View` ancestor (form.dart).
-- Breaking: dart:ui `AccessibilityFeatures` replaces the record struct; `SemanticsBinding` owns it (binding.dart).
-- Breaking: `MediaQueryData.fromView` reads accessibility flags from the dispatcher; `supportsAnnounce` defaults on.
-- Breaking: `AnimationController.DisableAnimations` is replaced by `SemanticsDebug.DebugSemanticsDisableAnimations`.
-- Breaking: `SemanticsService.SendAnnouncement(FlutterView, ..., Assertiveness)` sends `announce` and returns a Task.
-- Breaking: `MediaQuery.WithClampedTextScaling(child, minScaleFactor, maxScaleFactor)` builds a Builder, as in Dart.
-- `MediaQuery.MaybeSupportsAnnounceOf`; `supportsAnnounceOf` depends only on its own aspect (media_query.dart).
-- `RestorableRouteFuture<T>` (navigator.dart); `WidgetsApp` gives its `Navigator` Dart's `'nav'` restoration scope.
-- Breaking: `MediaQueryData.RemoveDisplayFeatures` keeps overlapping features and the full size (media_query.dart).
-- `NavigatorState` force-disposes pending entries and removes overlay entries first, as Dart does (navigator.dart).
-- Modal barrier colour drives `ColorTween.chain(CurveTween(barrierCurve))` as in routes.dart.
-- `WidgetStatesController.update` mutates the current value; `BorderSide.toPaint` strokes `CircleBorder` (borders).
-- Sliver adaptor drops children no longer kept alive inside layout callbacks, and checks `itemExtent` as Dart does.
-- `FrameworkDartTester` gains flutter_test's finders, semantics matchers, announcements, restoration, view, keys.
-- Date picker demo adds calendar-only/input-only dialogs and a restorable picker route (both samples).
-- date_picker, date_range_picker, calendar_date_picker, date_picker_theme and input_date_picker_form_field tests ported.
-- `PlatformViewsService`/`PlatformViewsRegistry` and every Android/iOS/macOS view controller (platform_views.dart).
-- `AndroidMotionEvent` conversion with Dart's pointer-id reuse, batching flags and `touch` message layout.
-- `RenderAndroidView`, `RenderUiKitView`/`RenderAppKitView`, `PlatformViewRenderBox` (rendering/platform_view.dart).
-- `AndroidView`, `UiKitView`, `AppKitView`, `PlatformViewLink`/`PlatformViewSurface`, `AndroidViewSurface`.
-- `HtmlElementView` takes Dart's non-web branch: it builds to `NotImplementedException` (_html_element_view_io.dart).
-- `Factory<T>`/`IFactory<T>` (basic_types.dart) and `EagerGestureRecognizer` (eager.dart).
-- `IMessageCodec`: the untyped face of every `MessageCodec<T>`, standing in for Dart's `MessageCodec<dynamic>`.
-- PlatformViewLink demo: placeholder -> `create(size, position)` -> surface, with two-way focus (both samples).
-- platform_views_test, rendering/platform_view_test and widgets/platform_view_test ported with the Dart fakes.
-- `SceneBuilder`/`Scene`/`EngineLayer` and the 11 typed engine layers: dart:ui's compositing.dart, with its asserts.
-- Breaking: `Layer.AddToScene(SceneBuilder)` pushes engine layers; clean subtrees go in via `AddRetained` (layer.dart).
-- Breaking: `ContainerLayer.BuildScene(SceneBuilder)` returns the `Scene`; `Layer.EngineLayer` is an `EngineLayer?`.
-- Breaking: `RenderView.CompositeFrame` builds the scene and calls `FlutterView.Render(scene, size)` (view.dart).
-- Breaking: `FlutterView.RenderRequested` carries the `Scene` and physical size; hosts rasterize its layer tree.
-- Breaking: `PipelineOwner.CompositeFrame(DrawingContext)` is gone; hosts draw through the scene rasterizer.
-- `OffsetLayer.ToImage`/`ToImageSync` and `RenderRepaintBoundary.ToImage`/`ToImageSync` (layer, proxy_box).
-- `TextureLayer`, `PlatformViewLayer`, `PerformanceOverlayLayer` (layer.dart); `RendererBinding.CreateSceneBuilder`.
-- `TextureBox`/`Texture` (texture.dart) over the engine's `TextureRegistry`; `ImageTexture` serves Avalonia images.
-- `RenderPerformanceOverlay`/`PerformanceOverlay`/`PerformanceOverlayOption` with the engine's stopwatch graphs.
-- `WidgetsApp.showPerformanceOverlay` and `ShowPerformanceOverlayOverride` stack the overlay over the app (app.dart).
-- Breaking: `ShaderMaskLayer.MaskRect`/`BlendMode` are nullable, as in Dart; clip/filter layers mark on every setter.
-- `Picture.Dispose`/`DebugDisposed`; `PictureLayer` disposes the picture it replaces or drops (painting, layer).
-- Tests rasterize scenes headlessly through Avalonia's Skia backend (`RasterBackend`, `Avalonia.Skia` test package).
-- Scene compositing demo: retained layers, `RepaintBoundary.toImage` capture and the performance overlay (both samples).
-- compositing_test.dart's SceneBuilder contract and layers_test/texture/performance_overlay tests ported.
-- `Paint.maskFilter` (every `BlurStyle`) and `Paint.blendMode` render through a raster backend (`PaintRasterizer`).
-- `Canvas` gains `DrawOval`/`DrawPath`/`DrawLine`/`DrawDRRect`/`DrawRSuperellipse` taking a `Paint` (dart:ui Canvas).
-- Breaking: `ShapeBorder.PaintInterior` takes a `Paint`, not an `IBrush`, as Dart's `paintInterior` does (borders).
-- Breaking: `BoxDecoration.BorderRadius` is `BorderRadiusGeometry?`; `EffectiveBorderRadius` is gone (box_decoration).
-- `BoxDecoration.BackgroundBlendMode`/`CopyWith`/`Scale`/`DebugAssertIsValid`; `Container` asserts it (box_decoration).
-- Breaking: `BoxDecoration` paints through Dart's `_BoxDecorationPainter`: mask-filter shadows, `drawCircle` circles.
-- Breaking: `BoxDecoration`/`ShapeDecoration.IsComplex` is true for any non-null shadow list, as in Dart.
-- Breaking: `ShapeDecoration` paints through Dart's `_ShapeDecorationPainter`; every shape casts its path shadows.
-- Breaking: `ShapeDecoration` asserts it has not both a color and a gradient (debug), as in shape_decoration.dart.
-- `DecorationImagePainter.Paint(context, rect, clipPath, configuration)`: Dart's clip-path overload (decoration_image).
-- Sliver debug arrows and the Cupertino toolbar shadow use Dart's mask filters (sliver, text_selection_toolbar).
-- `CupertinoMenuAnchor`: the divider's `overlay` pass and the item's `multiply`/`plus` background blend (menu_anchor).
-- DecoratedBox demo gains a shadow blur-style cycle and a `multiply` background blend toggle (both samples).
-- Flutter's box_decoration and shape_decoration tests and decoration_test's BoxDecoration cases ported.
-- Breaking: `RenderSliverPersistentHeader` and its four modes are abstract `RenderSliver`s (sliver_persistent_header).
-- Breaking: persistent headers read `MinExtent`/`MaxExtent` live (abstract); no constructor extents, no `ChildBuilder`.
-- Breaking: a persistent header's child gets plain `ParentData`; paint/hit test/transform use `RenderSliverHelpers`.
-- Breaking: `SliverPersistentHeader` no longer validates its delegate; `layoutChild` asserts `minExtent <= maxExtent`.
-- Breaking: `PersistentHeaderShowOnScreenConfiguration` has no value equality; its range check is a debug assert.
-- Breaking: `RenderSliverFloatingPersistentHeader` keeps its controller across vsync changes (`Resync`), as in Dart.
-- Breaking: `SliverFloatingHeader` loses the C#-only `ShowOnScreenConfiguration`; it snaps on its State's vsync.
-- Breaking: `SliverResizingHeader` is slotted over `SliverPhysicalParentData`; `PinnedHeaderSliver` lost `ShowOnScreen`.
-- Breaking: `RenderSliverOpacity` paints through `PushOpacity` with Dart's `_alpha`; no repaint boundary (proxy_sliver).
-- `NestedScrollPosition` extends `ScrollPosition`; inner scrollables no longer compete for drags (nested_scroll_view).
-- `Viewport`'s element reports only visible slivers as on stage (`debugVisitOnstageChildren`, viewport.dart).
-- Custom slivers demo gains a pinned `SliverPersistentHeader` that shows its live shrink offset (both samples).
-- Flutter's sliver_persistent_header, pinned/resizing/floating header and viewport showOnScreen header tests ported.
-- Breaking: hosts speak `flutter/textinput`: `HostTextInputPlugin` is the engine's text input plugin (macOS/Windows).
-- `TextInputModel`: the engine's `shell/platform/common/text_input_model.cc`, with its 154 unit tests ported.
-- Breaking: `FocusNode`/`Focus` lose `OnTextInput*`/`FocusTextInputState`; `FocusManager.HandleText*` are gone.
-- Breaking: `HostTextInputPlugin` is an instance (`Instance`, `Attach`, `InsertText`, `SetMarkedText`, `HandleKeyEvent`).
-- Breaking: `TextEditingValue` no longer clamps selection/composing; `FromJson`/`ToJson`/`Replaced` assert (debug).
-- Breaking: the `-1` any-client id and delta range checks apply in debug builds only (`kDebugMode`, text_input.dart).
-- `EditableText` sends `viewId`, `updateStyle` (open, restart, style/dependency changes) as `_openInputConnection` does.
-- `EditableText.onAppPrivateCommand`/`TextField.onAppPrivateCommand`; `AppPrivateCommandCallback` (editable_text.dart).
-- Breaking: `EditableText.maxLength` is gone; `TextField` limits through `LengthLimitingTextInputFormatter`, as in Dart.
-- `TextField.maxLengthEnforcement`; `LengthLimitingTextInputFormatter.Truncate`/`FormatEditUpdate` are strict ports.
-- flutter_test's `TestTextInput`/`MacOSTestTextInputKeyHandler` ported; maxLength, viewId, setStyle tests ported.
-- Breaking: `RenderView` is Dart's bare `RenderObject` with one `RenderBox` child, not a `RenderBox` (view.dart).
-- Breaking: `RenderView.HitTest(HitTestResult, Point)` always adds the view and returns true; no bounds check.
-- Breaking: `RenderView`'s root layer is a `TransformLayer` carrying the device pixel ratio; hosts undo it.
-- Breaking: `RenderView.PaintBounds`/`SemanticBounds`/`ApplyPaintTransform` apply the root transform, as in Dart.
-- Breaking: `RenderView.Constraints` reads the configuration; its child gets plain `ParentData` (view.dart).
-- `RenderView.UpdateSemantics`; `GetRectOfSemanticsNodeInViewCoordinates` undoes the root transform (binding.dart).
-- Flutter's paintBounds and constraints-from-configuration `view_test.dart` cases ported; the translate hit test runs.
-- Breaking: `InkSplash`/`InkRipple`/`InkSparkle`/`NoSplash`/`InkHighlight` are Dart's `InkFeature`s (ink_*.dart).
-- Breaking: `InteractiveInkFeatureFactory.Create(controller, referenceBox, position, ...)`; `Confirm`/`Cancel`.
-- Breaking: `InkResponse` is a `StatelessWidget` over Dart's `_InkResponseState`; it requires a `Material` ancestor.
-- Breaking: ink responses activate only through `ActivateIntent`/`ButtonActivateIntent` actions, as in ink_well.dart.
-- Breaking: `InkResponse.GetRectCallback` returns `RectCallback?`, null by default; `TableRowInkWell` is in data_table.
-- Breaking: `Ink` is a `StatefulWidget` painting an `InkDecoration` feature; `padding` is `EdgeInsetsGeometry?`.
-- Breaking: the C#-only `Plumix.Widgets.InkSplash`/`RenderInkSplash` and the `IMaterialInkFeature` bridge are gone.
-- `ObserverList`/`HashedObserverList` (observer_list.dart); `Canvas.DrawCircle(c, radius, Paint)`, `DrawPaint(Paint)`.
-- `WidgetStateMouseCursor` implements `IWidgetStateProperty<MouseCursor?>`, so `ResolveAs` resolves it (widget_state).
-- Ink demo gains a `StadiumBorder` `customBorder` well with double tap (both samples).
-- Flutter's ink_well, ink_paint, ink_splash and ink_sparkle tests ported (goldens skipped).
-- Breaking: every `Animated*` widget and `TweenAnimationBuilder` is an `ImplicitlyAnimatedWidget` (implicit_animations).
-- Breaking: `AnimatedOpacity`/`Scale`/`Rotation`/`Slide` build Fade/Scale/Rotation/SlideTransition, as in Dart.
-- Breaking: implicit-animation geometry is `EdgeInsetsGeometry`/`AlignmentGeometry`; argument checks are debug asserts.
-- Breaking: `EdgeInsetsTween` is `Tween<EdgeInsets>`; `TextStyleTween` moves to implicit_animations.dart's file.
-- `BoxConstraintsTween`, `EdgeInsetsGeometryTween`, `BorderRadiusTween`, `BorderTween` (implicit_animations.dart).
-- `AlignmentTween`, `AlignmentGeometryTween` (rendering/tweens.dart); `EdgeInsets.Lerp`; `BoxDecoration.GetClipPath`.
-- `AnimatedContainer.TransformAlignment`/`ClipBehavior`; implicit animations' `DebugFillProperties` (Dart's).
-- Breaking: `Animation.ToString` is Dart's `Type#hash(details)`; `ToStringDetails`, Proxy/Reverse/Compound strings.
-- `Text` gives its own `maxLines` precedence over `DefaultTextStyle.maxLines`, as in Dart (text.dart).
-- Flutter's implicit_animations, animated_container/align/padding/positioned, tween_animation_builder tests ported.
-- Breaking: `Curve` is Dart's class hierarchy, not a delegate: call `curve.Transform(t)` (curves.dart).
-- Breaking: `Curves.X` are shared `Cubic`/`Curve` instances; `Curves.Cubic/Interval/Flipped/Split...(...)` are gone.
-- Breaking: `Curves.EaseOutCubic` is Dart's `Cubic(0.215, 0.61, 0.355, 1.0)`; `Transform` asserts [0, 1] (curves.dart).
-- `SawTooth`, `CatmullRomSpline`/`CatmullRomCurve`, `Curve2D`, the Penner/bounce/elastic `Curves` (curves.dart).
-- Breaking: `Tween.Transform` returns `Begin`/`End` at 0/1 and never clamps; `Lerp(double t)` replaces `Lerp(a, b, t)`.
-- Breaking: `Tween<T>` is concrete with Dart's default lerp and errors; `Evaluate(double)` is `Transform` (tween.dart).
-- Breaking: `ColorTween`/`RectTween`/`SizeTween` are `Tween<Color?>`/`<Rect?>`/`<Size?>` with Dart's null lerps.
-- Breaking: `CurveTween` is an `Animatable<double>`; `IntTween`, `StepTween`, `Animatable.FromCallback` (tween.dart).
-- Breaking: `TweenSequence` asserts like Dart; `TweenSequenceItem` is a class; `FlippedTweenSequence` (tween_sequence).
-- Breaking: `CurvedAnimation` forwards listeners to its parent, keeps its first direction until settled (animations).
-- Breaking: `CreateRectTween` is `Tween<Rect?> (Rect?, Rect?)`, as in Dart (heroes.dart).
-- `Durations` and `Easing` (material motion.dart); `Diagnostics.ToStringAsFixed` breaks exact ties away from zero.
-- Flutter's `curves_test.dart`, `tween_test.dart` and the tween/curve cases of `animations_test.dart` ported.
-- Breaking: `Scrollable` requires a `View` without a `MediaQuery` ratio (widgets/scrollable.dart).
-- Breaking: viewports visit semantics children in paint order; directional traversal sorts them (rendering/viewport.dart).
-- Breaking: Material debug checks now cover localizations, Scaffold and ScaffoldMessenger (debug.dart).
-- Breaking: `Material` paints through `AnimatedPhysicalModel`/`_MaterialInterior`'s `PhysicalShape` (material.dart).
-- Breaking: `Material` clips via its physical model and paints its border with `_ShapeBorderPaint`, not a ClipPath.
-- Breaking: `MaterialInkController` is an interface implemented by the ink render object `Material.Of` returns.
-- Breaking: `InkFeature.PaintFeature(Canvas, Matrix4)`; `Controller`/`OnRemoved` public; Dart's paint-transform walk.
-- Breaking: `Material.BorderRadius` is `BorderRadiusGeometry?`; its argument checks are debug `AssertionError`s.
-- Breaking: `MaterialEdges.ForType` is `MaterialEdges.KMaterialEdges`; the internal `MaterialSurface` helper is gone.
-- `ShapeBorderTween`, `RectCallback`, `Material.DefaultSplashRadius`, `Material.DebugFillProperties` (material.dart).
-- `ImplicitlyAnimatedWidget`, `ImplicitlyAnimatedWidgetState`, `AnimatedWidgetBaseState` (implicit_animations.dart).
-- `Animatable.Evaluate(Animation<double>)` (tween.dart); concrete `LayoutChangedNotification` (notification_listener).
-- `MaterialDebug.DebugCheckHasMaterial` (material debug.dart); `MaterialApp` with no content builds, as in Dart.
-- `BorderRadiusGeometry.ToString` prints Dart's `BorderRadius.circular(...)` spelling (painting/border_radius.dart).
-- Flutter's `material_test.dart` ported (golden tests skipped); seven slider paint tests un-skipped.
-- Breaking: Material slider family is a strict port: theme, parts, value-indicator shapes, `Slider`, `RangeSlider`.
-- Breaking: slider value indicators paint in an `OverlayPortal` follower, their labels via `TextPainter` (slider.dart).
-- Breaking: slider shapes take Dart's `TextPainter labelPainter`; `SliderShapes.cs` is split into Dart's three files.
-- Breaking: `SliderThemeData` has Dart's fields only (no `ThumbRadius`/`TickMarkRadius`...); `OverlayColor` is `Color?`.
-- Breaking: `RangeValues`/`RangeLabels` are classes with Dart equality/`toString`; `RangeThumbSelector` takes `Size`.
-- Breaking: `Slider`/`RangeSlider` drop `materialTapTargetSize`; argument checks are Dart's debug asserts (slider.dart).
-- Breaking: `Slider` keys follow Dart's shortcuts (arrows only); default cursor is `WidgetStateMouseCursor.clickable`.
-- Flutter's `slider_test`, `range_slider_test` and `slider_theme_test` ported (210 tests).
-- `Slider`/`RangeSlider` assert `debugCheckHasMaterial` like Dart (slider.dart, range_slider.dart).
-- Breaking: time-picker dial labels are `TextPainter`s clamped to 2.0 text scale, disposed per build (time_picker.dart).
-- Time-picker dial draws the between-labels dot with Dart's non-negative `%` (it never showed) (time_picker.dart).
-- `BannerPainter` paints Dart's `drawRect(shadow.toPaint())` and a centred `TextPainter` label (banner.dart).
-- Breaking: `DebugOverflowIndicator` is strict: Dart's regions, label placement/rotation, `toStringAsPrecision`.
-- Breaking: `RenderButton` uses `TextPainter`; `TextLayoutFallback` and `Canvas.DrawTextLayout` are removed.
-- `MediaQueryData.BoldText`, `MediaQuery.BoldTextOf`/`MaybeBoldTextOf` (media_query.dart).
-- `Canvas.DrawRect`/`DrawRRect(…, Paint)` with mask-filter blur; `BoxShadow.ToPaint` (dart:ui, box_shadow.dart).
-- `RRect.FromLTRBR`/`FromLTRBAndCorners`; `Path` sorts inverted rects like Skia; `ArcTo` joins/moves like Skia.
-- `Path.Contains` counts points on the outline as inside, like Skia (dart:ui).
-- Breaking: cubic curves bisect to Dart's 0.001 bound (`Cubic.transformInternal`), so eased values match Flutter's.
-- Headless paragraphs round each line height like SkParagraph, so fractional font sizes stack whole-pixel lines.
-- `CupertinoThumbPainter` draws one `drawRRect(shadow.toPaint())` per shadow, then border and fill (thumb_painter.dart).
-- Breaking: semantics root no longer consumes id 1; `Detach` keeps a render object's semantics node (semantics.dart).
-- Setting `SemanticsConfiguration.IsFocusable` marks the configuration annotated, like Dart (semantics.dart).
-- Breaking: `WidgetsApp` drops a non-Dart `FocusScope` above `TapRegionSurface` (widgets/app.dart).
-- `Route.DidAdd` focuses the navigator's scope in a microtask, like Dart's `TickerFuture` chain (navigator.dart).
-- `EdgeInsetsGeometry`, `WidgetStatePropertyAll` and slider shapes print Dart's `toString`.
-- Canvas debug recording logs circles, lines, paths, shadows and transforms; shared test `paints` matcher (mock_canvas).
-- Breaking: `RenderSliverGrid.performLayout` is Dart's: garbage first, `overlap` overflow, no clamping (sliver_grid).
-- Breaking: grid delegates reverse the cross axis for RTL/`AxisDirection.left`, so RTL grids start at the right.
-- Breaking: grid delegates/layouts assert like Dart (`AssertionError`, debug only); `SliverGridGeometry` is a class.
-- Breaking: `SliverGridParentData.CrossAxisOffset` is `double?`; `ShouldRelayout` compares exactly (sliver_grid.dart).
-- `RenderSliverList` moved to its own strict file; grid/list classes are unsealed like Dart (sliver_list.dart).
-- Flutter's `grid_view_test`, `scrollable_grid_test`, `sliver_list_test` and sliver-cache grid tests ported.
-- Glow overscroll pull recedes on a timer and stops ticking when held, like `_GlowController` (overscroll_indicator).
-- `BoxDecoration` paints a rectangle without a border radius as `drawRect`, like `_paintBox` (box_decoration.dart).
-- Breaking: `SystemChrome` is a strict port over `flutter/platform`: orientations, UI modes (system_chrome.dart).
-- Breaking: `SystemUiOverlayStyle` has Dart's eight fields over `PlatformBrightness`; `SystemUiIconBrightness` is gone.
-- Breaking: `RenderView` samples the bar centres each composited frame, nav bar on Android only (rendering/view.dart).
-- `ServicesBinding` answers `SystemChrome.systemUIChange` and `System.requestAppExit` (services/binding.dart).
-- Breaking: `Title` asserts an opaque colour in debug mode only; `ApplicationSwitcherDescription` fields are nullable.
-- `TextPainter.Dispose` no longer throws in release builds (painting/text_painter.dart).
-- Breaking: framework `Color`/`ColorSpace` (dart:ui) replaces Avalonia's `Color` in every public API (painting.dart).
-- Breaking: `Color.lerp`, `alphaBlend`, `withOpacity` use dart:ui's exact math; 8-bit helper copies removed.
-- Breaking: `BoxShadow`/`Gradient` `ToString` print dart:ui's `Color(alpha: ..., colorSpace: ...)` spelling.
-- Breaking: `ColorSwatch<T>`/`MaterialColor` derive from `Color`; `Primary` and the conversion are gone (colors.dart).
-- Breaking: `CupertinoDynamicColor` derives from `Color`; Cupertino colour slots are `Color?` (cupertino colors.dart).
-- CupertinoTextThemeData resolves dynamic colours inside given styles (`_resolveTextStyle`) (cupertino text_theme.dart).
-- `CupertinoIconThemeData` and `createCupertinoColorProperty` are strict ports (cupertino icon_theme_data.dart).
-- `CupertinoMenuItem.kDefaultDecoration` is one brightness-dynamic table, resolved when painted (menu_anchor.dart).
-- Breaking: `WidgetStateColor extends Color`; its slots are `Color?`, `IsConstantColor` is gone (widget_state.dart).
-- `WidgetStateColor.fromMap`/`Transparent`, `IWidgetStateProperty<T>`, state-constraint equality (widget_state.dart).
-- Breaking: `AppBarThemeData.BackgroundColorState` removed; `BackgroundColor` takes a `WidgetStateColor` (app_bar.dart).
-- Breaking: `ListTile` icon/text and `ToggleButtons.fillColor` slots are `Color?`, resolved like Dart (list_tile.dart).
-- Breaking: `CupertinoSwitch` hands its track colours to the painter unresolved, as Dart does (cupertino switch.dart).
-- Breaking: segmented, switch-label, text-field and FlexibleSpaceBar opacities replace alpha like Dart's `withOpacity`.
-- Breaking: `ThemeData.Light`/`Dark` build a new theme per read, like Dart's factories; fixes flaky density tests.
-- `ProcessTextService`; EditableText/SelectableRegion text-processing menu items (services/process_text.dart).
-- EditableText Look Up, Search Web and Share menu items; SelectableRegion Share (editable_text.dart).
-- Breaking: context-menu anchors use `TextSelectionToolbarAnchors.fromSelection`, `getGlyphHeights` (editable_text).
-- Breaking: EditableText selection boxes default to `includeLineSpacingMiddle`/`max`, like Dart (editable_text.dart).
-- Breaking: `Focus` no longer requests focus on pointer down, as in Dart (widgets/focus_scope.dart).
-- Flutter's framework widget tests ported: GlobalKeys, reparenting, inherited, parent data, setState, build scope.
-- `UniqueWidget<T>` (widgets/unique_widget.dart).
-- Breaking: debug frames throw "Build scheduled during frame"; `DebugBuildingDirtyElements` (widgets/binding.dart).
-- Breaking: `ValueKey` compares doubles like Dart, so NaN keys differ (foundation/key.dart).
-- Breaking: `Positioned` is unsealed and hides null offsets in its diagnostics (widgets/basic.dart).
-- `FlutterTimeline` with `debugCollect` timings over a `dart:developer` Timeline/TimelineTask/Flow shim (timeline.dart).
-- Timeline events: frames, BUILD/LAYOUT/PAINT/SEMANTICS, per-widget/per-object profiling, intrinsics (object/box.dart).
-- Scheduler timeline: Frame/Animate/POST_FRAME, warm-up and lock-events tasks, `scheduleTask` flow (scheduler/binding).
-- Breaking: `scheduleWarmUpFrame` releases its event lock in a microtask after the frame, as Dart's `await` does.
-- ImageCache timeline tasks and instants; a resurrected live image now trims the cache (painting/image_cache.dart).
-- `Placeholder.debugFillProperties`, `CustomPainter.toString` (widgets/placeholder.dart, rendering/custom_paint.dart).
-- Breaking: (Text)SelectionOverlay are strict ports: `_getHandleDy`, handle drags, menus (widgets/text_selection.dart).
-- Breaking: EditableText cursor blinks on Dart's timer; `showCursor` defaults to `!readOnly` (editable_text.dart).
-- Breaking: EditableText toolbar, clipboard and button items follow Dart; ToolbarOptions off (editable_text.dart).
-- EditableText briefly shows the last typed password character on mobile; `_justResumed` focus (editable_text.dart).
-- `Scribe`, `LiveText`, `BrowserContextMenu`; Android stylus handwriting starts on tap down (services/scribe.dart).
-- `LiveTextInputStatusNotifier`, web clipboard notifier, Live Text context-menu button (widgets/text_selection.dart).
-- Breaking: Material's `TextInputAction` enum is removed; fields take `TextInputActionType` (search_anchor.dart).
-- `PlatformDispatcher.BrieflyShowPassword` and `WidgetsDebug.DebugCheckHasOverlay` (dart:ui, widgets/debug.dart).
-- TextField `dragStartBehavior`, handle taps toggle the toolbar; SelectableText passes `showCursor` (text_field.dart).
-- Breaking: EditableText keys run through Actions and DefaultTextEditingShortcuts, not onKeyEvent (editable_text.dart).
-- Breaking: EditableText edits go through `_formatAndSetValue`, batch edits and the remote value (editable_text.dart).
-- Breaking: Enter goes to the platform plugin; `performAction` unfocuses and submits like Dart (editable_text.dart).
-- EditableText iOS scribble: selection rects, scribble element, text placeholders (editable_text.dart).
-- UndoHistory widget, UndoHistoryController and the platform UndoManager channel (undo_history.dart, undo_manager.dart).
-- Breaking: TextField, CupertinoTextField, SelectableText use TextSelectionGestureDetectorBuilder (text_selection.dart).
-- Hosts hand unhandled keys to an emulated text input plugin: macOS selectors, Enter (C#-only `HostTextInputPlugin`).
-- `TextSelection.ExpandTo`/`ExtendTo`; CharacterBoundary edges at -1 and at the text end (text_editing, text_boundary).
-- Breaking: `Actions.Invoke` skips a disabled action instead of throwing (widgets/actions.dart).
-- EditableText lays out text it pushes ahead, so a hover hit test right after typing can't throw (editable_text.dart).
-- Breaking: EditableText scrolls in its own Scrollable: caret on screen, IME geometry (editable_text.dart).
-- EditableText floating cursor, autocorrection prompt rect, context menu hidden while scrolling (editable_text.dart).
-- Breaking: RendererBinding is a strict port: drawFrame, first-frame deferral, view semantics (rendering/binding.dart).
-- Breaking: SemanticsBinding owns semantics-enabled state and action listeners; events carry a view id (binding.dart).
-- Service extension registry with the rendering, `timeDilation` and `Flutter.Frame` entries (foundation/binding.dart).
-- SemanticsNode diagnostics: `toStringDeep(childOrder)`, `debugDumpSemanticsTree` (semantics.dart).
-- Diagnostics print rects as Dart's `Rect.fromLTRB`; semantics flags list in Dart's order (foundation/diagnostics.dart).
-- Breaking: TextStyle is a strict port: Dart fields, apply, debugLabel, package fonts, lerp, equality (text_style.dart).
-- dart:ui `Paint`, `MaskFilter`, `FontFeature` and `FontVariation`; `StrokeCap` moves to core (ui/painting.dart).
-- WidgetHost builds dirty widgets before every layout flush, including Avalonia's render pass (widgets/binding.dart).
-- Breaking: RenderEditable is a strict port over TextPainter: painters, offset, gestures, semantics (editable.dart).
-- EditableText drives RenderEditable with Dart's text span, spell check spans and caret runs (editable_text.dart).
-- Span dumps list their TextStyle; ValueNotifier and ViewportOffset print Dart names (painting/text_style.dart).
-- WidgetSpan extraction tags placeholder semantics with `PlaceholderSpanIndexSemanticsTag` (widgets/widget_span.dart).
-- RenderParagraph's paint transform translates inline children by their inline offset (rendering/paragraph.dart).
-- Breaking: Scrollable is a strict port: top-level `ScrollableState`, Dart asserts/fallbacks, tests (scrollable.dart).
-- Breaking: `SamplingClock.Stopwatch` returns a `DartStopwatch`; VelocityTracker reads the binding clock (binding.dart).
-- Breaking: `ScrollBehavior.BuildOverscrollIndicator` adds the glow on Android and Fuchsia (scroll_configuration.dart).
-- PageView restores its page instead of the pixel offset and keeps the page on ensureVisible (widgets/page_view.dart).
-- Breaking: Pointer events are a strict port: all fields, fixed values, copyWith, transformed, toString (events.dart).
-- Breaking: GestureBinding queues cancellation, adds touch resampling and queries native hits (gestures/binding.dart).
-- Breaking: `DefaultTextStyle.Of` returns the inherited widget with Dart fallback and merge behavior (widgets/text.dart).
-- Breaking: Headless frame microtasks drain after composite; layout builds flush their full scope (framework.dart).
-- Breaking: Editing and selection use async platform clipboard data and status (widgets/editable_text.dart).
-- Clipboard gains Flutter's async platform-channel API and desktop host handling (services/clipboard.dart).
-- Breaking: RenderBox/BoxConstraints are a strict port: Dart asserts, messages, caches, lerp, toString (box.dart).
-- Diagnostics print Avalonia sizes and points as Dart's `Size(w, h)` and `Offset(x, y)` (foundation/diagnostics.dart).
-- Breaking: FollowerLayer resolves its transform while compositing; layers gain depth/siblings/callbacks (layer.dart).
-- Diagnostics print enum values the way Dart does, as `Type.member` (foundation/diagnostics.dart).
-- Breaking: Directionality requires an ancestor and uses Flutter's ubiquitous dependency updates (widgets/basic.dart).
-- Breaking: SliverGeometry uses identity and nullable pre-layout geometry (rendering/sliver.dart).
-- Feedback sends platform sound/haptics and semantics events before wrapped callbacks (widgets/feedback.dart).
-- Repaint boundaries reject replacing their framework-owned layer in debug builds (rendering/object.dart).
-- Breaking: Alignment geometry matches Flutter arithmetic, interpolation and direction checks (alignment.dart).
-- Painting axis and direction helpers match Flutter's conversions (painting/basic_types.dart).
-- Breaking: SharedAppData reports Flutter's missing-ancestor diagnostics and shadowing parity (shared_app_data.dart).
-- Breaking: `RenderSliver` is a `RenderObject` with Dart's sliver layout/hit-test protocol (sliver.dart).
-- Breaking: PageStorage recognizes derived keys and reports Flutter's missing-ancestor error (page_storage.dart).
-- Breaking: ChangeNotifier matches Dart dispatch, disposal, merge and allocation events (change_notifier.dart).
-- Host view focus follows window activation and Tab entry direction (widgets/view.dart).
-- Breaking: BuildOwner owns its FocusManager and each root gets a fresh BuildScope (framework.dart).
-- Breaking: RunApp/RunWidget retain one binding-owned root and queue warm-up attachment (widgets/binding.dart).
-- Breaking: key classes preserve Dart's inherited value/identity equality for subclasses (foundation/key.dart).
-- Breaking: ValueKey subclasses inherit Flutter's printer and use Dart type names (foundation/key.dart).
-- Breaking: library states check typed widget contracts through direct and shared bases (framework.dart).
-- Breaking: `FittedSizes` is an immutable reference pair with Dart identity equality (box_fit.dart).
-- Fix host view metrics on initial layout and resize so popup geometry uses the incoming window size.
-- Breaking: Cupertino sliding taps arbitrate with scrolling and hit-test the whole view (dialog.dart).
-- Breaking: recognizer arena/routing ownership and construction-only options match Flutter (recognizer.dart).
-- Breaking: drag constructor options and debug contracts match Flutter; multitouch parity is covered (monodrag.dart).
-- App and Router read platform launch routes from `PlatformDispatcher`; legacy access forwards (app.dart, router.dart).
-- Breaking: sliver parent data separates plain/container types; viewport transforms match Dart (sliver.dart).
-- Breaking: fully-scrolled box slivers retain unclamped child transforms (sliver.dart).
-- Breaking: off-cache `SliverEnsureSemantics` bypasses viewport clips like Flutter (viewport.dart).
-- Keep-alive notification tests unmount their tree so post-frame callbacks do not leak into later tests.
-- Breaking: `RenderErrorBox` uses `UI.Paragraph` and shared engine style types (rendering/error.dart).
-- Breaking: proxy_box.dart is a strict port split across `Proxy.*.cs`; its render objects are no longer sealed.
-- Breaking: `RenderProxyBox` is concrete with a child constructor; its `Child` setter matches Dart's (proxy_box.dart).
-- Breaking: `AlwaysNeedsCompositing`, `VisitChildrenForSemantics`, `ComputeSizeForNoChild` are public (object.dart).
-- Breaking: `RenderObject.OnAttach` runs after the children attach, like a Dart `attach` override (object.dart).
-- `MarkNeedsSemanticsUpdate` is virtual; `Canvas.DrawPaint`, `Rect.ContainsHalfOpen` and `RRect.Contains` land.
-- Breaking: `RenderIntrinsicWidth`/`RenderIntrinsicHeight` move to the `Plumix.Rendering` namespace (proxy_box.dart).
-- Breaking: `RenderOpacity` has one Dart-shaped constructor; `RenderLimitedBox` takes `(child, maxWidth, maxHeight)`.
-- Breaking: `RenderAspectRatio` checks unbounded before tight and throws Dart's `FlutterError` (proxy_box.dart).
-- Breaking: `RenderConstrainedBox` intrinsics skip the child on tight axes; proxy asserts follow Dart (proxy_box.dart).
-- `RenderBox.GetDistanceToActualBaseline` lands; proxy boxes forward baselines through it (box.dart).
-- Breaking: `RenderDecoratedBox.Decoration` is a `Decoration`; `DecorationValue` and the box projection are gone.
-- Breaking: `RenderBackdropFilter` takes Dart's `filter`/`filterConfig` pair; `Filter` is `[Obsolete]` (proxy_box.dart).
-- Breaking: clips debug-paint through `TextPainter` and Dart's draw calls; `RenderCustomClipDebug` is gone.
-- Breaking: `RenderClipRect` hit-tests half-open; physical models fill with `drawRRect`/`drawPaint` (proxy_box.dart).
-- `BorderRadiusGeometry.Resolve(TextDirection?)` asserts like Dart; `ImageConfiguration.ToString` matches Dart.
-- Breaking: `RenderTransform` takes Dart's constructor; its `Transform` getter and `EffectiveTransform` are gone.
-- Breaking: `RenderTransform` with `filterQuality` pushes an `ImageFilterLayer`; `TransformLayer.FilterQuality` is gone.
-- `Material` and `InkWell` map ink through `RenderTransform.ApplyPaintTransform`, honoring origin and alignment.
-- Breaking: `FractionalTranslation.Translation` is a `Point`; `RenderFittedBox.HasVisualOverflow` is gone.
-- Breaking: `Listener`/`RenderPointerListener` take Dart's `Pointer*EventListener` delegates in Dart's order.
-- Breaking: `RenderIgnorePointer`, `RenderAbsorbPointer` and the semantics proxies take Dart's parameter order.
-- Breaking: `RenderSemanticsGestureHandler` takes Dart's callbacks and `scrollFactor`; `DefaultScrollFactor` is gone.
-- Breaking: `RenderAnnotatedRegion` requires `sized`; `IgnoringSemantics` is `[Obsolete]` as in Dart (proxy_box.dart).
-- Breaking: `CompositedTransformFollower.Offset` is a `Point`; `LayerLink.ToString` matches Dart (layer.dart).
-- Breaking: `TextPainter` is a strict port; `RenderParagraph` lays out and paints through it (text_painter.dart).
-- Breaking: text lays out through a dart:ui-shaped `Paragraph` over Avalonia or a headless engine (paragraph.dart).
-- Breaking: headless text uses Flutter's `FlutterTest` font metrics instead of the 0.6 em estimate.
-- `StrutStyle` is a strict port, and `Text`/`RichText`/`RenderParagraph` take a `strutStyle` (strut_style.dart).
-- Breaking: `TextOverflow` gains `Visible` in Dart's order; `TextHeightBehavior` gains `LeadingDistribution`.
-- Breaking: `LineMetrics`/`TextBox` take Dart's shape; `WordBoundary` moves to `Plumix.Painting` (text_painter.dart).
-- `InlineSpan.Build` and `TextStyle.GetTextStyle`/`GetParagraphStyle` land (inline_span.dart, text_style.dart).
-- Breaking: `TextOverflow.Fade` also fades vertically; `Canvas.DrawTextLayoutWithHorizontalFade` is gone.
-- Breaking: `RenderBox.HitTest` treats the right and bottom edges as outside, like `Size.contains` (box.dart).
-- Key records seal `ToString`, so a subclass of `ObjectKey`/`GlobalObjectKey`/`LabeledGlobalKey` prints like Dart's.
-- `Flex` and `Container` diagnostics omit null properties, matching Dart's `defaultValue: null` (basic.dart).
-- `LayerLink` may move between leader layers within a frame and checks the leftovers post-frame (layer.dart).
-- Breaking: framework.dart is a strict port: Dart's debug asserts, error texts and lifecycle checks (framework.dart).
-- Breaking: `DependOnInherited`/`GetInherited` take Dart's `...WidgetOfExactType` names (framework.dart).
-- Breaking: Dart-`@protected` framework hooks are public; `State.InvokeSetState` is gone for public `SetState`.
-- Breaking: the notification tree (`NotifiableElementMixin`) lands; `Notification.Dispatch` is void (framework.dart).
-- Breaking: `GlobalKey` lookups match by equality; `BuildOwner.ScheduleBuild`/`IsBuilding`/`RegisterElement` are gone.
-- Breaking: hosts and harness pumps finalize the element tree each frame; unmount failures are reported.
-- Breaking: `RenderObjectElement.RenderObject` is non-null; `Element.Size` checks Dart's preconditions (framework.dart).
-- Breaking: overlay-portal layout builders and persistent headers build inside a build scope (overlay.dart).
-- `State<T>`, `FlutterMemoryAllocations` and `DebugChildrenHaveDuplicateKeys` land (memory_allocations.dart).
-- `ErrorWidget`, `ParentDataElement<T>` and `LeafRenderObjectElement` are no longer sealed, as in Dart (framework.dart).
-- `TextField` no longer calls `SetState` while it is being disposed (text_field.dart).
-- Breaking: `RawScrollbar` uses directional insets, elliptical radii and `OutlinedBorder` shapes (scrollbar.dart).
-- Breaking: raw scrollbar padding, shape paint, geometry and debug-only guards follow Dart (scrollbar.dart).
-- Raw scrollbar thumb recognizers leave trackpad pan/zoom gestures to the content (scrollbar.dart).
-- Binding-wide render, layer and semantics-fragment dumps print through `DebugPrint` (binding.dart, object.dart).
-- Breaking: re-registering a render view moves it to the end of the binding's view order (binding.dart).
-- Breaking: semantics text defaults to empty strings; assignment and absorption follow Dart (semantics.dart).
-- Breaking: `Element.Widget` is cleared on unmount; `Mounted` follows configuration lifetime (framework.dart).
-- A failing dirty-element rebuild is reported without aborting the remaining build scope (framework.dart).
-- `RendererBinding` owns view-aware mouse rechecks across every registered view (binding.dart).
-- Breaking: `SingleChildScrollView` API, layout, clipping and notifications match Dart (single_child_scroll_view.dart).
-- Breaking: `ScrollPosition` throws when reading uninitialized metrics, matching Dart (scroll_position.dart).
-- Breaking: the framework owns a thread; its `async` work resumes as a `Scheduler` microtask, not on the pool.
-- Breaking: `EdgeDraggingAutoScroller` drops its ticker and `IDisposable` for Dart's loop (scrollable_helpers.dart).
-- Breaking: `SemanticsData` and `SemanticsNode.GetSemanticsData` land; `SemanticsNodeUpdate` carries one (semantics.dart).
-- Breaking: `Semantics`/`SliverSemantics` take `localeForSubtree`, and `Localizations` marks its subtree (basic.dart).
-- Breaking: `RenderParagraph`, `RenderEditable`, `ModalBarrier` and the chip delete button annotate a text direction.
-- Breaking: `_InactiveElements` lands; a dropped subtree unmounts deepest-first and `Element.UnmountChild` is gone.
-- Breaking: `Element.UnmountRoot` replaces `Unmount` as the way a host or harness tears down a parentless root.
-- Breaking: `CupertinoActionSheet` no longer tells its slide targets they were left when it is disposed (dialog.dart).
-- Breaking: `Scheduler.AddPostFrameCallback` no longer requests a frame and takes a `debugLabel` (binding.dart).
-- Breaking: `Scheduler.FramesEnabled` is read-only, driven by `HandleAppLifecycleStateChanged` (binding.dart).
-- Breaking: `Scheduler.CurrentFrameTimeStamp` is only readable inside a frame; `CurrentSystemFrameTimeStamp` lands.
-- Breaking: `SchedulerPhase.MidFrameMicrotasks` lands between the transient and persistent phases (binding.dart).
-- Breaking: a throwing frame callback is reported through `FlutterError.ReportError` instead of escaping the frame.
-- `Scheduler` gains `TimeDilation`/`ResetEpoch`, `HandleBeginFrame`/`HandleDrawFrame`, `EndOfFrame` (binding.dart).
-- `Scheduler` gains `ScheduleWarmUpFrame`, `LockEvents`/`Locked`/`Unlocked` and the timings callbacks (binding.dart).
-- `Scheduler` gains `RequestPerformanceMode` and the four `DebugAssertNo*` helpers; `SchedulerDebug` lands (debug.dart).
-- `PlatformDispatcher` gains the frame pipeline slots; `FrameTiming`/`FramePhase`/`DartPerformanceMode` land.
-- `Ticker` registers a transient frame callback instead of a scheduler-owned ticker list (ticker.dart).
-- Breaking: `[Flags] MaterialState` is gone; Material resolves the core `WidgetState` set (material_state.dart).
-- Breaking: element deactivation retains dirty state and activation follows Dart scheduling order (framework.dart).
-- Breaking: `CupertinoMenuItem` is stateless over `_CupertinoMenuItemLabel`/interaction handler (menu_anchor.dart).
-- Breaking: `CupertinoMenuAnchor`'s overlay is stateful, resolves motion and owns the swipe ticker (menu_anchor.dart).
-- `CupertinoMenuAnchor` gains the `_ShadowPainter`, the divider painter and the swipe render surface (menu_anchor.dart).
-- `WidgetStatesController`, `WidgetStatesConstraint` and `WidgetStateProperty.FromMap` land (widget_state.dart).
-- Added `Canvas.DrawRSuperellipseBlur` and `Curves.EaseInCurve`; `ValueNotifier`/`DirectionalFocusIntent` are open.
-- Breaking: `View`/`RawView`/`ViewAnchor`/`ViewCollection` land over `RenderTreeRootElement` (view.dart).
-- Breaking: `RootElement` hosts no render object; `IRootRenderObjectHost` is gone, a tree needs a `View` (binding.dart).
-- Breaking: `RenderView` takes its `FlutterView` and prepares its first frame; `RendererBinding` lands (view.dart).
-- Added `MediaQuery.FromView`, `WidgetsBinding.HandleMetricsChanged`/`HandleViewFocusChanged` (media_query.dart).
-- Breaking: the host back button runs `WidgetsApp.DidPopRoute` -> `MaybePop`; `TryHandleBackButton` is gone (app.dart).
-- Breaking: `NavigationNotification` is dispatched post-frame by the route history and `ModalRoute` (navigator.dart).
-- Breaking: `Element.MarkNeedsBuild` reports Dart's "setState() called during build" error (framework.dart).
-- Breaking: the "buildScope missed some dirty elements" assert is armed; `DebugCheckMissedDirtyElements` is gone.
-- Breaking: `Route.ChangedInternalState`/`ChangedExternalState` no longer rebuild the `Navigator` (navigator.dart).
-- Breaking: `WidgetsApp` reports `SystemNavigator.setFrameworkHandlesBack` once the app lifecycle is known (app.dart).
-- Breaking: `AutomaticKeepAlive` applies its `KeepAlive` out of turn instead of `SetState` (automatic_keep_alive.dart).
-- `FormField` defers its always-autovalidate pass to a post-frame callback, as Dart does (form.dart).
-- Breaking: `RootWidget`/`RootElement` land and `WidgetHost` composes them instead of a private root (binding.dart).
-- Breaking: `BuildOwner.ScheduleBuild` reports Dart's "already in the dirty list" error (framework.dart).
-- Fixed `FutureBuilder` calling `SetState` from the completing thread, which could strand a dirty element (async.dart).
-- Breaking: `BuildScope` lands; `BuildOwner.BuildScope(context)` flushes only that context's scope (framework.dart).
-- Breaking: `LayoutBuilder`/`SliverLayoutBuilder` own a `BuildScope` and flush it from layout (layout_builder.dart).
-- Breaking: `BuildOwner.ScheduleBuild` reports Dart's "widget that is not marked as dirty" error (framework.dart).
-- Breaking: `InheritedWidget` is a `ProxyWidget` carrying a `child`, and `InheritedElement` a `ProxyElement`.
-- Breaking: `Theme` is a `StatelessWidget` that builds `InheritedMaterialTheme`, as Dart's `_InheritedTheme` (theme.dart).
-- Breaking: `MediaQuery.PlatformBrightnessOf` falls back to `PlatformBrightness.Light` instead of throwing (media_query.dart).
-- Added `Theme.BrightnessOf`/`MaybeBrightnessOf` (`material_ui/lib/src/theme.dart`).
-- Breaking: `ComponentElement` lands as the base of `StatelessElement`/`StatefulElement`/`ProxyElement`.
-- Breaking: a throwing `build()` is reported and replaced by `ErrorWidget.Builder` instead of propagating.
-- Breaking: `ProxyElement` is abstract with an abstract `NotifyClients`; `ProxyWidget.CreateElement` is abstract.
-- Breaking: `State.Dispose()` must call `base.Dispose()`, and an unmounted `State` nulls its widget and element.
-- Breaking: `State.SetState` rejects a call after `Dispose()`, from a constructor, or with an `async` callback.
-- Breaking: `State.Context` throws a `FlutterError`, and `State.Mounted` tracks the element, not its lifecycle state.
-- Breaking: `ObjectKey`/`GlobalObjectKey` compare their value by identity, as Dart's `identical` does.
-- Breaking: `IndexedSlot` gains value equality, so a multi-child rebuild no longer moves every child every frame.
-- Added `ElementLifecycleState.Failed`: a subtree that throws in `Deactivate`/`Mount` is neither active nor defunct.
-- Added Flutter's ParentData diagnostics: the incorrect-ancestor and competing-`ParentDataWidget` reports.
-- Added `BuildOwner.LockState`/`DebugBuilding` and Dart's three duplicate-`GlobalKey` reports from `FinalizeTree`.
-- Added `widgets/debug.dart`'s switches as `WidgetsDebug`, plus `DebugWidgetBuilderValue` (`debug.dart`).
-- Added `LabeledGlobalKey.ToString`, `Element.DebugExpectsRenderObjectForSlot` and `DebugDeactivated`.
-- `Scrollable` auto-scrolls and re-anchors a text selection dragged past its edge (`scrollable.dart`).
-- Breaking: `EdgeDraggingAutoScroller` drops its viewport provider and hops to a scroll-origin-anchored target.
-- Breaking: `ScrollPosition` splits into the abstract base and `ScrollPositionWithSingleContext` (`scroll_position`).
-- Breaking: `ScrollActivity` dispatches the scroll notifications instead of `ScrollableState` (`scroll_activity.dart`).
-- Breaking: `ScrollPosition.PointerScroll` replaces `ApplyPointerScrollDelta`, and `JumpToWithoutSettling` lands.
-- Breaking: `BeginActivity` pairs `DidStartScroll`/`DidEndScroll` and resets `UserScrollDirection` to idle.
-- Breaking: the ballistic/driven activities run on an `AnimationController`; `DrivenScrollActivity.FromSimulation` adds.
-- Breaking: `ScrollPosition.SaveScrollOffset` keys `PageStorage` off the context chain, not off `restorationId`.
-- Breaking: `Scrollable` takes a required `viewportBuilder` plus an `axisDirection`; `ScrollView` owns the rest.
-- Breaking: `ScrollView`/`BoxScrollView` land and `CustomScrollView`/`ListView`/`GridView` derive from them.
-- Breaking: a vertical `ScrollView` with no controller and no `primary` resolves `AlwaysScrollableScrollPhysics`.
-- Breaking: `BoxScrollView` consumes the main-axis `MediaQuery` padding and republishes the cross-axis half.
-- Breaking: `ListView`/`GridView` take `cacheExtent`/`scrollCacheExtent` instead of `cacheExtent`/`cacheExtentStyle`.
-- Added `ListView.Custom`/`GridView.Custom`, `ListView.PrototypeItem`/`ItemExtentBuilder` and the missing view params.
-- Breaking: `Scrollable.Of`/`MaybeOf` resolve through a `_ScrollableScope` inherited widget and register a dependency.
-- `Scrollable` adopts the restoration bucket: the offset is persisted through `RestorableValue`, not only `PageStorage`.
-- Added `SliverWithKeepAliveWidget`, `SliverEnsureSemantics` and the sliver widgets' diagnostics (`sliver.dart`).
-- Breaking: `RenderProxyBox` gives its child a bare `ParentData` and paints at its own offset (`proxy_box.dart`).
-- Breaking: the shifting proxy subclasses re-base on `RenderShiftedBox`/`RenderAligningShiftedBox` (`shifted_box.dart`).
-- Breaking: `RenderAnimatedSize` takes an unresolved `AlignmentGeometry` plus a `TextDirection` (`animated_size.dart`).
-- `RenderCustomSingleChildLayoutBox`/`RenderConstraintsTransformBox` gain their own intrinsics and dry queries.
-- `RenderSingleChildViewport` shifts its child through a computed paint offset (`single_child_scroll_view.dart`).
-- Added `Element.DebugGetCreatorChain`/`DebugGetDiagnosticChain` and `DebugCreator`, stamped on every render object.
-- Breaking: `Element` derives from `DiagnosticableTree`; `BuildContext` gains the four `Describe*` members.
-- Breaking: ancestor lookups from a deactivated element throw, so `Dispose()` can no longer walk the tree.
-- Breaking: the scroll offset reaches `PageStorage` from `ScrollPosition.DidEndScroll`, not from `Dispose`.
-- Breaking: `MediaQuery.Of` and the two `Overlay` lookups report a `FlutterError` naming the widget and its chain.
-- Added `SemanticsProperties`, `AttributedString`/`AttributedStringProperty`, `SemanticsHintOverrides` (`semantics.dart`).
-- Added `SliverSemantics`/`RenderSliverSemanticsAnnotations` over the shared annotations mixin (`proxy_sliver.dart`).
-- Added the semantics text-editing actions, `identifier`, `headingLevel`, `linkUrl`, `controlsNodes`, value lengths.
-- Added `SemanticsValidationResult` and `UnicodeMarks` (`semantics.dart`, `unicode.dart`).
-- Breaking: `Semantics`/`RenderSemanticsAnnotations` carry one `SemanticsProperties` instead of a setter per annotation.
-- Breaking: `Semantics` drops `flags`/`mergeDescendants`; use the named booleans and `MergeSemantics` (`basic.dart`).
-- Breaking: `SemanticsFlags` is `long`-backed, gains the read-only/obscured/multiline/keyboard-key/required bits.
-- Breaking: `SemanticsFlags.IsInvalid` is gone; `FormField` reports `SemanticsValidationResult` instead (`form.dart`).
-- Breaking: `SemanticsConfiguration.Absorb` lets the absorbed child's action handler win (`semantics.dart`).
-- Added `MouseTracker`/`MouseTrackerAnnotation`: per-device enter/exit diffing per event/frame (`mouse_tracker.dart`).
-- Added `RenderMouseRegion` with `opaque`/`hitTestBehavior`/`validForMouseTracker` (`proxy_box.dart`).
-- Added `PointerAddedEvent`/`PointerRemovedEvent`, `PointerEvent.Device`/`ViewId`, enter/exit `FromMouseEvent`.
-- Breaking: `MouseCursor` is a `Plumix.UI` class with sessions over `flutter/mousecursor` (`mouse_cursor.dart`).
-- Breaking: `MouseCursorManager` is a per-tracker instance; the static push/pop cursor stack is gone.
-- Breaking: `SystemMouseCursors` carries all 36 Flutter cursors; `WidgetStateMouseCursor` gains `Textable`.
-- Breaking: `MouseRegion` is a `SingleChildRenderObjectWidget`; it no longer wraps a `Listener` (`basic.dart`).
-- Breaking: `Listener`/`RenderPointerListener` drop `onPointerEnter`/`onPointerExit`; they belong to `MouseRegion`.
-- Breaking: `InkResponse` and `TextField` take their cursor from a `MouseRegion` instead of pushing it on a stack.
-- Added `RenderAnimatedOpacity` + the shared animated-opacity mixin; `FadeTransition` is now a render-object widget.
-- Added `RenderClipRSuperellipse`/`RenderMergeSemantics`; their widgets now build them (`proxy_box.dart`).
-- Added `Semantics.ExcludeSemantics`/`BlockUserActions` and the matching render-object setters (`object.dart`).
-- Breaking: `RenderOpacity` keys visibility on the rounded 8-bit alpha and paints nothing at alpha 0 (`proxy_box.dart`).
-- Breaking: every `RenderCustomClip` subclass defaults to `Clip.AntiAlias` (`proxy_box.dart`).
-- Breaking: `RenderClipRRect` rejects corner hits only when a clipper is installed (`proxy_box.dart`).
-- Breaking: `RenderAbsorbPointer` swallows the hit without adding itself to the path (`proxy_box.dart`).
-- Breaking: `RenderPointerListener` extends `RenderProxyBoxWithHitTestBehavior` and sizes to `constraints.biggest`.
-- Breaking: `RenderPhysicalModel` is a `RenderCustomClip<RRect>`; a circle clips to an ellipse (`proxy_box.dart`).
-- Breaking: `RenderTransform` derives `AlwaysNeedsCompositing` from `filterQuality` and drops `PaintsChild`.
-- Breaking: `RenderBaseline` extends `RenderShiftedBox` and gains dry layout/baseline (`shifted_box.dart`).
-- Added dry layout, dry baselines and the missing intrinsics to the aspect-ratio, limited and intrinsic boxes.
-- Added `RenderProxyBox.ComputeSizeForNoChild`, `Size.Contains`, `BoxConstraints.HasInfinite*`, `RRect.FromRectXY`.
-- Breaking: `RenderDecoratedBox` hit-tests its decoration, disposes its painter and repaints on detach.
-- Breaking: `Material`'s foreground outline is a foreground `DecoratedBox`, not a sibling above the contents.
-- Breaking: inherited lookups match the exact widget runtime type over a per-element scope map (`framework.dart`).
-- Breaking: `BuildContext` is an interface `Element` implements, so a context *is* its element (`framework.dart`).
-- Breaking: `Element.Rebuild(force)` is non-virtual; subclasses override `PerformRebuild` (`framework.dart`).
-- Breaking: `Element.IsMounted` is `Mounted`; `Dirty` starts true, cleared only by `PerformRebuild` (`framework.dart`).
-- Breaking: `TwoDimensionalViewport.ChildManagerOf` is gone; cast the context instead (`two_dimensional_viewport.dart`).
-- Added `BuildContext.DebugDoingBuild`/`DispatchNotification`; a build-time `MarkNeedsBuild` no-ops (`framework.dart`).
-- Breaking: `ContextMenuController.Show` returns void and uses root overlays (`context_menu_controller.dart`).
-- Breaking: `WidgetHost`/`WidgetsApp` leave overlays to navigators or explicit `Overlay` widgets (`app.dart`).
-- Breaking: the `Element` lifecycle and `Widget.CreateElement` are public API (`framework.dart`).
-- Breaking: `RenderObjectWidget`'s render-object hooks are public, so any assembly can author one (`framework.dart`).
-- Breaking: sliver adaptors paint from `ChildMainAxisPosition`; reversed lists fixed (`sliver_multi_box_adaptor.dart`).
-- Breaking: `RenderSliverMultiBoxAdaptor.PaintsChild` is false for an unindexed child (`sliver_multi_box_adaptor.dart`).
-- Added `RenderSliverHelpers`: `HitTestBoxChild`, `ApplyPaintTransformForBoxChild` (`sliver.dart`).
-- Breaking: `SliverMultiBoxAdaptorParentData` extends `SliverLogicalParentData` and has no paint offset (`sliver.dart`).
-- Breaking: the viewport's sliver parent data is renamed `SliverLogicalContainerParentData` (`sliver.dart`).
-- Breaking: `RenderSliverFixedExtentBoxAdaptor.SetChildGeometry` is static and drops its constraints argument.
-- Added `TwoDimensionalViewport`, `RenderTwoDimensionalViewport` and `ChildVicinity` (`two_dimensional_viewport.dart`).
-- Added `TwoDimensionalScrollable` and `DiagonalDragBehavior` (`scrollable.dart`).
-- Added `TwoDimensionalScrollView` (`two_dimensional_scroll_view.dart`).
-- Added the `TwoDimensionalChildDelegate` builder/list family (`scroll_delegate.dart`).
-- Breaking: `KeepAlive` writes to the new `IKeepAliveParentData` rather than `SliverMultiBoxAdaptorParentData`.
-- Breaking: `Scrollable` takes an optional `axisDirection` that overrides `axis`/`reverse` (`scrollable.dart`).
-- Breaking: `ScrollPosition.EnsureVisible` reveals on its own axis, which a 2D viewport honors (`scroll_position.dart`).
-- Breaking: `scroll_delegate.dart` is a strict port in `Widgets/ScrollDelegate.cs` (`scroll_delegate.dart`).
-- Breaking: sliver/list delegates wrap every child in `RepaintBoundary` and always in `KeyedSubtree`.
-- Breaking: sliver/list/grid builder factories take a nullable `itemCount` first-class; `null` is unbounded.
-- Added `SliverList.Separated`, `SelectionKeepAlive` and `SliverChildDelegate.DebugFillDescription`.
-- Added `ErrorWidget`/`ErrorWidget.Builder` and `RenderErrorBox`; a throwing item builder now becomes one.
-- Breaking: `UniqueKey` compares by identity, not record value equality (`key.dart`).
-- Breaking: sliver item builders take `NullableIndexedWidgetBuilder`; `childCount: null` ends a list (`sliver.dart`).
-- Breaking: `SliverChildDelegate.ShouldRebuild` is abstract and gates the child rebuild (`scroll_delegate.dart`).
-- Breaking: `SliverMultiBoxAdaptorParentData.Index`/`LayoutOffset` are nullable; a moved child drops its offset.
-- `RenderSliverList` is a strict port, including the null-layout-offset garbage pass (`sliver_list.dart`).
-- Added `replaceMovedChildren`, the child-integrity checks and `findChildIndexCallback` factories (`sliver.dart`).
-- Lazy child mutation defers pre-existing dirty elements instead of flushing them mid-layout (`framework.dart`).
-- ListWheel child mutation now runs in an element-scoped build callback (`list_wheel_scroll_view.dart`).
-- Breaking: `Focus` defaults to semantics; ink/buttons merge to one node (`focus_scope.dart`, `ink_well.dart`).
-- Breaking: basic box/render-object and Spacer guards are debug-only (`basic.dart`, `proxy_box.dart`, `spacer.dart`).
-- Cupertino navigation-bar Hero sub-curves are pinned to the route animation (`nav_bar.dart`, `heroes.dart`).
-- Breaking: NavigationBar/Rail ink is indicator-scoped; rail destination overrides stay inert (`navigation_*.dart`).
-- Breaking: `SafeArea`/`SliverSafeArea.minimum` is `EdgeInsets`; diagnostics/nesting match (`safe_area.dart`).
-- Breaking: `RenderIndexedStack` derives from strict `RenderStack` and shares `StackParentData` (`stack.dart`).
-- Breaking: `IRenderSliverBoxChildManager` carries Dart's full contract (`sliver_multi_box_adaptor.dart`).
-- Breaking: the manager's `ChildCount` is the precise `int`; the nullable estimate is `EstimatedChildCount`.
-- Added `SliverChildDelegate.EstimateMaxScrollOffset`/`DidFinishLayout` and the widget hook (`scroll_delegate.dart`).
-- Added `SliverMultiBoxAdaptorElement`'s `ChildCount` probe, layout hooks and underflow look-ahead (`sliver.dart`).
-- Breaking: `SliverGrid` resolves its max scroll offset through the grid layout, not the list extrapolation.
-- Added the `RenderShiftedBox`/`RenderAligningShiftedBox` family in `Rendering/ShiftedBox.cs` (`shifted_box.dart`).
-- Breaking: `RenderAlign`/`RenderFractionallySizedBox` are `RenderPositionedBox`/`RenderFractionallySizedOverflowBox`.
-- Breaking: the aligning render boxes hold an `AlignmentGeometry` plus a `TextDirection` and resolve it themselves.
-- Breaking: `RenderPadding.Padding` is an `EdgeInsetsGeometry` and `RenderPadding` gained `TextDirection`.
-- Breaking: `Stack`/`IndexedStack` default to `AlignmentDirectional.TopStart`, so both need a `Directionality`.
-- Breaking: `Padding.InsetsGeometry` is `Padding.Insets`; the LTR-resolved `Thickness` property goes (`basic.dart`).
-- Breaking: `DecoratedBox(decoration, position, child, key)` follows Dart's parameter order (`container.dart`).
-- Breaking: `Container` asserts `color`/`decoration` are exclusive and drops its `Width`/`Height` properties.
-- Added `Container.transformAlignment`/`isAntiAlias` and the decoration's own padding (`container.dart`).
-- Added `SizedBox.Expand`/`Shrink`/`FromSize`, `Positioned.FromRect`/`Fill` and `FittedBox.clipBehavior`.
-- Added `IndexedStack.textDirection`/`clipBehavior`/`sizing`, forwarded to `RenderIndexedStack` (`indexed_stack.dart`).
-- Added `RenderFittedBox.ClipBehavior`, its dry layout/baseline and Dart's paint-only fit changes (`proxy_box.dart`).
-- Added `Element.DebugVisitOnstageChildren` and `Offstage`'s element override (`framework.dart`, `basic.dart`).
-- Added `BoxConstraints.Unbounded`, `EdgeInsetsGeometry.IsNonNegative` and `Path.RelativeLineTo`/`RelativeMoveTo`.
-- Fixed four `new BoxConstraints()` sites that meant Dart's unbounded `const BoxConstraints()` (`Badge`, `Chips`, ...).
-- Breaking: `RenderSliverFixedExtentList`/`RenderSliverVariedExtentList` derive from `RenderSliverFixedExtentBoxAdaptor`
-- Breaking: `RenderSliverVariableExtentList`, `SliverVariableExtentList` and `SliverVariableExtentLayout` go.
-- Breaking: `RenderSliverFillViewport`/`RenderSliverPrototypeExtentList` override `ItemExtent`; `GetItemExtent` goes.
-- Breaking: the fixed-extent layout hooks are public and `ItemExtent` is set through `SetItemExtent`.
-- Added `RenderSliverMultiBoxAdaptor.PaintsChild`/`PaintExtentOf`/`Calculate*Garbage` (`sliver_multi_box_adaptor.dart`).
-- `RenderSliverFixedExtentBoxAdaptor` reports a scroll extent that is not a multiple of its item extent.
-- Added `SelectionListener`/`SelectionListenerNotifier`/`SelectionDetails` (`selectable_region.dart`).
-- `ChangeNotifier.NotifyListeners` is virtual, as Dart's overridable `notifyListeners` (`change_notifier.dart`).
-- `RenderParagraph.VisitChildren` walks the inline children, so detach/attach reach `WidgetSpan`s (`paragraph.dart`).
-- Added `dart:ui`'s `Canvas`/`Picture`/`PictureRecorder` over the drawing backend; `PictureLayer` holds a picture.
-- Breaking: `PaintingContext` derives from `ClipContext` and exposes `Canvas`; `Draw*` moves there (`clip.dart`).
-- Breaking: `PaintingContext.Push*` take `needsCompositing`/`offset`/`oldLayer` and return the layer (`object.dart`).
-- Breaking: `PaintingContextCallback` is `(context, offset)`; a clip without compositing records onto the canvas.
-- Breaking: `RenderClipRect`/`RenderClipRRect`/`RenderTransform` are no longer repaint boundaries (`proxy_box.dart`).
-- Breaking: `ClipRRectLayer` carries an `RRect` and `ClipPathLayer` replaces `ClipGeometryLayer` (`layer.dart`).
-- Breaking: `OpacityLayer` is an `OffsetLayer` carrying an 8-bit `Alpha`; `OpacityOffsetLayer` goes (`layer.dart`).
-- Added `RenderObject.Layer`, `PaintingContext.SetIsComplexHint`/`SetWillChangeHint` and `ClipRSuperellipseLayer`.
-- `PaintUtilities.PaintZigZag` draws under the canvas save/translate/rotate Dart uses (`paint_utilities.dart`).
-- Breaking: `WidgetsApp.DefaultShortcuts`/`DefaultActions` ship Flutter's real maps, per platform (`app.dart`).
-- Breaking: traversal keys route through the app's shortcuts; `FocusManager`'s Tab/arrow fallback goes.
-- Breaking: `FocusTraversalGroup.Of`/traversal throws without a group instead of falling back to a policy.
-- Breaking: `FocusNode.RequestFocus` and `FocusManager.RequestFocus` return `void`, as Dart's do.
-- Added `SemanticsActions.DidGain`/`DidLoseAccessibilityFocus` and the Windows slider handler (`slider.dart`).
-- A user-action-blocked node now keeps its accessibility-focus actions, as Dart's `_kUnblockedUserActions` does.
-- Breaking: `FocusManager` applies focus changes on a microtask instead of synchronously (`focus_manager.dart`).
-- `PipelineOwner.FlushLayout` drains the microtask queue when the pipeline is driven outside a frame.
-- Breaking: `ClipRect`/`ClipRRect` derive from `RenderCustomClip<T>`; `ClipRect(clipRect:)` goes (`proxy_box.dart`).
-- Breaking: `ClipRRect` gained `clipper`/`clipBehavior`/`BorderRadiusGeometry`/`textDirection` (`proxy_box.dart`).
-- Breaking: `MaterialLocalizations` declares its resources abstract; the US English values move to the default.
-- Breaking: `DefaultMaterialLocalizations.Delegate` supports `en` alone and always reports `englishLike`.
-- Added `WillPopScope`, `ModalRoute`'s scoped will-pop callbacks and `Form.OnWillPop` (`will_pop_scope.dart`).
-- Added `ViewConfiguration`, `RenderView.Configuration`/`FlutterView`/`DebugFillProperties` (`rendering/view.dart`).
-- Added `BoxConstraints`'s `*`, `/` and `%` operators plus `TruncatingDivide` (`box.dart`).
-- `WidgetsApp` now installs Flutter's app-level `FocusTraversalGroup` (`app.dart`).
-- Breaking: `Theme` no longer installs a `DefaultTextStyle`; the button restores `AnimatedTheme` (`theme.dart`).
-- Breaking: a `SemanticsRole` no longer folds into `SemanticsFlags`; `SemanticsFlags.IsDialog`/`IsAlertDialog` go.
-- Added `SemanticsRole.TabBar`/`Tab` to `NavigationBar` and `button: true` to popup menu items (`popup_menu.dart`).
-- `DataTable`'s column-header role moved inside the ink well: a sortable header is one node (`data_table.dart`).
-- Added `MouseCursor.Uncontrolled` and the menu's `_MouseCursor` wrapper (`mouse_cursor.dart`, `menu_anchor.dart`).
-- Added `DebugFillProperties` to `MenuStyle`, the menu themes, `InputDecorationThemeData` and the selection theme.
-- `ColorProperty` now spells colours the way dart:ui's `Color.toString` does, not Avalonia's `#AARRGGBB`.
-- Added `RenderObject.Reassemble` overrides re-arming the overflow report (`debug_overflow_indicator.dart`).
-- `GestureDetector`'s and `AutofillScope`'s contract checks are gated on `Constants.KDebugMode`, as Dart's are.
-- Tests are green under `-c Profile`/`-c Release`: assert-only cases carry `[DebugOnlyFact]` plus build-mode gates.
-- Breaking: overlay children are adopted outside the theater's child list and ordered per entry (`overlay.dart`).
-- Breaking: `RenderOverlayTheater` takes `SkipCount`; an `OverlayEntry` builds under a `Builder` (`overlay.dart`).
-- Breaking: `CheckboxListTile`/`SwitchListTile` are strict ports; `mouseCursor` goes to the control, not the tile.
-- Breaking: `CheckboxListTile`/`SwitchListTile` drop their extra `Semantics` wrapper and take `EdgeInsetsGeometry`.
-- Breaking: `CheckboxListTile.CheckboxShape` and `Checkbox.Shape` are `OutlinedBorder?` (`checkbox_list_tile.dart`).
-- Added `SwitchListTile`'s thumb images, `DragStartBehavior` and `ApplyCupertinoTheme` (`switch_list_tile.dart`).
-- Breaking: `RadioListTile` no longer passes `mouseCursor` to its `ListTile` (`radio_list_tile.dart`).
-- Added `RenderingDebug`, the render-layer debug flag surface, and wired every consumer (`rendering/debug.dart`).
-- Added `RenderBox.DebugPaintSize`/`DebugPaintBaselines`/`DebugPaintPointers`/`DebugHandleEvent` (`box.dart`).
-- Added `RenderRepaintBoundary`'s symmetric/asymmetric paint metrics and usefulness diagnosis (`proxy_box.dart`).
-- Added `HSVColor` (`painting/colors.dart`) and `PaintUtilities.PaintZigZag` (`painting/paint_utilities.dart`).
-- Added `SliverConstraints.NormalizedGrowthDirection` and `RenderView.ComputeDryLayout` (`sliver.dart`, `view.dart`).
-- Breaking: `OverlayPortal`'s overlay child is a deferred-layout box laid out after its anchor (`overlay.dart`).
-- Added `RenderObjectWithLayoutCallbackMixin`'s `ScheduleLayoutCallback`/`RunLayoutCallback` pair (`object.dart`).
-- Breaking: `LayoutBuilder`/`SliverLayoutBuilder` rebuild even when an ancestor skips laying them out.
-- Added `Scheduler.EnsureVisualUpdate`, so a re-dirty inside a frame no longer asks for another one (`binding.dart`).
-- Breaking: `FocusNode` is a real parent/child tree with `FocusAttachment` and ancestors (`focus_manager.dart`).
-- Breaking: `FocusManager` gained `_markedForFocus`/dirty-node batching, autofocus queue, early/late key handlers.
-- Breaking: `FocusNode.Unfocus` takes an `UnfocusDisposition` and hands focus to the enclosing scope, not to null.
-- Breaking: `Focus`/`FocusScope` are the Dart widget pair (`ParentNode`, nullable config, `_FocusInheritedScope`).
-- Breaking: `ExcludeFocus` is a `StatelessWidget` over `Focus`, and `FocusScopeMarker`/`FocusDescendantsScope` are gone.
-- Added `DirectionalFocusTraversalPolicy`, `OrderedTraversalPolicy`, `FocusOrder` and `FocusTraversalOrder`.
-- Breaking: traversal moved out of `FocusManager` into `FocusTraversalPolicy` (`focus_traversal.dart`).
-- Added `FocusManager`'s app-lifecycle focus suspension and `Scrollable.MaybeOf(context, axis)` (`focus_manager.dart`).
-- Breaking: `AnimationStyle` gains `CopyWith`/`Merge`/`Lerp`; `NoAnimation` drops its curves (`animation_style.dart`).
-- Breaking: `IndexedStack` wraps children in `VisibilityScope` + `ExcludeFocus` (`indexed_stack.dart`).
-- Breaking: added `AnimatedCrossFade.ClipBehavior`, default `Clip.HardEdge` (`animated_cross_fade.dart`).
-- Added `FlutterAction.Overridable`, `CallingAction` and `SelectableRegion`'s non-override actions (`actions.dart`).
-- Added `ImageStreamListener.ReportErrors` and the completer's error-report suppression (`image_stream.dart`).
-- Added `Scheduler.ScheduleFrameCallback`/`CancelFrameCallbackWithId` and `BuildContext.Mounted` (`binding.dart`).
-- Added `ImageIcon.UseOriginalColors` and `RenderParagraph.DevicePixelRatio`, fed by `RichText` (`image_icon.dart`).
-- Breaking: `ShapeBorder.Lerp`/`OutlinedBorder.Lerp` try the reversed timeline before snapping (`borders.dart`).
-- Fixed `EdgeDraggingAutoScroller`, the stretch indicator's acceptance reset, the separated `AnimatedList` tail check.
-- Fixed `SliverResizingHeader` semantics, `TickerMode.GetValuesNotifier`, `RenderTable`'s row bound, spell-check.
-- Breaking: `PipelineOwner.SemanticsOwner` is nullable and created on demand (`object.dart`).
-- Breaking: every `PipelineOwner` flush phase recurses into child owners after its own nodes (`object.dart`).
-- Added the `PipelineOwner` tree: `AdoptChild`/`DropChild`/`VisitChildren`/`Attach`/`Detach`/`Dispose` (`object.dart`).
-- Added `PipelineManifold`, `HostPipelineManifold` and `PipelineOwner.EnsureSemantics` (`object.dart`).
-- Added `SemanticsHandle` (`semantics/binding.dart`) and `PipelineOwner.RootNode` with Dart's detach/attach setter.
-- Breaking: diagnostics elide their debug bodies in profile/release builds (`diagnostics.dart`, `object.dart`).
-- Added a `Profile` build configuration that defines `PROFILE`, so `Constants.KProfileMode` is reachable.
-- Breaking: `Diagnostics.ObjectRuntimeType` takes Dart's required `optimizedValue` argument (`object.dart`).
-- Breaking: element deactivation preserves its render subtree and enforces strict attachment (`framework.dart`).
-- Breaking: `RenderObject.Layout` reports a `PerformResize`/`PerformLayout` failure instead of throwing (`object.dart`).
-- Breaking: `PipelineOwner` relayouts only dirty relayout boundaries; the descendant dirty channel is gone.
-- Breaking: `MarkNeedsPaint`/`MarkNeedsCompositedLayerUpdate` are public and skip the parentless non-boundary root.
-- Breaking: `DropChild` detaches and clears the child's parent data and relayout-boundary state (`object.dart`).
-- Breaking: `Attach`/`Detach` recurse into children, and `RedepthChildren` walks them by default (`object.dart`).
-- Breaking: `GetTransformTo` accepts any render object in the tree, resolving through the common ancestor.
-- Added `LayoutWithoutResize`, `ScheduleInitialLayout`, `DebugResetSize` and `DebugAssertDoesMeetConstraints`.
-- Added `RenderObject`'s mutation-during-layout diagnostics, `_reportException` and the `debugNeeds*` getters.
-- Added `PaintingContext.RepaintCompositedChild`/`UpdateLayerProperties`/`AddLayer`/`AppendLayer`/`EstimatedBounds`.
-- Added `BoxConstraints.DebugAssertIsValid`, `ContainerRenderObjectMixin.RemoveAll` and `DiagnosticsDebugCreator`.
-- Added `PipelineOwner.RequestVisualUpdate` and the layout-callback dirty-node merge (`object.dart`).
-- Breaking: `Semantics` pushes its properties as one batch, so callbacks land before the config is re-collected.
-- Fixed `RenderAnimatedSize` re-dirtying itself from its own `PerformLayout` (`animated_size.dart`).
-- Breaking: `SizedByParent`/`PerformResize` are overridable; `RenderBox` resizes from `ComputeDryLayout` (`box.dart`).
-- Breaking: viewport, list wheel viewport, offstage, constrained overflow box and both sliders are sized by parent.
-- Added the size/geometry setter phase checks and `MarkNeedsLayoutForSizedByParentChange` (`box.dart`, `sliver.dart`).
-- Breaking: `Element.UpdateChild` is virtual; `ListWheelElement` overrides it (`list_wheel_scroll_view.dart`).
-- Added `RenderOffstage`'s offstage intrinsics/baselines and `PaintsChild`, and the overflow box's dry baseline.
-- Added CLR async-runtime elision to `FlutterError.DefaultStackFilter` (`foundation/assertions.dart`).
-- Breaking: render objects release retained layers on unmount; layers use handle ownership (`object.dart`, `layer.dart`).
-- Breaking: tap/force details use Dart-shaped diagnostic reference classes (`tap.dart`, `force_press.dart`).
-- Breaking: `GestureDetector`/`RawGestureDetector` are a strict port; `RawGestureDetector` takes only `gestures:`.
-- Added `GestureDetector`'s long-press matrix, force press, drag down/cancel and `supportedDevices`.
-- Added `SemanticsGestureDelegate` and `RawGestureDetectorState.ReplaceGestureRecognizers` (`gesture_detector.dart`).
-- Breaking: `ScrollableState.SetCanDrag` swaps a recognizer map through the detector, replacing `SetDragEnabled`.
-- Added `ForcePressGestureRecognizer` with `ForcePressDetails` and pressure interpolation (`gestures/force_press.dart`).
-- Added `PointerEvent.Pressure`/`PressureMin`/`PressureMax` and `Offset.DistanceSquared` (`gestures/events.dart`).
-- Added `RenderSemanticsGestureHandler.Behavior` and `PipelineOwner.DebugDoingLayout` (`proxy_box.dart`, `object.dart`).
-- Breaking: `State` is a `Diagnosticable`; `GlobalObjectKey.ToString` describes its value's identity (`framework.dart`).
-- Breaking: `Listener` moved to `Widgets/Listener.cs` and `MultitouchDragStrategy` is only `Plumix.Gestures`'.
-- Breaking: the long-press demo surface uses `GestureDetector` in both samples.
-- Added `HitTestResult`'s transform stack (`PushTransform`/`PushOffset`/`PopTransform`, `Wrap`) (`hit_test.dart`).
-- Breaking: `HitTestEntry.Transform` is filled during hit testing and `GestureBinding` dispatches `Transformed` events.
-- Breaking: `BoxHitTestEntry.LocalPosition` is the hit position; `HitTestEntry.TransformEvent` is gone (`box.dart`).
-- Added `BoxHitTestResult.AddWithOutOfBandPosition`; every `HitTestChildren` now pushes its offset (`box.dart`).
-- Breaking: `ToggleButtons` hit tests through `MatrixUtils.ForceToPoint`, as Dart does (`toggle_buttons.dart`).
-- Added `ScaleGestureRecognizer` with `Scale{Start,Update,End}Details` and pan/zoom aggregation (`gestures/scale.dart`).
-- Added `GestureDetector` `OnScale*` and the trackpad scroll-to-scale options (`widgets/gesture_detector.dart`).
-- Breaking: `OneSequenceGestureRecognizer.AddAllowedPointer` routes with the event's transform (`recognizer.dart`).
-- Added a pinch/zoom/rotate section to the gesture recognizer demo page in both samples.
-- Added `PointerPanZoom{Start,Update,End}Event` with pan/scale/rotation and local mapping (`gestures/events.dart`).
-- Added `GestureRecognizer.AddPointerPanZoom`/`AddAllowedPointerPanZoom`/`IsPointerPanZoomAllowed` (`recognizer.dart`).
-- Added the `DragGestureRecognizer` trackpad pan/zoom arms and pan-space velocity tracking (`gestures/monodrag.dart`).
-- Added `Listener`/`RenderPointerListener` pan/zoom callbacks and the binding's routing arms (`gestures/binding.dart`).
-- Breaking: `PointerDown`/`Move`/`Up`/`CancelEvent` reject `PointerDeviceKind.Trackpad`, as Dart does (`events.dart`).
-- Added `TrackpadPanZoomSynthesizer`, which rebuilds the gesture phase Avalonia's trackpad events omit.
-- Added a trackpad pan/zoom demo page to both samples.
-- Breaking: `DragGestureRecognizer` is a strict `OneSequenceGestureRecognizer` port (`gestures/monodrag.dart`).
-- Breaking: drags accept on accumulated global distance vs `computeHitSlop`/`computePanSlop`, not one 18 px slop.
-- Added `MultitouchDragStrategy` with the latest-pointer, sum-all and average-boundary strategies (`monodrag.dart`).
-- Breaking: `DragUpdateDetails.PrimaryDelta`/`DragEndDetails.PrimaryVelocity` are `double?`; a pan reports null.
-- Breaking: `LongPressGestureRecognizer` is a strict `PrimaryPointerGestureRecognizer` port (`long_press.dart`).
-- Added the secondary/tertiary long-press callback sets plus `LongPressDownDetails` and cancel (`long_press.dart`).
-- Breaking: `GestureRecognizer.InvokeCallback` reports a throwing callback via `FlutterError` instead of rethrowing.
-- Breaking: the gesture arena defers the last-member-standing win the way Dart's microtask does (`gestures/arena.dart`).
-- Added `PointerRouter` per-route transforms, reentrancy rules and error reporting (`gestures/pointer_router.dart`).
-- Added `PointerEvent.Transform`/`Transformed`/`Synthesized` and `GestureDebug` flags (`events.dart`, `debug.dart`).
-- Added a drag/long-press recognizer demo page to both samples.
-- Breaking: `SemanticsOwner` drains an incremental dirty set into a `SemanticsUpdate` (`semantics/semantics.dart`).
-- Added semantics traversal grafting via `traversalParentIdentifier`/`traversalChildIdentifier` (`semantics/semantics.dart`).
-- Added `PlumixHost.SemanticsUpdateProduced`, the per-frame changed-node feed for accessibility bridges.
-- Breaking: `SemanticsActions.CustomAction` carries custom actions; `CustomSemanticsAction` gained the id registry.
-- Breaking: custom-action dispatch walks merged descendants by action id (`semantics/semantics.dart`).
-- Added `SemanticsOwner.GetSemanticsNode`/`PerformActionAt`/`GetRectOfSemanticsNode` and action listeners.
-- Added `AccessibilityFocusBlockType` on `Semantics`, with subtree propagation and focus clearing (`object.dart`).
-- Added `RenderTapRegionSurface` semantics tap/long-press handling and `GetRectOfSemanticsNodeInViewCoordinates`.
-- Added `RenderObjectSemantics` diagnostics and `PipelineOwner.DebugDumpRenderObjectSemanticsTree` (`object.dart`).
-- Closed build-time dropdown route disposal and overlay timing (`navigator.dart`, `overlay.dart`, `dropdown.dart`).
-- Breaking: `WidgetsLocalizations` labels are abstract; the default is US-English LTR (`widgets/localizations.dart`).
-- Added complete `ThemeData` diagnostics and compact debug strings (`theme_data.dart`).
-- Breaking: flex checks and overflow labels follow Dart build modes (`rendering/flex.dart`, `widgets/basic.dart`).
-- Breaking: `SliverGeometry` matches Dart defaults, visibility, hit testing and corrections (`rendering/sliver.dart`).
-- Breaking: layout stops dirtying compositing; `RenderOpacity` uses alpha-driven boundaries (`rendering/object.dart`).
-- Added `FlutterError`/`FlutterErrorDetails`/`ErrorSummary`/`ErrorHint`/`DiagnosticsStackTrace` (`foundation/assertions.dart`).
-- Added `AssertionError`, `StackFrame`, `PartialStackFrame`, `RepetitiveStackFrameFilter` (`foundation/stack_frame.dart`).
-- Added `Print.DebugPrint`/`DebugPrintThrottled`/`DebugPrintSynchronously`/`DebugWordWrap` (`foundation/print.dart`).
-- Added `Constants.KDebugMode`/`KReleaseMode`/`KProfileMode`/`KIsWeb`/`KIsWasm` (`foundation/constants.dart`).
-- Breaking: a flex/constraints-transform overflow reports through `FlutterError.ReportError` once per render object.
-- Breaking: `RenderFlex` paints the overflow indicator only in debug builds, as Dart's `assert`-wrapped call does.
-- Breaking: dropped `TextInput.OnError`, `ServicesDebug.OnError`, `KeyboardDebug.DebugPrint`/`OnError` for `FlutterError`.
-- Breaking: `DiagnosticsBlock` is no longer sealed and `DiagnosticsNode.ToString(config, minLevel)` is virtual.
-- Breaking: `RenderObject` is a `DiagnosticableTree`; the render tree is dumpable (`rendering/object.dart`).
-- Added `debugFillProperties`/`debugDescribeChildren` across `rendering/`: render objects, layers, parent data.
-- Added `RenderFlex`/`RenderConstraintsTransformBox` ` OVERFLOWING` headers and `SliverGeometry` diagnostics.
-- Breaking: `RenderObject._needsCompositingBitsUpdate` starts `false`, as Dart's does, not `true`.
-- Added `ColorProperty` (`painting/colors.dart`) and `TransformProperty` (`painting/matrix_utils.dart`).
-- Added `Decoration`/`BoxDecoration`/`ShapeDecoration` and `InlineSpan`/`TextSpan`/`PlaceholderSpan` diagnostics.
-- Added `RenderViewportBase.IndexOfFirstChild`/`LabelForChildAt` and `PipelineOwner.DebugDumpRenderTree`.
-- Breaking: strict `RenderFlex` port; the marker drops `(reference) (approximate)` (`rendering/flex.dart`).
-- Breaking: `RenderFlex` asserts Flutter's `textDirection` requirements; a `Row` needs an ambient `Directionality`.
-- Breaking: `RenderFlex` throws Flutter's unbounded-flex error from layout and dry layout, not only dry layout.
-- Breaking: `CrossAxisAlignment.Stretch` tightens the cross axis even under unbounded cross constraints.
-- Added `RenderFlex.ClipBehavior`/`Flex.ClipBehavior`, `DescribeApproximatePaintClip` and the baseline overrides.
-- Breaking: `MainAxisAlignment`/`CrossAxisAlignment` members follow Dart's declaration order.
-- Breaking: `Flex` resolves the ambient `Directionality` only when Dart's `_needTextDirection` is true.
-- Breaking: `Flex` throws when `CrossAxisAlignment.Baseline` is used without a `textBaseline`.
-- `PaintingContext.PushClipRect` paints directly for `Clip.None` instead of pushing a no-op clip layer.
-- Added `RenderBoxContainerDefaultsMixin.DefaultComputeDistanceToFirst/HighestActualBaseline` (`rendering/box.dart`).
-- Breaking: strict `ThemeData` port; the marker drops `(reference) (approximate)` (`theme_data.dart`).
-- Breaking: `visualDensity`/`materialTapTargetSize` default per platform — compact + shrinkWrap on desktop.
-- Breaking: `VisualDensity.Comfortable` is `(-1, -1)`, not `(0, -1)`; densities outside [-4, 4] now throw.
-- Breaking: `VisualDensity.Lerp` no longer clamps `t`; ctor args are lowercase (`horizontal:`/`vertical:`).
-- Added `VisualDensity.MinimumDensity`/`MaximumDensity`/`AdaptivePlatformDensity`/`DefaultDensityForPlatform`.
-- Breaking: `ThemeData.Brightness` is derived from `ColorScheme`, not stored; use `CopyWith(brightness:)` to change it.
-- Breaking: dropped the 20 C#-only `ThemeData` colour mirrors and the five `*ButtonStyle` slots; read `ColorScheme`.
-- Added `ThemeData.SecondaryHeaderColor`, `DialogBackgroundColor`, `IndicatorColor` and the `buttonTheme` default.
-- Added `ThemeData.From`, `ThemeData.Fallback` and `ThemeData.CopyWith` (`theme_data.dart`).
-- Breaking: component themes resolve eagerly, so an explicitly-default component theme now equals an implicit one.
-- `ThemeData.Localize` uses Dart's size-5 FIFO cache keyed on input identity (`_FifoCache`).
-- `ThemeData.Platform` honours `PlatformDefaults.DebugTargetPlatformOverride`; added `DebugDefaultTargetPlatform`.
-- Breaking: strict `BottomNavigationBar` port over Dart's tile/label/bar/painter split (`bottom_navigation_bar.dart`).
-- Breaking: `BottomNavigationBar` gains `fixedColor`, `mouseCursor`, `enableFeedback`, `landscapeLayout`,
-  `useLegacyColorScheme`.
-- Breaking: `BottomNavigationBarThemeData` gains feedback/landscape/cursor fields (`bottom_navigation_bar_theme.dart`).
-- Added `MaterialConstants.BottomNavigationBarHeight` (`constants.dart`).
-- Breaking: strict tap port — `BaseTap` over `PrimaryPointerGestureRecognizer`, deferred tap-down (`tap.dart`).
-- Added `DoubleTap`/`MultiTap`/`SerialTap` recognizers (`multitap.dart`) and arena `Hold`/`Release` (`arena.dart`).
-- Added `PointerSignalResolver` + inertia-cancel event; wheels resolve to the innermost scrollable (`scrollable.dart`).
-- Breaking: tap callbacks take `TapDownDetails`/`TapUpDetails`; tertiary + double-tap trios (`gesture_detector.dart`).
-- Fixed the C#-only click-to-focus adaptation so the deepest `Focus` under a press wins instead of the shallowest.
-- Breaking: a drag starts as soon as it wins the arena; `OnlyAcceptDragOnThreshold` gates the slop (`monodrag.dart`).
-- Breaking: `GestureDetector.Behavior` is nullable, defaulting to translucent without a child (`gesture_detector.dart`).
-- Breaking: the bottom sheet drags through a threshold-gated `RawGestureDetector` (`bottom_sheet.dart`).
-- Breaking: `ColoredBox` is opaque-hit-testable and adds `isAntiAlias`; zero-size paint matches Dart (`basic.dart`).
-- Breaking: `Switch` drops the C#-only `semanticLabel`; label it with `Semantics`, as Dart does (`switch.dart`).
-- Added ancestor-aware `RenderObject.SendSemanticsEvent`; merged toggle events use their owning node (`object.dart`).
-- Breaking: strict `Switch` port — stateless `Switch` over `_MaterialSwitch` + `_SwitchPainter` (`switch.dart`).
-- Breaking: `Switch.adaptive` no longer builds a `CupertinoSwitch`; it keeps the Material stack with Cupertino config.
-- Breaking: M2/M3/Cupertino `_SwitchConfig` + defaults replace the C#-only `SwitchConfig` record and colour helpers.
-- Removed `MaterialButtonCore`; the `Switch` was its last consumer (`toggleable.dart` drives the switch now).
-- Added `Adaptation<T>` and `ThemeData.Adaptations`/`GetAdaptation<T>()` (`theme_data.dart`).
-- Breaking: `ToggleablePainter` owns Dart's colour/state properties; the five painters stop redeclaring them.
-- Breaking: `ToggleablePainter.PaintRadialReaction` follows Dart: dismissed-animation early-out, flag-driven radius.
-- Added `AnimationStatus.IsDismissed()` (`animation.dart`).
-- Breaking: `RawMaterialButton` builds Dart's `Semantics`/`_InputPadding`/`Material`/`InkWell` stack (`button.dart`).
-- Breaking: `RawMaterialButton.shape` is a `ShapeBorder`, defaulting to `RoundedRectangleBorder()`, not a radius.
-- Added `MaterialStateMixin` as an abstract `State` base, since C# has no mixins (`material_state_mixin.dart`).
-- Breaking: `FloatingActionButton` composes `RawMaterialButton` and merges `iconSize` into its icon theme.
-- Breaking: M3 `IconButton` builds `_SelectableIconButton` over `_IconButtonM3 : ButtonStyleButton` (`icon_button`).
-- Breaking: `IconButton.styleFrom` drops the C#-only `splashColor`, which Dart's signature does not have.
-- Breaking: `RawChip` builds `Material` + `InkWell` + `Ink` + `_ChipRedirectingHitDetectionWidget` (`chip.dart`).
-- Breaking: a chip reports selection through `Semantics.selected`, never `checked`, as Dart does off the web.
-- Breaking: `NavigationBar` puts its destinations in a `Material` over `_IndicatorInkWell` (`navigation_bar.dart`).
-- Breaking: `NavigationDrawer`/`NavigationRail` destinations build `InkWell`/`InkResponse` (`navigation_rail.dart`).
-- Breaking: a `NavigationDrawerDestination.backgroundColor` paints through `Ink`, not a `DecoratedBox`.
-- Breaking: `ToggleButtons` builds Dart's `TextButton` per button (`toggle_buttons.dart`).
-- Breaking: removed the C#-only `ButtonStyle.splashColor`; `InkResponse` derives the splash from `overlayColor`.
-- Removed `RenderButtonTapTargetPadding`; the remaining consumer uses `_InputPadding` (`button_style_button.dart`).
-- Added `Color.WithOpacity` in `Plumix.Painting`; `MaterialButtonCore`'s colour/padding/style helpers are gone.
-- Breaking: strict `Hero` port — `HeroController` observer, `_HeroFlight` per tag, overlay entries (`heroes.dart`).
-- Breaking: flights ride the route's own animation; the C#-only navigator flight engine and its controller are gone.
-- Breaking: `HeroControllerScope` carries a `HeroController`; `Navigator` picks it up and wraps its subtree in `.None`.
-- Breaking: `MaterialApp`/`CupertinoApp` install the controller through that scope; Material's arcs heroes (`app.dart`).
-- Breaking: `Hero` gains Dart's `curve`/`reverseCurve`; its placeholder is `SizedBox` + `Offstage` + `TickerMode`.
-- Breaking: duplicate hero tags now throw when a flight forms, not when the route subtree builds (`Hero._allHeroesFor`).
-- Breaking: removed `TransitionRoute.Suspend`/`RestoreEntryOpacityForFlight` and the navigator's deferred-disposal set.
-- Added `MaterialPointArcTween`/`MaterialRectArcTween`/`MaterialRectCenterArcTween` (`arc.dart`).
-- Added `ReverseTween<T>`, `EdgeInsetsTween`, `ModalRoute.SubtreeContext`; `RectTween` unsealed with virtual endpoints.
-- Breaking: strict `ButtonStyleButton` port — `Material` + `InkWell`, `_InputPadding` (`button_style_button.dart`).
-- Breaking: the four Material buttons extend it, with Dart's constructors, `.icon`/`.tonal` factories and defaults.
-- Breaking: they drop the C#-only `foregroundColor`/`backgroundColor`/`padding`/`borderRadius`/`min*` shortcuts.
-- Breaking: `ButtonStyle` takes Dart's field order; `Padding` is now an `EdgeInsetsGeometry` (`button_style.dart`).
-- Breaking: `ButtonStyle.Lerp` no longer clamps `t`; `Side` fades through Dart's `WidgetStateBorderSide.lerp`.
-- Breaking: `styleFrom(shape:)` takes an `OutlinedBorder`; `styleFrom` matches Dart's overlay/elevation tables.
-- Breaking: Elevated/Filled/Outlined `styleFrom(iconColor:)` resolves null when disabled, so the default wins.
-- Breaking: a resolved `ButtonStyle.textStyle` reaches `Material` whole; the default's weight is not merged in.
-- Breaking: disabling a pressed button adds `disabled` before clearing `pressed`, as `_ButtonStyleState` does.
-- Added `ButtonStyle.CopyWith`/`DebugFillProperties` and the five `*ButtonThemeData.DebugFillProperties`.
-- Split `Buttons.cs`/`ButtonThemes.cs` per Dart file; `MaterialButtonCore` is flagged C#-only infrastructure.
-- Breaking: full 8,825-icon `Icons` catalog + `Icons.Adaptive` generated from the pin (`icons.dart`).
-- Breaking: Material icons carry Dart's `FontFamily: "MaterialIcons"`; `Icons.MaterialIconsFontFamily` is gone.
-- Breaking: corrected drifted hand-written code points (`Edit`, `Search`, `Visibility`, `ChevronLeft`, ...).
-- `IconFontRegistry.Register` accepts a null package, matching Dart's unqualified `fontPackage` (`icon_data.dart`).
-- Added `scripts/generate_material_icons.py`; it re-vendors the pinned font and checks glyph coverage.
-- Breaking: `Slider` semantics moved onto its render object — value/increase/decrease/focus (`slider.dart`).
-- Breaking: removed the C#-only `Slider.semanticLabel`; the semantics label now comes from `Slider.label`, as in Dart.
-- Breaking: `RangeSlider` drops `focusNode`/`autofocus` for per-thumb focus nodes (`range_slider.dart`).
-- Breaking: `RangeSlider` has no keyboard adjustment (Dart has none); Tab moves focus between thumbs, taps focus one.
-- Breaking: `RangeSlider` emits one semantics node per thumb with per-thumb rects and RTL swap (`range_slider.dart`).
-- Breaking: `RangeSlider` steps by `0.05` on macOS, not `Slider`'s `0.1` (`range_slider.dart`).
-- Added `SemanticsConfiguration.IsSlider`/`IsEnabled`/`IsFocused`/`OnIncrease`/`OnDecrease`/`OnFocus`.
-- Breaking: removed the C#-only `Widgets.Scrollbar` wrapper, `ScrollbarInteractionState` and the overlay render object.
-- Breaking: strict `RawScrollbar` interaction port — `CustomPaint` + thumb/track recognizers (`scrollbar.dart`).
-- Breaking: `RawScrollbar` drops the C#-only resolver/overlay API; subclasses override `UpdateScrollbarPainter`.
-- Breaking: `ScrollbarPainter.GetTrackToScroll` maps a track *delta*; added `GetThumbScrollOffset`/`ThumbOffset`.
-- Breaking: scrollbar track taps page by `0.8 * viewportDimension`; the thumb drags from pointer-down.
-- Breaking: strict Material/Cupertino scrollbar states — `WidgetState` painter resolution, Dart haptics.
-- Unsealed `TapGestureRecognizer` and the drag recognizers; `DragEndDetails` carries global/local positions.
-- Breaking: strict `Scaffold` port — `Material` root, `restorationId`, dismissed-sheet stack (`scaffold.dart`).
-- Breaking: `Scaffold.Of`/`MaybeOf` no longer register a dependency; `_ScaffoldScope` carries only `hasDrawer`.
-- Breaking: `PersistentBottomSheetController` extends `ScaffoldFeatureController`; `StandardBottomSheet` is public.
-- Breaking: strict `AppBar` port in its own `AppBar.cs` — toolbar container, title box, M2/M3 defaults (`app_bar.dart`).
-- Breaking: `AppBar` drops the non-Dart `titleText`/`padding`; `bottom` is `IPreferredSizeWidget?`; `Bottom`/`SliverAppBar.Bottom` follow.
-- Breaking: `Scaffold.body` is optional and `Scaffold.appBar` takes any `IPreferredSizeWidget` (`scaffold.dart`).
-- Added `ScaffoldState.HasAppBar`/`AppBarMaxHeight`, `Scaffold.HasDrawerOf`, and `AppBar.PreferredAppBarSize`.
-- Added `SystemUiOverlayStyle.StatusBarBrightness`, which the app bar derives from its background (`system_chrome.dart`).
-- `CupertinoPicker.HandleChildTap` guards its post-animation continuation on `Mounted` (`picker.dart`).
-- Breaking: ported `GlobalMaterialLocalizations` with all 119 locale bundles (`global_material_localizations.dart`).
-- Breaking: `MaterialLocalizations` matches Dart's member set — 1-based `TabLabel`, `TimePickerHourLabel`.
-- Added `DateFormat.Parse`/`ParseStrict` and `NumberFormat(pattern, locale)` to the intl subset (`date_format.dart`).
-- Breaking: Material `Theme` installs a `MaterialBasedCupertinoThemeData`; added `ThemeData.CupertinoOverrideTheme`.
-- Material `Theme.Of` falls back to `CupertinoBasedMaterialThemeData` under a bare `CupertinoTheme` (`theme.dart`).
-- Ported `GlobalCupertinoLocalizations` with all 116 generated locale bundles (`global_cupertino_localizations.dart`).
-- Ported `GlobalWidgetsLocalizations` and its locale bundles (`flutter_localizations/widgets_localizations.dart`).
-- Added a pinned `package:intl` subset (`DateFormat`, `NumberFormat`, plural rules, CLDR data) under `Foundation/Intl`.
-- Breaking: `WidgetsLocalizations` gained toolbar labels; unselected radio reads `Not selected` (`localizations.dart`).
-- Breaking: re-ported `CupertinoTextSelectionToolbar` — chevron paging, fade, arrow clip (`text_selection_toolbar`).
-- Breaking: strict Cupertino selection-toolbar buttons and desktop surface (`desktop_text_selection_toolbar.dart`).
-- Added `Container.ClipBehavior`, `MediaQuery.DevicePixelRatioOf` and a shared core `ToolbarItemsParentData`.
-- Breaking: strict `CupertinoMagnifier` port — elliptical rim, themed border, curved in/out (`magnifier.dart`).
-- Magnifier lens and `BorderRadiusGeometry.Resolve` keep elliptical per-corner radii; added `BorderRadius.All`.
-- Breaking: re-ported `CupertinoScrollbar` on `RawScrollbar`; track rect spans the padded viewport (`scrollbar.dart`).
-- Breaking: re-ported `CupertinoSlider` strictly — dynamic colors, drag recognizer, track animation (`slider.dart`).
-- Ported `CupertinoActionSheet`/`CupertinoActionSheetAction` with cancel button and slide-to-select (`dialog.dart`).
-- Breaking: re-ported `CupertinoButton` strictly — size styles, tinted/filled, focus ring, tap-move slop (`button.dart`).
-- Breaking: re-ported `CupertinoRadio` strictly — `RawRadio`-backed, painter-drawn, no `isDark`/`tapTargetSize` (`radio.dart`).
-- Breaking: re-ported `CupertinoCheckbox` strictly — painter-drawn, `fillColor`, stateful side, no `isDark` (`checkbox.dart`).
-- Breaking: `WidgetStateBorderSide`/`WidgetStateMouseCursor` moved to core with set-based `Resolve` (`widget_state.dart`).
-- Breaking: re-ported `CupertinoActivityIndicator` strictly (no `isDark`) and added `CupertinoLinearActivityIndicator` (`activity_indicator.dart`).
-- Ported `CupertinoNavigationBar`/`CupertinoSliverNavigationBar` with search, bottoms and hero transitions (`nav_bar.dart`).
-- Breaking: `HeroFlightShuttleBuilder` now takes Flutter's `(flightContext, animation, direction, from, to)` (`heroes.dart`).
-- Ported `CupertinoMenuAnchor` with menu items, dividers, swipe and long-press opening (`menu_anchor.dart`).
-- Ported the `MultiDragGestureRecognizer` family with pending-delta and velocity semantics (`multidrag.dart`).
-- Breaking: `RawMenuAnchor` forwards every close request to `onCloseRequested` (`raw_menu_anchor.dart`).
-- Added `WidgetsBinding.AccessibilityFeatures` observer plumbing and `TickerFuture.WhenComplete`.
-- Ported `CupertinoDatePicker` and `CupertinoTimerPicker` with bounded wheel correction (`date_picker.dart`).
-- Ported `CupertinoContextMenu` and action rows with overlay flight and drag dismissal (`context_menu*.dart`).
-- Ported `CupertinoSearchTextField` with collapse fading and accessibility icon scaling (`search_field.dart`).
-- Ported `CupertinoTextFormFieldRow` with controller, validation and restoration lifecycle (`text_form_field_row.dart`).
-- Breaking: ported `CupertinoTextField` and aligned editable cursor/length behavior (`text_field.dart`).
-- Ported Cupertino sheet routes, drag/scroll handoff and painted system-overlay sampling (`sheet.dart`).
-- Ported `CupertinoSegmentedControl` and exact rounded-superellipse paths (`segmented_control.dart`).
-- Ported `CupertinoSlidingSegmentedControl` with gesture-team drag and spring thumb (`sliding_segmented_control.dart`).
-- Ported `CupertinoSliverRefreshControl` with held sliver geometry and native states (`refresh.dart`).
-- Ported `CupertinoPicker` and its selection overlay (`picker.dart`).
-- Breaking: ported Cupertino switch/thumb painter; rewired `Switch.Adaptive` (`switch.dart`, `thumb_painter.dart`).
-- Ported `CupertinoFormRow` and `CupertinoFormSection` (`form_row.dart`, `form_section.dart`).
-- Ported `CupertinoListSection` with base/inset groups and rounded-superellipse clipping (`list_section.dart`).
-- Breaking: ported `CupertinoTabScaffold` with restoration and retained per-tab focus (`tab_scaffold.dart`).
-- Breaking: ported Cupertino mobile/desktop text-selection controls (`text_selection.dart`,
-  `desktop_text_selection.dart`).
-- Ported `CupertinoListTile` and `CupertinoExpansionTile` (`list_tile.dart`, `expansion_tile.dart`).
-- Ported `CupertinoTabView` with independent named-route history and active-tab back handling (`tab_view.dart`).
-- Fixed `Navigator` restorable named-route history across restart with null-safe page-group keys (`navigator.dart`).
-- Breaking: ported `CupertinoTabBar`; moved `BottomNavigationBarItem` into core (`bottom_tab_bar.dart`).
-- Ported `CupertinoFocusHalo` with descendant focus and all three outline shapes (`cupertino_focus_halo.dart`).
-- Ported the generated `CupertinoIcons` catalog and bundled package font (`cupertino_ui/icons.dart`).
-- Ported `CupertinoApp` and `CupertinoScrollBehavior` with navigator/router shell defaults (`app.dart`).
-- Ported `CupertinoPageScaffold` with obstruction, inset, background and status-bar behavior (`page_scaffold.dart`).
-- Ported Cupertino page routes, transitions, back gestures and modal popups (`cupertino_ui/route.dart`).
-- Breaking: closed Cupertino localizations (`cupertino_ui/localizations.dart`) with picker formats and strict lookup.
-- Breaking: ported core and Cupertino icon themes (`widgets/icon_theme_data.dart`, `widgets/icon_theme.dart`,
-  `cupertino_ui/icon_theme_data.dart`); dynamic colours now resolve at each consumer.
-- Breaking: closed the Cupertino theme foundation (`cupertino_ui/colors.dart`, `theme.dart`, `text_theme.dart`,
-  `interface_level.dart`); `CupertinoColors` is the full table and `CupertinoThemeData` resolves dynamic colors.
-- Docs: opened M6 Cupertino port (`docs/CUPERTINO_TODO.md`); retired per-iteration notes, plan archive and
-  changelog rotation files into git history; added `docs/ai/BACKLOG.md`; `PORT_MAP.md` now lists qualified markers.
-- Fixed the platform-dependent `FixedExtentScrollPhysics` fling test (pins iOS target platform, DPR 3).
-- Breaking: ported `ScrollContext` (`widgets/scroll_context.dart`); `ScrollPosition`/`ScrollController` take Dart ctors.
-- Breaking: ported the list wheel (`widgets/list_wheel_scroll_view.dart`, `rendering/list_wheel_viewport.dart`).
-- Breaking: ported the rest of the text input service layer (`services/text_input.dart`, `text_editing_delta.dart`).
-- Breaking: ported the diagnostics layer (`foundation/diagnostics.dart`); `Widget` now extends `DiagnosticableTree`.
-- Breaking: ported the autofill subsystem (`services/autofill.dart`, `widgets/autofill.dart`); `EditableText` wired.
-- Breaking: ported the platform-channel layer (`services/platform_channel.dart`, codecs, `SystemChannels`).
-- Breaking: closed the Material 2 scheme derivation (`ColorSwatch`, `MaterialColor`, `Colors`, `FromSwatch`).
-- Breaking: closed the `TextSelectionTheme` family; `Theme` wraps its subtree in `DefaultSelectionStyle`.
-- Breaking: closed the `SnackBar` family (`SnackBar`/`SnackBarAction`/`SnackBarThemeData`, `ScaffoldMessenger` queue).
-- Added `Curves.EaseInCirc`/`EaseInOutQuart` and a measurement-only `TextPainter`.
-- Breaking: closed the legacy `DropdownButton` family (`DropdownButton`/`DropdownMenuItem`/`DropdownButtonFormField`).
-- Added `kElevationToShadow`, `kMaterialListPadding`, `WidgetStateMouseCursor.Clickable`, `Scrollbar.thumbVisibility`.
-- Breaking: closed the `CarouselView` family with real `RenderSliverFixedExtentCarousel`/`RenderSliverWeightedCarousel`.
-- Added `RenderSliverFixedExtentBoxAdaptor` (`rendering/sliver_fixed_extent_list.dart`) with `SliverLayoutDimensions`.
-- Breaking: closed the `DropdownMenu` family (`DropdownMenu`/`DropdownMenuFormField`) rebuilt on `MenuAnchor`.
-- Added `TextInputFormatter` family (`services/text_formatter.dart`), `EditableText.CursorHeight`, expand/collapse.
-- Breaking: closed the menus token/theme pass (`MenuAnchor`/`MenuBar`/`SubmenuButton`/`MenuItemButton`, `MenuStyle`).
-- Breaking: closed the `InputDecorator` token/theme pass (`InputDecorationThemeData` class, `WidgetStateTextStyle`).
-- Breaking: ported `widgets/scroll_metrics.dart` in full; `ScrollMetricsSnapshot` replaced by `IScrollMetrics`.
-- Fixed `RenderViewport.GetOffsetToReveal` double-counting a descendant's paint offset when slivers nest.
-- Breaking: ported `NestedScrollView` (`widgets/nested_scroll_view.dart`) with `IScrollActivityDelegate` primitives.
-- Breaking: ported `rendering/viewport_offset.dart`, `rendering/viewport.dart`, `widgets/viewport.dart` in full.
-- Breaking: ported `scheduler/ticker.dart` and `animation/animation_controller.dart` in full (`TickerFuture`).
-- Breaking: replaced the 2D affine transform pipeline with `Matrix4` (`vector_math`, `painting/matrix_utils.dart`).
-- Breaking: ported `painting/gradient.dart` and `painting/box_shadow.dart` in full; Avalonia shadow structs removed.
-- Breaking: ported the keyboard identity stack (`keyboard_key.g.dart`, `hardware_keyboard.dart`, `raw_keyboard.dart`).
-- Breaking: replaced the semantics compiler with Flutter's fragment model (`rendering/object.dart` semantics).
-- Breaking: ported the scrollable semantics layer (`ScrollSemantics`, viewport semantics clip, scroll actions).
-- Breaking: closed the `SelectableRegion` gesture/shortcut/overlay divergence (`gestures/tap_and_drag.dart`, shortcuts).
-- Breaking: replaced the bespoke text-selection stack (`rendering/selection.dart`, `widgets/selectable_region.dart`).
-- Breaking: closed the sliver persistent-header divergence (`rendering/sliver_persistent_header.dart`, `SliverAppBar`).
-- Breaking: closed the show-on-screen / reveal protocol (`RevealedOffset`, `ShowOnScreen`, `Scrollable.EnsureVisible`).
-- Breaking: closed the `Router` divergence (`widgets/router.dart`), incl. `WidgetsApp.Router`/`MaterialApp.Router`.
-- Breaking: closed the `About`/`LicensePage` divergence (`material_ui/about.dart`) with the master-detail shell.
-- Breaking: closed the remaining `Scaffold` slot divergence (`material_ui/scaffold.dart`): footer/statusBar/drawers.
-- Breaking: closed the `PageView` divergence (`widgets/page_view.dart`); `PageController` is a `ScrollController`.
-- Breaking: closed the live-`ScaffoldGeometry`/FAB-motion divergence (`_ScaffoldLayout`, FAB transition animator).
-- Breaking: closed the `Navigator` divergence (`widgets/navigator.dart`): pages API, restoration, staged lifecycle.
-- Breaking: ported the state-restoration subsystem (`services/restoration.dart`, `widgets/restoration.dart`).
+## v0.4.0-beta.1 — 2026-10-24 (collapses v0.2.0-alpha.2 … v0.3.0-alpha.4, 2026-08-20 … 2026-10-24)
+- Cupertino (M6): every `cupertino_ui/lib/src/` file is a strict port — theme/colours/text theme, localizations
+  (116 locale bundles), routes and sheets, `CupertinoApp`, page/tab scaffolds, navigation bars, pickers, context
+  menu, menu anchor, text field and selection, segmented controls, refresh control, list sections/tiles, icons.
+- Hosts are pure engine embedders: retained dart:ui `Scene`s through `SceneBuilder`/`EngineLayer` and
+  `FlutterView.Render`, `PlatformDispatcher` metrics/locales/accessibility/key data, physical `PointerDataPacket`s,
+  `flutter/textinput`/`keyevent`/`platform`/`mousecursor` channels, the windowing API, `FrameTiming` reports.
+- dart:ui surface: `Canvas`/`Picture`/`Paint` (mask filters, blend modes, isolated `saveLayer`), framework `Color`,
+  native `Path` geometry and metrics, `Paragraph` over Avalonia with SkParagraph metrics plus a headless FlutterTest
+  engine, `drawShadow`, gradients, animated image codecs, Skia-exact anti-aliasing for RRect/DRRect/path draws.
+- Strict framework ports: `framework.dart` (elements, build scopes, keys, notifications), the rendering
+  object/box/sliver/proxy/shifted/flex/viewport protocols, layers and the `PipelineOwner` tree, every binding, the
+  focus tree and traversal, the scrolling stack (2D viewports, nested scroll), gestures (tap, drag, long-press,
+  scale, force press, multi-drag, trackpad pan/zoom), mouse tracking, the semantics fragment model, text
+  input/editing/selection, curves/tweens/implicit animations, `Hero`, `Navigator`/`Router`, state restoration.
+- Material: strict re-ports of buttons and `ButtonStyle`, `Switch`, sliders, ink features, `Material`, `Scaffold`,
+  `AppBar`, date/time pickers, `TextField`/`InputDecorator`, `ThemeData`, `BottomNavigationBar`, `Stepper`,
+  `PaginatedDataTable`, list tiles; the 8,825-icon `Icons` catalog; `GlobalMaterialLocalizations` (119 locales).
+- Platform bridges: accessibility (UI Automation, macOS, AT-SPI, Android, VoiceOver, browser ARIA), platform views
+  (framework side), `PlatformMenuBar`, system context menu, `SystemChrome`, clipboard, Scribe/Live Text, ProcessText.
+- Hosts: the `Plumix.Android` package (`PlumixMainActivity` over `AndroidActivityDelegate`), Android system back,
+  Windows/Linux key messages; CI also runs the suite on the newest Avalonia of the major.
+- Tooling: `FrameworkDartTester` with flutter_test's finders, matchers and `TestTextInput`; Flutter's test files
+  ported per subsystem; timeline events, service extensions and the widget inspector; a `Profile` configuration;
+  tests green in Debug/Profile/Release; opt-in screen capture of every sample route in both samples.
+- Breaking (hosts): Avalonia 12.1.4 minimum; `PlumixHost` never lays out or paints, it rasterizes
+  `FlutterView.RenderRequested` scenes (`PipelineOwner.CompositeFrame(DrawingContext)` gone); render-only hosts
+  register views; one process-wide channel set across windows; Android `Run` sets `MainViewFactory`; the Android
+  sample is `Plumix.Sample.Android`; back reaches `WidgetsApp.DidPopRoute` via `TopLevel.BackRequested`
+  (`TryHandleBackButton` gone, `Key.Back` is no back button); hosts send `flutter/keyevent` (`HostRawKeyEventData`
+  gone) and speak `flutter/textinput` through an instance `HostTextInputPlugin`; host clicks get distinct gesture IDs;
+  hot reload runs `reassembleApplication` (host hooks gone); the framework thread, microtasks and async continuations
+  live on `EventLoop`, vsync and clock on `FrameClock`.
+- Breaking (painting): framework `Color`/`ColorSpace` replace Avalonia's `Color` in every API, with dart:ui's
+  `lerp`/`alphaBlend`/`withOpacity` and `toString`; `ColorSwatch`/`MaterialColor`/`CupertinoDynamicColor`/
+  `WidgetStateColor` derive from `Color`; `Matrix4` replaces the affine pipeline; `Canvas` is unsealed,
+  `saveLayer(Rect?, Paint)` isolates, `drawImage*` take a `Paint`, clips push no edge mode; `TextStyle`,
+  `TextPainter`, `StrutStyle`-aware `Paragraph`, `LineMetrics`/`TextBox`, `WordBoundary` (to `Plumix.Painting`),
+  `TextOverflow.Visible`/vertical `Fade`, `TextHeightBehavior.LeadingDistribution` follow Dart
+  (`TextLayoutFallback`, `Canvas.DrawTextLayout*` gone); headless text uses FlutterTest metrics and glyph boxes;
+  `BoxDecoration.BorderRadius` is `BorderRadiusGeometry?` (`EffectiveBorderRadius` gone), decorations paint through
+  Dart's painters with `IsComplex` as in Dart; `ShapeBorder.PaintInterior` takes a `Paint` and `Lerp` tries the
+  reversed timeline; `paintImage`/`DecorationImage`/`lerp`, `TableBorder`, gradients, `BoxShadow` (Avalonia shadow
+  structs gone), `Path`, rounded geometry, `Alignment`, `FittedSizes`, image streams, memory-allocation events and
+  `PaintingBinding`'s cache are strict.
+- Breaking (rendering): `RenderView` is a bare `RenderObject` with a DPR `TransformLayer` root; `RenderSliver` is a
+  `RenderObject`; `SliverGeometry`, sliver parent data (`SliverLogicalContainerParentData`, nullable
+  `SliverMultiBoxAdaptorParentData.Index`/`LayoutOffset`, `IKeepAliveParentData`), `IRenderSliverBoxChildManager`
+  (`ChildCount`/`EstimatedChildCount`), fixed/varied extent lists (variable-extent types gone, `SetItemExtent`),
+  `RenderSliverGrid` (RTL, `SliverGridGeometry` class), persistent headers (abstract extents, no `ChildBuilder`,
+  `SliverFloatingHeader`/`SliverResizingHeader`/`PinnedHeaderSliver`), `RenderSliverOpacity` follow Dart;
+  proxy_box is split and unsealed (`RenderProxyBox` concrete; `RenderOpacity`, `RenderLimitedBox`,
+  `RenderAspectRatio`, `RenderConstrainedBox`, `RenderDecoratedBox.Decoration`, `RenderBackdropFilter`,
+  `RenderTransform`, `RenderPhysicalModel`, clip hit tests and `Clip.AntiAlias` defaults, `RenderPointerListener`,
+  `RenderIgnorePointer`/`RenderAbsorbPointer`, `RenderSemanticsGestureHandler`, `RenderAnnotatedRegion`);
+  `RenderAlign`/`RenderFractionallySizedBox` become `RenderPositionedBox`/`RenderFractionallySizedOverflowBox` over
+  `AlignmentGeometry` + `TextDirection`, `RenderPadding.Padding` is `EdgeInsetsGeometry`, `RenderBaseline`,
+  `RenderAnimatedSize`, `RenderIndexedStack`, `RenderFlex` (Directionality, unbounded errors, enum order),
+  `RenderEditable`, `RenderParagraph`, `RenderErrorBox` are strict; `RenderBox` hit tests are half-open;
+  `PaintingContext` (a `ClipContext`, `Push*` return layers), `ClipRRectLayer`/`ClipPathLayer`, 8-bit `OpacityLayer`,
+  `Layer.AddToScene`/`ContainerLayer.BuildScene`, nullable `ShaderMaskLayer` fields; clips/transforms are no repaint
+  boundaries; `PipelineOwner` dirty queues, child owners and nullable `SemanticsOwner`; `MarkNeedsPaint`,
+  `SizedByParent`/`PerformResize`, `DropChild`/`Attach`/`Detach`, `GetTransformTo`, layer release on unmount;
+  `MouseCursor` is a class, `MouseCursorManager` per tracker, `SystemMouseCursors` complete, `MouseRegion` a
+  render-object widget; hit tests carry transforms (`HitTestEntry.TransformEvent` gone).
+- Breaking (framework): `BuildContext` is an interface `Element` implements; `ComponentElement`, abstract
+  `ProxyElement`, `InheritedWidget` as a `ProxyWidget`, `...WidgetOfExactType` lookups, `PerformRebuild`, `Mounted`,
+  `UnmountRoot`, `_InactiveElements`, `RootWidget`/`RootElement` (`IRootRenderObjectHost` gone),
+  `View`/`RawView`/`ViewCollection`, `BuildScope` and Dart's build errors, public lifecycle and render-object hooks;
+  `State` (`base.Dispose()`, `SetState` rules, `Context`, `Mounted`; `InvokeSetState` gone); keys (`ObjectKey`,
+  `GlobalObjectKey`, `UniqueKey` by identity, `ValueKey` NaN), `IndexedSlot` equality; a throwing `build()` becomes
+  `ErrorWidget`; `BuildOwner` owns its `FocusManager` (`ScheduleBuild`/`IsBuilding`/`RegisterElement` gone);
+  `RunApp`/`RunWidget` keep one root.
+- Breaking (widgets): `Directionality` is required (`Stack`/`IndexedStack` default to `TopStart`); `Text` (no flat
+  style parameters, `Locale?`), `RichText.locale`, `DefaultTextStyle.Of`, `Icon`, `Container`, `DecoratedBox`,
+  `Padding.Insets`, `SafeArea.minimum`, `ColoredBox`, `Positioned`, `IndexedStack`, `AnimatedCrossFade.ClipBehavior`;
+  `MediaQuery` aspects, `PlatformBrightnessOf`, `WithClampedTextScaling`, `RemoveDisplayFeatures`, `fromView`
+  accessibility; `SharedAppData`, `PageStorage`, `ChangeNotifier`, `Title`; localizations (`WidgetsLocalizations`
+  abstract, async batches, `LocalizationsResolver`); `Semantics` takes one `SemanticsProperties` (`flags`/
+  `mergeDescendants` gone); focus (`FocusNode` tree, `Unfocus(disposition)`, void `RequestFocus`, microtask changes,
+  `FocusTraversalPolicy`, `ExcludeFocus`; `OnTextInput*`, `HandleText*`, `FocusScopeMarker` gone; no focus on
+  pointer down); `WidgetsApp` shortcuts/actions, overlays, inspector, back handling; `Actions.Invoke`;
+  `ContextMenuController.Show`; `Overlay`/`OverlayPortal`/`RenderOverlayTheater.SkipCount`; `Navigator` (async pops,
+  `Task<bool>` route handlers, post-frame `NavigationNotification`); strict `Hero` (`HeroControllerScope`,
+  `HeroFlightShuttleBuilder`, `CreateRectTween`, `TransitionRoute.Suspend` gone); `AutomaticKeepAlive`, `KeepAlive`;
+  strict `scroll_delegate.dart` (`NullableIndexedWidgetBuilder`, nullable `itemCount`, abstract `ShouldRebuild`);
+  `EditableText` (no `maxLength`/`semanticsLabel`, Actions keys, own `Scrollable`, async clipboard, cursor timer,
+  toolbar, selection boxes, non-null `Composing`), `TextEditingValue`, `UndoHistory`, `TextSelectionOverlay`,
+  selection gesture builder, `SelectableRegion`, `WidgetStateTextStyle`, `WidgetStateBorderSide`/
+  `WidgetStateMouseCursor` and `BottomNavigationBarItem` moved to core, shortcut diagnostics.
+- Breaking (scrolling): strict `Scrollable` (requires a `View`, `viewportBuilder`/`axisDirection`, scoped `Of`,
+  `SetCanDrag`), `ScrollView`/`BoxScrollView` (`cacheExtent`/`scrollCacheExtent`), `ScrollPosition` split into
+  `ScrollPositionWithSingleContext` (`PointerScroll`, activities on `AnimationController`, `PageStorage` keys),
+  `ScrollContext`, `IScrollMetrics` (`ScrollMetricsSnapshot` gone), `NestedScrollView`, viewports, list wheel,
+  `PageController`, show-on-screen, `EdgeDraggingAutoScroller`, `SingleChildScrollView`, `RawScrollbar` (C#-only
+  `Widgets.Scrollbar` gone), glow on Android/Fuchsia.
+- Breaking (gestures, keyboard): strict pointer events (trackpad kinds rejected), `GestureBinding` queueing and
+  resampling, `SamplingClock` (`DartStopwatch`), arena, tap (`BaseTap`, `TapDownDetails`/`TapUpDetails`), drag
+  (accumulated slop, nullable `PrimaryDelta`), long press, `GestureDetector`/`RawGestureDetector` (`gestures:` only,
+  nullable `Behavior`), `InvokeCallback` reporting; `KeyEventManager`, `HardwareKeyboard.SyncKeyboardState`, the
+  keyboard identity stack.
+- Breaking (semantics, services): all 33 `SemanticsRole`s; `SemanticsFlags` is `long` (`IsInvalid`, `IsDialog`
+  gone); `SemanticsData`, `SemanticsOwner` dirty set, custom actions, `Absorb`, empty-string text defaults;
+  `AccessibilityFeatures` class on `SemanticsBinding`; `SemanticsService.SendAnnouncement`; `FormState.validate`
+  announces; strict `SystemChrome`/`SystemUiOverlayStyle` (`SystemUiIconBrightness` gone); platform channels,
+  restoration, autofill, text input layer; `FlutterError` replaces `TextInput.OnError`/`ServicesDebug.OnError`;
+  diagnostics layer (`Widget`/`RenderObject`/`Element` are `DiagnosticableTree`s).
+- Breaking (scheduler, animation): `SchedulerBinding.Instance`, `Priority` class, `lockEvents`, warm-up frame,
+  `AddPostFrameCallback`, read-only `FramesEnabled`, `CurrentFrameTimeStamp`, `MidFrameMicrotasks`, reported frame
+  errors; `Ticker`/`AnimationController`; `Curve` class hierarchy (`Curves.*` factories gone, `EaseOutCubic`);
+  `Tween` (`Transform`, `Lerp(t)`, nullable `ColorTween`/`RectTween`/`SizeTween`, `CurveTween`, `TweenSequence`);
+  `CurvedAnimation`; `Animation.ToString`; `AnimationStyle`; `ImplicitlyAnimatedWidget`-based `Animated*`.
+- Breaking (Material): `WidgetState` replaces `[Flags] MaterialState`; `Material` (physical model,
+  `MaterialInkController` interface, `MaterialEdges.KMaterialEdges`); ink as Dart's `InkFeature`s (`InkResponse`
+  stateless, intent activation, stateful `Ink`, native `InkSparkle`); `ThemeData` (per-platform density,
+  `VisualDensity`, derived `Brightness`, colour mirrors and `*ButtonStyle` slots gone, eager component themes);
+  `Theme` (no `DefaultTextStyle`, `MaterialBasedCupertinoThemeData`); `ButtonStyleButton` and the four buttons
+  (shortcuts gone, `ButtonStyle` field order/`Padding`/`Lerp`/`styleFrom`, `splashColor` gone), `IconButton`,
+  `RawMaterialButton`, FAB, `ToggleButtons`, `ToggleablePainter`; `Switch` (`semanticLabel` and `SwitchConfig`
+  gone); slider family (`SliderThemeData`, `RangeValues`/`RangeLabels`, semantics, keys); time and date pickers
+  (`DatePickerThemeData`, `DateTimeRange<T>`, `SelectableDayPredicate`, C#-only calendar types gone); `TextField`,
+  `InputDecoration`/`InputDecorationThemeData`, `DesktopTextSelectionToolbarButton`; `AppBar` (`titleText`/`padding`
+  gone), `AppBarThemeData`; `Scaffold`/`ScaffoldMessenger`/`PersistentBottomSheetController`; list tiles, chips,
+  navigation bar/drawer/rail, `BottomNavigationBar`, `Stepper`, `showDialog` via `showRawDialog`, `DialogTheme`,
+  menus and `RawMenuAnchor`, dropdowns, `CarouselView`, `SnackBar`, `TextSelectionTheme`, M2 scheme derivation,
+  `Icons` (code points, `MaterialIcons` family), `MaterialLocalizations`, `About`/`LicensePage`, `MaterialApp.Router`.
+- Breaking (Cupertino): `CupertinoButton`, `CupertinoCheckbox`, `CupertinoRadio`, `CupertinoSwitch`,
+  `CupertinoSlider`, `CupertinoActivityIndicator`, `CupertinoScrollbar`, `CupertinoMagnifier`, `CupertinoTextField`,
+  `CupertinoTabScaffold`, `CupertinoTabBar`, `CupertinoMenuAnchor`/`CupertinoMenuItem`, `CupertinoActionSheet`,
+  text-selection toolbar and controls re-ported strictly (no `isDark`); theme, colours, icon themes and localizations
+  closed with dynamic colours resolved at each consumer.
 
 ## v0.2.0-alpha.1 — 2026-08-13
 - Moved the Flutter parity pin to 3.47.0; Material/Cupertino source of truth is now `material_ui`/`cupertino_ui` 1.0.0.

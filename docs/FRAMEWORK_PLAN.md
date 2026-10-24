@@ -11,6 +11,7 @@ framework_plan_version: 2
 last_updated: 2026-10-24
 north_star: "Flutter-like widget/rendering framework in C# with Avalonia as host infrastructure."
 current_phase: "M6 Cupertino library port (docs/CUPERTINO_TODO.md); M5 cross-host stability continues in parallel."
+latest_release: "v0.4.0-beta.1 (2026-10-24); next: v1.0.0-rc.1, criteria in the Release Candidate section"
 flutter_pin: "3.47.0 (4cf24164269); material_ui 1.0.0; cupertino_ui 1.0.0 — see AGENTS.md"
 open_work_outside_controls: "docs/ai/BACKLOG.md (control-level gaps, host-level gaps; the 3.44->3.47 re-port table is down to subsystem-blocked rows)"
 status:
@@ -122,8 +123,7 @@ Release gates (on the commit that gets the tag):
   comparisons (`verify-runtime` in `docs/ai/PARITY_MATRIX.md`, *Pending runtime verification* in
   `docs/ai/BACKLOG.md`) may stay open as known limitations.
 - `python3 scripts/generate_port_map.py` reports no unresolvable markers.
-- `CHANGELOG.md`: `[Unreleased]` and the uncollapsed alpha sections collapse under the RC heading,
-  every `Breaking:` item kept by name.
+- `CHANGELOG.md`: `[Unreleased]` collapses under the RC heading, every `Breaking:` item kept by name.
 
 Known limitations (listed in the RC release notes, not blockers):
 
