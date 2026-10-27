@@ -248,8 +248,9 @@ internal sealed class AvaloniaParagraph : Paragraph
 
             if (double.IsNegativeInfinity(ascent))
             {
-                ResolvedTextStyle style = Text.Length == 0 ? _content.EmptyStyle
-                    : _content.StyleAt(Math.Max(0, native.FirstTextSourceIndex - 1));
+                ResolvedTextStyle style = (Text.Length == 0 ? _content.EmptyStyle
+                    : _content.StyleAt(Math.Max(0, native.FirstTextSourceIndex - 1)))
+                    with { LeadingDistribution = _content.EmptyLineLeadingDistribution };
                 TextRunProperties properties = ParagraphTextSource.CreateRunProperties(style);
                 Accumulate(style, new TextMetrics(properties.Typeface.GlyphTypeface, style.FontSize));
             }

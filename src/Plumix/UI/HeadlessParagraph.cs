@@ -805,15 +805,15 @@ internal sealed class HeadlessParagraph : Paragraph
         AddMetrics(ref metrics, fontSize, ascent, descent);
     }
 
-    /// `ParagraphImpl::computeEmptyMetrics`: the style's font with its height applied proportionally, or
-    /// as half leading when the strut asks for it. The paragraph's `leadingDistribution` never reaches
-    /// the engine's default text style.
+    /// `ParagraphImpl::computeEmptyMetrics`: the style's font with its height override distributed by the
+    /// strut's half-leading flag, never by the text style's own `leadingDistribution`.
     private void AccumulateEmpty(ref LineTextMetrics metrics, ResolvedTextStyle style)
     {
         double fontSize = style.FontSize;
-        TextLeadingDistribution distribution = _content.Style.StrutStyle?.LeadingDistribution
-                                               ?? TextLeadingDistribution.Proportional;
-        (double ascent, double descent) = VerticalMetrics(fontSize, style.Height, distribution);
+        (double ascent, double descent) = VerticalMetrics(
+            fontSize,
+            style.Height,
+            _content.EmptyLineLeadingDistribution);
         AddMetrics(ref metrics, fontSize, ascent, descent);
     }
 

@@ -736,6 +736,38 @@ public sealed class MaterialDropdownTests : IDisposable
         Assert.NotNull(FindParagraph(harness.RenderView, "One"));
     }
 
+    [Fact]
+    public void DropdownButtonFormField_OutlinedLabelAndHintText_AlignsTheButtonOnTheClearedHintBaseline()
+    {
+        // The form field clears the decoration's hintText to '' (the button shows its own hint). Under
+        // M3's even-leading bodyLarge that empty hint still reports a proportional 18 px baseline
+        // (SkParagraph's empty-line metrics), so InputDecorator drops the 16 px-baseline button 2 px
+        // below the hint. Offsets read from the same tree in flutter_test.
+        using var harness = new WidgetRenderHarness(Wrap(new Padding(
+            new Thickness(28),
+            new Column(
+                crossAxisAlignment: CrossAxisAlignment.Stretch,
+                children:
+                [
+                    new DropdownButtonFormField<string>(
+                        [new DropdownMenuItem<string>(new Text("One"), value: "one")],
+                        _ => { },
+                        decoration: new InputDecoration(
+                            labelText: "Required choice",
+                            hintText: "Pick one item",
+                            border: new OutlineInputBorder())),
+                ])), theme: ThemeData.Light));
+        harness.Pump(new Size(800, 600));
+
+        RenderBox stack = Assert.Single(FindDescendants<RenderIndexedStack>(harness.RenderView));
+        RenderParagraph hint = Assert.Single(
+            FindDescendants<RenderParagraph>(harness.RenderView),
+            paragraph => paragraph.Text.ToPlainText().Length == 0 && paragraph.Size.Width > 600);
+        Assert.Equal(new Point(44, 46), stack.LocalToGlobal(default));
+        Assert.Equal(new Point(44, 44), hint.LocalToGlobal(default));
+        Assert.Equal(new Size(688, 24), hint.Size);
+    }
+
     private static DropdownRoute<string> BuildRoute(
         int itemCount,
         int selectedIndex,
