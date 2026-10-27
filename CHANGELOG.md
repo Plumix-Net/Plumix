@@ -8,6 +8,21 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased]
+- Breaking: `PlatformDispatcher.TimerRun` removed; scheduler tasks and warm-up frames use `Timer.Run` (scheduler/binding.dart).
+- `FrameworkDartTester` fails on pending timers, runs warm-up frames at once, disables shadows (flutter_test binding.dart).
+- Service-extension handlers start on the framework thread; the intermittent banner-extension hang is gone (C#-only).
+- Breaking: C#-only `MaterialLocalizationsScope` removed; `MaterialLocalizations.Of` reads `Localizations` (C#-only).
+- Switch/CupertinoSwitch thumbs and the magnifier decoration paint shadows via `BoxShadow.toPaint` (switch.dart, magnifier.dart).
+- Breaking: `BoxShadowExtensions` (`ToAvalonia`) removed (C#-only).
+- Breaking: strict `SnapshotWidget` with `SnapshotPainter`/`painter`; `pixelRatio` and `SnapshotOffsetLayer` removed (snapshot_widget.dart).
+- Breaking: strict single-thread `ImageCache`; `ImageCacheStatus` ctor internal, `UntrackedStatus` removed (image_cache.dart).
+- `ImageProvider.Evict`/`ObtainCacheStatus` resume on the caller's context (image_provider.dart).
+- Breaking: `FocusNode.ToString` is Dart's diagnostics form; focus-tree diagnostics and `debugDumpFocusTree` (focus_manager.dart).
+- `RenderParagraph`/`RenderEditable` relayout, `Banner` and Cupertino pickers refresh on system font changes (object.dart).
+- Windows host forwards `WM_FONTCHANGE` as the `fontsChange` system message (C#-only).
+- Hosts answer `SystemNavigator.pop` per platform; Android no longer maps Escape/BrowserBack to `popRoute` (C#-only).
+- Hosts play system sounds/haptics natively as the engine plugins do; `PlumixHost` handler hooks (C#-only).
+- Android/iOS hosts resolve the platform locale; Android/browser report accessibility features (C#-only).
 - iOS AOT Bloc counter crash closed; `HostBinaryCompatibilityTests` binds sample packages to Plumix (C#-only).
 - Breaking: one dart:ui `Brightness` in `Plumix.UI` replaces `PlatformBrightness` and Material's enum (window.dart).
 - Breaking: `Plumix.Timer` (dart:async `Timer`) on the event loop with a fake test clock; `GestureTimer` removed.
