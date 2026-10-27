@@ -77,6 +77,19 @@ public sealed class EditableTextCursorDartParityTests : IDisposable
 
     private static string Shown(FrameworkDartTester tester) => Editable(tester).Text!.ToPlainText();
 
+    // Dart: `cursorRadius` and `cursorOffset` are nullable; the render object gets `Offset.zero`.
+    [Fact]
+    public void CursorRadiusAndOffsetDefaultToNull()
+    {
+        EditableText field = Field();
+        Assert.Null(field.CursorRadius);
+        Assert.Null(field.CursorOffset);
+
+        using FrameworkDartTester tester = Pump(field);
+        Assert.Null(Editable(tester).CursorRadius);
+        Assert.Equal(default, Editable(tester).CursorOffset);
+    }
+
     // Dart's `tester.enterText`: the platform replaces the text and puts the caret at its end.
     private static void EnterText(FrameworkDartTester tester, string text)
     {

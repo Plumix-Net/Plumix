@@ -1198,11 +1198,11 @@ public sealed partial class EditableText : StatefulWidget
         ShowCursor = showCursor ?? !readOnly;
         CursorWidth = cursorWidth;
         CursorHeight = cursorHeight;
-        CursorRadius = cursorRadius ?? Radius.Zero;
+        CursorRadius = cursorRadius;
         SelectionHeightStyle = selectionHeightStyle ?? EditableText.DefaultSelectionHeightStyle;
         SelectionWidthStyle = selectionWidthStyle ?? EditableText.DefaultSelectionWidthStyle;
         CursorOpacityAnimates = cursorOpacityAnimates;
-        CursorOffset = cursorOffset ?? default;
+        CursorOffset = cursorOffset;
         PaintCursorAboveText = paintCursorAboveText;
         EnableInteractiveSelection = enableInteractiveSelection ?? (!readOnly || !obscureText);
         SelectAllOnFocus = selectAllOnFocus ?? DefaultSelectAllOnFocus();
@@ -1302,11 +1302,11 @@ public sealed partial class EditableText : StatefulWidget
     public double CursorWidth { get; }
     /// <summary>Overrides the caret height; <c>null</c> uses the preferred line height.</summary>
     public double? CursorHeight { get; }
-    public Radius CursorRadius { get; }
+    public Radius? CursorRadius { get; }
     public BoxHeightStyle SelectionHeightStyle { get; }
     public BoxWidthStyle SelectionWidthStyle { get; }
     public bool CursorOpacityAnimates { get; }
-    public Point CursorOffset { get; }
+    public Point? CursorOffset { get; }
     public bool PaintCursorAboveText { get; }
     public bool EnableInteractiveSelection { get; }
 
@@ -2285,8 +2285,8 @@ public sealed partial class EditableText : StatefulWidget
                 rendererIgnoresPointer: Widget.RendererIgnoresPointer,
                 cursorWidth: Widget.CursorWidth,
                 cursorHeight: Widget.CursorHeight,
-                cursorRadius: Widget.CursorRadius == default ? null : Widget.CursorRadius,
-                cursorOffset: Widget.CursorOffset,
+                cursorRadius: Widget.CursorRadius,
+                cursorOffset: Widget.CursorOffset ?? default,
                 paintCursorAboveText: Widget.PaintCursorAboveText,
                 selectionHeightStyle: Widget.SelectionHeightStyle,
                 selectionWidthStyle: Widget.SelectionWidthStyle,
