@@ -6,8 +6,9 @@ using Xunit;
 namespace Plumix.Tests;
 
 // Dart parity source: flutter/packages/flutter/lib/src/foundation/binding.dart
-// (initServiceExtensions, reassembleApplication); mirrors the foundation half of
-// flutter/packages/flutter/test/foundation/service_extensions_test.dart.
+// (initServiceExtensions, reassembleApplication, checkInstance, debugBindingType, debugCheckZone); mirrors
+// the foundation half of flutter/packages/flutter/test/foundation/service_extensions_test.dart,
+// foundation/binding_test.dart and foundation/binding_2_test.dart.
 
 [Collection(SchedulerTestCollection.Name)]
 public sealed class FoundationBindingDartParityTests : IDisposable
@@ -156,6 +157,92 @@ public sealed class FoundationBindingDartParityTests : IDisposable
         }));
 
         Assert.Equal(Brightness.Dark, seen);
+    }
+
+    // binding_test.dart: 'BindingBase.debugBindingType'. Dart's test first expects null, before its custom
+    // binding is constructed; this process initializes WidgetsFlutterBinding on first use, so only the
+    // initialized half is observable.
+    [DebugOnlyFact]
+    public void DebugBindingType_IsTheTypeOfTheInitializedBinding()
+    {
+        WidgetsFlutterBinding.EnsureInitialized();
+        Assert.Equal(typeof(WidgetsFlutterBinding), BindingBase.DebugBindingType());
+    }
+
+    // debugBindingType's contract: the binding type is not tracked in release builds.
+    [Fact]
+    public void BuildModeGates_DebugBindingTypeIsNullOutsideDebug()
+    {
+        WidgetsFlutterBinding.EnsureInitialized();
+        Assert.Equal(Constants.KDebugMode ? typeof(WidgetsFlutterBinding) : null, BindingBase.DebugBindingType());
+    }
+
+    // checkInstance: returns its argument once the binding exists.
+    [Fact]
+    public void CheckInstance_ReturnsTheInstance()
+    {
+        WidgetsBinding binding = WidgetsFlutterBinding.EnsureInitialized();
+        Assert.Same(binding, BindingBase.CheckInstance<WidgetsBinding>(binding));
+        Assert.Same(binding, WidgetsBinding.Instance);
+    }
+
+    // checkInstance: the two failures a null instance reports, depending on whether a binding initialized.
+    [DebugOnlyFact]
+    public void CheckInstance_ExplainsANullInstance()
+    {
+        Type? initializedType = BindingBase.DebugInitializedType;
+        try
+        {
+            BindingBase.DebugInitializedType = null;
+            FlutterError notInitialized =
+                Assert.Throws<FlutterError>(static () => BindingBase.CheckInstance<SchedulerBinding>(null));
+            Assert.Equal("Binding has not yet been initialized.", notInitialized.Diagnostics[0].ToString());
+            Assert.Equal(
+                "The \"instance\" getter on the SchedulerBinding binding mixin is only available once that "
+                + "binding has been initialized.",
+                notInitialized.Diagnostics[1].ToString());
+
+            BindingBase.DebugInitializedType = typeof(WidgetsFlutterBinding);
+            FlutterError notMixedIn =
+                Assert.Throws<FlutterError>(static () => BindingBase.CheckInstance<SchedulerBinding>(null));
+            Assert.Equal(
+                "Binding mixin instance is null but bindings are already initialized.",
+                notMixedIn.Diagnostics[0].ToString());
+            Assert.Equal(
+                "The binding that was initialized was of the type \"WidgetsFlutterBinding\". ",
+                notMixedIn.Diagnostics[^1].ToString());
+        }
+        finally
+        {
+            BindingBase.DebugInitializedType = initializedType;
+        }
+    }
+
+    // binding_2_test.dart: 'BindingBase.debugCheckZone'. The first call (in the binding's own zone) passes
+    // silently. Dart's other two calls run in a forked zone and expect the "Zone mismatch" error, thrown
+    // or reported per debugZoneErrorsAreFatal; .NET has no zones to fork, so every caller is in the
+    // binding's zone and the check passes in both modes.
+    [Fact]
+    public void DebugCheckZone_PassesInTheBindingZone()
+    {
+        WidgetsBinding binding = WidgetsFlutterBinding.EnsureInitialized();
+        FlutterExceptionHandler? lastHandler = FlutterError.OnError;
+        List<FlutterErrorDetails> errors = [];
+        FlutterError.OnError = errors.Add;
+        try
+        {
+            Assert.True(binding.DebugCheckZone("test1"));
+            BindingBase.DebugZoneErrorsAreFatal = true;
+            Assert.True(binding.DebugCheckZone("test2"));
+            BindingBase.DebugZoneErrorsAreFatal = false;
+            Assert.True(binding.DebugCheckZone("test3"));
+            Assert.Empty(errors);
+        }
+        finally
+        {
+            BindingBase.DebugZoneErrorsAreFatal = false;
+            FlutterError.OnError = lastHandler;
+        }
     }
 
     private static Task<Dictionary<string, object?>> Extension(

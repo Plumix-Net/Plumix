@@ -15,7 +15,7 @@ public static class PlumixExtensions
     {
         ArgumentNullException.ThrowIfNull(application);
         WidgetsBinding binding = WidgetsFlutterBinding.EnsureInitialized();
-        RunWidgetCore(binding.WrapWithDefaultView(application), binding);
+        RunWidgetCore(binding.WrapWithDefaultView(application), binding, "runApp");
     }
 
     /// <summary>Runs a caller-owned view tree without adding an implicit <see cref="View"/>.</summary>
@@ -24,7 +24,7 @@ public static class PlumixExtensions
     {
         ArgumentNullException.ThrowIfNull(application);
         WidgetsBinding binding = WidgetsFlutterBinding.EnsureInitialized();
-        RunWidgetCore(application, binding);
+        RunWidgetCore(application, binding, "runWidget");
     }
 
     public static void Run<T>(T application, IApplicationLifetime? applicationLifetime, PlumixOptions? options = null)
@@ -77,8 +77,10 @@ public static class PlumixExtensions
         return host;
     }
 
-    private static void RunWidgetCore(Widget application, WidgetsBinding binding)
+    // Dart's private `_runWidget`.
+    private static void RunWidgetCore(Widget application, WidgetsBinding binding, string debugEntryPoint)
     {
+        System.Diagnostics.Debug.Assert(binding.DebugCheckZone(debugEntryPoint));
         binding.ScheduleAttachRootWidget(application);
         SchedulerBinding.Instance.ScheduleWarmUpFrame();
     }

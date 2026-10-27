@@ -270,8 +270,11 @@ internal sealed class HighlightModeManager
             }
         }
 
+        System.Diagnostics.Debug.Assert(FocusManager.FocusDebug(() => $"Received key event {message}"));
         if (_focusManager.PrimaryFocus == null)
         {
+            System.Diagnostics.Debug.Assert(
+                FocusManager.FocusDebug(() => $"No primary focus for key event, ignored: {message}"));
             return false;
         }
 
@@ -295,9 +298,14 @@ internal sealed class HighlightModeManager
                 case KeyEventResult.Ignored:
                     break;
                 case KeyEventResult.Handled:
+                    System.Diagnostics.Debug.Assert(
+                        FocusManager.FocusDebug(() => $"Key event {message} handled by early key event callback."));
                     handled = true;
                     break;
                 case KeyEventResult.SkipRemainingHandlers:
+                    System.Diagnostics.Debug.Assert(
+                        FocusManager.FocusDebug(
+                            () => $"Key event {message} propagation stopped by early key event callback."));
                     handled = false;
                     break;
             }
@@ -331,7 +339,19 @@ internal sealed class HighlightModeManager
                 continue;
             }
 
-            handled = result == KeyEventResult.Handled;
+            if (result == KeyEventResult.Handled)
+            {
+                System.Diagnostics.Debug.Assert(
+                    FocusManager.FocusDebug(() => $"Node {node} handled key event {message}."));
+                handled = true;
+            }
+            else
+            {
+                System.Diagnostics.Debug.Assert(
+                    FocusManager.FocusDebug(() => $"Node {node} stopped key event propagation: {message}."));
+                handled = false;
+            }
+
             // Only KeyEventResult.ignored will continue the for loop. All other
             // options will stop the event propagation.
             break;
@@ -355,12 +375,23 @@ internal sealed class HighlightModeManager
                 case KeyEventResult.Ignored:
                     break;
                 case KeyEventResult.Handled:
+                    System.Diagnostics.Debug.Assert(
+                        FocusManager.FocusDebug(() => $"Key event {message} handled by late key event callback."));
                     handled = true;
                     break;
                 case KeyEventResult.SkipRemainingHandlers:
+                    System.Diagnostics.Debug.Assert(
+                        FocusManager.FocusDebug(
+                            () => $"Key event {message} propagation stopped by late key event callback."));
                     handled = false;
                     break;
             }
+        }
+
+        if (!handled)
+        {
+            System.Diagnostics.Debug.Assert(
+                FocusManager.FocusDebug(() => $"Key event not handled by focus system: {message}."));
         }
 
         return handled;

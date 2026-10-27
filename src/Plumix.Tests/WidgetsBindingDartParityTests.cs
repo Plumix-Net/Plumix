@@ -10,7 +10,8 @@ namespace Plumix.Tests;
 // Dart parity source: flutter/packages/flutter/lib/src/widgets/binding.dart
 // Mirrors widgets/binding_test.dart (observer callbacks, the "callbacks handle exceptions gracefully"
 // group, locale/navigation/back-gesture/memory-pressure channels, the element-mounting stack filters),
-// binding_first_frame_rasterized_test.dart, and localizations_test.dart's LocalizationsResolver cases.
+// binding_first_frame_rasterized_test.dart, binding_first_frame_developer_test.dart, and
+// localizations_test.dart's LocalizationsResolver cases.
 
 [Collection(SchedulerTestCollection.Name)]
 public sealed class WidgetsBindingDartParityTests : IDisposable
@@ -639,6 +640,34 @@ public sealed class WidgetsBindingDartParityTests : IDisposable
         PlatformDispatcher.Instance.OnReportTimings!([]);
 
         Assert.Equal("true", (await extension(new Dictionary<string, string>()))["enabled"]);
+    }
+
+    [NonReleaseFact]
+    public void FirstFrameCallback_SetsTheDefaultUserTag()
+    {
+        // binding_first_frame_developer_test.dart: 'first frame callback sets the default UserTag'.
+        WidgetsBinding binding = WidgetsFlutterBinding.EnsureInitialized();
+        binding.ResetFirstFrameForTests();
+        RendererBinding.Instance.ResetFirstFrameSent();
+        try
+        {
+            string userTag = Developer.DeveloperService.GetCurrentTag().Label;
+            Assert.Contains(userTag, new HashSet<string> { "Default", "AppStartUp" });
+
+            Developer.UserTag.Create("test tag").MakeCurrent();
+            Assert.Equal("test tag", Developer.DeveloperService.GetCurrentTag().Label);
+
+            binding.DrawFrame();
+            // Simulates the engine again.
+            PlatformDispatcher.Instance.OnReportTimings!([]);
+
+            Assert.Equal("Default", Developer.DeveloperService.GetCurrentTag().Label);
+        }
+        finally
+        {
+            Developer.UserTag.ResetForTests();
+            RendererBinding.Instance.ResetFirstFrameSent();
+        }
     }
 
     // ------------------------------------------------------------------ helpers

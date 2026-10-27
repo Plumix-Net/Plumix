@@ -80,8 +80,12 @@ public sealed class ServiceExtensionResponse
 /// mixin chain are spelled out: <see cref="ReassembleApplication"/> locks events on
 /// <c>SchedulerBinding</c> (where <c>lockEvents</c> lives) and runs the most derived
 /// <c>performReassemble</c>, the widgets binding's, which ends in <see cref="PerformReassemble"/>.
-/// Construction checks (<c>checkInstance</c>, <c>debugCheckZone</c>) are not ported (see
-/// <c>docs/ai/BACKLOG.md</c>).
+/// </para>
+/// <para>
+/// The construction checks are static too: <see cref="CheckInstance{T}"/> and
+/// <see cref="DebugBindingType"/> read the type the composed binding (<c>WidgetsBinding</c>, whose
+/// <c>InitInstances</c> is the first link of Plumix's chain) recorded, and the instance member
+/// <c>debugCheckZone</c> lives on <c>WidgetsBinding</c>, the object Dart's <c>runApp</c> calls it on.
 /// </para>
 /// </remarks>
 public static class BindingBase
@@ -90,6 +94,118 @@ public static class BindingBase
 
     private static readonly Dictionary<string, ServiceExtensionCallback> Callbacks = [];
     private static readonly Dictionary<string, ServiceExtensionHandler> Handlers = [];
+
+    /// <summary>
+    /// Dart's private <c>BindingBase._debugInitializedType</c>: the runtime type of the binding whose
+    /// <c>initInstances</c> ran, recorded in debug builds only.
+    /// </summary>
+    /// <remarks>
+    /// Dart's base <c>initInstances</c> records it; Plumix's bindings have no common base instance, so the
+    /// composed binding (<c>WidgetsBinding.InitInstances</c>) records it. Tests set it to reach both
+    /// failure messages of <see cref="CheckInstance{T}"/>.
+    /// </remarks>
+    internal static Type? DebugInitializedType { get; set; }
+
+    /// <summary>
+    /// A method that shows a useful error message if the given binding instance is not initialized.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Flutter's <c>BindingBase.checkInstance</c>. This method either returns the argument or throws an
+    /// exception. In release mode it always returns the argument.
+    /// </para>
+    /// <para>
+    /// The type argument <typeparamref name="T"/> should be the kind of binding (e.g.
+    /// <c>SchedulerBinding</c>) that is calling the method. It is used in error messages. Plumix's
+    /// bindings do not derive from a <c>BindingBase</c> instance class, so <typeparamref name="T"/> is any
+    /// class, and Dart's checks of the <c>BindingBase()</c> constructor having run (the "did not complete
+    /// initialization", "initialized without calling initInstances" and "does not extend BindingBase"
+    /// failures) have no constructor to observe.
+    /// </para>
+    /// </remarks>
+    public static T CheckInstance<T>(T? instance)
+        where T : class
+    {
+        if (Constants.KDebugMode)
+        {
+            string type = Diagnostics.DescribeType(typeof(T));
+            if (DebugInitializedType == null && instance == null)
+            {
+                throw new FlutterError(
+                [
+                    new ErrorSummary("Binding has not yet been initialized."),
+                    new ErrorDescription(
+                        $"The \"instance\" getter on the {type} binding mixin is only available once that binding "
+                        + "has been initialized."),
+                    new ErrorHint(
+                        "Typically, this is done by calling \"WidgetsFlutterBinding.ensureInitialized()\" or "
+                        + "\"runApp()\" (the latter calls the former). Typically this call is done in the "
+                        + "\"void main()\" method. The \"ensureInitialized\" method is idempotent; calling it "
+                        + "multiple times is not harmful. After calling that method, the \"instance\" getter will "
+                        + "return the binding."),
+                    new ErrorHint(
+                        "In a test, one can call \"TestWidgetsFlutterBinding.ensureInitialized()\" as the first "
+                        + "line in the test's \"main()\" method to initialize the binding."),
+                    new ErrorHint(
+                        $"If {type} is a custom binding mixin, there must also be a custom binding class, like "
+                        + "WidgetsFlutterBinding, but that mixes in the selected binding, and that is the class "
+                        + "that must be constructed before using the \"instance\" getter."),
+                ]);
+            }
+
+            if (instance == null)
+            {
+                throw new FlutterError(
+                [
+                    new ErrorSummary("Binding mixin instance is null but bindings are already initialized."),
+                    new ErrorDescription(
+                        $"The \"instance\" property of the {type} binding mixin was accessed, but that binding "
+                        + "was not initialized when the \"initInstances()\" method was called."),
+                    new ErrorHint(
+                        $"This probably indicates that the {type} mixin was not mixed into the class that was "
+                        + "used to initialize the binding. If this is a custom binding mixin, there must also be "
+                        + "a custom binding class, like WidgetsFlutterBinding, but that mixes in the selected "
+                        + "binding. If this is a test binding, check that the binding being initialized is the "
+                        + "same as the one into which the test binding is mixed."),
+                    new ErrorHint(
+                        $"It is also possible that {type} does not implement \"initInstances()\" to assign a "
+                        + "value to \"instance\". See the documentation of the BindingBase class for more "
+                        + "details."),
+                    new ErrorHint(
+                        "The binding that was initialized was of the type "
+                        + $"\"{Diagnostics.DescribeType(DebugInitializedType!)}\". "),
+                ]);
+            }
+        }
+
+        return instance!;
+    }
+
+    /// <summary>In debug builds, the type of the current binding, if any, or else null.</summary>
+    /// <remarks>
+    /// <para>
+    /// Flutter's <c>BindingBase.debugBindingType</c>. This may be useful in asserts to verify that the
+    /// binding has not been initialized before the point in the application code that wants to initialize
+    /// the binding, or to verify that the binding is the one that is expected.
+    /// </para>
+    /// <para>
+    /// If this returns null, the binding has not been initialized. If this returns a non-null value, it
+    /// returns the type of the binding instance. This method only returns a useful value in debug builds.
+    /// In release builds, the return value is always null; to improve startup performance, the type of
+    /// the binding is not tracked in release builds.
+    /// </para>
+    /// </remarks>
+    public static Type? DebugBindingType() => DebugInitializedType;
+
+    /// <summary>
+    /// Whether <c>WidgetsBinding.DebugCheckZone</c> should throw (true) or just report the error (false).
+    /// </summary>
+    /// <remarks>
+    /// Flutter's <c>BindingBase.debugZoneErrorsAreFatal</c>. .NET has no zones, so the check it configures
+    /// never finds a mismatch and this flag has no effect; it is kept so code written against Flutter's
+    /// API compiles unchanged.
+    /// </remarks>
+    public static bool DebugZoneErrorsAreFatal { get; set; }
 
     /// <summary>Raised with every event posted through <see cref="PostEvent"/>.</summary>
     /// <remarks>dart:developer's <c>Extension</c> event stream.</remarks>

@@ -1,3 +1,5 @@
+using System.Text;
+using System.Text.RegularExpressions;
 using Plumix.Foundation;
 using Plumix.Widgets;
 using Xunit;
@@ -7,7 +9,7 @@ using Xunit;
 //
 // The diagnostics tests of focus_manager_test.dart ('implements debugFillProperties' of the FocusNode
 // and FocusScopeNode groups, 'debugDescribeFocusTree produces correct output') and the
-// 'Service extensions - debugDumpFocusTree' test.
+// 'Service extensions - debugDumpFocusTree' test, and the two `debugFocusChanges` logging tests.
 
 namespace Plumix.Tests;
 
@@ -212,5 +214,120 @@ public sealed class FocusDiagnosticsDartParityTests : IDisposable
             + " └─rootScope: FocusScopeNode#[0-9a-f]{5}\\(Root Focus Scope\\)\n$",
             data);
         Assert.Equal(WidgetsBinding.Instance.FocusManager.ToStringDeep(), data);
+    }
+
+    // 'debugFocusChanges causes logging of focus changes'
+    [DebugOnlyFact]
+    public void DebugFocusChangesCausesLoggingOfFocusChanges()
+    {
+        bool oldDebugFocusChanges = FocusManager.DebugFocusChanges;
+        DebugPrintCallback oldDebugPrint = Print.DebugPrint;
+        var messages = new StringBuilder();
+        Print.DebugPrint = (message, _) => messages.Append(message ?? string.Empty).Append('\n');
+        FocusManager.DebugFocusChanges = true;
+        try
+        {
+            using var tester = new FrameworkDartTester();
+            BuildContext context = SetupWidget(tester);
+            using var parent1 = new FocusScopeNode(debugLabel: "parent1");
+            FocusAttachment parent1Attachment = parent1.Attach(context);
+            using var child1 = new FocusNode(debugLabel: "child1");
+            FocusAttachment child1Attachment = child1.Attach(context);
+            parent1Attachment.Reparent(parent: tester.Owner.FocusManager.RootScope);
+            child1Attachment.Reparent(parent: parent1);
+
+            int notifyCount = 0;
+            void HandleFocusChange() => notifyCount++;
+
+            tester.Owner.FocusManager.AddListener(HandleFocusChange);
+
+            parent1.RequestFocus();
+            Assert.Equal(0, notifyCount);
+            tester.Pump();
+            Assert.Equal(1, notifyCount);
+            notifyCount = 0;
+
+            child1.RequestFocus();
+            tester.Pump();
+            Assert.Equal(1, notifyCount);
+
+            tester.Owner.FocusManager.RemoveListener(HandleFocusChange);
+        }
+        finally
+        {
+            FocusManager.DebugFocusChanges = oldDebugFocusChanges;
+            Print.DebugPrint = oldDebugPrint;
+        }
+
+        string messagesStr = messages.ToString();
+        Assert.Matches(
+            new Regex(@"   └─Child \d+: FocusScopeNode#[a-f0-9]{5}\(parent1 \[PRIMARY FOCUS\]\)"),
+            messagesStr);
+        Assert.Contains("FOCUS: Notified 2 dirty nodes", messagesStr, StringComparison.Ordinal);
+        Assert.Matches(
+            new Regex(
+                "FOCUS: Scheduling update, current focus is null, next focus will be FocusScopeNode#.*parent1"),
+            messagesStr);
+    }
+
+    // "doesn't call toString on a focus node when debugFocusChanges is false"
+    [DebugOnlyFact]
+    public void DoesNotCallToStringOnAFocusNodeWhenDebugFocusChangesIsFalse()
+    {
+        bool oldDebugFocusChanges = FocusManager.DebugFocusChanges;
+        DebugPrintCallback oldDebugPrint = Print.DebugPrint;
+        var messages = new StringBuilder();
+        Print.DebugPrint = (message, _) => messages.Append(message ?? string.Empty).Append('\n');
+        using var tester = new FrameworkDartTester();
+
+        void TestDebugFocusChanges()
+        {
+            BuildContext context = SetupWidget(tester);
+            var parent1 = new FocusScopeNode(debugLabel: "parent1");
+            FocusAttachment parent1Attachment = parent1.Attach(context);
+            FocusNode child1 = FocusManager.DebugFocusChanges
+                ? new FocusNode(debugLabel: "child1")
+                : new LoggingTestFocusNode(debugLabel: "child1");
+            FocusAttachment child1Attachment = child1.Attach(context);
+            parent1Attachment.Reparent(parent: tester.Owner.FocusManager.RootScope);
+            child1Attachment.Reparent(parent: parent1);
+
+            child1.RequestFocus();
+            tester.Pump();
+            child1.Dispose();
+            parent1.Dispose();
+            tester.Pump();
+        }
+
+        try
+        {
+            FocusManager.DebugFocusChanges = false;
+            TestDebugFocusChanges();
+            Assert.Equal(0, messages.Length);
+            Assert.Null(tester.TakeException());
+            FocusManager.DebugFocusChanges = true;
+            TestDebugFocusChanges();
+            Assert.Contains("FOCUS: Notified 3 dirty nodes:", messages.ToString(), StringComparison.Ordinal);
+            Assert.Null(tester.TakeException());
+        }
+        finally
+        {
+            FocusManager.DebugFocusChanges = oldDebugFocusChanges;
+            Print.DebugPrint = oldDebugPrint;
+        }
+    }
+
+    // focus_manager_test.dart's `_LoggingTestFocusNode`.
+    private sealed class LoggingTestFocusNode(string? debugLabel = null) : FocusNode(debugLabel: debugLabel)
+    {
+        public override string ToString(DiagnosticLevel minLevel) =>
+            throw new InvalidOperationException("Shouldn't call toString here");
+
+        public override string ToStringDeep(
+            string prefixLineOne = "",
+            string? prefixOtherLines = null,
+            DiagnosticLevel minLevel = DiagnosticLevel.Debug,
+            int wrapWidth = 65) =>
+            throw new InvalidOperationException("Shouldn't call toStringDeep here");
     }
 }

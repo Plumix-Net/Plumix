@@ -253,7 +253,13 @@ public partial class WidgetsBinding
         }
     }
 
-    public static WidgetsBinding Instance => SharedInstance;
+    /// <summary>The current <see cref="WidgetsBinding"/>, if one has been created.</summary>
+    /// <remarks>
+    /// Flutter's <c>WidgetsBinding.instance</c>: <c>BindingBase.checkInstance(_instance)</c>, which throws a
+    /// descriptive <see cref="FlutterError"/> in debug builds when it is read while the binding is still
+    /// being constructed.
+    /// </remarks>
+    public static WidgetsBinding Instance => BindingBase.CheckInstance<WidgetsBinding>(SharedInstance);
 
     /// <summary>
     /// Returns the ambient binding after its static construction has completed. A
@@ -509,8 +515,12 @@ public partial class WidgetsBinding
     /// </summary>
     public void InitInstances()
     {
+        // Dart's base `BindingBase.initInstances`, the first link of the chain: records the binding type
+        // in debug builds.
+        DebugAssertions.Assert(BindingBase.DebugInitializedType == null);
         if (Constants.KDebugMode)
         {
+            BindingBase.DebugInitializedType = GetType();
             DebugAddStackFilters();
         }
 

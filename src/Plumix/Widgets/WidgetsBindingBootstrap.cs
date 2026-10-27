@@ -69,6 +69,31 @@ public partial class WidgetsBinding
             deprecatedDoNotUseWillBeRemovedWithoutNoticeRenderView: _implicitRenderView);
     }
 
+    /// <summary>
+    /// Checks that the current zone is the same as that which was used to initialize the binding; always
+    /// <see langword="true"/> in Plumix.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Flutter's <c>BindingBase.debugCheckZone</c>, an instance member of the composed binding, which Plumix
+    /// spells as this class. Dart compares <c>Zone.current</c> with the zone that was current when
+    /// <c>initInstances</c> ran and reports (or, with <see cref="BindingBase.DebugZoneErrorsAreFatal"/>,
+    /// throws) a "Zone mismatch" <see cref="FlutterError"/> naming <paramref name="entryPoint"/>. .NET has no
+    /// zones: the state a Dart zone carries (error handlers, timers, microtasks, print) is process-wide in
+    /// Plumix, so every caller runs in the zone the binding was initialized in and the check always passes.
+    /// </para>
+    /// <para>
+    /// The <paramref name="entryPoint"/> parameter is the name of the API that is checking the zones are
+    /// consistent, for example, <c>"runApp"</c>. A binding that expects to be used with multiple zones
+    /// overrides this method to return true always without throwing, as flutter_test's bindings do.
+    /// </para>
+    /// </remarks>
+    public virtual bool DebugCheckZone(string entryPoint)
+    {
+        ArgumentNullException.ThrowIfNull(entryPoint);
+        return true;
+    }
+
     /// <summary>Queues a root attachment for the next event-loop turn.</summary>
     /// <remarks>Flutter's <c>WidgetsBinding.scheduleAttachRootWidget</c>.</remarks>
     internal void ScheduleAttachRootWidget(Widget rootWidget)
@@ -110,7 +135,8 @@ public partial class WidgetsBinding
     /// Flutter's <c>WidgetsBinding.drawFrame</c>, the override of <c>RendererBinding.drawFrame</c> that
     /// the renderer binding's persistent frame callback reaches. Until the first frame is reported, a
     /// timings callback waits for the platform to report a rasterized frame
-    /// (<see cref="FirstFrameRasterized"/>, the <c>Rasterized first useful frame</c> instant and the
+    /// (<see cref="FirstFrameRasterized"/>, the default <c>UserTag</c> made current again, the
+    /// <c>Rasterized first useful frame</c> instant and the
     /// <c>Flutter.FirstFrame</c> event); a frame that was deferred is not that frame.
     /// </remarks>
     public void DrawFrame()
@@ -132,6 +158,11 @@ public partial class WidgetsBinding
                 DebugAssertions.Assert(debugFrameWasSentToEngine);
                 if (!Constants.KReleaseMode)
                 {
+                    // Change the current user tag back to the default tag. At this point,
+                    // the user tag should be set to "AppStartUp" (originally set in the
+                    // engine), so we need to change it back to the default tag to mark
+                    // the end of app start up for CPU profiles.
+                    Developer.UserTag.DefaultTag.MakeCurrent();
                     FlutterTimeline.InstantSync("Rasterized first useful frame");
                     Developer.DeveloperService.PostEvent("Flutter.FirstFrame", new Dictionary<string, object?>());
                 }
