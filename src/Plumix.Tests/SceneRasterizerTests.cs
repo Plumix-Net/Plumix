@@ -128,6 +128,43 @@ public sealed class SceneRasterizerTests
         Assert.Equal(0, RasterBackend.PixelAt(image, 45, 5).A);
     }
 
+    // RawMagnifier.build paints `ShapeDecoration(shape, shadows)` above the lens, through
+    // `ClipPath(clipBehavior, _NegativeClip(shape))`: an offset shadow covers the lens unless clipped.
+    [Theory]
+    [InlineData(Clip.None)]
+    [InlineData(Clip.HardEdge)]
+    public void MagnifierLayer_PaintsItsShadowsThroughTheShapeDecorationAndNegativeClip(Clip clipBehavior)
+    {
+        var root = new OffsetLayer();
+        root.Append(new PictureLayer(default)
+        {
+            Picture = SceneBuilderTests.DrawRectPicture(new Rect(0, 0, 20, 20), Red),
+        });
+        var offset = new OffsetLayer(new Point(30, 0));
+        offset.Append(new MagnifierLayer
+        {
+            LensRect = new Rect(0, 0, 10, 10),
+            FocalPointOffset = new Point(-25, 5),
+            MagnificationScale = 1.0,
+            Decoration = new MagnifierDecoration(
+                shadows: [new BoxShadow(color: new Color(0xFF0000FF), offset: new Point(5, 5))]),
+            ClipBehavior = clipBehavior,
+        });
+        root.Append(offset);
+
+        Bitmap image = RasterizeScene(root, 50, 20);
+
+        // Outside the lens the shadow always shows.
+        Assert.Equal(((byte)0, (byte)0, (byte)0xFF, (byte)0xFF), RasterBackend.PixelAt(image, 42, 12));
+        // Inside the lens it is drawn above the magnified image unless the negative clip removes it.
+        Assert.Equal(
+            clipBehavior == Clip.None
+                ? ((byte)0, (byte)0, (byte)0xFF, (byte)0xFF)
+                : ((byte)0xFF, (byte)0, (byte)0, (byte)0xFF),
+            RasterBackend.PixelAt(image, 37, 7));
+        Assert.Equal(((byte)0xFF, (byte)0, (byte)0, (byte)0xFF), RasterBackend.PixelAt(image, 32, 2));
+    }
+
     [Fact]
     public void RetainedSubtree_RastersLikeTheFrameThatBuiltIt()
     {

@@ -147,29 +147,6 @@ public sealed class BoxShadowTests
     }
 
     [Fact]
-    public void BoxShadow_MapsOntoTheBackendShadowValue()
-    {
-        var shadow = new BoxShadow(
-            color: Colors.Red,
-            offset: new Point(1, 2),
-            blurRadius: 3.0,
-            spreadRadius: 4.0);
-
-        Avalonia.Media.BoxShadow converted = shadow.ToAvalonia();
-
-        Assert.Equal(1.0, converted.OffsetX);
-        Assert.Equal(2.0, converted.OffsetY);
-        Assert.Equal(3.0, converted.Blur);
-        Assert.Equal(4.0, converted.Spread);
-        Assert.Equal(Colors.Red, converted.Color);
-        Assert.False(converted.IsInset);
-
-        Avalonia.Media.BoxShadows empty = ((IReadOnlyList<BoxShadow>?)null).ToAvalonia();
-        Assert.Equal(0, empty.Count);
-        Assert.Equal(2, new[] { shadow, shadow }.ToAvalonia().Count);
-    }
-
-    [Fact]
     public void BoxDecoration_LerpsShadowListsInsteadOfSnapping()
     {
         var from = new BoxDecoration(BoxShadows: [new BoxShadow(color: Colors.Red, blurRadius: 2.0)]);

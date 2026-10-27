@@ -1784,26 +1784,6 @@ internal sealed class SwitchPainter : ToggleablePainter
         ImageErrorListener? imageError,
         Icon? icon)
     {
-        var thumbBounds = new Rect(offset.X, offset.Y, thumbSize.Width, thumbSize.Height);
-        double radius = thumbSize.Height / 2.0;
-        if (_thumbShadow is { Count: > 0 })
-        {
-            context.Canvas.DrawRectangle(
-                Brushes.Transparent,
-                null,
-                thumbBounds,
-                BorderRadius.Circular(radius),
-                _thumbShadow.ToAvalonia());
-        }
-
-        if (_isCupertino)
-        {
-            context.Canvas.DrawRRect(
-                RRect.FromRectAndRadius(thumbBounds.Inflate(0.5), radius + 0.5),
-                new SolidColorBrush(Color.FromARGB(0x0A, 0x00, 0x00, 0x00)),
-                null);
-        }
-
         try
         {
             _isPainting = true;
@@ -1812,28 +1792,63 @@ internal sealed class SwitchPainter : ToggleablePainter
                 || !ReferenceEquals(_cachedThumbImage, image)
                 || !ReferenceEquals(_cachedThumbImageError, imageError))
             {
-                _thumbPainter?.Dispose();
                 _cachedThumbColor = thumbColor;
                 _cachedThumbImage = image;
                 _cachedThumbImageError = imageError;
-                var decoration = new ShapeDecoration(
-                    Shape: new StadiumBorder(),
-                    Color: thumbColor,
-                    Image: image is null ? null : new DecorationImage(image, onError: imageError));
-                _thumbPainter = decoration.CreateBoxPainter(HandleDecorationChanged);
+                _thumbPainter?.Dispose();
+                _thumbPainter = CreateDefaultThumbDecoration(thumbColor, image, imageError)
+                    .CreateBoxPainter(HandleDecorationChanged);
             }
 
-            _thumbPainter!.Paint(context, offset, _configuration with { Size = thumbSize });
+            BoxPainter thumbPainter = _thumbPainter!;
+            if (_isCupertino)
+            {
+                PaintCupertinoThumbShadowAndBorder(context.Canvas, offset, thumbSize);
+            }
+
+            thumbPainter.Paint(context, offset, _configuration with { Size = thumbSize });
+
+            if (icon?.IconData is not null)
+            {
+                var thumbBounds = new Rect(offset.X, offset.Y, thumbSize.Width, thumbSize.Height);
+                PaintIcon(context, thumbBounds, icon, colorValue);
+            }
         }
         finally
         {
             _isPainting = false;
         }
+    }
 
-        if (icon?.IconData is not null)
+    private ShapeDecoration CreateDefaultThumbDecoration(
+        Color color,
+        ImageProvider? image,
+        ImageErrorListener? errorListener)
+    {
+        return new ShapeDecoration(
+            Color: color,
+            Image: image is null ? null : new DecorationImage(image, onError: errorListener),
+            Shape: new StadiumBorder(),
+            Shadows: _isCupertino ? null : _thumbShadow);
+    }
+
+    private void PaintCupertinoThumbShadowAndBorder(Canvas canvas, Point thumbPaintOffset, Size thumbSize)
+    {
+        RRect thumbBounds = RRect.FromLTRBR(
+            thumbPaintOffset.X,
+            thumbPaintOffset.Y,
+            thumbPaintOffset.X + thumbSize.Width,
+            thumbPaintOffset.Y + thumbSize.Height,
+            Radius.Circular(thumbSize.Height / 2.0));
+        if (_thumbShadow is not null)
         {
-            PaintIcon(context, thumbBounds, icon, colorValue);
+            foreach (BoxShadow shadow in _thumbShadow)
+            {
+                canvas.DrawRRect(thumbBounds.Shift(shadow.Offset), shadow.ToPaint());
+            }
         }
+
+        canvas.DrawRRect(thumbBounds.Inflate(0.5), new Paint { Color = Color.FromARGB(0x0A, 0x00, 0x00, 0x00) });
     }
 
     private void PaintIcon(
