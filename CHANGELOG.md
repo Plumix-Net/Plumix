@@ -8,6 +8,11 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased]
+- Headless paragraphs fake bold (w600+)/italic FlutterTest glyphs and paint backgrounds, shadows, decorations (SkParagraph).
+- Headless paragraphs keep the half letter-spacing lead-in unless an alignment shift applies (SkParagraph `TextLine`).
+- `Badge` composes `Container(clipBehavior, ShapeDecoration(StadiumBorder))` like badge.dart (badge.dart).
+- M3 `Chip` delete icon takes `_ChipDefaultsM3.deleteIconColor` (chip.dart).
+- Sample: Router/NavigatorPages buttons and TextField form buttons follow the Dart sample; 160 of 164 capture routes match.
 - Breaking: `PlatformDispatcher.TimerRun` removed; scheduler tasks and warm-up frames use `Timer.Run` (scheduler/binding.dart).
 - `FrameworkDartTester` fails on pending timers, runs warm-up frames at once, disables shadows (flutter_test binding.dart).
 - Service-extension handlers start on the framework thread; the intermittent banner-extension hang is gone (C#-only).
