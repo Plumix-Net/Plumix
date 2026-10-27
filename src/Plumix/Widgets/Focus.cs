@@ -139,7 +139,9 @@ public sealed class FocusAttachment
 }
 
 /// <summary>Dart parity source: <c>FocusNode</c>.</summary>
-public class FocusNode : ChangeNotifier
+/// <remarks>Dart's <c>DiagnosticableTreeMixin</c> is the <see cref="IDiagnosticableTree"/> surface below
+/// (C# has no mixins and <see cref="ChangeNotifier"/> is the base class).</remarks>
+public class FocusNode : ChangeNotifier, IDiagnosticableTree
 {
     private readonly List<FocusNode> _children = [];
     private readonly List<FocusOnKeyEventCallback> _keyEventHandlers = [];
@@ -733,20 +735,86 @@ public class FocusNode : ChangeNotifier
         base.Dispose();
     }
 
-    public override string ToString()
-    {
-        string extra = DebugLabel ?? string.Empty;
-        if (HasPrimaryFocus)
-        {
-            extra = extra.Length == 0 ? "[PRIMARY FOCUS]" : extra + " [PRIMARY FOCUS]";
-        }
-        else if (HasFocus)
-        {
-            extra = extra.Length == 0 ? "[IN FOCUS PATH]" : extra + " [IN FOCUS PATH]";
-        }
+    // -- Diagnostics (Dart's DiagnosticableTreeMixin) -------------------------------------------------
 
-        return extra.Length == 0 ? GetType().Name : $"{GetType().Name}({extra})";
+    /// <summary>Dart parity source: <c>FocusNode.debugFillProperties</c>.</summary>
+    public virtual void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        ArgumentNullException.ThrowIfNull(properties);
+        properties.Add(new DiagnosticsProperty<BuildContext>(
+            "context", Context, defaultValue: DiagnosticsDefaults.NullValue));
+        properties.Add(new FlagProperty(
+            "descendantsAreFocusable",
+            value: DescendantsAreFocusable,
+            ifFalse: "DESCENDANTS UNFOCUSABLE",
+            defaultValue: true));
+        properties.Add(new FlagProperty(
+            "descendantsAreTraversable",
+            value: DescendantsAreTraversable,
+            ifFalse: "DESCENDANTS UNTRAVERSABLE",
+            defaultValue: true));
+        properties.Add(new FlagProperty(
+            "canRequestFocus",
+            value: CanRequestFocus,
+            ifFalse: "NOT FOCUSABLE",
+            defaultValue: true));
+        properties.Add(new FlagProperty(
+            "hasFocus",
+            value: HasFocus && !HasPrimaryFocus,
+            ifTrue: "IN FOCUS PATH",
+            defaultValue: false));
+        properties.Add(new FlagProperty(
+            "hasPrimaryFocus",
+            value: HasPrimaryFocus,
+            ifTrue: "PRIMARY FOCUS",
+            defaultValue: false));
     }
+
+    /// <summary>Dart parity source: <c>FocusNode.debugDescribeChildren</c>.</summary>
+    public virtual List<DiagnosticsNode> DebugDescribeChildren()
+    {
+        int count = 1;
+        return _children.Select(child => child.ToDiagnosticsNode(name: $"Child {count++}")).ToList();
+    }
+
+    /// <summary>Dart parity source: <c>FocusNode.toStringShort</c>.</summary>
+    public virtual string ToStringShort()
+    {
+        bool hasDebugLabel = !string.IsNullOrEmpty(DebugLabel);
+        string extraData = (hasDebugLabel ? DebugLabel : string.Empty)
+            + (HasFocus && hasDebugLabel ? " " : string.Empty)
+            + (HasFocus && !HasPrimaryFocus ? "[IN FOCUS PATH]" : string.Empty)
+            + (HasPrimaryFocus ? "[PRIMARY FOCUS]" : string.Empty);
+        return Diagnostics.DescribeIdentity(this) + (extraData.Length > 0 ? $"({extraData})" : string.Empty);
+    }
+
+    /// <summary>Dart's <c>DiagnosticableTreeMixin.toDiagnosticsNode</c>.</summary>
+    public virtual DiagnosticsNode ToDiagnosticsNode(string? name = null, DiagnosticsTreeStyle? style = null) =>
+        new DiagnosticableTreeNode(name, this, style);
+
+    /// <inheritdoc />
+    public override string ToString() => ToString(DiagnosticLevel.Info);
+
+    /// <summary>Dart's <c>DiagnosticableTreeMixin.toString({minLevel})</c>.</summary>
+    public virtual string ToString(DiagnosticLevel minLevel) => Constants.KDebugMode
+        ? ToDiagnosticsNode(style: DiagnosticsTreeStyle.SingleLine).ToString(null, minLevel)
+        : ToStringShort();
+
+    /// <summary>Dart's <c>DiagnosticableTreeMixin.toStringShallow</c>.</summary>
+    public virtual string ToStringShallow(string joiner = ", ", DiagnosticLevel minLevel = DiagnosticLevel.Debug) =>
+        FocusDiagnostics.ToStringShallow(this, joiner, minLevel);
+
+    /// <summary>Dart's <c>DiagnosticableTreeMixin.toStringDeep</c>.</summary>
+    public virtual string ToStringDeep(
+        string prefixLineOne = "",
+        string? prefixOtherLines = null,
+        DiagnosticLevel minLevel = DiagnosticLevel.Debug,
+        int wrapWidth = 65) =>
+        ToDiagnosticsNode().ToStringDeep(
+            prefixLineOne: prefixLineOne,
+            prefixOtherLines: prefixOtherLines,
+            minLevel: minLevel,
+            wrapWidth: wrapWidth);
 }
 
 /// <summary>Dart parity source: <c>FocusScopeNode</c>.</summary>
@@ -860,6 +928,24 @@ public sealed class FocusScopeNode : FocusNode
 
     internal IReadOnlyList<FocusNode> FocusedChildren => _focusedChildren;
 
+    /// <summary>Dart parity source: <c>FocusScopeNode.debugFillProperties</c>.</summary>
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        base.DebugFillProperties(properties);
+        if (_focusedChildren.Count == 0)
+        {
+            return;
+        }
+
+        List<string> childList = Enumerable.Reverse(_focusedChildren)
+            .Select(static child => child.ToStringShort())
+            .ToList();
+        properties.Add(new IterableProperty<string>(
+            "focusedChildren", childList, defaultValue: Enumerable.Empty<string>()));
+        properties.Add(new DiagnosticsProperty<TraversalEdgeBehavior>(
+            "traversalEdgeBehavior", TraversalEdgeBehavior, defaultValue: TraversalEdgeBehavior.ClosedLoop));
+    }
+
     internal override void DoRequestFocus(bool findFirstFocus)
     {
         while (_focusedChildren.Count > 0
@@ -898,7 +984,9 @@ internal sealed class FocusAppLifecycleListener : WidgetsBindingObserver
 }
 
 /// <summary>Dart parity source: <c>FocusManager</c>.</summary>
-public sealed class FocusManager : ChangeNotifier
+/// <remarks>Dart's <c>DiagnosticableTreeMixin</c> is the <see cref="IDiagnosticableTree"/> surface at the end
+/// of the class.</remarks>
+public sealed class FocusManager : ChangeNotifier, IDiagnosticableTree
 {
     private readonly HashSet<FocusNode> _dirtyNodes = [];
     private readonly List<PendingAutofocus> _pendingAutofocuses = [];
@@ -1290,5 +1378,91 @@ public sealed class FocusManager : ChangeNotifier
         _highlightManager.Dispose();
         _rootScope.Dispose();
         base.Dispose();
+    }
+
+    // -- Diagnostics (Dart's DiagnosticableTreeMixin) -------------------------------------------------
+
+    /// <summary>Dart parity source: <c>FocusManager.debugDescribeChildren</c>.</summary>
+    public List<DiagnosticsNode> DebugDescribeChildren() => [_rootScope.ToDiagnosticsNode(name: "rootScope")];
+
+    /// <summary>Dart parity source: <c>FocusManager.debugFillProperties</c>.</summary>
+    public void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        ArgumentNullException.ThrowIfNull(properties);
+        properties.Add(new FlagProperty(
+            "haveScheduledUpdate", value: _haveScheduledUpdate, ifTrue: "UPDATE SCHEDULED"));
+        properties.Add(new DiagnosticsProperty<FocusNode>(
+            "primaryFocus", PrimaryFocus, defaultValue: DiagnosticsDefaults.NullValue));
+        properties.Add(new DiagnosticsProperty<FocusNode>(
+            "nextFocus", MarkedForFocus, defaultValue: DiagnosticsDefaults.NullValue));
+        if (PrimaryFocus?.Context is Element element)
+        {
+            properties.Add(new DiagnosticsProperty<string>("primaryFocusCreator", element.DebugGetCreatorChain(20)));
+        }
+    }
+
+    /// <summary>Dart's <c>DiagnosticableTreeMixin.toStringShort</c>.</summary>
+    public string ToStringShort() => Diagnostics.DescribeIdentity(this);
+
+    /// <summary>Dart's <c>DiagnosticableTreeMixin.toDiagnosticsNode</c>.</summary>
+    public DiagnosticsNode ToDiagnosticsNode(string? name = null, DiagnosticsTreeStyle? style = null) =>
+        new DiagnosticableTreeNode(name, this, style);
+
+    /// <inheritdoc />
+    public override string ToString() => ToString(DiagnosticLevel.Info);
+
+    /// <summary>Dart's <c>DiagnosticableTreeMixin.toString({minLevel})</c>.</summary>
+    public string ToString(DiagnosticLevel minLevel) => Constants.KDebugMode
+        ? ToDiagnosticsNode(style: DiagnosticsTreeStyle.SingleLine).ToString(null, minLevel)
+        : ToStringShort();
+
+    /// <summary>Dart's <c>DiagnosticableTreeMixin.toStringShallow</c>.</summary>
+    public string ToStringShallow(string joiner = ", ", DiagnosticLevel minLevel = DiagnosticLevel.Debug) =>
+        FocusDiagnostics.ToStringShallow(this, joiner, minLevel);
+
+    /// <summary>Dart's <c>DiagnosticableTreeMixin.toStringDeep</c>.</summary>
+    public string ToStringDeep(
+        string prefixLineOne = "",
+        string? prefixOtherLines = null,
+        DiagnosticLevel minLevel = DiagnosticLevel.Debug,
+        int wrapWidth = 65) =>
+        ToDiagnosticsNode().ToStringDeep(
+            prefixLineOne: prefixLineOne,
+            prefixOtherLines: prefixOtherLines,
+            minLevel: minLevel,
+            wrapWidth: wrapWidth);
+
+    /// <summary>
+    /// Returns a text representation of the current focus tree, along with the current attributes on
+    /// each node; an empty string in release builds.
+    /// </summary>
+    /// <remarks>Dart's top-level <c>debugDescribeFocusTree</c>.</remarks>
+    public static string DebugDescribeFocusTree() => Constants.KDebugMode ? Instance.ToStringDeep() : string.Empty;
+
+    /// <summary>Prints <see cref="DebugDescribeFocusTree"/>; does nothing in release builds.</summary>
+    /// <remarks>Dart's top-level <c>debugDumpFocusTree</c>.</remarks>
+    public static void DebugDumpFocusTree()
+    {
+        if (Constants.KDebugMode)
+        {
+            Print.DebugPrint(DebugDescribeFocusTree());
+        }
+    }
+}
+
+/// <summary>The <c>DiagnosticableTreeMixin.toStringShallow</c> body shared by the focus classes.</summary>
+internal static class FocusDiagnostics
+{
+    internal static string ToStringShallow(IDiagnosticableTree tree, string joiner, DiagnosticLevel minLevel)
+    {
+        if (!Constants.KDebugMode)
+        {
+            return tree.ToString() ?? string.Empty;
+        }
+
+        var builder = new DiagnosticPropertiesBuilder();
+        tree.DebugFillProperties(builder);
+        IEnumerable<DiagnosticsNode> properties = builder.Properties.Where(node => !node.IsFiltered(minLevel));
+        return tree + joiner + string.Join(joiner, properties);
     }
 }

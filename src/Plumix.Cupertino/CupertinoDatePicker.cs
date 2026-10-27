@@ -452,7 +452,14 @@ internal sealed class CupertinoDatePickerDateState : State<CupertinoDatePicker>
         _dayController = new FixedExtentScrollController(initialItem: _selectedDay - 1);
         _monthController = new FixedExtentScrollController(initialItem: _selectedMonth - 1);
         _yearController = new FixedExtentScrollController(initialItem: _selectedYear - Current.MinimumYear);
+
+        PaintingBinding.Instance.SystemFonts.AddListener(HandleSystemFontsChange);
     }
+
+    // Dart's `_handleSystemFontsChange`. The column widths and label metrics are measured on every
+    // build here (Dart caches them in `estimatedColumnWidths` / `_measureLabelMetrics`), so the
+    // rebuild is the whole cache reset.
+    private void HandleSystemFontsChange() => SetState(static () => { });
 
     public override void DidUpdateWidget(CupertinoDatePicker oldWidget)
     {
@@ -535,6 +542,7 @@ internal sealed class CupertinoDatePickerDateState : State<CupertinoDatePicker>
         _dayController.Dispose();
         _monthController.Dispose();
         _yearController.Dispose();
+        PaintingBinding.Instance.SystemFonts.RemoveListener(HandleSystemFontsChange);
         base.Dispose();
     }
 
@@ -815,7 +823,14 @@ internal sealed class CupertinoDatePickerMonthYearState : State<CupertinoDatePic
         _selectedYear = Current.InitialDateTime.Year;
         _monthController = new FixedExtentScrollController(initialItem: _selectedMonth - 1);
         _yearController = new FixedExtentScrollController(initialItem: _selectedYear - Current.MinimumYear);
+
+        PaintingBinding.Instance.SystemFonts.AddListener(HandleSystemFontsChange);
     }
+
+    // Dart's `_handleSystemFontsChange`. The column widths and label metrics are measured on every
+    // build here (Dart caches them in `estimatedColumnWidths` / `_measureLabelMetrics`), so the
+    // rebuild is the whole cache reset.
+    private void HandleSystemFontsChange() => SetState(static () => { });
 
     public override void DidUpdateWidget(CupertinoDatePicker oldWidget)
     {
@@ -907,6 +922,7 @@ internal sealed class CupertinoDatePickerMonthYearState : State<CupertinoDatePic
     {
         _monthController.Dispose();
         _yearController.Dispose();
+        PaintingBinding.Instance.SystemFonts.RemoveListener(HandleSystemFontsChange);
         base.Dispose();
     }
 
@@ -1065,7 +1081,14 @@ internal sealed class CupertinoDatePickerDateTimeState : State<CupertinoDatePick
         {
             _meridiemController = new FixedExtentScrollController(initialItem: _selectedAmPm);
         }
+
+        PaintingBinding.Instance.SystemFonts.AddListener(HandleSystemFontsChange);
     }
+
+    // Dart's `_handleSystemFontsChange`. The column widths and label metrics are measured on every
+    // build here (Dart caches them in `estimatedColumnWidths` / `_measureLabelMetrics`), so the
+    // rebuild is the whole cache reset.
+    private void HandleSystemFontsChange() => SetState(static () => { });
 
     public override void DidUpdateWidget(CupertinoDatePicker oldWidget)
     {
@@ -1190,6 +1213,7 @@ internal sealed class CupertinoDatePickerDateTimeState : State<CupertinoDatePick
         _hourController.Dispose();
         _minuteController.Dispose();
         _meridiemController?.Dispose();
+        PaintingBinding.Instance.SystemFonts.RemoveListener(HandleSystemFontsChange);
         base.Dispose();
     }
 
@@ -1587,7 +1611,14 @@ internal sealed class CupertinoTimerPickerState : State<CupertinoTimerPicker>
             _secondController = new FixedExtentScrollController(
                 initialItem: _selectedSecond / Current.SecondInterval);
         }
+
+        PaintingBinding.Instance.SystemFonts.AddListener(HandleSystemFontsChange);
     }
+
+    // Dart's `_handleSystemFontsChange`. The column widths and label metrics are measured on every
+    // build here (Dart caches them in `estimatedColumnWidths` / `_measureLabelMetrics`), so the
+    // rebuild is the whole cache reset.
+    private void HandleSystemFontsChange() => SetState(static () => { });
 
     public override void DidUpdateWidget(CupertinoTimerPicker oldWidget)
     {
@@ -1609,6 +1640,7 @@ internal sealed class CupertinoTimerPickerState : State<CupertinoTimerPicker>
         _hourController?.Dispose();
         _minuteController?.Dispose();
         _secondController?.Dispose();
+        PaintingBinding.Instance.SystemFonts.RemoveListener(HandleSystemFontsChange);
         base.Dispose();
     }
 

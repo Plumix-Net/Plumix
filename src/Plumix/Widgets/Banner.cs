@@ -47,7 +47,7 @@ public sealed class BannerPainter : CustomPainter
         TextDirection layoutDirection,
         Color? color = null,
         TextStyle? textStyle = null,
-        BoxShadow? shadow = null)
+        BoxShadow? shadow = null) : base(PaintingBinding.Instance.SystemFonts)
     {
         Message = message ?? throw new ArgumentNullException(nameof(message));
         TextDirection = textDirection;

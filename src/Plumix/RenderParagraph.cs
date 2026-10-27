@@ -20,6 +20,7 @@ public sealed partial class RenderParagraph : RenderBox,
 
     private readonly RenderBoxContainerDefaultsMixin<RenderBox, TextParentData> _container;
     private readonly TextPainter _textPainter;
+    private readonly RelayoutWhenSystemFontsChangeMixin _systemFonts;
     private TextPainter? _textIntrinsicsCache;
     private bool _softWrap = true;
     private TextOverflow _overflow = TextOverflow.Clip;
@@ -42,6 +43,7 @@ public sealed partial class RenderParagraph : RenderBox,
         ArgumentNullException.ThrowIfNull(text);
         text.DebugAssertIsValid();
         _container = new RenderBoxContainerDefaultsMixin<RenderBox, TextParentData>(this);
+        _systemFonts = new RelayoutWhenSystemFontsChangeMixin(this, SystemFontsDidChange);
         _textPainter = new TextPainter(
             text: text,
             textAlign: TextAlign.Start,
@@ -334,6 +336,29 @@ public sealed partial class RenderParagraph : RenderBox,
 
     /// Whether this paragraph currently has an overflow fade shader. Dart's `debugHasOverflowShader`.
     internal bool DebugHasOverflowShader => _overflowShader is not null;
+
+    /// <summary>Dart's <c>systemFontsDidChange</c> override of <c>RelayoutWhenSystemFontsChangeMixin</c>.</summary>
+    public void SystemFontsDidChange()
+    {
+        _systemFonts.SystemFontsDidChange();
+        _textPainter.MarkNeedsLayout();
+    }
+
+    /// <inheritdoc />
+    /// <remarks>Dart's <c>RelayoutWhenSystemFontsChangeMixin.attach</c>.</remarks>
+    protected override void OnAttach()
+    {
+        base.OnAttach();
+        _systemFonts.OnAttach();
+    }
+
+    /// <inheritdoc />
+    /// <remarks>Dart's <c>RelayoutWhenSystemFontsChangeMixin.detach</c>.</remarks>
+    protected override void OnDetach()
+    {
+        _systemFonts.OnDetach();
+        base.OnDetach();
+    }
 
     public RenderBox? FirstChild => _container.FirstChild;
 

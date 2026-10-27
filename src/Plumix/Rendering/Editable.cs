@@ -213,7 +213,8 @@ public sealed class VerticalCaretMovementRun : IEnumerator<TextPosition>
 /// <see cref="RenderBoxContainerDefaultsMixin{TChild,TParentData}"/> field and
 /// <c>RenderInlineChildrenContainerDefaults</c> is the static
 /// <see cref="RenderInlineChildrenContainerDefaults"/> helper, the same way <c>RenderParagraph</c> does
-/// it. <c>RelayoutWhenSystemFontsChangeMixin</c> is not ported (docs/ai/BACKLOG.md).</para>
+/// it. <c>RelayoutWhenSystemFontsChangeMixin</c> is the composed
+/// <see cref="RelayoutWhenSystemFontsChangeMixin"/> field, whose hook is <see cref="SystemFontsDidChange"/>.</para>
 /// </remarks>
 public class RenderEditable : RenderBox,
     IRenderBoxContainerDefaultsMixin<RenderBox, TextParentData>,
@@ -232,6 +233,7 @@ public class RenderEditable : RenderBox,
 
     private readonly RenderBoxContainerDefaultsMixin<RenderBox, TextParentData> _container;
     private readonly TextPainter _textPainter;
+    private readonly RelayoutWhenSystemFontsChangeMixin _systemFonts;
     private readonly TextHighlightPainter _selectionPainter = new();
     private readonly TextHighlightPainter _autocorrectHighlightPainter = new();
     private readonly ValueNotifier<bool> _selectionStartInViewport = new(true);
@@ -366,6 +368,7 @@ public class RenderEditable : RenderBox,
         DebugAssert(cursorHeight is null || cursorHeight >= 0.0);
 
         _container = new RenderBoxContainerDefaultsMixin<RenderBox, TextParentData>(this);
+        _systemFonts = new RelayoutWhenSystemFontsChangeMixin(this, SystemFontsDidChange);
         _textPainter = new TextPainter(
             text: text,
             textAlign: textAlign,
@@ -876,6 +879,14 @@ public class RenderEditable : RenderBox,
         // Tell the painters to repaint since text layout may have changed.
         _foregroundRenderObject?.MarkNeedsPaint();
         _backgroundRenderObject?.MarkNeedsPaint();
+    }
+
+    /// <summary>Dart's <c>systemFontsDidChange</c> override of <c>RelayoutWhenSystemFontsChangeMixin</c>.</summary>
+    /// <remarks>Overrides must call the base implementation, which schedules the relayout.</remarks>
+    public virtual void SystemFontsDidChange()
+    {
+        _systemFonts.SystemFontsDidChange();
+        _textPainter.MarkNeedsLayout();
     }
 
     /// <summary>Returns a plain text version of the text in <see cref="TextPainter"/>.</summary>
@@ -1834,6 +1845,7 @@ public class RenderEditable : RenderBox,
     protected override void OnAttach()
     {
         base.OnAttach();
+        _systemFonts.OnAttach();
         _tap = new TapGestureRecognizer { DebugOwner = this };
         _tap.OnTapDown = HandleTapDownFromRecognizer;
         _tap.OnTap = HandleTapFromRecognizer;
@@ -1851,6 +1863,7 @@ public class RenderEditable : RenderBox,
         _longPress!.Dispose();
         _offset.RemoveListener(MarkNeedsPaint);
         _showCursor.RemoveListener(ShowHideCursor);
+        _systemFonts.OnDetach();
         base.OnDetach();
     }
 

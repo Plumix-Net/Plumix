@@ -113,8 +113,7 @@ public partial class WidgetsBinding
     /// <summary>Registers the widgets library's service extensions.</summary>
     /// <remarks>
     /// Flutter's <c>WidgetsBinding.initServiceExtensions</c>, which <c>BindingBase</c> runs right after
-    /// <c>initInstances</c>. <c>debugDumpFocusTree</c> is not registered (the focus manager has no
-    /// diagnostics tree); see <c>docs/ai/BACKLOG.md</c>.
+    /// <c>initInstances</c>.
     /// </remarks>
     private void InitServiceExtensions()
     {
@@ -123,6 +122,10 @@ public partial class WidgetsBinding
             BindingBase.RegisterServiceExtension(
                 WidgetsServiceExtensions.DebugDumpApp.DartName(),
                 static _ => Task.FromResult(new Dictionary<string, object?> { ["data"] = DebugDumpAppString() }));
+
+            BindingBase.RegisterServiceExtension(
+                WidgetsServiceExtensions.DebugDumpFocusTree.DartName(),
+                _ => Task.FromResult(new Dictionary<string, object?> { ["data"] = FocusManager.ToStringDeep() }));
 
             if (!Constants.KIsWeb)
             {
