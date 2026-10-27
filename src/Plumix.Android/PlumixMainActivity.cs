@@ -34,6 +34,7 @@ public class PlumixMainActivity : AvaloniaMainActivity
     private AndroidActivityDelegate? _delegate;
     private Java.Lang.Object? _backCallback;
     private ImeVisibilityListener? _imeListener;
+    private AndroidAccessibilityFeatures? _accessibilityFeatures;
 
     /// <summary>The delegate the Activity callbacks are forwarded to.</summary>
     protected AndroidActivityDelegate Delegate => _delegate ??= new AndroidActivityDelegate();
@@ -44,6 +45,10 @@ public class PlumixMainActivity : AvaloniaMainActivity
         // PlatformPlugin.popSystemNavigator never reaches an OnBackPressedDispatcher. Going through
         // Avalonia's dispatcher here would hand the press back to the framework.
         Delegate.PopSystemNavigator = Finish;
+        // PlatformPlugin's sound and haptics over the decor view, LocalizationPlugin's locale resolution.
+        Delegate.PlaySystemSound = type => AndroidPlatformPlugin.PlaySystemSound(this, type);
+        Delegate.VibrateHapticFeedback = type => AndroidPlatformPlugin.VibrateHapticFeedback(this, type);
+        Delegate.ResolveLocale = supported => AndroidPlatformPlugin.ResolveNativeLocale(this, supported);
         if (OperatingSystem.IsAndroidVersionAtLeast(34))
         {
             Delegate.BackCallbackNeededChanged = SetBackCallbackRegistered;
@@ -52,6 +57,8 @@ public class PlumixMainActivity : AvaloniaMainActivity
         ReportConfiguration(Resources?.Configuration);
         Delegate.OnCreate(savedInstanceState?.GetByteArray(FrameworkRestorationBundleKey));
         base.OnCreate(savedInstanceState);
+        // AccessibilityBridge's feature flags, which FlutterView creates with the bridge.
+        _accessibilityFeatures = new AndroidAccessibilityFeatures(this, Delegate);
 
         if (OperatingSystem.IsAndroidVersionAtLeast(34) && Window?.DecorView is { } decorView)
         {
@@ -98,6 +105,8 @@ public class PlumixMainActivity : AvaloniaMainActivity
             _imeListener = null;
         }
 
+        _accessibilityFeatures?.Dispose();
+        _accessibilityFeatures = null;
         Delegate.OnDestroy();
         base.OnDestroy();
     }
@@ -123,6 +132,9 @@ public class PlumixMainActivity : AvaloniaMainActivity
         {
             Delegate.OnLocalesChanged(ReadLocales(configuration));
         }
+
+        // The bold-text setting changes the configuration's font weight adjustment.
+        _accessibilityFeatures?.Report();
     }
 
     // FlutterJNI.getScaledFontSize over the DisplayMetrics of the configuration being reported (the engine's

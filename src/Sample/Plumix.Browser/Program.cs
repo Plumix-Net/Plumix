@@ -25,6 +25,7 @@ internal sealed partial class Program
         await BuildAvaloniaApp()
             .WithInterFont()
             .StartBrowserAppAsync("out");
+        await BrowserPlatformPlugin.InitializeAsync();
         await JSHost.ImportAsync(LifecycleModule, "./plumix-lifecycle.js");
         SubscribeToLifecycle(LifecycleCallback);
         if (Application.Current?.ApplicationLifetime is ISingleViewApplicationLifetime { MainView: PlumixHost host })

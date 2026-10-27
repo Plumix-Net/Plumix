@@ -30,7 +30,7 @@ using FeedbackType = Plumix.UI.FeedbackType;
 
 namespace Plumix;
 
-public class PlumixHost : Control, ICustomHitTest
+public partial class PlumixHost : Control, ICustomHitTest
 {
     static PlumixHost()
     {
@@ -58,6 +58,13 @@ public class PlumixHost : Control, ICustomHitTest
     // embedders do not treat as back (Alt+Left moves by word in macOS text fields).
     private static readonly bool s_listensToSystemBack = OperatingSystem.IsAndroid();
 
+    /// <summary>
+    /// Whether the Escape and BrowserBack keys run <c>popRoute</c> (C#-only, see <c>docs/ai/DIVERGENCES.md</c>):
+    /// everywhere but Android, whose system back reaches the framework through <c>TopLevel.BackRequested</c>
+    /// (and the predictive back callback), as it reaches <c>FlutterActivity.onBackPressed</c>. Test-settable.
+    /// </summary>
+    internal static bool MapsBackKeysToPopRoute { get; set; } = !OperatingSystem.IsAndroid();
+
     // What the framework last reported through `SystemNavigator.setFrameworkHandlesBack`; null until it
     // reports, so an Activity created later can register the engine's back callback to match.
     private static bool? s_reportedFrameworkHandlesBack;
@@ -68,7 +75,8 @@ public class PlumixHost : Control, ICustomHitTest
         s_frameworkHandlesBack = true;
         s_reportedFrameworkHandlesBack = null;
         FrameworkHandlesBackChanged = null;
-        SystemNavigatorPopHandler = null;
+        MapsBackKeysToPopRoute = !OperatingSystem.IsAndroid();
+        ResetPlatformPluginForTests();
     }
 
     /// <summary>
@@ -82,13 +90,6 @@ public class PlumixHost : Control, ICustomHitTest
     /// registering or unregistering its back callback.
     /// </summary>
     internal static event Action<bool>? FrameworkHandlesBackChanged;
-
-    /// <summary>
-    /// The platform's answer to <c>SystemNavigator.pop</c> (the Android engine's
-    /// <c>PlatformPlugin.popSystemNavigator</c>, which finishes the Activity); null where the host has
-    /// none, and the call is then left unimplemented, as on Flutter's desktop embedders.
-    /// </summary>
-    internal static Action? SystemNavigatorPopHandler { get; set; }
 
     // The Android embedder's `ViewportMetrics.physicalTouchSlop` (`ViewConfiguration.getScaledTouchSlop`),
     // which its `FlutterView` sends with every metrics update. The other embedders send none, so
@@ -346,9 +347,9 @@ public class PlumixHost : Control, ICustomHitTest
         }
 
         // Avalonia's `Key.Back` is Backspace on every platform (Android's KEYCODE_DEL); Android's
-        // KEYCODE_BACK arrives as `Key.Escape`.
+        // KEYCODE_BACK arrives as `Key.Escape`, and, left unhandled, comes back as the system back.
         bool isBackKey = e.Key is Key.Escape or Key.BrowserBack;
-        if (isBackKey && HandleBackButton())
+        if (isBackKey && MapsBackKeysToPopRoute && HandleBackButton(fromKey: true))
         {
             e.Handled = true;
         }
@@ -364,7 +365,7 @@ public class PlumixHost : Control, ICustomHitTest
     /// </remarks>
     internal void HandleBackRequested(RoutedEventArgs e)
     {
-        if (!e.Handled && HandleBackButton())
+        if (!e.Handled && HandleBackButton(fromKey: false))
         {
             e.Handled = true;
         }
@@ -375,9 +376,10 @@ public class PlumixHost : Control, ICustomHitTest
     /// <summary>
     /// The engine's back button: a <c>popRoute</c> message, sent only while the framework reported it
     /// handles back (<c>SystemNavigator.setFrameworkHandlesBack</c>). Returns whether the host must
-    /// treat the back press as consumed.
+    /// treat the back press as consumed. A back key's unanswered pop does not reach the platform's
+    /// <c>SystemNavigator.pop</c> (see <see cref="SystemNavigatorPopHandler"/>).
     /// </summary>
-    private static bool HandleBackButton()
+    private static bool HandleBackButton(bool fromKey)
     {
         if (!s_frameworkHandlesBack)
         {
@@ -389,7 +391,9 @@ public class PlumixHost : Control, ICustomHitTest
         Task<bool> handled;
         using (EventLoop.EnterFrameworkThread())
         {
-            handled = WidgetsBinding.Instance.HandlePopRoute();
+            handled = fromKey
+                ? RunKeyPopRoute(WidgetsBinding.Instance.HandlePopRoute)
+                : WidgetsBinding.Instance.HandlePopRoute();
         }
 
         return !handled.IsCompleted || handled is { IsCompletedSuccessfully: true, Result: true };
@@ -755,7 +759,8 @@ public class PlumixHost : Control, ICustomHitTest
     /// <summary>
     /// Reports the platform's accessibility features to the dispatcher, as the engine's
     /// <c>_updateAccessibilityFeatures</c> does. Avalonia exposes only the high-contrast theme
-    /// variant, so that is the one bit this host owns; every other bit keeps the value last reported.
+    /// variant, so that is the one bit this host reads, unless an embedder reported it through
+    /// <see cref="UpdatePlatformAccessibilityFeatures"/>; every other bit keeps the value last reported.
     /// </summary>
     private void ReportAccessibilityFeatures()
     {
@@ -764,14 +769,7 @@ public class PlumixHost : Control, ICustomHitTest
             return;
         }
 
-        PlatformDispatcher dispatcher = PlatformDispatcher.Instance;
-        int values = dispatcher.ReportedAccessibilityFeatures & ~AccessibilityFeatures.KHighContrastIndex;
-        if (ResolveHighContrast())
-        {
-            values |= AccessibilityFeatures.KHighContrastIndex;
-        }
-
-        dispatcher.UpdateAccessibilityFeatures(values);
+        PublishAccessibilityFeatures(ResolveHighContrast());
     }
 
     /// <summary>Logical insets to the physical pixels a <see cref="FlutterView"/> reports.</summary>
@@ -1527,9 +1525,8 @@ public class PlumixHost : Control, ICustomHitTest
                 s_reportedFrameworkHandlesBack = s_frameworkHandlesBack;
                 FrameworkHandlesBackChanged?.Invoke(s_frameworkHandlesBack);
                 return Task.FromResult<object?>(null);
-            case "SystemNavigator.pop" when SystemNavigatorPopHandler is { } popSystemNavigator:
-                popSystemNavigator();
-                return Task.FromResult<object?>(null);
+            case "SystemNavigator.pop":
+                return PopSystemNavigator(call.Arguments);
             case "SystemChrome.setSystemUIOverlayStyle":
                 _currentSystemUiOverlayStyle =
                     SystemUiOverlayStyle.FromMap((System.Collections.IDictionary)call.Arguments!);
@@ -1604,17 +1601,30 @@ public class PlumixHost : Control, ICustomHitTest
         _ => SystemSoundType.Click,
     };
 
+    /// <summary>
+    /// Receives <c>SystemSound.play</c>: runs <see cref="SystemSoundHandler"/>, or the desktop embedders'
+    /// answer when no platform host installed one.
+    /// </summary>
     protected virtual void OnFrameworkSystemSound(SystemSoundType type)
     {
+        if (SystemSoundHandler is { } playSystemSound)
+        {
+            playSystemSound(type);
+        }
+        else
+        {
+            DesktopPlatformPlugin.PlaySystemSound(type);
+        }
     }
 
     /// <summary>
     /// Receives <c>HapticFeedback.vibrate</c>. <paramref name="type"/> is Dart's
     /// <c>HapticFeedbackType</c> string (for example <c>HapticFeedbackType.mediumImpact</c>), or
-    /// <c>null</c> for the plain system default.
+    /// <c>null</c> for the plain system default. Runs <see cref="HapticFeedbackHandler"/>.
     /// </summary>
     protected virtual void OnFrameworkHapticFeedback(string? type)
     {
+        HapticFeedbackHandler?.Invoke(type);
     }
 
     private void ApplyApplicationSwitcherDescription()

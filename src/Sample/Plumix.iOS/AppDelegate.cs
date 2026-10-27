@@ -98,6 +98,7 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>
             })
         {
             IOSAccessibilityBridge.Attach(host);
+            IOSPlatformPlugin.Install(host);
         }
     }
 

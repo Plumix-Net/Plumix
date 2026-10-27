@@ -77,6 +77,28 @@ public sealed class AndroidActivityDelegate
     public Action? PopSystemNavigator { get; set; }
 
     /// <summary>
+    /// The Activity's answer to <c>SystemSound.play</c>: <c>PlatformPlugin.playSystemSound</c>, which plays
+    /// the decor view's <c>SoundEffectConstants.CLICK</c> for <see cref="SystemSoundType.Click"/> only.
+    /// </summary>
+    public Action<SystemSoundType>? PlaySystemSound { get; set; }
+
+    /// <summary>
+    /// The Activity's answer to <c>HapticFeedback.vibrate</c>, called with Dart's <c>HapticFeedbackType</c>
+    /// string or <see langword="null"/> for the plain vibration: <c>PlatformPlugin.vibrateHapticFeedback</c>,
+    /// which performs the decor view's <c>HapticFeedbackConstants</c> for each type.
+    /// </summary>
+    public Action<string?>? VibrateHapticFeedback { get; set; }
+
+    /// <summary>
+    /// The Activity's locale resolution, which <see cref="PlatformDispatcher.ComputePlatformResolvedLocale"/>
+    /// asks: <c>LocalizationPlugin.resolveNativeLocale</c> over the configuration's locale list.
+    /// </summary>
+    /// <remarks>
+    /// <see cref="OnCreate"/> installs it as <see cref="PlatformDispatcher.PlatformLocaleResolver"/>.
+    /// </remarks>
+    public Func<IReadOnlyList<Locale>, Locale?>? ResolveLocale { get; set; }
+
+    /// <summary>
     /// <c>Activity.onCreate</c>: hands the framework the restoration data saved by
     /// <see cref="OnSaveInstanceState"/>, or null when the Activity starts fresh, and makes this Activity
     /// the one that answers the framework's back requests.
@@ -90,6 +112,9 @@ public sealed class AndroidActivityDelegate
         PlumixHost.FrameworkHandlesBackChanged -= HandleFrameworkHandlesBackChanged;
         PlumixHost.FrameworkHandlesBackChanged += HandleFrameworkHandlesBackChanged;
         PlumixHost.SystemNavigatorPopHandler = HandleSystemNavigatorPop;
+        PlumixHost.SystemSoundHandler = HandleSystemSound;
+        PlumixHost.HapticFeedbackHandler = HandleHapticFeedback;
+        PlatformDispatcher.Instance.PlatformLocaleResolver = HandleResolveLocale;
         if (PlumixHost.ReportedFrameworkHandlesBack is { } frameworkHandlesBack)
         {
             HandleFrameworkHandlesBackChanged(frameworkHandlesBack);
@@ -117,6 +142,21 @@ public sealed class AndroidActivityDelegate
         if (ReferenceEquals(PlumixHost.SystemNavigatorPopHandler?.Target, this))
         {
             PlumixHost.SystemNavigatorPopHandler = null;
+        }
+
+        if (ReferenceEquals(PlumixHost.SystemSoundHandler?.Target, this))
+        {
+            PlumixHost.SystemSoundHandler = null;
+        }
+
+        if (ReferenceEquals(PlumixHost.HapticFeedbackHandler?.Target, this))
+        {
+            PlumixHost.HapticFeedbackHandler = null;
+        }
+
+        if (ReferenceEquals(PlatformDispatcher.Instance.PlatformLocaleResolver?.Target, this))
+        {
+            PlatformDispatcher.Instance.PlatformLocaleResolver = null;
         }
 
         _lifecycleChannel.AppIsDetached();
@@ -189,6 +229,43 @@ public sealed class AndroidActivityDelegate
         PlumixHost.UpdatePhysicalTouchSlop(scaledTouchSlop);
     }
 
+    /// <summary>
+    /// Reports the accessibility features the Activity reads from the platform, as the engine's
+    /// <c>AccessibilityBridge</c> does, together with the no-announce bit, which the Android engine always
+    /// sets. The features Android does not support (reduce motion, on/off switch labels, the auto-play and
+    /// cursor bits) stay clear.
+    /// </summary>
+    /// <param name="accessibleNavigation">An assistive technology inspects the window.</param>
+    /// <param name="invertColors">The secure <c>accessibility_display_inversion_enabled</c> setting.</param>
+    /// <param name="disableAnimations">The global <c>transition_animation_scale</c> is 0.</param>
+    /// <param name="boldText">The configuration's <c>fontWeightAdjustment</c> is 300 or more (Android 12+).</param>
+    /// <param name="highContrast"><c>UiModeManager.getContrast</c> is above 0 (Android 14+).</param>
+    public void OnAccessibilityFeaturesChanged(
+        bool accessibleNavigation,
+        bool invertColors,
+        bool disableAnimations,
+        bool boldText,
+        bool highContrast)
+    {
+        int features = AccessibilityFeatures.KNoAnnounceIndex;
+        features |= accessibleNavigation ? AccessibilityFeatures.KAccessibleNavigationIndex : 0;
+        features |= invertColors ? AccessibilityFeatures.KInvertColorsIndex : 0;
+        features |= disableAnimations ? AccessibilityFeatures.KDisableAnimationsIndex : 0;
+        features |= boldText ? AccessibilityFeatures.KBoldTextIndex : 0;
+        features |= highContrast ? AccessibilityFeatures.KHighContrastIndex : 0;
+        PlumixHost.UpdatePlatformAccessibilityFeatures(features, AndroidAccessibilityFeatures);
+    }
+
+    // The accessibility feature bits the Android engine reports: its `AccessibilityFeature`s not marked
+    // "NOT SUPPORTED".
+    internal const int AndroidAccessibilityFeatures =
+        AccessibilityFeatures.KAccessibleNavigationIndex
+        | AccessibilityFeatures.KInvertColorsIndex
+        | AccessibilityFeatures.KDisableAnimationsIndex
+        | AccessibilityFeatures.KBoldTextIndex
+        | AccessibilityFeatures.KHighContrastIndex
+        | AccessibilityFeatures.KNoAnnounceIndex;
+
     /// <summary><c>OnBackAnimationCallback.onBackStarted</c> (Android 14+ predictive back).</summary>
     public void OnBackStarted(PredictiveBackEvent backEvent) =>
         _ = WidgetsBinding.Instance.HandleStartBackGesture(backEvent);
@@ -234,7 +311,14 @@ public sealed class AndroidActivityDelegate
         }
     }
 
-    private void HandleSystemNavigatorPop() => PopSystemNavigator?.Invoke();
+    private void HandleSystemNavigatorPop(bool animated) => PopSystemNavigator?.Invoke();
+
+    private void HandleSystemSound(SystemSoundType type) => PlaySystemSound?.Invoke(type);
+
+    private void HandleHapticFeedback(string? type) => VibrateHapticFeedback?.Invoke(type);
+
+    private Locale? HandleResolveLocale(IReadOnlyList<Locale> supportedLocales) =>
+        ResolveLocale?.Invoke(supportedLocales);
 
     internal static void ResetForTests() => s_restorationChannel = null;
 }
