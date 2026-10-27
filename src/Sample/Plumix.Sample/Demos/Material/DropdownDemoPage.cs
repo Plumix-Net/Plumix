@@ -83,7 +83,7 @@ public sealed class DropdownDemoPage : StatefulWidget
                 dropdownColor: new Color(0xFFFFF8E1),
                 menuMaxHeight: 180,
                 borderRadius: BorderRadius.Circular(10),
-                padding: new Thickness(8, 4));
+                padding: EdgeInsets.Symmetric(horizontal: 8, vertical: 4));
             if (_hideUnderline) dropdown = new DropdownButtonHideUnderline(dropdown);
             dropdown = new ButtonTheme(new ButtonThemeData(AlignedDropdown: _aligned), dropdown);
             dropdown = new Directionality(

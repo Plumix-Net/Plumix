@@ -51,7 +51,7 @@ internal sealed class AsyncBuilderDemoPageState : State
     {
         return new Container(
             color: new Color(0xFFF4F7FA),
-            padding: new Thickness(12),
+            padding: EdgeInsets.All(12),
             child: new Column(
                 crossAxisAlignment: CrossAxisAlignment.Stretch,
                 spacing: 10,
@@ -78,7 +78,7 @@ internal sealed class AsyncBuilderDemoPageState : State
     {
         return new Container(
             color: new Color(0xFFF4F7FA),
-            padding: new Thickness(12),
+            padding: EdgeInsets.All(12),
             child: new Column(
                 crossAxisAlignment: CrossAxisAlignment.Stretch,
                 spacing: 10,

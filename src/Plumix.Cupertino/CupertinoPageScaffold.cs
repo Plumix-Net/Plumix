@@ -100,7 +100,7 @@ internal sealed class CupertinoPageScaffoldState : State<CupertinoPageScaffold>,
             double bottomPadding = CurrentWidget.ResizeToAvoidBottomInset
                 ? existingMediaQuery.ViewInsets.Bottom
                 : 0.0;
-            Thickness newViewInsets = CurrentWidget.ResizeToAvoidBottomInset
+            EdgeInsets newViewInsets = CurrentWidget.ResizeToAvoidBottomInset
                 ? CopyBottom(existingMediaQuery.ViewInsets, 0.0)
                 : existingMediaQuery.ViewInsets;
 
@@ -111,7 +111,7 @@ internal sealed class CupertinoPageScaffoldState : State<CupertinoPageScaffold>,
                         .RemovePadding(removeTop: true)
                         .CopyWith(viewInsets: newViewInsets),
                     child: new Padding(
-                        insets: new Thickness(0.0, topPadding, 0.0, bottomPadding),
+                        insets: EdgeInsets.FromLTRB(0.0, topPadding, 0.0, bottomPadding),
                         child: paddedContent));
             }
             else
@@ -121,7 +121,7 @@ internal sealed class CupertinoPageScaffoldState : State<CupertinoPageScaffold>,
                         padding: CopyTop(existingMediaQuery.Padding, topPadding),
                         viewInsets: newViewInsets),
                     child: new Padding(
-                        insets: new Thickness(0.0, 0.0, 0.0, bottomPadding),
+                        insets: EdgeInsets.FromLTRB(0.0, 0.0, 0.0, bottomPadding),
                         child: paddedContent));
             }
         }
@@ -131,7 +131,7 @@ internal sealed class CupertinoPageScaffoldState : State<CupertinoPageScaffold>,
                 data: existingMediaQuery.CopyWith(
                     viewInsets: CopyBottom(existingMediaQuery.ViewInsets, 0.0)),
                 child: new Padding(
-                    insets: new Thickness(0.0, 0.0, 0.0, existingMediaQuery.ViewInsets.Bottom),
+                    insets: EdgeInsets.FromLTRB(0.0, 0.0, 0.0, existingMediaQuery.ViewInsets.Bottom),
                     child: paddedContent));
         }
 
@@ -161,14 +161,14 @@ internal sealed class CupertinoPageScaffoldState : State<CupertinoPageScaffold>,
                     child: new Stack(children: children))));
     }
 
-    private static Thickness CopyTop(Thickness source, double top)
+    private static EdgeInsets CopyTop(EdgeInsets source, double top)
     {
-        return new Thickness(source.Left, top, source.Right, source.Bottom);
+        return EdgeInsets.FromLTRB(source.Left, top, source.Right, source.Bottom);
     }
 
-    private static Thickness CopyBottom(Thickness source, double bottom)
+    private static EdgeInsets CopyBottom(EdgeInsets source, double bottom)
     {
-        return new Thickness(source.Left, source.Top, source.Right, bottom);
+        return EdgeInsets.FromLTRB(source.Left, source.Top, source.Right, bottom);
     }
 }
 

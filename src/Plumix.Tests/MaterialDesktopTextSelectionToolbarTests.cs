@@ -68,12 +68,12 @@ public sealed class MaterialDesktopTextSelectionToolbarTests : IDisposable
                     new DesktopTextSelectionToolbarButton(() => { }, new Text("Copy")),
                     new DesktopTextSelectionToolbarButton(() => { }, new Text("Paste")),
                 ]),
-            padding: new Thickness(0, 12, 0, 0));
+            padding: EdgeInsets.FromLTRB(0, 12, 0, 0));
 
         harness.Pump(new Size(400, 300));
 
         var padding = Assert.Single(FindDescendants<RenderPadding>(harness.RenderView), value =>
-            value.Padding == new Thickness(8, 20, 8, 8));
+            value.Padding == EdgeInsets.FromLTRB(8, 20, 8, 8));
         Assert.Equal(new Size(400, 300), padding.Size);
 
         var customLayout = Assert.Single(FindDescendants<RenderCustomSingleChildLayoutBox>(harness.RenderView));
@@ -110,7 +110,7 @@ public sealed class MaterialDesktopTextSelectionToolbarTests : IDisposable
             box.AdditionalConstraints.MinWidth == 48
             && box.AdditionalConstraints.MinHeight == 36);
         Assert.Contains(FindDescendants<RenderPadding>(harness.RenderView), value =>
-            value.Padding == new Thickness(20, 0, 20, 3));
+            value.Padding == EdgeInsets.FromLTRB(20, 0, 20, 3));
         Assert.Contains(FindDescendants<RenderPositionedBox>(harness.RenderView), align =>
             align.Alignment == Alignment.CenterLeft);
 
@@ -205,12 +205,18 @@ public sealed class MaterialDesktopTextSelectionToolbarTests : IDisposable
     [Fact]
     public void TextSelectionToolbarTextButton_UsesPositionPaddingAndAndroidStyle()
     {
-        Assert.Equal(new Thickness(14.5, 0, 14.5, 0), TextSelectionToolbarTextButton.GetPadding(0, 1));
-        Assert.Equal(new Thickness(14.5, 0, 9.5, 0), TextSelectionToolbarTextButton.GetPadding(0, 3));
-        Assert.Equal(new Thickness(9.5, 0, 14.5, 0), TextSelectionToolbarTextButton.GetPadding(2, 3));
         Assert.Equal(
-            new Thickness(9.5, 0, 14.5, 0),
-            TextSelectionToolbarTextButton.GetPadding(0, 3, TextDirection.Rtl));
+            EdgeInsetsGeometry.DirectionalOnly(start: 14.5, end: 14.5),
+            TextSelectionToolbarTextButton.GetPadding(0, 1));
+        Assert.Equal(
+            EdgeInsetsGeometry.DirectionalOnly(start: 14.5, end: 9.5),
+            TextSelectionToolbarTextButton.GetPadding(0, 3));
+        Assert.Equal(
+            EdgeInsets.FromLTRB(9.5, 0, 14.5, 0),
+            TextSelectionToolbarTextButton.GetPadding(2, 3).Resolve(TextDirection.Ltr));
+        Assert.Equal(
+            EdgeInsets.FromLTRB(9.5, 0, 14.5, 0),
+            TextSelectionToolbarTextButton.GetPadding(0, 3).Resolve(TextDirection.Rtl));
         Assert.Throws<ArgumentOutOfRangeException>(() => TextSelectionToolbarTextButton.GetPadding(1, 1));
 
         using var harness = CreateHarness(
@@ -223,7 +229,7 @@ public sealed class MaterialDesktopTextSelectionToolbarTests : IDisposable
         harness.Pump(new Size(180, 60));
 
         Assert.Contains(FindDescendants<RenderPadding>(harness.RenderView), value =>
-            value.Padding == new Thickness(14.5, 0, 9.5, 0));
+            value.Padding == EdgeInsetsGeometry.DirectionalOnly(start: 14.5, end: 9.5));
         Assert.Contains(FindDescendants<RenderConstrainedBox>(harness.RenderView), box =>
             box.AdditionalConstraints.MinWidth == 48
             && box.AdditionalConstraints.MinHeight == 48);
@@ -252,12 +258,12 @@ public sealed class MaterialDesktopTextSelectionToolbarTests : IDisposable
                         TextSelectionToolbarTextButton.GetPadding(1, 2),
                         () => { }),
                 ]),
-            padding: new Thickness(0, 12, 0, 0));
+            padding: EdgeInsets.FromLTRB(0, 12, 0, 0));
 
         harness.Pump(new Size(320, 200));
 
         Assert.Contains(FindDescendants<RenderPadding>(harness.RenderView), value =>
-            value.Padding == new Thickness(8, 20, 8, 8));
+            value.Padding == EdgeInsets.FromLTRB(8, 20, 8, 8));
         var customLayout = Assert.Single(FindDescendants<RenderCustomSingleChildLayoutBox>(harness.RenderView));
         var layoutDelegate = Assert.IsType<TextSelectionToolbarLayoutDelegate>(customLayout.LayoutDelegate);
         Assert.Equal(new Point(152, 72), layoutDelegate.AnchorAbove);
@@ -568,12 +574,12 @@ public sealed class MaterialDesktopTextSelectionToolbarTests : IDisposable
         using var harness = CreateHarness(
             ThemeData.Light with { Platform = TargetPlatform.Android },
             new SpellCheckSuggestionsToolbar(new Point(150, 180), items),
-            padding: new Thickness(0, 10, 0, 0),
-            viewInsets: new Thickness(0, 0, 0, 30));
+            padding: EdgeInsets.FromLTRB(0, 10, 0, 0),
+            viewInsets: EdgeInsets.FromLTRB(0, 0, 0, 30));
         harness.Pump(new Size(300, 250));
 
         Assert.Contains(FindDescendants<RenderPadding>(harness.RenderView), value =>
-            value.Padding == new Thickness(8, 18, 8, 38));
+            value.Padding == EdgeInsets.FromLTRB(8, 18, 8, 38));
         Assert.Contains(FindDescendants<RenderConstrainedBox>(harness.RenderView), value =>
             value.AdditionalConstraints == BoxConstraints.TightFor(width: 165, height: 97));
         Assert.Contains(
@@ -597,8 +603,8 @@ public sealed class MaterialDesktopTextSelectionToolbarTests : IDisposable
     private static WidgetRenderHarness CreateHarness(
         ThemeData theme,
         Widget child,
-        Thickness padding = default,
-        Thickness viewInsets = default)
+        EdgeInsets padding = default,
+        EdgeInsets viewInsets = default)
     {
         return new WidgetRenderHarness(
             new Theme(

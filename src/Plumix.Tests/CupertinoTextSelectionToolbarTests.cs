@@ -61,7 +61,7 @@ public sealed class CupertinoTextSelectionToolbarTests : IDisposable
                 anchorAbove: new Point(100000.0, 0.0),
                 anchorBelow: new Point(-100000.0, 500.0),
                 children: [Child(), Child(), Child()]),
-            padding: new Thickness(0.0, 12.0, 0.0, 0.0));
+            padding: EdgeInsets.FromLTRB(0.0, 12.0, 0.0, 0.0));
         harness.Pump(new Size(800.0, 600.0));
 
         CustomSingleChildLayout layout = Assert.Single(harness.FindWidgets<CustomSingleChildLayout>());
@@ -85,7 +85,7 @@ public sealed class CupertinoTextSelectionToolbarTests : IDisposable
                        anchorAbove: new Point(100.0, 70.0),
                        anchorBelow: new Point(100.0, 500.0),
                        children: [Child(50.0, 50.0), Child(50.0, 50.0), Child(50.0, 50.0)]),
-                   padding: new Thickness(0.0, 12.0, 0.0, 0.0)))
+                   padding: EdgeInsets.FromLTRB(0.0, 12.0, 0.0, 0.0)))
         {
             below.Pump(new Size(800.0, 600.0));
             RenderBox shape = Assert.Single(
@@ -99,7 +99,7 @@ public sealed class CupertinoTextSelectionToolbarTests : IDisposable
                 anchorAbove: new Point(100.0, 80.0),
                 anchorBelow: new Point(100.0, 500.0),
                 children: [Child(50.0, 50.0), Child(50.0, 50.0), Child(50.0, 50.0)]),
-            padding: new Thickness(0.0, 12.0, 0.0, 0.0));
+            padding: EdgeInsets.FromLTRB(0.0, 12.0, 0.0, 0.0));
         above.Pump(new Size(800.0, 600.0));
         RenderBox aboveShape = Assert.Single(
             FindDescendants<RenderCupertinoTextSelectionToolbarShape>(above.RenderView));
@@ -713,7 +713,7 @@ public sealed class CupertinoTextSelectionToolbarTests : IDisposable
 
     private static Widget WrapForHarness(
         Widget child,
-        Thickness padding = default,
+        EdgeInsets padding = default,
         Brightness brightness = Brightness.Light)
     {
         return new CupertinoTheme(
@@ -732,7 +732,7 @@ public sealed class CupertinoTextSelectionToolbarTests : IDisposable
 
     private static CupertinoThemeTestHarness CreateHarness(
         Widget child,
-        Thickness padding = default,
+        EdgeInsets padding = default,
         Brightness brightness = Brightness.Light)
     {
         return new CupertinoThemeTestHarness(WrapForHarness(child, padding, brightness));

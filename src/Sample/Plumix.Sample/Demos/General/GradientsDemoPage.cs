@@ -182,7 +182,7 @@ internal sealed class GradientsDemoPageState : State
                 background: (Color)Avalonia.Media.Color.Parse(colorHex),
                 foreground: Colors.Black,
                 fontSize: 12,
-                padding: new Thickness(10, 8)));
+                padding: EdgeInsets.Symmetric(horizontal: 10, vertical: 8)));
     }
 
     private void ChangeRotation(double delta)

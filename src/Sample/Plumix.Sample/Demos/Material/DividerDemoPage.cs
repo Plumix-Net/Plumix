@@ -116,7 +116,7 @@ internal sealed class DividerDemoPageState : State
 
         return new Container(
             color: new Color(0xFFF7F9FC),
-            padding: new Thickness(12),
+            padding: EdgeInsets.All(12),
             child: new Column(
                 crossAxisAlignment: CrossAxisAlignment.Stretch,
                 children:
@@ -125,7 +125,7 @@ internal sealed class DividerDemoPageState : State
                     new SizedBox(height: 8),
                     new Container(
                         color: new Color(0xFFE3F2FD),
-                        padding: new Thickness(10, 6),
+                        padding: EdgeInsets.Symmetric(horizontal: 10, vertical: 6),
                         child: new Text(
                             "Before divider",
                             style: new TextStyle(
@@ -134,7 +134,7 @@ internal sealed class DividerDemoPageState : State
                     dividerWidget,
                     new Container(
                         color: new Color(0xFFE8F5E9),
-                        padding: new Thickness(10, 6),
+                        padding: EdgeInsets.Symmetric(horizontal: 10, vertical: 6),
                         child: new Text(
                             "After divider",
                             style: new TextStyle(
@@ -163,7 +163,7 @@ internal sealed class DividerDemoPageState : State
 
         return new Container(
             color: new Color(0xFFF7F9FC),
-            padding: new Thickness(12),
+            padding: EdgeInsets.All(12),
             child: new Column(
                 crossAxisAlignment: CrossAxisAlignment.Stretch,
                 children:
@@ -213,7 +213,7 @@ internal sealed class DividerDemoPageState : State
                     backgroundColor: background,
                     foregroundColor: MaterialColors.Black,
                     minimumSize: new Size(0, 36),
-                    padding: new Thickness(10, 8),
+                    padding: EdgeInsets.Symmetric(horizontal: 10, vertical: 8),
                     shape: new RoundedRectangleBorder(borderRadius: BorderRadius.Circular(8))),
                 child: new Text(label, style: new TextStyle(FontSize: 12))));
     }

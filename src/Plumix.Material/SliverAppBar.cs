@@ -57,7 +57,7 @@ public sealed class SliverAppBar : StatefulWidget
         bool forceMaterialTransparency = false,
         bool useDefaultSemanticsOrder = true,
         Clip? clipBehavior = null,
-        Thickness? actionsPadding = null,
+        EdgeInsetsGeometry? actionsPadding = null,
         Key? key = null) : this(
         SliverAppBarVariant.Small, titleText, title, leading, automaticallyImplyLeading, actions,
         automaticallyImplyActions, flexibleSpace, bottom, elevation, scrolledUnderElevation,
@@ -109,7 +109,7 @@ public sealed class SliverAppBar : StatefulWidget
         bool forceMaterialTransparency,
         bool useDefaultSemanticsOrder,
         Clip? clipBehavior,
-        Thickness? actionsPadding,
+        EdgeInsetsGeometry? actionsPadding,
         Key? key) : base(key)
     {
         if (!double.IsFinite(toolbarHeight) || toolbarHeight <= 0) throw new ArgumentOutOfRangeException(nameof(toolbarHeight));
@@ -204,7 +204,7 @@ public sealed class SliverAppBar : StatefulWidget
         bool forceMaterialTransparency = false,
         bool useDefaultSemanticsOrder = true,
         Clip? clipBehavior = null,
-        Thickness? actionsPadding = null,
+        EdgeInsetsGeometry? actionsPadding = null,
         Key? key = null) => new(
         SliverAppBarVariant.Medium, null, title, leading, automaticallyImplyLeading, actions,
         automaticallyImplyActions, flexibleSpace, bottom, elevation, scrolledUnderElevation,
@@ -252,7 +252,7 @@ public sealed class SliverAppBar : StatefulWidget
         bool forceMaterialTransparency = false,
         bool useDefaultSemanticsOrder = true,
         Clip? clipBehavior = null,
-        Thickness? actionsPadding = null,
+        EdgeInsetsGeometry? actionsPadding = null,
         Key? key = null) => new(
         SliverAppBarVariant.Large, null, title, leading, automaticallyImplyLeading, actions,
         automaticallyImplyActions, flexibleSpace, bottom, elevation, scrolledUnderElevation,
@@ -301,7 +301,7 @@ public sealed class SliverAppBar : StatefulWidget
     public bool ForceMaterialTransparency { get; }
     public bool UseDefaultSemanticsOrder { get; }
     public Clip? ClipBehavior { get; }
-    public Thickness? ActionsPadding { get; }
+    public EdgeInsetsGeometry? ActionsPadding { get; }
 
     public override State CreateState() => new SliverAppBarState();
 
@@ -416,8 +416,8 @@ internal sealed class SliverAppBarState : State<SliverAppBar>
                         color: widget.ForegroundColor ?? theme.ColorScheme.OnSurface),
                 widget.Title),
             titlePadding: widget.Variant == SliverAppBarVariant.Large
-                ? new Thickness(16, 0, 16, 28)
-                : new Thickness(16, 0, 16, 20),
+                ? EdgeInsets.FromLTRB(16, 0, 16, 28)
+                : EdgeInsets.FromLTRB(16, 0, 16, 20),
             expandedTitleScale: 1);
     }
 }

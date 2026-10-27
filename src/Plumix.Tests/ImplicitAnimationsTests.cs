@@ -379,10 +379,10 @@ public sealed class ImplicitAnimationsTests : IDisposable
     public void AnimatedPadding_ValidatesArgumentsAndExposesFlutterDefaults()
     {
         var padding = new AnimatedPadding(
-            padding: new Thickness(8),
+            padding: EdgeInsets.All(8),
             duration: TimeSpan.FromMilliseconds(200));
 
-        Assert.Equal(new Thickness(8), padding.Padding);
+        Assert.Equal(EdgeInsets.All(8), padding.Padding);
         Assert.Equal(TimeSpan.FromMilliseconds(200), padding.Duration);
         Assert.Null(padding.Child);
         Assert.Equal(Curves.Linear.Transform(0.3), padding.Curve.Transform(0.3));
@@ -390,10 +390,10 @@ public sealed class ImplicitAnimationsTests : IDisposable
         if (Constants.KDebugMode)
         {
             Assert.Throws<AssertionError>(() => new AnimatedPadding(
-                padding: new Thickness(-1),
+                padding: EdgeInsets.All(-1),
                 duration: TimeSpan.Zero));
             Assert.Throws<AssertionError>(() => new AnimatedPadding(
-                padding: new Thickness(double.NaN),
+                padding: EdgeInsets.All(double.NaN),
                 duration: TimeSpan.Zero));
         }
     }
@@ -435,16 +435,16 @@ public sealed class ImplicitAnimationsTests : IDisposable
         int completed = 0;
         var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new AnimatedPadding(
-            padding: new Thickness(0),
+            padding: EdgeInsets.Zero,
             duration: TimeSpan.FromMilliseconds(200),
             child: new SizedBox(width: 10, height: 10),
             onEnd: () => completed++));
         Mount(root, owner);
 
-        Assert.Equal(new Thickness(0), RequireRenderObject<RenderPadding>(root.ChildElement).Padding);
+        Assert.Equal(EdgeInsets.Zero, RequireRenderObject<RenderPadding>(root.ChildElement).Padding);
 
         root.Update(new AnimatedPadding(
-            padding: new Thickness(20, 10, 40, 30),
+            padding: EdgeInsets.FromLTRB(20, 10, 40, 30),
             duration: TimeSpan.FromMilliseconds(200),
             curve: Curves.Linear,
             child: new SizedBox(width: 10, height: 10),
@@ -463,7 +463,7 @@ public sealed class ImplicitAnimationsTests : IDisposable
         Assert.Equal(0, completed);
 
         root.Update(new AnimatedPadding(
-            padding: new Thickness(30),
+            padding: EdgeInsets.All(30),
             duration: TimeSpan.FromMilliseconds(200),
             child: new SizedBox(width: 10, height: 10),
             onEnd: () => completed++));
@@ -472,7 +472,7 @@ public sealed class ImplicitAnimationsTests : IDisposable
 
         AnimationPump.Advance(1.0);
         owner.PumpFrame();
-        Assert.Equal(new Thickness(30), RequireRenderObject<RenderPadding>(root.ChildElement).Padding);
+        Assert.Equal(EdgeInsets.All(30), RequireRenderObject<RenderPadding>(root.ChildElement).Padding);
         Assert.Equal(1, completed);
 
         root.UnmountRoot();

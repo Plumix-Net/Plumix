@@ -23,7 +23,7 @@ public sealed class NestedScrollViewDemoPage : StatelessWidget
                 new SliverToBoxAdapter(
                     new Container(
                         color: new Color(0xFFE8EAF6),
-                        padding: new Thickness(16, 14),
+                        padding: EdgeInsets.Symmetric(horizontal: 16, vertical: 14),
                         child: new Column(
                             crossAxisAlignment: CrossAxisAlignment.Stretch,
                             spacing: 4,
@@ -50,7 +50,7 @@ public sealed class NestedScrollViewDemoPage : StatelessWidget
                         color: index % 2 == 0
                             ? new Color(0xFFF5F5F5)
                             : new Color(0xFFFFFFFF),
-                        padding: new Thickness(16, 12),
+                        padding: EdgeInsets.Symmetric(horizontal: 16, vertical: 12),
                         child: new Text($"body row #{index}", style: new TextStyle(FontSize: 14, Color: Colors.Black))),
                     addAutomaticKeepAlives: false),
             ])));
@@ -71,7 +71,7 @@ internal sealed class NestedScrollViewHeaderDelegate(bool innerBoxIsScrolled) : 
             color: innerBoxIsScrolled
                 ? new Color(0xFF90CAF9)
                 : new Color(0xFFBBDEFB),
-            padding: new Thickness(16, 12),
+            padding: EdgeInsets.Symmetric(horizontal: 16, vertical: 12),
             child: new Column(
                 mainAxisAlignment: MainAxisAlignment.Center,
                 crossAxisAlignment: CrossAxisAlignment.Stretch,

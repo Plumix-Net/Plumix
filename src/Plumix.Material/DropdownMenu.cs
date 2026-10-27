@@ -120,7 +120,7 @@ public sealed class DropdownMenu<T> : StatefulWidget
         double? cursorHeight = null,
         string? restorationId = null,
         MenuController? menuController = null,
-        Thickness? scrollPadding = null,
+        EdgeInsets? scrollPadding = null,
         Key? key = null) : base(key)
     {
         if (dropdownMenuEntries is null) throw new ArgumentNullException(nameof(dropdownMenuEntries));
@@ -178,7 +178,7 @@ public sealed class DropdownMenu<T> : StatefulWidget
         CursorHeight = cursorHeight;
         RestorationId = restorationId;
         MenuController = menuController;
-        ScrollPadding = scrollPadding ?? new Thickness(20);
+        ScrollPadding = scrollPadding ?? EdgeInsets.All(20);
     }
 
     public IReadOnlyList<DropdownMenuEntry<T>> DropdownMenuEntries { get; }
@@ -219,7 +219,7 @@ public sealed class DropdownMenu<T> : StatefulWidget
     public double? CursorHeight { get; }
     public string? RestorationId { get; }
     public MenuController? MenuController { get; }
-    public Thickness ScrollPadding { get; }
+    public EdgeInsets ScrollPadding { get; }
 
     public override State CreateState() => new DropdownMenuState<T>();
 }
@@ -473,11 +473,8 @@ public sealed class DropdownMenuState<T> : State<DropdownMenu<T>>
             double padding = entry.LeadingIcon is null
                 ? _leadingPadding ?? DropdownMenu<T>.DefaultHorizontalPadding
                 : DropdownMenu<T>.DefaultHorizontalPadding;
-            // `ButtonStyle.Padding` is a resolved `Thickness`, so the directional inset Dart writes
-            // as `EdgeInsetsDirectional.only(start: padding, end: 12)` is resolved here instead.
-            var itemPadding = EdgeInsetsGeometry
-                .DirectionalOnly(start: padding, end: DropdownMenu<T>.DefaultHorizontalPadding)
-                .Resolve(textDirection);
+            EdgeInsetsGeometry itemPadding = EdgeInsetsGeometry
+                .DirectionalOnly(start: padding, end: DropdownMenu<T>.DefaultHorizontalPadding);
             var effectiveStyle = entry.Style
                                  ?? new ButtonStyle(
                                      Padding: WidgetStateProperty<EdgeInsetsGeometry?>.All(itemPadding));
@@ -897,13 +894,13 @@ public sealed class DropdownMenuState<T> : State<DropdownMenu<T>>
             if (effectiveLabel is not null)
             {
                 children.Add(new ExcludeSemantics(child: new Padding(
-                    insets: new Thickness(4.0, 0.0),
+                    insets: EdgeInsets.Symmetric(horizontal: 4.0),
                     child: new DefaultTextStyle(effectiveTextStyle ?? new TextStyle(), effectiveLabel))));
             }
 
             children.Add(effectiveDecoration.SuffixIcon ?? new SizedBox(width: 0, height: 0));
             children.Add(new Padding(
-                insets: new Thickness(8.0),
+                insets: EdgeInsets.All(8.0),
                 child: effectiveDecoration.PrefixIcon ?? new SizedBox(width: 0, height: 0)));
             body = new DropdownMenuBody(Current.Width, children);
         }
@@ -931,7 +928,7 @@ public sealed class DropdownMenuState<T> : State<DropdownMenu<T>>
         if (!Current.ShowTrailingIcon) return null;
         bool isCollapsed = Current.InputDecorationTheme?.IsCollapsed ?? false;
         return new Padding(
-            insets: isCollapsed ? new Thickness(0) : new Thickness(4.0),
+            insets: isCollapsed ? EdgeInsets.Zero : EdgeInsets.All(4.0),
             child: new ExcludeSemantics(
                 excluding: IsButton,
                 child: new IconButton(

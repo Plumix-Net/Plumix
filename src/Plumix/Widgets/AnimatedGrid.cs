@@ -19,7 +19,7 @@ public sealed class AnimatedGrid : StatefulWidget
         ScrollController? controller = null,
         bool? primary = null,
         ScrollPhysics? physics = null,
-        Thickness? padding = null,
+        EdgeInsetsGeometry? padding = null,
         Clip clipBehavior = Clip.HardEdge,
         ScrollCacheExtent? scrollCacheExtent = null,
         Key? key = null) : base(key)
@@ -58,7 +58,7 @@ public sealed class AnimatedGrid : StatefulWidget
 
     public ScrollPhysics? Physics { get; }
 
-    public Thickness? Padding { get; }
+    public EdgeInsetsGeometry? Padding { get; }
 
     public Clip ClipBehavior { get; }
 
@@ -124,11 +124,11 @@ public sealed class AnimatedGridState : State<AnimatedGrid>
             initialItemCount: widget.InitialItemCount,
             key: _sliverKey);
 
-        Thickness? effectivePadding = widget.Padding;
+        EdgeInsetsGeometry? effectivePadding = widget.Padding;
         if (!effectivePadding.HasValue && MediaQuery.MaybeOf(context) is { } mediaQuery)
         {
-            Thickness horizontalPadding = new(mediaQuery.Padding.Left, 0, mediaQuery.Padding.Right, 0);
-            Thickness verticalPadding = new(0, mediaQuery.Padding.Top, 0, mediaQuery.Padding.Bottom);
+            EdgeInsets horizontalPadding = EdgeInsets.FromLTRB(mediaQuery.Padding.Left, 0, mediaQuery.Padding.Right, 0);
+            EdgeInsets verticalPadding = EdgeInsets.FromLTRB(0, mediaQuery.Padding.Top, 0, mediaQuery.Padding.Bottom);
             effectivePadding = widget.ScrollDirection == Axis.Vertical ? verticalPadding : horizontalPadding;
             sliver = new MediaQuery(
                 mediaQuery.CopyWith(

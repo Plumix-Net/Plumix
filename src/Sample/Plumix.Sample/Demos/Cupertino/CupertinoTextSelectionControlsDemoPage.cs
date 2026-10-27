@@ -23,7 +23,7 @@ public sealed class CupertinoTextSelectionControlsDemoPage : StatelessWidget
                     "Line-height-aware iOS handles and handle-free macOS selection controls.",
                     style: new TextStyle(FontSize: 14.0, Color: new Color(0x8A000000))),
                 new Container(
-                    padding: new Thickness(12.0),
+                    padding: EdgeInsets.All(12.0),
                     decoration: new BoxDecoration(
                         Color: new Color(0xFFF2F2F7),
                         BorderRadius: BorderRadius.Circular(12.0)),

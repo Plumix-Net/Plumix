@@ -183,7 +183,7 @@ internal sealed class RestorableStorageListState : State
             child: new Container(
                 height: 44,
                 color: index % 2 == 0 ? new Color(0xFFF4F7FA) : new Color(0xFFE6EDF5),
-                padding: new Thickness(12, 0),
+                padding: EdgeInsets.Symmetric(horizontal: 12),
                 alignment: Alignment.CenterLeft,
                 child: new Text($"Stored row {index + 1}")));
     }

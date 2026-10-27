@@ -158,7 +158,7 @@ public sealed class AdaptiveTextSelectionToolbar : StatelessWidget
 
             buttons.Add(new TextSelectionToolbarTextButton(
                 child: new Text(label),
-                padding: TextSelectionToolbarTextButton.GetPadding(index, buttonItems.Count, textDirection),
+                padding: TextSelectionToolbarTextButton.GetPadding(index, buttonItems.Count),
                 onPressed: item.OnPressed,
                 alignment: textDirection == TextDirection.Rtl
                     ? Alignment.CenterRight

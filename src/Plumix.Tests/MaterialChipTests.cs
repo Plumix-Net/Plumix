@@ -54,7 +54,7 @@ public sealed class MaterialChipTests : IDisposable
         Assert.Equal(Color.FromARGB(0x3d, 95, 158, 160), defaults.SecondarySelectedColor);
         Assert.Equal(Color.FromARGB(0xde, 95, 158, 160), defaults.SecondaryLabelStyle!.Color);
         Assert.True(defaults.ShowCheckmark);
-        Assert.Equal(new Thickness(4), defaults.Padding);
+        Assert.Equal(EdgeInsets.All(4), defaults.Padding);
         Assert.Equal(8.0, defaults.PressElevation);
         Assert.Equal(18.0, defaults.IconTheme!.Size);
 
@@ -88,8 +88,8 @@ public sealed class MaterialChipTests : IDisposable
             SelectedShadowColor: Colors.Indigo,
             ShowCheckmark: false,
             CheckmarkColor: Colors.Lime,
-            LabelPadding: new Thickness(1),
-            Padding: new Thickness(2),
+            LabelPadding: EdgeInsets.All(1),
+            Padding: EdgeInsets.All(2),
             Side: new BorderSide(Colors.Maroon, 3),
             Shape: new RoundedRectangleBorder(borderRadius: Plumix.Rendering.BorderRadius.Circular(4)),
             LabelStyle: new TextStyle(FontSize: 12),
@@ -129,8 +129,8 @@ public sealed class MaterialChipTests : IDisposable
             SelectedShadowColor: Colors.Black,
             ShowCheckmark: false,
             CheckmarkColor: Colors.Black,
-            LabelPadding: new Thickness(8, 0),
-            Padding: new Thickness(4),
+            LabelPadding: EdgeInsets.Symmetric(horizontal: 8),
+            Padding: EdgeInsets.All(4),
             Side: new BorderSide(Colors.Black, 2),
             Shape: new RoundedRectangleBorder(borderRadius: Plumix.Rendering.BorderRadius.Circular(2)),
             LabelStyle: new TextStyle(Color: Colors.Black, FontSize: 10),
@@ -153,8 +153,8 @@ public sealed class MaterialChipTests : IDisposable
             SelectedShadowColor: Colors.White,
             ShowCheckmark: true,
             CheckmarkColor: Colors.White,
-            LabelPadding: new Thickness(0, 8),
-            Padding: new Thickness(2),
+            LabelPadding: EdgeInsets.Symmetric(vertical: 8),
+            Padding: EdgeInsets.All(2),
             Side: new BorderSide(Colors.White, 4),
             Shape: new RoundedRectangleBorder(borderRadius: Plumix.Rendering.BorderRadius.Circular(10)),
             LabelStyle: new TextStyle(Color: Colors.White, FontSize: 20),
@@ -178,8 +178,8 @@ public sealed class MaterialChipTests : IDisposable
         ColorMatchers.AssertSameColorAs(middleGray, midpoint.DeleteIconColor);
         ColorMatchers.AssertSameColorAs(middleGray, midpoint.CheckmarkColor);
         Assert.True(midpoint.ShowCheckmark);
-        Assert.Equal(new Thickness(4, 4), midpoint.LabelPadding);
-        Assert.Equal(new Thickness(3), midpoint.Padding);
+        Assert.Equal(EdgeInsets.Symmetric(horizontal: 4, vertical: 4), midpoint.LabelPadding);
+        Assert.Equal(EdgeInsets.All(3), midpoint.Padding);
         ColorMatchers.AssertSameColorAs(middleGray, midpoint.Side!.Value.Color);
         Assert.Equal(3, midpoint.Side.Value.Width);
         Assert.Equal(6, ShapeBorderGeometry.ResolveRadius(midpoint.Shape).Radius);
@@ -246,7 +246,7 @@ public sealed class MaterialChipTests : IDisposable
         Assert.Equal(Colors.DarkSlateBlue, ForegroundColor(Paragraph(harness.RenderView, "Action")));
         RenderChip renderChip = FindChipRender(harness.RenderView);
         Assert.True(renderChip.Size.Height >= 32);
-        Assert.Equal(new Thickness(8), renderChip.Padding);
+        Assert.Equal(EdgeInsets.All(8), renderChip.Padding);
     }
 
     [Fact]

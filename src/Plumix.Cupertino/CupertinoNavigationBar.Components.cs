@@ -403,7 +403,7 @@ internal sealed class PersistentNavigationBar : StatelessWidget
         if (Padding != null)
         {
             paddedToolbar = new Padding(
-                new Thickness(0.0, Padding.Value.Top, 0.0, Padding.Value.Bottom),
+                EdgeInsets.FromLTRB(0.0, Padding.Value.Top, 0.0, Padding.Value.Bottom),
                 child: paddedToolbar);
         }
 
@@ -936,7 +936,7 @@ internal sealed class InactiveSearchableBottom : StatelessWidget
                         new SizedBox(
                             width: AnimationController.Value * NavBarStatics.SearchFieldCancelButtonWidth,
                             child: new Padding(
-                                new Thickness(0.0, 0.0, 0.0, NavBarStatics.NavBarBottomPadding),
+                                EdgeInsets.FromLTRB(0.0, 0.0, 0.0, NavBarStatics.NavBarBottomPadding),
                                 child: new NavBarCancelButton(opacity: 0.4, onPressed: () => { }))),
                     ])));
     }

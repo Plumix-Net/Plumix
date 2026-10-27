@@ -108,7 +108,7 @@ internal sealed class DemoWindowContent(RegularWindowController controller) : St
         Size size = WindowScope.ContentSizeOf(context);
         return new Container(
             color: new Color(0xFFF4F7FA),
-            padding: new Thickness(16),
+            padding: EdgeInsets.All(16),
             child: new Column(
                 crossAxisAlignment: CrossAxisAlignment.Start,
                 spacing: 8,

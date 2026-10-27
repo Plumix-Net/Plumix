@@ -113,7 +113,7 @@ internal sealed class PlatformViewLinkDemoPageState : State
             background: new Color(0xFFDCE3ED),
             foreground: new Color(0xFF000000),
             fontSize: 12,
-            padding: new Thickness(10, 8));
+            padding: EdgeInsets.Symmetric(horizontal: 10, vertical: 8));
     }
 }
 

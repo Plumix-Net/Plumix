@@ -38,7 +38,7 @@ internal sealed class IntrinsicWidgetsDemoPageState : State
                 new Container(
                     height: 86.0,
                     color: new Color(0xFFE7EDF6),
-                    padding: new Thickness(12.0),
+                    padding: EdgeInsets.All(12.0),
                     child: new Align(
                         alignment: Alignment.CenterLeft,
                         child: new IntrinsicWidth(
@@ -46,7 +46,7 @@ internal sealed class IntrinsicWidgetsDemoPageState : State
                             child: new Container(
                                 width: 70.0,
                                 color: new Color(0xFFCCE3FF),
-                                padding: new Thickness(10.0, 8.0),
+                                padding: EdgeInsets.Symmetric(horizontal: 10.0, vertical: 8.0),
                                 child: new Text(
                                     _snapWidth ? "70 → 112" : "70 px",
                                     style: new TextStyle(FontSize: 13.0, Color: new Color(0xFF1D3557))))))),
@@ -55,7 +55,7 @@ internal sealed class IntrinsicWidgetsDemoPageState : State
                     style: new TextStyle(FontSize: 14.0, Color: MaterialColors.Black54)),
                 new Container(
                     color: new Color(0xFFF1F5F9),
-                    padding: new Thickness(12.0),
+                    padding: EdgeInsets.All(12.0),
                     child: new IntrinsicHeight(
                         child: new Row(
                             crossAxisAlignment: CrossAxisAlignment.Stretch,
@@ -81,7 +81,7 @@ internal sealed class IntrinsicWidgetsDemoPageState : State
                     : new Color(0xFFDCE3ED),
                 foreground: _snapWidth == enabled ? Colors.White : Colors.Black,
                 fontSize: 12.0,
-                padding: new Thickness(10.0, 8.0)));
+                padding: EdgeInsets.Symmetric(horizontal: 10.0, vertical: 8.0)));
     }
 
     private static Widget BuildTile(string label, double height, string colorHex)

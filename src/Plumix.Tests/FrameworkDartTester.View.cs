@@ -56,7 +56,7 @@ internal sealed partial class FrameworkDartTester
 /// </summary>
 /// <remarks>
 /// All values are physical pixels, as in Dart (<c>tester.view.viewInsets = FakeViewPadding(bottom: 1000)</c>
-/// is <c>tester.View.ViewInsets = new Thickness(0, 0, 0, 1000)</c>). The view converts implicitly to
+/// is <c>tester.View.ViewInsets = FakeViewPadding.Create(bottom: 1000)</c>). The view converts implicitly to
 /// <see cref="FlutterView"/>, so it can be passed wherever the framework wants one.
 /// </remarks>
 internal sealed class TestFlutterView
@@ -64,10 +64,10 @@ internal sealed class TestFlutterView
     private readonly FlutterView _view;
     private readonly Size _initialPhysicalSize;
     private readonly double _initialDevicePixelRatio;
-    private readonly Thickness _initialPadding;
-    private readonly Thickness _initialViewInsets;
-    private readonly Thickness _initialViewPadding;
-    private readonly Thickness _initialSystemGestureInsets;
+    private readonly ViewPadding _initialPadding;
+    private readonly ViewPadding _initialViewInsets;
+    private readonly ViewPadding _initialViewPadding;
+    private readonly ViewPadding _initialSystemGestureInsets;
 
     public TestFlutterView(FlutterView view)
     {
@@ -106,28 +106,28 @@ internal sealed class TestFlutterView
     }
 
     /// <summary>Dart's <c>padding</c>, in physical pixels.</summary>
-    public Thickness Padding
+    public ViewPadding Padding
     {
         get => _view.Padding;
         set => Update(() => _view.UpdateMetrics(padding: value));
     }
 
     /// <summary>Dart's <c>viewInsets</c>, in physical pixels.</summary>
-    public Thickness ViewInsets
+    public ViewPadding ViewInsets
     {
         get => _view.ViewInsets;
         set => Update(() => _view.UpdateMetrics(viewInsets: value));
     }
 
     /// <summary>Dart's <c>viewPadding</c>, in physical pixels.</summary>
-    public Thickness ViewPadding
+    public ViewPadding ViewPadding
     {
         get => _view.ViewPadding;
         set => Update(() => _view.UpdateMetrics(viewPadding: value));
     }
 
     /// <summary>Dart's <c>systemGestureInsets</c>, in physical pixels.</summary>
-    public Thickness SystemGestureInsets
+    public ViewPadding SystemGestureInsets
     {
         get => _view.SystemGestureInsets;
         set => Update(() => _view.UpdateMetrics(systemGestureInsets: value));
@@ -181,10 +181,10 @@ internal sealed class TestFlutterView
         double? devicePixelRatio = null,
         int? viewId = null,
         BoxConstraints? physicalConstraints = null,
-        Thickness? padding = null,
-        Thickness? viewInsets = null,
-        Thickness? viewPadding = null,
-        Thickness? systemGestureInsets = null)
+        ViewPadding? padding = null,
+        ViewPadding? viewInsets = null,
+        ViewPadding? viewPadding = null,
+        ViewPadding? systemGestureInsets = null)
     {
         _view.UpdateMetrics(
             physicalSize: physicalSize,
@@ -252,4 +252,17 @@ internal sealed class FrameworkDartTestBinding
     /// Dart's <c>binding.takeAnnouncements</c>; see <see cref="FrameworkDartTester.TakeAnnouncements"/>.
     /// </summary>
     public List<CapturedAccessibilityAnnouncement> TakeAnnouncements() => _tester.TakeAnnouncements();
+}
+
+/// <summary>
+/// flutter_test's <c>FakeViewPadding</c>: a <see cref="ViewPadding"/> built from named edges that default
+/// to zero, in physical pixels.
+/// </summary>
+internal static class FakeViewPadding
+{
+    public static ViewPadding Create(
+        double left = 0.0,
+        double top = 0.0,
+        double right = 0.0,
+        double bottom = 0.0) => new(left, top, right, bottom);
 }

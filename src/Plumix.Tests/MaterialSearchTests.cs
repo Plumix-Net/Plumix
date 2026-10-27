@@ -46,7 +46,7 @@ public sealed class MaterialSearchTests : IDisposable
         Assert.True(bar.Enabled);
         Assert.False(bar.AutoFocus);
         Assert.False(bar.ReadOnly);
-        Assert.Equal(new Thickness(20), bar.ScrollPadding);
+        Assert.Equal(EdgeInsets.All(20), bar.ScrollPadding);
         Assert.Null(bar.Controller);
         Assert.Null(bar.FocusNode);
         Assert.Null(bar.HintText);
@@ -187,7 +187,7 @@ public sealed class MaterialSearchTests : IDisposable
                 textCapitalization: TextCapitalization.Characters,
                 smartDashesType: SmartDashesType.Disabled,
                 smartQuotesType: SmartQuotesType.Disabled,
-                scrollPadding: new Thickness(42))));
+                scrollPadding: EdgeInsets.All(42))));
         harness.Pump(new Size(900, 120));
 
         TextField field = Assert.Single(harness.FindWidgets<TextField>());
@@ -196,13 +196,13 @@ public sealed class MaterialSearchTests : IDisposable
         Assert.Equal(TextCapitalization.Characters, field.TextCapitalization);
         Assert.Equal(SmartDashesType.Disabled, field.SmartDashesType);
         Assert.Equal(SmartQuotesType.Disabled, field.SmartQuotesType);
-        Assert.Equal(new Thickness(42), field.ScrollPadding);
+        Assert.Equal(EdgeInsets.All(42), field.ScrollPadding);
 
         EditableText editable = Assert.Single(harness.FindWidgets<EditableText>());
         Assert.Equal(TextCapitalization.Characters, editable.TextCapitalization);
         Assert.Equal(SmartDashesType.Disabled, editable.SmartDashesType);
         Assert.Equal(SmartQuotesType.Disabled, editable.SmartQuotesType);
-        Assert.Equal(new Thickness(42), editable.ScrollPadding);
+        Assert.Equal(EdgeInsets.All(42), editable.ScrollPadding);
     }
 
     [Fact]

@@ -876,7 +876,7 @@ public sealed class CupertinoContextMenu : StatefulWidget
     private static double GetScaleFactor(BuildContext context, Rect childRect)
     {
         Size size = MediaQuery.SizeOf(context);
-        Thickness padding = MediaQuery.PaddingOf(context);
+        EdgeInsets padding = MediaQuery.PaddingOf(context);
         if (childRect.Width <= 0.0 || childRect.Height <= 0.0)
         {
             return 1.02;

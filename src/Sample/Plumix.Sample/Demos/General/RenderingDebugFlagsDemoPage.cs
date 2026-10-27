@@ -87,7 +87,7 @@ internal sealed class RenderingDebugFlagsDemoPageState : State
             key: new ValueKey<int>(_repaintToken),
             child: new Container(
                 color: Colors.White,
-                padding: new Thickness(16),
+                padding: EdgeInsets.All(16),
                 child: new Column(
                     crossAxisAlignment: CrossAxisAlignment.Start,
                     spacing: 16,
@@ -97,7 +97,7 @@ internal sealed class RenderingDebugFlagsDemoPageState : State
                             "Padding draws its construction lines, clips get a scissors marker.",
                             style: new TextStyle(FontSize: 12, Color: Colors.DarkSlateGray)),
                         new Padding(
-                            insets: new Thickness(20, 12),
+                            insets: EdgeInsets.Symmetric(horizontal: 20, vertical: 12),
                             child: new ClipRRect(
                                 borderRadius: BorderRadius.Circular(12),
                                 child: new Container(
@@ -150,6 +150,6 @@ internal sealed class RenderingDebugFlagsDemoPageState : State
             background: enabled ? new Color(0xFF9FC5E8) : new Color(0xFFDCE3ED),
             foreground: Colors.Black,
             fontSize: 12,
-            padding: new Thickness(10, 8));
+            padding: EdgeInsets.Symmetric(horizontal: 10, vertical: 8));
     }
 }

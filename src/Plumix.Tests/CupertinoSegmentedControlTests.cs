@@ -102,7 +102,7 @@ public sealed class CupertinoSegmentedControlTests : IDisposable
         Assert.Equal(Colors.Purple, render.BorderColor);
         Assert.Equal([Colors.Gray.ToARGB32(), Colors.Beige.ToARGB32()], ColorsOf(render));
         Padding padding = Assert.Single(harness.FindWidgets<Padding>());
-        Assert.Equal(new Thickness(1.0, 3.0, 5.0, 7.0), padding.Insets);
+        Assert.Equal(EdgeInsets.FromLTRB(1.0, 3.0, 5.0, 7.0), padding.Insets);
         Assert.Single(
             harness.FindWidgets<DefaultTextStyle>(),
             style => style.Style.Color == Colors.Pink);

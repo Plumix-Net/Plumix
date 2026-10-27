@@ -27,7 +27,7 @@ public sealed class GridViewDemoPage : StatelessWidget
                 new Expanded(
                     child: GridView.Builder(
                         itemCount: 60,
-                        padding: new Thickness(12),
+                        padding: EdgeInsets.All(12),
                         gridDelegate: new SliverGridDelegateWithFixedCrossAxisCount(
                             crossAxisCount: 3,
                             mainAxisSpacing: 8,
@@ -43,7 +43,7 @@ public sealed class GridViewDemoPage : StatelessWidget
                             slivers:
                             [
                                 new SliverPadding(
-                                    padding: new Thickness(12, 0, 12, 10),
+                                    padding: EdgeInsets.FromLTRB(12, 0, 12, 10),
                                     sliver: SliverGrid.Builder(
                                         itemCount: 12,
                                         gridDelegate: new SliverGridDelegateWithMaxCrossAxisExtent(
@@ -53,7 +53,7 @@ public sealed class GridViewDemoPage : StatelessWidget
                                             childAspectRatio: 1.8),
                                         itemBuilder: (_, index) => new Container(
                                             color: index % 2 == 0 ? new Color(0xFFEAF4FF) : new Color(0xFFE8F5E9),
-                                            padding: new Thickness(8, 6),
+                                            padding: EdgeInsets.Symmetric(horizontal: 8, vertical: 6),
                                             child: new Text(
                                                 $"sliver tile #{index}",
                                                 style: new TextStyle(FontSize: 12, Color: Colors.Black))))),
@@ -97,6 +97,6 @@ internal sealed class GridTileItemState : State
             background: background,
             foreground: Colors.Black,
             fontSize: 12,
-            padding: new Thickness(8, 6));
+            padding: EdgeInsets.Symmetric(horizontal: 8, vertical: 6));
     }
 }

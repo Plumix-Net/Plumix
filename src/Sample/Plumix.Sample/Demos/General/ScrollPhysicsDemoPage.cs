@@ -95,7 +95,7 @@ public sealed class ScrollPhysicsDemoPage : StatelessWidget
             physics: physics,
             itemBuilder: (_, index) => new Container(
                 color: index % 2 == 0 ? color : Colors.White,
-                padding: new Thickness(10, 8),
+                padding: EdgeInsets.Symmetric(horizontal: 10, vertical: 8),
                 child: new Text($"row #{index}", style: new TextStyle(FontSize: 13, Color: Colors.Black))),
             addAutomaticKeepAlives: false);
         return showGlow

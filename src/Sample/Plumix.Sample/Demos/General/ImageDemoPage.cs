@@ -329,7 +329,7 @@ internal sealed class ImageDemoPageState : State
                 background: new Color(0xFFDCE3ED),
                 foreground: Colors.Black,
                 fontSize: 12,
-                padding: new Thickness(10, 8)));
+                padding: EdgeInsets.Symmetric(horizontal: 10, vertical: 8)));
     }
 
     private static Widget Probe(string label, Widget child)

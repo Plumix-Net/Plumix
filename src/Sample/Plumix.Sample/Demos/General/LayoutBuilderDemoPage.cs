@@ -24,7 +24,7 @@ public sealed class LayoutBuilderDemoPage : StatelessWidget
                 new Container(
                     height: 96,
                     color: new Color(0xFFE7EDF6),
-                    padding: new Thickness(12),
+                    padding: EdgeInsets.All(12),
                     child: new LayoutBuilder((_, constraints) =>
                     {
                         bool isWide = constraints.MaxWidth >= 420;

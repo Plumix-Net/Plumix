@@ -3,6 +3,7 @@ using Avalonia.Media;
 using Plumix.Foundation;
 using Plumix.Widgets;
 using Plumix.UI;
+using Plumix.Rendering;
 
 namespace Plumix.Material;
 
@@ -18,7 +19,7 @@ public sealed partial record SwitchThemeData(
     IWidgetStateProperty<Color?>? OverlayColor = null,
     double? SplashRadius = null,
     WidgetStateProperty<Icon?>? ThumbIcon = null,
-    Thickness? Padding = null);
+    EdgeInsetsGeometry? Padding = null);
 
 public sealed class SwitchTheme : InheritedWidget
 {

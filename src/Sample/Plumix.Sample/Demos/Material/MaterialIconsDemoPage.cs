@@ -112,7 +112,7 @@ public sealed class MaterialIconsDemoPage : StatelessWidget
     {
         return new Container(
             width: 148.0,
-            padding: new Thickness(12.0),
+            padding: EdgeInsets.All(12.0),
             decoration: new BoxDecoration(
                 Color: new Color(0xFFEDE7F6),
                 BorderRadius: BorderRadius.Circular(12.0)),

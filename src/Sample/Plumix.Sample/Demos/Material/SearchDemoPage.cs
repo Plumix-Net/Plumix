@@ -217,7 +217,7 @@ internal sealed class SearchDemoPageState : State
         if (suggestions.Count == 0)
         {
             suggestions.Add(new Padding(
-                new Thickness(16),
+                EdgeInsets.All(16),
                 new Text($"No results for {query}", style: new TextStyle(FontSize: 13, Color: MaterialColors.Grey))));
         }
 

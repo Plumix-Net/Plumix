@@ -1096,7 +1096,7 @@ public sealed partial class EditableText : StatefulWidget
         TextCapitalization textCapitalization = TextCapitalization.None,
         SmartDashesType? smartDashesType = null,
         SmartQuotesType? smartQuotesType = null,
-        Thickness? scrollPadding = null,
+        EdgeInsets? scrollPadding = null,
         ScrollController? scrollController = null,
         ScrollPhysics? scrollPhysics = null,
         bool? autocorrect = null,
@@ -1182,7 +1182,7 @@ public sealed partial class EditableText : StatefulWidget
         TextCapitalization = textCapitalization;
         SmartDashesType = smartDashesType ?? (obscureText ? SmartDashesType.Disabled : SmartDashesType.Enabled);
         SmartQuotesType = smartQuotesType ?? (obscureText ? SmartQuotesType.Disabled : SmartQuotesType.Enabled);
-        ScrollPadding = scrollPadding ?? new Thickness(20);
+        ScrollPadding = scrollPadding ?? EdgeInsets.All(20);
         ScrollController = scrollController;
         ScrollPhysics = scrollPhysics;
         Autocorrect = autocorrect ?? InferAutocorrect(AutofillHints);
@@ -1272,7 +1272,7 @@ public sealed partial class EditableText : StatefulWidget
     public TextCapitalization TextCapitalization { get; }
     public SmartDashesType SmartDashesType { get; }
     public SmartQuotesType SmartQuotesType { get; }
-    public Thickness ScrollPadding { get; }
+    public EdgeInsets ScrollPadding { get; }
     public ScrollController? ScrollController { get; }
     public ScrollPhysics? ScrollPhysics { get; }
     public bool Autocorrect { get; }

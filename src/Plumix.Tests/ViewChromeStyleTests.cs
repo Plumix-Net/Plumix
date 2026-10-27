@@ -261,11 +261,9 @@ public sealed class ViewChromeStyleTests : IDisposable
 
     private void SetupTestDevice()
     {
-        var padding = new Thickness(
-            0,
-            StatusBarHeight * DevicePixelRatio,
-            0,
-            NavigationBarHeight * DevicePixelRatio);
+        ViewPadding padding = FakeViewPadding.Create(
+            top: StatusBarHeight * DevicePixelRatio,
+            bottom: NavigationBarHeight * DevicePixelRatio);
         _tester.View.UpdateMetrics(
             physicalSize: new Size(DeviceWidth * DevicePixelRatio, DeviceHeight * DevicePixelRatio),
             devicePixelRatio: DevicePixelRatio,

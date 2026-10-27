@@ -81,7 +81,7 @@ internal sealed class ShapeBordersDemoPageState : State
                     width: 260,
                     height: 160,
                     color: new Color(0xFFE7EDF6),
-                    padding: new Thickness(8),
+                    padding: EdgeInsets.All(8),
                     child: new Center(
                         child: new SizedBox(
                             width: 180,
@@ -129,7 +129,7 @@ internal sealed class ShapeBordersDemoPageState : State
                 background: (Color)Avalonia.Media.Color.Parse(colorHex),
                 foreground: Colors.Black,
                 fontSize: 12,
-                padding: new Thickness(10, 8)));
+                padding: EdgeInsets.Symmetric(horizontal: 10, vertical: 8)));
     }
 
     private void ChangeShape(int delta)

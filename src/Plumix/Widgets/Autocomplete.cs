@@ -652,7 +652,7 @@ internal sealed class RawAutocompleteState<T> : State<RawAutocomplete<T>>
         }
     }
 
-    private static Rect DeflateRect(Rect rect, Thickness insets)
+    private static Rect DeflateRect(Rect rect, EdgeInsets insets)
     {
         double left = rect.Left + insets.Left;
         double top = rect.Top + insets.Top;

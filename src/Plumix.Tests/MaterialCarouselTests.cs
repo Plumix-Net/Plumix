@@ -25,7 +25,7 @@ public sealed class MaterialCarouselTests
         RoundedRectangleBorder shape = Assert.IsType<RoundedRectangleBorder>(surface.Shape);
         Assert.Equal(28.0, shape.BorderRadius.Physical.Radius);
         Assert.Null(surface.BorderRadius);
-        Assert.Equal(new Thickness(4), harness.FindWidgets<Padding>()[0].Insets);
+        Assert.Equal(EdgeInsets.All(4), harness.FindWidgets<Padding>()[0].Insets);
     }
 
     [Fact]
@@ -34,7 +34,7 @@ public sealed class MaterialCarouselTests
         using CarouselHarness harness = new(new CarouselView(
             200,
             Items(5),
-            padding: new Thickness(20),
+            padding: EdgeInsets.All(20),
             backgroundColor: new Color(0xFFFFC107),
             elevation: 10.0,
             shape: new StadiumBorder(),
@@ -47,7 +47,7 @@ public sealed class MaterialCarouselTests
         Assert.Equal(new Color(0xFFFFC107), surface.Color);
         Assert.Equal(10.0, surface.Elevation);
         Assert.IsType<StadiumBorder>(surface.Shape);
-        Assert.Equal(new Thickness(20), harness.FindWidgets<Padding>()[0].Insets);
+        Assert.Equal(EdgeInsets.All(20), harness.FindWidgets<Padding>()[0].Insets);
 
         InkWell ink = harness.FindWidgets<InkWell>()[0];
         Assert.Equal(Colors.Purple, ink.OverlayColor!.Resolve(new HashSet<WidgetState> { WidgetState.Focused }));
@@ -82,7 +82,7 @@ public sealed class MaterialCarouselTests
                 BackgroundColor: themeColor,
                 Elevation: 3.0,
                 Shape: new RoundedRectangleBorder(borderRadius: BorderRadius.Circular(12)),
-                Padding: new Thickness(6),
+                Padding: EdgeInsets.All(6),
                 ItemClipBehavior: Clip.HardEdge),
         };
 
@@ -93,7 +93,7 @@ public sealed class MaterialCarouselTests
         Assert.Equal(3.0, fromTheme.Elevation);
         Assert.Equal(Clip.HardEdge, fromTheme.ClipBehavior);
         Assert.Equal(12.0, Assert.IsType<RoundedRectangleBorder>(fromTheme.Shape).BorderRadius.Physical.Radius);
-        Assert.Equal(new Thickness(6), themeHarness.FindWidgets<Padding>()[0].Insets);
+        Assert.Equal(EdgeInsets.All(6), themeHarness.FindWidgets<Padding>()[0].Insets);
 
         using CarouselHarness localHarness = new(
             new CarouselViewTheme(
@@ -136,17 +136,17 @@ public sealed class MaterialCarouselTests
         CarouselViewThemeData a = new(
             Elevation: 2,
             BackgroundColor: Colors.Black,
-            Padding: new Thickness(0),
+            Padding: EdgeInsets.Zero,
             ItemClipBehavior: Clip.HardEdge);
         CarouselViewThemeData b = new(
             Elevation: 6,
             BackgroundColor: Colors.White,
-            Padding: new Thickness(8),
+            Padding: EdgeInsets.All(8),
             ItemClipBehavior: Clip.AntiAlias);
 
         CarouselViewThemeData mid = CarouselViewThemeData.Lerp(a, b, 0.5);
         Assert.Equal(4.0, mid.Elevation);
-        Assert.Equal(new Thickness(4), mid.Padding);
+        Assert.Equal(EdgeInsets.All(4), mid.Padding);
         Assert.Equal(Clip.AntiAlias, mid.ItemClipBehavior);
         Assert.Equal(Clip.HardEdge, CarouselViewThemeData.Lerp(a, b, 0.4).ItemClipBehavior);
         Assert.Same(a, CarouselViewThemeData.Lerp(a, a, 0.3));
@@ -298,7 +298,7 @@ public sealed class MaterialCarouselTests
         using CarouselHarness harness = new(new CarouselView(
             200,
             Items(5),
-            padding: new Thickness(0),
+            padding: EdgeInsets.Zero,
             scrollDirection: Axis.Vertical));
         harness.Pump();
 

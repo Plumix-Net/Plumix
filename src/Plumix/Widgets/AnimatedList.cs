@@ -28,7 +28,7 @@ public sealed class AnimatedList : StatefulWidget
         bool? primary = null,
         ScrollPhysics? physics = null,
         bool shrinkWrap = false,
-        Thickness? padding = null,
+        EdgeInsetsGeometry? padding = null,
         Clip clipBehavior = Clip.HardEdge,
         ScrollCacheExtent? scrollCacheExtent = null,
         Key? key = null) : this(
@@ -58,7 +58,7 @@ public sealed class AnimatedList : StatefulWidget
         bool? primary,
         ScrollPhysics? physics,
         bool shrinkWrap,
-        Thickness? padding,
+        EdgeInsetsGeometry? padding,
         Clip clipBehavior,
         ScrollCacheExtent? scrollCacheExtent,
         Key? key) : base(key)
@@ -98,7 +98,7 @@ public sealed class AnimatedList : StatefulWidget
 
     public bool ShrinkWrap { get; }
 
-    public Thickness? Padding { get; }
+    public EdgeInsetsGeometry? Padding { get; }
 
     public Clip ClipBehavior { get; }
 
@@ -117,7 +117,7 @@ public sealed class AnimatedList : StatefulWidget
         bool? primary = null,
         ScrollPhysics? physics = null,
         bool shrinkWrap = false,
-        Thickness? padding = null,
+        EdgeInsetsGeometry? padding = null,
         Clip clipBehavior = Clip.HardEdge,
         ScrollCacheExtent? scrollCacheExtent = null,
         Key? key = null)
@@ -288,11 +288,11 @@ public sealed class AnimatedListState : State<AnimatedList>
             initialItemCount: widget.InitialItemCount,
             key: _sliverKey);
 
-        Thickness? effectivePadding = widget.Padding;
+        EdgeInsetsGeometry? effectivePadding = widget.Padding;
         if (!effectivePadding.HasValue && MediaQuery.MaybeOf(context) is { } mediaQuery)
         {
-            Thickness horizontalPadding = new(mediaQuery.Padding.Left, 0, mediaQuery.Padding.Right, 0);
-            Thickness verticalPadding = new(0, mediaQuery.Padding.Top, 0, mediaQuery.Padding.Bottom);
+            EdgeInsets horizontalPadding = EdgeInsets.FromLTRB(mediaQuery.Padding.Left, 0, mediaQuery.Padding.Right, 0);
+            EdgeInsets verticalPadding = EdgeInsets.FromLTRB(0, mediaQuery.Padding.Top, 0, mediaQuery.Padding.Bottom);
             effectivePadding = widget.ScrollDirection == Axis.Vertical ? verticalPadding : horizontalPadding;
             sliver = new MediaQuery(
                 mediaQuery.CopyWith(

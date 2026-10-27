@@ -102,7 +102,7 @@ internal sealed class WidgetInspectorDemoPageState : State
         return new ColoredBox(
             color: color,
             child: new Padding(
-                new Thickness(12),
+                EdgeInsets.All(12),
                 child: new Column(
                     crossAxisAlignment: CrossAxisAlignment.Start,
                     spacing: 8,
@@ -123,6 +123,6 @@ internal sealed class WidgetInspectorDemoPageState : State
                 background: new Color(0xFFDCE3ED),
                 foreground: Colors.Black,
                 fontSize: 12,
-                padding: new Thickness(10, 8)));
+                padding: EdgeInsets.Symmetric(horizontal: 10, vertical: 8)));
     }
 }

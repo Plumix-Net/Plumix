@@ -773,9 +773,9 @@ public partial class PlumixHost : Control, ICustomHitTest
     }
 
     /// <summary>Logical insets to the physical pixels a <see cref="FlutterView"/> reports.</summary>
-    private static Thickness ToViewPadding(Thickness logical, double devicePixelRatio)
+    private static ViewPadding ToViewPadding(EdgeInsets logical, double devicePixelRatio)
     {
-        return new Thickness(
+        return new ViewPadding(
             logical.Left * devicePixelRatio,
             logical.Top * devicePixelRatio,
             logical.Right * devicePixelRatio,
@@ -980,12 +980,13 @@ public partial class PlumixHost : Control, ICustomHitTest
 
     protected MediaQueryData GetMediaQueryData()
     {
-        var viewPadding = _insetsManager?.SafeAreaPadding ?? default;
+        // Avalonia boundary: the platform safe area arrives as a Thickness.
+        EdgeInsets viewPadding = _insetsManager?.SafeAreaPadding ?? default(Thickness);
         // Avalonia assigns Bounds after ArrangeOverride returns; metrics published during that
         // callback must use its finalSize, including the first layout and subsequent resizes.
         var size = _lastArrangedSize;
         Point origin = _attachedTopLevel is null ? default : this.TranslatePoint(default, _attachedTopLevel) ?? default;
-        var viewInsets = ResolveViewInsets(
+        EdgeInsets viewInsets = ResolveViewInsets(
             _inputPane?.State ?? InputPaneState.Closed, _inputPane?.OccludedRect ?? default, new Rect(origin, size));
         double scale = _attachedTopLevel?.RenderScaling ?? 1.0;
         if (!double.IsFinite(scale) || scale <= 0)
@@ -1809,7 +1810,7 @@ public partial class PlumixHost : Control, ICustomHitTest
     /// <param name="state">The input pane's state; a closed pane covers nothing.</param>
     /// <param name="occludedRect">The pane's rect in top-level coordinates.</param>
     /// <param name="hostRect">The view's rect in top-level coordinates.</param>
-    internal static Thickness ResolveViewInsets(InputPaneState state, Rect occludedRect, Rect hostRect)
+    internal static EdgeInsets ResolveViewInsets(InputPaneState state, Rect occludedRect, Rect hostRect)
     {
         if (state != InputPaneState.Open || occludedRect.Height <= 0 || hostRect.Height <= 0)
         {
@@ -1819,7 +1820,7 @@ public partial class PlumixHost : Control, ICustomHitTest
         Rect covered = hostRect.Intersect(occludedRect);
         return covered.Height <= 0
             ? default
-            : new Thickness(0, 0, 0, Math.Clamp(hostRect.Bottom - covered.Top, 0.0, hostRect.Height));
+            : EdgeInsets.Only(bottom: Math.Clamp(hostRect.Bottom - covered.Top, 0.0, hostRect.Height));
     }
 
     /// <summary>

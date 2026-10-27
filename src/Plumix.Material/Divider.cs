@@ -74,8 +74,8 @@ public sealed class Divider : StatelessWidget
         TextDirection direction = Directionality.Of(context);
         BorderRadius? effectiveRadius = (Radius ?? dividerTheme.Radius ?? defaults.Radius)?.Resolve(direction);
         var margin = direction == TextDirection.Ltr
-            ? new Thickness(effectiveIndent, 0.0, effectiveEndIndent, 0.0)
-            : new Thickness(effectiveEndIndent, 0.0, effectiveIndent, 0.0);
+            ? EdgeInsets.FromLTRB(effectiveIndent, 0.0, effectiveEndIndent, 0.0)
+            : EdgeInsets.FromLTRB(effectiveEndIndent, 0.0, effectiveIndent, 0.0);
 
         return new SizedBox(
             height: effectiveHeight,
@@ -154,7 +154,7 @@ public sealed class VerticalDivider : StatelessWidget
             child: new Center(
                 child: new Container(
                     width: effectiveThickness,
-                    margin: new Thickness(0.0, effectiveIndent, 0.0, effectiveEndIndent),
+                    margin: EdgeInsets.FromLTRB(0.0, effectiveIndent, 0.0, effectiveEndIndent),
                     decoration: new BoxDecoration(
                         BorderRadius: effectiveRadius,
                         Border: new Plumix.Rendering.Border(

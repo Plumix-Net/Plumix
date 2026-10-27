@@ -2191,7 +2191,7 @@ internal sealed class SelectionHandleOverlay : StatefulWidget
                                             }),
                                 },
                                 child: new Padding(
-                                    insets: new Thickness(
+                                    insets: EdgeInsets.FromLTRB(
                                         padding.Left,
                                         padding.Top,
                                         padding.Right,

@@ -32,7 +32,7 @@ internal sealed class CupertinoPageScaffoldDemoPageState : State
         double bottomInset = _showKeyboardInset ? 96.0 : 0.0;
         return new MediaQuery(
             data: mediaQuery.CopyWith(
-                viewInsets: new Thickness(
+                viewInsets: EdgeInsets.FromLTRB(
                     mediaQuery.ViewInsets.Left,
                     mediaQuery.ViewInsets.Top,
                     mediaQuery.ViewInsets.Right,
@@ -55,7 +55,7 @@ internal sealed class CupertinoPageScaffoldDemoPageState : State
 
         return new SingleChildScrollView(
             child: new Padding(
-                insets: new Thickness(16.0, mediaQuery.Padding.Top + 16.0, 16.0, 16.0),
+                insets: EdgeInsets.FromLTRB(16.0, mediaQuery.Padding.Top + 16.0, 16.0, 16.0),
                 child: new Column(
                     crossAxisAlignment: CrossAxisAlignment.Stretch,
                     spacing: 10.0,
@@ -66,7 +66,7 @@ internal sealed class CupertinoPageScaffoldDemoPageState : State
                             "The probe bar switches between translucent overlap guidance and opaque content offset.",
                             style: new TextStyle(FontSize: 14.0, Color: secondaryLabel)),
                         new Container(
-                            padding: new Thickness(12.0),
+                            padding: EdgeInsets.All(12.0),
                             decoration: new BoxDecoration(
                                 Color: cardColor,
                                 BorderRadius: BorderRadius.Circular(10.0)),
@@ -118,7 +118,7 @@ internal sealed class CupertinoPageScaffoldDemoPageState : State
                 backgroundColor: background,
                 foregroundColor: MaterialColors.Black,
                 minimumSize: new Size(0, 36),
-                padding: new Thickness(10, 8)),
+                padding: EdgeInsets.Symmetric(horizontal: 10, vertical: 8)),
             child: new Text(label, style: new TextStyle(FontSize: 12)));
     }
 

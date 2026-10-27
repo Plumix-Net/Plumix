@@ -81,7 +81,7 @@ internal sealed class BlocCounterDemoPageState : State
                 style: TextButton.StyleFrom(
                     foregroundColor: Colors.Black,
                     backgroundColor: background,
-                    padding: new Thickness(10, 8),
+                    padding: EdgeInsets.Symmetric(horizontal: 10, vertical: 8),
                     minimumSize: new Size(64, 38),
                     shape: new RoundedRectangleBorder(
                         borderRadius: BorderRadius.Circular(8)))));

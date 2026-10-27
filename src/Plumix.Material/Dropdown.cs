@@ -107,7 +107,7 @@ internal sealed class DropdownMenuItemButton<T> : StatefulWidget
 {
     public DropdownMenuItemButton(
         DropdownRoute<T> route,
-        Thickness? padding,
+        EdgeInsets? padding,
         Rect buttonRect,
         BoxConstraints constraints,
         int itemIndex,
@@ -127,7 +127,7 @@ internal sealed class DropdownMenuItemButton<T> : StatefulWidget
     }
 
     public DropdownRoute<T> Route { get; }
-    public Thickness? Padding { get; }
+    public EdgeInsets? Padding { get; }
     public Rect ButtonRect { get; }
     public BoxConstraints Constraints { get; }
     public int ItemIndex { get; }
@@ -270,7 +270,7 @@ internal sealed class DropdownMenuPanel<T> : StatefulWidget
 {
     public DropdownMenuPanel(
         DropdownRoute<T> route,
-        Thickness? padding,
+        EdgeInsets? padding,
         Rect buttonRect,
         BoxConstraints constraints,
         Color? dropdownColor,
@@ -292,7 +292,7 @@ internal sealed class DropdownMenuPanel<T> : StatefulWidget
     }
 
     public DropdownRoute<T> Route { get; }
-    public Thickness? Padding { get; }
+    public EdgeInsets? Padding { get; }
     public Rect ButtonRect { get; }
     public BoxConstraints Constraints { get; }
     public Color? DropdownColor { get; }

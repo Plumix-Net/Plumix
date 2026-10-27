@@ -65,7 +65,7 @@ internal sealed class OffstageDemoPageState : State
                     new Container(
                         height: 82,
                         color: new Color(0xFFF6F8FB),
-                        padding: new Thickness(8),
+                        padding: EdgeInsets.All(8),
                         child: new Row(
                             mainAxisAlignment: MainAxisAlignment.Center,
                             spacing: 8,
@@ -168,7 +168,7 @@ internal sealed class OffstageDemoPageState : State
                     width: 260,
                     height: 190,
                     color: new Color(0xFFE7EDF6),
-                    padding: new Thickness(10),
+                    padding: EdgeInsets.All(10),
                     child: new Column(
                         crossAxisAlignment: CrossAxisAlignment.Stretch,
                         spacing: 8,
@@ -180,7 +180,7 @@ internal sealed class OffstageDemoPageState : State
                             new Container(
                                 height: 72,
                                 color: Colors.White,
-                                padding: new Thickness(8, 10, 8, 10),
+                                padding: EdgeInsets.FromLTRB(8, 10, 8, 10),
                                 child: new Row(
                                     mainAxisAlignment: MainAxisAlignment.Center,
                                     spacing: 8,
@@ -220,7 +220,7 @@ internal sealed class OffstageDemoPageState : State
                 background: (Color)Avalonia.Media.Color.Parse(colorHex),
                 foreground: Colors.Black,
                 fontSize: 12,
-                padding: new Thickness(10, 8)));
+                padding: EdgeInsets.Symmetric(horizontal: 10, vertical: 8)));
     }
 
     private static Widget BuildMarker(string label, string colorHex)

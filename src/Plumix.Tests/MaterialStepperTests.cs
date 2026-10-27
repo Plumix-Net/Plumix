@@ -227,7 +227,7 @@ public sealed class MaterialStepperTests : IDisposable
         bool continuePressed = false;
         bool canceledPressed = false;
         Widget Builder(BuildContext context, ControlsDetails details) => new Container(
-            margin: new Thickness(0, 16, 0, 0),
+            margin: EdgeInsets.FromLTRB(0, 16, 0, 0),
             child: new ConstrainedBox(
                 constraints: BoxConstraints.TightFor(height: 48.0),
                 child: new Row(children:
@@ -270,7 +270,7 @@ public sealed class MaterialStepperTests : IDisposable
     {
         int currentStep = 0;
         Widget Builder(BuildContext context, ControlsDetails details) => new Container(
-            margin: new Thickness(0, 16, 0, 0),
+            margin: EdgeInsets.FromLTRB(0, 16, 0, 0),
             child: new ConstrainedBox(
                 constraints: BoxConstraints.TightFor(height: 48.0),
                 child: new Row(children:
@@ -941,7 +941,7 @@ public sealed class MaterialStepperTests : IDisposable
         Assert.Equal(customPadding, tester.Widget<Stepper>(Find.ByType<Stepper>()).ContentPadding);
         ListView listView = tester.Widget<ListView>(
             Find.Descendant(of: Find.ByType<Stepper>(), matching: Find.ByType<ListView>()));
-        Assert.Equal(new Thickness(expected), listView.Padding);
+        Assert.Equal(EdgeInsets.All(expected), listView.Padding);
     }
 
     // Flutter: "Stepper custom contentPadding for vertical stepper",
@@ -978,7 +978,7 @@ public sealed class MaterialStepperTests : IDisposable
 
         Padding paddingWidget = tester.FirstWidget<Padding>(
             Find.Ancestor(of: Find.Text("Content 1"), matching: Find.ByType<Padding>()));
-        Assert.Equal(new Thickness(left, 0, right, bottom), paddingWidget.Insets.Resolve(TextDirection.Ltr));
+        Assert.Equal(EdgeInsets.FromLTRB(left, 0, right, bottom), paddingWidget.Insets.Resolve(TextDirection.Ltr));
     }
 
     // C#-only: the default index digit merges _kStepStyle (fontSize 12, white) into the ambient

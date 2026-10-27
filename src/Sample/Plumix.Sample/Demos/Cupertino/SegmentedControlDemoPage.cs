@@ -97,7 +97,7 @@ internal sealed class CupertinoSegmentedControlDemoPageState : State
             onTap: onTap,
             child: new Container(
                 width: 126.0,
-                padding: new Thickness(10.0, 8.0),
+                padding: EdgeInsets.Symmetric(horizontal: 10.0, vertical: 8.0),
                 decoration: new BoxDecoration(
                     Color: new Color(0xFFE8F4F1),
                     BorderRadius: BorderRadius.Circular(8.0)),

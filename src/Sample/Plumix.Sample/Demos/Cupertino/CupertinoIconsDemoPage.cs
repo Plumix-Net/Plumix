@@ -53,7 +53,7 @@ public sealed class CupertinoIconsDemoPage : StatelessWidget
     {
         return new Container(
             width: 132.0,
-            padding: new Thickness(12.0),
+            padding: EdgeInsets.All(12.0),
             decoration: new BoxDecoration(
                 Color: new Color(0xFFF2F2F7),
                 BorderRadius: BorderRadius.Circular(12.0)),

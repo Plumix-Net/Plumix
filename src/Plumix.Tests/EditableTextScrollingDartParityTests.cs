@@ -39,7 +39,7 @@ public sealed class EditableTextScrollingDartParityTests : IDisposable
         bool readOnly = false,
         ScrollController? scrollController = null,
         ScrollPhysics? scrollPhysics = null,
-        Thickness? scrollPadding = null,
+        EdgeInsets? scrollPadding = null,
         IReadOnlyList<TextInputFormatter>? inputFormatters = null,
         Color? autocorrectionTextRectColor = null,
         bool cursorOpacityAnimates = false,
@@ -187,7 +187,7 @@ public sealed class EditableTextScrollingDartParityTests : IDisposable
                 children:
                 [
                     new SizedBox(height: 200),
-                    Field(controller, focusNode, scrollPadding: new Thickness(50)),
+                    Field(controller, focusNode, scrollPadding: EdgeInsets.All(50)),
                     new SizedBox(height: 850),
                 ])))));
         double editableHeight = Editable(tester).Size.Height;
@@ -618,7 +618,7 @@ public sealed class EditableTextScrollingDartParityTests : IDisposable
         scrollController.JumpTo(0.0);
         tester.Pump();
 
-        tester.View.ViewInsets = new Thickness(0, 0, 0, 500);
+        tester.View.ViewInsets = FakeViewPadding.Create(bottom: 500);
         tester.Pump();
 
         double offset = scrollController.Offset;

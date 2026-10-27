@@ -92,8 +92,8 @@ public sealed partial class EditableText
                     bottomSpacing = Math.Max(handleCenter + interactiveHandleHeight / 2, bottomSpacing);
                 }
 
-                Thickness scrollPadding = Widget.ScrollPadding;
-                var caretPadding = new Thickness(
+                EdgeInsets scrollPadding = Widget.ScrollPadding;
+                var caretPadding = EdgeInsets.FromLTRB(
                     scrollPadding.Left,
                     scrollPadding.Top,
                     scrollPadding.Right,

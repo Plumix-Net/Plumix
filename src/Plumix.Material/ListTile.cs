@@ -330,7 +330,7 @@ public sealed class ListTile : StatelessWidget
         Widget? trailing = WrapSlot(Trailing, leadingAndTrailingStyle);
 
         TextDirection textDirection = Directionality.Of(context);
-        Thickness resolvedContentPadding = (ContentPadding
+        EdgeInsets resolvedContentPadding = (ContentPadding
                                             ?? tileTheme.ContentPadding
                                             ?? defaults.ContentPadding!.Value)
             .Resolve(textDirection);
@@ -386,7 +386,7 @@ public sealed class ListTile : StatelessWidget
         content = new SafeArea(
             top: false,
             bottom: false,
-            minimum: new EdgeInsets(
+            minimum: EdgeInsets.FromLTRB(
                 resolvedContentPadding.Left,
                 resolvedContentPadding.Top,
                 resolvedContentPadding.Right,

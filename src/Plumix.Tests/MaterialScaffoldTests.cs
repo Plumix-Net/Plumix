@@ -918,7 +918,7 @@ public sealed class MaterialScaffoldTests
                 },
                 child: new MediaQuery(
                     data: new MediaQueryData(
-                        Padding: new Thickness(30, 0, 0, 0)),
+                        Padding: EdgeInsets.FromLTRB(30, 0, 0, 0)),
                     child: new Scaffold(
                         drawer: new Drawer(child: new Text("Padded edge drawer panel")),
                         body: new CaptureBuildContextWidget(
@@ -962,7 +962,7 @@ public sealed class MaterialScaffoldTests
                     },
                     child: new MediaQuery(
                         data: new MediaQueryData(
-                            Padding: new Thickness(0, 0, 30, 0)),
+                            Padding: EdgeInsets.FromLTRB(0, 0, 30, 0)),
                         child: new Scaffold(
                             drawer: new Drawer(child: new Text("RTL padded edge start drawer panel")),
                             body: new CaptureBuildContextWidget(
@@ -1006,7 +1006,7 @@ public sealed class MaterialScaffoldTests
                     },
                     child: new MediaQuery(
                         data: new MediaQueryData(
-                            Padding: new Thickness(30, 0, 0, 0)),
+                            Padding: EdgeInsets.FromLTRB(30, 0, 0, 0)),
                         child: new Scaffold(
                             endDrawer: new Drawer(child: new Text("RTL padded edge end drawer panel")),
                             body: new CaptureBuildContextWidget(
@@ -2797,7 +2797,7 @@ public sealed class MaterialScaffoldTests
         var owner = TestBuildOwner.Create();
         var theme = ThemeData.Light with
         {
-            AppBarTheme = new AppBarThemeData(ActionsPadding: new Thickness(13, 5, 19, 7)),
+            AppBarTheme = new AppBarThemeData(ActionsPadding: EdgeInsets.FromLTRB(13, 5, 19, 7)),
         };
 
         var root = new TestRootElement(
@@ -2830,7 +2830,7 @@ public sealed class MaterialScaffoldTests
         var owner = TestBuildOwner.Create();
         var theme = ThemeData.Light with
         {
-            AppBarTheme = new AppBarThemeData(ActionsPadding: new Thickness(13, 5, 19, 7)),
+            AppBarTheme = new AppBarThemeData(ActionsPadding: EdgeInsets.FromLTRB(13, 5, 19, 7)),
         };
 
         var root = new TestRootElement(
@@ -2838,7 +2838,7 @@ public sealed class MaterialScaffoldTests
                 data: theme,
                 child: new AppBar(
                     title: new Text("Title"),
-                    actionsPadding: new Thickness(4, 6, 8, 10),
+                    actionsPadding: EdgeInsets.FromLTRB(4, 6, 8, 10),
                     actions:
                     [
                         new Text("Action"),
@@ -2867,8 +2867,8 @@ public sealed class MaterialScaffoldTests
                 data: ThemeData.Light,
                 child: new MediaQuery(
                     data: new MediaQueryData(
-                        Padding: new Thickness(0, 24, 0, 0),
-                        ViewPadding: new Thickness(0, 24, 0, 0)),
+                        Padding: EdgeInsets.FromLTRB(0, 24, 0, 0),
+                        ViewPadding: EdgeInsets.FromLTRB(0, 24, 0, 0)),
                     child: new AppBar(title: new Text("Title")))));
 
         root.Attach(owner);
@@ -2894,8 +2894,8 @@ public sealed class MaterialScaffoldTests
                 data: ThemeData.Light,
                 child: new MediaQuery(
                     data: new MediaQueryData(
-                        Padding: new Thickness(0, 24, 0, 0),
-                        ViewPadding: new Thickness(0, 24, 0, 0)),
+                        Padding: EdgeInsets.FromLTRB(0, 24, 0, 0),
+                        ViewPadding: EdgeInsets.FromLTRB(0, 24, 0, 0)),
                     child: new AppBar(
                         title: new Text("Title"),
                         primary: false))));
@@ -2923,7 +2923,7 @@ public sealed class MaterialScaffoldTests
                 data: ThemeData.Light,
                 child: new AppBar(
                     title: new Text("Title"),
-                    actionsPadding: new Thickness(3, 4, 5, 6),
+                    actionsPadding: EdgeInsets.FromLTRB(3, 4, 5, 6),
                     actions:
                     [
                         new Text("One"),
@@ -2963,7 +2963,7 @@ public sealed class MaterialScaffoldTests
                 data: theme,
                 child: new AppBar(
                     title: new Text("Title"),
-                    actionsPadding: new Thickness(7, 8, 9, 10),
+                    actionsPadding: EdgeInsets.FromLTRB(7, 8, 9, 10),
                     actions:
                     [
                         new Text("One"),
@@ -3981,7 +3981,7 @@ public sealed class MaterialScaffoldTests
         var callbacks = new List<bool>();
         using var harness = new WidgetRenderHarness(
             new MediaQuery(
-                data: new MediaQueryData(Padding: new Thickness(12, 0, 0, 0)),
+                data: new MediaQueryData(Padding: EdgeInsets.FromLTRB(12, 0, 0, 0)),
                 child: new Directionality(
                     textDirection: TextDirection.Ltr,
                     child: new Theme(

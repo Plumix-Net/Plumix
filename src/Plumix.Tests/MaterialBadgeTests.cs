@@ -66,7 +66,7 @@ public sealed class MaterialBadgeTests
                 BackgroundColor: Colors.DarkGreen,
                 TextColor: Colors.Gold,
                 LargeSize: 20,
-                Padding: new Thickness(6, 0),
+                Padding: EdgeInsets.Symmetric(horizontal: 6),
                 Alignment: Alignment.BottomLeft,
                 Offset: new Vector(2, 3)),
         };
@@ -178,7 +178,7 @@ public sealed class MaterialBadgeTests
             SmallSize: 4,
             LargeSize: 12,
             TextStyle: new TextStyle(FontSize: 10),
-            Padding: new Thickness(2, 0),
+            Padding: EdgeInsets.Symmetric(horizontal: 2),
             Alignment: Alignment.TopLeft,
             Offset: new Vector(2, -2));
         var end = new BadgeThemeData(
@@ -187,7 +187,7 @@ public sealed class MaterialBadgeTests
             SmallSize: 8,
             LargeSize: 20,
             TextStyle: new TextStyle(FontSize: 14),
-            Padding: new Thickness(6, 2),
+            Padding: EdgeInsets.Symmetric(horizontal: 6, vertical: 2),
             Alignment: AlignmentDirectional.TopEnd,
             Offset: new Vector(6, 2));
 
@@ -201,7 +201,7 @@ public sealed class MaterialBadgeTests
         Assert.Equal(6, halfway.SmallSize);
         Assert.Equal(16, halfway.LargeSize);
         Assert.Equal(12, halfway.TextStyle!.FontSize);
-        Assert.Equal(new Thickness(4, 1), halfway.Padding);
+        Assert.Equal(EdgeInsets.Symmetric(horizontal: 4, vertical: 1), halfway.Padding);
         Assert.Equal(new Vector(4, 0), halfway.Offset);
         Assert.Equal(0, mixedLtr.X, precision: 6);
         Assert.Equal(-1, mixedRtl.X, precision: 6);

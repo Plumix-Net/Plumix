@@ -96,7 +96,7 @@ public sealed class RenderingParityTests
     public void RenderPadding_IgnoresNoOpPaddingUpdate()
     {
         var child = new CountingRenderBox();
-        var padding = new RenderPadding(new Thickness(8, 10, 12, 14), child);
+        var padding = new RenderPadding(EdgeInsets.FromLTRB(8, 10, 12, 14), child);
         var parent = new ParentUsesSizeRenderBox(padding);
         var root = new RenderView(new FlutterView(new Size(800, 600)))
         {
@@ -110,7 +110,7 @@ public sealed class RenderingParityTests
         pipeline.FlushLayout(viewport);
         Assert.Equal(1, parent.LayoutCount);
 
-        padding.Padding = new Thickness(8, 10, 12, 14);
+        padding.Padding = EdgeInsets.FromLTRB(8, 10, 12, 14);
         pipeline.FlushLayout(viewport);
 
         Assert.Equal(1, parent.LayoutCount);

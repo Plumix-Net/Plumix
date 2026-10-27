@@ -301,7 +301,7 @@ public sealed class MaterialDividerTests
 
         Assert.Contains(
             FindDescendants<RenderPadding>(harness.RenderView),
-            padding => padding.Padding == new Thickness(20.0, 0.0, 10.0, 0.0));
+            padding => padding.Padding == EdgeInsets.FromLTRB(20.0, 0.0, 10.0, 0.0));
         RenderDecoratedBox line = FindDividerBox(harness.RenderView, Axis.Horizontal);
         Assert.Equal(70.0, line.Size.Width, 3);
         Assert.Equal(BorderRadius.Only(4, 1, 6, 2), line.AsBoxDecoration.BorderRadius);

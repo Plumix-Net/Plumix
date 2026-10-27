@@ -22,7 +22,7 @@ public sealed class TableBorderTests
         Assert.Equal(new BorderSide(Colors.Black), border.Left);
         Assert.Equal(BorderSide.None, border.HorizontalInside);
         Assert.Equal(new BorderSide(Colors.Black), border.VerticalInside);
-        Assert.Equal(new Thickness(1, 0, 1, 0), border.Dimensions);
+        Assert.Equal(EdgeInsets.FromLTRB(1, 0, 1, 0), border.Dimensions);
         Assert.False(border.IsUniform);
         Assert.Equal(new TableBorder(
             left: new BorderSide(Colors.Black, width: 2),
@@ -35,7 +35,7 @@ public sealed class TableBorderTests
     {
         var all = TableBorder.All(new Color(0xFF00FFFF), 2);
         Assert.All(Sides(all), side => Assert.Equal(new BorderSide(new Color(0xFF00FFFF), 2), side));
-        Assert.Equal(new Thickness(2), all.Dimensions);
+        Assert.Equal(EdgeInsets.All(2), all.Dimensions);
         Assert.True(all.IsUniform);
         Assert.Equal(TableBorder.All(new Color(0xFF00FFFF)), all.Scale(0.5));
         var inside = new BorderSide(Colors.Black, width: 3);
@@ -44,7 +44,7 @@ public sealed class TableBorderTests
         Assert.All(Sides(symmetric).Take(4), side => Assert.Equal(outside, side));
         Assert.Equal(inside, symmetric.HorizontalInside);
         Assert.Equal(inside, symmetric.VerticalInside);
-        Assert.Equal(new Thickness(1), symmetric.Dimensions);
+        Assert.Equal(EdgeInsets.All(1), symmetric.Dimensions);
         Assert.False(symmetric.IsUniform);
         Assert.Equal(TableBorder.Symmetric(outside: new BorderSide(outside.Color, 0, BorderStyle.None)),
             symmetric.Scale(0));
@@ -64,7 +64,7 @@ public sealed class TableBorderTests
         TableBorder b = a.Scale(2);
         TableBorder c = a.Scale(3);
         Assert.False(a.IsUniform);
-        Assert.Equal(new Thickness(4, 1, 2, 3), a.Dimensions);
+        Assert.Equal(EdgeInsets.FromLTRB(4, 1, 2, 3), a.Dimensions);
         Assert.Equal(b, TableBorder.Lerp(a, c, 0.5));
         Assert.Equal(c, TableBorder.Lerp(a, b, 2));
         Assert.Equal(a, TableBorder.Lerp(b, c, -1));

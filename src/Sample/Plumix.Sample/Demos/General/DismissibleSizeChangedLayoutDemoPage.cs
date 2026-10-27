@@ -95,7 +95,7 @@ internal sealed class DismissibleSizeChangedLayoutDemoPageState : State
     private Widget BuildDismissibleRow(int item)
     {
         return new Padding(
-            insets: new Thickness(0, 0, 0, 8),
+            insets: EdgeInsets.FromLTRB(0, 0, 0, 8),
             child: new Dismissible(
                 key: new ValueKey<int>(item),
                 child: BuildRowSurface($"Swipe row {item}", new Color(0xFFF4F6F8)),
@@ -113,7 +113,7 @@ internal sealed class DismissibleSizeChangedLayoutDemoPageState : State
         return new Container(
             height: 58,
             color: color,
-            padding: new Thickness(16, 0),
+            padding: EdgeInsets.Symmetric(horizontal: 16),
             alignment: Alignment.CenterLeft,
             child: new Text(label, style: new TextStyle(Color: Colors.Black)));
     }
@@ -123,7 +123,7 @@ internal sealed class DismissibleSizeChangedLayoutDemoPageState : State
         return new Container(
             height: 58,
             color: color,
-            padding: new Thickness(16, 0),
+            padding: EdgeInsets.Symmetric(horizontal: 16),
             alignment: alignment,
             child: new Text(label, style: new TextStyle(Color: Colors.White)));
     }
@@ -138,6 +138,6 @@ internal sealed class DismissibleSizeChangedLayoutDemoPageState : State
                 background: new Color(0xFFDCE3ED),
                 foreground: Colors.Black,
                 fontSize: 12,
-                padding: new Thickness(8, 7)));
+                padding: EdgeInsets.Symmetric(horizontal: 8, vertical: 7)));
     }
 }

@@ -105,7 +105,7 @@ internal sealed class CupertinoExpansionTileDemoPageState : State
                     controller: controller,
                     transitionMode: mode,
                     child: new Padding(
-                        insets: new Thickness(20.0, 14.0),
+                        insets: EdgeInsets.Symmetric(horizontal: 20.0, vertical: 14.0),
                         child: new Text(body)))));
     }
 }

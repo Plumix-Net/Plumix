@@ -105,7 +105,7 @@ public sealed class CupertinoTextSelectionToolbar : StatelessWidget
 
     public override Widget Build(BuildContext context)
     {
-        Thickness mediaQueryPadding = MediaQuery.PaddingOf(context);
+        EdgeInsets mediaQueryPadding = MediaQuery.PaddingOf(context);
         double paddingAbove = mediaQueryPadding.Top + ToolbarScreenPadding;
         double leftMargin = ArrowScreenPadding + mediaQueryPadding.Left;
         double rightMargin = MediaQuery.WidthOf(context) - mediaQueryPadding.Right - ArrowScreenPadding;
@@ -118,7 +118,7 @@ public sealed class CupertinoTextSelectionToolbar : StatelessWidget
             AnchorBelow.Y + ToolbarContentDistance - paddingAbove);
 
         return new Padding(
-            new Thickness(
+            EdgeInsets.FromLTRB(
                 ToolbarScreenPadding,
                 paddingAbove,
                 ToolbarScreenPadding,

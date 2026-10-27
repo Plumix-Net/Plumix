@@ -240,7 +240,7 @@ public sealed class MaterialScaffoldGeometryTests
     public void ScaffoldLayout_ResizeToAvoidBottomInsetFalse_KeepsTheButtonAboveTheKeyboard()
     {
         BuildContext? context = null;
-        var media = new MediaQueryData(Size: Viewport, ViewInsets: new Thickness(0, 0, 0, 300));
+        var media = new MediaQueryData(Size: Viewport, ViewInsets: EdgeInsets.FromLTRB(0, 0, 0, 300));
         using var harness = new Harness(Wrap(
             new Scaffold(
                 body: Capture(c => context = c),
@@ -257,7 +257,7 @@ public sealed class MaterialScaffoldGeometryTests
     public void ScaffoldLayout_ResizeToAvoidBottomInset_LiftsTheButtonAboveTheKeyboard()
     {
         BuildContext? context = null;
-        var media = new MediaQueryData(Size: Viewport, ViewInsets: new Thickness(0, 0, 0, 300));
+        var media = new MediaQueryData(Size: Viewport, ViewInsets: EdgeInsets.FromLTRB(0, 0, 0, 300));
         using var harness = new Harness(Wrap(
             new Scaffold(
                 body: Capture(c => context = c),
@@ -433,7 +433,7 @@ public sealed class MaterialScaffoldGeometryTests
                 persistentFooterButtons: [new SizedBox(width: 100, height: 90)]),
             mediaQuery: new MediaQueryData(
                 Size: Viewport,
-                Padding: new Thickness(10, 20, 30, 40))));
+                Padding: EdgeInsets.FromLTRB(10, 20, 30, 40))));
         harness.Pump(Viewport);
 
         RenderBox footer = harness.RequireSlot(ScaffoldSlot.PersistentFooter);
@@ -457,8 +457,8 @@ public sealed class MaterialScaffoldGeometryTests
                 bottomNavigationBar: new SizedBox(height: 60)),
             mediaQuery: new MediaQueryData(
                 Size: Viewport,
-                Padding: new Thickness(0, 0, 0, 40),
-                ViewPadding: new Thickness(0, 0, 0, 40))));
+                Padding: EdgeInsets.FromLTRB(0, 0, 0, 40),
+                ViewPadding: EdgeInsets.FromLTRB(0, 0, 0, 40))));
         harness.Pump(Viewport);
 
         RenderBox footer = harness.RequireSlot(ScaffoldSlot.PersistentFooter);
@@ -473,8 +473,8 @@ public sealed class MaterialScaffoldGeometryTests
     {
         var withoutKeyboard = new MediaQueryData(
             Size: Viewport,
-            Padding: new Thickness(0, 0, 0, 20),
-            ViewPadding: new Thickness(0, 0, 0, 20));
+            Padding: EdgeInsets.FromLTRB(0, 0, 0, 20),
+            ViewPadding: EdgeInsets.FromLTRB(0, 0, 0, 20));
         using var harness = new Harness(Wrap(
             new Scaffold(
                 body: new SizedBox(),
@@ -492,7 +492,7 @@ public sealed class MaterialScaffoldGeometryTests
             mediaQuery: withoutKeyboard with
             {
                 Padding = default,
-                ViewInsets = new Thickness(0, 0, 0, 300),
+                ViewInsets = EdgeInsets.FromLTRB(0, 0, 0, 300),
             }));
         harness.Pump(Viewport);
 
@@ -583,7 +583,7 @@ public sealed class MaterialScaffoldGeometryTests
                     bodyMetrics = MediaQuery.Of(context);
                     return Filling();
                 })),
-            mediaQuery: new MediaQueryData(Size: Viewport, Padding: new Thickness(0, 24, 0, 0))));
+            mediaQuery: new MediaQueryData(Size: Viewport, Padding: EdgeInsets.FromLTRB(0, 24, 0, 0))));
         harness.Pump(Viewport);
 
         Assert.Equal(expectedBodyHeight, harness.RequireSlot(ScaffoldSlot.Body).Size.Height);
@@ -742,7 +742,7 @@ public sealed class MaterialScaffoldGeometryTests
     {
         using var harness = new Harness(Wrap(
             new Scaffold(body: new SizedBox()),
-            mediaQuery: new MediaQueryData(Size: Viewport, Padding: new Thickness(0, 25, 0, 0)),
+            mediaQuery: new MediaQueryData(Size: Viewport, Padding: EdgeInsets.FromLTRB(0, 25, 0, 0)),
             theme: ThemeData.Light with { Platform = TargetPlatform.IOS }));
         harness.Pump(Viewport);
 
@@ -760,7 +760,7 @@ public sealed class MaterialScaffoldGeometryTests
                 controller: controller,
                 child: new Scaffold(
                     body: new ListView(controller: controller, children: [new SizedBox(height: 2400)]))),
-            mediaQuery: new MediaQueryData(Size: Viewport, Padding: new Thickness(0, 25, 0, 0)),
+            mediaQuery: new MediaQueryData(Size: Viewport, Padding: EdgeInsets.FromLTRB(0, 25, 0, 0)),
             theme: ThemeData.Light with { Platform = TargetPlatform.IOS }));
         harness.Pump(Viewport);
         Assert.True(controller.HasClients);
@@ -807,7 +807,7 @@ public sealed class MaterialScaffoldGeometryTests
                             controller: foreground,
                             children: [new SizedBox(height: 2400)]))),
                 ]),
-            mediaQuery: new MediaQueryData(Size: Viewport, Padding: new Thickness(0, 25, 0, 0)),
+            mediaQuery: new MediaQueryData(Size: Viewport, Padding: EdgeInsets.FromLTRB(0, 25, 0, 0)),
             theme: ThemeData.Light with { Platform = TargetPlatform.IOS }));
         harness.Pump(Viewport);
         background.JumpTo(1000.0);

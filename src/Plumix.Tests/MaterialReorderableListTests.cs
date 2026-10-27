@@ -106,7 +106,7 @@ public sealed class MaterialReorderableListTests
             1,
             onReorderItem: (_, _) => { },
             buildDefaultDragHandles: false,
-            padding: new Thickness(4),
+            padding: EdgeInsets.All(4),
             itemExtent: 20,
             anchor: 0.25,
             dragStartBehavior: DragStartBehavior.Down,
@@ -116,7 +116,7 @@ public sealed class MaterialReorderableListTests
             autoScrollerVelocityScalar: 75.0);
 
         var configured = Assert.IsType<ReorderableListView>(list);
-        Assert.Equal(new Thickness(4), configured.Padding);
+        Assert.Equal(EdgeInsets.All(4), configured.Padding);
         Assert.Equal(0.25, configured.Anchor);
         Assert.Equal(DragStartBehavior.Down, configured.DragStartBehavior);
         Assert.Equal(ScrollViewKeyboardDismissBehavior.OnDrag, configured.KeyboardDismissBehavior);
@@ -214,7 +214,7 @@ public sealed class MaterialReorderableListTests
         Widget widget = new Align(
             alignment: Alignment.TopLeft,
             child: new Padding(
-                new Thickness(40, 30, 0, 0),
+                EdgeInsets.FromLTRB(40, 30, 0, 0),
                 new DragBoundary(new SizedBox(width: 100, height: 100, key: key))));
         using WidgetRenderHarness harness = new(Wrap(widget));
         harness.Pump(new Size(240, 200));
@@ -586,7 +586,7 @@ public sealed class MaterialReorderableListTests
             [new SizedBox(height: 40, key: new ValueKey<int>(0))],
             onReorderItem: (_, _) => { },
             buildDefaultDragHandles: false,
-            padding: new Thickness(10),
+            padding: EdgeInsets.All(10),
             header: new SizedBox(height: 20),
             footer: new SizedBox(height: 30),
             itemExtent: 40);
@@ -596,7 +596,7 @@ public sealed class MaterialReorderableListTests
         List<RenderSliverPadding> paddings = FindDescendants<RenderSliverPadding>(harness.RenderView);
         // Header, list, footer: the header keeps the top inset and the footer the bottom one.
         Assert.Equal(
-            [new Thickness(10, 10, 10, 0), new Thickness(10, 0, 10, 0), new Thickness(10, 0, 10, 10)],
+            [EdgeInsets.FromLTRB(10, 10, 10, 0), EdgeInsets.FromLTRB(10, 0, 10, 0), EdgeInsets.FromLTRB(10, 0, 10, 10)],
             paddings.Select(value => value.Padding));
     }
 

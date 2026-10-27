@@ -17,7 +17,7 @@ public sealed record CardThemeData
         Color? ShadowColor = null,
         Color? SurfaceTintColor = null,
         double? Elevation = null,
-        Thickness? Margin = null,
+        EdgeInsetsGeometry? Margin = null,
         ShapeBorder? Shape = null)
     {
         if (Elevation.HasValue
@@ -49,7 +49,7 @@ public sealed record CardThemeData
 
     public double? Elevation { get; init; }
 
-    public Thickness? Margin { get; init; }
+    public EdgeInsetsGeometry? Margin { get; init; }
 
     public ShapeBorder? Shape { get; init; }
 
@@ -59,7 +59,7 @@ public sealed record CardThemeData
         Color? shadowColor = null,
         Color? surfaceTintColor = null,
         double? elevation = null,
-        Thickness? margin = null,
+        EdgeInsetsGeometry? margin = null,
         ShapeBorder? shape = null)
     {
         return new CardThemeData(
@@ -89,7 +89,7 @@ public sealed record CardThemeData
                 b?.SurfaceTintColor,
                 clampedT),
             Elevation: MaterialThemeLerp.Double(a?.Elevation, b?.Elevation, clampedT),
-            Margin: MaterialThemeLerp.Thickness(a?.Margin, b?.Margin, clampedT),
+            Margin: MaterialThemeLerp.EdgeInsets(a?.Margin, b?.Margin, clampedT),
             Shape: MaterialThemeLerp.Shape(a?.Shape, b?.Shape, clampedT));
     }
 }
@@ -103,7 +103,7 @@ public sealed class CardTheme : InheritedWidget
         Color? surfaceTintColor = null,
         Color? shadowColor = null,
         double? elevation = null,
-        Thickness? margin = null,
+        EdgeInsetsGeometry? margin = null,
         ShapeBorder? shape = null,
         CardThemeData? data = null,
         Key? key = null) : base(child ?? new SizedBox(), key)
@@ -154,7 +154,7 @@ public sealed class CardTheme : InheritedWidget
 
     public double? Elevation => Data.Elevation;
 
-    public Thickness? Margin => Data.Margin;
+    public EdgeInsetsGeometry? Margin => Data.Margin;
 
     public ShapeBorder? Shape => Data.Shape;
 
@@ -164,7 +164,7 @@ public sealed class CardTheme : InheritedWidget
         Color? shadowColor = null,
         Color? surfaceTintColor = null,
         double? elevation = null,
-        Thickness? margin = null,
+        EdgeInsetsGeometry? margin = null,
         ShapeBorder? shape = null)
     {
         return new CardTheme(

@@ -48,7 +48,7 @@ internal sealed class CupertinoRefreshDemoPageState : State
                                 addAutomaticKeepAlives: false,
                                 itemBuilder: (_, index) => new Container(
                                     color: index % 2 == 0 ? Colors.White : new Color(0xFFF5F7FA),
-                                    padding: new Thickness(12.0, 10.0),
+                                    padding: EdgeInsets.Symmetric(horizontal: 12.0, vertical: 10.0),
                                     child: new Text(
                                         $"Cupertino refresh row #{index + 1}",
                                         style: new TextStyle(FontSize: 13.0, Color: Colors.Black)))),

@@ -36,8 +36,8 @@ public sealed class MaterialRefreshIndicatorTests : IDisposable
         var widget = new RefreshProgressIndicator(value: 0.75);
         Assert.Equal(RefreshProgressIndicator.DefaultStrokeWidth, widget.StrokeWidth);
         Assert.Equal(2.0, widget.Elevation);
-        Assert.Equal(new Thickness(4), widget.IndicatorMargin);
-        Assert.Equal(new Thickness(12), widget.IndicatorPadding);
+        Assert.Equal(EdgeInsets.All(4), widget.IndicatorMargin);
+        Assert.Equal(EdgeInsets.All(12), widget.IndicatorPadding);
 
         using var harness = new WidgetRenderHarness(Wrap(widget));
         harness.Pump(new Size(120, 120));

@@ -148,7 +148,7 @@ internal sealed class FocusTraversalDemoPageState : State
                     onTap: () => node.RequestFocus(),
                     child: new Container(
                         color: node.HasPrimaryFocus ? MaterialColors.Blue : MaterialColors.Grey.Shade300,
-                        padding: new Thickness(14, 18),
+                        padding: EdgeInsets.Symmetric(horizontal: 14, vertical: 18),
                         child: new Text(
                             label,
                             style: new TextStyle(

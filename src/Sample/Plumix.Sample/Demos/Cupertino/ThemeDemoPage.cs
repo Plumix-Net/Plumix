@@ -119,7 +119,7 @@ internal sealed class CupertinoThemeDemoPageState : State
             {
                 CupertinoThemeData theme = CupertinoTheme.Of(context);
                 return new Container(
-                    padding: new Thickness(12),
+                    padding: EdgeInsets.All(12),
                     decoration: new BoxDecoration(
                         Color: theme.ScaffoldBackgroundColor,
                         BorderRadius: BorderRadius.Circular(12),
@@ -166,7 +166,7 @@ internal sealed class CupertinoThemeDemoPageState : State
         Color separator = CupertinoDynamicColor.Resolve(CupertinoColors.Separator, context);
 
         return new Container(
-            padding: new Thickness(12),
+            padding: EdgeInsets.All(12),
             decoration: new BoxDecoration(
                 Color: theme.ScaffoldBackgroundColor,
                 BorderRadius: BorderRadius.Circular(12),
@@ -231,7 +231,7 @@ internal sealed class CupertinoThemeDemoPageState : State
                 style: TextButton.StyleFrom(
                     foregroundColor: Colors.Black,
                     backgroundColor: background,
-                    padding: new Thickness(10, 8),
+                    padding: EdgeInsets.Symmetric(horizontal: 10, vertical: 8),
                     minimumSize: new Size(0, 36),
                     shape: new RoundedRectangleBorder(
                         borderRadius: BorderRadius.Circular(8)))));

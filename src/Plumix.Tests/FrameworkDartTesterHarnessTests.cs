@@ -100,7 +100,7 @@ public sealed class FrameworkDartTesterHarnessTests : IDisposable
             new Align(
                 alignment: Alignment.TopLeft,
                 child: new Padding(
-                    insets: new EdgeInsets(10, 20, 0, 0),
+                    insets: EdgeInsets.FromLTRB(10, 20, 0, 0),
                     child: new GestureDetector(
                         onTap: () => taps++,
                         onLongPress: () => longPresses++,
@@ -293,8 +293,8 @@ public sealed class FrameworkDartTesterHarnessTests : IDisposable
 
         tester.View.PhysicalSize = new Size(800, 800);
         tester.View.DevicePixelRatio = 2.0;
-        tester.View.ViewInsets = new Thickness(0, 0, 0, 100);
-        tester.View.Padding = new Thickness(0, 40, 0, 0);
+        tester.View.ViewInsets = FakeViewPadding.Create(bottom: 100);
+        tester.View.Padding = FakeViewPadding.Create(top: 40);
         tester.Pump();
         Assert.Equal(new Size(400, 400), data!.Size);
         Assert.Equal(new Size(400, 400), tester.RenderView.Size);

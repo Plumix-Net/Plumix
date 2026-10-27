@@ -10,17 +10,17 @@ namespace Plumix.Widgets;
 
 internal sealed class RenderSemanticsClipper : RenderProxyBox
 {
-    private ValueNotifier<Thickness> _clipDetailsNotifier;
+    private ValueNotifier<EdgeInsets> _clipDetailsNotifier;
 
     public RenderSemanticsClipper(
-        ValueNotifier<Thickness> clipDetailsNotifier,
+        ValueNotifier<EdgeInsets> clipDetailsNotifier,
         RenderBox? child = null)
     {
         _clipDetailsNotifier = clipDetailsNotifier ?? throw new ArgumentNullException(nameof(clipDetailsNotifier));
         Child = child;
     }
 
-    public ValueNotifier<Thickness> ClipDetailsNotifier
+    public ValueNotifier<EdgeInsets> ClipDetailsNotifier
     {
         get => _clipDetailsNotifier;
         set
@@ -50,7 +50,7 @@ internal sealed class RenderSemanticsClipper : RenderProxyBox
     {
         get
         {
-            Thickness clipDetails = _clipDetailsNotifier.Value;
+            EdgeInsets clipDetails = _clipDetailsNotifier.Value;
             Rect originalRect = base.SemanticBounds;
             double width = Math.Max(0, originalRect.Width - clipDetails.Left - clipDetails.Right);
             double height = Math.Max(0, originalRect.Height - clipDetails.Top - clipDetails.Bottom);
@@ -84,7 +84,7 @@ internal sealed class RenderSemanticsClipper : RenderProxyBox
 internal sealed class SemanticsClipper : SingleChildRenderObjectWidget
 {
     public SemanticsClipper(
-        ValueNotifier<Thickness> clipDetailsNotifier,
+        ValueNotifier<EdgeInsets> clipDetailsNotifier,
         Widget? child = null,
         Key? key = null) : base(child, key)
     {
@@ -92,7 +92,7 @@ internal sealed class SemanticsClipper : SingleChildRenderObjectWidget
                               ?? throw new ArgumentNullException(nameof(clipDetailsNotifier));
     }
 
-    public ValueNotifier<Thickness> ClipDetailsNotifier { get; }
+    public ValueNotifier<EdgeInsets> ClipDetailsNotifier { get; }
 
     public override RenderObject CreateRenderObject(BuildContext context)
     {
@@ -113,7 +113,7 @@ public sealed class ModalBarrier : StatelessWidget
         Action? onDismiss = null,
         string? semanticsLabel = null,
         bool? barrierSemanticsDismissible = true,
-        ValueNotifier<Thickness>? clipDetailsNotifier = null,
+        ValueNotifier<EdgeInsets>? clipDetailsNotifier = null,
         string? semanticsOnTapHint = null,
         Key? key = null) : base(key)
     {
@@ -136,7 +136,7 @@ public sealed class ModalBarrier : StatelessWidget
 
     public bool? BarrierSemanticsDismissible { get; }
 
-    public ValueNotifier<Thickness>? ClipDetailsNotifier { get; }
+    public ValueNotifier<EdgeInsets>? ClipDetailsNotifier { get; }
 
     public string? SemanticsOnTapHint { get; }
 
@@ -214,7 +214,7 @@ public sealed class AnimatedModalBarrier : AnimatedWidget
         string? semanticsLabel = null,
         bool? barrierSemanticsDismissible = null,
         Action? onDismiss = null,
-        ValueNotifier<Thickness>? clipDetailsNotifier = null,
+        ValueNotifier<EdgeInsets>? clipDetailsNotifier = null,
         string? semanticsOnTapHint = null,
         Key? key = null) : base(color ?? throw new ArgumentNullException(nameof(color)), key)
     {
@@ -236,7 +236,7 @@ public sealed class AnimatedModalBarrier : AnimatedWidget
 
     public Action? OnDismiss { get; }
 
-    public ValueNotifier<Thickness>? ClipDetailsNotifier { get; }
+    public ValueNotifier<EdgeInsets>? ClipDetailsNotifier { get; }
 
     public string? SemanticsOnTapHint { get; }
 

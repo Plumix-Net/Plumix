@@ -96,7 +96,7 @@ public sealed class BasicWidgetsParityTests
             child: new SizedBox()));
 
         Padding padding = Assert.Single(Of<Padding>(widgets));
-        Assert.Equal(new Thickness(4, 6, 4, 4), padding.Insets.Resolve(TextDirection.Ltr));
+        Assert.Equal(EdgeInsets.FromLTRB(4, 6, 4, 4), padding.Insets.Resolve(TextDirection.Ltr));
     }
 
     [Fact]

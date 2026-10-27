@@ -112,7 +112,7 @@ internal sealed class DataTableDemoPageState : State
                             style: new TextStyle(
                                 FontSize: 16,
                                 Color: Colors.Black)),
-                        new Padding(new Thickness(8), BuildBorderProbe()),
+                        new Padding(EdgeInsets.All(8), BuildBorderProbe()),
                         new SizedBox(height: 12),
                         new Text("PaginatedDataTable", style: new TextStyle(FontSize: 16, Color: Colors.Black)),
                         new SizedBox(height: 8),
@@ -204,7 +204,7 @@ internal sealed class DataTableDemoPageState : State
         ]);
 
     private static Widget BuildWidthCell(string label) => new Padding(
-        new Thickness(8, 6),
+        EdgeInsets.Symmetric(horizontal: 8, vertical: 6),
         new Text(label, style: new TextStyle(FontSize: 11)));
 
     private static TableCell BuildProbeCell(
@@ -244,7 +244,7 @@ internal sealed class DataTableDemoPageState : State
             style: TextButton.StyleFrom(
                 foregroundColor: Colors.Black,
                 backgroundColor: new Color(0xFFE9F0FF),
-                padding: new Thickness(8, 6),
+                padding: EdgeInsets.Symmetric(horizontal: 8, vertical: 6),
                 minimumSize: new Size(0, 36),
                 shape: new RoundedRectangleBorder(
                     borderRadius: BorderRadius.Circular(8)))));

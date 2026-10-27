@@ -594,7 +594,7 @@ public sealed class WidgetInspectorDartParityTests : IDisposable
         WidgetInspectorService.Instance.IsSelectMode = true;
 
         tester.PumpWidget(Ltr(new MediaQuery(
-            data: new MediaQueryData(ViewPadding: new Thickness(0, 0, 0, 50.0)),
+            data: new MediaQueryData(ViewPadding: EdgeInsets.FromLTRB(0, 0, 0, 50.0)),
             child: new WidgetInspector(
                 exitWidgetSelectionButtonBuilder: (_, _, _, _) => new Text("exit"),
                 moveExitWidgetSelectionButtonBuilder: (_, _, _, _) => new Text("move"),
@@ -1285,7 +1285,7 @@ public sealed class WidgetInspectorDartParityTests : IDisposable
         FrameworkDartTester tester = CreateTester();
         var key = new LabeledGlobalKey<State>(null);
         tester.PumpWidget(Ltr(new Container(
-            padding: new EdgeInsets(8, 8, 8, 8),
+            padding: EdgeInsets.FromLTRB(8, 8, 8, 8),
             child: LtrText("target", key: key))));
         Element element = (Element)key.CurrentContext!;
         Assert.False(WidgetInspectorDebug.DebugIsWidgetLocalCreation(element.Widget));

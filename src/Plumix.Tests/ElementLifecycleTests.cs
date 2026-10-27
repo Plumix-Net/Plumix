@@ -152,7 +152,7 @@ public sealed class ElementLifecycleTests
         var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new Padding(
-                insets: new Avalonia.Thickness(4),
+                insets: EdgeInsets.All(4),
                 child: new LifecycleRecorderWidget(new ValueKey<string>("nested"))));
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));

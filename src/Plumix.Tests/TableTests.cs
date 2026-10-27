@@ -824,7 +824,7 @@ public sealed class TableTests
         Assert.Equal(1.0, all.Top.Width);
         Assert.Equal(BorderStyle.Solid, all.HorizontalInside.Style);
         Assert.True(all.IsUniform);
-        Assert.Equal(new Thickness(1, 1, 1, 1), all.Dimensions);
+        Assert.Equal(EdgeInsets.FromLTRB(1, 1, 1, 1), all.Dimensions);
 
         var side = new BorderSide(Colors.Red, 2.0);
         var symmetric = TableBorder.Symmetric(inside: side);

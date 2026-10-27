@@ -83,7 +83,7 @@ public sealed record TableBorder
     public BorderRadius BorderRadius { get; }
 
     /// The widths of the sides of this border represented as insets.
-    public Thickness Dimensions => new(Left.Width, Top.Width, Right.Width, Bottom.Width);
+    public EdgeInsets Dimensions => EdgeInsets.FromLTRB(Left.Width, Top.Width, Right.Width, Bottom.Width);
 
     /// Whether all the sides of the border (outside and inside) are identical.
     public bool IsUniform =>
@@ -259,10 +259,10 @@ public sealed record TableBorder
         BorderSide left)
     {
         RRect borderRect = borderRadius.ToRRect(rect);
-        RRect inner = borderRect.DeflateEdges(
-            new Thickness(left.StrokeInset, top.StrokeInset, right.StrokeInset, bottom.StrokeInset));
-        RRect outer = borderRect.InflateEdges(
-            new Thickness(left.StrokeOutset, top.StrokeOutset, right.StrokeOutset, bottom.StrokeOutset));
+        RRect inner = EdgeInsets.FromLTRB(left.StrokeInset, top.StrokeInset, right.StrokeInset, bottom.StrokeInset)
+            .DeflateRRect(borderRect);
+        RRect outer = EdgeInsets.FromLTRB(left.StrokeOutset, top.StrokeOutset, right.StrokeOutset, bottom.StrokeOutset)
+            .InflateRRect(borderRect);
         canvas.DrawDRRect(outer, inner, new Paint { Color = color });
     }
 

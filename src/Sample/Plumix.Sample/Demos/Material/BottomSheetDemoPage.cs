@@ -107,7 +107,7 @@ public sealed class BottomSheetDemoPage : StatefulWidget
                             children: Enumerable
                                 .Range(0, 40)
                                 .Select(Widget (index) => new Padding(
-                                    new Avalonia.Thickness(24, 12),
+                                    EdgeInsets.Symmetric(horizontal: 24, vertical: 12),
                                     new Text($"Draggable row {index}")))
                                 .ToList())),
                     initialChildSize: 0.5,
@@ -120,7 +120,7 @@ public sealed class BottomSheetDemoPage : StatefulWidget
         }
 
         private static Widget BuildSheetContent(string title, Action close) => new Padding(
-            new Avalonia.Thickness(24, 12, 24, 24),
+            EdgeInsets.FromLTRB(24, 12, 24, 24),
             new Column(
                 mainAxisSize: MainAxisSize.Min,
                 crossAxisAlignment: CrossAxisAlignment.Stretch,

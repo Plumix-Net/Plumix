@@ -71,24 +71,24 @@ public sealed class FlutterView
     /// The parts of the view obscured by system UI that content should avoid, in physical pixels.
     /// </summary>
     /// <remarks>dart:ui's <c>FlutterView.padding</c>.</remarks>
-    public Thickness Padding { get; private set; }
+    public ViewPadding Padding { get; private set; }
 
     /// <summary>
     /// The parts of the view completely obscured by system UI, such as a keyboard, in physical pixels.
     /// </summary>
     /// <remarks>dart:ui's <c>FlutterView.viewInsets</c>.</remarks>
-    public Thickness ViewInsets { get; private set; }
+    public ViewPadding ViewInsets { get; private set; }
 
     /// <summary>
     /// The parts of the view obscured by system UI regardless of transient insets, in physical
     /// pixels.
     /// </summary>
     /// <remarks>dart:ui's <c>FlutterView.viewPadding</c>.</remarks>
-    public Thickness ViewPadding { get; private set; }
+    public ViewPadding ViewPadding { get; private set; }
 
     /// <summary>The areas the system reserves for its own gestures, in physical pixels.</summary>
     /// <remarks>dart:ui's <c>FlutterView.systemGestureInsets</c>.</remarks>
-    public Thickness SystemGestureInsets { get; private set; }
+    public ViewPadding SystemGestureInsets { get; private set; }
 
     /// <summary>The platform's gesture settings, when the host reports them.</summary>
     /// <remarks>dart:ui's <c>FlutterView.gestureSettings</c>.</remarks>
@@ -117,10 +117,10 @@ public sealed class FlutterView
         double? devicePixelRatio = null,
         int? viewId = null,
         BoxConstraints? physicalConstraints = null,
-        Thickness? padding = null,
-        Thickness? viewInsets = null,
-        Thickness? viewPadding = null,
-        Thickness? systemGestureInsets = null,
+        ViewPadding? padding = null,
+        ViewPadding? viewInsets = null,
+        ViewPadding? viewPadding = null,
+        ViewPadding? systemGestureInsets = null,
         DeviceGestureSettings? gestureSettings = null,
         IReadOnlyList<DisplayFeature>? displayFeatures = null,
         BorderRadius? displayCornerRadii = null)

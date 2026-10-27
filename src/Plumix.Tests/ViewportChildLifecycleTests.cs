@@ -62,7 +62,7 @@ public sealed class ViewportChildLifecycleTests
         bool moved = false;
         var childDelegate = new RawSliverDelegate((_, index) => moved
             ? index == 0
-                ? new Padding(new Thickness(0), child: new LifecycleProbe(key))
+                ? new Padding(EdgeInsets.Zero, child: new LifecycleProbe(key))
                 : new SizedBox(height: 100)
             : index == 1 ? new LifecycleProbe(key) : new SizedBox(height: 100));
         PumpWidget(tester, new CustomScrollView(slivers: [new SliverList(childDelegate)]));

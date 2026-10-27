@@ -554,7 +554,7 @@ public sealed class MaterialRadioExpansionTileTests : IDisposable
             Assert.Equal(divider, ((Plumix.Rendering.Border)decoration.Shape).Bottom.Color);
             Assert.Equal(BorderStyle.None, ((Plumix.Rendering.Border)decoration.Shape).Left.Style);
             Assert.Equal(BorderStyle.None, ((Plumix.Rendering.Border)decoration.Shape).Right.Style);
-            Assert.Equal(new Thickness(0, 1, 0, 1), decoration.Shape.Dimensions.Resolve(TextDirection.Ltr));
+            Assert.Equal(EdgeInsets.FromLTRB(0, 1, 0, 1), decoration.Shape.Dimensions.Resolve(TextDirection.Ltr));
         }
 
         ShapeBorder shape = new RoundedRectangleBorder(borderRadius: Plumix.Rendering.BorderRadius.Circular(12.0));

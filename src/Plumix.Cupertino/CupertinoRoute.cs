@@ -868,7 +868,7 @@ internal sealed class CupertinoBackGestureDetector : StatefulWidget
         {
             _textDirection = Directionality.Of(context);
             _pageWidth = MediaQuery.Of(context).Size.Width;
-            Thickness padding = MediaQuery.MaybePaddingOf(context) ?? default;
+            EdgeInsets padding = MediaQuery.MaybePaddingOf(context) ?? default;
             double inset = _textDirection == TextDirection.Ltr ? padding.Left : padding.Right;
             double dragAreaWidth = Math.Max(
                 inset,

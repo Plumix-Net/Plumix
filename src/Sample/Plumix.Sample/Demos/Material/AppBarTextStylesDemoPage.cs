@@ -98,7 +98,7 @@ internal sealed class AppBarTextStylesDemoPageState : State
                 new Container(
                     width: 320,
                     color: new Color(0xFFE7EDF6),
-                    padding: new Thickness(10),
+                    padding: EdgeInsets.All(10),
                     child: new Column(
                         crossAxisAlignment: CrossAxisAlignment.Stretch,
                         spacing: 8,
@@ -165,7 +165,7 @@ internal sealed class AppBarTextStylesDemoPageState : State
                 background: (Color)Avalonia.Media.Color.Parse(colorHex),
                 foreground: Colors.Black,
                 fontSize: 12,
-                padding: new Thickness(10, 8)));
+                padding: EdgeInsets.Symmetric(horizontal: 10, vertical: 8)));
     }
 
     private void SetForeground(Color value)

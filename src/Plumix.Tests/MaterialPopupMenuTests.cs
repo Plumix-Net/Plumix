@@ -97,7 +97,7 @@ public sealed class MaterialPopupMenuTests : IDisposable
         Assert.Equal(Colors.Orange, side.Color);
         Assert.Contains(
             FindDescendants<RenderPadding>(harness.RenderView),
-            padding => padding.Padding == new Thickness(7, 0, 9, 0));
+            padding => padding.Padding == EdgeInsets.FromLTRB(7, 0, 9, 0));
         Assert.Equal(20, harness.RenderView.Child!.Size.Height);
     }
 
@@ -161,7 +161,9 @@ public sealed class MaterialPopupMenuTests : IDisposable
             ThemeData.Light,
             new PopupMenuItem<string>(new Text("M3 item"), value: "m3")));
         var m3Semantics = m3.PumpAndGetSemantics(new Size(240, 80));
-        Assert.Contains(FindDescendants<RenderPadding>(m3.RenderView), value => value.Padding == new Thickness(12, 0));
+        Assert.Contains(
+            FindDescendants<RenderPadding>(m3.RenderView),
+            value => value.Padding == EdgeInsets.Symmetric(horizontal: 12));
         Assert.Equal(
             ThemeData.Localize(ThemeData.Light, Typography.EnglishLike2021).TextTheme.LabelLarge.FontSize,
             FindParagraph(m3.RenderView, "M3 item")!.FontSize);
@@ -176,7 +178,9 @@ public sealed class MaterialPopupMenuTests : IDisposable
             ThemeData.Light with { UseMaterial3 = false },
             new PopupMenuItem<string>(new Text("M2 disabled"), enabled: false)));
         var m2Semantics = m2.PumpAndGetSemantics(new Size(240, 80));
-        Assert.Contains(FindDescendants<RenderPadding>(m2.RenderView), value => value.Padding == new Thickness(16, 0));
+        Assert.Contains(
+            FindDescendants<RenderPadding>(m2.RenderView),
+            value => value.Padding == EdgeInsets.Symmetric(horizontal: 16));
         Assert.Equal(
             ThemeData.Localize(ThemeData.Light, Typography.EnglishLike2021).TextTheme.TitleMedium.FontSize,
             FindParagraph(m2.RenderView, "M2 disabled")!.FontSize);
@@ -294,7 +298,7 @@ public sealed class MaterialPopupMenuTests : IDisposable
                 new PopupMenuThemeData(
                     Color: Colors.Purple,
                     Shape: new RoundedRectangleBorder(borderRadius: Plumix.Rendering.BorderRadius.Circular(10)),
-                    MenuPadding: new Thickness(5)),
+                    MenuPadding: EdgeInsets.All(5)),
                 new CaptureContext(value => captured = value, new Text("Home")))))));
         harness.Pump(new Size(500, 360));
         _ = PopupMenus.ShowMenu(
@@ -304,7 +308,7 @@ public sealed class MaterialPopupMenuTests : IDisposable
             color: Colors.Orange,
             shape: new RoundedRectangleBorder(borderRadius: Plumix.Rendering.BorderRadius.Circular(3)),
             elevation: 0,
-            menuPadding: new Thickness(7));
+            menuPadding: EdgeInsets.All(7));
         PumpAnimation();
         harness.Pump(new Size(500, 360));
 
@@ -313,7 +317,7 @@ public sealed class MaterialPopupMenuTests : IDisposable
             && box.BorderRadius == BorderRadius.Circular(3)
             && !box.HasShadow);
         Assert.Contains(FindDescendants<RenderPadding>(harness.RenderView), padding =>
-            padding.Padding == new Thickness(7));
+            padding.Padding == EdgeInsets.All(7));
     }
 
     [Fact]
@@ -430,8 +434,8 @@ public sealed class MaterialPopupMenuTests : IDisposable
             PopupMenuThemeData.Lerp(from, to, 0.5));
         Assert.Equal(4, lerped.Elevation);
         Assert.Equal(24, lerped.IconSize);
-        Assert.Equal(new Thickness(8, 4, 12, 8), lerped.MenuPadding!.Value.Resolve(TextDirection.Ltr));
-        Assert.Equal(new Thickness(12, 4, 8, 8), lerped.MenuPadding.Value.Resolve(TextDirection.Rtl));
+        Assert.Equal(EdgeInsets.FromLTRB(8, 4, 12, 8), lerped.MenuPadding!.Value.Resolve(TextDirection.Ltr));
+        Assert.Equal(EdgeInsets.FromLTRB(12, 4, 8, 8), lerped.MenuPadding.Value.Resolve(TextDirection.Rtl));
         Assert.True(lerped.EnableFeedback);
         Assert.Equal(PopupMenuPosition.Under, lerped.Position);
         Assert.Same(from, PopupMenuThemeData.Lerp(from, from, 0.25));
@@ -657,7 +661,7 @@ public sealed class MaterialPopupMenuTests : IDisposable
         Point offset = ((BoxParentData)layout.Child!.parentData!).offset;
         Assert.Equal(382, offset.X + layout.Child.Size.Width, precision: 3);
         Assert.Contains(FindDescendants<RenderPadding>(harness.RenderView), padding =>
-            padding.Padding == new Thickness(4, 6, 20, 10));
+            padding.Padding == EdgeInsets.FromLTRB(4, 6, 20, 10));
     }
 
     [Fact]
@@ -702,7 +706,7 @@ public sealed class MaterialPopupMenuTests : IDisposable
                     new PopupMenuItem<string>(
                         new SizedBox(width: 20, height: 75),
                         height: 16,
-                        padding: new Thickness(0)),
+                        padding: EdgeInsets.Zero),
                 ])));
         ordinary.Pump(new Size(200, 200));
         RenderConstrainedBox ordinaryMinimum = Assert.Single(
@@ -719,7 +723,7 @@ public sealed class MaterialPopupMenuTests : IDisposable
                     new CheckedPopupMenuItem<string>(
                         new SizedBox(width: 20, height: 10),
                         height: 16,
-                        padding: new Thickness(0)),
+                        padding: EdgeInsets.Zero),
                 ])));
         checkedItem.Pump(new Size(200, 200));
         RenderConstrainedBox checkedMinimum = Assert.Single(

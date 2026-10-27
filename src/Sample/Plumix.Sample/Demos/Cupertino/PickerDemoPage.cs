@@ -95,7 +95,7 @@ internal sealed class CupertinoPickerDemoPageState : State
             child: new Text(label, textAlign: TextAlign.Center),
             onPressed: () => SetState(() => _demoIndex = index),
             color: _demoIndex == index ? CupertinoColors.ActiveBlue : CupertinoColors.SystemGrey5,
-            padding: new Thickness(8.0, 6.0));
+            padding: EdgeInsets.Symmetric(horizontal: 8.0, vertical: 6.0));
     }
 
     private Widget BuildActivePicker()

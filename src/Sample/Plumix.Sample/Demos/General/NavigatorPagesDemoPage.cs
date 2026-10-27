@@ -82,7 +82,7 @@ internal sealed class NavigatorPagesDemoPageState : State
         return new GestureDetector(
             onTap: onTap,
             child: new Container(
-                padding: new Thickness(10, 8),
+                padding: EdgeInsets.Symmetric(horizontal: 10, vertical: 8),
                 color: background,
                 child: new Text(label, style: new TextStyle(FontSize: 12, Color: Colors.Black))));
     }
@@ -135,7 +135,7 @@ internal sealed class SampleDeclarativePageRoute : PageRoute
                             // Qualified: `Route.Navigator` shadows the widget type inside a Route.
                             onTap: () => Plumix.Widgets.Navigator.Of(context).MaybePop(),
                             child: new Container(
-                                padding: new Thickness(10, 6),
+                                padding: EdgeInsets.Symmetric(horizontal: 10, vertical: 6),
                                 color: new Color(0xFFFFFFFF),
                                 child: new Text(
                                     "Pop this page",

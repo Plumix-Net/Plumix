@@ -103,7 +103,7 @@ public sealed class MaterialGridTileTests
         Assert.Contains(
             FindDescendants<RenderPadding>(harness.RenderView),
             padding => padding.Padding.Resolve(padding.TextDirection ?? TextDirection.Ltr)
-                == new Thickness(16, 0, 16, 0));
+                == EdgeInsets.FromLTRB(16, 0, 16, 0));
         Assert.Empty(FindDescendants<RenderDecoratedBox>(harness.RenderView));
 
         var title = FindParagraph(harness.RenderView, "Title");
@@ -140,7 +140,7 @@ public sealed class MaterialGridTileTests
         Assert.Contains(
             FindDescendants<RenderPadding>(harness.RenderView),
             padding => padding.Padding.Resolve(padding.TextDirection ?? TextDirection.Ltr)
-                == new Thickness(8, 0, 8, 0));
+                == EdgeInsets.FromLTRB(8, 0, 8, 0));
         Assert.Contains(
             FindDescendants<RenderDecoratedBox>(harness.RenderView),
             box => box.AsBoxDecoration.Color == background);
@@ -187,7 +187,7 @@ public sealed class MaterialGridTileTests
         Assert.Contains(
             FindDescendants<RenderPadding>(harness.RenderView),
             padding => padding.Padding.Resolve(padding.TextDirection ?? TextDirection.Ltr)
-                == new Thickness(16, 0, 8, 0));
+                == EdgeInsets.FromLTRB(16, 0, 8, 0));
         var row = FindDescendants<RenderFlex>(harness.RenderView)
             .Single(flex => flex.Direction == Axis.Horizontal);
         var leading = Assert.IsAssignableFrom<RenderBox>(row.FirstChild);

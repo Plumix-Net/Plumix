@@ -28,7 +28,7 @@ public sealed class DialogTheme : InheritedTheme
         TextStyle? contentTextStyle = null,
         EdgeInsetsGeometry? actionsPadding = null,
         Color? barrierColor = null,
-        Thickness? insetPadding = null,
+        EdgeInsets? insetPadding = null,
         Clip? clipBehavior = null) : base(child ?? new SizedBox(), key)
     {
         DebugAssertions.Assert(
@@ -83,7 +83,7 @@ public sealed class DialogTheme : InheritedTheme
     private readonly TextStyle? _contentTextStyle;
     private readonly EdgeInsetsGeometry? _actionsPadding;
     private readonly Color? _barrierColor;
-    private readonly Thickness? _insetPadding;
+    private readonly EdgeInsets? _insetPadding;
     private readonly Clip? _clipBehavior;
 
     public Color? BackgroundColor => _data is not null ? _data.BackgroundColor : _backgroundColor;
@@ -97,7 +97,7 @@ public sealed class DialogTheme : InheritedTheme
     public TextStyle? ContentTextStyle => _data is not null ? _data.ContentTextStyle : _contentTextStyle;
     public EdgeInsetsGeometry? ActionsPadding => _data is not null ? _data.ActionsPadding : _actionsPadding;
     public Color? BarrierColor => _data is not null ? _data.BarrierColor : _barrierColor;
-    public Thickness? InsetPadding => _data is not null ? _data.InsetPadding : _insetPadding;
+    public EdgeInsets? InsetPadding => _data is not null ? _data.InsetPadding : _insetPadding;
     public Clip? ClipBehavior => _data is not null ? _data.ClipBehavior : _clipBehavior;
 
     public DialogThemeData Data => _data ?? new DialogThemeData(
@@ -136,7 +136,7 @@ public sealed class DialogTheme : InheritedTheme
         TextStyle? contentTextStyle = null,
         EdgeInsetsGeometry? actionsPadding = null,
         Color? barrierColor = null,
-        Thickness? insetPadding = null,
+        EdgeInsets? insetPadding = null,
         Clip? clipBehavior = null)
     {
         return new DialogTheme(
@@ -175,7 +175,7 @@ public sealed class DialogTheme : InheritedTheme
             contentTextStyle: TextStyle.Lerp(a?.ContentTextStyle, b?.ContentTextStyle, t),
             actionsPadding: EdgeInsetsGeometry.Lerp(a?.ActionsPadding, b?.ActionsPadding, t),
             barrierColor: Color.Lerp(a?.BarrierColor, b?.BarrierColor, t),
-            insetPadding: MaterialThemeLerp.Thickness(a?.InsetPadding, b?.InsetPadding, t),
+            insetPadding: MaterialThemeLerp.EdgeInsets(a?.InsetPadding, b?.InsetPadding, t),
             clipBehavior: t < 0.5 ? a?.ClipBehavior : b?.ClipBehavior);
     }
 
@@ -203,7 +203,7 @@ public sealed class DialogTheme : InheritedTheme
             ActionsPadding,
             defaultValue: nullDefault));
         properties.Add(new ColorProperty("barrierColor", BarrierColor, defaultValue: nullDefault));
-        properties.Add(new DiagnosticsProperty<Thickness?>("insetPadding", InsetPadding, defaultValue: nullDefault));
+        properties.Add(new DiagnosticsProperty<EdgeInsets?>("insetPadding", InsetPadding, defaultValue: nullDefault));
         properties.Add(new DiagnosticsProperty<Clip?>("clipBehavior", ClipBehavior, defaultValue: nullDefault));
     }
 }
@@ -222,7 +222,7 @@ public sealed partial record DialogThemeData : IDiagnosticable
         EdgeInsetsGeometry? ActionsPadding = null,
         Color? IconColor = null,
         Color? BarrierColor = null,
-        Thickness? InsetPadding = null,
+        EdgeInsets? InsetPadding = null,
         Clip? ClipBehavior = null,
         BoxConstraints? Constraints = null)
     {
@@ -253,7 +253,7 @@ public sealed partial record DialogThemeData : IDiagnosticable
     public EdgeInsetsGeometry? ActionsPadding { get; init; }
     public Color? IconColor { get; init; }
     public Color? BarrierColor { get; init; }
-    public Thickness? InsetPadding { get; init; }
+    public EdgeInsets? InsetPadding { get; init; }
     public Clip? ClipBehavior { get; init; }
     public BoxConstraints? Constraints { get; init; }
 
@@ -269,7 +269,7 @@ public sealed partial record DialogThemeData : IDiagnosticable
         TextStyle? contentTextStyle = null,
         EdgeInsetsGeometry? actionsPadding = null,
         Color? barrierColor = null,
-        Thickness? insetPadding = null,
+        EdgeInsets? insetPadding = null,
         Clip? clipBehavior = null,
         BoxConstraints? constraints = null)
     {
@@ -309,7 +309,7 @@ public sealed partial record DialogThemeData : IDiagnosticable
             ContentTextStyle: TextStyle.Lerp(a?.ContentTextStyle, b?.ContentTextStyle, t),
             ActionsPadding: EdgeInsetsGeometry.Lerp(a?.ActionsPadding, b?.ActionsPadding, t),
             BarrierColor: Color.Lerp(a?.BarrierColor, b?.BarrierColor, t),
-            InsetPadding: MaterialThemeLerp.Thickness(a?.InsetPadding, b?.InsetPadding, t),
+            InsetPadding: MaterialThemeLerp.EdgeInsets(a?.InsetPadding, b?.InsetPadding, t),
             ClipBehavior: t < 0.5 ? a?.ClipBehavior : b?.ClipBehavior,
             Constraints: BoxConstraints.Lerp(a?.Constraints, b?.Constraints, t));
     }
@@ -338,13 +338,13 @@ public sealed partial record DialogThemeData : IDiagnosticable
             ActionsPadding,
             defaultValue: nullDefault));
         properties.Add(new ColorProperty("barrierColor", BarrierColor, defaultValue: nullDefault));
-        properties.Add(new DiagnosticsProperty<Thickness?>("insetPadding", InsetPadding, defaultValue: nullDefault));
+        properties.Add(new DiagnosticsProperty<EdgeInsets?>("insetPadding", InsetPadding, defaultValue: nullDefault));
         properties.Add(new DiagnosticsProperty<Clip?>("clipBehavior", ClipBehavior, defaultValue: nullDefault));
         properties.Add(new DiagnosticsProperty<BoxConstraints?>("constraints", Constraints, defaultValue: nullDefault));
     }
 
     // Dialog itself validates its insets; theme data accepts values without validation, as in Dart.
-    internal static void ValidateInsets(Thickness? value, string parameterName)
+    internal static void ValidateInsets(EdgeInsets? value, string parameterName)
     {
         if (!value.HasValue) return;
         var insets = value.Value;

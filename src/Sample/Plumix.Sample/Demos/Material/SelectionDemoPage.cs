@@ -66,7 +66,7 @@ internal sealed class SelectionDemoPageState : State
                 elevation: 8,
                 borderRadius: BorderRadius.Circular(12),
                 child: new Padding(
-                    insets: new Thickness(16),
+                    insets: EdgeInsets.All(16),
                     child: new Column(
                         mainAxisSize: MainAxisSize.Min,
                         crossAxisAlignment: CrossAxisAlignment.Start,
@@ -139,7 +139,7 @@ internal sealed class SelectionDemoPageState : State
                             Border: Plumix.Rendering.Border.FromBorderSide(new BorderSide(new Color(0xFFCAC4D0))),
                             BorderRadius: BorderRadius.Circular(12)),
                         child: new Padding(
-                            insets: new Thickness(16),
+                            insets: EdgeInsets.All(16),
                             child: new SelectableText(
                                 "Plumix keeps selectable text in the framework render pipeline.",
                                 style: new TextStyle(FontSize: 17, Height: 1.35),
@@ -168,7 +168,7 @@ internal sealed class SelectionDemoPageState : State
                                         new BorderSide(new Color(0xFF80CBC4))),
                                     BorderRadius: BorderRadius.Circular(12)),
                                 child: new Padding(
-                                    insets: new Thickness(16),
+                                    insets: EdgeInsets.All(16),
                                     child: new Column(
                                         crossAxisAlignment: CrossAxisAlignment.Start,
                                         spacing: 6,
@@ -208,7 +208,7 @@ internal sealed class SelectionDemoPageState : State
                                     itemCount: 40,
                                     itemExtent: 28,
                                     itemBuilder: (context, index) => new Padding(
-                                        insets: new Thickness(12, 4),
+                                        insets: EdgeInsets.Symmetric(horizontal: 12, vertical: 4),
                                         child: new Text(
                                             $"Row {index} of the scrollable selection probe")))))),
                     new Text(

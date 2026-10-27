@@ -207,7 +207,7 @@ public sealed record CompoundBorder : ShapeBorder
     {
         for (int index = 0; index < Borders.Count - 1; index++)
         {
-            rect = rect.Deflate(Borders[index].Dimensions.Resolve(textDirection ?? TextDirection.Ltr));
+            rect = Borders[index].Dimensions.Resolve(textDirection ?? TextDirection.Ltr).DeflateRect(rect);
         }
 
         return Borders[^1].GetInnerPath(rect, textDirection);
@@ -234,7 +234,7 @@ public sealed record CompoundBorder : ShapeBorder
         foreach (ShapeBorder border in Borders)
         {
             border.Paint(context, rect, textDirection);
-            rect = rect.Deflate(border.Dimensions.Resolve(textDirection ?? TextDirection.Ltr));
+            rect = border.Dimensions.Resolve(textDirection ?? TextDirection.Ltr).DeflateRect(rect);
         }
     }
 

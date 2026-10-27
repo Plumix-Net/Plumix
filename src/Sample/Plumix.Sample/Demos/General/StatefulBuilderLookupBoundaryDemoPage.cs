@@ -28,7 +28,7 @@ public sealed class StatefulBuilderLookupBoundaryDemoPage : StatelessWidget
                     style: new TextStyle(FontSize: 14, Color: MaterialColors.Black54)),
                 new Container(
                     color: new Color(0xFFF4F7FA),
-                    padding: new Thickness(12),
+                    padding: EdgeInsets.All(12),
                     child: new StatefulBuilder((builderContext, setState) =>
                         new Column(
                             crossAxisAlignment: CrossAxisAlignment.Start,
@@ -53,7 +53,7 @@ public sealed class StatefulBuilderLookupBoundaryDemoPage : StatelessWidget
                                 ?? "missing";
                             return new Container(
                                 color: new Color(0xFFE7EDF6),
-                                padding: new Thickness(12),
+                                padding: EdgeInsets.All(12),
                                 child: new Column(
                                     crossAxisAlignment: CrossAxisAlignment.Start,
                                     spacing: 6,

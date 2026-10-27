@@ -87,7 +87,7 @@ public sealed class MaterialTimePickerThemeTests
         Assert.Equal(50, mid.DialHandColor!.Red);
         // Dart lerps the state colors with Color.lerp, collapsing them to the default resolution.
         Assert.Equal(50, mid.HourMinuteColor!.Red);
-        Assert.Equal(new Thickness(10), mid.Padding!.Value.Resolve(TextDirection.Ltr));
+        Assert.Equal(EdgeInsets.All(10), mid.Padding!.Value.Resolve(TextDirection.Ltr));
         // inputDecorationTheme is a discrete t < 0.5 switch, never interpolated.
         Assert.True(TimePickerThemeData.Lerp(a, b, 0.4).InputDecorationTheme!.Filled);
         Assert.False(TimePickerThemeData.Lerp(a, b, 0.6).InputDecorationTheme!.Filled);

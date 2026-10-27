@@ -28,7 +28,7 @@ public sealed class BaselineDemoPage : StatelessWidget
                     style: new TextStyle(FontSize: 14, Color: MaterialColors.Black54)),
                 new Container(
                     color: new Color(0xFFF1F5F9),
-                    padding: new Thickness(12),
+                    padding: EdgeInsets.All(12),
                     child: new Row(
                         crossAxisAlignment: CrossAxisAlignment.Baseline,
                         textBaseline: TextBaseline.Alphabetic,
@@ -51,7 +51,7 @@ public sealed class BaselineDemoPage : StatelessWidget
         return new Container(
             height: 118,
             color: new Color(0xFFE7EDF6),
-            padding: new Thickness(12),
+            padding: EdgeInsets.All(12),
             child: new Stack(
                 clipBehavior: Clip.None,
                 children:

@@ -83,7 +83,7 @@ public sealed class CupertinoContextMenuAction : StatefulWidget
                             _isPressed ? BackgroundColorPressed : CupertinoContextMenu.BackgroundColor,
                             context),
                         child: new Padding(
-                            insets: new Thickness(15.5, 8.0, 17.5, 8.0),
+                            insets: EdgeInsets.FromLTRB(15.5, 8.0, 17.5, 8.0),
                             child: new DefaultTextStyle(
                                 style: textStyle,
                                 child: new Row(

@@ -83,7 +83,7 @@ public sealed class AnimatedGridDemoPage : StatefulWidget
                 itemBuilder: (_, index, animation) => BuildTile(_items[index], animation),
                 gridDelegate: CreateGridDelegate(),
                 initialItemCount: _items.Count,
-                padding: new Thickness(4),
+                padding: EdgeInsets.All(4),
                 key: _gridKey);
         }
 
@@ -93,7 +93,7 @@ public sealed class AnimatedGridDemoPage : StatefulWidget
                 slivers:
                 [
                     new SliverPadding(
-                        new Thickness(4),
+                        EdgeInsets.All(4),
                         new SliverAnimatedGrid(
                             itemBuilder: (_, index, animation) => BuildTile(
                                 _sliverItems[index],

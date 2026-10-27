@@ -103,7 +103,7 @@ internal sealed class ColorPaletteDemoPageState : State
 
         return new Container(
             color: new Color(0xFFF7F9FC),
-            padding: new Thickness(12),
+            padding: EdgeInsets.All(12),
             child: new Column(
                 crossAxisAlignment: CrossAxisAlignment.Stretch,
                 children:
@@ -118,7 +118,7 @@ internal sealed class ColorPaletteDemoPageState : State
     {
         return new Container(
             color: new Color(0xFFF7F9FC),
-            padding: new Thickness(12),
+            padding: EdgeInsets.All(12),
             child: new Column(
                 crossAxisAlignment: CrossAxisAlignment.Stretch,
                 children:
@@ -163,7 +163,7 @@ internal sealed class ColorPaletteDemoPageState : State
                 style: TextButton.StyleFrom(
                     foregroundColor: Colors.Black,
                     backgroundColor: background,
-                    padding: new Thickness(10, 8),
+                    padding: EdgeInsets.Symmetric(horizontal: 10, vertical: 8),
                     minimumSize: new Size(0, 36),
                     shape: new RoundedRectangleBorder(
                         borderRadius: BorderRadius.Circular(8)))));

@@ -370,7 +370,7 @@ public abstract class BoxScrollView : ScrollView
         bool? primary = null,
         ScrollPhysics? physics = null,
         bool shrinkWrap = false,
-        Thickness? padding = null,
+        EdgeInsetsGeometry? padding = null,
         double? cacheExtent = null,
         ScrollCacheExtent? scrollCacheExtent = null,
         int? semanticChildCount = null,
@@ -400,22 +400,22 @@ public abstract class BoxScrollView : ScrollView
     }
 
     /// <summary>The amount of space by which to inset the children.</summary>
-    public Thickness? Padding { get; }
+    public EdgeInsetsGeometry? Padding { get; }
 
     /// <inheritdoc />
     public override IReadOnlyList<Widget> BuildSlivers(BuildContext context)
     {
         Widget sliver = BuildChildLayout(context);
-        Thickness? effectivePadding = Padding;
+        EdgeInsetsGeometry? effectivePadding = Padding;
         if (Padding is null && MediaQuery.MaybeOf(context) is { } mediaQuery)
         {
             // Automatically pad the sliver with the padding from the MediaQuery.
-            var mediaQueryHorizontalPadding = new Thickness(
+            var mediaQueryHorizontalPadding = EdgeInsets.FromLTRB(
                 mediaQuery.Padding.Left,
                 0.0,
                 mediaQuery.Padding.Right,
                 0.0);
-            var mediaQueryVerticalPadding = new Thickness(
+            var mediaQueryVerticalPadding = EdgeInsets.FromLTRB(
                 0.0,
                 mediaQuery.Padding.Top,
                 0.0,
@@ -448,7 +448,7 @@ public abstract class BoxScrollView : ScrollView
     public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
     {
         base.DebugFillProperties(properties);
-        properties.Add(new DiagnosticsProperty<Thickness?>("padding", Padding, defaultValue: null));
+        properties.Add(new DiagnosticsProperty<EdgeInsetsGeometry?>("padding", Padding, defaultValue: null));
     }
 }
 
@@ -468,7 +468,7 @@ public sealed class ListView : BoxScrollView
         bool? primary,
         ScrollPhysics? physics,
         bool shrinkWrap,
-        Thickness? padding,
+        EdgeInsetsGeometry? padding,
         double? cacheExtent,
         ScrollCacheExtent? scrollCacheExtent,
         int? semanticChildCount,
@@ -517,7 +517,7 @@ public sealed class ListView : BoxScrollView
         bool? primary = null,
         ScrollPhysics? physics = null,
         bool shrinkWrap = false,
-        Thickness? padding = null,
+        EdgeInsetsGeometry? padding = null,
         double? itemExtent = null,
         ItemExtentBuilder? itemExtentBuilder = null,
         Widget? prototypeItem = null,
@@ -582,7 +582,7 @@ public sealed class ListView : BoxScrollView
         bool? primary = null,
         ScrollPhysics? physics = null,
         bool shrinkWrap = false,
-        Thickness? padding = null,
+        EdgeInsetsGeometry? padding = null,
         double? itemExtent = null,
         ItemExtentBuilder? itemExtentBuilder = null,
         Widget? prototypeItem = null,
@@ -656,7 +656,7 @@ public sealed class ListView : BoxScrollView
         bool? primary = null,
         ScrollPhysics? physics = null,
         bool shrinkWrap = false,
-        Thickness? padding = null,
+        EdgeInsetsGeometry? padding = null,
         ChildIndexGetter? findItemIndexCallback = null,
         ChildIndexGetter? findChildIndexCallback = null,
         bool addAutomaticKeepAlives = true,
@@ -737,7 +737,7 @@ public sealed class ListView : BoxScrollView
         bool? primary = null,
         ScrollPhysics? physics = null,
         bool shrinkWrap = false,
-        Thickness? padding = null,
+        EdgeInsetsGeometry? padding = null,
         double? itemExtent = null,
         Widget? prototypeItem = null,
         ItemExtentBuilder? itemExtentBuilder = null,
@@ -820,7 +820,7 @@ public sealed class GridView : BoxScrollView
         bool? primary,
         ScrollPhysics? physics,
         bool shrinkWrap,
-        Thickness? padding,
+        EdgeInsetsGeometry? padding,
         double? cacheExtent,
         ScrollCacheExtent? scrollCacheExtent,
         int? semanticChildCount,
@@ -860,7 +860,7 @@ public sealed class GridView : BoxScrollView
         bool? primary = null,
         ScrollPhysics? physics = null,
         bool shrinkWrap = false,
-        Thickness? padding = null,
+        EdgeInsetsGeometry? padding = null,
         bool addAutomaticKeepAlives = true,
         bool addRepaintBoundaries = true,
         bool addSemanticIndexes = true,
@@ -915,7 +915,7 @@ public sealed class GridView : BoxScrollView
         bool? primary = null,
         ScrollPhysics? physics = null,
         bool shrinkWrap = false,
-        Thickness? padding = null,
+        EdgeInsetsGeometry? padding = null,
         ChildIndexGetter? findChildIndexCallback = null,
         bool addAutomaticKeepAlives = true,
         bool addRepaintBoundaries = true,
@@ -967,7 +967,7 @@ public sealed class GridView : BoxScrollView
         bool? primary = null,
         ScrollPhysics? physics = null,
         bool shrinkWrap = false,
-        Thickness? padding = null,
+        EdgeInsetsGeometry? padding = null,
         double? cacheExtent = null,
         ScrollCacheExtent? scrollCacheExtent = null,
         int? semanticChildCount = null,
@@ -1009,7 +1009,7 @@ public sealed class GridView : BoxScrollView
         bool? primary = null,
         ScrollPhysics? physics = null,
         bool shrinkWrap = false,
-        Thickness? padding = null,
+        EdgeInsetsGeometry? padding = null,
         double mainAxisSpacing = 0.0,
         double crossAxisSpacing = 0.0,
         double childAspectRatio = 1.0,
@@ -1066,7 +1066,7 @@ public sealed class GridView : BoxScrollView
         bool? primary = null,
         ScrollPhysics? physics = null,
         bool shrinkWrap = false,
-        Thickness? padding = null,
+        EdgeInsetsGeometry? padding = null,
         double mainAxisSpacing = 0.0,
         double crossAxisSpacing = 0.0,
         double childAspectRatio = 1.0,

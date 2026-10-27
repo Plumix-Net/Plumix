@@ -193,8 +193,8 @@ internal sealed class CupertinoAlertDialogState : State<CupertinoAlertDialog>
     private Widget BuildDialog(BuildContext context)
     {
         bool accessibilityMode = CupertinoDialogConstants.IsInAccessibilityMode(context);
-        Thickness viewInsets = MediaQuery.ViewInsetsOf(context);
-        var effectivePadding = new Thickness(
+        EdgeInsets viewInsets = MediaQuery.ViewInsetsOf(context);
+        var effectivePadding = EdgeInsets.FromLTRB(
             viewInsets.Left + 40.0,
             viewInsets.Top + 24.0,
             viewInsets.Right + 40.0,
@@ -221,7 +221,7 @@ internal sealed class CupertinoAlertDialogState : State<CupertinoAlertDialog>
                 context,
                 new Center(
                     child: new Padding(
-                        new Thickness(0, CupertinoDialogConstants.DialogEdgePadding),
+                        EdgeInsets.Symmetric(vertical: CupertinoDialogConstants.DialogEdgePadding),
                         dialog)),
                 removeLeft: true,
                 removeTop: true,
@@ -294,12 +294,12 @@ internal sealed class CupertinoAlertDialogState : State<CupertinoAlertDialog>
                 title: Current.Title,
                 message: Current.Content,
                 scrollController: EffectiveScrollController,
-                titlePadding: new Thickness(
+                titlePadding: EdgeInsets.FromLTRB(
                     CupertinoDialogConstants.DialogEdgePadding,
                     CupertinoDialogConstants.DialogEdgePadding * effectiveTextScale,
                     CupertinoDialogConstants.DialogEdgePadding,
                     Current.Content is null ? CupertinoDialogConstants.DialogEdgePadding : 1.0),
-                messagePadding: new Thickness(
+                messagePadding: EdgeInsets.FromLTRB(
                     CupertinoDialogConstants.DialogEdgePadding,
                     Current.Title is null ? CupertinoDialogConstants.DialogEdgePadding : 1.0,
                     CupertinoDialogConstants.DialogEdgePadding,
@@ -437,7 +437,7 @@ internal sealed class CupertinoDialogActionState : State<CupertinoDialogAction>,
                 child: new ConstrainedBox(
                     new BoxConstraints(MinHeight: CupertinoDialogConstants.DialogMinButtonHeight),
                     new Padding(
-                        new Thickness(padding),
+                        EdgeInsets.All(padding),
                         new Center(child: sizedContent)))));
     }
 }
@@ -598,11 +598,11 @@ internal sealed class CupertinoAlertContentSection : StatelessWidget
         Widget? title,
         Widget? message,
         ScrollController scrollController,
-        Thickness titlePadding,
-        Thickness messagePadding,
+        EdgeInsets titlePadding,
+        EdgeInsets messagePadding,
         TextStyle titleTextStyle,
         TextStyle messageTextStyle,
-        Thickness? additionalPaddingBetweenTitleAndMessage = null,
+        EdgeInsets? additionalPaddingBetweenTitleAndMessage = null,
         Key? key = null) : base(key)
     {
         Title = title;
@@ -618,13 +618,13 @@ internal sealed class CupertinoAlertContentSection : StatelessWidget
     public Widget? Title { get; }
     public Widget? Message { get; }
     public ScrollController ScrollController { get; }
-    public Thickness TitlePadding { get; }
-    public Thickness MessagePadding { get; }
+    public EdgeInsets TitlePadding { get; }
+    public EdgeInsets MessagePadding { get; }
     public TextStyle TitleTextStyle { get; }
     public TextStyle MessageTextStyle { get; }
 
     /// <summary>Extra spacing inserted between title and message; action sheets only.</summary>
-    public Thickness? AdditionalPaddingBetweenTitleAndMessage { get; }
+    public EdgeInsets? AdditionalPaddingBetweenTitleAndMessage { get; }
 
     public override Widget Build(BuildContext context)
     {

@@ -75,15 +75,15 @@ public sealed class MaterialDialogThemeTests
     [Fact]
     public void DataStoresUnvalidatedThemeValuesAndAllowsInterpolationExtrapolation()
     {
-        var data = new DialogThemeData(Elevation: -1, InsetPadding: new Thickness(-2));
+        var data = new DialogThemeData(Elevation: -1, InsetPadding: EdgeInsets.All(-2));
         Assert.Equal(-1, data.Elevation);
-        Assert.Equal(new Thickness(-2), data.InsetPadding);
+        Assert.Equal(EdgeInsets.All(-2), data.InsetPadding);
         Assert.True(double.IsNaN(new DialogThemeData(Elevation: double.NaN).Elevation!.Value));
-        var from = new DialogThemeData(Elevation: 2, InsetPadding: new Thickness(4));
-        var to = new DialogThemeData(Elevation: 6, InsetPadding: new Thickness(8));
+        var from = new DialogThemeData(Elevation: 2, InsetPadding: EdgeInsets.All(4));
+        var to = new DialogThemeData(Elevation: 6, InsetPadding: EdgeInsets.All(8));
         Assert.Equal(8, DialogThemeData.Lerp(from, to, 1.5).Elevation);
         Assert.Equal(-2, DialogThemeData.Lerp(from, to, -1).Elevation);
-        Assert.Equal(new Thickness(-4), DialogThemeData.Lerp(from, to, -2).InsetPadding);
+        Assert.Equal(EdgeInsets.All(-4), DialogThemeData.Lerp(from, to, -2).InsetPadding);
     }
 
     [Fact]
@@ -339,7 +339,7 @@ public sealed class MaterialDialogThemeTests
         using var tester = new FrameworkDartTester();
         var data = new DialogThemeData(
             Alignment: Alignment.BottomLeft,
-            InsetPadding: new Thickness(10, 15, 20, 25),
+            InsetPadding: EdgeInsets.FromLTRB(10, 15, 20, 25),
             ClipBehavior: Clip.HardEdge,
             Shape: new RoundedRectangleBorder(borderRadius: BorderRadius.Circular(16)));
         var dialog = new Dialog(
@@ -366,7 +366,7 @@ public sealed class MaterialDialogThemeTests
         tester.PumpWidget(new MaterialApp(
             theme: new ThemeData() with
             {
-                DialogTheme = new DialogThemeData(InsetPadding: new Thickness(10, 15, 20, 25)),
+                DialogTheme = new DialogThemeData(InsetPadding: EdgeInsets.FromLTRB(10, 15, 20, 25)),
             },
             home: new Dialog(child: SizedBox.Expand(key: childKey))));
         var box = Assert.IsAssignableFrom<RenderBox>(tester.ElementsWithKey(childKey).Single().RenderObject);
@@ -441,7 +441,7 @@ public sealed class MaterialDialogThemeTests
         ContentTextStyle: new TextStyle(Color: Colors.Black),
         ActionsPadding: EdgeInsetsGeometry.All(8),
         BarrierColor: new Color(0xff000005),
-        InsetPadding: new Thickness(30),
+        InsetPadding: EdgeInsets.All(30),
         ClipBehavior: Clip.AntiAlias,
         Constraints: new BoxConstraints(MaxWidth: 500, MaxHeight: 500));
 

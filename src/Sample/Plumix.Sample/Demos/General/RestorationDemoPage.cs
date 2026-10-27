@@ -74,7 +74,7 @@ public sealed class RestorationDemoPage : StatefulWidget
                         .. Enumerable.Range(1, 24).Select(index => new Container(
                             height: 48,
                             alignment: Alignment.CenterLeft,
-                            padding: new Thickness(12, 0),
+                            padding: EdgeInsets.Symmetric(horizontal: 12),
                             child: new Text($"Restorable row {index}"))),
                     ])));
         }

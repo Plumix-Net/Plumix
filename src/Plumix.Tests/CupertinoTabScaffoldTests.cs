@@ -255,7 +255,7 @@ public sealed class CupertinoTabScaffoldTests : IDisposable
                        tabBar: BuildTabBar(2),
                        tabBuilder: (context, _) => new CaptureContext(
                            captured => resizedQuery = MediaQuery.Of(captured))),
-                   viewInsets: new Thickness(0.0, 0.0, 0.0, 200.0))))
+                   viewInsets: EdgeInsets.FromLTRB(0.0, 0.0, 0.0, 200.0))))
         {
             resized.Pump(ViewSize);
             Assert.Equal(0.0, resizedQuery!.ViewInsets.Bottom);
@@ -270,7 +270,7 @@ public sealed class CupertinoTabScaffoldTests : IDisposable
                        resizeToAvoidBottomInset: false,
                        tabBuilder: (context, _) => new CaptureContext(
                            captured => unresizedQuery = MediaQuery.Of(captured))),
-                   viewInsets: new Thickness(0.0, 0.0, 0.0, 200.0))))
+                   viewInsets: EdgeInsets.FromLTRB(0.0, 0.0, 0.0, 200.0))))
         {
             unresized.Pump(ViewSize);
             Assert.Equal(200.0, unresizedQuery!.ViewInsets.Bottom);
@@ -287,7 +287,7 @@ public sealed class CupertinoTabScaffoldTests : IDisposable
                 tabBar: BuildTabBar(2),
                 tabBuilder: (_, _) => new CupertinoPageScaffold(
                     child: new CaptureContext(context => nestedPageQuery = MediaQuery.Of(context)))),
-            viewInsets: new Thickness(0.0, 0.0, 0.0, 200.0)));
+            viewInsets: EdgeInsets.FromLTRB(0.0, 0.0, 0.0, 200.0)));
         nested.Pump(ViewSize);
         Assert.Equal(0.0, nestedPageQuery!.ViewInsets.Bottom);
         Assert.Equal(0.0, nestedPageQuery.Padding.Bottom);
@@ -297,7 +297,7 @@ public sealed class CupertinoTabScaffoldTests : IDisposable
     public void ContentStateSurvivesMediaQueryInsetUpdates()
     {
         var states = new List<StateIdentityProbeState>();
-        Widget Build(Thickness viewInsets)
+        Widget Build(EdgeInsets viewInsets)
         {
             return BuildRoot(
                 new CupertinoTabScaffold(
@@ -310,7 +310,7 @@ public sealed class CupertinoTabScaffoldTests : IDisposable
         harness.Pump(ViewSize);
         StateIdentityProbeState originalState = Assert.Single(states.Distinct());
 
-        harness.PumpWidget(Build(new Thickness(0.0, 0.0, 0.0, 100.0)));
+        harness.PumpWidget(Build(EdgeInsets.FromLTRB(0.0, 0.0, 0.0, 100.0)));
         harness.Pump(ViewSize);
 
         Assert.Same(originalState, Assert.Single(states.Distinct()));
@@ -419,7 +419,7 @@ public sealed class CupertinoTabScaffoldTests : IDisposable
                 tabBar: BuildTabBar(2, backgroundColor: color),
                 tabBuilder: (context, _) => new CaptureContext(
                     captured => contentQuery = MediaQuery.Of(captured))),
-            padding: new Thickness(0.0, 0.0, 0.0, 20.0)));
+            padding: EdgeInsets.FromLTRB(0.0, 0.0, 0.0, 20.0)));
         harness.Pump(ViewSize);
         return contentQuery!.Padding.Bottom;
     }
@@ -454,8 +454,8 @@ public sealed class CupertinoTabScaffoldTests : IDisposable
 
     private static Widget BuildRoot(
         Widget child,
-        Thickness padding = default,
-        Thickness viewInsets = default,
+        EdgeInsets padding = default,
+        EdgeInsets viewInsets = default,
         double textScaleFactor = 1.0,
         Brightness brightness = Brightness.Light,
         RestorationBucket? bucket = null)

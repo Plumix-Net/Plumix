@@ -72,7 +72,7 @@ public sealed class MaterialBannerTests
         Assert.Throws<ArgumentException>(() => new MaterialBanner(new Text("Content"), []));
         Assert.Throws<ArgumentOutOfRangeException>(() => Banner(elevation: -1));
         Assert.Throws<ArgumentOutOfRangeException>(() => Banner(minActionBarHeight: -1));
-        Assert.Throws<ArgumentOutOfRangeException>(() => Banner(padding: new Thickness(-1)));
+        Assert.Throws<ArgumentOutOfRangeException>(() => Banner(padding: EdgeInsets.All(-1)));
         Assert.Throws<ArgumentOutOfRangeException>(() => new MaterialBannerThemeData(Elevation: -1));
 
         using var controller = MaterialBanner.CreateAnimationController();
@@ -173,7 +173,7 @@ public sealed class MaterialBannerTests
         Assert.Equal(ThemeData.Light.ColorScheme.SurfaceContainerLow, decoration.Color);
         Assert.False(decoration.HasShadow);
         Assert.Contains(FindDescendants<RenderPadding>(harness.RenderView),
-            padding => padding.Padding == new Thickness(16, 2, 0, 0));
+            padding => padding.Padding == EdgeInsets.FromLTRB(16, 2, 0, 0));
         Assert.Contains(FindDescendants<RenderConstrainedBox>(harness.RenderView),
             box => box.AdditionalConstraints.MinHeight == 52);
         Assert.Single(FindDescendants<RenderOverflowBar>(harness.RenderView));
@@ -202,7 +202,7 @@ public sealed class MaterialBannerTests
         Assert.True(secondOffset.Y > firstOffset.Y);
         Assert.Equal(overflow.Size.Width - first.Size.Width, firstOffset.X, precision: 3);
         Assert.Contains(FindDescendants<RenderPadding>(narrow.RenderView),
-            padding => padding.Padding == new Thickness(16, 24, 16, 4));
+            padding => padding.Padding == EdgeInsets.FromLTRB(16, 24, 16, 4));
     }
 
     [Theory]
@@ -248,8 +248,8 @@ public sealed class MaterialBannerTests
                     color: Colors.Orange,
                     fontSize: 18),
                 Elevation: 3,
-                Padding: new Thickness(7),
-                LeadingPadding: new Thickness(5)),
+                Padding: EdgeInsets.All(7),
+                LeadingPadding: EdgeInsets.All(5)),
         };
         using var themed = new WidgetRenderHarness(Wrap(theme, Banner(leading: new Text("Leading"))));
         themed.Pump(new Size(360, 180));
@@ -261,10 +261,10 @@ public sealed class MaterialBannerTests
         Assert.Equal(Colors.Orange,
             Assert.IsType<SolidColorBrush>(FindParagraph(themed.RenderView, "Content")!.Foreground).Color);
         Assert.Equal(18, FindParagraph(themed.RenderView, "Content")!.FontSize);
-        Assert.Contains(FindDescendants<RenderPadding>(themed.RenderView), value => value.Padding == new Thickness(7));
-        Assert.Contains(FindDescendants<RenderPadding>(themed.RenderView), value => value.Padding == new Thickness(5));
+        Assert.Contains(FindDescendants<RenderPadding>(themed.RenderView), value => value.Padding == EdgeInsets.All(7));
+        Assert.Contains(FindDescendants<RenderPadding>(themed.RenderView), value => value.Padding == EdgeInsets.All(5));
         Assert.Contains(FindDescendants<RenderPadding>(themed.RenderView),
-            value => value.Padding == new Thickness(0, 0, 0, 10));
+            value => value.Padding == EdgeInsets.FromLTRB(0, 0, 0, 10));
 
         using var explicitColor = new WidgetRenderHarness(Wrap(
             theme,
@@ -293,9 +293,9 @@ public sealed class MaterialBannerTests
             content.TextScaler.Scale(content.FontSize),
             precision: 3);
         Assert.Contains(FindDescendants<RenderPadding>(harness.RenderView),
-            padding => padding.Padding == new Thickness(0, 2, 16, 0));
+            padding => padding.Padding == EdgeInsets.FromLTRB(0, 2, 16, 0));
         Assert.Contains(FindDescendants<RenderPadding>(harness.RenderView),
-            padding => padding.Padding == new Thickness(16, 0, 0, 0));
+            padding => padding.Padding == EdgeInsets.FromLTRB(16, 0, 0, 0));
     }
 
     [Fact]
@@ -362,8 +362,8 @@ public sealed class MaterialBannerTests
             top: 5,
             end: 7,
             bottom: 11);
-        Assert.Equal(new Thickness(3, 5, 7, 11), directional.Resolve(TextDirection.Ltr));
-        Assert.Equal(new Thickness(7, 5, 3, 11), directional.Resolve(TextDirection.Rtl));
+        Assert.Equal(EdgeInsets.FromLTRB(3, 5, 7, 11), directional.Resolve(TextDirection.Ltr));
+        Assert.Equal(EdgeInsets.FromLTRB(7, 5, 3, 11), directional.Resolve(TextDirection.Rtl));
         Assert.Equal(
             EdgeInsetsGeometry.All(5),
             EdgeInsetsGeometry.Lerp(EdgeInsetsGeometry.Zero, EdgeInsetsGeometry.All(10), 0.5));
@@ -581,7 +581,7 @@ public sealed class MaterialBannerTests
         double? elevation = null,
         Widget? leading = null,
         Color? backgroundColor = null,
-        Thickness? padding = null,
+        EdgeInsets? padding = null,
         double minActionBarHeight = 52,
         Animation<double>? animation = null,
         Action? onVisible = null,

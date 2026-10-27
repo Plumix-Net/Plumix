@@ -262,7 +262,7 @@ public sealed class ReorderableListDartParityTests
     {
         using var tester = new FrameworkDartTester();
         List<BoxConstraints> constraints = [];
-        tester.PumpWidget(Wrap(new MediaQuery(new MediaQueryData(Padding: new Thickness(0, 50, 0, 0)),
+        tester.PumpWidget(Wrap(new MediaQuery(new MediaQueryData(Padding: EdgeInsets.FromLTRB(0, 50, 0, 0)),
             new DefaultTextStyle(new TextStyle(FontSize: 29), new ReorderableList(
                 (_, index) => new LayoutBuilder((context, value) =>
                 {

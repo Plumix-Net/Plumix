@@ -141,8 +141,8 @@ public sealed class CupertinoTabBarTests : IDisposable
     {
         var tabBar = new CupertinoTabBar(BuildItems(), height: 56.0);
         var media = new MediaQueryData(
-            ViewPadding: new Thickness(0.0, 0.0, 0.0, 34.0),
-            ViewInsets: new Thickness(0.0, 0.0, 0.0, 336.0));
+            ViewPadding: EdgeInsets.FromLTRB(0.0, 0.0, 0.0, 34.0),
+            ViewInsets: EdgeInsets.FromLTRB(0.0, 0.0, 0.0, 336.0));
         using var harness = new CupertinoThemeTestHarness(Wrap(tabBar, media: media, center: true));
 
         harness.Pump(ViewSize);

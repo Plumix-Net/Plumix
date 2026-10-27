@@ -462,12 +462,6 @@ public sealed class AccessibilityFeaturesDartParityTests
         tester.View.PhysicalSize.Width / tester.View.DevicePixelRatio,
         tester.View.PhysicalSize.Height / tester.View.DevicePixelRatio);
 
-    private static Thickness FromViewPadding(Thickness padding, double devicePixelRatio) => new(
-        padding.Left / devicePixelRatio,
-        padding.Top / devicePixelRatio,
-        padding.Right / devicePixelRatio,
-        padding.Bottom / devicePixelRatio);
-
     private static void AssertHasOneLineDescription(MediaQueryData data)
     {
         string description = data.ToString();
@@ -480,10 +474,12 @@ public sealed class AccessibilityFeaturesDartParityTests
         double devicePixelRatio = tester.View.DevicePixelRatio;
         Assert.Equal(LogicalSize(tester), data.Size);
         Assert.Equal(devicePixelRatio, data.DevicePixelRatio);
-        Assert.Equal(FromViewPadding(tester.View.Padding, devicePixelRatio), data.Padding);
-        Assert.Equal(FromViewPadding(tester.View.ViewPadding, devicePixelRatio), data.ViewPadding);
-        Assert.Equal(FromViewPadding(tester.View.ViewInsets, devicePixelRatio), data.ViewInsets);
-        Assert.Equal(FromViewPadding(tester.View.SystemGestureInsets, devicePixelRatio), data.SystemGestureInsets);
+        Assert.Equal(EdgeInsets.FromViewPadding(tester.View.Padding, devicePixelRatio), data.Padding);
+        Assert.Equal(EdgeInsets.FromViewPadding(tester.View.ViewPadding, devicePixelRatio), data.ViewPadding);
+        Assert.Equal(EdgeInsets.FromViewPadding(tester.View.ViewInsets, devicePixelRatio), data.ViewInsets);
+        Assert.Equal(
+            EdgeInsets.FromViewPadding(tester.View.SystemGestureInsets, devicePixelRatio),
+            data.SystemGestureInsets);
         Assert.Equal(tester.View.FlutterView.GestureSettings, data.GestureSettings);
         Assert.Equal(tester.View.FlutterView.DisplayFeatures, data.DisplayFeatures);
     }

@@ -24,7 +24,7 @@ public sealed class CounterScreen : StatelessWidget
 
         return new Container(
             color: MaterialColors.White,
-            padding: new Thickness(20),
+            padding: EdgeInsets.All(20),
             child: new SingleChildScrollView(
                 child: new Column(
                     crossAxisAlignment: CrossAxisAlignment.Stretch,
@@ -93,14 +93,14 @@ public sealed class CounterScreen : StatelessWidget
                                 new Expanded(
                                     child: new Container(
                                         color: new Color(0xFFE8F5E9),
-                                        padding: new Thickness(8),
+                                        padding: EdgeInsets.All(8),
                                         child: model.PlaceGlobalOnLeft
                                             ? new MovableBadge(key: new GlobalObjectKey<MovableBadgeState>(model.GlobalBadgeIdentity))
                                             : new Text("left slot", style: new TextStyle(Color: MaterialColors.Grey)))),
                                 new Expanded(
                                     child: new Container(
                                         color: new Color(0xFFE3F2FD),
-                                        padding: new Thickness(8),
+                                        padding: EdgeInsets.All(8),
                                         child: !model.PlaceGlobalOnLeft
                                             ? new MovableBadge(key: new GlobalObjectKey<MovableBadgeState>(model.GlobalBadgeIdentity))
                                             : new Text("right slot",

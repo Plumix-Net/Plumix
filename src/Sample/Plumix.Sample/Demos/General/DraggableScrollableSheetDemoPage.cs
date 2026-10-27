@@ -73,7 +73,7 @@ public sealed class DraggableScrollableSheetDemoPage : StatefulWidget
                     child: new ListView(
                         controller: scrollController,
                         itemExtent: 44.0,
-                        padding: new Thickness(12, 8),
+                        padding: EdgeInsets.Symmetric(horizontal: 12, vertical: 8),
                         children: BuildItems())));
 
             return new Container(

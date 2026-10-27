@@ -1177,13 +1177,13 @@ public sealed class ScaffoldState : RestorationState<Scaffold>, WidgetsBindingOb
         }
 
         // The minimum insets for contents of the Scaffold to keep visible.
-        Thickness minInsets = CopyBottomInset(
+        EdgeInsets minInsets = CopyBottomInset(
             mediaQuery.Padding,
             resizeToAvoidBottomInset ? mediaQuery.ViewInsets.Bottom : 0.0);
 
         // The minimum viewPadding for interactive elements positioned by the Scaffold to keep within safe
         // interactive areas.
-        Thickness minViewPadding = resizeToAvoidBottomInset && mediaQuery.ViewInsets.Bottom != 0.0
+        EdgeInsets minViewPadding = resizeToAvoidBottomInset && mediaQuery.ViewInsets.Bottom != 0.0
             ? CopyBottomInset(mediaQuery.ViewPadding, 0.0)
             : mediaQuery.ViewPadding;
 
@@ -1319,7 +1319,7 @@ public sealed class ScaffoldState : RestorationState<Scaffold>, WidgetsBindingOb
         children.Add(new LayoutId(id: childId, child: new MediaQuery(data: data, child: child)));
     }
 
-    private static Thickness CopyBottomInset(Thickness insets, double bottom) =>
+    private static EdgeInsets CopyBottomInset(EdgeInsets insets, double bottom) =>
         new(insets.Left, insets.Top, insets.Right, bottom);
 }
 

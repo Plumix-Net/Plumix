@@ -130,7 +130,7 @@ public abstract record BoxBorder : ShapeBorder
     public override Path GetInnerPath(Rect rect, TextDirection? textDirection = null)
     {
         var path = new Path();
-        path.AddRect(rect.Deflate(Dimensions.Resolve(textDirection ?? TextDirection.Ltr)));
+        path.AddRect(Dimensions.Resolve(textDirection ?? TextDirection.Ltr).DeflateRect(rect));
         return path;
     }
 
@@ -236,10 +236,10 @@ public abstract record BoxBorder : ShapeBorder
         }
 
         var brush = new SolidColorBrush(color);
-        RRect inner = borderRect.DeflateEdges(
-            new Thickness(left.StrokeInset, top.StrokeInset, right.StrokeInset, bottom.StrokeInset));
-        RRect outer = borderRect.InflateEdges(
-            new Thickness(left.StrokeOutset, top.StrokeOutset, right.StrokeOutset, bottom.StrokeOutset));
+        RRect inner = EdgeInsets.FromLTRB(left.StrokeInset, top.StrokeInset, right.StrokeInset, bottom.StrokeInset)
+            .DeflateRRect(borderRect);
+        RRect outer = EdgeInsets.FromLTRB(left.StrokeOutset, top.StrokeOutset, right.StrokeOutset, bottom.StrokeOutset)
+            .InflateRRect(borderRect);
         context.Canvas.DrawDRRect(outer, inner, brush);
     }
 

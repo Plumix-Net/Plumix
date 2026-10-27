@@ -44,7 +44,7 @@ public sealed class MaterialBarControlsTests
         Assert.Equal(80, m3Surface.Size.Height, 3);
         Assert.Contains(
             FindDescendants<RenderPadding>(m3Surface),
-            padding => padding.Padding == new Thickness(16, 12));
+            padding => padding.Padding == EdgeInsets.Symmetric(horizontal: 16, vertical: 12));
 
         using var m2 = new WidgetRenderHarness(Wrap(
             new BottomAppBar(child: new SizedBox(height: 20)),
@@ -72,7 +72,7 @@ public sealed class MaterialBarControlsTests
                 Height: 72,
                 SurfaceTintColor: MaterialColors.Transparent,
                 ShadowColor: Colors.DarkSlateGray,
-                Padding: new Thickness(9)),
+                Padding: EdgeInsets.All(9)),
         };
 
         using var themed = new WidgetRenderHarness(Wrap(new BottomAppBar(), theme));
@@ -92,7 +92,7 @@ public sealed class MaterialBarControlsTests
                 shape: widgetShape,
                 height: 64,
                 shadowColor: Colors.Crimson,
-                padding: new Thickness(3)),
+                padding: EdgeInsets.All(3)),
             theme));
         explicitHarness.Pump(new Size(320, 160));
         var explicitSurface = FindDescendant<RenderBottomAppBarSurface>(explicitHarness.RenderView);
@@ -135,7 +135,7 @@ public sealed class MaterialBarControlsTests
     {
         using var harness = new WidgetRenderHarness(Wrap(
             new BottomAppBar(height: 80),
-            mediaPadding: new Thickness(0, 0, 0, 24)));
+            mediaPadding: EdgeInsets.FromLTRB(0, 0, 0, 24)));
         harness.Pump(new Size(320, 180));
         var surface = FindDescendant<RenderBottomAppBarSurface>(harness.RenderView);
         Assert.NotNull(surface);
@@ -257,7 +257,7 @@ public sealed class MaterialBarControlsTests
             Height: 60,
             SurfaceTintColor: Colors.Green,
             ShadowColor: Colors.Black,
-            Padding: new Thickness(4));
+            Padding: EdgeInsets.All(4));
         var end = new BottomAppBarThemeData(
             Color: Colors.Blue,
             Elevation: 6,
@@ -265,7 +265,7 @@ public sealed class MaterialBarControlsTests
             Height: 80,
             SurfaceTintColor: Colors.Yellow,
             ShadowColor: Colors.White,
-            Padding: new Thickness(12));
+            Padding: EdgeInsets.All(12));
 
         BottomAppBarThemeData copied = begin.CopyWith(
             color: Colors.Gold,
@@ -278,7 +278,7 @@ public sealed class MaterialBarControlsTests
         Assert.NotNull(midpoint);
         Assert.Equal(4, midpoint!.Elevation);
         Assert.Equal(70, midpoint.Height);
-        Assert.Equal(new Thickness(8), midpoint.Padding);
+        Assert.Equal(EdgeInsets.All(8), midpoint.Padding);
         Assert.Same(endShape, midpoint.Shape);
         Assert.Same(begin, BottomAppBarThemeData.Lerp(begin, begin, 0.5));
 
@@ -379,7 +379,7 @@ public sealed class MaterialBarControlsTests
                     TextTheme: ButtonTextTheme.Normal,
                     MinWidth: 12,
                     Height: 13,
-                    Padding: new Thickness(2),
+                    Padding: EdgeInsets.All(2),
                     LayoutBehavior: ButtonBarLayoutBehavior.Constrained),
                 new ButtonBar(children: [new ButtonThemeProbe(value => captured = value)]))));
         harness.Pump(new Size(320, 100));
@@ -553,7 +553,7 @@ public sealed class MaterialBarControlsTests
         Assert.True(harness.RenderView.Child!.Size.Height >= 52);
     }
 
-    private static Widget Wrap(Widget child, ThemeData? theme = null, Thickness? mediaPadding = null) =>
+    private static Widget Wrap(Widget child, ThemeData? theme = null, EdgeInsets? mediaPadding = null) =>
         new Directionality(
             TextDirection.Ltr,
             new MediaQuery(

@@ -24,7 +24,7 @@ public sealed class MaterialDrawerHeaderTests
         using var harness = new WidgetRenderHarness(Root(
             new DrawerHeader(child: new Text("Header")),
             theme,
-            padding: new Thickness(0, 24, 0, 0)));
+            padding: EdgeInsets.FromLTRB(0, 24, 0, 0)));
 
         harness.Pump(new Size(304, 260));
 
@@ -33,7 +33,7 @@ public sealed class MaterialDrawerHeaderTests
             box => box.AdditionalConstraints == BoxConstraints.TightFor(height: 185));
         Assert.Contains(
             FindDescendants<RenderPadding>(harness.RenderView),
-            padding => padding.Padding == new Thickness(16, 40, 16, 8));
+            padding => padding.Padding == EdgeInsets.FromLTRB(16, 40, 16, 8));
         Assert.Contains(
             FindDescendants<RenderDecoratedBox>(harness.RenderView),
             box => box.AsBoxDecoration.Border is Plumix.Rendering.Border sideBottom
@@ -48,8 +48,8 @@ public sealed class MaterialDrawerHeaderTests
         var header = new DrawerHeader(
             child: new Text("Custom"),
             decoration: decoration,
-            margin: new Thickness(3, 4, 5, 6),
-            padding: new Thickness(7, 8, 9, 10),
+            margin: EdgeInsets.FromLTRB(3, 4, 5, 6),
+            padding: EdgeInsets.FromLTRB(7, 8, 9, 10),
             duration: TimeSpan.FromMilliseconds(400),
             curve: Curves.EaseOut);
         Assert.Equal(TimeSpan.FromMilliseconds(400), header.Duration);
@@ -66,7 +66,7 @@ public sealed class MaterialDrawerHeaderTests
             box => box.Decoration == decoration);
         Assert.Contains(
             FindDescendants<RenderPadding>(harness.RenderView),
-            padding => padding.Padding == new Thickness(3, 4, 5, 6));
+            padding => padding.Padding == EdgeInsets.FromLTRB(3, 4, 5, 6));
     }
 
     [Fact]
@@ -378,17 +378,17 @@ public sealed class MaterialDrawerHeaderTests
         using var harness = new WidgetRenderHarness(Root(
             header,
             ThemeData.Light,
-            padding: new Thickness(0.0, 19.0, 0.0, 0.0),
+            padding: EdgeInsets.FromLTRB(0.0, 19.0, 0.0, 0.0),
             direction: TextDirection.Rtl));
 
         harness.Pump(new Size(304, 260));
 
         Assert.Contains(
             FindDescendants<RenderPadding>(harness.RenderView),
-            padding => padding.Padding == new Thickness(13.0, 30.0, 7.0, 17.0));
+            padding => padding.Padding == EdgeInsets.FromLTRB(13.0, 30.0, 7.0, 17.0));
         Assert.Contains(
             FindDescendants<RenderPadding>(harness.RenderView),
-            padding => padding.Padding == new Thickness(5.0, 0.0, 3.0, 0.0));
+            padding => padding.Padding == EdgeInsets.FromLTRB(5.0, 0.0, 3.0, 0.0));
     }
 
     [Fact]
@@ -407,7 +407,7 @@ public sealed class MaterialDrawerHeaderTests
     private static Widget Root(
         Widget child,
         ThemeData theme,
-        Thickness padding = default,
+        EdgeInsets padding = default,
         TextDirection direction = TextDirection.Ltr)
     {
         return new MediaQuery(

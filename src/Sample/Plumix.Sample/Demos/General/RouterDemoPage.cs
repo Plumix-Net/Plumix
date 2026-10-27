@@ -87,7 +87,7 @@ internal sealed class RouterDemoPageState : State
         return new GestureDetector(
             onTap: onTap,
             child: new Container(
-                padding: new Thickness(10, 8),
+                padding: EdgeInsets.Symmetric(horizontal: 10, vertical: 8),
                 color: background,
                 child: new Text(label, style: new TextStyle(FontSize: 12, Color: Colors.Black))));
     }

@@ -713,7 +713,7 @@ public sealed class WindowingTests : IDisposable
         Assert.Single(tester.ElementsWithText("Window dialog"));
         // The dialog fills its window: no insets, no rounded shape, expanded constraints.
         DialogThemeData windowTheme = DialogTheme.Of(dialogContext!);
-        Assert.Equal(new Thickness(0), windowTheme.InsetPadding);
+        Assert.Equal(EdgeInsets.Zero, windowTheme.InsetPadding);
         Assert.Equal(BoxConstraints.Expand(), windowTheme.Constraints);
         Assert.Equal(Theme.Of(homeContext!), Theme.Of(dialogContext!));
 

@@ -43,7 +43,7 @@ internal sealed class CupertinoNavigationBarDemoPageState : State
         Color secondaryLabel = CupertinoDynamicColor.Resolve(CupertinoColors.SecondaryLabel, context);
 
         return new Padding(
-            new Thickness(16.0),
+            EdgeInsets.All(16.0),
             child: new Column(
                 crossAxisAlignment: CrossAxisAlignment.Stretch,
                 spacing: 10.0,
@@ -98,7 +98,7 @@ internal sealed class CupertinoNavigationBarDemoPageState : State
                     [
                         new CupertinoSliverNavigationBar(),
                         new SliverToBoxAdapter(new Padding(
-                            new Thickness(16.0),
+                            EdgeInsets.All(16.0),
                             child: new Builder(routeContext => new Column(
                                 crossAxisAlignment: CrossAxisAlignment.Stretch,
                                 spacing: 10.0,
@@ -128,6 +128,6 @@ internal sealed class CupertinoNavigationBarDemoPageState : State
             background: background,
             foreground: Colors.Black,
             fontSize: 12.0,
-            padding: new Thickness(10.0, 8.0));
+            padding: EdgeInsets.Symmetric(horizontal: 10.0, vertical: 8.0));
     }
 }

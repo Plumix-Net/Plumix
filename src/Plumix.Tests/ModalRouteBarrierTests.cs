@@ -305,7 +305,7 @@ public sealed class ModalRouteBarrierTests : IDisposable
             Widget child)
         {
             TransitionCallCount++;
-            return new Padding(new Thickness(20), child);
+            return new Padding(EdgeInsets.All(20), child);
         }
     }
 

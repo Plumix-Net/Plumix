@@ -878,7 +878,7 @@ internal sealed class SampleMenuPage : StatefulWidget
             return new Scaffold(
                 appBar: new AppBar(title: new Text("Plumix.Sample widget pages")),
                 body: new Container(
-                    padding: new Thickness(16),
+                    padding: EdgeInsets.All(16),
                     child: new Column(
                         crossAxisAlignment: CrossAxisAlignment.Stretch,
                         spacing: 10,
@@ -893,7 +893,7 @@ internal sealed class SampleMenuPage : StatefulWidget
                             new Expanded(
                                 child: ListView.Builder(
                                     itemCount: pages.Count,
-                                    padding: new Thickness(0, 8, 0, 8),
+                                    padding: EdgeInsets.FromLTRB(0, 8, 0, 8),
                                     itemExtent: 56,
                                     itemBuilder: (_, index) => BuildPageButton(context, pages[index]),
                                     addAutomaticKeepAlives: false)),
@@ -936,7 +936,7 @@ internal sealed class SampleMenuPage : StatefulWidget
                 style: OutlinedButton.StyleFrom(
                     foregroundColor: Colors.Black,
                     backgroundColor: new Color(0xFFDCE3ED),
-                    padding: new Thickness(10, 8),
+                    padding: EdgeInsets.Symmetric(horizontal: 10, vertical: 8),
                     minimumSize: new Size(64, 44),
                     side: new BorderSide(new Color(0xFFB8C4D4))));
         }
@@ -966,7 +966,7 @@ internal sealed class SampleDemoPage : StatelessWidget
         return new Scaffold(
             appBar: new AppBar(title: new Text(_title)),
             body: new Container(
-                padding: new Thickness(16),
+                padding: EdgeInsets.All(16),
                 child: new Column(
                     crossAxisAlignment: CrossAxisAlignment.Stretch,
                     spacing: 10,
@@ -976,7 +976,7 @@ internal sealed class SampleDemoPage : StatelessWidget
                         new Expanded(
                             child: new Container(
                                 color: new Color(0xFFF7F9FC),
-                                padding: new Thickness(12),
+                                padding: EdgeInsets.All(12),
                                 child: _child)),
                     ])));
     }

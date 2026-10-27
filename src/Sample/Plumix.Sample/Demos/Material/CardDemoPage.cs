@@ -42,7 +42,7 @@ internal sealed class CardDemoPageState : State
                     ShadowColor: new Color(0xFF455A64),
                     SurfaceTintColor: new Color(0xFF6750A4),
                     Elevation: 3,
-                    Margin: new Thickness(8),
+                    Margin: EdgeInsets.All(8),
                     Shape: new RoundedRectangleBorder(borderRadius: Plumix.Rendering.BorderRadius.Circular(18)),
                     ClipBehavior: _clip ? Clip.AntiAlias : Clip.None)
                 : new CardThemeData()
@@ -167,7 +167,7 @@ internal sealed class CardDemoPageState : State
     private Widget BuildMaterialSurface()
     {
         return new Container(
-            margin: new Thickness(4),
+            margin: EdgeInsets.All(4),
             child: new MaterialSurface(
                 type: MaterialType.Card,
                 color: new Color(0xFFFFF8E1),
@@ -202,7 +202,7 @@ internal sealed class CardDemoPageState : State
             new Color(0xFFE3F2FD)));
 
         return new Container(
-            margin: new Thickness(4),
+            margin: EdgeInsets.All(4),
             child: new MergeableMaterial(
                 elevation: _useThemeOverrides ? 4 : 2,
                 hasDividers: true,
@@ -212,7 +212,7 @@ internal sealed class CardDemoPageState : State
     private Widget BuildCardBody(string title, string body)
     {
         return new Container(
-            padding: _dense ? new Thickness(14, 10) : new Thickness(18, 14),
+            padding: _dense ? EdgeInsets.Symmetric(14, 10) : EdgeInsets.Symmetric(18, 14),
             child: new Column(
                 crossAxisAlignment: CrossAxisAlignment.Start,
                 spacing: 6,
@@ -237,7 +237,7 @@ internal sealed class CardDemoPageState : State
                 style: TextButton.StyleFrom(
                     foregroundColor: Colors.Black,
                     backgroundColor: background,
-                    padding: new Thickness(10, 8),
+                    padding: EdgeInsets.Symmetric(horizontal: 10, vertical: 8),
                     minimumSize: new Size(0, 36),
                     shape: new RoundedRectangleBorder(
                         borderRadius: BorderRadius.Circular(8)))));

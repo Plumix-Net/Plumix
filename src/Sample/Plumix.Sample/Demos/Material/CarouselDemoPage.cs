@@ -39,7 +39,7 @@ public sealed class CarouselDemoPage : StatelessWidget
                 new Text("Weighted [1, 6, 1]", style: new TextStyle(FontSize: 14, Color: Colors.Black)),
                 new SizedBox(height: 132, child: new CarouselViewTheme(
                     new CarouselViewThemeData(
-                        Padding: new Thickness(6),
+                        Padding: EdgeInsets.All(6),
                         Shape: new RoundedRectangleBorder(borderRadius: Plumix.Rendering.BorderRadius.Circular(20))),
                     CarouselView.Weighted(
                         flexWeights: [1, 6, 1],

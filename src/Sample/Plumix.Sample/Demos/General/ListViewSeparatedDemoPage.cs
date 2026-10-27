@@ -25,7 +25,7 @@ public sealed class ListViewSeparatedDemoPage : StatelessWidget
                 new Expanded(
                     child: ListView.Separated(
                         itemCount: 30,
-                        padding: new Thickness(12),
+                        padding: EdgeInsets.All(12),
                         itemBuilder: (_, index) => new SeparatedListItem(index),
                         separatorBuilder: (_, index) => new Container(
                             height: 4,
@@ -70,6 +70,6 @@ internal sealed class SeparatedListItemState : State
             background: _index % 2 == 0 ? new Color(0xFFEFF5FF) : Colors.White,
             foreground: Colors.Black,
             fontSize: 13,
-            padding: new Thickness(10, 8));
+            padding: EdgeInsets.Symmetric(horizontal: 10, vertical: 8));
     }
 }

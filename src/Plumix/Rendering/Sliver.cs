@@ -2278,7 +2278,7 @@ public abstract class RenderSliverEdgeInsetsPadding : RenderSliver, IRenderObjec
 
     /// <summary>The amount to pad the child in each dimension.</summary>
     /// <remarks>Flutter's <c>RenderSliverEdgeInsetsPadding.resolvedPadding</c>; null until resolved.</remarks>
-    public abstract Thickness? ResolvedPadding { get; }
+    public abstract EdgeInsets? ResolvedPadding { get; }
 
     /// <summary>The padding in the scroll direction on the side nearest the 0.0 scroll direction.</summary>
     /// <remarks>Flutter's <c>RenderSliverEdgeInsetsPadding.beforePadding</c>.</remarks>
@@ -2287,7 +2287,7 @@ public abstract class RenderSliverEdgeInsetsPadding : RenderSliver, IRenderObjec
         get
         {
             Debug.Assert(ResolvedPadding != null);
-            Thickness resolvedPadding = ResolvedPadding!.Value;
+            EdgeInsets resolvedPadding = ResolvedPadding!.Value;
             return ScrollDirectionUtils.ApplyGrowthDirectionToAxisDirection(
                 Constraints.AxisDirection,
                 Constraints.GrowthDirection) switch
@@ -2307,7 +2307,7 @@ public abstract class RenderSliverEdgeInsetsPadding : RenderSliver, IRenderObjec
         get
         {
             Debug.Assert(ResolvedPadding != null);
-            Thickness resolvedPadding = ResolvedPadding!.Value;
+            EdgeInsets resolvedPadding = ResolvedPadding!.Value;
             return ScrollDirectionUtils.ApplyGrowthDirectionToAxisDirection(
                 Constraints.AxisDirection,
                 Constraints.GrowthDirection) switch
@@ -2327,7 +2327,7 @@ public abstract class RenderSliverEdgeInsetsPadding : RenderSliver, IRenderObjec
         get
         {
             Debug.Assert(ResolvedPadding != null);
-            Thickness resolvedPadding = ResolvedPadding!.Value;
+            EdgeInsets resolvedPadding = ResolvedPadding!.Value;
             return Constraints.Axis == Axis.Horizontal
                 ? resolvedPadding.Left + resolvedPadding.Right
                 : resolvedPadding.Top + resolvedPadding.Bottom;
@@ -2341,7 +2341,7 @@ public abstract class RenderSliverEdgeInsetsPadding : RenderSliver, IRenderObjec
         get
         {
             Debug.Assert(ResolvedPadding != null);
-            Thickness resolvedPadding = ResolvedPadding!.Value;
+            EdgeInsets resolvedPadding = ResolvedPadding!.Value;
             return Constraints.Axis == Axis.Horizontal
                 ? resolvedPadding.Top + resolvedPadding.Bottom
                 : resolvedPadding.Left + resolvedPadding.Right;
@@ -2371,7 +2371,7 @@ public abstract class RenderSliverEdgeInsetsPadding : RenderSliver, IRenderObjec
         double CacheOffset(double from, double to) => CalculateCacheOffset(constraints, from, to);
 
         Debug.Assert(ResolvedPadding != null);
-        Thickness resolvedPadding = ResolvedPadding!.Value;
+        EdgeInsets resolvedPadding = ResolvedPadding!.Value;
         double beforePadding = BeforePadding;
         double afterPadding = AfterPadding;
         double mainAxisPadding = MainAxisPadding;
@@ -2562,7 +2562,7 @@ public abstract class RenderSliverEdgeInsetsPadding : RenderSliver, IRenderObjec
 /// <remarks>Flutter's <c>RenderSliverPadding</c>.</remarks>
 public class RenderSliverPadding : RenderSliverEdgeInsetsPadding
 {
-    private Thickness? _resolvedPadding;
+    private EdgeInsets? _resolvedPadding;
     private EdgeInsetsGeometry _padding;
     private TextDirection? _textDirection;
 
@@ -2579,7 +2579,7 @@ public class RenderSliverPadding : RenderSliverEdgeInsetsPadding
     }
 
     /// <inheritdoc />
-    public override Thickness? ResolvedPadding => _resolvedPadding;
+    public override EdgeInsets? ResolvedPadding => _resolvedPadding;
 
     private void Resolve()
     {

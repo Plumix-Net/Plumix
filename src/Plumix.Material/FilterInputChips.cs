@@ -19,7 +19,7 @@ public sealed class FilterChip : StatelessWidget
         bool selected = false,
         Widget? avatar = null,
         TextStyle? labelStyle = null,
-        Thickness? labelPadding = null,
+        EdgeInsetsGeometry? labelPadding = null,
         Widget? deleteIcon = null,
         Action? onDeleted = null,
         Color? deleteIconColor = null,
@@ -35,7 +35,7 @@ public sealed class FilterChip : StatelessWidget
         bool autofocus = false,
         IWidgetStateProperty<Color?>? color = null,
         Color? backgroundColor = null,
-        Thickness? padding = null,
+        EdgeInsetsGeometry? padding = null,
         VisualDensity? visualDensity = null,
         MaterialTapTargetSize? materialTapTargetSize = null,
         double? elevation = null,
@@ -66,7 +66,7 @@ public sealed class FilterChip : StatelessWidget
         bool selected,
         Widget? avatar,
         TextStyle? labelStyle,
-        Thickness? labelPadding,
+        EdgeInsetsGeometry? labelPadding,
         Widget? deleteIcon,
         Action? onDeleted,
         Color? deleteIconColor,
@@ -82,7 +82,7 @@ public sealed class FilterChip : StatelessWidget
         bool autofocus,
         IWidgetStateProperty<Color?>? color,
         Color? backgroundColor,
-        Thickness? padding,
+        EdgeInsetsGeometry? padding,
         VisualDensity? visualDensity,
         MaterialTapTargetSize? materialTapTargetSize,
         double? elevation,
@@ -148,7 +148,7 @@ public sealed class FilterChip : StatelessWidget
         bool selected = false,
         Widget? avatar = null,
         TextStyle? labelStyle = null,
-        Thickness? labelPadding = null,
+        EdgeInsetsGeometry? labelPadding = null,
         Widget? deleteIcon = null,
         Action? onDeleted = null,
         Color? deleteIconColor = null,
@@ -164,7 +164,7 @@ public sealed class FilterChip : StatelessWidget
         bool autofocus = false,
         IWidgetStateProperty<Color?>? color = null,
         Color? backgroundColor = null,
-        Thickness? padding = null,
+        EdgeInsetsGeometry? padding = null,
         VisualDensity? visualDensity = null,
         MaterialTapTargetSize? materialTapTargetSize = null,
         double? elevation = null,
@@ -193,7 +193,7 @@ public sealed class FilterChip : StatelessWidget
     public Widget? Avatar { get; }
     public Widget Label { get; }
     public TextStyle? LabelStyle { get; }
-    public Thickness? LabelPadding { get; }
+    public EdgeInsetsGeometry? LabelPadding { get; }
     public bool Selected { get; }
     public Action<bool>? OnSelected { get; }
     public Widget? DeleteIcon { get; }
@@ -211,7 +211,7 @@ public sealed class FilterChip : StatelessWidget
     public bool Autofocus { get; }
     public IWidgetStateProperty<Color?>? Color { get; }
     public Color? BackgroundColor { get; }
-    public Thickness? Padding { get; }
+    public EdgeInsetsGeometry? Padding { get; }
     public VisualDensity? VisualDensity { get; }
     public MaterialTapTargetSize? MaterialTapTargetSize { get; }
     public double? Elevation { get; }
@@ -292,7 +292,7 @@ public sealed class InputChip : StatelessWidget
         Widget label,
         Widget? avatar = null,
         TextStyle? labelStyle = null,
-        Thickness? labelPadding = null,
+        EdgeInsetsGeometry? labelPadding = null,
         bool selected = false,
         bool isEnabled = true,
         Action<bool>? onSelected = null,
@@ -312,7 +312,7 @@ public sealed class InputChip : StatelessWidget
         bool autofocus = false,
         IWidgetStateProperty<Color?>? color = null,
         Color? backgroundColor = null,
-        Thickness? padding = null,
+        EdgeInsetsGeometry? padding = null,
         VisualDensity? visualDensity = null,
         MaterialTapTargetSize? materialTapTargetSize = null,
         double? elevation = null,
@@ -380,7 +380,7 @@ public sealed class InputChip : StatelessWidget
     public Widget? Avatar { get; }
     public Widget Label { get; }
     public TextStyle? LabelStyle { get; }
-    public Thickness? LabelPadding { get; }
+    public EdgeInsetsGeometry? LabelPadding { get; }
     public bool Selected { get; }
     public bool IsEnabled { get; }
     public Action<bool>? OnSelected { get; }
@@ -400,7 +400,7 @@ public sealed class InputChip : StatelessWidget
     public bool Autofocus { get; }
     public IWidgetStateProperty<Color?>? Color { get; }
     public Color? BackgroundColor { get; }
-    public Thickness? Padding { get; }
+    public EdgeInsetsGeometry? Padding { get; }
     public VisualDensity? VisualDensity { get; }
     public MaterialTapTargetSize? MaterialTapTargetSize { get; }
     public double? Elevation { get; }

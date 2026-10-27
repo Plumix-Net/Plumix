@@ -504,7 +504,7 @@ public sealed class SnackBar : StatefulWidget
                                         + (widget.Action is not null ? actionHorizontalMargin : 0)
                                         + (showCloseIcon ? iconButton!.IconSize ?? 0 + iconHorizontalMargin : 0);
 
-            Thickness margin = widget.Margin?.Resolve(TextDirection.Ltr)
+            EdgeInsets margin = widget.Margin?.Resolve(TextDirection.Ltr)
                                ?? snackBarTheme.InsetPadding
                                ?? defaults.InsetPadding!.Value;
             double snackBarWidth = widget.Width ?? MediaQuery.WidthOf(context) - (margin.Left + margin.Right);
@@ -519,24 +519,25 @@ public sealed class SnackBar : StatefulWidget
             if (widget.Action is not null)
             {
                 maybeActionAndIcon.Add(new Padding(
-                    new Thickness(actionHorizontalMargin, 0),
+                    EdgeInsets.Symmetric(horizontal: actionHorizontalMargin),
                     new TextButtonTheme(
                         data: new TextButtonThemeData(style: TextButton.StyleFrom(
                             foregroundColor: buttonColor,
-                            padding: new Thickness(horizontalPadding, 0))),
+                            padding: EdgeInsets.Symmetric(horizontal: horizontalPadding))),
                         child: widget.Action)));
             }
 
             if (showCloseIcon)
             {
-                maybeActionAndIcon.Add(new Padding(new Thickness(iconHorizontalMargin, 0), iconButton!));
+                maybeActionAndIcon.Add(
+                    new Padding(EdgeInsets.Symmetric(horizontal: iconHorizontalMargin), iconButton!));
             }
 
             var rowChildren = new List<Widget>
             {
                 new Expanded(new Padding(
                     widget.Padding is null
-                        ? new Thickness(0, SnackBarConstants.SingleLineVerticalPadding)
+                        ? EdgeInsets.Symmetric(vertical: SnackBarConstants.SingleLineVerticalPadding)
                         : default,
                     new DefaultTextStyle(contentTextStyle!, widget.Content))),
             };
@@ -554,7 +555,7 @@ public sealed class SnackBar : StatefulWidget
             if (willOverflowAction)
             {
                 wrapChildren.Add(new Padding(
-                    new Thickness(0, 0, 0, SnackBarConstants.SingleLineVerticalPadding),
+                    EdgeInsets.FromLTRB(0, 0, 0, SnackBarConstants.SingleLineVerticalPadding),
                     new Row(mainAxisAlignment: MainAxisAlignment.End, children: maybeActionAndIcon)));
             }
 
@@ -589,7 +590,7 @@ public sealed class SnackBar : StatefulWidget
                 // If width is provided, do not include horizontal margins.
                 snackBar = width is not null
                     ? new Padding(
-                        new Thickness(0, margin.Top, 0, margin.Bottom),
+                        EdgeInsets.FromLTRB(0, margin.Top, 0, margin.Bottom),
                         new SizedBox(width: width, child: snackBar))
                     : new Padding(margin, snackBar);
                 snackBar = new SafeArea(top: false, bottom: false, child: snackBar);
@@ -716,7 +717,7 @@ internal sealed class SnackBarDefaultsM2 : SnackBarThemeData
     public override ShapeBorder? Shape => new RoundedRectangleBorder(
         borderRadius: Plumix.Rendering.BorderRadius.Circular(4.0));
 
-    public override Thickness? InsetPadding => new Thickness(15.0, 5.0, 15.0, 10.0);
+    public override EdgeInsets? InsetPadding => EdgeInsets.FromLTRB(15.0, 5.0, 15.0, 10.0);
 
     public override bool? ShowCloseIcon => false;
 
@@ -753,7 +754,7 @@ internal sealed class SnackBarDefaultsM3 : SnackBarThemeData
 
     public override SnackBarBehavior? Behavior => SnackBarBehavior.Fixed;
 
-    public override Thickness? InsetPadding => new Thickness(15.0, 5.0, 15.0, 10.0);
+    public override EdgeInsets? InsetPadding => EdgeInsets.FromLTRB(15.0, 5.0, 15.0, 10.0);
 
     public override bool? ShowCloseIcon => false;
 

@@ -99,7 +99,7 @@ public sealed class SpellCheckSuggestionsToolbar : StatelessWidget
                     children: children)));
 
         return new Padding(
-            new Thickness(
+            EdgeInsets.FromLTRB(
                 screenPadding,
                 paddingAbove,
                 screenPadding,
@@ -114,7 +114,7 @@ public sealed class SpellCheckSuggestionsToolbar : StatelessWidget
     private static Widget BuildToolbarButton(BuildContext context, ContextMenuButtonItem item)
     {
         Widget button = new TextSelectionToolbarTextButton(
-            padding: new Thickness(20.0, 0.0, 0.0, 0.0),
+            padding: EdgeInsets.FromLTRB(20.0, 0.0, 0.0, 0.0),
             onPressed: item.OnPressed,
             alignment: Alignment.CenterLeft,
             child: new Text(

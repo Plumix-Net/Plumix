@@ -139,7 +139,7 @@ public sealed class StatefulBuilderLookupBoundaryTests
                     child: new NamedStatefulWidget(
                         name: "inner",
                         child: new Padding(
-                            insets: new Avalonia.Thickness(4),
+                            insets: EdgeInsets.All(4),
                             child: new AncestorLookupProbe(tracker))))));
         using var harness = new WidgetHarness(outer);
 

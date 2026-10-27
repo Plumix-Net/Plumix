@@ -129,7 +129,7 @@ internal static class AppBarDefaults
             ToolbarHeight: MaterialConstants.ToolbarHeight,
             ToolbarTextStyle: theme.TextTheme.BodyMedium,
             TitleTextStyle: theme.TextTheme.TitleLarge,
-            ActionsPadding: new Thickness(),
+            ActionsPadding: EdgeInsets.Zero,
             Elevation: 4.0,
             ShadowColor: Colors.Black);
     }
@@ -147,7 +147,7 @@ internal static class AppBarDefaults
             ToolbarHeight: 64.0,
             ToolbarTextStyle: theme.TextTheme.BodyMedium,
             TitleTextStyle: theme.TextTheme.TitleLarge,
-            ActionsPadding: new Thickness(),
+            ActionsPadding: EdgeInsets.Zero,
             Elevation: 0.0,
             ScrolledUnderElevation: 3.0,
             ShadowColor: Colors.Transparent,
@@ -196,7 +196,7 @@ public sealed class AppBar : StatefulWidget, IPreferredSizeWidget
         bool forceMaterialTransparency = false,
         bool useDefaultSemanticsOrder = true,
         Clip? clipBehavior = null,
-        Thickness? actionsPadding = null,
+        EdgeInsetsGeometry? actionsPadding = null,
         bool animateColor = false,
         Key? key = null) : base(key)
     {
@@ -303,7 +303,7 @@ public sealed class AppBar : StatefulWidget, IPreferredSizeWidget
 
     public Clip? ClipBehavior { get; }
 
-    public Thickness? ActionsPadding { get; }
+    public EdgeInsetsGeometry? ActionsPadding { get; }
 
     public bool AnimateColor { get; }
 
@@ -473,7 +473,7 @@ public sealed class AppBar : StatefulWidget, IPreferredSizeWidget
                                              ?? defaults.ActionsIconTheme?.CopyWith(color: actionForegroundColor)
                                              ?? overallIconTheme;
 
-            Thickness actionsPadding = widget.ActionsPadding
+            EdgeInsetsGeometry actionsPadding = widget.ActionsPadding
                                        ?? appBarTheme.ActionsPadding
                                        ?? defaults.ActionsPadding!.Value;
 

@@ -90,16 +90,6 @@ public readonly record struct RRect
         borderRadius.BottomRightRadius.Clamp(minimum: Radius.Zero),
         borderRadius.BottomLeftRadius.Clamp(minimum: Radius.Zero));
 
-    // Dart parity source: flutter/packages/flutter/lib/src/painting/edge_insets.dart (inflateRRect/deflateRRect)
-    public RRect InflateEdges(Thickness insets) => FromLTRBAndCorners(
-        Left - insets.Left, Top - insets.Top, Right + insets.Right, Bottom + insets.Bottom,
-        new Radius(TopLeft.X + insets.Left, TopLeft.Y + insets.Top).Clamp(minimum: Radius.Zero),
-        new Radius(TopRight.X + insets.Right, TopRight.Y + insets.Top).Clamp(minimum: Radius.Zero),
-        new Radius(BottomRight.X + insets.Right, BottomRight.Y + insets.Bottom).Clamp(minimum: Radius.Zero),
-        new Radius(BottomLeft.X + insets.Left, BottomLeft.Y + insets.Bottom).Clamp(minimum: Radius.Zero));
-    public RRect DeflateEdges(Thickness insets) =>
-        InflateEdges(new Thickness(-insets.Left, -insets.Top, -insets.Right, -insets.Bottom));
-
     /// <summary>Whether the point specified by the given offset lies inside the rounded rectangle.</summary>
     /// <remarks>
     /// Dart's <c>RRect.contains</c>: the bounding box is half-open (the right and bottom edges are outside),
@@ -188,6 +178,5 @@ public readonly record struct RRect
 
     internal Rect BottomLeftCorner() =>
         new(Left, Bottom - (BottomLeft.Y * 2.0), BottomLeft.X * 2.0, BottomLeft.Y * 2.0);
-
 
 }

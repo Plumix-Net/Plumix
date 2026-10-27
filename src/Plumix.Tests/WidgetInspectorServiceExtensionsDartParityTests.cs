@@ -836,7 +836,7 @@ public sealed class WidgetInspectorServiceExtensionsDartParityTests : IDisposabl
                     new Flexible(new ColoredBox(
                         color: new Color(0xFF00FF00),
                         child: new SizedBox(
-                            child: new Padding(new Thickness(0), child: new Text("a"))))),
+                            child: new Padding(EdgeInsets.Zero, child: new Text("a"))))),
                 ]))));
         Dictionary<string, object?> result =
             LayoutExplorerNode(SelectAndId(tester.FirstElement(Find.ByType(typeof(Padding)))));
@@ -1023,7 +1023,7 @@ public sealed class WidgetInspectorServiceExtensionsDartParityTests : IDisposabl
                     key: outerContainerKey,
                     color: new Color(0xFFFFFFFF),
                     child: new Padding(
-                        new Thickness(100.0),
+                        EdgeInsets.All(100.0),
                         key: paddingKey,
                         child: new SizedBox(
                             key: sizedBoxKey,

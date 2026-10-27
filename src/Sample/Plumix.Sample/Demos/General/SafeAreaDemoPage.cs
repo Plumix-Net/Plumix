@@ -34,8 +34,8 @@ public sealed class SafeAreaDemoPage : StatelessWidget
     {
         return new MediaQuery(
             data: new MediaQueryData(
-                Padding: new Thickness(24, 18, 32, 0),
-                ViewPadding: new Thickness(24, 18, 32, 28)),
+                Padding: EdgeInsets.FromLTRB(24, 18, 32, 0),
+                ViewPadding: EdgeInsets.FromLTRB(24, 18, 32, 28)),
             child: new Container(
                 height: 170,
                 color: new Color(0xFFFFCDD2),
@@ -55,8 +55,8 @@ public sealed class SafeAreaDemoPage : StatelessWidget
     {
         return new MediaQuery(
             data: new MediaQueryData(
-                Padding: new Thickness(16, 20, 24, 12),
-                ViewPadding: new Thickness(16, 20, 24, 12)),
+                Padding: EdgeInsets.FromLTRB(16, 20, 24, 12),
+                ViewPadding: EdgeInsets.FromLTRB(16, 20, 24, 12)),
             child: new Container(
                 color: new Color(0xFFFFE0E0),
                 child: new CustomScrollView(
@@ -72,7 +72,7 @@ public sealed class SafeAreaDemoPage : StatelessWidget
                                     color: index % 2 == 0
                                         ? new Color(0xFFE3F2FD)
                                         : new Color(0xFFFFFFFF),
-                                    padding: new Thickness(12, 8),
+                                    padding: EdgeInsets.Symmetric(horizontal: 12, vertical: 8),
                                     child: new Text(
                                         $"safe sliver row #{index}",
                                         style: new TextStyle(FontSize: 14, Color: Colors.Black))),

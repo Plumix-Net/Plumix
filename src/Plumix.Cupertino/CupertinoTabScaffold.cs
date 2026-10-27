@@ -140,12 +140,12 @@ internal sealed class CupertinoTabScaffoldState : RestorationState<CupertinoTabS
             currentTabIndex: Controller.Index,
             tabCount: CurrentWidget.TabBar.Items.Count,
             tabBuilder: CurrentWidget.TabBuilder);
-        Thickness contentPadding = default;
+        EdgeInsets contentPadding = default;
 
         if (CurrentWidget.ResizeToAvoidBottomInset)
         {
             newMediaQuery = newMediaQuery.RemoveViewInsets(removeBottom: true);
-            contentPadding = new Thickness(0.0, 0.0, 0.0, existingMediaQuery.ViewInsets.Bottom);
+            contentPadding = EdgeInsets.FromLTRB(0.0, 0.0, 0.0, existingMediaQuery.ViewInsets.Bottom);
         }
 
         if (!CurrentWidget.ResizeToAvoidBottomInset
@@ -156,7 +156,7 @@ internal sealed class CupertinoTabScaffoldState : RestorationState<CupertinoTabS
 
             if (CurrentWidget.TabBar.Opaque(context))
             {
-                contentPadding = new Thickness(0.0, 0.0, 0.0, bottomPadding);
+                contentPadding = EdgeInsets.FromLTRB(0.0, 0.0, 0.0, bottomPadding);
                 newMediaQuery = newMediaQuery.RemovePadding(removeBottom: true);
             }
             else
@@ -260,9 +260,9 @@ internal sealed class CupertinoTabScaffoldState : RestorationState<CupertinoTabS
         CurrentWidget.TabBar.OnTap?.Invoke(newIndex);
     }
 
-    private static Thickness CopyBottom(Thickness source, double bottom)
+    private static EdgeInsets CopyBottom(EdgeInsets source, double bottom)
     {
-        return new Thickness(source.Left, source.Top, source.Right, bottom);
+        return EdgeInsets.FromLTRB(source.Left, source.Top, source.Right, bottom);
     }
 }
 

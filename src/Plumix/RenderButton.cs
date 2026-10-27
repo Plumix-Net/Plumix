@@ -16,7 +16,7 @@ public sealed class RenderButton : RenderBox
     private Color _background;
     private Color _foreground;
     private double _fontSize;
-    private readonly Thickness _padding;
+    private readonly EdgeInsets _padding;
 
     private readonly TextPainter _textPainter = new(textDirection: TextDirection.Ltr);
 
@@ -26,14 +26,14 @@ public sealed class RenderButton : RenderBox
         Color background,
         Color foreground,
         double fontSize,
-        Thickness? padding = null)
+        EdgeInsets? padding = null)
     {
         _label = label;
         _onPressed = onPressed;
         _background = background;
         _foreground = foreground;
         _fontSize = fontSize;
-        _padding = padding ?? new Thickness(14, 10);
+        _padding = padding ?? EdgeInsets.Symmetric(horizontal: 14, vertical: 10);
     }
 
     public string Label

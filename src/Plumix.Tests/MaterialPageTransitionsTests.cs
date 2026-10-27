@@ -117,8 +117,8 @@ public sealed class MaterialPageTransitionsTests : IDisposable
             new MediaQueryData(
                 Size: new Size(width, height),
                 Padding: textDirection == TextDirection.Ltr
-                    ? new Thickness(24.0, 0.0, 0.0, 0.0)
-                    : new Thickness(0.0, 0.0, 24.0, 0.0)),
+                    ? EdgeInsets.FromLTRB(24.0, 0.0, 0.0, 0.0)
+                    : EdgeInsets.FromLTRB(0.0, 0.0, 24.0, 0.0)),
             new Theme(
                 ThemeData.Light with { Platform = TargetPlatform.IOS },
                 new Directionality(

@@ -227,7 +227,7 @@ public sealed class MaterialExpandIconTests : IDisposable
 
         Assert.Contains(
             FindDescendants<RenderPadding>(harness.RenderView),
-            renderPadding => renderPadding.Padding == new Thickness(7.0, 2.0, 3.0, 4.0));
+            renderPadding => renderPadding.Padding == EdgeInsets.FromLTRB(7.0, 2.0, 3.0, 4.0));
     }
 
     [Fact]

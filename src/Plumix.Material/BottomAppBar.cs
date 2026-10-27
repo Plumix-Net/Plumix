@@ -18,7 +18,7 @@ public sealed class BottomAppBar : StatefulWidget
         NotchedShape? shape = null,
         Clip clipBehavior = Clip.None,
         double notchMargin = 4.0,
-        Thickness? padding = null,
+        EdgeInsetsGeometry? padding = null,
         Color? surfaceTintColor = null,
         Color? shadowColor = null,
         double? height = null,
@@ -52,7 +52,7 @@ public sealed class BottomAppBar : StatefulWidget
     public NotchedShape? Shape { get; }
     public Clip ClipBehavior { get; }
     public double NotchMargin { get; }
-    public Thickness? Padding { get; }
+    public EdgeInsetsGeometry? Padding { get; }
     public Color? SurfaceTintColor { get; }
     public Color? ShadowColor { get; }
     public double? Height { get; }
@@ -108,7 +108,7 @@ internal sealed class BottomAppBarState : State<BottomAppBar>
                         : null);
         var padding = widget.Padding
                       ?? barTheme.Padding
-                      ?? (useMaterial3 ? new Thickness(16, 12) : default);
+                      ?? (useMaterial3 ? EdgeInsets.Symmetric(horizontal: 16, vertical: 12) : default);
 
         color = useMaterial3
             ? ElevationOverlay.ApplySurfaceTint(color, surfaceTint, elevation)

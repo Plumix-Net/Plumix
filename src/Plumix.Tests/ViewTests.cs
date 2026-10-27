@@ -723,7 +723,9 @@ public sealed class ViewTests
     public void MediaQueryFromView_DerivesTheViewDataFromTheView()
     {
         var view = new FlutterView(new Size(800, 600), devicePixelRatio: 2.0, viewId: 5045);
-        view.UpdateMetrics(padding: new Thickness(0, 40, 0, 0), viewInsets: new Thickness(0, 0, 0, 100));
+        view.UpdateMetrics(
+            padding: FakeViewPadding.Create(top: 40),
+            viewInsets: FakeViewPadding.Create(bottom: 100));
         MediaQueryData? data = null;
         using var tree = new ViewTree(new View(view, new Builder(context =>
         {
@@ -733,8 +735,8 @@ public sealed class ViewTests
 
         Assert.Equal(new Size(400, 300), data!.Size);
         Assert.Equal(2.0, data.DevicePixelRatio);
-        Assert.Equal(new Thickness(0, 20, 0, 0), data.Padding);
-        Assert.Equal(new Thickness(0, 0, 0, 50), data.ViewInsets);
+        Assert.Equal(EdgeInsets.FromLTRB(0, 20, 0, 0), data.Padding);
+        Assert.Equal(EdgeInsets.FromLTRB(0, 0, 0, 50), data.ViewInsets);
         Assert.Equal(5045, data.ViewId);
     }
 

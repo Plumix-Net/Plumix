@@ -66,7 +66,7 @@ internal sealed class CupertinoRouteDemoPageState : State
             builder: routeContext => new Center(
                 child: new Container(
                     color: Colors.White,
-                    padding: new Thickness(20.0),
+                    padding: EdgeInsets.All(20.0),
                     child: new Column(
                         mainAxisSize: MainAxisSize.Min,
                         spacing: 12.0,
@@ -111,7 +111,7 @@ internal sealed class CupertinoRouteDemoPageState : State
         return new Center(
             child: new Container(
                 color: Colors.White,
-                padding: new Thickness(20.0),
+                padding: EdgeInsets.All(20.0),
                 child: new Column(
                     mainAxisSize: MainAxisSize.Min,
                     spacing: 12.0,
@@ -128,7 +128,7 @@ internal sealed class CupertinoRouteDemoPageState : State
             context,
             popupContext => new Container(
                 color: Colors.White,
-                padding: new Thickness(20.0),
+                padding: EdgeInsets.All(20.0),
                 child: new Column(
                     mainAxisSize: MainAxisSize.Min,
                     spacing: 12.0,
@@ -157,7 +157,7 @@ internal sealed class CupertinoRouteDemoPageState : State
                     child: new ListView(
                         controller: controller,
                         itemExtent: 48.0,
-                        padding: new Thickness(16.0, 20.0),
+                        padding: EdgeInsets.Symmetric(horizontal: 16.0, vertical: 20.0),
                         children:
                         [
                             new Text(
@@ -189,6 +189,6 @@ internal sealed class CupertinoRouteDemoPageState : State
             background: background,
             foreground: Colors.Black,
             fontSize: 12.0,
-            padding: new Thickness(10.0, 8.0));
+            padding: EdgeInsets.Symmetric(horizontal: 10.0, vertical: 8.0));
     }
 }

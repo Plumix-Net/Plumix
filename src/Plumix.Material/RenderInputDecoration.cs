@@ -628,7 +628,7 @@ internal sealed class RenderDecoration : RenderBox, ISlottedRenderObjectContaine
 
         double counterPadding = _counter is not null ? SubtextCounterPadding : 0.0;
         BoxConstraints helperErrorConstraints = constraints.Deflate(
-            new Thickness(counterSize.Width + counterPadding, 0, 0, 0));
+            EdgeInsets.FromLTRB(counterSize.Width + counterPadding, 0, 0, 0));
         double helperErrorHeight = _helperError is null
             ? 0.0
             : layoutChild(_helperError, helperErrorConstraints).Height;
@@ -660,8 +660,8 @@ internal sealed class RenderDecoration : RenderBox, ISlottedRenderObjectContaine
         BoxConstraints boxConstraints = constraints.Loosen();
 
         double iconWidth = _icon is null ? 0.0 : layoutChild(_icon, boxConstraints).Width;
-        BoxConstraints containerConstraints = boxConstraints.Deflate(new Thickness(iconWidth, 0, 0, 0));
-        BoxConstraints contentConstraints = containerConstraints.Deflate(new Thickness(
+        BoxConstraints containerConstraints = boxConstraints.Deflate(EdgeInsets.FromLTRB(iconWidth, 0, 0, 0));
+        BoxConstraints contentConstraints = containerConstraints.Deflate(EdgeInsets.FromLTRB(
             PaddingStart + _decoration.InputGap,
             0,
             PaddingEnd + _decoration.InputGap,
@@ -710,7 +710,7 @@ internal sealed class RenderDecoration : RenderBox, ISlottedRenderObjectContaine
 
         double bottomHeight = subtextSize?.BottomHeight ?? 0.0;
         BoxConstraints inputConstraints = boxConstraints
-            .Deflate(new Thickness(0, PaddingVertical + topHeight + bottomHeight + DensityOffset.Y, 0, 0))
+            .Deflate(EdgeInsets.FromLTRB(0, PaddingVertical + topHeight + bottomHeight + DensityOffset.Y, 0, 0))
             .Tighten(width: inputWidth);
 
         Size inputSize = _input is null ? default : layoutChild(_input, inputConstraints);

@@ -323,7 +323,7 @@ public sealed class CupertinoTextSelectionControlsTests : IDisposable
             mediaQuery: new MediaQueryData(
                 Size: new Size(320.0, 240.0),
                 DevicePixelRatio: 2.0,
-                Padding: new Thickness(5.0, 0.0, 7.0, 0.0))));
+                Padding: EdgeInsets.FromLTRB(5.0, 0.0, 7.0, 0.0))));
 #pragma warning restore CS0618
     }
 
@@ -350,7 +350,7 @@ public sealed class CupertinoTextSelectionControlsTests : IDisposable
             mediaQuery: new MediaQueryData(
                 Size: new Size(320.0, 240.0),
                 DevicePixelRatio: 2.0,
-                Padding: new Thickness(5.0, 0.0, 12.0, 0.0))));
+                Padding: EdgeInsets.FromLTRB(5.0, 0.0, 12.0, 0.0))));
 #pragma warning restore CS0618
     }
 

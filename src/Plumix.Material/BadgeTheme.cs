@@ -14,7 +14,7 @@ public sealed record BadgeThemeData(
     double? SmallSize = null,
     double? LargeSize = null,
     TextStyle? TextStyle = null,
-    Thickness? Padding = null,
+    EdgeInsetsGeometry? Padding = null,
     AlignmentGeometry? Alignment = null,
     Vector? Offset = null)
 {
@@ -24,7 +24,7 @@ public sealed record BadgeThemeData(
         double? smallSize = null,
         double? largeSize = null,
         TextStyle? textStyle = null,
-        Thickness? padding = null,
+        EdgeInsetsGeometry? padding = null,
         AlignmentGeometry? alignment = null,
         Vector? offset = null)
     {
@@ -52,7 +52,7 @@ public sealed record BadgeThemeData(
             SmallSize: LerpDouble(a?.SmallSize, b?.SmallSize, t),
             LargeSize: LerpDouble(a?.LargeSize, b?.LargeSize, t),
             TextStyle: LerpTextStyle(a?.TextStyle, b?.TextStyle, t),
-            Padding: LerpThickness(a?.Padding, b?.Padding, t),
+            Padding: EdgeInsetsGeometry.Lerp(a?.Padding, b?.Padding, t),
             Alignment: AlignmentGeometry.Lerp(a?.Alignment, b?.Alignment, t),
             Offset: LerpVector(a?.Offset, b?.Offset, t));
     }
@@ -82,21 +82,6 @@ public sealed record BadgeThemeData(
         return TextStyle.Lerp(a ?? new TextStyle(), b ?? new TextStyle(), t);
     }
 
-    private static Thickness? LerpThickness(Thickness? a, Thickness? b, double t)
-    {
-        if (!a.HasValue && !b.HasValue)
-        {
-            return null;
-        }
-
-        Thickness from = a ?? default;
-        Thickness to = b ?? default;
-        return new Thickness(
-            from.Left + ((to.Left - from.Left) * t),
-            from.Top + ((to.Top - from.Top) * t),
-            from.Right + ((to.Right - from.Right) * t),
-            from.Bottom + ((to.Bottom - from.Bottom) * t));
-    }
 
     private static Vector? LerpVector(Vector? a, Vector? b, double t)
     {

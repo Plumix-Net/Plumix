@@ -60,7 +60,7 @@ public sealed class TextSelectionToolbar : StatelessWidget
         var localAdjustment = new Vector(ToolbarScreenPadding, paddingAbove);
 
         return new Padding(
-            new Thickness(ToolbarScreenPadding, paddingAbove, ToolbarScreenPadding, ToolbarScreenPadding),
+            EdgeInsets.FromLTRB(ToolbarScreenPadding, paddingAbove, ToolbarScreenPadding, ToolbarScreenPadding),
             new CustomSingleChildLayout(
                 new TextSelectionToolbarLayoutDelegate(
                     anchorAbove: anchorAbovePadded - localAdjustment,
@@ -102,7 +102,7 @@ public sealed class TextSelectionToolbarTextButton : StatelessWidget
 
     public TextSelectionToolbarTextButton(
         Widget child,
-        Thickness padding,
+        EdgeInsetsGeometry padding,
         Action? onPressed = null,
         Alignment? alignment = null,
         Key? key = null) : base(key)
@@ -117,11 +117,15 @@ public sealed class TextSelectionToolbarTextButton : StatelessWidget
 
     public Action? OnPressed { get; }
 
-    public Thickness Padding { get; }
+    public EdgeInsetsGeometry Padding { get; }
 
     public Alignment? Alignment { get; }
 
-    public static Thickness GetPadding(int index, int total, TextDirection textDirection = TextDirection.Ltr)
+    /// <summary>
+    /// The directional padding for the button at <paramref name="index"/> of <paramref name="total"/>:
+    /// the first and last buttons get the wider end padding on their outer side.
+    /// </summary>
+    public static EdgeInsetsGeometry GetPadding(int index, int total)
     {
         if (total <= 0)
         {
@@ -135,15 +139,13 @@ public sealed class TextSelectionToolbarTextButton : StatelessWidget
 
         double start = index == 0 ? EndPadding : MiddlePadding;
         double end = index == total - 1 ? EndPadding : MiddlePadding;
-        return textDirection == TextDirection.Rtl
-            ? new Thickness(end, 0.0, start, 0.0)
-            : new Thickness(start, 0.0, end, 0.0);
+        return EdgeInsetsGeometry.DirectionalOnly(start: start, end: end);
     }
 
     public TextSelectionToolbarTextButton CopyWith(
         Widget? child = null,
         Action? onPressed = null,
-        Thickness? padding = null,
+        EdgeInsetsGeometry? padding = null,
         Alignment? alignment = null)
     {
         return new TextSelectionToolbarTextButton(

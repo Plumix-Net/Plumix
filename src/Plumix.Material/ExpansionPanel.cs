@@ -89,13 +89,13 @@ public sealed class ExpansionPanelRadio : ExpansionPanel
 public sealed class ExpansionPanelList : StatefulWidget
 {
     private static readonly TimeSpan DefaultAnimationDuration = TimeSpan.FromMilliseconds(200);
-    private static readonly Thickness DefaultExpandedHeaderPadding = new(0, 16);
+    private static readonly EdgeInsets DefaultExpandedHeaderPadding = EdgeInsets.Symmetric(vertical: 16);
 
     public ExpansionPanelList(
         IReadOnlyList<ExpansionPanel>? children = null,
         ExpansionPanelCallback? expansionCallback = null,
         TimeSpan? animationDuration = null,
-        Thickness? expandedHeaderPadding = null,
+        EdgeInsets? expandedHeaderPadding = null,
         Color? dividerColor = null,
         double elevation = 2,
         Color? expandIconColor = null,
@@ -119,7 +119,7 @@ public sealed class ExpansionPanelList : StatefulWidget
         IReadOnlyList<ExpansionPanel>? children,
         ExpansionPanelCallback? expansionCallback,
         TimeSpan? animationDuration,
-        Thickness? expandedHeaderPadding,
+        EdgeInsets? expandedHeaderPadding,
         Color? dividerColor,
         double elevation,
         Color? expandIconColor,
@@ -165,7 +165,7 @@ public sealed class ExpansionPanelList : StatefulWidget
 
     public TimeSpan AnimationDuration { get; }
 
-    public Thickness ExpandedHeaderPadding { get; }
+    public EdgeInsets ExpandedHeaderPadding { get; }
 
     public Color? DividerColor { get; }
 
@@ -184,7 +184,7 @@ public sealed class ExpansionPanelList : StatefulWidget
         ExpansionPanelCallback? expansionCallback = null,
         TimeSpan? animationDuration = null,
         object? initialOpenPanelValue = null,
-        Thickness? expandedHeaderPadding = null,
+        EdgeInsets? expandedHeaderPadding = null,
         Color? dividerColor = null,
         double elevation = 2,
         Color? expandIconColor = null,
@@ -286,7 +286,7 @@ public sealed class ExpansionPanelList : StatefulWidget
                         child: new ExpandIcon(
                             color: CurrentWidget.ExpandIconColor,
                             isExpanded: expanded,
-                            padding: new Thickness(12.0),
+                            padding: EdgeInsets.All(12.0),
                             splashColor: panel.SplashColor,
                             highlightColor: panel.HighlightColor,
                             onPressed: isExpanded => HandlePressed(capturedIndex, isExpanded))));
@@ -309,7 +309,7 @@ public sealed class ExpansionPanelList : StatefulWidget
                             new AnimatedContainer(
                                 duration: CurrentWidget.AnimationDuration,
                                 curve: Curves.FastOutSlowIn,
-                                margin: expanded ? CurrentWidget.ExpandedHeaderPadding : default(Thickness),
+                                margin: expanded ? CurrentWidget.ExpandedHeaderPadding : default(EdgeInsets),
                                 child: new ConstrainedBox(
                                     constraints: new BoxConstraints(MinHeight: 48.0),
                                     child: headerWidget))),

@@ -267,7 +267,7 @@ internal sealed class AutocompleteOptionsListState<T> : State<AutocompleteOption
                             color: highlightedIndex == index
                                 ? Theme.Of(builderContext).FocusColor
                                 : null,
-                            padding: new Thickness(16),
+                            padding: EdgeInsets.All(16),
                             child: new Text(Current.DisplayStringForOption(option))))));
             });
     }

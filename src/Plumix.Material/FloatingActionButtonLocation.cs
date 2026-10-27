@@ -26,8 +26,8 @@ public sealed record ScaffoldPrelayoutGeometry(
     Size FloatingActionButtonSize,
     Size BottomSheetSize,
     Size SnackBarSize,
-    Thickness MinInsets,
-    Thickness MinViewPadding,
+    EdgeInsets MinInsets,
+    EdgeInsets MinViewPadding,
     TextDirection TextDirection,
     Size MaterialBannerSize);
 

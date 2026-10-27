@@ -152,7 +152,7 @@ public class AboutDialog : StatelessWidget
         }
 
         row.Add(new Expanded(new Padding(
-            new Thickness(24.0, 0.0),
+            EdgeInsets.Symmetric(horizontal: 24.0),
             new ListBody(
             [
                 new Text(name, style: themeData.TextTheme.HeadlineSmall),
@@ -379,7 +379,7 @@ internal sealed class AboutProgram : StatelessWidget
         if (Version != string.Empty)
         {
             children.Add(new Padding(
-                new Thickness(0.0, 0.0, 0.0, AboutDialog.TextVerticalSeparation),
+                EdgeInsets.FromLTRB(0.0, 0.0, 0.0, AboutDialog.TextVerticalSeparation),
                 new Text(Version, style: textTheme.BodyMedium, textAlign: TextAlign.Center)));
         }
 
@@ -392,7 +392,7 @@ internal sealed class AboutProgram : StatelessWidget
         children.Add(new Text("Powered by Flutter", style: textTheme.BodyMedium, textAlign: TextAlign.Center));
 
         return new Padding(
-            new Thickness(AboutDialogs.GutterSize(context), 24.0),
+            EdgeInsets.Symmetric(horizontal: AboutDialogs.GutterSize(context), vertical: 24.0),
             new Column(children: children));
     }
 }
@@ -497,7 +497,7 @@ internal sealed class PackagesViewState : State<PackagesView>
         bool drawSelection)
     {
         var safeAreaPadding = MediaQuery.PaddingOf(context);
-        var padding = new Thickness(safeAreaPadding.Left, 0.0, safeAreaPadding.Right, safeAreaPadding.Bottom);
+        var padding = EdgeInsets.FromLTRB(safeAreaPadding.Left, 0.0, safeAreaPadding.Right, safeAreaPadding.Bottom);
         return ListView.Builder(
             itemCount: data.Packages.Count + 1,
             itemBuilder: (itemContext, index) =>
@@ -726,13 +726,13 @@ internal sealed class PackageLicensePageState : State<PackageLicensePage>
 
             SetState(() =>
             {
-                _licenses.Add(new Padding(new Thickness(18.0), new Divider()));
+                _licenses.Add(new Padding(EdgeInsets.All(18.0), new Divider()));
                 foreach (var paragraph in paragraphs)
                 {
                     if (paragraph.Indent == LicenseParagraph.CenteredIndent)
                     {
                         _licenses.Add(new Padding(
-                            new Thickness(0.0, 16.0, 0.0, 0.0),
+                            EdgeInsets.FromLTRB(0.0, 16.0, 0.0, 0.0),
                             new Text(
                                 paragraph.Text,
                                 style: new TextStyle(FontWeight: FontWeight.Bold),
@@ -769,7 +769,7 @@ internal sealed class PackageLicensePageState : State<PackageLicensePage>
         string subtitle = localizations.LicensesPackageDetailText(CurrentWidget.LicenseEntries.Count);
         double pad = AboutDialogs.GutterSize(context);
         var safeAreaPadding = MediaQuery.PaddingOf(context);
-        var padding = new Thickness(
+        var padding = EdgeInsets.FromLTRB(
             pad + safeAreaPadding.Left,
             0.0,
             pad + safeAreaPadding.Right,
@@ -779,7 +779,7 @@ internal sealed class PackageLicensePageState : State<PackageLicensePage>
         if (!_loaded)
         {
             listWidgets.Add(new Padding(
-                new Thickness(0.0, 24.0),
+                EdgeInsets.Symmetric(vertical: 24.0),
                 new Center(child: new CircularProgressIndicator())));
         }
 
@@ -1158,7 +1158,7 @@ internal sealed class MasterDetailScaffoldState : State<MasterDetailScaffold>, I
                                 child: new IconTheme(
                                     Theme.Of(context).PrimaryIconTheme,
                                     new Padding(
-                                        new Thickness(8),
+                                        EdgeInsets.All(8),
                                         new Align(
                                             alignment: AlignmentDirectional.CenterEnd,
                                             child: new OverflowBar(
@@ -1233,7 +1233,7 @@ internal sealed class DetailView : StatelessWidget
                     color: Theme.Of(sheetContext).CardColor,
                     elevation: AboutDialogs.CardElevation,
                     clipBehavior: Clip.AntiAlias,
-                    margin: new Thickness(AboutDialogs.CardElevation, 0.0, AboutDialogs.CardElevation, 0.0),
+                    margin: EdgeInsets.FromLTRB(AboutDialogs.CardElevation, 0.0, AboutDialogs.CardElevation, 0.0),
                     shape: new RoundedRectangleBorder(
                         borderRadius: BorderRadius.Vertical(top: new Radius(3.0, 3.0))),
                     child: Builder(sheetContext, Arguments, controller))));

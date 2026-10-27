@@ -149,7 +149,7 @@ public sealed class SingleChildScrollViewTests
         Assert.Equal(20, viewport.OffsetPixels);
         Assert.Equal(540, viewport.Child!.Size.Width);
         var padding = Assert.IsType<RenderPadding>(viewport.Child);
-        Assert.Equal(new Thickness(30, 0, 10, 0), padding.Padding.Resolve(TextDirection.Rtl));
+        Assert.Equal(EdgeInsets.FromLTRB(30, 0, 10, 0), padding.Padding.Resolve(TextDirection.Rtl));
         harness.Update(Build(second, Clip.AntiAlias, true), new Size(100, 100));
         Assert.Same(viewport, FindViewport(harness.RenderView));
         Assert.Equal(AxisDirection.Right, viewport.AxisDirection);

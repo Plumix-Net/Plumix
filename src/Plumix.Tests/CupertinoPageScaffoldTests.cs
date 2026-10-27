@@ -90,12 +90,12 @@ public sealed class CupertinoPageScaffoldTests : IDisposable
                     childMediaQuery = MediaQuery.Of(context);
                     childTextScale = MediaQuery.TextScaleFactorOf(context);
                 })),
-            padding: new Thickness(0.0, 20.0, 0.0, 0.0),
-            viewInsets: new Thickness(0.0, 0.0, 0.0, 100.0),
+            padding: EdgeInsets.FromLTRB(0.0, 20.0, 0.0, 0.0),
+            viewInsets: EdgeInsets.FromLTRB(0.0, 0.0, 0.0, 100.0),
             textScaleFactor: 3.0));
 
         var contentPadding = Assert.Single(harness.FindWidgets<Padding>());
-        Assert.Equal(new Thickness(0.0, 64.0, 0.0, 100.0), contentPadding.Insets);
+        Assert.Equal(EdgeInsets.FromLTRB(0.0, 64.0, 0.0, 100.0), contentPadding.Insets);
         Assert.NotNull(childMediaQuery);
         Assert.Equal(0.0, childMediaQuery.Padding.Top);
         Assert.Equal(0.0, childMediaQuery.ViewInsets.Bottom);
@@ -113,11 +113,11 @@ public sealed class CupertinoPageScaffoldTests : IDisposable
             new CupertinoPageScaffold(
                 navigationBar: navigationBar,
                 child: new CaptureBuildContextWidget(context => childMediaQuery = MediaQuery.Of(context))),
-            padding: new Thickness(0.0, 20.0, 0.0, 0.0),
-            viewInsets: new Thickness(0.0, 0.0, 0.0, 100.0)));
+            padding: EdgeInsets.FromLTRB(0.0, 20.0, 0.0, 0.0),
+            viewInsets: EdgeInsets.FromLTRB(0.0, 0.0, 0.0, 100.0)));
 
         var contentPadding = Assert.Single(harness.FindWidgets<Padding>());
-        Assert.Equal(new Thickness(0.0, 0.0, 0.0, 100.0), contentPadding.Insets);
+        Assert.Equal(EdgeInsets.FromLTRB(0.0, 0.0, 0.0, 100.0), contentPadding.Insets);
         Assert.NotNull(childMediaQuery);
         Assert.Equal(64.0, childMediaQuery.Padding.Top);
         Assert.Equal(0.0, childMediaQuery.ViewInsets.Bottom);
@@ -130,7 +130,7 @@ public sealed class CupertinoPageScaffoldTests : IDisposable
         using (var resized = new WidgetRenderHarness(BuildRoot(
                    new CupertinoPageScaffold(
                        child: new CaptureBuildContextWidget(context => resizedMediaQuery = MediaQuery.Of(context))),
-                   viewInsets: new Thickness(0.0, 0.0, 0.0, 80.0))))
+                   viewInsets: EdgeInsets.FromLTRB(0.0, 0.0, 0.0, 80.0))))
         {
             var contentPadding = Assert.Single(resized.FindWidgets<Padding>());
             Assert.Equal(80.0, contentPadding.Insets.Bottom);
@@ -142,7 +142,7 @@ public sealed class CupertinoPageScaffoldTests : IDisposable
             new CupertinoPageScaffold(
                 resizeToAvoidBottomInset: false,
                 child: new CaptureBuildContextWidget(context => unresizedMediaQuery = MediaQuery.Of(context))),
-            viewInsets: new Thickness(0.0, 0.0, 0.0, 80.0)));
+            viewInsets: EdgeInsets.FromLTRB(0.0, 0.0, 0.0, 80.0)));
 
         Assert.Empty(unresized.FindWidgets<Padding>());
         Assert.Equal(80.0, unresizedMediaQuery!.ViewInsets.Bottom);
@@ -159,7 +159,7 @@ public sealed class CupertinoPageScaffoldTests : IDisposable
                     child: new SingleChildScrollView(
                         primary: true,
                         child: new SizedBox(width: double.PositiveInfinity, height: 2000.0)))),
-            padding: new Thickness(0.0, 25.0, 0.0, 0.0)));
+            padding: EdgeInsets.FromLTRB(0.0, 25.0, 0.0, 0.0)));
 
         harness.Pump(new Size(400.0, 600.0));
         Assert.Equal(1000.0, controller.Offset);
@@ -185,7 +185,7 @@ public sealed class CupertinoPageScaffoldTests : IDisposable
                     BuildScrollableScaffold(backgroundController),
                     BuildScrollableScaffold(foregroundController),
                 ]),
-            padding: new Thickness(0.0, 25.0, 0.0, 0.0)));
+            padding: EdgeInsets.FromLTRB(0.0, 25.0, 0.0, 0.0)));
 
         harness.Pump(new Size(400.0, 600.0));
         WidgetsBinding.Instance.HandleStatusBarTap();
@@ -210,8 +210,8 @@ public sealed class CupertinoPageScaffoldTests : IDisposable
 
     private static Widget BuildRoot(
         Widget child,
-        Thickness padding = default,
-        Thickness viewInsets = default,
+        EdgeInsets padding = default,
+        EdgeInsets viewInsets = default,
         double textScaleFactor = 1.0,
         Brightness platformBrightness = Brightness.Light)
     {

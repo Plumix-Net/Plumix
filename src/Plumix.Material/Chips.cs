@@ -40,7 +40,7 @@ public sealed class ActionChip : StatelessWidget
         Action? onPressed,
         Widget? avatar = null,
         TextStyle? labelStyle = null,
-        Thickness? labelPadding = null,
+        EdgeInsetsGeometry? labelPadding = null,
         double? pressElevation = null,
         string? tooltip = null,
         WidgetStateProperty<BorderSide?>? side = null,
@@ -51,7 +51,7 @@ public sealed class ActionChip : StatelessWidget
         IWidgetStateProperty<Color?>? color = null,
         Color? backgroundColor = null,
         Color? disabledColor = null,
-        Thickness? padding = null,
+        EdgeInsetsGeometry? padding = null,
         VisualDensity? visualDensity = null,
         MaterialTapTargetSize? materialTapTargetSize = null,
         double? elevation = null,
@@ -74,7 +74,7 @@ public sealed class ActionChip : StatelessWidget
         Action? onPressed,
         Widget? avatar,
         TextStyle? labelStyle,
-        Thickness? labelPadding,
+        EdgeInsetsGeometry? labelPadding,
         double? pressElevation,
         string? tooltip,
         WidgetStateProperty<BorderSide?>? side,
@@ -85,7 +85,7 @@ public sealed class ActionChip : StatelessWidget
         IWidgetStateProperty<Color?>? color,
         Color? backgroundColor,
         Color? disabledColor,
-        Thickness? padding,
+        EdgeInsetsGeometry? padding,
         VisualDensity? visualDensity,
         MaterialTapTargetSize? materialTapTargetSize,
         double? elevation,
@@ -133,7 +133,7 @@ public sealed class ActionChip : StatelessWidget
         Action? onPressed,
         Widget? avatar = null,
         TextStyle? labelStyle = null,
-        Thickness? labelPadding = null,
+        EdgeInsetsGeometry? labelPadding = null,
         double? pressElevation = null,
         string? tooltip = null,
         WidgetStateProperty<BorderSide?>? side = null,
@@ -144,7 +144,7 @@ public sealed class ActionChip : StatelessWidget
         IWidgetStateProperty<Color?>? color = null,
         Color? backgroundColor = null,
         Color? disabledColor = null,
-        Thickness? padding = null,
+        EdgeInsetsGeometry? padding = null,
         VisualDensity? visualDensity = null,
         MaterialTapTargetSize? materialTapTargetSize = null,
         double? elevation = null,
@@ -166,7 +166,7 @@ public sealed class ActionChip : StatelessWidget
     public Widget? Avatar { get; }
     public Widget Label { get; }
     public TextStyle? LabelStyle { get; }
-    public Thickness? LabelPadding { get; }
+    public EdgeInsetsGeometry? LabelPadding { get; }
     public Action? OnPressed { get; }
     public double? PressElevation { get; }
     public string? Tooltip { get; }
@@ -178,7 +178,7 @@ public sealed class ActionChip : StatelessWidget
     public IWidgetStateProperty<Color?>? Color { get; }
     public Color? BackgroundColor { get; }
     public Color? DisabledColor { get; }
-    public Thickness? Padding { get; }
+    public EdgeInsetsGeometry? Padding { get; }
     public VisualDensity? VisualDensity { get; }
     public MaterialTapTargetSize? MaterialTapTargetSize { get; }
     public double? Elevation { get; }
@@ -249,7 +249,7 @@ public sealed class ChoiceChip : StatelessWidget
         Action<bool>? onSelected,
         Widget? avatar = null,
         TextStyle? labelStyle = null,
-        Thickness? labelPadding = null,
+        EdgeInsetsGeometry? labelPadding = null,
         double? pressElevation = null,
         Color? selectedColor = null,
         Color? disabledColor = null,
@@ -261,7 +261,7 @@ public sealed class ChoiceChip : StatelessWidget
         bool autofocus = false,
         IWidgetStateProperty<Color?>? color = null,
         Color? backgroundColor = null,
-        Thickness? padding = null,
+        EdgeInsetsGeometry? padding = null,
         VisualDensity? visualDensity = null,
         MaterialTapTargetSize? materialTapTargetSize = null,
         double? elevation = null,
@@ -291,7 +291,7 @@ public sealed class ChoiceChip : StatelessWidget
         Action<bool>? onSelected,
         Widget? avatar,
         TextStyle? labelStyle,
-        Thickness? labelPadding,
+        EdgeInsetsGeometry? labelPadding,
         double? pressElevation,
         Color? selectedColor,
         Color? disabledColor,
@@ -303,7 +303,7 @@ public sealed class ChoiceChip : StatelessWidget
         bool autofocus,
         IWidgetStateProperty<Color?>? color,
         Color? backgroundColor,
-        Thickness? padding,
+        EdgeInsetsGeometry? padding,
         VisualDensity? visualDensity,
         MaterialTapTargetSize? materialTapTargetSize,
         double? elevation,
@@ -370,7 +370,7 @@ public sealed class ChoiceChip : StatelessWidget
         Action<bool>? onSelected,
         Widget? avatar = null,
         TextStyle? labelStyle = null,
-        Thickness? labelPadding = null,
+        EdgeInsetsGeometry? labelPadding = null,
         double? pressElevation = null,
         Color? selectedColor = null,
         Color? disabledColor = null,
@@ -382,7 +382,7 @@ public sealed class ChoiceChip : StatelessWidget
         bool autofocus = false,
         IWidgetStateProperty<Color?>? color = null,
         Color? backgroundColor = null,
-        Thickness? padding = null,
+        EdgeInsetsGeometry? padding = null,
         VisualDensity? visualDensity = null,
         MaterialTapTargetSize? materialTapTargetSize = null,
         double? elevation = null,
@@ -410,7 +410,7 @@ public sealed class ChoiceChip : StatelessWidget
     public Widget? Avatar { get; }
     public Widget Label { get; }
     public TextStyle? LabelStyle { get; }
-    public Thickness? LabelPadding { get; }
+    public EdgeInsetsGeometry? LabelPadding { get; }
     public Action<bool>? OnSelected { get; }
     public double? PressElevation { get; }
     public bool Selected { get; }
@@ -424,7 +424,7 @@ public sealed class ChoiceChip : StatelessWidget
     public bool Autofocus { get; }
     public IWidgetStateProperty<Color?>? Color { get; }
     public Color? BackgroundColor { get; }
-    public Thickness? Padding { get; }
+    public EdgeInsetsGeometry? Padding { get; }
     public VisualDensity? VisualDensity { get; }
     public MaterialTapTargetSize? MaterialTapTargetSize { get; }
     public double? Elevation { get; }
@@ -490,7 +490,7 @@ public sealed class RawChip : StatefulWidget
         Widget label,
         Widget? avatar = null,
         TextStyle? labelStyle = null,
-        Thickness? labelPadding = null,
+        EdgeInsetsGeometry? labelPadding = null,
         Action? onPressed = null,
         Action<bool>? onSelected = null,
         double? pressElevation = null,
@@ -507,7 +507,7 @@ public sealed class RawChip : StatefulWidget
         Color? selectedColor = null,
         IWidgetStateProperty<Color?>? color = null,
         Color? backgroundColor = null,
-        Thickness? padding = null,
+        EdgeInsetsGeometry? padding = null,
         VisualDensity? visualDensity = null,
         bool isEnabled = true,
         bool tapEnabled = true,
@@ -542,7 +542,7 @@ public sealed class RawChip : StatefulWidget
         Widget label,
         Widget? avatar,
         TextStyle? labelStyle,
-        Thickness? labelPadding,
+        EdgeInsetsGeometry? labelPadding,
         Action? onPressed,
         Action<bool>? onSelected,
         double? pressElevation,
@@ -559,7 +559,7 @@ public sealed class RawChip : StatefulWidget
         Color? selectedColor,
         IWidgetStateProperty<Color?>? color,
         Color? backgroundColor,
-        Thickness? padding,
+        EdgeInsetsGeometry? padding,
         VisualDensity? visualDensity,
         bool isEnabled,
         MaterialTapTargetSize? materialTapTargetSize,
@@ -642,7 +642,7 @@ public sealed class RawChip : StatefulWidget
     public Widget? Avatar { get; }
     public Widget Label { get; }
     public TextStyle? LabelStyle { get; }
-    public Thickness? LabelPadding { get; }
+    public EdgeInsetsGeometry? LabelPadding { get; }
     public Action? OnPressed { get; }
     public Action<bool>? OnSelected { get; }
     public double? PressElevation { get; }
@@ -659,7 +659,7 @@ public sealed class RawChip : StatefulWidget
     public Color? SelectedColor { get; }
     public IWidgetStateProperty<Color?>? Color { get; }
     public Color? BackgroundColor { get; }
-    public Thickness? Padding { get; }
+    public EdgeInsetsGeometry? Padding { get; }
     public VisualDensity? VisualDensity { get; }
     public bool IsEnabled { get; }
     public MaterialTapTargetSize? MaterialTapTargetSize { get; }
@@ -806,7 +806,7 @@ public sealed class RawChip : StatefulWidget
             var theme = Theme.Of(context);
             var chipTheme = ChipTheme.Of(context);
             var defaults = ResolveDefaults(context, theme, widget);
-            var padding = widget.Padding ?? chipTheme.Padding ?? defaults.Padding ?? new Thickness(4);
+            var padding = widget.Padding ?? chipTheme.Padding ?? defaults.Padding ?? EdgeInsets.All(4);
             var baseLabelStyle = chipTheme.LabelStyle ?? defaults.LabelStyle ?? theme.TextTheme.BodyLarge;
             var labelStyle = baseLabelStyle.Merge(widget.LabelStyle);
             // Dart: the chip starts at 8px on each side and interpolates to 4px as text scaling
@@ -816,10 +816,10 @@ public sealed class RawChip : StatefulWidget
                 EdgeInsetsGeometry.Symmetric(horizontal: 8.0),
                 EdgeInsetsGeometry.Symmetric(horizontal: 4.0),
                 Math.Clamp(effectiveTextScale - 1.0, 0.0, 1.0))!.Value;
-            Thickness labelPadding = widget.LabelPadding
+            EdgeInsetsGeometry labelPadding = widget.LabelPadding
                                      ?? chipTheme.LabelPadding
                                      ?? defaults.LabelPadding
-                                     ?? defaultLabelPadding.Resolve(Directionality.Of(context));
+                                     ?? defaultLabelPadding;
             var density = widget.VisualDensity ?? theme.VisualDensity;
             var tapTargetSize = widget.MaterialTapTargetSize ?? theme.MaterialTapTargetSize;
             var effectiveIconTheme = widget.IconTheme ?? chipTheme.IconTheme ?? defaults.IconTheme;
@@ -863,8 +863,8 @@ public sealed class RawChip : StatefulWidget
                 label: label,
                 avatar: leading,
                 deleteIcon: delete,
-                padding: padding,
-                labelPadding: labelPadding,
+                padding: padding.Resolve(Directionality.Of(context)),
+                labelPadding: labelPadding.Resolve(Directionality.Of(context)),
                 visualDensity: density,
                 textDirection: Directionality.Of(context),
                 isEnabled: widget.IsEnabled,
@@ -1063,7 +1063,7 @@ public sealed class RawChip : StatefulWidget
                     LabelStyle: theme.TextTheme.BodyLarge.CopyWith(color: WithAlpha(primary, 0xde)),
                     SecondaryLabelStyle: theme.TextTheme.BodyLarge.CopyWith(
                         color: WithAlpha(theme.PrimaryColor, 0xde)),
-                    Padding: new Thickness(4),
+                    Padding: EdgeInsets.All(4),
                     Shape: new RoundedRectangleBorder(borderRadius: Plumix.Rendering.BorderRadius.Circular(10_000)),
                     Elevation: 0,
                     PressElevation: 8,
@@ -1077,7 +1077,7 @@ public sealed class RawChip : StatefulWidget
                 Shape: new RoundedRectangleBorder(borderRadius: Plumix.Rendering.BorderRadius.Circular(8)),
                 ShowCheckmark: true,
                 SurfaceTintColor: Colors.Transparent,
-                Padding: new Thickness(8),
+                Padding: EdgeInsets.All(8),
                 PressElevation: 1);
 
             if (chip.DefaultsKind is ChipDefaultsKind.Choice or ChipDefaultsKind.Filter)

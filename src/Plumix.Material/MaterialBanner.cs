@@ -195,13 +195,13 @@ public sealed class MaterialBanner : StatefulWidget
                                                          ?? EdgeInsetsDirectional.Only(end: 16);
             ValidateInsets(contentPaddingGeometry, nameof(MaterialBannerThemeData.Padding));
             ValidateInsets(leadingPaddingGeometry, nameof(MaterialBannerThemeData.LeadingPadding));
-            Thickness contentPadding = contentPaddingGeometry.Resolve(direction);
-            Thickness leadingPadding = leadingPaddingGeometry.Resolve(direction);
+            EdgeInsets contentPadding = contentPaddingGeometry.Resolve(direction);
+            EdgeInsets leadingPadding = leadingPaddingGeometry.Resolve(direction);
 
             Widget actionsBar = new ConstrainedBox(
                 constraints: new BoxConstraints(MinHeight: widget.MinActionBarHeight),
                 child: new Padding(
-                    insets: new Thickness(8, 0),
+                    insets: EdgeInsets.Symmetric(horizontal: 8),
                     child: new Align(
                         alignment: direction == TextDirection.Ltr ? Alignment.CenterRight : Alignment.CenterLeft,
                         child: new OverflowBar(
@@ -215,7 +215,7 @@ public sealed class MaterialBanner : StatefulWidget
             double elevation = widget.Elevation ?? bannerTheme.Elevation ?? 0;
             EdgeInsetsGeometry marginGeometry = widget.Margin
                                                  ?? EdgeInsets.Only(bottom: elevation > 0 ? 10 : 0);
-            Thickness margin = marginGeometry.Resolve(direction);
+            EdgeInsets margin = marginGeometry.Resolve(direction);
             var backgroundColor = widget.BackgroundColor
                                   ?? bannerTheme.BackgroundColor
                                   ?? defaults.BackgroundColor;

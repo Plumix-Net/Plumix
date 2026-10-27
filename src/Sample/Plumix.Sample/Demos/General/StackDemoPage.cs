@@ -77,7 +77,7 @@ internal sealed class StackDemoPageState : State
                     width: 220,
                     height: 140,
                     color: new Color(0xFFE7EDF6),
-                    padding: new Thickness(8),
+                    padding: EdgeInsets.All(8),
                     child: new Container(
                         color: Colors.White,
                         child: new Directionality(
@@ -146,7 +146,7 @@ internal sealed class StackDemoPageState : State
                 background: (Color)Avalonia.Media.Color.Parse(colorHex),
                 foreground: Colors.Black,
                 fontSize: 12,
-                padding: new Thickness(10, 8)));
+                padding: EdgeInsets.Symmetric(horizontal: 10, vertical: 8)));
     }
 
     private void Move(double dx, double dy)

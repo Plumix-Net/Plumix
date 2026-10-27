@@ -231,7 +231,7 @@ internal sealed class CupertinoMenuOverlayState : State<CupertinoMenuOverlay>, W
         IReadOnlyList<Rect> avoidBounds = mediaQuery is null
             ? []
             : DisplayFeatureSubScreen.AvoidBounds(mediaQuery);
-        Thickness overlayPadding = Current.OverlayPadding.Resolve(_textDirection);
+        EdgeInsets overlayPadding = Current.OverlayPadding.Resolve(_textDirection);
 
         Widget layout = new ValueListenableBuilder<double>(
             valueListenable: _sizeAnimation,
@@ -495,7 +495,7 @@ internal sealed class CupertinoMenuLayoutDelegate : SingleChildLayoutDelegate
         IReadOnlyList<Rect> avoidBounds,
         double heightFactor,
         Alignment menuAlignment,
-        Thickness overlayPadding)
+        EdgeInsets overlayPadding)
     {
         AnchorRect = anchorRect;
         AttachmentPoint = attachmentPoint;
@@ -515,7 +515,7 @@ internal sealed class CupertinoMenuLayoutDelegate : SingleChildLayoutDelegate
 
     public Alignment MenuAlignment { get; }
 
-    public Thickness OverlayPadding { get; }
+    public EdgeInsets OverlayPadding { get; }
 
     public override BoxConstraints GetConstraintsForChild(BoxConstraints constraints) =>
         BoxConstraints.Loose(constraints.Biggest).Deflate(OverlayPadding);

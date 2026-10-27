@@ -141,7 +141,7 @@ public sealed class ModalBarrierTests
     [Fact]
     public void SemanticsClipper_TracksNotifierAndUpdatesBarrierFocusBounds()
     {
-        var notifier = new ValueNotifier<Thickness>(new Thickness(10, 5, 20, 15));
+        var notifier = new ValueNotifier<EdgeInsets>(EdgeInsets.FromLTRB(10, 5, 20, 15));
         var label = new RenderSemanticsAnnotations(
             new SemanticsProperties(label: "Barrier"),
             child: new RenderConstrainedBox(BoxConstraints.Expand()),
@@ -161,7 +161,7 @@ public sealed class ModalBarrierTests
         Assert.Equal("Barrier", clipperNode.Label);
         Assert.Empty(clipperNode.Children);
 
-        notifier.Value = new Thickness(4, 3, 6, 7);
+        notifier.Value = EdgeInsets.FromLTRB(4, 3, 6, 7);
         pipeline.FlushSemantics();
 
         root = pipeline.SemanticsOwner!.RootNode;

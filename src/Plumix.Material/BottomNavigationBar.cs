@@ -328,7 +328,7 @@ internal sealed class BottomNavigationTile : StatelessWidget
             mouseCursor: MouseCursor,
             enableFeedback: EnableFeedback,
             child: new Padding(
-                insets: new Thickness(0, topPadding, 0, bottomPadding),
+                insets: EdgeInsets.FromLTRB(0, topPadding, 0, bottomPadding),
                 child: new BottomNavigationTileContent(
                     layout: Layout,
                     icon: new BottomNavigationTileIcon(
@@ -686,7 +686,7 @@ internal sealed class BottomNavigationBarState : State<BottomNavigationBar>
                             // Splashes.
                             type: MaterialType.Transparency,
                             child: new Padding(
-                                insets: new Thickness(0, 0, 0, additionalBottomPadding),
+                                insets: EdgeInsets.FromLTRB(0, 0, 0, additionalBottomPadding),
                                 child: MediaQuery.RemovePadding(
                                     context: context,
                                     removeBottom: true,

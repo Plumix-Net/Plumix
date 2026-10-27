@@ -97,7 +97,7 @@ public sealed class BaselineTests
     public void ProxyBoxes_ForwardChildBaselineIncludingPaintOffset()
     {
         var child = new FixedBaselineBox(new Size(20, 10), alphabeticBaseline: 7);
-        var padding = new RenderPadding(new Thickness(2, 4, 6, 8), child);
+        var padding = new RenderPadding(EdgeInsets.FromLTRB(2, 4, 6, 8), child);
 
         padding.Layout(new BoxConstraints(MaxWidth: 100, MaxHeight: 100));
 

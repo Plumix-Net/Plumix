@@ -420,7 +420,7 @@ public sealed class ScrollInfrastructureTests
     public void ListView_WithPadding_WrapsSliverIntoSliverPadding()
     {
         var owner = TestBuildOwner.Create();
-        var expectedPadding = new Avalonia.Thickness(4, 8, 12, 16);
+        var expectedPadding = EdgeInsets.FromLTRB(4, 8, 12, 16);
         Widget? rootSliver = null;
         Widget? childSliver = null;
 
@@ -554,7 +554,7 @@ public sealed class ScrollInfrastructureTests
     public void GridView_WithPadding_WrapsSliverIntoSliverPadding()
     {
         var owner = TestBuildOwner.Create();
-        var expectedPadding = new Avalonia.Thickness(6, 10, 14, 18);
+        var expectedPadding = EdgeInsets.FromLTRB(6, 10, 14, 18);
         Widget? rootSliver = null;
         Widget? childSliver = null;
 

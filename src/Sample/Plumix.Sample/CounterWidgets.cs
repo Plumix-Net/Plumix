@@ -18,7 +18,7 @@ internal sealed class CounterTapButton : StatelessWidget
         Color background,
         Color foreground,
         double fontSize,
-        Thickness? padding = null,
+        EdgeInsets? padding = null,
         Key? key = null) : base(key)
     {
         Label = label;
@@ -26,7 +26,7 @@ internal sealed class CounterTapButton : StatelessWidget
         Background = background;
         Foreground = foreground;
         FontSize = fontSize;
-        Padding = padding ?? new Thickness(14, 10);
+        Padding = padding ?? EdgeInsets.Symmetric(horizontal: 14, vertical: 10);
     }
 
     public string Label { get; }
@@ -39,7 +39,7 @@ internal sealed class CounterTapButton : StatelessWidget
 
     public double FontSize { get; }
 
-    public Thickness Padding { get; }
+    public EdgeInsets Padding { get; }
 
     public override Widget Build(BuildContext context)
     {
@@ -96,7 +96,7 @@ internal sealed class KeyedListItemState : State
             background: new Color(0xFFF5F5F5),
             foreground: Colors.Black,
             fontSize: 14,
-            padding: new Thickness(10, 8));
+            padding: EdgeInsets.Symmetric(horizontal: 10, vertical: 8));
     }
 }
 
@@ -121,7 +121,7 @@ internal sealed class MovableBadgeState : State
             background: MaterialColors.DeepOrange,
             foreground: Colors.White,
             fontSize: 14,
-            padding: new Thickness(10, 8));
+            padding: EdgeInsets.Symmetric(horizontal: 10, vertical: 8));
     }
 }
 
@@ -183,6 +183,6 @@ internal sealed class KeepAliveListItemState : AutomaticKeepAliveClientMixin
             background: keepAlive ? new Color(0xFFE8F5E9) : Colors.White,
             foreground: Colors.Black,
             fontSize: 13,
-            padding: new Thickness(10, 8));
+            padding: EdgeInsets.Symmetric(horizontal: 10, vertical: 8));
     }
 }

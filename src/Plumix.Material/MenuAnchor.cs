@@ -1135,7 +1135,7 @@ internal sealed class MenuItemLabel : StatelessWidget
         double horizontalPadding = Math.Max(
             MenuConstants.LabelItemMinSpacing,
             MenuConstants.LabelItemDefaultSpacing + (density.Horizontal * 2));
-        Thickness leadingPadding = EdgeInsetsGeometry
+        EdgeInsets leadingPadding = EdgeInsetsGeometry
             .DirectionalOnly(start: horizontalPadding)
             .Resolve(textDirection);
 
@@ -1176,7 +1176,7 @@ internal sealed class MenuItemLabel : StatelessWidget
         return result;
     }
 
-    private Widget BuildLeadings(Thickness leadingPadding)
+    private Widget BuildLeadings(EdgeInsets leadingPadding)
     {
         var inner = new List<Widget>();
         if (LeadingIcon is not null)
@@ -1300,7 +1300,7 @@ internal static class MenuButtonDefaults
     }
 
     /// <summary>Flutter's `_scaledPadding`: horizontal-only padding that shrinks with text scale.</summary>
-    internal static Thickness ScaledPadding(BuildContext context)
+    internal static EdgeInsets ScaledPadding(BuildContext context)
     {
         ThemeData theme = Theme.Of(context);
         VisualDensity density = theme.VisualDensity;
@@ -1314,11 +1314,10 @@ internal static class MenuButtonDefaults
             theme.TextTheme.LabelLarge.FontSize);
         double densityDx = density.BaseSizeAdjustment.X;
         return ButtonStyleButton.ScaledPadding(
-            new Thickness(
-                Math.Max(MenuConstants.MenuViewPadding, MenuConstants.LabelItemDefaultSpacing + densityDx),
-                0.0),
-            new Thickness(Math.Max(MenuConstants.MenuViewPadding, 8.0 + densityDx), 0.0),
-            new Thickness(MenuConstants.MenuViewPadding, 0.0),
+            EdgeInsets.Symmetric(
+                horizontal: Math.Max(MenuConstants.MenuViewPadding, MenuConstants.LabelItemDefaultSpacing + densityDx)),
+            EdgeInsets.Symmetric(horizontal: Math.Max(MenuConstants.MenuViewPadding, 8.0 + densityDx)),
+            EdgeInsets.Symmetric(horizontal: MenuConstants.MenuViewPadding),
             fontSizeRatio).Resolve(Directionality.Of(context));
     }
 }
@@ -2073,7 +2072,7 @@ public sealed class SubmenuButtonState : State<SubmenuButton>
                                                  ?? new MenuDefaultsM3(context).Padding!
                                                      .Resolve(states)!.Value;
         TextDirection direction = Directionality.Of(context);
-        Thickness menuPadding = menuPaddingGeometry.Resolve(direction);
+        EdgeInsets menuPadding = menuPaddingGeometry.Resolve(direction);
 
         // Flutter's `_SubmenuButtonState.build` falls back to `Axis.vertical` here, unlike the
         // horizontal fallback the label decoration and the overlay theme switch use.
@@ -2372,8 +2371,8 @@ internal sealed class MenuLayout : SingleChildLayoutDelegate
         EdgeInsetsGeometry reservedPadding,
         IReadOnlyList<Rect>? avoidBounds = null,
         double heightFactor = 1.0,
-        Thickness viewPadding = default,
-        Thickness viewInsets = default)
+        EdgeInsets viewPadding = default,
+        EdgeInsets viewInsets = default)
     {
         AnchorRect = anchorRect;
         TextDirection = textDirection;
@@ -2417,10 +2416,10 @@ internal sealed class MenuLayout : SingleChildLayoutDelegate
     public double HeightFactor { get; }
 
     /// <summary>`MediaQueryData.padding` of the overlay's media query.</summary>
-    public Thickness ViewPadding { get; }
+    public EdgeInsets ViewPadding { get; }
 
     /// <summary>`MediaQueryData.viewInsets` of the overlay's media query.</summary>
-    public Thickness ViewInsets { get; }
+    public EdgeInsets ViewInsets { get; }
 
     public override BoxConstraints GetConstraintsForChild(BoxConstraints constraints)
     {
@@ -2582,7 +2581,7 @@ internal sealed class MenuLayout : SingleChildLayoutDelegate
         return Math.Sqrt((dx * dx) + (dy * dy));
     }
 
-    private static Rect DeflateRect(Thickness insets, Rect rect)
+    private static Rect DeflateRect(EdgeInsets insets, Rect rect)
     {
         double left = rect.Left + insets.Left;
         double top = rect.Top + insets.Top;

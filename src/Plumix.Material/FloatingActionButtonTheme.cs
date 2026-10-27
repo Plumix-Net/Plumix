@@ -28,7 +28,7 @@ public sealed record FloatingActionButtonThemeData(
     BoxConstraints? LargeSizeConstraints = null,
     BoxConstraints? ExtendedSizeConstraints = null,
     double? ExtendedIconLabelSpacing = null,
-    Thickness? ExtendedPadding = null,
+    EdgeInsetsGeometry? ExtendedPadding = null,
     TextStyle? ExtendedTextStyle = null,
     IWidgetStateProperty<MouseCursor?>? MouseCursor = null)
 {
@@ -51,7 +51,7 @@ public sealed record FloatingActionButtonThemeData(
         BoxConstraints? largeSizeConstraints = null,
         BoxConstraints? extendedSizeConstraints = null,
         double? extendedIconLabelSpacing = null,
-        Thickness? extendedPadding = null,
+        EdgeInsetsGeometry? extendedPadding = null,
         TextStyle? extendedTextStyle = null,
         IWidgetStateProperty<MouseCursor?>? mouseCursor = null)
     {
@@ -124,7 +124,7 @@ public sealed record FloatingActionButtonThemeData(
                 a?.ExtendedIconLabelSpacing,
                 b?.ExtendedIconLabelSpacing,
                 clampedT),
-            ExtendedPadding: MaterialThemeLerp.Thickness(
+            ExtendedPadding: MaterialThemeLerp.EdgeInsets(
                 a?.ExtendedPadding,
                 b?.ExtendedPadding,
                 clampedT),

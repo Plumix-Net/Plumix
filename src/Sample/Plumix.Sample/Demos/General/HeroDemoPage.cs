@@ -176,7 +176,7 @@ internal sealed class HeroDemoPageState : State
                 background: (Color)Avalonia.Media.Color.Parse(colorHex),
                 foreground: MaterialColors.Black,
                 fontSize: 12,
-                padding: new Thickness(10, 8)));
+                padding: EdgeInsets.Symmetric(horizontal: 10, vertical: 8)));
     }
 
     private void SetHeroMode(bool value)
@@ -220,7 +220,7 @@ internal sealed class HeroDetailPage : StatelessWidget
     {
         return new Container(
             color: new Color(0xFFFDFDFD),
-            padding: new Thickness(16),
+            padding: EdgeInsets.All(16),
             child: new Column(
                 crossAxisAlignment: CrossAxisAlignment.Stretch,
                 spacing: 12,
@@ -243,7 +243,7 @@ internal sealed class HeroDetailPage : StatelessWidget
                         background: new Color(0xFFDCE3ED),
                         foreground: Colors.Black,
                         fontSize: 12,
-                        padding: new Thickness(10, 8)),
+                        padding: EdgeInsets.Symmetric(horizontal: 10, vertical: 8)),
                 ]));
     }
 }

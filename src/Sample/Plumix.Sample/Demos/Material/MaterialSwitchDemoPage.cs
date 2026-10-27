@@ -137,7 +137,7 @@ internal sealed class MaterialSwitchDemoPageState : State
     {
         return new Container(
             color: new Color(0xFFF7F9FC),
-            padding: new Thickness(12, 8),
+            padding: EdgeInsets.Symmetric(horizontal: 12, vertical: 8),
             child: new Row(
                 spacing: 12,
                 children:
@@ -163,7 +163,7 @@ internal sealed class MaterialSwitchDemoPageState : State
                     backgroundColor: background,
                     foregroundColor: MaterialColors.Black,
                     minimumSize: new Size(0, 36),
-                    padding: new Thickness(10, 8),
+                    padding: EdgeInsets.Symmetric(horizontal: 10, vertical: 8),
                     shape: new RoundedRectangleBorder(borderRadius: BorderRadius.Circular(8))),
                 child: new Text(label, style: new TextStyle(FontSize: 12))));
     }

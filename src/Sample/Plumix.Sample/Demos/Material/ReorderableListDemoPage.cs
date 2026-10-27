@@ -67,20 +67,20 @@ public sealed class ReorderableListDemoPage : StatefulWidget
                                 onReorderEnd: index => SetState(() => _status = $"Dropped at insertion index {index}"),
                                 buildDefaultDragHandles: _buildDefaultDragHandles,
                                 header: new Padding(
-                                    new Thickness(12, 8),
+                                    EdgeInsets.Symmetric(horizontal: 12, vertical: 8),
                                     new Text(
                                         "Header (not reorderable)",
                                         style: new TextStyle(
                                             FontSize: 13,
                                             Color: Colors.Black))),
                                 footer: new Padding(
-                                    new Thickness(12, 8),
+                                    EdgeInsets.Symmetric(horizontal: 12, vertical: 8),
                                     new Text(
                                         "Footer (not reorderable)",
                                         style: new TextStyle(
                                             FontSize: 13,
                                             Color: Colors.Black))),
-                                padding: new Thickness(4),
+                                padding: EdgeInsets.All(4),
                                 itemExtent: 58,
                                 anchor: 0.08,
                                 dragStartBehavior: DragStartBehavior.Down,

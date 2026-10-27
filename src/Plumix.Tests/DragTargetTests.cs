@@ -309,7 +309,7 @@ public sealed class DragTargetTests
                 value: 42,
                 child: new MediaQuery(
                     data: new MediaQueryData(
-                        Padding: new Thickness(1),
+                        Padding: EdgeInsets.All(1),
                         TextScaleFactor: 2.0),
                     child: new Stack(
                         fit: StackFit.Expand,
@@ -343,14 +343,14 @@ public sealed class DragTargetTests
         using var harness = new WidgetHarness(
             new MediaQuery(
                 data: new MediaQueryData(
-                    Padding: new Thickness(10),
+                    Padding: EdgeInsets.All(10),
                     TextScaleFactor: 1.0),
                 child: new Overlay(initialEntries: [entry])));
         RenderOverlayTheater theater = harness.FindRenderObject<RenderOverlayTheater>();
 
         Assert.True(controller.IsShowing);
         Assert.Equal(42, inheritedValue);
-        Assert.Equal(new Thickness(10), portalMedia?.Padding);
+        Assert.Equal(EdgeInsets.All(10), portalMedia?.Padding);
         Assert.Equal(2.0, portalMedia?.TextScaleFactor);
         Assert.Equal(1, overlayBuilds);
 

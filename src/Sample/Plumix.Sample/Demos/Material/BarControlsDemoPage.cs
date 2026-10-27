@@ -38,7 +38,7 @@ internal sealed class BarControlsDemoPageState : State
                     Elevation: 6,
                     Height: 72,
                     ShadowColor: new Color(0x66000000),
-                    Padding: new Thickness(10, 8))
+                    Padding: EdgeInsets.Symmetric(horizontal: 10, vertical: 8))
                 : new BottomAppBarThemeData(),
             ButtonBarTheme = _useThemeOverrides
                 ? new ButtonBarThemeData(
@@ -153,7 +153,7 @@ internal sealed class BarControlsDemoPageState : State
             style: TextButton.StyleFrom(
                 foregroundColor: Colors.Black,
                 backgroundColor: new Color(0xFFE9F0FF),
-                padding: new Thickness(8, 6),
+                padding: EdgeInsets.Symmetric(horizontal: 8, vertical: 6),
                 minimumSize: new Size(0, 36),
                 shape: new RoundedRectangleBorder(
                     borderRadius: BorderRadius.Circular(8)))));

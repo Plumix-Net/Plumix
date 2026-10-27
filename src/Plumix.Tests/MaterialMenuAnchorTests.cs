@@ -304,7 +304,7 @@ public sealed class MaterialMenuAnchorTests
         var overlaySize = new Size(600.0, 800.0);
         MenuLayout layout = Layout(
             anchorRect: new Rect(0.0, 500.0, 100.0, 60.0),
-            viewInsets: new Thickness(0.0, 0.0, 0.0, 200.0));
+            viewInsets: EdgeInsets.FromLTRB(0.0, 0.0, 0.0, 200.0));
 
         Point position = layout.GetPositionForChild(overlaySize, new Size(200.0, 100.0));
 
@@ -417,8 +417,8 @@ public sealed class MaterialMenuAnchorTests
 
         EdgeInsetsGeometry padding = style.Padding!.Resolve(new HashSet<WidgetState>())!.Value;
 
-        Assert.Equal(new Thickness(10, 12, 11, 13), padding.Resolve(TextDirection.Ltr));
-        Assert.Equal(new Thickness(11, 12, 10, 13), padding.Resolve(TextDirection.Rtl));
+        Assert.Equal(EdgeInsets.FromLTRB(10, 12, 11, 13), padding.Resolve(TextDirection.Ltr));
+        Assert.Equal(EdgeInsets.FromLTRB(11, 12, 10, 13), padding.Resolve(TextDirection.Rtl));
     }
 
     [Fact]
@@ -616,8 +616,8 @@ public sealed class MaterialMenuAnchorTests
         IReadOnlyList<Rect>? avoidBounds = null,
         double heightFactor = 1.0,
         TextDirection textDirection = TextDirection.Ltr,
-        Thickness viewPadding = default,
-        Thickness viewInsets = default) => new(
+        EdgeInsets viewPadding = default,
+        EdgeInsets viewInsets = default) => new(
         anchorRect: anchorRect,
         textDirection: textDirection,
         alignment: alignment ?? AlignmentDirectional.BottomStart,

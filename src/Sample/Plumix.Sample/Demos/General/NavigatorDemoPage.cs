@@ -69,7 +69,7 @@ public sealed class NavigatorDemoPage : StatelessWidget
             background: background,
             foreground: Colors.Black,
             fontSize: 12,
-            padding: new Thickness(10, 8));
+            padding: EdgeInsets.Symmetric(horizontal: 10, vertical: 8));
     }
 }
 
@@ -84,7 +84,7 @@ internal sealed class NavigatorOverlayProbe : StatelessWidget
         string canPop = route is null ? "-" : route.CanPop ? "true" : "false";
         return new Container(
             color: new Color(0xFFE8F0FE),
-            padding: new Thickness(10, 8),
+            padding: EdgeInsets.Symmetric(horizontal: 10, vertical: 8),
             child: new Text(
                 $"Overlay: entries={entries} maintainState={maintainState} opaque={opaque} canPop={canPop}",
                 style: new TextStyle(FontSize: 12, Color: Colors.Black)));
@@ -111,7 +111,7 @@ internal sealed class SampleBlurredPopupRoute : PopupRoute
         return new Center(
             child: new Container(
                 color: Colors.White,
-                padding: new Thickness(20, 16),
+                padding: EdgeInsets.Symmetric(horizontal: 20, vertical: 16),
                 child: new Text(
                     "Blurred popup — tap outside to dismiss",
                     style: new TextStyle(FontSize: 14, Color: Colors.Black))));
@@ -165,7 +165,7 @@ internal sealed class NavigatorRouteAwareProbeState : State, RouteAware
         string routeName = ModalRoute.MaybeOf(context)?.Settings.Name ?? "(null)";
         return new Container(
             color: new Color(0xFFF1F8FF),
-            padding: new Thickness(10, 8),
+            padding: EdgeInsets.Symmetric(horizontal: 10, vertical: 8),
             child: new Text(
                 $"RouteAware: name={routeName} didPush={_didPushCount} didPushNext={_didPushNextCount} didPopNext={_didPopNextCount} didPop={_didPopCount}",
                 style: new TextStyle(FontSize: 12, Color: Colors.Black)));
@@ -242,7 +242,7 @@ internal sealed class NavigatorDetailsPageState : State<NavigatorDetailsPage>
                     background: new Color(0xFFEAF4FF),
                     foreground: Colors.Black,
                     fontSize: 12,
-                    padding: new Thickness(10, 8)),
+                    padding: EdgeInsets.Symmetric(horizontal: 10, vertical: 8)),
                 new CounterTapButton(
                     label: "PopUntil(menu)",
                     onTap: () => Navigator.PopUntil(
@@ -251,7 +251,7 @@ internal sealed class NavigatorDetailsPageState : State<NavigatorDetailsPage>
                     background: new Color(0xFFFFF3E0),
                     foreground: Colors.Black,
                     fontSize: 12,
-                    padding: new Thickness(10, 8)),
+                    padding: EdgeInsets.Symmetric(horizontal: 10, vertical: 8)),
                 new CounterTapButton(
                     label: "RemoveRouteBelow(current)",
                     onTap: () =>
@@ -264,7 +264,7 @@ internal sealed class NavigatorDetailsPageState : State<NavigatorDetailsPage>
                     background: new Color(0xFFF3E5F5),
                     foreground: Colors.Black,
                     fontSize: 12,
-                    padding: new Thickness(10, 8)),
+                    padding: EdgeInsets.Symmetric(horizontal: 10, vertical: 8)),
                 new Row(
                     spacing: 8,
                     children:
@@ -276,7 +276,7 @@ internal sealed class NavigatorDetailsPageState : State<NavigatorDetailsPage>
                                 background: new Color(0xFFE0F7FA),
                                 foreground: Colors.Black,
                                 fontSize: 12,
-                                padding: new Thickness(10, 8))),
+                                padding: EdgeInsets.Symmetric(horizontal: 10, vertical: 8))),
                         new Expanded(
                             child: new CounterTapButton(
                                 label: "Stop gesture",
@@ -284,7 +284,7 @@ internal sealed class NavigatorDetailsPageState : State<NavigatorDetailsPage>
                                 background: new Color(0xFFFFF9C4),
                                 foreground: Colors.Black,
                                 fontSize: 12,
-                                padding: new Thickness(10, 8))),
+                                padding: EdgeInsets.Symmetric(horizontal: 10, vertical: 8))),
                     ]),
                 new CounterTapButton(
                     label: _userGestureInProgress
@@ -294,14 +294,14 @@ internal sealed class NavigatorDetailsPageState : State<NavigatorDetailsPage>
                     background: new Color(0xFFD7CCC8),
                     foreground: Colors.Black,
                     fontSize: 12,
-                    padding: new Thickness(10, 8)),
+                    padding: EdgeInsets.Symmetric(horizontal: 10, vertical: 8)),
                 new CounterTapButton(
                     label: "Back (MaybePop)",
                     onTap: () => Navigator.MaybePop(context),
                     background: MaterialColors.Blue,
                     foreground: Colors.White,
                     fontSize: 12,
-                    padding: new Thickness(10, 8)),
+                    padding: EdgeInsets.Symmetric(horizontal: 10, vertical: 8)),
             ]);
     }
 

@@ -167,18 +167,18 @@ public sealed class MaterialSwitchTests
             new Size(52.0, 48.0),
             MountAndFindCustomPaint(
                 ThemeData.Light,
-                new Switch(false, _ => { }, padding: new Thickness(0.0))).Size);
+                new Switch(false, _ => { }, padding: EdgeInsets.Zero)).Size);
         Assert.Equal(
             new Size(60.0, 56.0),
             MountAndFindCustomPaint(
                 ThemeData.Light,
-                new Switch(false, _ => { }, padding: new Thickness(4.0))).Size);
+                new Switch(false, _ => { }, padding: EdgeInsets.All(4.0))).Size);
         Assert.Equal(
             new Size(52.0, 48.0),
             MountAndFindCustomPaint(
                 ThemeData.Light,
                 new SwitchTheme(
-                    data: new SwitchThemeData(Padding: new Thickness(0.0)),
+                    data: new SwitchThemeData(Padding: EdgeInsets.Zero),
                     child: new Switch(false, _ => { }))).Size);
     }
 

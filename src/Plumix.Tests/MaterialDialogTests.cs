@@ -32,7 +32,7 @@ public sealed class MaterialDialogTests : IDisposable
     public void DialogAndTheme_ValidateContractsAndFullscreenDefaults()
     {
         Assert.Throws<ArgumentOutOfRangeException>(() => new Dialog(elevation: -1));
-        Assert.Throws<ArgumentOutOfRangeException>(() => new Dialog(insetPadding: new Thickness(-1)));
+        Assert.Throws<ArgumentOutOfRangeException>(() => new Dialog(insetPadding: EdgeInsets.All(-1)));
         Assert.Equal(-1, new DialogThemeData(Elevation: -1).Elevation);
         Assert.Throws<ArgumentOutOfRangeException>(() => new AlertDialog(actionsOverflowButtonSpacing: -1));
 
@@ -40,7 +40,7 @@ public sealed class MaterialDialogTests : IDisposable
         Assert.True(fullscreen.IsFullscreen);
         Assert.Equal(0, fullscreen.Elevation);
         Assert.Equal(TimeSpan.Zero, fullscreen.InsetAnimationDuration);
-        Assert.Equal(default(Thickness), fullscreen.InsetPadding);
+        Assert.Equal(default(EdgeInsets), fullscreen.InsetPadding);
         Assert.Equal(Clip.None, fullscreen.ClipBehavior);
     }
 
@@ -49,7 +49,7 @@ public sealed class MaterialDialogTests : IDisposable
     {
         var media = new MediaQueryData(
             Size: new Size(600, 400),
-            ViewInsets: new Thickness(3, 5, 7, 11));
+            ViewInsets: EdgeInsets.FromLTRB(3, 5, 7, 11));
         using var harness = new WidgetRenderHarness(Wrap(
             ThemeData.Light with { Platform = TargetPlatform.Android },
             new Dialog(child: new SizedBox(width: 80, height: 40)),
@@ -57,7 +57,7 @@ public sealed class MaterialDialogTests : IDisposable
         var semantics = harness.PumpAndGetSemantics(new Size(600, 400));
 
         Assert.Contains(FindDescendants<RenderPadding>(harness.RenderView), padding =>
-            padding.Padding == new Thickness(43, 29, 47, 35));
+            padding.Padding == EdgeInsets.FromLTRB(43, 29, 47, 35));
         Assert.Contains(FindDescendants<RenderConstrainedBox>(harness.RenderView), box =>
             box.AdditionalConstraints.MinWidth == 280);
         Assert.Contains(MaterialSurfaceProbe.FindAll(harness.RenderView), box =>
@@ -80,7 +80,7 @@ public sealed class MaterialDialogTests : IDisposable
             BackgroundColor: Colors.Purple,
             Elevation: 0,
             Shape: new RoundedRectangleBorder(borderRadius: Plumix.Rendering.BorderRadius.Circular(12)),
-            InsetPadding: new Thickness(9));
+            InsetPadding: EdgeInsets.All(9));
         using var themed = new WidgetRenderHarness(Wrap(
             global,
             new DialogTheme(local, new Dialog(child: new Text("themed")))));
@@ -88,7 +88,9 @@ public sealed class MaterialDialogTests : IDisposable
         Assert.Contains(MaterialSurfaceProbe.FindAll(themed.RenderView), box =>
             box.Color == Colors.Purple
             && box.BorderRadius == BorderRadius.Circular(12));
-        Assert.Contains(FindDescendants<RenderPadding>(themed.RenderView), padding => padding.Padding == new Thickness(9));
+        Assert.Contains(
+            FindDescendants<RenderPadding>(themed.RenderView),
+            padding => padding.Padding == EdgeInsets.All(9));
 
         using var widget = new WidgetRenderHarness(Wrap(
             global,
@@ -145,9 +147,15 @@ public sealed class MaterialDialogTests : IDisposable
         Assert.Equal(
             localizedTheme.TextTheme.BodyMedium.FontSize,
             FindParagraph(harness.RenderView, "Content")!.FontSize);
-        Assert.Contains(FindDescendants<RenderPadding>(harness.RenderView), value => value.Padding == new Thickness(24, 24, 24, 16));
-        Assert.Contains(FindDescendants<RenderPadding>(harness.RenderView), value => value.Padding == new Thickness(24, 16, 24, 24));
-        Assert.Contains(FindDescendants<RenderPadding>(harness.RenderView), value => value.Padding == new Thickness(24, 0, 24, 24));
+        Assert.Contains(
+            FindDescendants<RenderPadding>(harness.RenderView),
+            value => value.Padding == EdgeInsets.FromLTRB(24, 24, 24, 16));
+        Assert.Contains(
+            FindDescendants<RenderPadding>(harness.RenderView),
+            value => value.Padding == EdgeInsets.FromLTRB(24, 16, 24, 24));
+        Assert.Contains(
+            FindDescendants<RenderPadding>(harness.RenderView),
+            value => value.Padding == EdgeInsets.FromLTRB(24, 0, 24, 24));
         Assert.NotNull(FindSemantics(semantics, node =>
             HasLabelPart(node, "Alert")
             && node.Flags.HasFlag(SemanticsFlags.ScopesRoute)
@@ -222,11 +230,11 @@ public sealed class MaterialDialogTests : IDisposable
     public void SimpleDialogAndOption_ExposeFlutterDefaultsAndValidateContracts()
     {
         var dialog = new SimpleDialog();
-        Assert.Equal(new Thickness(24, 24, 24, 0), dialog.TitlePadding);
-        Assert.Equal(new Thickness(0, 12, 0, 16), dialog.ContentPadding);
+        Assert.Equal(EdgeInsets.FromLTRB(24, 24, 24, 0), dialog.TitlePadding);
+        Assert.Equal(EdgeInsets.FromLTRB(0, 12, 0, 16), dialog.ContentPadding);
         Assert.Null(dialog.Children);
         Assert.Throws<ArgumentOutOfRangeException>(() => new SimpleDialog(elevation: -1));
-        Assert.Throws<ArgumentOutOfRangeException>(() => new SimpleDialogOption(padding: new Thickness(-1)));
+        Assert.Throws<ArgumentOutOfRangeException>(() => new SimpleDialogOption(padding: EdgeInsets.All(-1)));
     }
 
     [Fact]
@@ -251,11 +259,11 @@ public sealed class MaterialDialogTests : IDisposable
         Assert.Equal(AxisDirection.Down, listBody.AxisDirection);
         Assert.Equal(2, listBody.ChildCount);
         Assert.Contains(FindDescendants<RenderPadding>(harness.RenderView), value =>
-            value.Padding == new Thickness(24, 24, 24, 0));
+            value.Padding == EdgeInsets.FromLTRB(24, 24, 24, 0));
         Assert.Contains(FindDescendants<RenderPadding>(harness.RenderView), value =>
-            value.Padding == new Thickness(0, 12, 0, 16));
+            value.Padding == EdgeInsets.FromLTRB(0, 12, 0, 16));
         Assert.Equal(2, FindDescendants<RenderPadding>(harness.RenderView).Count(value =>
-            value.Padding == new Thickness(24, 8)));
+            value.Padding == EdgeInsets.Symmetric(horizontal: 24, vertical: 8)));
         ThemeData localizedTheme = ThemeData.Localize(ThemeData.Light, Typography.EnglishLike2021);
         Assert.Equal(
             localizedTheme.TextTheme.TitleLarge.FontSize,

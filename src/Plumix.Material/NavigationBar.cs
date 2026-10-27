@@ -69,7 +69,7 @@ public sealed class NavigationBar : StatelessWidget
         NavigationDestinationLabelBehavior? labelBehavior = null,
         IWidgetStateProperty<Color?>? overlayColor = null,
         IWidgetStateProperty<TextStyle?>? labelTextStyle = null,
-        Thickness? labelPadding = null,
+        EdgeInsetsGeometry? labelPadding = null,
         bool maintainBottomViewPadding = false,
         Key? key = null) : base(key)
     {
@@ -128,7 +128,7 @@ public sealed class NavigationBar : StatelessWidget
     public NavigationDestinationLabelBehavior? LabelBehavior { get; }
     public IWidgetStateProperty<Color?>? OverlayColor { get; }
     public IWidgetStateProperty<TextStyle?>? LabelTextStyle { get; }
-    public Thickness? LabelPadding { get; }
+    public EdgeInsetsGeometry? LabelPadding { get; }
     public bool MaintainBottomViewPadding { get; }
 
     public override Widget Build(BuildContext context)
@@ -144,7 +144,10 @@ public sealed class NavigationBar : StatelessWidget
         var effectiveIndicatorColor = IndicatorColor ?? navigationTheme.IndicatorColor ?? defaults.IndicatorColor!;
         var effectiveIndicatorShape = IndicatorShape ?? navigationTheme.IndicatorShape ?? defaults.IndicatorShape!;
         var effectiveLabelBehavior = LabelBehavior ?? navigationTheme.LabelBehavior ?? defaults.LabelBehavior!.Value;
-        var effectiveLabelPadding = LabelPadding ?? navigationTheme.LabelPadding ?? defaults.LabelPadding ?? new Thickness(0, 4, 0, 0);
+        EdgeInsetsGeometry effectiveLabelPadding = LabelPadding
+                                                   ?? navigationTheme.LabelPadding
+                                                   ?? defaults.LabelPadding
+                                                   ?? EdgeInsets.Only(top: 4);
 
         var children = new List<Widget>(Destinations.Count);
         for (int index = 0; index < Destinations.Count; index++)
@@ -233,7 +236,7 @@ public sealed class NavigationBar : StatelessWidget
                             ? NavigationSurfaceUtilities.WithOpacity(colors.OnSurface, 0.04)
                             : null),
                 LabelBehavior: NavigationDestinationLabelBehavior.AlwaysShow,
-                LabelPadding: new Thickness(0, 4, 0, 0));
+                LabelPadding: EdgeInsets.FromLTRB(0, 4, 0, 0));
         }
 
         return new NavigationBarThemeData(
@@ -266,7 +269,7 @@ public sealed class NavigationBar : StatelessWidget
                         ? NavigationSurfaceUtilities.WithOpacity(colors.OnSurface, 0.08)
                         : null),
             LabelBehavior: NavigationDestinationLabelBehavior.AlwaysShow,
-            LabelPadding: new Thickness(0, 4, 0, 0));
+            LabelPadding: EdgeInsets.FromLTRB(0, 4, 0, 0));
     }
 
     private static WidgetStateProperty<T?> ComposeReferenceProperty<T>(
@@ -378,7 +381,7 @@ internal sealed class NavigationBarDestinationTile : StatefulWidget
         IWidgetStateProperty<TextStyle?> labelTextStyle,
         WidgetStateProperty<IconThemeData?> iconTheme,
         IWidgetStateProperty<Color?> overlayColor,
-        Thickness labelPadding,
+        EdgeInsetsGeometry labelPadding,
         double height,
         Key? key = null) : base(key)
     {
@@ -408,7 +411,7 @@ internal sealed class NavigationBarDestinationTile : StatefulWidget
     public IWidgetStateProperty<TextStyle?> LabelTextStyle { get; }
     public WidgetStateProperty<IconThemeData?> IconTheme { get; }
     public IWidgetStateProperty<Color?> OverlayColor { get; }
-    public Thickness LabelPadding { get; }
+    public EdgeInsetsGeometry LabelPadding { get; }
     public double Height { get; }
 
     public override State CreateState() => new NavigationBarDestinationTileState();

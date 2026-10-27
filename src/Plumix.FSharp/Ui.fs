@@ -17,16 +17,7 @@ module private Interop =
 
     let inline obj' o = Option.toObj o
 
-    let edgeInsets (o: Thickness option) : Nullable<EdgeInsetsGeometry> =
-        match o with
-        | Some value ->
-            Nullable(
-                EdgeInsetsGeometry.FromLTRB(
-                    value.Left,
-                    value.Top,
-                    value.Right,
-                    value.Bottom))
-        | None -> Nullable()
+    let edgeInsets (o: EdgeInsetsGeometry option) : Nullable<EdgeInsetsGeometry> = Option.toNullable o
 
     let action (f: (unit -> unit) option) : Action =
         match f with
@@ -132,11 +123,11 @@ type Ui private () =
             heightFactor = nul heightFactor,
             key = obj' key)
 
-    static member padding(insets: Thickness, child: Widget, ?key: Key) : Widget =
+    static member padding(insets: EdgeInsetsGeometry, child: Widget, ?key: Key) : Widget =
         Padding(insets, child, key = obj' key)
 
     static member padding(all: float, child: Widget, ?key: Key) : Widget =
-        Padding(Thickness(all), child, key = obj' key)
+        Padding(EdgeInsets.All(all), child, key = obj' key)
 
     static member sizedBox(?width: float, ?height: float, ?child: Widget, ?key: Key) : Widget =
         SizedBox(width = nul width, height = nul height, child = obj' child, key = obj' key)
@@ -151,8 +142,8 @@ type Ui private () =
         (
             ?child: Widget,
             ?color: Color,
-            ?padding: Thickness,
-            ?margin: Thickness,
+            ?padding: EdgeInsetsGeometry,
+            ?margin: EdgeInsetsGeometry,
             ?width: float,
             ?height: float,
             ?alignment: AlignmentGeometry,

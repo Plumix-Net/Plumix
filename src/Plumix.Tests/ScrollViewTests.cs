@@ -206,7 +206,7 @@ public sealed class ScrollViewTests
     public void ExplicitPadding_WrapsTheChildLayoutInASliverPadding()
     {
         using var harness = new ScrollViewProbeHarness();
-        var padding = new Thickness(4, 8, 12, 16);
+        var padding = EdgeInsets.FromLTRB(4, 8, 12, 16);
 
         Widget sliver = Assert.Single(harness.BuildSlivers(new ListView(padding: padding)));
         var sliverPadding = Assert.IsType<SliverPadding>(sliver);
@@ -218,15 +218,15 @@ public sealed class ScrollViewTests
     public void WithoutPadding_TheMainAxisMediaQueryPaddingIsConsumedAndTheCrossAxisPaddingRepublished()
     {
         using var harness = new ScrollViewProbeHarness(
-            new MediaQueryData(Padding: new Thickness(30, 30, 30, 30)));
+            new MediaQueryData(Padding: EdgeInsets.FromLTRB(30, 30, 30, 30)));
 
         Widget sliver = Assert.Single(harness.BuildSlivers(new ListView()));
         var sliverPadding = Assert.IsType<SliverPadding>(sliver);
         // A vertical list consumes the vertical padding.
-        Assert.Equal(new Thickness(0, 30, 0, 30), sliverPadding.Padding);
+        Assert.Equal(EdgeInsets.FromLTRB(0, 30, 0, 30), sliverPadding.Padding);
         // ... and republishes the horizontal padding to its children.
         var republished = Assert.IsType<MediaQuery>(sliverPadding.Child);
-        Assert.Equal(new Thickness(30, 0, 30, 0), republished.Data.Padding);
+        Assert.Equal(EdgeInsets.FromLTRB(30, 0, 30, 0), republished.Data.Padding);
         Assert.IsType<SliverList>(republished.Child);
     }
 
@@ -234,14 +234,14 @@ public sealed class ScrollViewTests
     public void WithoutPadding_AHorizontalListSwapsTheConsumedAxis()
     {
         using var harness = new ScrollViewProbeHarness(
-            new MediaQueryData(Padding: new Thickness(30, 30, 30, 30)));
+            new MediaQueryData(Padding: EdgeInsets.FromLTRB(30, 30, 30, 30)));
 
         Widget sliver = Assert.Single(
             harness.BuildSlivers(new ListView(scrollDirection: Axis.Horizontal)));
         var sliverPadding = Assert.IsType<SliverPadding>(sliver);
-        Assert.Equal(new Thickness(30, 0, 30, 0), sliverPadding.Padding);
+        Assert.Equal(EdgeInsets.FromLTRB(30, 0, 30, 0), sliverPadding.Padding);
         var republished = Assert.IsType<MediaQuery>(sliverPadding.Child);
-        Assert.Equal(new Thickness(0, 30, 0, 30), republished.Data.Padding);
+        Assert.Equal(EdgeInsets.FromLTRB(0, 30, 0, 30), republished.Data.Padding);
     }
 
     [Fact]
@@ -263,7 +263,7 @@ public sealed class ScrollViewTests
             scrollDirection: Axis.Horizontal,
             reverse: true,
             shrinkWrap: true,
-            padding: new Thickness(3),
+            padding: EdgeInsets.All(3),
             itemExtent: 12).DebugFillProperties(properties);
 
         List<string> names = properties.Properties.Select(property => property.Name!).ToList();

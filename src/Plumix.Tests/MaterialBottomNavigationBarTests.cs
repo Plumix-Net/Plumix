@@ -346,7 +346,7 @@ public sealed class MaterialBottomNavigationBarTests
                 selectedIconTheme: new IconThemeData(Size: 36.0),
                 unselectedIconTheme: new IconThemeData(Size: 20.0)));
 
-        List<Thickness> insets = TilePaddings(scope);
+        List<EdgeInsets> insets = TilePaddings(scope);
         Assert.Equal(8.0, insets[0].Top, 6);
         Assert.Equal(8.0, insets[0].Bottom, 6);
         Assert.Equal(16.0, insets[1].Top, 6);
@@ -366,7 +366,7 @@ public sealed class MaterialBottomNavigationBarTests
                 selectedIconTheme: new IconThemeData(Size: 36.0),
                 unselectedIconTheme: new IconThemeData(Size: 20.0)));
 
-        List<Thickness> insets = TilePaddings(scope);
+        List<EdgeInsets> insets = TilePaddings(scope);
         Assert.Equal(8.0, insets[0].Top, 6);
         Assert.Equal(8.0, insets[0].Bottom, 6);
         Assert.Equal(24.0, insets[1].Top, 6);
@@ -387,7 +387,7 @@ public sealed class MaterialBottomNavigationBarTests
                 selectedIconTheme: new IconThemeData(Size: 36.0),
                 unselectedIconTheme: new IconThemeData(Size: 20.0)));
 
-        List<Thickness> insets = TilePaddings(scope);
+        List<EdgeInsets> insets = TilePaddings(scope);
         Assert.Equal(16.0, insets[0].Top, 6);
         Assert.Equal(0.0, insets[0].Bottom, 6);
         Assert.Equal(24.0, insets[1].Top, 6);
@@ -499,7 +499,7 @@ public sealed class MaterialBottomNavigationBarTests
             WrapWithThemeAndMediaQuery(
                 ThemeData.Light,
                 new BottomNavigationBar(items: TwoItems(), selectedFontSize: 8.0),
-                viewPadding: new Thickness(0, 0, 0, 40)));
+                viewPadding: EdgeInsets.FromLTRB(0, 0, 0, 40)));
 
         harness.Pump(new Size(800, 600));
         Assert.Equal(96.0, harness.RenderView.Child!.Size.Height, 3);
@@ -512,8 +512,8 @@ public sealed class MaterialBottomNavigationBarTests
             WrapWithThemeAndMediaQuery(
                 ThemeData.Light,
                 new BottomNavigationBar(items: TwoItems(), selectedFontSize: 8.0),
-                viewPadding: new Thickness(0, 0, 0, 40),
-                viewInsets: new Thickness(0, 0, 0, 336)));
+                viewPadding: EdgeInsets.FromLTRB(0, 0, 0, 40),
+                viewInsets: EdgeInsets.FromLTRB(0, 0, 0, 336)));
 
         harness.Pump(new Size(800, 600));
         Assert.Equal(96.0, harness.RenderView.Child!.Size.Height, 3);
@@ -1186,9 +1186,9 @@ public sealed class MaterialBottomNavigationBarTests
     }
 
     /// <summary>Every tile's animated icon/label padding, in item order.</summary>
-    private static List<Thickness> TilePaddings(MountedScope scope)
+    private static List<EdgeInsets> TilePaddings(MountedScope scope)
     {
-        var insets = new List<Thickness>();
+        var insets = new List<EdgeInsets>();
         foreach (Element tile in FindElements(scope.Root, element => element.Widget is BottomNavigationTile))
         {
             Element? padding = FindElement(tile, element => element.Widget is Padding);
@@ -1446,8 +1446,8 @@ public sealed class MaterialBottomNavigationBarTests
         Widget child,
         MaterialLocalizations? localizations = null,
         Size? size = null,
-        Thickness viewPadding = default,
-        Thickness viewInsets = default)
+        EdgeInsets viewPadding = default,
+        EdgeInsets viewInsets = default)
     {
         Widget themedContent = MaterialLocalizationsTesting.Localized(
             new Theme(data: theme, child: child),

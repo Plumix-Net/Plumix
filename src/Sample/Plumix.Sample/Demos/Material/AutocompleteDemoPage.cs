@@ -137,7 +137,7 @@ internal sealed class AutocompleteDemoPageState : State
                     shrinkWrap: true,
                     children: materialized.Select((option, index) =>
                     {
-                        Widget content = new Padding(new Thickness(16, 12), new Text(option));
+                        Widget content = new Padding(EdgeInsets.Symmetric(16, 12), new Text(option));
                         if (index == highlightedIndex)
                         {
                             content = new ColoredBox(theme.FocusColor, child: content);

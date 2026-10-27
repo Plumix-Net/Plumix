@@ -24,7 +24,7 @@ public sealed class ReorderableListView : StatefulWidget
         Widget? prototypeItem = null,
         ReorderItemProxyDecorator? proxyDecorator = null,
         bool buildDefaultDragHandles = true,
-        Thickness? padding = null,
+        EdgeInsets? padding = null,
         Widget? header = null,
         Widget? footer = null,
         Axis scrollDirection = Axis.Vertical,
@@ -93,7 +93,7 @@ public sealed class ReorderableListView : StatefulWidget
         Widget? prototypeItem,
         ReorderItemProxyDecorator? proxyDecorator,
         bool buildDefaultDragHandles,
-        Thickness? padding,
+        EdgeInsets? padding,
         Widget? header,
         Widget? footer,
         Axis scrollDirection,
@@ -171,7 +171,7 @@ public sealed class ReorderableListView : StatefulWidget
 
     public bool BuildDefaultDragHandles { get; }
 
-    public Thickness? Padding { get; }
+    public EdgeInsets? Padding { get; }
 
     public Widget? Header { get; }
 
@@ -222,7 +222,7 @@ public sealed class ReorderableListView : StatefulWidget
         Widget? prototypeItem = null,
         ReorderItemProxyDecorator? proxyDecorator = null,
         bool buildDefaultDragHandles = true,
-        Thickness? padding = null,
+        EdgeInsets? padding = null,
         Widget? header = null,
         Widget? footer = null,
         Axis scrollDirection = Axis.Vertical,
@@ -297,7 +297,7 @@ public sealed class ReorderableListView : StatefulWidget
                 effectiveController = PrimaryScrollController.MaybeOf(context);
             }
 
-            (Thickness headerPadding, Thickness listPadding, Thickness footerPadding) = ResolvePadding(widget);
+            (EdgeInsets headerPadding, EdgeInsets listPadding, EdgeInsets footerPadding) = ResolvePadding(widget);
             var slivers = new List<Widget>();
             if (widget.Header is not null)
             {
@@ -439,10 +439,10 @@ public sealed class ReorderableListView : StatefulWidget
                        : SystemMouseCursors.Grab);
         }
 
-        private static (Thickness Header, Thickness List, Thickness Footer) ResolvePadding(
+        private static (EdgeInsets Header, EdgeInsets List, EdgeInsets Footer) ResolvePadding(
             ReorderableListView widget)
         {
-            Thickness padding = widget.Padding ?? default;
+            EdgeInsets padding = widget.Padding ?? default;
             double? start = widget.Header is null ? null : 0.0;
             double? end = widget.Footer is null ? null : 0.0;
             if (widget.Reverse)
@@ -450,9 +450,9 @@ public sealed class ReorderableListView : StatefulWidget
                 (start, end) = (end, start);
             }
 
-            Thickness startPadding;
-            Thickness endPadding;
-            Thickness listPadding;
+            EdgeInsets startPadding;
+            EdgeInsets endPadding;
+            EdgeInsets listPadding;
             if (start is null && end is null)
             {
                 startPadding = default;
@@ -462,17 +462,17 @@ public sealed class ReorderableListView : StatefulWidget
             else if (widget.ScrollDirection == Axis.Horizontal)
             {
                 // Dart: padding.copyWith(left: 0) / padding.copyWith(right: 0).
-                startPadding = new Thickness(0, padding.Top, padding.Right, padding.Bottom);
-                endPadding = new Thickness(padding.Left, padding.Top, 0, padding.Bottom);
-                listPadding = new Thickness(start ?? padding.Left, padding.Top, end ?? padding.Right, padding.Bottom);
+                startPadding = EdgeInsets.FromLTRB(0, padding.Top, padding.Right, padding.Bottom);
+                endPadding = EdgeInsets.FromLTRB(padding.Left, padding.Top, 0, padding.Bottom);
+                listPadding = new EdgeInsets(start ?? padding.Left, padding.Top, end ?? padding.Right, padding.Bottom);
             }
             else
             {
                 // Dart: padding.copyWith(top: 0) / padding.copyWith(bottom: 0); the header takes the
                 // "end" padding below, which keeps the top inset.
-                startPadding = new Thickness(padding.Left, 0, padding.Right, padding.Bottom);
-                endPadding = new Thickness(padding.Left, padding.Top, padding.Right, 0);
-                listPadding = new Thickness(padding.Left, start ?? padding.Top, padding.Right, end ?? padding.Bottom);
+                startPadding = EdgeInsets.FromLTRB(padding.Left, 0, padding.Right, padding.Bottom);
+                endPadding = EdgeInsets.FromLTRB(padding.Left, padding.Top, padding.Right, 0);
+                listPadding = new EdgeInsets(padding.Left, start ?? padding.Top, padding.Right, end ?? padding.Bottom);
             }
 
             return widget.Reverse

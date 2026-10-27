@@ -141,7 +141,7 @@ public sealed class RenderPadding : RenderShiftedBox
 {
     private EdgeInsetsGeometry _padding;
     private TextDirection? _textDirection;
-    private Thickness? _resolvedPaddingCache;
+    private EdgeInsets? _resolvedPaddingCache;
 
     public RenderPadding(
         EdgeInsetsGeometry padding,
@@ -157,7 +157,7 @@ public sealed class RenderPadding : RenderShiftedBox
         _textDirection = textDirection;
     }
 
-    private Thickness ResolvedPadding => _resolvedPaddingCache ??= _padding.Resolve(_textDirection);
+    private EdgeInsets ResolvedPadding => _resolvedPaddingCache ??= _padding.Resolve(_textDirection);
 
     public EdgeInsetsGeometry Padding
     {
@@ -202,7 +202,7 @@ public sealed class RenderPadding : RenderShiftedBox
 
     protected override double ComputeMinIntrinsicWidth(double height)
     {
-        Thickness padding = ResolvedPadding;
+        EdgeInsets padding = ResolvedPadding;
         double horizontal = padding.Left + padding.Right;
         double vertical = padding.Top + padding.Bottom;
         if (Child != null)
@@ -216,7 +216,7 @@ public sealed class RenderPadding : RenderShiftedBox
 
     protected override double ComputeMaxIntrinsicWidth(double height)
     {
-        Thickness padding = ResolvedPadding;
+        EdgeInsets padding = ResolvedPadding;
         double horizontal = padding.Left + padding.Right;
         double vertical = padding.Top + padding.Bottom;
         if (Child != null)
@@ -229,7 +229,7 @@ public sealed class RenderPadding : RenderShiftedBox
 
     protected override double ComputeMinIntrinsicHeight(double width)
     {
-        Thickness padding = ResolvedPadding;
+        EdgeInsets padding = ResolvedPadding;
         double horizontal = padding.Left + padding.Right;
         double vertical = padding.Top + padding.Bottom;
         if (Child != null)
@@ -242,7 +242,7 @@ public sealed class RenderPadding : RenderShiftedBox
 
     protected override double ComputeMaxIntrinsicHeight(double width)
     {
-        Thickness padding = ResolvedPadding;
+        EdgeInsets padding = ResolvedPadding;
         double horizontal = padding.Left + padding.Right;
         double vertical = padding.Top + padding.Bottom;
         if (Child != null)
@@ -255,7 +255,7 @@ public sealed class RenderPadding : RenderShiftedBox
 
     protected override Size ComputeDryLayout(BoxConstraints constraints)
     {
-        Thickness padding = ResolvedPadding;
+        EdgeInsets padding = ResolvedPadding;
         double horizontal = padding.Left + padding.Right;
         double vertical = padding.Top + padding.Bottom;
         if (Child == null)
@@ -275,7 +275,7 @@ public sealed class RenderPadding : RenderShiftedBox
             return null;
         }
 
-        Thickness padding = ResolvedPadding;
+        EdgeInsets padding = ResolvedPadding;
         double? childBaseline = child.GetDryBaseline(constraints.Deflate(padding), baseline);
         return childBaseline is null ? null : childBaseline + padding.Top;
     }
@@ -283,7 +283,7 @@ public sealed class RenderPadding : RenderShiftedBox
     protected override void PerformLayout()
     {
         BoxConstraints constraints = Constraints;
-        Thickness padding = ResolvedPadding;
+        EdgeInsets padding = ResolvedPadding;
         double horizontal = padding.Left + padding.Right;
         double vertical = padding.Top + padding.Bottom;
         if (Child == null)
@@ -309,7 +309,7 @@ public sealed class RenderPadding : RenderShiftedBox
         RenderingDebug.PaintPadding(
             context,
             outerRect,
-            Child is null ? null : outerRect.Deflate(_resolvedPaddingCache!.Value));
+            Child is null ? null : _resolvedPaddingCache!.Value.DeflateRect(outerRect));
     }
 
     /// <inheritdoc />

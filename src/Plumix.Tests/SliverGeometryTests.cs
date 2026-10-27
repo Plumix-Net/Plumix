@@ -176,7 +176,7 @@ public sealed class SliverGeometryTests
             PaintExtent: 10.0,
             MaxPaintExtent: 10.0,
             HitTestExtent: 24.0));
-        var padding = new RenderSliverPadding(new Thickness(0.0, 5.0, 0.0, 7.0), child: child);
+        var padding = new RenderSliverPadding(EdgeInsets.FromLTRB(0.0, 5.0, 0.0, 7.0), child: child);
 
         padding.Layout(Constraints(), parentUsesSize: true);
 

@@ -55,7 +55,7 @@ public sealed class DesktopTextSelectionToolbar : StatelessWidget
                     children: Children)));
 
         return new Padding(
-            new Thickness(
+            EdgeInsets.FromLTRB(
                 ToolbarScreenPadding,
                 paddingAbove,
                 ToolbarScreenPadding,
@@ -69,7 +69,7 @@ public sealed class DesktopTextSelectionToolbar : StatelessWidget
 /// <summary>A full-width text button styled for a Material desktop selection toolbar.</summary>
 public sealed class DesktopTextSelectionToolbarButton : StatelessWidget
 {
-    private static readonly Thickness ToolbarButtonPadding = new(20.0, 0.0, 20.0, 3.0);
+    private static readonly EdgeInsets ToolbarButtonPadding = EdgeInsets.FromLTRB(20.0, 0.0, 20.0, 3.0);
 
     public DesktopTextSelectionToolbarButton(
         Action? onPressed,

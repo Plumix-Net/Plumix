@@ -771,14 +771,14 @@ internal sealed class IndicatorPainter : CustomPainter
         if (IndicatorSize == TabBarIndicatorSize.Label)
         {
             double tabWidth = TabKeys[tabIndex].CurrentContext?.Size?.Width ?? tabRight - tabLeft;
-            Thickness insets = LabelPaddings[tabIndex]
+            EdgeInsets insets = LabelPaddings[tabIndex]
                 .Resolve(_currentTextDirection ?? Plumix.UI.TextDirection.Ltr);
             double delta = ((tabRight - tabLeft) - (tabWidth + insets.Left + insets.Right)) / 2.0;
             tabLeft += delta + insets.Left;
             tabRight = tabLeft + tabWidth;
         }
 
-        Thickness indicatorInsets = IndicatorPadding
+        EdgeInsets indicatorInsets = IndicatorPadding
             .Resolve(_currentTextDirection ?? Plumix.UI.TextDirection.Ltr);
         var rect = new Rect(tabLeft, 0.0, tabRight - tabLeft, tabBarSize.Height);
         if (rect.Width < indicatorInsets.Left + indicatorInsets.Right
@@ -1712,7 +1712,7 @@ public sealed class TabBar : StatefulWidget, IPreferredSizeWidget
                                   ?? tabBarTheme.SplashBorderRadius
                                   ?? defaults.SplashBorderRadius,
                     child: new Padding(
-                        new Thickness(0, 0, 0, Current.IndicatorWeight),
+                        EdgeInsets.FromLTRB(0, 0, 0, Current.IndicatorWeight),
                         child));
                 child = new MergeSemantics(child);
                 if (!Current.IsScrollable && effectiveTabAlignment == global::Plumix.Material.TabAlignment.Fill)

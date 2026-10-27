@@ -85,7 +85,7 @@ internal sealed class CenterViewportDemoPageState : State
                                 key: CenterKey,
                                 child: new Container(
                                     color: new Color(0xFF263238),
-                                    padding: new Thickness(12, 10),
+                                    padding: EdgeInsets.Symmetric(horizontal: 12, vertical: 10),
                                     child: new Text(
                                         "center (offset 0)",
                                         style: new TextStyle(
@@ -105,7 +105,7 @@ internal sealed class CenterViewportDemoPageState : State
         return new Container(
             height: 44,
             color: background,
-            padding: new Thickness(12, 8),
+            padding: EdgeInsets.Symmetric(horizontal: 12, vertical: 8),
             child: new Text($"item {index}", style: new TextStyle(FontSize: 13, Color: Colors.Black)));
     }
 }

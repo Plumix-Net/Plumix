@@ -335,7 +335,7 @@ public sealed class UiGeometryDartParityTests
             Assert.Equal(deflated.TopLeft, super.TopLeft);
         }
         Assert.True(deflated.Deflate(20).IsEmpty);
-        Assert.Equal(Radius.Zero, deflated.DeflateEdges(new Thickness(100)).TopLeft);
+        Assert.Equal(Radius.Zero, EdgeInsets.All(100).DeflateRRect(deflated).TopLeft);
     }
 
     [Fact]

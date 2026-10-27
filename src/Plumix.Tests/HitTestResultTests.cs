@@ -245,7 +245,7 @@ public sealed class HitTestResultTests
     public void RenderBoxHitTest_StampsEachEntryWithItsGlobalToLocalTransform()
     {
         var leaf = new FixedHitTestBox(new Size(20, 20));
-        var padded = new RenderPadding(new Thickness(10, 10, 0, 0), leaf);
+        var padded = new RenderPadding(EdgeInsets.FromLTRB(10, 10, 0, 0), leaf);
         var transform = new RenderTransform(Matrix4.Diagonal3Values(2.0, 2.0, 1.0), child: padded);
         PipelineOwner pipeline = BuildPipeline(transform);
 
@@ -276,7 +276,7 @@ public sealed class HitTestResultTests
                 localDelta = @event.LocalDelta;
             },
             child: new FixedHitTestBox(new Size(40, 40)));
-        var padded = new RenderPadding(new Thickness(10, 20, 0, 0), listener);
+        var padded = new RenderPadding(EdgeInsets.FromLTRB(10, 20, 0, 0), listener);
         var transform = new RenderTransform(Matrix4.Diagonal3Values(2.0, 2.0, 1.0), child: padded);
         PipelineOwner pipeline = BuildPipeline(transform);
 

@@ -130,7 +130,7 @@ internal sealed class ScaffoldSlotsDemoPageState : State
                                 new BorderSide(new Color(0xFFD6DEEA), 1))),
                         child: new ContextBuilder(previewContext => new MediaQuery(
                             data: MediaQuery.Of(previewContext).CopyWith(
-                                viewInsets: new Thickness(0, 0, 0, _showKeyboard ? 120 : 0)),
+                                viewInsets: EdgeInsets.FromLTRB(0, 0, 0, _showKeyboard ? 120 : 0)),
                             child: new Scaffold(
                                 resizeToAvoidBottomInset: _resizeForKeyboard,
                                 appBar: new AppBar(title: new Text("Slots preview")),
@@ -184,11 +184,11 @@ internal sealed class ScaffoldSlotsDemoPageState : State
 
     private Widget BuildPreviewBody(BuildContext context)
     {
-        Thickness padding = MediaQuery.Of(context).Padding;
+        EdgeInsets padding = MediaQuery.Of(context).Padding;
 
         return new Container(
             color: new Color(0xFFF2F6FF),
-            padding: new Thickness(14),
+            padding: EdgeInsets.All(14),
             child: new Column(
                 crossAxisAlignment: CrossAxisAlignment.Stretch,
                 spacing: 8,
@@ -226,7 +226,7 @@ internal sealed class ScaffoldSlotsDemoPageState : State
         return new Drawer(
             child: new ContextBuilder(
                 context => new Container(
-                    padding: new Thickness(14),
+                    padding: EdgeInsets.All(14),
                     child: new Column(
                         mainAxisSize: MainAxisSize.Min,
                         crossAxisAlignment: CrossAxisAlignment.Stretch,
@@ -254,7 +254,7 @@ internal sealed class ScaffoldSlotsDemoPageState : State
             child: new Text(label, style: new TextStyle(FontSize: 12)),
             style: TextButton.StyleFrom(
                 foregroundColor: new Color(0xFF0D47A1),
-                padding: new Thickness(12, 8),
+                padding: EdgeInsets.Symmetric(horizontal: 12, vertical: 8),
                 minimumSize: new Size(0, 36),
                 shape: new RoundedRectangleBorder(
                     borderRadius: BorderRadius.Circular(8))));
@@ -274,7 +274,7 @@ internal sealed class ScaffoldSlotsDemoPageState : State
                 style: TextButton.StyleFrom(
                     foregroundColor: Colors.Black,
                     backgroundColor: background,
-                    padding: new Thickness(10, 8),
+                    padding: EdgeInsets.Symmetric(horizontal: 10, vertical: 8),
                     minimumSize: new Size(0, 36),
                     shape: new RoundedRectangleBorder(
                         borderRadius: BorderRadius.Circular(8)))));

@@ -101,7 +101,7 @@ internal sealed class ExpansionPanelDemoPageState : State
     private static Widget BuildHeader(string label, bool expanded)
     {
         return new Padding(
-            new Avalonia.Thickness(16, 0),
+            EdgeInsets.Symmetric(horizontal: 16),
             new Text(
                 $"{label} · {(expanded ? "open" : "closed")}",
                 style: new TextStyle(
@@ -112,7 +112,7 @@ internal sealed class ExpansionPanelDemoPageState : State
     private static Widget BuildBody(string label)
     {
         return new Padding(
-            new Avalonia.Thickness(16, 0, 16, 16),
+            EdgeInsets.FromLTRB(16, 0, 16, 16),
             new Text(label, style: new TextStyle(FontSize: 13, Color: new Color(0xFF49454F))));
     }
 }

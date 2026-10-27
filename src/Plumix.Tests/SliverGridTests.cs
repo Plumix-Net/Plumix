@@ -1096,7 +1096,7 @@ public sealed class SliverGridTests
                 width: 300.0, // forces the grid children to be 300..300
                 child: GridView.Count(
                     crossAxisCount: 1,
-                    padding: new Thickness(0.0, 100.0, 0.0, 0.0),
+                    padding: EdgeInsets.FromLTRB(0.0, 100.0, 0.0, 0.0),
                     children:
                     [
                         .. Enumerable.Range(0, 10)

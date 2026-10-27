@@ -412,7 +412,7 @@ public sealed class DrawerControllerState : State<DrawerController>
             return CurrentWidget.EdgeDragWidth.Value;
         }
 
-        Thickness padding = MediaQuery.MaybePaddingOf(context) ?? default;
+        EdgeInsets padding = MediaQuery.MaybePaddingOf(context) ?? default;
         bool isOnLeft = IsOnLeft(CurrentWidget.Alignment, textDirection);
         return DefaultEdgeDragWidth + (isOnLeft ? padding.Left : padding.Right);
     }

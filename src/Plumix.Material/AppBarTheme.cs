@@ -30,7 +30,7 @@ public sealed class AppBarTheme : InheritedTheme
         TextStyle? toolbarTextStyle = null,
         TextStyle? titleTextStyle = null,
         SystemUiOverlayStyle? systemOverlayStyle = null,
-        Thickness? actionsPadding = null,
+        EdgeInsetsGeometry? actionsPadding = null,
         AppBarThemeData? data = null,
         Key? key = null) : base(child ?? new SizedBox(), key)
     {
@@ -119,7 +119,7 @@ public sealed class AppBarTheme : InheritedTheme
 
     public SystemUiOverlayStyle? SystemOverlayStyle => Data.SystemOverlayStyle;
 
-    public Thickness? ActionsPadding => Data.ActionsPadding;
+    public EdgeInsetsGeometry? ActionsPadding => Data.ActionsPadding;
 
     public AppBarTheme CopyWith(
         Color? color = null,
@@ -139,7 +139,7 @@ public sealed class AppBarTheme : InheritedTheme
         TextStyle? toolbarTextStyle = null,
         TextStyle? titleTextStyle = null,
         SystemUiOverlayStyle? systemOverlayStyle = null,
-        Thickness? actionsPadding = null)
+        EdgeInsetsGeometry? actionsPadding = null)
     {
         if (color is not null && backgroundColor is not null)
         {

@@ -317,7 +317,7 @@ public sealed class ImageWidgetTests : IDisposable
             {
                 observedFrame = frame;
                 observedSynchronous = synchronous;
-                frameResult = new Padding(new Thickness(1), child);
+                frameResult = new Padding(EdgeInsets.All(1), child);
                 return frameResult;
             },
             loadingBuilder: (_, child, _) =>

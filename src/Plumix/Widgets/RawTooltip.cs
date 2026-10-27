@@ -504,7 +504,7 @@ public sealed class RawTooltipState : State<RawTooltip>
 
         double bottomViewInset = MediaQuery.MaybeViewInsetsOf(context)?.Bottom ?? 0.0;
         Widget overlayChild = new Padding(
-            insets: new Thickness(0, 0, 0, bottomViewInset),
+            insets: EdgeInsets.FromLTRB(0, 0, 0, bottomViewInset),
             child: new CustomSingleChildLayout(
                 layoutDelegate: new RawTooltipPositionLayoutDelegate(
                     target,

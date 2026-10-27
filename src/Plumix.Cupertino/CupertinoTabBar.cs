@@ -133,7 +133,7 @@ public sealed class CupertinoTabBar : StatelessWidget, IPreferredSizeWidget
                     child: DefaultTextStyle.Merge(
                         style: CupertinoTheme.Of(context).TextTheme.TabLabelTextStyle.CopyWith(color: inactive),
                         child: new Padding(
-                            new Thickness(0.0, 0.0, 0.0, bottomPadding),
+                            EdgeInsets.FromLTRB(0.0, 0.0, 0.0, bottomPadding),
                             child: new Semantics(
                                 explicitChildNodes: true,
                                 child: new Row(
@@ -208,7 +208,7 @@ public sealed class CupertinoTabBar : StatelessWidget, IPreferredSizeWidget
                                 behavior: HitTestBehavior.Opaque,
                                 onTap: OnTap is null ? null : () => OnTap(itemIndex),
                                 child: new Padding(
-                                    new Thickness(0.0, 0.0, 0.0, 4.0),
+                                    EdgeInsets.FromLTRB(0.0, 0.0, 0.0, 4.0),
                                     child: new Column(
                                         mainAxisAlignment: MainAxisAlignment.End,
                                         children: BuildSingleTabItem(Items[itemIndex], active))))))));

@@ -216,7 +216,7 @@ public sealed class CupertinoActionSheetTests : IDisposable
         using var harness = new CupertinoThemeTestHarness(Wrap(
             Sheet(actions: Enumerable.Range(0, 20).Select(index => Action($"Button {index}")).ToArray()),
             size: viewSize,
-            viewPadding: new Thickness(horizontalPadding, topPadding, horizontalPadding, bottomPadding)));
+            viewPadding: EdgeInsets.FromLTRB(horizontalPadding, topPadding, horizontalPadding, bottomPadding)));
         harness.Pump(viewSize);
 
         RenderBox mainSheet = Descendants<RenderStack>(harness.RenderView)[0];
@@ -561,7 +561,7 @@ public sealed class CupertinoActionSheetTests : IDisposable
         Widget child,
         double textScaleFactor = 1.0,
         Size? size = null,
-        Thickness viewPadding = default,
+        EdgeInsets viewPadding = default,
         Brightness brightness = Brightness.Light)
     {
         return new Directionality(

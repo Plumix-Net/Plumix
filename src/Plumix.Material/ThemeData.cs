@@ -154,7 +154,7 @@ public sealed record AppBarThemeData(
     double? ToolbarHeight = null,
     TextStyle? ToolbarTextStyle = null,
     TextStyle? TitleTextStyle = null,
-    Thickness? ActionsPadding = null,
+    EdgeInsetsGeometry? ActionsPadding = null,
     SystemUiOverlayStyle? SystemOverlayStyle = null,
     double? Elevation = null,
     double? ScrolledUnderElevation = null,
@@ -174,7 +174,7 @@ public sealed record AppBarThemeData(
         double? toolbarHeight = null,
         TextStyle? toolbarTextStyle = null,
         TextStyle? titleTextStyle = null,
-        Thickness? actionsPadding = null,
+        EdgeInsetsGeometry? actionsPadding = null,
         SystemUiOverlayStyle? systemOverlayStyle = null,
         double? elevation = null,
         double? scrolledUnderElevation = null,
@@ -227,7 +227,7 @@ public sealed record AppBarThemeData(
             ToolbarHeight: LerpDouble(a?.ToolbarHeight, b?.ToolbarHeight, clampedT),
             ToolbarTextStyle: LerpTextStyle(a?.ToolbarTextStyle, b?.ToolbarTextStyle, clampedT),
             TitleTextStyle: LerpTextStyle(a?.TitleTextStyle, b?.TitleTextStyle, clampedT),
-            ActionsPadding: LerpThickness(a?.ActionsPadding, b?.ActionsPadding, clampedT),
+            ActionsPadding: EdgeInsetsGeometry.Lerp(a?.ActionsPadding, b?.ActionsPadding, clampedT),
             SystemOverlayStyle: clampedT < 0.5 ? a?.SystemOverlayStyle : b?.SystemOverlayStyle,
             Elevation: LerpDouble(a?.Elevation, b?.Elevation, clampedT),
             ScrolledUnderElevation: LerpDouble(
@@ -285,21 +285,6 @@ public sealed record AppBarThemeData(
         return TextStyle.Lerp(a ?? new TextStyle(), b ?? new TextStyle(), t);
     }
 
-    private static Thickness? LerpThickness(Thickness? a, Thickness? b, double t)
-    {
-        if (!a.HasValue && !b.HasValue)
-        {
-            return null;
-        }
-
-        var from = a ?? default;
-        var to = b ?? default;
-        return new Thickness(
-            from.Left + ((to.Left - from.Left) * t),
-            from.Top + ((to.Top - from.Top) * t),
-            from.Right + ((to.Right - from.Right) * t),
-            from.Bottom + ((to.Bottom - from.Bottom) * t));
-    }
 }
 
 public sealed record ThemeData : IDiagnosticable

@@ -59,7 +59,7 @@ internal sealed class BadgeTooltipDemoPageState : State
                     ]),
                 new Container(
                     color: new Color(0xFFF7F2FA),
-                    padding: new Thickness(20),
+                    padding: EdgeInsets.All(20),
                     child: new Row(
                         mainAxisAlignment: MainAxisAlignment.SpaceAround,
                         children:
@@ -172,7 +172,7 @@ internal sealed class BadgeTooltipDemoPageState : State
                 TextColor: Colors.White,
                 LargeSize: 18,
                 SmallSize: 8,
-                Padding: new Thickness(5, 0),
+                Padding: EdgeInsets.Symmetric(horizontal: 5),
                 Alignment: AlignmentDirectional.BottomEnd),
             child: new TooltipTheme(
                 data: new TooltipThemeData(

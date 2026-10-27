@@ -58,8 +58,8 @@ public sealed class SafeAreaTests
         var root = new TestRootElement(
             new MediaQuery(
                 data: new MediaQueryData(
-                    Padding: new Thickness(10, 20, 30, 40),
-                    ViewPadding: new Thickness(10, 20, 30, 40)),
+                    Padding: EdgeInsets.FromLTRB(10, 20, 30, 40),
+                    ViewPadding: EdgeInsets.FromLTRB(10, 20, 30, 40)),
                 child: new SliverSafeArea(
                     sliver: new SliverToBoxAdapter(new MediaQueryProbeWidget()))));
 
@@ -68,9 +68,9 @@ public sealed class SafeAreaTests
         owner.PumpFrame();
 
         var outerPadding = RequireRenderObject<RenderSliverPadding>(root.ChildElement);
-        Assert.Equal(new Thickness(10, 20, 30, 40), outerPadding.Padding);
-        Assert.Equal(new Thickness(), MediaQueryProbe.Padding);
-        Assert.Equal(new Thickness(), MediaQueryProbe.ViewPadding);
+        Assert.Equal(EdgeInsets.FromLTRB(10, 20, 30, 40), outerPadding.Padding);
+        Assert.Equal(EdgeInsets.Zero, MediaQueryProbe.Padding);
+        Assert.Equal(EdgeInsets.Zero, MediaQueryProbe.ViewPadding);
     }
 
     [Fact]
@@ -82,14 +82,14 @@ public sealed class SafeAreaTests
         var root = new TestRootElement(
             new MediaQuery(
                 data: new MediaQueryData(
-                    Padding: new Thickness(4, 10, 3, 2),
-                    ViewPadding: new Thickness(4, 10, 3, 2)),
+                    Padding: EdgeInsets.FromLTRB(4, 10, 3, 2),
+                    ViewPadding: EdgeInsets.FromLTRB(4, 10, 3, 2)),
                 child: new SliverSafeArea(
                     left: false,
                     top: true,
                     right: true,
                     bottom: false,
-                    minimum: new EdgeInsets(5, 1, 8, 4),
+                    minimum: EdgeInsets.FromLTRB(5, 1, 8, 4),
                     sliver: new SliverToBoxAdapter(new MediaQueryProbeWidget()))));
 
         root.Attach(owner);
@@ -97,8 +97,8 @@ public sealed class SafeAreaTests
         owner.PumpFrame();
 
         var outerPadding = RequireRenderObject<RenderSliverPadding>(root.ChildElement);
-        Assert.Equal(new Thickness(5, 10, 8, 4), outerPadding.Padding);
-        Assert.Equal(new Thickness(4, 0, 0, 2), MediaQueryProbe.Padding);
+        Assert.Equal(EdgeInsets.FromLTRB(5, 10, 8, 4), outerPadding.Padding);
+        Assert.Equal(EdgeInsets.FromLTRB(4, 0, 0, 2), MediaQueryProbe.Padding);
     }
 
     [Fact]
@@ -120,8 +120,8 @@ public sealed class SafeAreaTests
         var root = new TestRootElement(
             new MediaQuery(
                 data: new MediaQueryData(
-                    Padding: new Thickness(10, 20, 30, 40),
-                    ViewPadding: new Thickness(10, 20, 30, 40)),
+                    Padding: EdgeInsets.FromLTRB(10, 20, 30, 40),
+                    ViewPadding: EdgeInsets.FromLTRB(10, 20, 30, 40)),
                 child: new SliverSafeArea(
                     sliver: new SliverToBoxAdapter(new SizedBox(height: 50)))));
 
@@ -154,8 +154,8 @@ public sealed class SafeAreaTests
         var root = new TestRootElement(
             new MediaQuery(
                 data: new MediaQueryData(
-                    Padding: new Thickness(10, 20, 30, 40),
-                    ViewPadding: new Thickness(10, 20, 30, 40)),
+                    Padding: EdgeInsets.FromLTRB(10, 20, 30, 40),
+                    ViewPadding: EdgeInsets.FromLTRB(10, 20, 30, 40)),
                 child: new SafeArea(
                     child: new MediaQueryProbeWidget())));
 
@@ -164,9 +164,9 @@ public sealed class SafeAreaTests
         owner.PumpFrame();
 
         var outerPadding = RequireRenderObject<RenderPadding>(root.ChildElement);
-        Assert.Equal(new Thickness(10, 20, 30, 40), outerPadding.Padding);
-        Assert.Equal(new Thickness(), MediaQueryProbe.Padding);
-        Assert.Equal(new Thickness(), MediaQueryProbe.ViewPadding);
+        Assert.Equal(EdgeInsets.FromLTRB(10, 20, 30, 40), outerPadding.Padding);
+        Assert.Equal(EdgeInsets.Zero, MediaQueryProbe.Padding);
+        Assert.Equal(EdgeInsets.Zero, MediaQueryProbe.ViewPadding);
     }
 
     [Fact]
@@ -178,8 +178,8 @@ public sealed class SafeAreaTests
         var root = new TestRootElement(
             new MediaQuery(
                 data: new MediaQueryData(
-                    Padding: new Thickness(12, 4, 6, 0),
-                    ViewPadding: new Thickness(12, 4, 6, 34)),
+                    Padding: EdgeInsets.FromLTRB(12, 4, 6, 0),
+                    ViewPadding: EdgeInsets.FromLTRB(12, 4, 6, 34)),
                 child: new SafeArea(
                     maintainBottomViewPadding: true,
                     child: new MediaQueryProbeWidget())));
@@ -189,9 +189,9 @@ public sealed class SafeAreaTests
         owner.PumpFrame();
 
         var outerPadding = RequireRenderObject<RenderPadding>(root.ChildElement);
-        Assert.Equal(new Thickness(12, 4, 6, 34), outerPadding.Padding);
-        Assert.Equal(new Thickness(), MediaQueryProbe.Padding);
-        Assert.Equal(new Thickness(0, 0, 0, 34), MediaQueryProbe.ViewPadding);
+        Assert.Equal(EdgeInsets.FromLTRB(12, 4, 6, 34), outerPadding.Padding);
+        Assert.Equal(EdgeInsets.Zero, MediaQueryProbe.Padding);
+        Assert.Equal(EdgeInsets.FromLTRB(0, 0, 0, 34), MediaQueryProbe.ViewPadding);
     }
 
     [Fact]
@@ -203,14 +203,14 @@ public sealed class SafeAreaTests
         var root = new TestRootElement(
             new MediaQuery(
                 data: new MediaQueryData(
-                    Padding: new Thickness(4, 10, 3, 2),
-                    ViewPadding: new Thickness(4, 10, 3, 2)),
+                    Padding: EdgeInsets.FromLTRB(4, 10, 3, 2),
+                    ViewPadding: EdgeInsets.FromLTRB(4, 10, 3, 2)),
                 child: new SafeArea(
                     left: false,
                     top: true,
                     right: true,
                     bottom: false,
-                    minimum: new EdgeInsets(5, 1, 8, 4),
+                    minimum: EdgeInsets.FromLTRB(5, 1, 8, 4),
                     child: new MediaQueryProbeWidget())));
 
         root.Attach(owner);
@@ -218,8 +218,8 @@ public sealed class SafeAreaTests
         owner.PumpFrame();
 
         var outerPadding = RequireRenderObject<RenderPadding>(root.ChildElement);
-        Assert.Equal(new Thickness(5, 10, 8, 4), outerPadding.Padding);
-        Assert.Equal(new Thickness(4, 0, 0, 2), MediaQueryProbe.Padding);
+        Assert.Equal(EdgeInsets.FromLTRB(5, 10, 8, 4), outerPadding.Padding);
+        Assert.Equal(EdgeInsets.FromLTRB(4, 0, 0, 2), MediaQueryProbe.Padding);
     }
 
     [Fact]
@@ -229,8 +229,8 @@ public sealed class SafeAreaTests
         var root = new TestRootElement(
             new MediaQuery(
                 data: new MediaQueryData(
-                    Padding: new Thickness(20),
-                    ViewPadding: new Thickness(20)),
+                    Padding: EdgeInsets.All(20),
+                    ViewPadding: EdgeInsets.All(20)),
                 child: new SafeArea(
                     top: false,
                     child: new SafeArea(
@@ -245,8 +245,8 @@ public sealed class SafeAreaTests
         var inner = Assert.IsType<RenderPadding>(outer.Child);
         outer.Layout(new BoxConstraints(MaxWidth: 800, MaxHeight: 600));
 
-        Assert.Equal(new Thickness(20, 0, 20, 20), outer.Padding);
-        Assert.Equal(new Thickness(0, 20, 0, 0), inner.Padding);
+        Assert.Equal(EdgeInsets.FromLTRB(20, 0, 20, 20), outer.Padding);
+        Assert.Equal(EdgeInsets.FromLTRB(0, 20, 0, 0), inner.Padding);
         Assert.Equal(new Size(80, 70), outer.Size);
     }
 
@@ -262,8 +262,8 @@ public sealed class SafeAreaTests
         var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new MediaQuery(
             data: new MediaQueryData(
-                Padding: new Thickness(20),
-                ViewPadding: new Thickness(20)),
+                Padding: EdgeInsets.All(20),
+                ViewPadding: EdgeInsets.All(20)),
             child: child));
 
         root.Attach(owner);
@@ -271,18 +271,18 @@ public sealed class SafeAreaTests
         owner.PumpFrame();
 
         var outer = RequireRenderObject<RenderPadding>(root.ChildElement);
-        Assert.Equal(new Thickness(20, 20, 20, 0), outer.Padding);
+        Assert.Equal(EdgeInsets.FromLTRB(20, 20, 20, 0), outer.Padding);
 
         root.Update(new MediaQuery(
             data: new MediaQueryData(
-                Padding: new Thickness(100, 30, 0, 40),
-                ViewPadding: new Thickness(100, 30, 0, 40)),
+                Padding: EdgeInsets.FromLTRB(100, 30, 0, 40),
+                ViewPadding: EdgeInsets.FromLTRB(100, 30, 0, 40)),
             child: child));
         owner.PumpFrame();
 
         outer = RequireRenderObject<RenderPadding>(root.ChildElement);
         var inner = Assert.IsType<RenderPadding>(outer.Child);
-        Assert.Equal(new Thickness(100, 30, 0, 0), outer.Padding);
+        Assert.Equal(EdgeInsets.FromLTRB(100, 30, 0, 0), outer.Padding);
         Assert.Equal(default, inner.Padding);
     }
 
@@ -290,54 +290,54 @@ public sealed class SafeAreaTests
     public void MediaQueryData_RemovePadding_AdjustsViewPaddingLikeFlutter()
     {
         var data = new MediaQueryData(
-            Padding: new Thickness(4, 6, 8, 10),
-            ViewPadding: new Thickness(9, 11, 13, 15));
+            Padding: EdgeInsets.FromLTRB(4, 6, 8, 10),
+            ViewPadding: EdgeInsets.FromLTRB(9, 11, 13, 15));
 
         var updated = data.RemovePadding(removeLeft: true, removeBottom: true);
 
-        Assert.Equal(new Thickness(0, 6, 8, 0), updated.Padding);
-        Assert.Equal(new Thickness(5, 11, 13, 5), updated.ViewPadding);
+        Assert.Equal(EdgeInsets.FromLTRB(0, 6, 8, 0), updated.Padding);
+        Assert.Equal(EdgeInsets.FromLTRB(5, 11, 13, 5), updated.ViewPadding);
     }
 
     [Fact]
     public void MediaQueryData_RemoveViewInsets_AdjustsViewPaddingAndZeroesSelectedInsets()
     {
         var data = new MediaQueryData(
-            Padding: new Thickness(3, 4, 5, 6),
-            ViewPadding: new Thickness(9, 10, 11, 12),
-            ViewInsets: new Thickness(2, 20, 4, 6));
+            Padding: EdgeInsets.FromLTRB(3, 4, 5, 6),
+            ViewPadding: EdgeInsets.FromLTRB(9, 10, 11, 12),
+            ViewInsets: EdgeInsets.FromLTRB(2, 20, 4, 6));
 
         var updated = data.RemoveViewInsets(removeLeft: true, removeBottom: true);
 
-        Assert.Equal(new Thickness(3, 4, 5, 6), updated.Padding);
-        Assert.Equal(new Thickness(0, 20, 4, 0), updated.ViewInsets);
-        Assert.Equal(new Thickness(7, 10, 11, 6), updated.ViewPadding);
+        Assert.Equal(EdgeInsets.FromLTRB(3, 4, 5, 6), updated.Padding);
+        Assert.Equal(EdgeInsets.FromLTRB(0, 20, 4, 0), updated.ViewInsets);
+        Assert.Equal(EdgeInsets.FromLTRB(7, 10, 11, 6), updated.ViewPadding);
     }
 
     [Fact]
     public void MediaQueryData_RemoveViewInsets_ClampsViewPaddingToZeroWhenInsetsExceedPadding()
     {
         var data = new MediaQueryData(
-            ViewPadding: new Thickness(5, 6, 7, 8),
-            ViewInsets: new Thickness(9, 10, 3, 2));
+            ViewPadding: EdgeInsets.FromLTRB(5, 6, 7, 8),
+            ViewInsets: EdgeInsets.FromLTRB(9, 10, 3, 2));
 
         var updated = data.RemoveViewInsets(removeLeft: true, removeTop: true);
 
-        Assert.Equal(new Thickness(0, 0, 3, 2), updated.ViewInsets);
-        Assert.Equal(new Thickness(0, 0, 7, 8), updated.ViewPadding);
+        Assert.Equal(EdgeInsets.FromLTRB(0, 0, 3, 2), updated.ViewInsets);
+        Assert.Equal(EdgeInsets.FromLTRB(0, 0, 7, 8), updated.ViewPadding);
     }
 
     [Fact]
     public void MediaQueryData_RemoveViewPadding_ZerosSelectedPaddingSides()
     {
         var data = new MediaQueryData(
-            Padding: new Thickness(3, 4, 5, 6),
-            ViewPadding: new Thickness(7, 8, 9, 10));
+            Padding: EdgeInsets.FromLTRB(3, 4, 5, 6),
+            ViewPadding: EdgeInsets.FromLTRB(7, 8, 9, 10));
 
         var updated = data.RemoveViewPadding(removeTop: true, removeRight: true);
 
-        Assert.Equal(new Thickness(3, 0, 0, 6), updated.Padding);
-        Assert.Equal(new Thickness(7, 0, 0, 10), updated.ViewPadding);
+        Assert.Equal(EdgeInsets.FromLTRB(3, 0, 0, 6), updated.Padding);
+        Assert.Equal(EdgeInsets.FromLTRB(7, 0, 0, 10), updated.ViewPadding);
     }
 
     [Fact]
@@ -377,8 +377,8 @@ public sealed class SafeAreaTests
         };
 
         Assert.True(MediaQueryProbe.DidBuild);
-        Assert.Equal(new Thickness(), MediaQueryProbe.Padding);
-        Assert.Equal(new Thickness(), MediaQueryProbe.ViewPadding);
+        Assert.Equal(EdgeInsets.Zero, MediaQueryProbe.Padding);
+        Assert.Equal(EdgeInsets.Zero, MediaQueryProbe.ViewPadding);
         Assert.Equal(new Size(0, 0), MediaQueryProbe.Size);
         Assert.False(MediaQueryProbe.HasOverlay);
 
@@ -431,17 +431,17 @@ public sealed class SafeAreaTests
     {
         public static bool DidBuild { get; private set; }
 
-        public static Thickness Padding { get; private set; }
+        public static EdgeInsets Padding { get; private set; }
 
-        public static Thickness ViewPadding { get; private set; }
+        public static EdgeInsets ViewPadding { get; private set; }
 
         public static Size Size { get; private set; }
 
         public static bool HasOverlay { get; private set; }
 
         public static void Record(
-            Thickness padding,
-            Thickness viewPadding,
+            EdgeInsets padding,
+            EdgeInsets viewPadding,
             Size size,
             bool hasOverlay)
         {

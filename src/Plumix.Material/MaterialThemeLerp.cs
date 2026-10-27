@@ -147,16 +147,16 @@ internal static class MaterialThemeLerp
             from.Y + ((to.Y - from.Y) * t));
     }
 
-    public static Thickness? Thickness(Thickness? a, Thickness? b, double t)
+    public static EdgeInsets? EdgeInsets(EdgeInsets? a, EdgeInsets? b, double t)
     {
         if (!a.HasValue && !b.HasValue)
         {
             return null;
         }
 
-        Avalonia.Thickness from = a ?? default;
-        Avalonia.Thickness to = b ?? default;
-        return new Avalonia.Thickness(
+        Plumix.Rendering.EdgeInsets from = a ?? default;
+        Plumix.Rendering.EdgeInsets to = b ?? default;
+        return new Plumix.Rendering.EdgeInsets(
             from.Left + ((to.Left - from.Left) * t),
             from.Top + ((to.Top - from.Top) * t),
             from.Right + ((to.Right - from.Right) * t),
@@ -231,12 +231,12 @@ internal static class MaterialThemeLerp
         return StateProperty(a, b, t, Size);
     }
 
-    public static WidgetStateProperty<Thickness?>? ThicknessStateProperty(
-        WidgetStateProperty<Thickness?>? a,
-        WidgetStateProperty<Thickness?>? b,
+    public static WidgetStateProperty<EdgeInsets?>? ResolvedEdgeInsetsStateProperty(
+        WidgetStateProperty<EdgeInsets?>? a,
+        WidgetStateProperty<EdgeInsets?>? b,
         double t)
     {
-        return StateProperty(a, b, t, Thickness);
+        return StateProperty(a, b, t, EdgeInsets);
     }
 
     public static WidgetStateProperty<EdgeInsetsGeometry?>? EdgeInsetsStateProperty(

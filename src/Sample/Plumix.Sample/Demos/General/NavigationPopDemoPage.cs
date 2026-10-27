@@ -104,7 +104,7 @@ internal sealed class NavigationPopDemoPageState : State
     {
         return new Container(
             color: page == 0 ? new Color(0xFFE8F0FE) : new Color(0xFFE6F4EA),
-            padding: new Thickness(16),
+            padding: EdgeInsets.All(16),
             alignment: Alignment.Center,
             child: new Text(
                 page == 0 ? "Nested root" : $"Nested page {page}",

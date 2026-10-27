@@ -117,7 +117,7 @@ internal sealed class AlignDemoPageState : State
             thumbVisibility: true,
             child: new SingleChildScrollView(
                 controller: _scrollController,
-                padding: new Thickness(0, 0, 12, 12),
+                padding: EdgeInsets.FromLTRB(0, 0, 12, 12),
                 child: BuildContent()));
     }
 
@@ -214,7 +214,7 @@ internal sealed class AlignDemoPageState : State
                     height: 140,
                     color: new Color(0xFFE7EDF6),
                     child: new AnimatedPadding(
-                        padding: new Thickness(_expandedPadding ? 24 : 8),
+                        padding: EdgeInsets.All(_expandedPadding ? 24 : 8),
                         duration: TimeSpan.FromMilliseconds(350),
                         curve: Curves.EaseInOut,
                         onEnd: HandleAnimationEnd,
@@ -1027,7 +1027,7 @@ internal sealed class AlignDemoPageState : State
                 background: (Color)Avalonia.Media.Color.Parse(colorHex),
                 foreground: Colors.Black,
                 fontSize: 12,
-                padding: new Thickness(10, 8)));
+                padding: EdgeInsets.Symmetric(horizontal: 10, vertical: 8)));
     }
 
     private void SetAlignment(Alignment alignment)

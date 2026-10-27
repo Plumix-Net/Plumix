@@ -1233,7 +1233,7 @@ public sealed class MaterialBottomSheetTests : IDisposable
         using var harness = new WidgetRenderHarness(new Directionality(
             TextDirection.Ltr,
             new MediaQuery(
-                new MediaQueryData(Size: new Size(500, 400), Padding: new Thickness(50)),
+                new MediaQueryData(Size: new Size(500, 400), Padding: EdgeInsets.All(50)),
                 MaterialLocalizationsTesting.Localized(
                     new Theme(
                         ThemeData.Light,

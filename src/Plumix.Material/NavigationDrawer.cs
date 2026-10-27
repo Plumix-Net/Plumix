@@ -12,7 +12,7 @@ namespace Plumix.Material;
 public sealed class NavigationDrawer : StatelessWidget
 {
     private static readonly TimeSpan SelectionAnimationDuration = TimeSpan.FromMilliseconds(500);
-    private static readonly Thickness DefaultTilePadding = new(12, 0);
+    private static readonly EdgeInsets DefaultTilePadding = EdgeInsets.Symmetric(horizontal: 12);
 
     public NavigationDrawer(
         IReadOnlyList<Widget> children,
@@ -26,7 +26,7 @@ public sealed class NavigationDrawer : StatelessWidget
         ShapeBorder? indicatorShape = null,
         Action<int>? onDestinationSelected = null,
         int? selectedIndex = 0,
-        Thickness? tilePadding = null,
+        EdgeInsetsGeometry? tilePadding = null,
         Key? key = null) : base(key)
     {
         if (children is null) throw new ArgumentNullException(nameof(children));
@@ -67,7 +67,7 @@ public sealed class NavigationDrawer : StatelessWidget
     public ShapeBorder? IndicatorShape { get; }
     public Action<int>? OnDestinationSelected { get; }
     public int? SelectedIndex { get; }
-    public Thickness TilePadding { get; }
+    public EdgeInsetsGeometry TilePadding { get; }
 
     public override Widget Build(BuildContext context)
     {
@@ -152,7 +152,7 @@ internal sealed class NavigationDrawerDestinationTile : StatefulWidget
         bool selected,
         Color? indicatorColor,
         ShapeBorder? indicatorShape,
-        Thickness tilePadding,
+        EdgeInsetsGeometry tilePadding,
         Action onTap,
         TimeSpan duration,
         Key? key = null) : base(key)
@@ -174,7 +174,7 @@ internal sealed class NavigationDrawerDestinationTile : StatefulWidget
     public bool Selected { get; }
     public Color? IndicatorColor { get; }
     public ShapeBorder? IndicatorShape { get; }
-    public Thickness TilePadding { get; }
+    public EdgeInsetsGeometry TilePadding { get; }
     public Action OnTap { get; }
     public TimeSpan Duration { get; }
 

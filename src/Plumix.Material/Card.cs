@@ -18,7 +18,7 @@ public enum CardVariant
 
 public sealed class Card : StatelessWidget
 {
-    private static readonly Thickness DefaultMargin = new(4);
+    private static readonly EdgeInsets DefaultMargin = EdgeInsets.All(4);
 
     public Card(
         Color? color = null,
@@ -27,7 +27,7 @@ public sealed class Card : StatelessWidget
         double? elevation = null,
         ShapeBorder? shape = null,
         bool borderOnForeground = true,
-        Thickness? margin = null,
+        EdgeInsetsGeometry? margin = null,
         Clip? clipBehavior = null,
         Widget? child = null,
         bool semanticContainer = true,
@@ -55,7 +55,7 @@ public sealed class Card : StatelessWidget
         double? elevation = null,
         ShapeBorder? shape = null,
         bool borderOnForeground = true,
-        Thickness? margin = null,
+        EdgeInsetsGeometry? margin = null,
         Clip? clipBehavior = null,
         Widget? child = null,
         bool semanticContainer = true,
@@ -96,7 +96,7 @@ public sealed class Card : StatelessWidget
 
     public bool BorderOnForeground { get; }
 
-    public Thickness? Margin { get; }
+    public EdgeInsetsGeometry? Margin { get; }
 
     public Clip? ClipBehavior { get; }
 
@@ -111,7 +111,7 @@ public sealed class Card : StatelessWidget
         double? elevation = null,
         ShapeBorder? shape = null,
         bool borderOnForeground = true,
-        Thickness? margin = null,
+        EdgeInsetsGeometry? margin = null,
         Clip? clipBehavior = null,
         Widget? child = null,
         bool semanticContainer = true,
@@ -139,7 +139,7 @@ public sealed class Card : StatelessWidget
         double? elevation = null,
         ShapeBorder? shape = null,
         bool borderOnForeground = true,
-        Thickness? margin = null,
+        EdgeInsetsGeometry? margin = null,
         Clip? clipBehavior = null,
         Widget? child = null,
         bool semanticContainer = true,

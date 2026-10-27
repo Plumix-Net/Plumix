@@ -59,13 +59,13 @@ internal sealed class ListViewReverseDemoPageState : State
                         itemCount: _messages.Count,
                         reverse: true,
                         itemExtent: 44,
-                        padding: new Thickness(12),
+                        padding: EdgeInsets.All(12),
                         itemBuilder: (_, index) =>
                         {
                             int id = _messages[index];
                             return new Container(
                                 color: id % 2 == 0 ? new Color(0xFFFFF3E0) : Colors.White,
-                                padding: new Thickness(12, 8),
+                                padding: EdgeInsets.Symmetric(horizontal: 12, vertical: 8),
                                 child: new Text(
                                     $"message #{id}",
                                     style: new TextStyle(

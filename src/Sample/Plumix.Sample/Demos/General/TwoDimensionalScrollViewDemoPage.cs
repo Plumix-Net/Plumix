@@ -102,7 +102,7 @@ internal sealed class TwoDimensionalScrollViewDemoPageState : State
         bool shaded = (vicinity.XIndex + vicinity.YIndex) % 2 == 0;
         return new Container(
             color: shaded ? new Color(0xFFE1F5FE) : new Color(0xFFFFF8E1),
-            padding: new Thickness(10, 8),
+            padding: EdgeInsets.Symmetric(horizontal: 10, vertical: 8),
             child: new Text(
                 $"R{vicinity.YIndex}:C{vicinity.XIndex}",
                 style: new TextStyle(FontSize: 13, Color: Colors.Black)));

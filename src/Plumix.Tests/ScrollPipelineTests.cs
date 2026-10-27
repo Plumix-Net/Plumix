@@ -270,7 +270,7 @@ public sealed class ScrollPipelineTests
     public void RenderSliverPadding_ContributesPaddingToScrollExtent()
     {
         var innerSliver = new RenderSliverToBoxAdapter(new FixedSizeBox(new Size(100, 120)));
-        var sliverPadding = new RenderSliverPadding(new Thickness(0, 10, 0, 20), innerSliver);
+        var sliverPadding = new RenderSliverPadding(EdgeInsets.FromLTRB(0, 10, 0, 20), innerSliver);
         var viewportOffset = new TestViewportOffset();
         var viewport = new RenderViewport(offset: viewportOffset);
         viewport.Insert(sliverPadding);
@@ -485,7 +485,7 @@ public sealed class ScrollPipelineTests
             // the host platform's default (bouncing physics legitimately overscroll a jump that
             // lands past a lazily-estimated max extent).
             physics: new ClampingScrollPhysics(parent: new RangeMaintainingScrollPhysics()),
-            padding: new Thickness(12),
+            padding: EdgeInsets.All(12),
             addAutomaticKeepAlives: false,
             itemBuilder: (_, index) => new Container(
                 height: 44,

@@ -1067,7 +1067,7 @@ public sealed class MaterialButtonsTests
 
         var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(padding);
-        Assert.Equal(new Thickness(8), padding!.Padding.Resolve(padding.TextDirection ?? TextDirection.Ltr));
+        Assert.Equal(EdgeInsets.All(8), padding!.Padding.Resolve(padding.TextDirection ?? TextDirection.Ltr));
     }
 
     [Fact]
@@ -1089,7 +1089,9 @@ public sealed class MaterialButtonsTests
 
         var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(padding);
-        Assert.Equal(new Thickness(12, 8, 16, 8), padding!.Padding.Resolve(padding.TextDirection ?? TextDirection.Ltr));
+        Assert.Equal(
+            EdgeInsets.FromLTRB(12, 8, 16, 8),
+            padding!.Padding.Resolve(padding.TextDirection ?? TextDirection.Ltr));
     }
 
     [Fact]
@@ -1111,7 +1113,7 @@ public sealed class MaterialButtonsTests
 
         var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(padding);
-        Assert.Equal(new Thickness(8), padding!.Padding.Resolve(padding.TextDirection ?? TextDirection.Ltr));
+        Assert.Equal(EdgeInsets.All(8), padding!.Padding.Resolve(padding.TextDirection ?? TextDirection.Ltr));
     }
 
     [Fact]
@@ -1134,7 +1136,9 @@ public sealed class MaterialButtonsTests
 
         var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(padding);
-        Assert.Equal(new Thickness(8, 0), padding!.Padding.Resolve(padding.TextDirection ?? TextDirection.Ltr));
+        Assert.Equal(
+            EdgeInsets.Symmetric(horizontal: 8),
+            padding!.Padding.Resolve(padding.TextDirection ?? TextDirection.Ltr));
     }
 
     [Fact]
@@ -1158,7 +1162,9 @@ public sealed class MaterialButtonsTests
 
         var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(padding);
-        Assert.Equal(new Thickness(4, 0), padding!.Padding.Resolve(padding.TextDirection ?? TextDirection.Ltr));
+        Assert.Equal(
+            EdgeInsets.Symmetric(horizontal: 4),
+            padding!.Padding.Resolve(padding.TextDirection ?? TextDirection.Ltr));
     }
 
     [Fact]
@@ -1182,7 +1188,9 @@ public sealed class MaterialButtonsTests
 
         var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(padding);
-        Assert.Equal(new Thickness(16, 8, 12, 8), padding!.Padding.Resolve(padding.TextDirection ?? TextDirection.Ltr));
+        Assert.Equal(
+            EdgeInsets.FromLTRB(16, 8, 12, 8),
+            padding!.Padding.Resolve(padding.TextDirection ?? TextDirection.Ltr));
     }
 
     [Fact]
@@ -1547,7 +1555,9 @@ public sealed class MaterialButtonsTests
 
         var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(padding);
-        Assert.Equal(new Thickness(24, 0), padding!.Padding.Resolve(padding.TextDirection ?? TextDirection.Ltr));
+        Assert.Equal(
+            EdgeInsets.Symmetric(horizontal: 24),
+            padding!.Padding.Resolve(padding.TextDirection ?? TextDirection.Ltr));
     }
 
     [Fact]
@@ -1568,7 +1578,9 @@ public sealed class MaterialButtonsTests
 
         var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(padding);
-        Assert.Equal(new Thickness(16, 0), padding!.Padding.Resolve(padding.TextDirection ?? TextDirection.Ltr));
+        Assert.Equal(
+            EdgeInsets.Symmetric(horizontal: 16),
+            padding!.Padding.Resolve(padding.TextDirection ?? TextDirection.Ltr));
     }
 
     [Fact]
@@ -1590,7 +1602,9 @@ public sealed class MaterialButtonsTests
 
         var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(padding);
-        Assert.Equal(new Thickness(16, 0, 24, 0), padding!.Padding.Resolve(padding.TextDirection ?? TextDirection.Ltr));
+        Assert.Equal(
+            EdgeInsets.FromLTRB(16, 0, 24, 0),
+            padding!.Padding.Resolve(padding.TextDirection ?? TextDirection.Ltr));
     }
 
     [Fact]
@@ -1612,7 +1626,9 @@ public sealed class MaterialButtonsTests
 
         var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(padding);
-        Assert.Equal(new Thickness(12, 0, 16, 0), padding!.Padding.Resolve(padding.TextDirection ?? TextDirection.Ltr));
+        Assert.Equal(
+            EdgeInsets.FromLTRB(12, 0, 16, 0),
+            padding!.Padding.Resolve(padding.TextDirection ?? TextDirection.Ltr));
     }
 
     [Fact]
@@ -1635,7 +1651,9 @@ public sealed class MaterialButtonsTests
 
         var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(padding);
-        Assert.Equal(new Thickness(12, 0), padding!.Padding.Resolve(padding.TextDirection ?? TextDirection.Ltr));
+        Assert.Equal(
+            EdgeInsets.Symmetric(horizontal: 12),
+            padding!.Padding.Resolve(padding.TextDirection ?? TextDirection.Ltr));
     }
 
     [Fact]
@@ -1659,7 +1677,7 @@ public sealed class MaterialButtonsTests
 
         var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(padding);
-        Assert.Equal(new Thickness(8, 0, 12, 0), padding!.Padding.Resolve(padding.TextDirection ?? TextDirection.Ltr));
+        Assert.Equal(new EdgeInsets(8, 0, 12, 0), padding!.Padding.Resolve(padding.TextDirection ?? TextDirection.Ltr));
     }
 
     [Fact]
@@ -1685,7 +1703,7 @@ public sealed class MaterialButtonsTests
 
         var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(padding);
-        Assert.Equal(new Thickness(12, 0, 8, 0), padding!.Padding.Resolve(padding.TextDirection ?? TextDirection.Ltr));
+        Assert.Equal(new EdgeInsets(12, 0, 8, 0), padding!.Padding.Resolve(padding.TextDirection ?? TextDirection.Ltr));
     }
 
     [Fact]
@@ -1753,7 +1771,9 @@ public sealed class MaterialButtonsTests
 
         var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(padding);
-        Assert.Equal(new Thickness(24, 0), padding!.Padding.Resolve(padding.TextDirection ?? TextDirection.Ltr));
+        Assert.Equal(
+            EdgeInsets.Symmetric(horizontal: 24),
+            padding!.Padding.Resolve(padding.TextDirection ?? TextDirection.Ltr));
     }
 
     [Fact]
@@ -1774,7 +1794,9 @@ public sealed class MaterialButtonsTests
 
         var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(padding);
-        Assert.Equal(new Thickness(16, 0), padding!.Padding.Resolve(padding.TextDirection ?? TextDirection.Ltr));
+        Assert.Equal(
+            EdgeInsets.Symmetric(horizontal: 16),
+            padding!.Padding.Resolve(padding.TextDirection ?? TextDirection.Ltr));
     }
 
     [Fact]
@@ -1796,7 +1818,9 @@ public sealed class MaterialButtonsTests
 
         var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(padding);
-        Assert.Equal(new Thickness(16, 0, 24, 0), padding!.Padding.Resolve(padding.TextDirection ?? TextDirection.Ltr));
+        Assert.Equal(
+            EdgeInsets.FromLTRB(16, 0, 24, 0),
+            padding!.Padding.Resolve(padding.TextDirection ?? TextDirection.Ltr));
     }
 
     [Fact]
@@ -1818,7 +1842,9 @@ public sealed class MaterialButtonsTests
 
         var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(padding);
-        Assert.Equal(new Thickness(16, 0), padding!.Padding.Resolve(padding.TextDirection ?? TextDirection.Ltr));
+        Assert.Equal(
+            EdgeInsets.Symmetric(horizontal: 16),
+            padding!.Padding.Resolve(padding.TextDirection ?? TextDirection.Ltr));
     }
 
     [Fact]
@@ -1841,7 +1867,9 @@ public sealed class MaterialButtonsTests
 
         var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(padding);
-        Assert.Equal(new Thickness(12, 0), padding!.Padding.Resolve(padding.TextDirection ?? TextDirection.Ltr));
+        Assert.Equal(
+            EdgeInsets.Symmetric(horizontal: 12),
+            padding!.Padding.Resolve(padding.TextDirection ?? TextDirection.Ltr));
     }
 
     [Fact]
@@ -1865,7 +1893,7 @@ public sealed class MaterialButtonsTests
 
         var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(padding);
-        Assert.Equal(new Thickness(8, 0, 12, 0), padding!.Padding.Resolve(padding.TextDirection ?? TextDirection.Ltr));
+        Assert.Equal(new EdgeInsets(8, 0, 12, 0), padding!.Padding.Resolve(padding.TextDirection ?? TextDirection.Ltr));
     }
 
     [Fact]
@@ -1889,7 +1917,9 @@ public sealed class MaterialButtonsTests
 
         var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(padding);
-        Assert.Equal(new Thickness(8, 0), padding!.Padding.Resolve(padding.TextDirection ?? TextDirection.Ltr));
+        Assert.Equal(
+            EdgeInsets.Symmetric(horizontal: 8),
+            padding!.Padding.Resolve(padding.TextDirection ?? TextDirection.Ltr));
     }
 
     [Fact]
@@ -1957,7 +1987,9 @@ public sealed class MaterialButtonsTests
 
         var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(padding);
-        Assert.Equal(new Thickness(24, 0), padding!.Padding.Resolve(padding.TextDirection ?? TextDirection.Ltr));
+        Assert.Equal(
+            EdgeInsets.Symmetric(horizontal: 24),
+            padding!.Padding.Resolve(padding.TextDirection ?? TextDirection.Ltr));
     }
 
     [Fact]
@@ -1978,7 +2010,9 @@ public sealed class MaterialButtonsTests
 
         var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(padding);
-        Assert.Equal(new Thickness(16, 0), padding!.Padding.Resolve(padding.TextDirection ?? TextDirection.Ltr));
+        Assert.Equal(
+            EdgeInsets.Symmetric(horizontal: 16),
+            padding!.Padding.Resolve(padding.TextDirection ?? TextDirection.Ltr));
     }
 
     [Fact]
@@ -1999,7 +2033,9 @@ public sealed class MaterialButtonsTests
 
         var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(padding);
-        Assert.Equal(new Thickness(16, 0), padding!.Padding.Resolve(padding.TextDirection ?? TextDirection.Ltr));
+        Assert.Equal(
+            EdgeInsets.Symmetric(horizontal: 16),
+            padding!.Padding.Resolve(padding.TextDirection ?? TextDirection.Ltr));
     }
 
     [Fact]
@@ -2021,7 +2057,9 @@ public sealed class MaterialButtonsTests
 
         var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(padding);
-        Assert.Equal(new Thickness(16, 0, 24, 0), padding!.Padding.Resolve(padding.TextDirection ?? TextDirection.Ltr));
+        Assert.Equal(
+            EdgeInsets.FromLTRB(16, 0, 24, 0),
+            padding!.Padding.Resolve(padding.TextDirection ?? TextDirection.Ltr));
     }
 
     [Fact]
@@ -2043,7 +2081,9 @@ public sealed class MaterialButtonsTests
 
         var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(padding);
-        Assert.Equal(new Thickness(12, 0, 16, 0), padding!.Padding.Resolve(padding.TextDirection ?? TextDirection.Ltr));
+        Assert.Equal(
+            EdgeInsets.FromLTRB(12, 0, 16, 0),
+            padding!.Padding.Resolve(padding.TextDirection ?? TextDirection.Ltr));
     }
 
     [Fact]
@@ -2065,7 +2105,9 @@ public sealed class MaterialButtonsTests
 
         var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(padding);
-        Assert.Equal(new Thickness(12, 0, 16, 0), padding!.Padding.Resolve(padding.TextDirection ?? TextDirection.Ltr));
+        Assert.Equal(
+            EdgeInsets.FromLTRB(12, 0, 16, 0),
+            padding!.Padding.Resolve(padding.TextDirection ?? TextDirection.Ltr));
     }
 
     [Fact]
@@ -2088,7 +2130,9 @@ public sealed class MaterialButtonsTests
 
         var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(padding);
-        Assert.Equal(new Thickness(12, 0), padding!.Padding.Resolve(padding.TextDirection ?? TextDirection.Ltr));
+        Assert.Equal(
+            EdgeInsets.Symmetric(horizontal: 12),
+            padding!.Padding.Resolve(padding.TextDirection ?? TextDirection.Ltr));
     }
 
     [Fact]
@@ -2112,7 +2156,7 @@ public sealed class MaterialButtonsTests
 
         var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(padding);
-        Assert.Equal(new Thickness(8, 0, 12, 0), padding!.Padding.Resolve(padding.TextDirection ?? TextDirection.Ltr));
+        Assert.Equal(new EdgeInsets(8, 0, 12, 0), padding!.Padding.Resolve(padding.TextDirection ?? TextDirection.Ltr));
     }
 
     [Fact]
@@ -2138,7 +2182,7 @@ public sealed class MaterialButtonsTests
 
         var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(padding);
-        Assert.Equal(new Thickness(12, 0, 8, 0), padding!.Padding.Resolve(padding.TextDirection ?? TextDirection.Ltr));
+        Assert.Equal(new EdgeInsets(12, 0, 8, 0), padding!.Padding.Resolve(padding.TextDirection ?? TextDirection.Ltr));
     }
 
     [Fact]
@@ -5630,7 +5674,7 @@ public sealed class MaterialButtonsTests
             onPressed: () => { },
             iconSize: 28,
             visualDensity: VisualDensity.Compact,
-            padding: new Thickness(6),
+            padding: EdgeInsets.All(6),
             alignment: Alignment.BottomRight,
             splashRadius: 31,
             tooltip: "Favorite",
@@ -5645,7 +5689,7 @@ public sealed class MaterialButtonsTests
 
         Assert.Equal(28, button.IconSize);
         Assert.Equal(VisualDensity.Compact, button.VisualDensity);
-        Assert.Equal(new Thickness(6), button.Padding);
+        Assert.Equal(EdgeInsets.All(6), button.Padding);
         Assert.Equal(Alignment.BottomRight, button.Alignment);
         Assert.Equal(31, button.SplashRadius);
         Assert.Equal("Favorite", button.Tooltip);

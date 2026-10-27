@@ -80,14 +80,13 @@ internal sealed class DesktopTextSelectionToolbarDemoPageState : State
     private Widget BuildMaterialToolbar(BuildContext context, Point anchor)
     {
         string[] labels = ["Cut", "Copy", "Paste", "Select all", "Share", "Translate", "Search web"];
-        TextDirection direction = Directionality.Of(context);
         var children = new List<Widget>(labels.Length);
         for (int index = 0; index < labels.Length; index++)
         {
             string label = labels[index];
             children.Add(new TextSelectionToolbarTextButton(
                 child: new Text(label),
-                padding: TextSelectionToolbarTextButton.GetPadding(index, labels.Length, direction),
+                padding: TextSelectionToolbarTextButton.GetPadding(index, labels.Length),
                 onPressed: label == "Translate" ? null : () => SetAction(label)));
         }
 

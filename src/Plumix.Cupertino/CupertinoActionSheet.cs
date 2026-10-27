@@ -131,7 +131,7 @@ internal sealed class CupertinoActionSheetState : State<CupertinoActionSheet>
             : MediaQuery.HeightOf(context);
 
         return new SafeArea(
-            minimum: new EdgeInsets(0, 0, 0, CupertinoDialogConstants.ActionSheetEdgePadding),
+            minimum: EdgeInsets.FromLTRB(0, 0, 0, CupertinoDialogConstants.ActionSheetEdgePadding),
             // A CupertinoScrollbar is built-in below.
             child: new ScrollConfiguration(
                 behavior: ScrollConfiguration.Of(context).CopyWith(scrollbars: false),
@@ -146,7 +146,7 @@ internal sealed class CupertinoActionSheetState : State<CupertinoActionSheet>
                         new Padding(
                             // The bottom padding is set on SafeArea.Minimum, allowing it to be
                             // consumed by the bottom view padding.
-                            new Thickness(
+                            EdgeInsets.FromLTRB(
                                 CupertinoDialogConstants.ActionSheetEdgePadding,
                                 TopPadding(context),
                                 CupertinoDialogConstants.ActionSheetEdgePadding,
@@ -179,12 +179,12 @@ internal sealed class CupertinoActionSheetState : State<CupertinoActionSheet>
                 title: Current.Title,
                 message: Current.Message,
                 scrollController: EffectiveMessageScrollController,
-                titlePadding: new Thickness(
+                titlePadding: EdgeInsets.FromLTRB(
                     CupertinoDialogConstants.ActionSheetContentHorizontalPadding,
                     CupertinoDialogConstants.ActionSheetContentVerticalPadding,
                     CupertinoDialogConstants.ActionSheetContentHorizontalPadding,
                     Current.Message is null ? CupertinoDialogConstants.ActionSheetContentVerticalPadding : 0.0),
-                messagePadding: new Thickness(
+                messagePadding: EdgeInsets.FromLTRB(
                     CupertinoDialogConstants.ActionSheetContentHorizontalPadding,
                     Current.Title is null ? CupertinoDialogConstants.ActionSheetContentVerticalPadding : 0.0,
                     CupertinoDialogConstants.ActionSheetContentHorizontalPadding,
@@ -195,7 +195,7 @@ internal sealed class CupertinoActionSheetState : State<CupertinoActionSheet>
                 messageTextStyle: Current.Title is null
                     ? textStyle.CopyWith(fontWeight: FontWeight.SemiBold)
                     : textStyle,
-                additionalPaddingBetweenTitleAndMessage: new Thickness(0, 4.0, 0, 0)));
+                additionalPaddingBetweenTitleAndMessage: EdgeInsets.FromLTRB(0, 4.0, 0, 0)));
     }
 
     private Widget BuildCancelButton()
@@ -205,7 +205,7 @@ internal sealed class CupertinoActionSheetState : State<CupertinoActionSheet>
                 ? CupertinoDialogConstants.ActionSheetCancelButtonPadding
                 : 0.0;
         return new Padding(
-            new Thickness(0, cancelPadding, 0, 0),
+            EdgeInsets.FromLTRB(0, cancelPadding, 0, 0),
             CupertinoFocusHalo.WithRRect(
                 borderRadius: CupertinoConstants.CupertinoButtonSizeBorderRadius[CupertinoButtonSize.Large],
                 child: new ActionSheetButtonBackground(
@@ -462,7 +462,7 @@ internal sealed class ActionSheetActionContent : StatelessWidget
         double verticalPadding = CupertinoDialogConstants.ActionSheetButtonVerticalPaddingBase
                                  + (fontSize * CupertinoDialogConstants.ActionSheetButtonVerticalPaddingFactor);
         return new Padding(
-            new Thickness(
+            EdgeInsets.FromLTRB(
                 CupertinoDialogConstants.ActionSheetButtonHorizontalPadding,
                 verticalPadding,
                 CupertinoDialogConstants.ActionSheetButtonHorizontalPadding,

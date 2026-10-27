@@ -115,7 +115,7 @@ public sealed class FloatingActionButton : StatelessWidget
         bool autofocus,
         MaterialTapTargetSize? materialTapTargetSize,
         double? extendedIconLabelSpacing,
-        Thickness? extendedPadding,
+        EdgeInsetsGeometry? extendedPadding,
         TextStyle? extendedTextStyle,
         Key? key) : base(key)
     {
@@ -216,7 +216,7 @@ public sealed class FloatingActionButton : StatelessWidget
 
     public double? ExtendedIconLabelSpacing { get; }
 
-    public Thickness? ExtendedPadding { get; }
+    public EdgeInsetsGeometry? ExtendedPadding { get; }
 
     public TextStyle? ExtendedTextStyle { get; }
 
@@ -359,7 +359,7 @@ public sealed class FloatingActionButton : StatelessWidget
         bool autofocus = false,
         MaterialTapTargetSize? materialTapTargetSize = null,
         double? extendedIconLabelSpacing = null,
-        Thickness? extendedPadding = null,
+        EdgeInsetsGeometry? extendedPadding = null,
         TextStyle? extendedTextStyle = null,
         Key? key = null,
         [System.Runtime.CompilerServices.CallerArgumentExpression(nameof(heroTag))]
@@ -531,7 +531,7 @@ public sealed class FloatingActionButton : StatelessWidget
                     children: children)));
     }
 
-    private Thickness ResolveExtendedPadding(
+    private EdgeInsetsGeometry ResolveExtendedPadding(
         BuildContext context,
         FloatingActionButtonThemeData floatingActionButtonTheme,
         FloatingActionButtonDefaults defaults)
@@ -675,7 +675,7 @@ internal sealed record FloatingActionButtonDefaults(
     BoxConstraints LargeSizeConstraints,
     BoxConstraints ExtendedSizeConstraints,
     double ExtendedIconLabelSpacing,
-    Thickness ExtendedPadding,
+    EdgeInsetsGeometry ExtendedPadding,
     TextStyle ExtendedTextStyle,
     bool EnableFeedback)
 {
@@ -758,7 +758,7 @@ internal sealed record FloatingActionButtonDefaults(
     /// <summary>
     /// Dart's `EdgeInsetsDirectional` extended padding, resolved against the ambient direction.
     /// </summary>
-    private static Thickness ResolveDirectionalPadding(
+    private static EdgeInsets ResolveDirectionalPadding(
         BuildContext context,
         double start,
         double top,
@@ -766,8 +766,8 @@ internal sealed record FloatingActionButtonDefaults(
         double bottom)
     {
         return Directionality.Of(context) == TextDirection.Ltr
-            ? new Thickness(start, top, end, bottom)
-            : new Thickness(end, top, start, bottom);
+            ? EdgeInsets.FromLTRB(start, top, end, bottom)
+            : EdgeInsets.FromLTRB(end, top, start, bottom);
     }
 
     private static ShapeBorder ResolveM2Shape(FloatingActionButtonType type)

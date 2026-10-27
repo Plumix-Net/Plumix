@@ -111,14 +111,14 @@ internal sealed class DrawerDemoPageState : State
     private Widget BuildPreviewBody(BuildContext context)
     {
         return new Container(
-            padding: new Thickness(14),
+            padding: EdgeInsets.All(14),
             child: new Column(
                 crossAxisAlignment: CrossAxisAlignment.Stretch,
                 spacing: 8,
                 children:
                 [
                     new Container(
-                        padding: new Thickness(10, 8),
+                        padding: EdgeInsets.Symmetric(horizontal: 10, vertical: 8),
                         decoration: new BoxDecoration(
                             Color: new Color(0xFFE8EEF7),
                             BorderRadius: BorderRadius.Circular(8)),
@@ -169,7 +169,7 @@ internal sealed class DrawerDemoPageState : State
             width: _useWidgetOverrides ? (isStartDrawer ? 236 : 228) : null,
             child: new ContextBuilder(
                 context => new Container(
-                    padding: new Thickness(14),
+                    padding: EdgeInsets.All(14),
                     child: new Column(
                         mainAxisSize: MainAxisSize.Min,
                         crossAxisAlignment: CrossAxisAlignment.Stretch,
@@ -225,7 +225,7 @@ internal sealed class DrawerDemoPageState : State
                 style: TextButton.StyleFrom(
                     foregroundColor: Colors.Black,
                     backgroundColor: background,
-                    padding: new Thickness(10, 8),
+                    padding: EdgeInsets.Symmetric(horizontal: 10, vertical: 8),
                     minimumSize: new Size(0, 36),
                     shape: new RoundedRectangleBorder(
                         borderRadius: BorderRadius.Circular(8)))));

@@ -179,7 +179,7 @@ public sealed record LinearBorder : OutlinedBorder
     public override Path GetInnerPath(Rect rect, TextDirection? textDirection = null)
     {
         var path = new Path();
-        path.AddRect(rect.Deflate(Dimensions.Resolve(textDirection ?? TextDirection.Ltr)));
+        path.AddRect(Dimensions.Resolve(textDirection ?? TextDirection.Ltr).DeflateRect(rect));
         return path;
     }
 
@@ -192,7 +192,7 @@ public sealed record LinearBorder : OutlinedBorder
 
     public override void Paint(PaintingContext context, Rect rect, TextDirection? textDirection = null)
     {
-        Thickness insets = Dimensions.Resolve(textDirection ?? TextDirection.Ltr);
+        EdgeInsets insets = Dimensions.Resolve(textDirection ?? TextDirection.Ltr);
         bool rtl = textDirection == TextDirection.Rtl;
 
         if (Start is { } startEdge && startEdge.Size != 0.0 && Side.Style != BorderStyle.None)

@@ -43,13 +43,13 @@ public sealed class SafeArea : StatelessWidget
 
     public override Widget Build(BuildContext context)
     {
-        Thickness padding = MediaQuery.PaddingOf(context);
+        EdgeInsets padding = MediaQuery.PaddingOf(context);
 
         // Bottom padding has been consumed - i.e. by the keyboard.
         if (MaintainBottomViewPadding)
         {
-            Thickness viewPadding = MediaQuery.ViewPaddingOf(context);
-            padding = new Thickness(padding.Left, padding.Top, padding.Right, viewPadding.Bottom);
+            EdgeInsets viewPadding = MediaQuery.ViewPaddingOf(context);
+            padding = EdgeInsets.FromLTRB(padding.Left, padding.Top, padding.Right, viewPadding.Bottom);
         }
 
         var resolvedPadding = EdgeInsets.Only(
@@ -114,7 +114,7 @@ public sealed class SliverSafeArea : StatelessWidget
 
     public override Widget Build(BuildContext context)
     {
-        Thickness padding = MediaQuery.PaddingOf(context);
+        EdgeInsets padding = MediaQuery.PaddingOf(context);
         var resolvedPadding = EdgeInsets.Only(
             Math.Max(Left ? padding.Left : 0.0, Minimum.Left),
             Math.Max(Top ? padding.Top : 0.0, Minimum.Top),
@@ -122,7 +122,7 @@ public sealed class SliverSafeArea : StatelessWidget
             Math.Max(Bottom ? padding.Bottom : 0.0, Minimum.Bottom));
 
         return new SliverPadding(
-            padding: new Thickness(
+            padding: EdgeInsets.FromLTRB(
                 resolvedPadding.Left,
                 resolvedPadding.Top,
                 resolvedPadding.Right,

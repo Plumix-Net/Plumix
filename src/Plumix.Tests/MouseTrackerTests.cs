@@ -435,7 +435,7 @@ public sealed class MouseTrackerTests : IDisposable
 
     private static Widget Padding(double inset, Widget child) => new Align(
         alignment: Alignment.TopLeft,
-        child: new Plumix.Widgets.Padding(insets: new Thickness(inset, inset, 0, 0), child: child));
+        child: new Plumix.Widgets.Padding(insets: EdgeInsets.FromLTRB(inset, inset, 0, 0), child: child));
 
     private static T? FindDescendant<T>(RenderObject? root)
         where T : RenderObject

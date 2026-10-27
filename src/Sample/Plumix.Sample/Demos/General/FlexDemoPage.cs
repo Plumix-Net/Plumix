@@ -90,7 +90,7 @@ internal sealed class FlexDemoPageState : State
                 new Container(
                     height: 120,
                     color: new Color(0xFFE7EDF6),
-                    padding: new Thickness(8),
+                    padding: EdgeInsets.All(8),
                     child: new Directionality(
                         _rightToLeft ? TextDirection.Rtl : TextDirection.Ltr,
                         child: new Flex(
@@ -109,7 +109,7 @@ internal sealed class FlexDemoPageState : State
                 new Container(
                     height: 150,
                     color: new Color(0xFFEFF3E7),
-                    padding: new Thickness(8),
+                    padding: EdgeInsets.All(8),
                     child: new Directionality(
                         _rightToLeft ? TextDirection.Rtl : TextDirection.Ltr,
                         child: new Row(
@@ -144,7 +144,7 @@ internal sealed class FlexDemoPageState : State
                 background: (Color)Avalonia.Media.Color.Parse(colorHex),
                 foreground: Colors.Black,
                 fontSize: 12,
-                padding: new Thickness(10, 8)));
+                padding: EdgeInsets.Symmetric(horizontal: 10, vertical: 8)));
     }
 
     private void CycleAlignment()

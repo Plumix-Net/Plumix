@@ -110,7 +110,7 @@ public sealed class CupertinoSheetTests : IDisposable
             MediaQuery bodyMedia = Assert.Single(
                 FindWidgets<MediaQuery>(harness.Root),
                 query => query.Data.Padding.Top == 15.0);
-            Assert.Equal(new Thickness(0.0, 15.0, 0.0, 0.0), bodyMedia.Data.Padding);
+            Assert.Equal(EdgeInsets.FromLTRB(0.0, 15.0, 0.0, 0.0), bodyMedia.Data.Padding);
             Assert.Contains(
                 FindWidgets<SizedBox>(harness.Root),
                 box => box.Width == 36.0 && box.Height == 5.0);
@@ -270,7 +270,7 @@ public sealed class CupertinoSheetTests : IDisposable
         Widget widget = new MediaQuery(
             new MediaQueryData(
                 Size: new Size(400.0, 800.0),
-                ViewPadding: new Thickness(0.0, 24.0, 0.0, 20.0)),
+                ViewPadding: EdgeInsets.FromLTRB(0.0, 24.0, 0.0, 20.0)),
             new Directionality(
                 TextDirection.Ltr,
                 new CupertinoTheme(

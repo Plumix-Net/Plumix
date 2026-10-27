@@ -90,7 +90,7 @@ public sealed class PopupMenuDemoPage : StatefulWidget
                                 onCanceled: () => SetState(() => _status = "canceled"),
                                 enabled: _enabled,
                                 position: position,
-                                child: new Padding(new Thickness(12, 8), new Text("CHILD MENU"))),
+                                child: new Padding(EdgeInsets.Symmetric(12, 8), new Text("CHILD MENU"))),
                             new PopupMenuButton<string>(
                                 itemBuilder: BuildItems,
                                 initialValue: _selected,

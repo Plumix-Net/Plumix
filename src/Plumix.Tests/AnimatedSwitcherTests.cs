@@ -135,7 +135,7 @@ public sealed class AnimatedSwitcherTests : IDisposable
         AnimatedSwitcherTransitionBuilder secondBuilder = (child, _) =>
         {
             secondBuilderCalls++;
-            return new Padding(insets: new Thickness(1), child: child);
+            return new Padding(insets: EdgeInsets.All(1), child: child);
         };
         var owner = TestBuildOwner.Create();
         var root = new TestRootElement(BuildSwitcher(

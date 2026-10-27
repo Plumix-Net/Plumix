@@ -107,7 +107,7 @@ internal sealed class RenderSliverFractionalPadding : RenderSliverEdgeInsetsPadd
 {
     private SliverConstraints? _lastResolvedConstraints;
     private double _viewportFraction;
-    private Thickness? _resolvedPadding;
+    private EdgeInsets? _resolvedPadding;
 
     public RenderSliverFractionalPadding(double viewportFraction = 0.0)
     {
@@ -132,7 +132,7 @@ internal sealed class RenderSliverFractionalPadding : RenderSliverEdgeInsetsPadd
     }
 
     /// <inheritdoc />
-    public override Thickness? ResolvedPadding => _resolvedPadding;
+    public override EdgeInsets? ResolvedPadding => _resolvedPadding;
 
     private void MarkNeedsResolution()
     {
@@ -151,8 +151,8 @@ internal sealed class RenderSliverFractionalPadding : RenderSliverEdgeInsetsPadd
         _lastResolvedConstraints = Constraints;
         _resolvedPadding = Constraints.Axis switch
         {
-            Axis.Horizontal => new Thickness(paddingValue, 0.0, paddingValue, 0.0),
-            _ => new Thickness(0.0, paddingValue, 0.0, paddingValue),
+            Axis.Horizontal => EdgeInsets.FromLTRB(paddingValue, 0.0, paddingValue, 0.0),
+            _ => EdgeInsets.FromLTRB(0.0, paddingValue, 0.0, paddingValue),
         };
     }
 

@@ -165,11 +165,11 @@ public sealed class GestureRecognizerDemoPageState : State
             child: new Container(
                 height: 96,
                 color: new Color(0xFFF4F7FA),
-                padding: new Thickness(8),
+                padding: EdgeInsets.All(8),
                 child: new Align(
                     alignment: Alignment.CenterLeft,
                     child: new Padding(
-                        insets: new Thickness(_offset, 0, 0, 0),
+                        insets: EdgeInsets.FromLTRB(_offset, 0, 0, 0),
                         child: new Container(
                             width: 56,
                             height: 56,
@@ -304,7 +304,7 @@ public sealed class GestureRecognizerDemoPageState : State
 
         return new Container(
             color: new Color(0xFFF7F7F7),
-            padding: new Thickness(12),
+            padding: EdgeInsets.All(12),
             child: new Column(
                 crossAxisAlignment: CrossAxisAlignment.Start,
                 spacing: 4,

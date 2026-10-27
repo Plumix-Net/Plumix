@@ -78,7 +78,7 @@ public sealed class MaterialAppBarTests
             new Directionality(
                 textDirection: TextDirection.Ltr,
                 child: new MediaQuery(
-                    data: new MediaQueryData(Padding: new Thickness(0, 24, 0, 0)),
+                    data: new MediaQueryData(Padding: EdgeInsets.FromLTRB(0, 24, 0, 0)),
                     child: new Theme(
                         data: ThemeData.Light with
                         {
@@ -346,7 +346,7 @@ public sealed class MaterialAppBarTests
                     child: new Theme(
                         data: ThemeData.Light with
                         {
-                            AppBarTheme = new AppBarThemeData(ActionsPadding: new Thickness(0, 0, 37, 0)),
+                            AppBarTheme = new AppBarThemeData(ActionsPadding: EdgeInsets.FromLTRB(0, 0, 37, 0)),
                         },
                         child: new Scaffold(
                             appBar: new AppBar(title: new Text("Title")),
@@ -493,7 +493,7 @@ public sealed class MaterialAppBarTests
         Assert.Null(defaults.ActionsIconTheme);
         Assert.Equal(16.0, defaults.TitleSpacing);
         Assert.Equal(56.0, defaults.ToolbarHeight);
-        Assert.Equal(new Thickness(), defaults.ActionsPadding);
+        Assert.Equal(EdgeInsets.Zero, defaults.ActionsPadding);
         Assert.Null(defaults.Shape);
         Assert.Null(defaults.CenterTitle);
         Assert.Null(defaults.LeadingWidth);

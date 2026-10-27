@@ -70,7 +70,7 @@ public sealed class CupertinoContextMenuTests : IDisposable
         ConstrainedBox constrained = Assert.Single(light.FindWidgets<ConstrainedBox>());
         Assert.Equal(43.0, constrained.Constraints.MinHeight);
         Padding padding = Assert.Single(light.FindWidgets<Padding>());
-        Assert.Equal(new Thickness(15.5, 8.0, 17.5, 8.0), padding.Insets);
+        Assert.Equal(EdgeInsets.FromLTRB(15.5, 8.0, 17.5, 8.0), padding.Insets);
         DefaultTextStyle textStyle = Assert.Single(light.FindWidgets<DefaultTextStyle>());
         Assert.Equal(16.0, textStyle.Style.FontSize);
         Assert.Equal(FontWeight.SemiBold, textStyle.Style.FontWeight);

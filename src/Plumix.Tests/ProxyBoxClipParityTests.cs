@@ -262,7 +262,7 @@ public sealed class ProxyBoxClipParityTests
             + "   configuration: ImageConfiguration()\n",
             FrameworkDartTester.IgnoringHashCodes(coloredBox.ToStringDeep(minLevel: DiagnosticLevel.Info)));
 
-        var paddingBox = new RenderPadding(new Thickness(10.0), coloredBox);
+        var paddingBox = new RenderPadding(EdgeInsets.All(10.0), coloredBox);
         var root = new RenderDecoratedBox(decoration: new BoxDecoration(), child: paddingBox);
         LayoutRoot(root, new Size(800, 600));
         Assert.Equal(780.0, coloredBox.Size.Width);

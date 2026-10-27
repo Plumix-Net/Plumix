@@ -31,7 +31,7 @@ public sealed class MaterialSnackBarTests : IDisposable
     public void SnackBar_ValidatesFlutterAsserts()
     {
         Assert.Throws<ArgumentOutOfRangeException>(() => Bar(elevation: -1));
-        Assert.Throws<ArgumentException>(() => Bar(width: 200, margin: new Thickness(8)));
+        Assert.Throws<ArgumentException>(() => Bar(width: 200, margin: EdgeInsets.All(8)));
         foreach (double invalid in new[] { -1.0, -0.0001, 1.000001, 5.0 })
         {
             Assert.Throws<ArgumentOutOfRangeException>(() => Bar(actionOverflowThreshold: invalid));
@@ -40,7 +40,7 @@ public sealed class MaterialSnackBarTests : IDisposable
         // Dart drops the asserts Plumix used to add on its own: a zero width and negative insets
         // are accepted by the constructor.
         Assert.Equal(0, Bar(width: 0).Width);
-        Assert.Equal(new Thickness(-1), Bar(margin: new Thickness(-1)).Margin!.Value.Resolve(TextDirection.Ltr));
+        Assert.Equal(EdgeInsets.All(-1), Bar(margin: EdgeInsets.All(-1)).Margin!.Value.Resolve(TextDirection.Ltr));
     }
 
     [Fact]
@@ -149,7 +149,7 @@ public sealed class MaterialSnackBarTests : IDisposable
             content: new Text("Message"),
             backgroundColor: Colors.Purple,
             elevation: 3,
-            margin: new Thickness(4),
+            margin: EdgeInsets.All(4),
             width: null,
             shape: new RoundedRectangleBorder(borderRadius: Plumix.Rendering.BorderRadius.Circular(9)),
             hitTestBehavior: Plumix.Rendering.HitTestBehavior.Translucent,
@@ -171,7 +171,7 @@ public sealed class MaterialSnackBarTests : IDisposable
         Assert.Same(original.Content, copy.Content);
         Assert.Equal(Colors.Purple, copy.BackgroundColor);
         Assert.Equal(3, copy.Elevation);
-        Assert.Equal(new Thickness(4), copy.Margin!.Value.Resolve(TextDirection.Ltr));
+        Assert.Equal(EdgeInsets.All(4), copy.Margin!.Value.Resolve(TextDirection.Ltr));
         Assert.Equal(original.Shape, copy.Shape);
         Assert.Equal(Plumix.Rendering.HitTestBehavior.Translucent, copy.HitTestBehavior);
         Assert.Equal(SnackBarBehavior.Floating, copy.Behavior);
@@ -280,7 +280,7 @@ public sealed class MaterialSnackBarTests : IDisposable
                     fontSize: 18),
                 elevation: 0,
                 behavior: SnackBarBehavior.Floating,
-                insetPadding: new Thickness(7),
+                insetPadding: EdgeInsets.All(7),
                 shape: new RoundedRectangleBorder(
                     borderRadius: Plumix.Rendering.BorderRadius.Circular(9))),
         };
@@ -618,7 +618,7 @@ public sealed class MaterialSnackBarTests : IDisposable
 
         using var withMargin = Show(
             ThemeData.Light,
-            Bar(margin: new Thickness(8), behavior: SnackBarBehavior.Floating));
+            Bar(margin: EdgeInsets.All(8), behavior: SnackBarBehavior.Floating));
         Assert.Equal(
             Plumix.Rendering.HitTestBehavior.DeferToChild,
             Assert.Single(FindWidgets<Dismissible>(withMargin)).Behavior);
@@ -627,7 +627,7 @@ public sealed class MaterialSnackBarTests : IDisposable
         {
             SnackBarTheme = new SnackBarThemeData(
                 behavior: SnackBarBehavior.Floating,
-                insetPadding: new Thickness(6)),
+                insetPadding: EdgeInsets.All(6)),
         };
         using var themedInset = Show(themed, Bar());
         Assert.Equal(
@@ -636,7 +636,7 @@ public sealed class MaterialSnackBarTests : IDisposable
 
         using var explicitBehavior = Show(
             ThemeData.Light,
-            Bar(margin: new Thickness(8), behavior: SnackBarBehavior.Floating,
+            Bar(margin: EdgeInsets.All(8), behavior: SnackBarBehavior.Floating,
                 hitTestBehavior: Plumix.Rendering.HitTestBehavior.Opaque));
         Assert.Equal(
             Plumix.Rendering.HitTestBehavior.Opaque,
@@ -647,7 +647,7 @@ public sealed class MaterialSnackBarTests : IDisposable
     public void SnackBar_MarginAndWidthRejectFixedBehaviorWithDartsThreeMessages()
     {
         InvalidOperationException fromConstructor = BuildErrors.Throws<InvalidOperationException>(
-            () => Show(ThemeData.Light, Bar(margin: new Thickness(8), behavior: SnackBarBehavior.Fixed)));
+            () => Show(ThemeData.Light, Bar(margin: EdgeInsets.All(8), behavior: SnackBarBehavior.Fixed)));
         Assert.Contains("was set in the SnackBar constructor.", fromConstructor.Message, StringComparison.Ordinal);
 
         var themed = ThemeData.Light with
@@ -655,14 +655,14 @@ public sealed class MaterialSnackBarTests : IDisposable
             SnackBarTheme = new SnackBarThemeData(behavior: SnackBarBehavior.Fixed),
         };
         InvalidOperationException fromTheme = BuildErrors.Throws<InvalidOperationException>(
-            () => Show(themed, Bar(margin: new Thickness(8))));
+            () => Show(themed, Bar(margin: EdgeInsets.All(8))));
         Assert.Contains(
             "was set by the inherited SnackBarThemeData.",
             fromTheme.Message,
             StringComparison.Ordinal);
 
         InvalidOperationException byDefault = BuildErrors.Throws<InvalidOperationException>(
-            () => Show(ThemeData.Light, Bar(margin: new Thickness(8))));
+            () => Show(ThemeData.Light, Bar(margin: EdgeInsets.All(8))));
         Assert.Contains("was set by default.", byDefault.Message, StringComparison.Ordinal);
         Assert.Contains("Margin can only be used with floating behavior.", byDefault.Message, StringComparison.Ordinal);
 
@@ -687,7 +687,7 @@ public sealed class MaterialSnackBarTests : IDisposable
 
         // The surviving padding carries only the vertical inset padding.
         Assert.Contains(FindWidgets<Padding>(harness), padding =>
-            padding.Insets.Resolve(TextDirection.Ltr) == new Thickness(0, 5, 0, 10));
+            padding.Insets.Resolve(TextDirection.Ltr) == EdgeInsets.FromLTRB(0, 5, 0, 10));
     }
 
     [Fact]
@@ -811,8 +811,8 @@ public sealed class MaterialSnackBarTests : IDisposable
         string content = "Message",
         Color? backgroundColor = null,
         double? elevation = null,
-        Thickness? margin = null,
-        Thickness? padding = null,
+        EdgeInsets? margin = null,
+        EdgeInsets? padding = null,
         double? width = null,
         SnackBarBehavior? behavior = null,
         SnackBarAction? action = null,

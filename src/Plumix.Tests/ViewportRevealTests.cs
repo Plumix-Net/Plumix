@@ -226,7 +226,7 @@ public sealed class ViewportRevealTests
                 ? target.Wrap(new SizedBox(height: 100, width: 300))
                 : new SizedBox(height: 100, width: 300);
             slivers.Add(new SliverPadding(
-                padding: new Thickness(0, 22, 0, 23),
+                padding: EdgeInsets.FromLTRB(0, 22, 0, 23),
                 sliver: new SliverToBoxAdapter(child)));
         }
 
@@ -265,7 +265,7 @@ public sealed class ViewportRevealTests
                 slivers:
                 [
                     new SliverPadding(
-                        padding: new Thickness(0, 22, 0, 23),
+                        padding: EdgeInsets.FromLTRB(0, 22, 0, 23),
                         sliver: new SliverList(
                             new SliverChildListDelegate(BuildTiles(20, target, index: 5)))),
                 ]));
@@ -658,7 +658,7 @@ public sealed class ViewportRevealTests
                 slivers:
                 [
                     new SliverPadding(
-                        padding: new Thickness(11, 22, 13, 23),
+                        padding: EdgeInsets.FromLTRB(11, 22, 13, 23),
                         sliver: new SliverToBoxAdapter(new SizedBox(height: 100, width: 300))),
                 ]));
         harness.Pump(new Size(300, 200));

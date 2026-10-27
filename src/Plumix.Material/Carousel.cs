@@ -20,7 +20,7 @@ public sealed partial record CarouselViewThemeData(
     Color? BackgroundColor = null,
     IWidgetStateProperty<Color?>? OverlayColor = null,
     ShapeBorder? Shape = null,
-    Thickness? Padding = null,
+    EdgeInsets? Padding = null,
     Clip? ItemClipBehavior = null)
 {
     public CarouselViewThemeData CopyWith(
@@ -28,7 +28,7 @@ public sealed partial record CarouselViewThemeData(
         Color? backgroundColor = null,
         IWidgetStateProperty<Color?>? overlayColor = null,
         ShapeBorder? shape = null,
-        Thickness? padding = null,
+        EdgeInsets? padding = null,
         Clip? itemClipBehavior = null)
     {
         return new CarouselViewThemeData(
@@ -72,7 +72,7 @@ public sealed class CarouselView : StatefulWidget
     public CarouselView(
         double itemExtent,
         IReadOnlyList<Widget> children,
-        Thickness? padding = null,
+        EdgeInsets? padding = null,
         Color? backgroundColor = null,
         double? elevation = null,
         ShapeBorder? shape = null,
@@ -119,7 +119,7 @@ public sealed class CarouselView : StatefulWidget
         IReadOnlyList<Widget> children,
         CarouselItemBuilder? itemBuilder,
         int? itemCount,
-        Thickness? padding,
+        EdgeInsets? padding,
         Color? backgroundColor,
         double? elevation,
         ShapeBorder? shape,
@@ -170,7 +170,7 @@ public sealed class CarouselView : StatefulWidget
 
     public int? ItemCount { get; }
 
-    public Thickness? Padding { get; }
+    public EdgeInsets? Padding { get; }
 
     public Color? BackgroundColor { get; }
 
@@ -206,7 +206,7 @@ public sealed class CarouselView : StatefulWidget
     public static CarouselView Weighted(
         IReadOnlyList<int> flexWeights,
         IReadOnlyList<Widget> children,
-        Thickness? padding = null,
+        EdgeInsets? padding = null,
         Color? backgroundColor = null,
         double? elevation = null,
         ShapeBorder? shape = null,
@@ -235,7 +235,7 @@ public sealed class CarouselView : StatefulWidget
         double itemExtent,
         CarouselItemBuilder itemBuilder,
         int? itemCount = null,
-        Thickness? padding = null,
+        EdgeInsets? padding = null,
         Color? backgroundColor = null,
         double? elevation = null,
         ShapeBorder? shape = null,
@@ -264,7 +264,7 @@ public sealed class CarouselView : StatefulWidget
         IReadOnlyList<int> flexWeights,
         CarouselItemBuilder itemBuilder,
         int? itemCount = null,
-        Thickness? padding = null,
+        EdgeInsets? padding = null,
         Color? backgroundColor = null,
         double? elevation = null,
         ShapeBorder? shape = null,
@@ -457,7 +457,7 @@ public sealed class CarouselViewState : State<CarouselView>
 
         CarouselViewThemeData carouselTheme = CarouselViewTheme.Of(itemContext);
         ColorScheme colorScheme = Theme.Of(itemContext).ColorScheme;
-        Thickness effectivePadding = Current.Padding ?? carouselTheme.Padding ?? new Thickness(4.0);
+        EdgeInsets effectivePadding = Current.Padding ?? carouselTheme.Padding ?? EdgeInsets.All(4.0);
         Color effectiveBackgroundColor =
             Current.BackgroundColor ?? carouselTheme.BackgroundColor ?? colorScheme.Surface;
         double effectiveElevation = Current.Elevation ?? carouselTheme.Elevation ?? 0.0;

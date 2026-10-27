@@ -76,7 +76,7 @@ internal sealed class UnconstrainedLimitedBoxDemoPageState : State
                     width: 260,
                     height: 304,
                     color: new Color(0xFFE7EDF6),
-                    padding: new Thickness(10),
+                    padding: EdgeInsets.All(10),
                     child: new Column(
                         crossAxisAlignment: CrossAxisAlignment.Stretch,
                         spacing: 8,
@@ -90,7 +90,7 @@ internal sealed class UnconstrainedLimitedBoxDemoPageState : State
                             new Container(
                                 height: 60,
                                 color: Colors.White,
-                                padding: new Thickness(6),
+                                padding: EdgeInsets.All(6),
                                 child: new Center(
                                     child: new LimitedBox(
                                         maxWidth: _maxWidth,
@@ -104,7 +104,7 @@ internal sealed class UnconstrainedLimitedBoxDemoPageState : State
                             new Container(
                                 height: 92,
                                 color: Colors.White,
-                                padding: new Thickness(6),
+                                padding: EdgeInsets.All(6),
                                 child: new Center(
                                     child: new UnconstrainedBox(
                                         alignment: Alignment.Center,
@@ -119,7 +119,7 @@ internal sealed class UnconstrainedLimitedBoxDemoPageState : State
                             new Container(
                                 height: 58,
                                 color: Colors.White,
-                                padding: new Thickness(6),
+                                padding: EdgeInsets.All(6),
                                 child: new ConstraintsTransformBox(
                                     constraintsTransform: ConstraintsTransformBox.MaxWidthUnconstrained,
                                     textDirection: TextDirection.Ltr,
@@ -165,7 +165,7 @@ internal sealed class UnconstrainedLimitedBoxDemoPageState : State
                 background: (Color)Avalonia.Media.Color.Parse(colorHex),
                 foreground: Colors.Black,
                 fontSize: 12,
-                padding: new Thickness(10, 8)));
+                padding: EdgeInsets.Symmetric(horizontal: 10, vertical: 8)));
     }
 
     private void SetConstrainedAxis(Axis? value)

@@ -50,7 +50,7 @@ internal sealed class OverflowIndicatorDemoPageState : State
                     width: 280,
                     height: 220,
                     color: new Color(0xFFE7EDF6),
-                    padding: new Thickness(10),
+                    padding: EdgeInsets.All(10),
                     child: new Center(
                         child: BuildProbe())),
             ]);
@@ -64,7 +64,7 @@ internal sealed class OverflowIndicatorDemoPageState : State
                 width: 240,
                 height: 120,
                 color: Colors.White,
-                padding: new Thickness(8),
+                padding: EdgeInsets.All(8),
                 child: new Row(
                     spacing: 8,
                     children:
@@ -77,7 +77,7 @@ internal sealed class OverflowIndicatorDemoPageState : State
             width: 240,
             height: 120,
             color: Colors.White,
-            padding: new Thickness(8),
+            padding: EdgeInsets.All(8),
             child: new Column(
                 crossAxisAlignment: CrossAxisAlignment.Stretch,
                 spacing: 8,
@@ -116,7 +116,7 @@ internal sealed class OverflowIndicatorDemoPageState : State
                 background: (Color)Avalonia.Media.Color.Parse(colorHex),
                 foreground: Colors.Black,
                 fontSize: 12,
-                padding: new Thickness(10, 8)));
+                padding: EdgeInsets.Symmetric(horizontal: 10, vertical: 8)));
     }
 
     private void SetHorizontal(bool value)

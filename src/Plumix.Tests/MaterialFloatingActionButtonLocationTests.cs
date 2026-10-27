@@ -3,6 +3,7 @@ using Plumix.Material;
 using Plumix.UI;
 using Plumix.Widgets;
 using Xunit;
+using Plumix.Rendering;
 
 namespace Plumix.Tests;
 
@@ -15,8 +16,8 @@ public sealed class MaterialFloatingActionButtonLocationTests
         FloatingActionButtonSize: new Size(56, 56),
         BottomSheetSize: new Size(),
         SnackBarSize: new Size(),
-        MinInsets: new Thickness(4, 0, 8, 0),
-        MinViewPadding: new Thickness(0, 24, 0, 12),
+        MinInsets: EdgeInsets.FromLTRB(4, 0, 8, 0),
+        MinViewPadding: EdgeInsets.FromLTRB(0, 24, 0, 12),
         TextDirection: TextDirection.Ltr,
         MaterialBannerSize: new Size());
 

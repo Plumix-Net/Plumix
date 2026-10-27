@@ -182,11 +182,11 @@ public sealed class MaterialTooltipTests
         Assert.Contains(
             FindDescendants<RenderPadding>(harness.RenderView),
             padding => padding.Padding.Resolve(padding.TextDirection ?? TextDirection.Ltr)
-                == new Thickness(2, 3, 12, 4));
+                == EdgeInsets.FromLTRB(2, 3, 12, 4));
         Assert.Contains(
             FindDescendants<RenderPadding>(harness.RenderView),
             padding => padding.Padding.Resolve(padding.TextDirection ?? TextDirection.Ltr)
-                == new Thickness(1, 0, 7, 0));
+                == EdgeInsets.FromLTRB(1, 0, 7, 0));
     }
 
     [Fact]

@@ -70,7 +70,7 @@ internal sealed class LifecycleUtilitiesDemoPageState : State, WidgetsBindingObs
     {
         return new SingleChildScrollView(
             child: new Padding(
-                insets: new Thickness(16),
+                insets: EdgeInsets.All(16),
                 child: new Column(
                     crossAxisAlignment: CrossAxisAlignment.Stretch,
                     spacing: 12,
@@ -87,7 +87,7 @@ internal sealed class LifecycleUtilitiesDemoPageState : State, WidgetsBindingObs
                             style: new TextStyle(Color: MaterialColors.Black54)),
                         new Container(
                             color: new Color(0xFFF4F7FA),
-                            padding: new Thickness(12),
+                            padding: EdgeInsets.All(12),
                             child: new Text(
                                 $"Last app state: {(_lastLifecycleState is { } state ? state.Name() : "waiting")}\n"
                                 + "Disposable context available: "
@@ -114,7 +114,7 @@ internal sealed class LifecycleUtilitiesDemoPageState : State, WidgetsBindingObs
                             style: new TextStyle(Color: MaterialColors.Black54)),
                         new Container(
                             color: new Color(0xFFF4F7FA),
-                            padding: new Thickness(12),
+                            padding: EdgeInsets.All(12),
                             child: new Text(
                                 $"Metrics changes: {_metricsChanges}\n"
                                 + $"Platform brightness changes: {_brightnessChanges} "
@@ -161,7 +161,7 @@ internal sealed class LifecycleUtilitiesDemoPageState : State, WidgetsBindingObs
         _statusBuildCount++;
         return new Container(
             color: new Color(0xFFE7F0FA),
-            padding: new Thickness(12),
+            padding: EdgeInsets.All(12),
             child: new Text(
                 $"Animation status: {_controller.Status.Name()}\nStatusTransitionWidget builds: {_statusBuildCount}"));
     }

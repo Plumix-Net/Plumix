@@ -481,7 +481,7 @@ public sealed class MaterialFloatingActionButtonTests
         var renderRoot = RequireRenderObject<RenderObject>(root.ChildElement);
         var constrainedBox = FindSizingConstrainedBox(renderRoot);
         var paddings = FindDescendants<RenderPadding>(renderRoot);
-        bool hasExpectedPadding = paddings.Any(p => p.Padding == new Thickness(16, 0, 20, 0));
+        bool hasExpectedPadding = paddings.Any(p => p.Padding == EdgeInsets.FromLTRB(16, 0, 20, 0));
         var label = FindDescendants<RenderParagraph>(renderRoot).FirstOrDefault(p => p.PlainText == "Create");
 
         Assert.NotNull(constrainedBox);
@@ -507,7 +507,7 @@ public sealed class MaterialFloatingActionButtonTests
         owner.PumpFrame();
 
         var paddings = FindDescendants<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
-        bool hasExpectedPadding = paddings.Any(p => p.Padding == new Thickness(20, 0, 20, 0));
+        bool hasExpectedPadding = paddings.Any(p => p.Padding == EdgeInsets.FromLTRB(20, 0, 20, 0));
         Assert.True(hasExpectedPadding);
     }
 
@@ -559,7 +559,7 @@ public sealed class MaterialFloatingActionButtonTests
             Shape: new RoundedRectangleBorder(borderRadius: Plumix.Rendering.BorderRadius.Circular(4)),
             EnableFeedback: false,
             SizeConstraints: TightConstraints(40, 50),
-            ExtendedPadding: new Thickness(10, 0, 20, 0),
+            ExtendedPadding: EdgeInsets.FromLTRB(10, 0, 20, 0),
             MouseCursor: cursorA);
         var b = new FloatingActionButtonThemeData(
             ForegroundColor: Colors.Blue,
@@ -567,7 +567,7 @@ public sealed class MaterialFloatingActionButtonTests
             Shape: new RoundedRectangleBorder(borderRadius: Plumix.Rendering.BorderRadius.Circular(12)),
             EnableFeedback: true,
             SizeConstraints: TightConstraints(80, 90),
-            ExtendedPadding: new Thickness(30, 0, 40, 0),
+            ExtendedPadding: EdgeInsets.FromLTRB(30, 0, 40, 0),
             MouseCursor: cursorB);
 
         Assert.Equal(a, a.CopyWith());
@@ -578,7 +578,7 @@ public sealed class MaterialFloatingActionButtonTests
         Assert.Equal(4, midpoint!.Elevation);
         Assert.Equal(BorderRadius.Circular(8), ShapeBorderGeometry.ResolveRadius(midpoint.Shape));
         Assert.Equal(TightConstraints(60, 70), midpoint.SizeConstraints);
-        Assert.Equal(new Thickness(20, 0, 30, 0), midpoint.ExtendedPadding);
+        Assert.Equal(EdgeInsets.FromLTRB(20, 0, 30, 0), midpoint.ExtendedPadding);
         Assert.Same(cursorB, midpoint.MouseCursor);
         Assert.True(midpoint.EnableFeedback);
         Assert.Null(FloatingActionButtonThemeData.Lerp(null, null, 0.5));
@@ -794,7 +794,7 @@ public sealed class MaterialFloatingActionButtonTests
         Assert.Null(FindParagraphByText(renderRoot, "Create"));
         Assert.Contains(
             FindDescendants<RenderPadding>(renderRoot),
-            padding => padding.Padding == new Thickness(16, 0, 20, 0));
+            padding => padding.Padding == EdgeInsets.FromLTRB(16, 0, 20, 0));
     }
 
     [Fact]

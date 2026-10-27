@@ -25,7 +25,7 @@ public sealed class GridTileDemoPage : StatelessWidget
                 new Expanded(
                     child: GridView.Builder(
                         itemCount: 4,
-                        padding: new Thickness(12),
+                        padding: EdgeInsets.All(12),
                         gridDelegate: new SliverGridDelegateWithFixedCrossAxisCount(
                             crossAxisCount: 2,
                             mainAxisSpacing: 12,

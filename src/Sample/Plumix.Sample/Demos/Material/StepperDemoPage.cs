@@ -81,7 +81,7 @@ internal sealed class StepperDemoPageState : State
         subtitle: new Text(subtitle),
         label: new Text((index + 1).ToString()),
         content: new Container(
-            padding: new Thickness(12),
+            padding: EdgeInsets.All(12),
             color: new Color(0xFFF3EDF7),
             child: new Text(content, style: new TextStyle(FontSize: 14))),
         state: index < _currentStep

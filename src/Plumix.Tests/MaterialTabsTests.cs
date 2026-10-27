@@ -43,7 +43,7 @@ public sealed class MaterialTabsTests
         using var m3 = new WidgetRenderHarness(Wrap(new Tab(text: "A", icon: new SizedBox(width: 10, height: 10))));
         m3.Pump(new Size(200, 100));
         Assert.Equal(
-            new Thickness(0, 0, 0, 2),
+            EdgeInsets.FromLTRB(0, 0, 0, 2),
             FindDescendants<RenderPadding>(m3.RenderView).Select(p => p.Padding).First(i => i.Bottom > 0));
 
         using var m2 = new WidgetRenderHarness(Wrap(
@@ -51,7 +51,7 @@ public sealed class MaterialTabsTests
             ThemeData.Light with { UseMaterial3 = false }));
         m2.Pump(new Size(200, 100));
         Assert.Equal(
-            new Thickness(0, 0, 0, 10),
+            EdgeInsets.FromLTRB(0, 0, 0, 10),
             FindDescendants<RenderPadding>(m2.RenderView).Select(p => p.Padding).First(i => i.Bottom > 0));
 
         using var custom = new WidgetRenderHarness(Wrap(new Tab(
@@ -814,7 +814,7 @@ public sealed class MaterialTabsTests
             .Where(insets => insets.Left == 16 && insets.Right == 16)
             .ToList();
         // The text+icon tab keeps kTabLabelPadding; the shorter tabs get (72 - 46) / 2 = 13 added.
-        Assert.Contains(new Thickness(16, 0, 16, 0), labelPaddings);
+        Assert.Contains(EdgeInsets.FromLTRB(16, 0, 16, 0), labelPaddings);
         Assert.Equal(2, labelPaddings.Count(insets => insets.Top == 13 && insets.Bottom == 13));
     }
 

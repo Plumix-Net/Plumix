@@ -172,7 +172,7 @@ internal sealed class EnsureVisibleDemoPageState : State
         return new Container(
             color: index % 2 == 0 ? Colors.White : Colors.AliceBlue,
             alignment: Alignment.CenterLeft,
-            padding: new Thickness(12, 0, 12, 0),
+            padding: EdgeInsets.FromLTRB(12, 0, 12, 0),
             child: new Text($"Row {index}", style: new TextStyle(FontSize: 14, Color: Colors.Black)));
     }
 }

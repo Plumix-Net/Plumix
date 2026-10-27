@@ -52,7 +52,7 @@ internal sealed class CustomElementDemoPageState : State
                     style: new TextStyle(FontSize: 14, Color: MaterialColors.Grey)),
                 new Container(
                     color: new Color(0xFFF4F7FA),
-                    padding: new Thickness(12),
+                    padding: EdgeInsets.All(12),
                     child: new Column(
                         crossAxisAlignment: CrossAxisAlignment.Start,
                         spacing: 6,
@@ -83,7 +83,7 @@ internal sealed class CustomElementDemoPageState : State
         {
             return new Container(
                 color: new Color(0xFFF1F1F1),
-                padding: new Thickness(12),
+                padding: EdgeInsets.All(12),
                 child: new Text("probe detached", style: new TextStyle(FontSize: 14, Color: MaterialColors.Grey)));
         }
 
@@ -91,7 +91,7 @@ internal sealed class CustomElementDemoPageState : State
             log: _log,
             child: new Container(
                 color: new Color(0xFFE1F5FE),
-                padding: new Thickness(12),
+                padding: EdgeInsets.All(12),
                 child: new Text(
                     $"probe child revision {_revision}",
                     style: new TextStyle(

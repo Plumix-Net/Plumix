@@ -40,7 +40,7 @@ public sealed class TabPageSelectorIndicator : StatelessWidget
         return new Container(
             width: Size,
             height: Size,
-            margin: new Thickness(4),
+            margin: EdgeInsets.All(4),
             decoration: new BoxDecoration(
                 Color: BackgroundColor,
                 Border: Plumix.Rendering.Border.FromBorderSide(new BorderSide(BorderColor, style: BorderStyle)),

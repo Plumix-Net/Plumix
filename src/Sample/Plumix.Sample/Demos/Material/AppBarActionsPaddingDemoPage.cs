@@ -20,9 +20,9 @@ public sealed class AppBarActionsPaddingDemoPage : StatefulWidget
 
 internal sealed class AppBarActionsPaddingDemoPageState : State
 {
-    private Thickness _themeActionsPadding = new(6, 2, 6, 2);
+    private EdgeInsets _themeActionsPadding = EdgeInsets.FromLTRB(6, 2, 6, 2);
     private bool _useWidgetOverride;
-    private Thickness _widgetActionsPadding = new(10, 4, 10, 4);
+    private EdgeInsets _widgetActionsPadding = EdgeInsets.FromLTRB(10, 4, 10, 4);
 
     public override Widget Build(BuildContext context)
     {
@@ -39,9 +39,21 @@ internal sealed class AppBarActionsPaddingDemoPageState : State
                     spacing: 8,
                     children:
                     [
-                        BuildButton("theme 0", () => SetThemeActionsPadding(new Thickness()), width: 92, colorHex: "#FFDCE3ED"),
-                        BuildButton("theme 6/2", () => SetThemeActionsPadding(new Thickness(6, 2, 6, 2)), width: 92, colorHex: "#FFDCE3ED"),
-                        BuildButton("theme 14/6", () => SetThemeActionsPadding(new Thickness(14, 6, 14, 6)), width: 102, colorHex: "#FFDCE3ED"),
+                        BuildButton(
+                            "theme 0",
+                            () => SetThemeActionsPadding(EdgeInsets.Zero),
+                            width: 92,
+                            colorHex: "#FFDCE3ED"),
+                        BuildButton(
+                            "theme 6/2",
+                            () => SetThemeActionsPadding(EdgeInsets.FromLTRB(6, 2, 6, 2)),
+                            width: 92,
+                            colorHex: "#FFDCE3ED"),
+                        BuildButton(
+                            "theme 14/6",
+                            () => SetThemeActionsPadding(EdgeInsets.FromLTRB(14, 6, 14, 6)),
+                            width: 102,
+                            colorHex: "#FFDCE3ED"),
                     ]),
                 new Row(
                     spacing: 8,
@@ -54,9 +66,21 @@ internal sealed class AppBarActionsPaddingDemoPageState : State
                     spacing: 8,
                     children:
                     [
-                        BuildButton("widget 4/0", () => SetWidgetActionsPadding(new Thickness(4, 0, 4, 0)), width: 92, colorHex: "#FFF3E8D8"),
-                        BuildButton("widget 10/4", () => SetWidgetActionsPadding(new Thickness(10, 4, 10, 4)), width: 92, colorHex: "#FFF3E8D8"),
-                        BuildButton("widget 16/8", () => SetWidgetActionsPadding(new Thickness(16, 8, 16, 8)), width: 102, colorHex: "#FFF3E8D8"),
+                        BuildButton(
+                            "widget 4/0",
+                            () => SetWidgetActionsPadding(EdgeInsets.FromLTRB(4, 0, 4, 0)),
+                            width: 92,
+                            colorHex: "#FFF3E8D8"),
+                        BuildButton(
+                            "widget 10/4",
+                            () => SetWidgetActionsPadding(EdgeInsets.FromLTRB(10, 4, 10, 4)),
+                            width: 92,
+                            colorHex: "#FFF3E8D8"),
+                        BuildButton(
+                            "widget 16/8",
+                            () => SetWidgetActionsPadding(EdgeInsets.FromLTRB(16, 8, 16, 8)),
+                            width: 102,
+                            colorHex: "#FFF3E8D8"),
                     ]),
                 new Text(
                     $"theme={FormatInsets(_themeActionsPadding)}, override={(_useWidgetOverride ? "on" : "off")}, widget={FormatInsets(_widgetActionsPadding)}, effective={FormatInsets(EffectiveActionsPadding())}",
@@ -64,7 +88,7 @@ internal sealed class AppBarActionsPaddingDemoPageState : State
                 new Container(
                     width: 300,
                     color: new Color(0xFFE7EDF6),
-                    padding: new Thickness(10),
+                    padding: EdgeInsets.All(10),
                     child: new Column(
                         crossAxisAlignment: CrossAxisAlignment.Stretch,
                         spacing: 8,
@@ -159,7 +183,7 @@ internal sealed class AppBarActionsPaddingDemoPageState : State
         return new SizedBox(
             height: 36,
             child: new Padding(
-                new Thickness(12, 8),
+                EdgeInsets.Symmetric(horizontal: 12, vertical: 8),
                 new Text(label, style: new TextStyle(FontSize: 12, Color: MaterialColors.BlueGrey))));
     }
 
@@ -186,10 +210,10 @@ internal sealed class AppBarActionsPaddingDemoPageState : State
                 background: (Color)Avalonia.Media.Color.Parse(colorHex),
                 foreground: Colors.Black,
                 fontSize: 12,
-                padding: new Thickness(10, 8)));
+                padding: EdgeInsets.Symmetric(horizontal: 10, vertical: 8)));
     }
 
-    private void SetThemeActionsPadding(Thickness value)
+    private void SetThemeActionsPadding(EdgeInsets value)
     {
         SetState(() => _themeActionsPadding = value);
     }
@@ -199,17 +223,17 @@ internal sealed class AppBarActionsPaddingDemoPageState : State
         SetState(() => _useWidgetOverride = value);
     }
 
-    private void SetWidgetActionsPadding(Thickness value)
+    private void SetWidgetActionsPadding(EdgeInsets value)
     {
         SetState(() => _widgetActionsPadding = value);
     }
 
-    private Thickness EffectiveActionsPadding()
+    private EdgeInsets EffectiveActionsPadding()
     {
         return _useWidgetOverride ? _widgetActionsPadding : _themeActionsPadding;
     }
 
-    private static string FormatInsets(Thickness insets)
+    private static string FormatInsets(EdgeInsets insets)
     {
         return $"{insets.Left:0}/{insets.Top:0}/{insets.Right:0}/{insets.Bottom:0}";
     }

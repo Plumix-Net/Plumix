@@ -27,7 +27,7 @@ public sealed class SliverAppBarDemoPage : StatefulWidget
                 BuildAppBar(),
                 new SliverToBoxAdapter(
                     new Padding(
-                        new Thickness(12),
+                        EdgeInsets.All(12),
                         new Column(
                             crossAxisAlignment: CrossAxisAlignment.Stretch,
                             spacing: 8,
@@ -50,13 +50,13 @@ public sealed class SliverAppBarDemoPage : StatefulWidget
                                     ]),
                             ]))),
                 new SliverPadding(
-                    padding: new Thickness(12, 0, 12, 20),
+                    padding: EdgeInsets.FromLTRB(12, 0, 12, 20),
                     sliver: SliverList.Builder(
                         itemCount: 24,
                         itemBuilder: (_, index) => new Container(
                             color: index % 2 == 0 ? new Color(0xFFF3EDF7) : new Color(0xFFE8DEF8),
-                            margin: new Thickness(0, 0, 0, 6),
-                            padding: new Thickness(14),
+                            margin: EdgeInsets.FromLTRB(0, 0, 0, 6),
+                            padding: EdgeInsets.All(14),
                             child: new Text($"Scrollable row #{index + 1}")),
                         addAutomaticKeepAlives: false)),
             ]);

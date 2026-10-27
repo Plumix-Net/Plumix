@@ -231,7 +231,7 @@ public sealed class MaterialSliverAppBarTests
         rtl.Pump(new Size(360, 200));
 
         var padding = Assert.Single(FindDescendants<RenderPadding>(rtl.RenderView));
-        Assert.Equal(new Thickness(0, 0, 72, 16), padding.Padding.Resolve(padding.TextDirection));
+        Assert.Equal(EdgeInsets.FromLTRB(0, 0, 72, 16), padding.Padding.Resolve(padding.TextDirection));
         var transform = Assert.Single(FindDescendants<RenderTransform>(rtl.RenderView));
         Assert.Equal(
             Alignment.BottomRight,

@@ -76,7 +76,7 @@ public sealed class RichTextDemoPageState : State
         var bodyStyle = new TextStyle(FontSize: 15, Color: new Color(0xFF1D3557));
         return new Container(
             color: new Color(0xFFFFF7ED),
-            padding: new Thickness(12),
+            padding: EdgeInsets.All(12),
             child: new Column(
                 crossAxisAlignment: CrossAxisAlignment.Stretch,
                 spacing: 8,
@@ -129,7 +129,7 @@ public sealed class RichTextDemoPageState : State
             onTap: onTap,
             child: new Container(
                 color: selected ? new Color(0xFF2A9D8F) : new Color(0xFFE2E8F0),
-                padding: new Thickness(10, 6),
+                padding: EdgeInsets.Symmetric(horizontal: 10, vertical: 6),
                 child: new Text(
                     label,
                     style: new TextStyle(
@@ -141,7 +141,7 @@ public sealed class RichTextDemoPageState : State
     {
         return new Container(
             color: new Color(0xFFF1F5F9),
-            padding: new Thickness(12),
+            padding: EdgeInsets.All(12),
             child: new RichText(
                 text: new TextSpan(
                     text: "Can you ",
@@ -163,7 +163,7 @@ public sealed class RichTextDemoPageState : State
     {
         return new Container(
             color: new Color(0xFFFDF6E3),
-            padding: new Thickness(12),
+            padding: EdgeInsets.All(12),
             child: Text.Rich(
                 new TextSpan(
                     text: "A ",
@@ -190,7 +190,7 @@ public sealed class RichTextDemoPageState : State
     {
         return new Container(
             color: new Color(0xFFE7EDF6),
-            padding: new Thickness(12),
+            padding: EdgeInsets.All(12),
             child: Text.Rich(
                 new TextSpan(
                     text: "Inline ",
@@ -209,7 +209,7 @@ public sealed class RichTextDemoPageState : State
     {
         return new Container(
             color: new Color(0xFFF0FDF4),
-            padding: new Thickness(12),
+            padding: EdgeInsets.All(12),
             child: new Column(
                 crossAxisAlignment: CrossAxisAlignment.Stretch,
                 spacing: 6,
@@ -244,7 +244,7 @@ public sealed class RichTextDemoPageState : State
     {
         return new Container(
             color: new Color(0xFFF8EDEB),
-            padding: new Thickness(12),
+            padding: EdgeInsets.All(12),
             child: Text.Rich(
                 new TextSpan(
                     text: "top ",
@@ -265,7 +265,7 @@ public sealed class RichTextDemoPageState : State
         Color textColor = new Color(0xFF1D3557);
         return new Container(
             color: new Color(0xFFEAF4EA),
-            padding: new Thickness(12),
+            padding: EdgeInsets.All(12),
             child: new Column(
                 crossAxisAlignment: CrossAxisAlignment.Stretch,
                 spacing: 8,
@@ -295,7 +295,7 @@ public sealed class RichTextDemoPageState : State
     {
         return new Container(
             color: new Color(0xFFF0F9FF),
-            padding: new Thickness(12),
+            padding: EdgeInsets.All(12),
             child: new RichText(
                 textHeightBehavior: new TextHeightBehavior(false, false, TextLeadingDistribution.Even),
                 strutStyle: new StrutStyle(FontSize: 18, Height: 1.5),
@@ -321,7 +321,7 @@ public sealed class RichTextDemoPageState : State
     {
         return new Container(
             color: new Color(0xFFF5F0FF),
-            padding: new Thickness(12),
+            padding: EdgeInsets.All(12),
             child: new DefaultTextStyle(
                 style: new TextStyle(FontSize: 16, Color: new Color(0xFF1D3557)),
                 overflow: TextOverflow.Ellipsis,

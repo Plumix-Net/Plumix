@@ -406,8 +406,8 @@ internal sealed class CupertinoSearchTextFieldState : RestorationState<Cupertino
 
     private EdgeInsetsGeometry AnimatedInsets(BuildContext context, EdgeInsetsGeometry insets)
     {
-        Thickness currentInsets = insets.Resolve(Directionality.Of(context));
-        var collapsedInsets = new Thickness(
+        EdgeInsets currentInsets = insets.Resolve(Directionality.Of(context));
+        var collapsedInsets = EdgeInsets.FromLTRB(
             currentInsets.Left,
             currentInsets.Top / 2.0,
             currentInsets.Right,

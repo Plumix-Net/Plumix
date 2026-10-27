@@ -227,7 +227,8 @@ public class RenderEditable : RenderBox,
 
     // The additional size on the x and y axis with which to expand the prototype cursor to render the
     // floating cursor in pixels.
-    private static readonly Thickness KFloatingCursorSizeIncrease = new(0.5, 1.0);
+    private static readonly EdgeInsets KFloatingCursorSizeIncrease =
+        EdgeInsets.Symmetric(horizontal: 0.5, vertical: 1.0);
 
     // _kFloatingCursorRadius and the shortest caret distance live on CaretPainter, their only reader.
 
@@ -343,7 +344,7 @@ public class RenderEditable : RenderBox,
         BoxHeightStyle selectionHeightStyle = BoxHeightStyle.Max,
         BoxWidthStyle selectionWidthStyle = BoxWidthStyle.Max,
         bool? enableInteractiveSelection = null,
-        Thickness? floatingCursorAddedMargin = null,
+        EdgeInsets? floatingCursorAddedMargin = null,
         TextRange? promptRectRange = null,
         Color? promptRectColor = null,
         Clip clipBehavior = Clip.HardEdge,
@@ -403,7 +404,7 @@ public class RenderEditable : RenderBox,
         _disposeShowCursor = showCursor is null;
         IgnorePointer = ignorePointer;
         TextSelectionDelegate = textSelectionDelegate;
-        FloatingCursorAddedMargin = floatingCursorAddedMargin ?? new Thickness(4, 4, 4, 5);
+        FloatingCursorAddedMargin = floatingCursorAddedMargin ?? EdgeInsets.FromLTRB(4, 4, 4, 5);
 
         DebugAssert(!_showCursor.Value || cursorColor is not null);
 
@@ -455,7 +456,7 @@ public class RenderEditable : RenderBox,
 
     /// <summary>The margin, on top of the text's size, that the floating cursor may travel.</summary>
     /// <remarks>Dart's <c>floatingCursorAddedMargin</c>.</remarks>
-    public Thickness FloatingCursorAddedMargin { get; set; }
+    public EdgeInsets FloatingCursorAddedMargin { get; set; }
 
     /// <summary>The text painter this editable lays out and paints with.</summary>
     internal TextPainter TextPainter => _textPainter;
@@ -2746,8 +2747,8 @@ public class RenderEditable : RenderBox,
         {
             _floatingCursorTextPosition = lastTextPosition;
             double? animationValue = _resetFloatingCursorAnimationValue;
-            Thickness sizeAdjustment = animationValue is { } value
-                ? LerpThickness(KFloatingCursorSizeIncrease, default, value)
+            EdgeInsets sizeAdjustment = animationValue is { } value
+                ? EdgeInsets.Lerp(KFloatingCursorSizeIncrease, EdgeInsets.Zero, value)!.Value
                 : KFloatingCursorSizeIncrease;
             Rect inflated = sizeAdjustment.InflateRect(_caretPrototype);
             CaretPainterInstance.FloatingCursorRect = inflated.Translate(new Vector(boundedOffset.X, boundedOffset.Y));
@@ -2758,16 +2759,6 @@ public class RenderEditable : RenderBox,
         }
 
         CaretPainterInstance.ShowRegularCaret = _resetFloatingCursorAnimationValue is null;
-    }
-
-    // Dart's `EdgeInsets.lerp` of two non-null insets.
-    private static Thickness LerpThickness(Thickness a, Thickness b, double t)
-    {
-        return new Thickness(
-            a.Left + ((b.Left - a.Left) * t),
-            a.Top + ((b.Top - a.Top) * t),
-            a.Right + ((b.Right - a.Right) * t),
-            a.Bottom + ((b.Bottom - a.Bottom) * t));
     }
 
     /// <summary>The text position the floating cursor sits on, read by the caret painter.</summary>

@@ -70,7 +70,7 @@ public sealed class MaterialDropdownMenuTests : IDisposable
         Assert.Null(menu.CursorHeight);
         Assert.Null(menu.RestorationId);
         Assert.Null(menu.MenuController);
-        Assert.Equal(new Thickness(20), menu.ScrollPadding);
+        Assert.Equal(EdgeInsets.All(20), menu.ScrollPadding);
 
         var entry = entries[0];
         Assert.True(entry.Enabled);
@@ -168,7 +168,7 @@ public sealed class MaterialDropdownMenuTests : IDisposable
         Assert.IsType<OutlineInputBorder>(textField.Decoration!.Border);
         Assert.Equal(TextAlignVertical.Center, textField.TextAlignVertical);
         Assert.Equal(1, textField.MaxLines);
-        Assert.Equal(new Thickness(20), textField.ScrollPadding);
+        Assert.Equal(EdgeInsets.All(20), textField.ScrollPadding);
         Assert.True(controller.IsOpen);
     }
 
@@ -906,7 +906,7 @@ public sealed class MaterialDropdownMenuTests : IDisposable
             cursorHeight: 17,
             restorationId: "dropdown",
             inputFormatters: formatters,
-            scrollPadding: new Thickness(7));
+            scrollPadding: EdgeInsets.All(7));
         using var harness = new WidgetRenderHarness(Wrap(menu));
         harness.Pump(new Size(500, 360));
         var textField = Assert.Single(FindWidgets<TextField>(harness.RootElement));
@@ -917,7 +917,7 @@ public sealed class MaterialDropdownMenuTests : IDisposable
         Assert.Equal(17.0, textField.CursorHeight);
         Assert.Equal("dropdown", textField.RestorationId);
         Assert.Same(formatters, textField.InputFormatters);
-        Assert.Equal(new Thickness(7), textField.ScrollPadding);
+        Assert.Equal(EdgeInsets.All(7), textField.ScrollPadding);
     }
 
     [Fact]

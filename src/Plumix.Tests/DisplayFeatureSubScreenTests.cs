@@ -14,7 +14,7 @@ public sealed class DisplayFeatureSubScreenTests : IDisposable
 
     private static readonly MediaQueryData VerticalHinge = new(
         Size: ScreenSize,
-        Padding: new Thickness(10),
+        Padding: EdgeInsets.All(10),
         DisplayFeatures: [new DisplayFeature(new Rect(390, 0, 20, 600), DisplayFeatureType.Hinge)]);
 
     public DisplayFeatureSubScreenTests() => SchedulerBinding.ResetForTests();
@@ -55,14 +55,14 @@ public sealed class DisplayFeatureSubScreenTests : IDisposable
     public void RemoveDisplayFeaturesRemovesSpecifiedDisplayFeaturesAndPadding()
     {
         MediaQueryData subScreenMediaQuery = SubScreenData(
-            viewPadding: new Thickness(10.0, 6.0, 8.0, 12.0),
+            viewPadding: EdgeInsets.FromLTRB(10.0, 6.0, 8.0, 12.0),
             subScreen: new Rect(new Point(20, 10), new Point(40, 20)));
 
         Assert.Equal(new Size(82.0, 40.0), subScreenMediaQuery.Size);
         Assert.Equal(2.0, subScreenMediaQuery.DevicePixelRatio);
-        Assert.Equal(new Thickness(0), subScreenMediaQuery.Padding);
-        Assert.Equal(new Thickness(0), subScreenMediaQuery.ViewPadding);
-        Assert.Equal(new Thickness(0), subScreenMediaQuery.ViewInsets);
+        Assert.Equal(EdgeInsets.Zero, subScreenMediaQuery.Padding);
+        Assert.Equal(EdgeInsets.Zero, subScreenMediaQuery.ViewPadding);
+        Assert.Equal(EdgeInsets.Zero, subScreenMediaQuery.ViewInsets);
         Assert.True(subScreenMediaQuery.AlwaysUse24HourFormat);
         Assert.True(subScreenMediaQuery.DisableAnimations);
         Assert.Empty(subScreenMediaQuery.DisplayFeatures!);
@@ -74,14 +74,14 @@ public sealed class DisplayFeatureSubScreenTests : IDisposable
     public void RemoveDisplayFeaturesOnlyRemovesSpecifiedDisplayFeaturesAndPadding()
     {
         MediaQueryData subScreenMediaQuery = SubScreenData(
-            viewPadding: new Thickness(46.0, 6.0, 8.0, 12.0),
+            viewPadding: EdgeInsets.FromLTRB(46.0, 6.0, 8.0, 12.0),
             subScreen: new Rect(new Point(42, 0), new Point(82, 40)));
 
         Assert.Equal(new Size(82.0, 40.0), subScreenMediaQuery.Size);
         Assert.Equal(2.0, subScreenMediaQuery.DevicePixelRatio);
-        Assert.Equal(new Thickness(0, 1.0, 2.0, 4.0), subScreenMediaQuery.Padding);
-        Assert.Equal(new Thickness(4.0, 6.0, 8.0, 12.0), subScreenMediaQuery.ViewPadding);
-        Assert.Equal(new Thickness(0, 5.0, 6.0, 8.0), subScreenMediaQuery.ViewInsets);
+        Assert.Equal(EdgeInsets.FromLTRB(0, 1.0, 2.0, 4.0), subScreenMediaQuery.Padding);
+        Assert.Equal(EdgeInsets.FromLTRB(4.0, 6.0, 8.0, 12.0), subScreenMediaQuery.ViewPadding);
+        Assert.Equal(EdgeInsets.FromLTRB(0, 5.0, 6.0, 8.0), subScreenMediaQuery.ViewInsets);
         Assert.True(subScreenMediaQuery.AlwaysUse24HourFormat);
         Assert.True(subScreenMediaQuery.DisableAnimations);
         Assert.Equal([CutoutDisplayFeature], subScreenMediaQuery.DisplayFeatures!);
@@ -92,14 +92,14 @@ public sealed class DisplayFeatureSubScreenTests : IDisposable
         Type: DisplayFeatureType.Cutout,
         State: DisplayFeatureState.Unknown);
 
-    private static MediaQueryData SubScreenData(Thickness viewPadding, Rect subScreen)
+    private static MediaQueryData SubScreenData(EdgeInsets viewPadding, Rect subScreen)
     {
         var data = new MediaQueryData(
             Size: new Size(82.0, 40.0),
             DevicePixelRatio: 2.0,
-            Padding: new Thickness(3.0, 1.0, 2.0, 4.0),
+            Padding: EdgeInsets.FromLTRB(3.0, 1.0, 2.0, 4.0),
             ViewPadding: viewPadding,
-            ViewInsets: new Thickness(7.0, 5.0, 6.0, 8.0),
+            ViewInsets: EdgeInsets.FromLTRB(7.0, 5.0, 6.0, 8.0),
             AlwaysUse24HourFormat: true,
             DisableAnimations: true,
             DisplayFeatures:

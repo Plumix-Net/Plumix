@@ -183,7 +183,7 @@ public class DatePickerDialog : StatefulWidget
         Action<DatePickerEntryMode>? onDatePickerModeChange = null,
         Icon? switchToInputEntryModeIcon = null,
         Icon? switchToCalendarEntryModeIcon = null,
-        Thickness? insetPadding = null,
+        EdgeInsets? insetPadding = null,
         CalendarDelegate<DateTime>? calendarDelegate = null,
         Key? key = null) : base(key)
     {
@@ -202,7 +202,7 @@ public class DatePickerDialog : StatefulWidget
         OnDatePickerModeChange = onDatePickerModeChange;
         SwitchToInputEntryModeIcon = switchToInputEntryModeIcon;
         SwitchToCalendarEntryModeIcon = switchToCalendarEntryModeIcon;
-        InsetPadding = insetPadding ?? new Thickness(16.0, 24.0);
+        InsetPadding = insetPadding ?? EdgeInsets.Symmetric(horizontal: 16.0, vertical: 24.0);
         CalendarDelegate = calendarDelegate ?? GregorianCalendarDelegate.Instance;
         InitialDate = initialDate == null ? null : CalendarDelegate.DateOnly(initialDate.Value);
         FirstDate = CalendarDelegate.DateOnly(firstDate);
@@ -324,7 +324,7 @@ public class DatePickerDialog : StatefulWidget
     /// This defines the minimum space between the screen's edges and the dialog.
     /// </summary>
     /// <remarks>Defaults to <c>EdgeInsets.symmetric(horizontal: 16.0, vertical: 24.0)</c>.</remarks>
-    public Thickness InsetPadding { get; }
+    public EdgeInsets InsetPadding { get; }
 
     /// <summary>The calendar system the dialog interprets, navigates and formats dates with.</summary>
     public CalendarDelegate<DateTime> CalendarDelegate { get; }

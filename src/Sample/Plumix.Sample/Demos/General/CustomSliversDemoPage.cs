@@ -23,7 +23,7 @@ public sealed class CustomSliversDemoPage : StatelessWidget
                             maxExtentPrototype: new SizedBox(height: 140),
                             child: new Container(
                                 color: new Color(0xFFE8EAF6),
-                                padding: new Thickness(16, 12),
+                                padding: EdgeInsets.Symmetric(horizontal: 16, vertical: 12),
                                 child: new Column(
                                     mainAxisAlignment: MainAxisAlignment.Center,
                                     crossAxisAlignment: CrossAxisAlignment.Stretch,
@@ -52,7 +52,7 @@ public sealed class CustomSliversDemoPage : StatelessWidget
                     child: new Container(
                         height: 64,
                         color: new Color(0xFFFFECB3),
-                        padding: new Thickness(16, 10),
+                        padding: EdgeInsets.Symmetric(horizontal: 16, vertical: 10),
                         child: new Column(
                             crossAxisAlignment: CrossAxisAlignment.Stretch,
                             spacing: 2,
@@ -84,7 +84,7 @@ public sealed class CustomSliversDemoPage : StatelessWidget
                             addAutomaticKeepAlives: false),
                     ]),
                 new SliverSafeArea(
-                    minimum: new EdgeInsets(12, 8, 12, 0),
+                    minimum: EdgeInsets.FromLTRB(12, 8, 12, 0),
                     sliver: new SliverLayoutBuilder((_, constraints) =>
                     {
                         bool compact = constraints.CrossAxisExtent < 420;
@@ -94,7 +94,7 @@ public sealed class CustomSliversDemoPage : StatelessWidget
                             new Container(
                                 height: height,
                                 color: new Color(0xFFF8FAFF),
-                                padding: new Thickness(12, 10),
+                                padding: EdgeInsets.Symmetric(horizontal: 12, vertical: 10),
                                 child: new Column(
                                     crossAxisAlignment: CrossAxisAlignment.Stretch,
                                     spacing: 4,
@@ -112,7 +112,7 @@ public sealed class CustomSliversDemoPage : StatelessWidget
                     hasScrollBody: false,
                     child: new Container(
                         color: new Color(0xFFF3E5F5),
-                        padding: new Thickness(24),
+                        padding: EdgeInsets.All(24),
                         alignment: Alignment.Center,
                         child: new Column(
                             mainAxisAlignment: MainAxisAlignment.Center,
@@ -146,7 +146,7 @@ public sealed class CustomSliversDemoPage : StatelessWidget
                         Border: Plumix.Rendering.Border.FromBorderSide(new BorderSide(new Color(0xFF90CAF9), 2)),
                         BorderRadius: BorderRadius.Circular(18)),
                     sliver: new SliverPadding(
-                        padding: new Thickness(12, 10, 12, 8),
+                        padding: EdgeInsets.FromLTRB(12, 10, 12, 8),
                         sliver: SliverFixedExtentList.Builder(
                             itemCount: 8,
                             itemExtent: 42,
@@ -154,7 +154,7 @@ public sealed class CustomSliversDemoPage : StatelessWidget
                                 color: index % 2 == 0
                                     ? new Color(0xCCFFFFFF)
                                     : new Color(0xCCE8F5E9),
-                                padding: new Thickness(10, 8),
+                                padding: EdgeInsets.Symmetric(horizontal: 10, vertical: 8),
                                 child: new Text(
                                     $"decorated sliver row #{index}",
                                     style: new TextStyle(FontSize: 13, Color: Colors.Black))),
@@ -166,7 +166,7 @@ public sealed class CustomSliversDemoPage : StatelessWidget
                             new Container(
                                 height: 56,
                                 color: new Color(0xFFFFF3E0),
-                                padding: new Thickness(12, 9),
+                                padding: EdgeInsets.Symmetric(horizontal: 12, vertical: 9),
                                 child: new Column(
                                     crossAxisAlignment: CrossAxisAlignment.Stretch,
                                     spacing: 2,
@@ -212,7 +212,7 @@ public sealed class CustomSliversDemoPage : StatelessWidget
                             ]),
                     ]),
                 new SliverPadding(
-                    padding: new Thickness(12, 10, 12, 4),
+                    padding: EdgeInsets.FromLTRB(12, 10, 12, 4),
                     sliver: SliverPrototypeExtentList.Builder(
                         itemCount: 4,
                         prototypeItem: new SizedBox(height: 54),
@@ -223,7 +223,7 @@ public sealed class CustomSliversDemoPage : StatelessWidget
                                 : new Color(0xFFF3E5F5)),
                         addAutomaticKeepAlives: false)),
                 new SliverPadding(
-                    padding: new Thickness(12, 4, 12, 8),
+                    padding: EdgeInsets.FromLTRB(12, 4, 12, 8),
                     sliver: SliverVariedExtentList.Builder(
                         itemCount: 6,
                         itemExtentBuilder: (index, _) => (index % 3) switch
@@ -239,23 +239,23 @@ public sealed class CustomSliversDemoPage : StatelessWidget
                                 : new Color(0xFFE8F5E9)),
                         addAutomaticKeepAlives: false)),
                 new SliverPadding(
-                    padding: new Thickness(12, 8, 12, 4),
+                    padding: EdgeInsets.FromLTRB(12, 8, 12, 4),
                     sliver: SliverList.Builder(
                         itemCount: 8,
                         itemBuilder: (_, index) => new Container(
                             color: new Color(0xFFF5F5F5),
-                            padding: new Thickness(10, 10),
+                            padding: EdgeInsets.Symmetric(horizontal: 10, vertical: 10),
                             child: new Text(
                                 $"regular sliver row #{index}",
                                 style: new TextStyle(FontSize: 13, Color: Colors.Black))),
                         addAutomaticKeepAlives: false)),
                 new SliverPadding(
-                    padding: new Thickness(12, 4, 12, 16),
+                    padding: EdgeInsets.FromLTRB(12, 4, 12, 16),
                     sliver: SliverList.Separated(
                         itemCount: 5,
                         itemBuilder: (_, index) => new Container(
                             color: new Color(0xFFFFF3E0),
-                            padding: new Thickness(10, 10),
+                            padding: EdgeInsets.Symmetric(horizontal: 10, vertical: 10),
                             child: new Text(
                                 $"separated sliver row #{index}",
                                 style: new TextStyle(FontSize: 13, Color: Colors.Black))),
@@ -281,7 +281,7 @@ public sealed class CustomSliversDemoPage : StatelessWidget
             return SizedBox.Expand(
                 child: new Container(
                     color: new Color(0xFFE0F2F1),
-                    padding: new Thickness(16, 8),
+                    padding: EdgeInsets.Symmetric(horizontal: 16, vertical: 8),
                     child: new Column(
                         mainAxisAlignment: MainAxisAlignment.Center,
                         crossAxisAlignment: CrossAxisAlignment.Stretch,
@@ -303,7 +303,7 @@ public sealed class CustomSliversDemoPage : StatelessWidget
     {
         return new Container(
             color: color,
-            padding: new Thickness(6, 8),
+            padding: EdgeInsets.Symmetric(horizontal: 6, vertical: 8),
             child: new Text(label, style: new TextStyle(FontSize: 12, Color: Colors.Black)));
     }
 
@@ -311,7 +311,7 @@ public sealed class CustomSliversDemoPage : StatelessWidget
     {
         return new Container(
             color: color,
-            padding: new Thickness(20),
+            padding: EdgeInsets.All(20),
             alignment: Alignment.Center,
             child: new Column(
                 mainAxisAlignment: MainAxisAlignment.Center,
@@ -329,7 +329,7 @@ public sealed class CustomSliversDemoPage : StatelessWidget
     {
         return new Container(
             color: color,
-            padding: new Thickness(10, 8),
+            padding: EdgeInsets.Symmetric(horizontal: 10, vertical: 8),
             alignment: Alignment.CenterLeft,
             child: new Text(label, style: new TextStyle(FontSize: 13, Color: Colors.Black)));
     }

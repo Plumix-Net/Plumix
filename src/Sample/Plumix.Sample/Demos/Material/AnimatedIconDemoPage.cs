@@ -58,7 +58,7 @@ internal sealed class AnimatedIconDemoPageState : State
     public override Widget Build(BuildContext context)
     {
         return new SingleChildScrollView(
-            padding: new Thickness(0, 0, 12, 12),
+            padding: EdgeInsets.FromLTRB(0, 0, 12, 12),
             child: new Column(
                 crossAxisAlignment: CrossAxisAlignment.Stretch,
                 spacing: 10,
@@ -109,7 +109,7 @@ internal sealed class AnimatedIconDemoPageState : State
         return new Container(
             width: 132,
             height: 100,
-            padding: new Thickness(8),
+            padding: EdgeInsets.All(8),
             decoration: new BoxDecoration(
                 Color: new Color(0xFFF1F4F8),
                 BorderRadius: new BorderRadius(12)),

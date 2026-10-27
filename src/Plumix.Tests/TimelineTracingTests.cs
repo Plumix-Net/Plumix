@@ -559,7 +559,7 @@ public sealed class TimelineTracingTests : IDisposable
     public void RenderBox_IntrinsicsReportOnlyTheOutermostComputationUnlessLayoutsAreProfiled()
     {
         var inner = new RenderConstrainedBox(BoxConstraints.TightFor(width: 10, height: 20));
-        var outer = new RenderPadding(new Thickness(1), child: inner);
+        var outer = new RenderPadding(EdgeInsets.All(1), child: inner);
         using var recorder = new TimelineRecorder();
 
         outer.GetMinIntrinsicWidth(double.PositiveInfinity);

@@ -41,7 +41,7 @@ public sealed partial record CarouselViewThemeData
             BackgroundColor: MaterialThemeLerp.Color(a?.BackgroundColor, b?.BackgroundColor, t),
             OverlayColor: MaterialThemeLerp.ColorStateProperty(a?.OverlayColor, b?.OverlayColor, t),
             Shape: MaterialThemeLerp.Shape(a?.Shape, b?.Shape, t),
-            Padding: MaterialThemeLerp.Thickness(a?.Padding, b?.Padding, t),
+            Padding: MaterialThemeLerp.EdgeInsets(a?.Padding, b?.Padding, t),
             ItemClipBehavior: t < 0.5 ? a?.ItemClipBehavior : b?.ItemClipBehavior);
     }
 }
@@ -254,8 +254,8 @@ public sealed partial record ChipThemeData
                 t),
             ShowCheckmark: t < 0.5 ? a?.ShowCheckmark ?? true : b?.ShowCheckmark ?? true,
             CheckmarkColor: MaterialThemeLerp.Color(a?.CheckmarkColor, b?.CheckmarkColor, t),
-            LabelPadding: MaterialThemeLerp.Thickness(a?.LabelPadding, b?.LabelPadding, t),
-            Padding: MaterialThemeLerp.Thickness(a?.Padding, b?.Padding, t),
+            LabelPadding: MaterialThemeLerp.EdgeInsets(a?.LabelPadding, b?.LabelPadding, t),
+            Padding: MaterialThemeLerp.EdgeInsets(a?.Padding, b?.Padding, t),
             Side: MaterialThemeLerp.BorderSide(a?.Side, b?.Side, t),
             Shape: MaterialThemeLerp.Shape(a?.Shape, b?.Shape, t),
             LabelStyle: MaterialThemeLerp.TextStyle(a?.LabelStyle, b?.LabelStyle, t),
@@ -462,7 +462,7 @@ public partial class SnackBarThemeData
             shape: MaterialThemeLerp.Shape(a?.Shape, b?.Shape, t),
             behavior: t < 0.5 ? a?.Behavior : b?.Behavior,
             width: MaterialThemeLerp.Double(a?.Width, b?.Width, t),
-            insetPadding: MaterialThemeLerp.Thickness(a?.InsetPadding, b?.InsetPadding, t),
+            insetPadding: MaterialThemeLerp.EdgeInsets(a?.InsetPadding, b?.InsetPadding, t),
             closeIconColor: MaterialThemeLerp.Color(a?.CloseIconColor, b?.CloseIconColor, t),
             actionOverflowThreshold: MaterialThemeLerp.Double(
                 a?.ActionOverflowThreshold,
@@ -795,7 +795,7 @@ public sealed partial record SwitchThemeData
             OverlayColor: MaterialThemeLerp.ColorStateProperty(a?.OverlayColor, b?.OverlayColor, t),
             SplashRadius: MaterialThemeLerp.Double(a?.SplashRadius, b?.SplashRadius, t),
             ThumbIcon: t < 0.5 ? a?.ThumbIcon : b?.ThumbIcon,
-            Padding: MaterialThemeLerp.Thickness(a?.Padding, b?.Padding, t));
+            Padding: MaterialThemeLerp.EdgeInsets(a?.Padding, b?.Padding, t));
     }
 }
 

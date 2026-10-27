@@ -17,7 +17,7 @@ public sealed class Badge : StatelessWidget
         double? smallSize = null,
         double? largeSize = null,
         TextStyle? textStyle = null,
-        Thickness? padding = null,
+        EdgeInsetsGeometry? padding = null,
         AlignmentGeometry? alignment = null,
         Vector? offset = null,
         Widget? label = null,
@@ -46,7 +46,7 @@ public sealed class Badge : StatelessWidget
         double? smallSize = null,
         double? largeSize = null,
         TextStyle? textStyle = null,
-        Thickness? padding = null,
+        EdgeInsetsGeometry? padding = null,
         AlignmentGeometry? alignment = null,
         Vector? offset = null,
         bool isLabelVisible = true,
@@ -83,7 +83,7 @@ public sealed class Badge : StatelessWidget
     public double? SmallSize { get; }
     public double? LargeSize { get; }
     public TextStyle? TextStyle { get; }
-    public Thickness? Padding { get; }
+    public EdgeInsetsGeometry? Padding { get; }
     public AlignmentGeometry? Alignment { get; }
     public Vector? Offset { get; }
     public Widget? Label { get; }
@@ -119,7 +119,7 @@ public sealed class Badge : StatelessWidget
                     child: new Container(
                         clipBehavior: Clip.AntiAlias,
                         decoration: effectiveDecoration,
-                        padding: Padding ?? badgeTheme.Padding ?? new Thickness(4, 0),
+                        padding: Padding ?? badgeTheme.Padding ?? EdgeInsets.Symmetric(horizontal: 4),
                         alignment: Plumix.Rendering.Alignment.Center,
                         child: Label)));
         }

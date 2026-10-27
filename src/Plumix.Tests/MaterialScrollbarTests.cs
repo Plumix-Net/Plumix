@@ -107,7 +107,7 @@ public sealed class MaterialScrollbarTests
             thickness: 8,
             mainAxisMargin: 5,
             crossAxisMargin: 3,
-            padding: new Thickness(7, 11, 13, 17),
+            padding: EdgeInsets.FromLTRB(7, 11, 13, 17),
             child: new SingleChildScrollView(
                 controller: controller,
                 scrollDirection: Axis.Horizontal,
@@ -884,11 +884,11 @@ public sealed class MaterialScrollbarTests
         using var timers = new FakeGestureTimers();
         using var controller = new ScrollController();
         using var harness = new WidgetRenderHarness(new MediaQuery(
-            data: new MediaQueryData(Padding: new Thickness(50)),
+            data: new MediaQueryData(Padding: EdgeInsets.All(50)),
             child: new RawScrollbar(
                 controller: controller,
                 thumbVisibility: true,
-                padding: explicitPadding ? new Thickness(100) : null,
+                padding: explicitPadding ? EdgeInsets.All(100) : null,
                 minThumbLength: 21,
                 minOverscrollLength: 8,
                 child: new SingleChildScrollView(
@@ -915,7 +915,7 @@ public sealed class MaterialScrollbarTests
         ScrollbarPainter painter = RequirePainter(harness);
         controller.JumpTo(80);
         harness.UpdateWidget(new MediaQuery(
-            data: new MediaQueryData(Padding: new Thickness(7, 11, 13, 17)),
+            data: new MediaQueryData(Padding: EdgeInsets.FromLTRB(7, 11, 13, 17)),
             child: scrollbar));
         Settle(harness);
 
@@ -929,7 +929,7 @@ public sealed class MaterialScrollbarTests
     public void RawScrollbar_ExplicitZeroPaddingWorksWithoutMediaQuery()
     {
         using var harness = new WidgetRenderHarness(
-            new RawScrollbar(padding: new Thickness(), child: new SizedBox()), provideMediaQuery: false);
+            new RawScrollbar(padding: EdgeInsets.Zero, child: new SizedBox()), provideMediaQuery: false);
         Assert.Equal(EdgeInsetsGeometry.Zero, RequirePainter(harness).Padding);
     }
 
@@ -976,7 +976,7 @@ public sealed class MaterialScrollbarTests
     public void ScrollbarPainter_ValidatesPaddingDirectionAndShapeContracts()
     {
         Assert.Throws<ArgumentOutOfRangeException>(() => new ScrollbarPainter(
-            Colors.Crimson, new ConstantAnimation<double>(1), padding: new Thickness(-1)));
+            Colors.Crimson, new ConstantAnimation<double>(1), padding: EdgeInsets.All(-1)));
         Assert.Throws<ArgumentNullException>(() => new ScrollbarPainter(
             Colors.Crimson, new ConstantAnimation<double>(1), padding: EdgeInsetsGeometry.DirectionalOnly(start: 1)));
         using var painter = new ScrollbarPainter(
@@ -1000,7 +1000,7 @@ public sealed class MaterialScrollbarTests
     {
         using var painter = new ScrollbarPainter(
             Colors.Crimson, new ConstantAnimation<double>(1), textDirection: TextDirection.Ltr,
-            mainAxisMargin: -10, padding: new Thickness(1, 2, 3, 4));
+            mainAxisMargin: -10, padding: EdgeInsets.FromLTRB(1, 2, 3, 4));
         painter.Update(TestScrollMetrics(0, 0, 560, 80), direction);
         painter.Paint(new PaintingContext(new OffsetLayer()), new Size(200, 240));
         ScrollbarGeometry geometry = painter.Geometry!.Value;

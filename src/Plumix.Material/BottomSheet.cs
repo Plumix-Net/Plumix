@@ -181,7 +181,7 @@ public sealed class BottomSheet : StatefulWidget
                     children:
                     [
                         dragHandle!,
-                        new Padding(new Thickness(0, WidgetConstants.MinInteractiveDimension, 0, 0), content),
+                        new Padding(EdgeInsets.FromLTRB(0, WidgetConstants.MinInteractiveDimension, 0, 0), content),
                     ])
                 : content;
 
@@ -637,7 +637,7 @@ internal sealed class ModalBottomSheetWidgetState<T> : State<ModalBottomSheetWid
                 child: new ClipRect(
                     child: new BottomSheetLayoutWithSizeListener(
                         onChildSizeChanged: size =>
-                            route.DidChangeBarrierSemanticsClip(new Thickness(0, 0, 0, size.Height)),
+                            route.DidChangeBarrierSemanticsClip(EdgeInsets.FromLTRB(0, 0, 0, size.Height)),
                         animationValue: _sheetAnimation.Value,
                         isScrollControlled: widget.IsScrollControlled,
                         scrollControlDisabledMaxHeightRatio: widget.ScrollControlDisabledMaxHeightRatio,
@@ -675,7 +675,7 @@ public sealed class ModalBottomSheetRoute<T> : PopupRoute
 {
     public const double DefaultScrollControlDisabledMaxHeightRatio = 9.0 / 16.0;
 
-    private readonly ValueNotifier<Thickness> _clipDetailsNotifier = new(default);
+    private readonly ValueNotifier<EdgeInsets> _clipDetailsNotifier = new(default);
     private readonly CapturedThemes _capturedThemes;
     private readonly BottomSheetThemeData _capturedBottomSheetTheme;
     private readonly AnimationController? _transitionAnimationController;
@@ -829,7 +829,7 @@ public sealed class ModalBottomSheetRoute<T> : PopupRoute
         base.Dispose();
     }
 
-    internal void DidChangeBarrierSemanticsClip(Thickness clipDetails)
+    internal void DidChangeBarrierSemanticsClip(EdgeInsets clipDetails)
     {
         if (_clipDetailsNotifier.Value == clipDetails) return;
         _clipDetailsNotifier.Value = clipDetails;

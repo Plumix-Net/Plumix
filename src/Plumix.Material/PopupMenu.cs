@@ -88,7 +88,7 @@ public class PopupMenuItem<T> : PopupMenuEntry<T>
         Action? onTap = null,
         bool enabled = true,
         double height = 48,
-        Thickness? padding = null,
+        EdgeInsets? padding = null,
         TextStyle? textStyle = null,
         IWidgetStateProperty<TextStyle?>? labelTextStyle = null,
         MouseCursor? mouseCursor = null,
@@ -110,7 +110,7 @@ public class PopupMenuItem<T> : PopupMenuEntry<T>
     public Action? OnTap { get; }
     public bool Enabled { get; }
     public override double Height { get; }
-    public Thickness? Padding { get; }
+    public EdgeInsets? Padding { get; }
     public TextStyle? TextStyle { get; }
     public IWidgetStateProperty<TextStyle?>? LabelTextStyle { get; }
     public MouseCursor? MouseCursor { get; }
@@ -157,7 +157,10 @@ public class PopupMenuItemState<T> : State<PopupMenuItem<T>>
             }
         }
 
-        Thickness padding = widget.Padding ?? (theme.UseMaterial3 ? new Thickness(12, 0) : new Thickness(16, 0));
+        EdgeInsets padding = widget.Padding
+                             ?? (theme.UseMaterial3
+                                 ? EdgeInsets.Symmetric(horizontal: 12)
+                                 : EdgeInsets.Symmetric(horizontal: 16));
         Alignment alignment = Directionality.Of(context) == TextDirection.Rtl
             ? Alignment.CenterRight
             : Alignment.CenterLeft;
@@ -243,7 +246,7 @@ public sealed class CheckedPopupMenuItem<T> : PopupMenuItem<T>
         Action? onTap = null,
         bool enabled = true,
         double height = 48,
-        Thickness? padding = null,
+        EdgeInsets? padding = null,
         IWidgetStateProperty<TextStyle?>? labelTextStyle = null,
         MouseCursor? mouseCursor = null,
         Key? key = null)
@@ -583,7 +586,7 @@ public sealed class PopupMenuButtonState<T> : State<PopupMenuButton<T>>
         double yOffset = position == PopupMenuPosition.Under ? button.Size.Height : 0;
         if (position == PopupMenuPosition.Under && CurrentWidget.Child is null)
         {
-            Thickness padding = CurrentWidget.Padding.Resolve(Directionality.Of(Context));
+            EdgeInsets padding = CurrentWidget.Padding.Resolve(Directionality.Of(Context));
             yOffset -= (padding.Top + padding.Bottom) / 2.0;
         }
         Rect shifted = bounds.Translate(new Vector(offset.X, offset.Y + yOffset));
@@ -1043,7 +1046,7 @@ internal sealed class PopupMenuPositionLayout : SingleChildRenderObjectWidget
 {
     public PopupMenuPositionLayout(
         RelativeRect position,
-        Thickness safePadding,
+        EdgeInsets safePadding,
         IReadOnlyList<DisplayFeature>? displayFeatures,
         Widget child)
         : base(child)
@@ -1054,7 +1057,7 @@ internal sealed class PopupMenuPositionLayout : SingleChildRenderObjectWidget
     }
 
     public RelativeRect Position { get; }
-    public Thickness SafePadding { get; }
+    public EdgeInsets SafePadding { get; }
     public IReadOnlyList<DisplayFeature> DisplayFeatures { get; }
 
     public override RenderObject CreateRenderObject(BuildContext context) =>
@@ -1077,13 +1080,13 @@ internal sealed class PopupMenuPositionLayout : SingleChildRenderObjectWidget
 internal sealed class RenderPopupMenuPositionLayout : RenderShiftedBox
 {
     private RelativeRect _position;
-    private Thickness _safePadding;
+    private EdgeInsets _safePadding;
     private IReadOnlyList<DisplayFeature> _displayFeatures;
     private TextDirection _textDirection;
 
     public RenderPopupMenuPositionLayout(
         RelativeRect position,
-        Thickness safePadding,
+        EdgeInsets safePadding,
         IReadOnlyList<DisplayFeature> displayFeatures,
         TextDirection textDirection) : base(null)
     {
@@ -1094,7 +1097,18 @@ internal sealed class RenderPopupMenuPositionLayout : RenderShiftedBox
     }
 
     public RelativeRect Position { get => _position; set { if (_position != value) { _position = value; MarkNeedsLayout(); } } }
-    public Thickness SafePadding { get => _safePadding; set { if (_safePadding != value) { _safePadding = value; MarkNeedsLayout(); } } }
+    public EdgeInsets SafePadding
+    {
+        get => _safePadding;
+        set
+        {
+            if (_safePadding != value)
+            {
+                _safePadding = value;
+                MarkNeedsLayout();
+            }
+        }
+    }
     public IReadOnlyList<DisplayFeature> DisplayFeatures
     {
         get => _displayFeatures;

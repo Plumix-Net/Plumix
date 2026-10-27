@@ -73,7 +73,7 @@ internal sealed class OverflowBoxDemoPageState : State
                     width: 260,
                     height: 230,
                     color: new Color(0xFFE7EDF6),
-                    padding: new Thickness(10),
+                    padding: EdgeInsets.All(10),
                     child: new Column(
                         crossAxisAlignment: CrossAxisAlignment.Stretch,
                         spacing: 8,
@@ -84,7 +84,7 @@ internal sealed class OverflowBoxDemoPageState : State
                             new Container(
                                 height: 72,
                                 color: Colors.White,
-                                padding: new Thickness(6),
+                                padding: EdgeInsets.All(6),
                                 child: new Center(
                                     child: new OverflowBox(
                                         alignment: _alignment,
@@ -100,7 +100,7 @@ internal sealed class OverflowBoxDemoPageState : State
                             new Container(
                                 height: 86,
                                 color: Colors.White,
-                                padding: new Thickness(6),
+                                padding: EdgeInsets.All(6),
                                 child: new Center(
                                     child: new SizedOverflowBox(
                                         size: _requestedSize,
@@ -133,7 +133,7 @@ internal sealed class OverflowBoxDemoPageState : State
                 background: (Color)Avalonia.Media.Color.Parse(colorHex),
                 foreground: Colors.Black,
                 fontSize: 12,
-                padding: new Thickness(10, 8)));
+                padding: EdgeInsets.Symmetric(horizontal: 10, vertical: 8)));
     }
 
     private void SetFit(OverflowBoxFit value)

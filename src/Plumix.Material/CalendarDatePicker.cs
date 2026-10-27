@@ -1689,7 +1689,7 @@ internal sealed class YearPickerState : State<YearPicker>
                             gridDelegate: new YearPickerGridDelegate(context),
                             itemBuilder: BuildYearItem,
                             itemCount: Math.Max(ItemCount, MinYears),
-                            padding: new Thickness(Consts.YearPickerPadding, 0)))),
+                            padding: EdgeInsets.Symmetric(horizontal: Consts.YearPickerPadding)))),
                 new Divider(),
             ]);
     }

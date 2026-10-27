@@ -41,7 +41,7 @@ public sealed class MaterialCardTests
 
         var margin = FindDescendant<RenderPadding>(harness.RenderView);
         Assert.NotNull(margin);
-        Assert.Equal(new Thickness(4), margin!.Padding);
+        Assert.Equal(EdgeInsets.All(4), margin!.Padding);
     }
 
     [Fact]
@@ -146,7 +146,7 @@ public sealed class MaterialCardTests
                 Color: themeColor,
                 ShadowColor: Colors.DarkGreen,
                 Elevation: 3,
-                Margin: new Thickness(9),
+                Margin: EdgeInsets.All(9),
                 Shape: new RoundedRectangleBorder(borderRadius: Plumix.Rendering.BorderRadius.Circular(18)),
                 ClipBehavior: Clip.AntiAlias)
         };
@@ -164,7 +164,7 @@ public sealed class MaterialCardTests
 
         var margin = FindDescendant<RenderPadding>(harness.RenderView);
         Assert.NotNull(margin);
-        Assert.Equal(new Thickness(9), margin!.Padding);
+        Assert.Equal(EdgeInsets.All(9), margin!.Padding);
         // Dart's Material clips through its physical shape, not a separate ClipPath.
         Assert.Equal(Clip.AntiAlias, material.ClipBehavior);
     }
@@ -220,7 +220,7 @@ public sealed class MaterialCardTests
             ShadowColor: Colors.Black,
             SurfaceTintColor: Colors.Blue,
             Elevation: 2,
-            Margin: new Thickness(2, 4, 6, 8),
+            Margin: EdgeInsets.FromLTRB(2, 4, 6, 8),
             Shape: new RoundedRectangleBorder(
                 new BorderSide(Colors.Red, 1), Plumix.Rendering.BorderRadius.Circular(4)));
         CardThemeData copy = a.CopyWith(color: Colors.Green, elevation: 6);
@@ -234,14 +234,14 @@ public sealed class MaterialCardTests
             ShadowColor: Colors.White,
             SurfaceTintColor: Colors.Green,
             Elevation: 10,
-            Margin: new Thickness(10, 12, 14, 16),
+            Margin: EdgeInsets.FromLTRB(10, 12, 14, 16),
             Shape: new RoundedRectangleBorder(
                 new BorderSide(Colors.Blue, 3), Plumix.Rendering.BorderRadius.Circular(12)));
         CardThemeData midpoint = Assert.IsType<CardThemeData>(CardThemeData.Lerp(a, b, 0.5));
 
         Assert.Equal(Clip.AntiAlias, midpoint.ClipBehavior);
         Assert.Equal(6, midpoint.Elevation);
-        Assert.Equal(new Thickness(6, 8, 10, 12), midpoint.Margin);
+        Assert.Equal(EdgeInsets.FromLTRB(6, 8, 10, 12), midpoint.Margin);
         Assert.Equal(8, ShapeBorderGeometry.ResolveRadius(midpoint.Shape).Radius);
         Assert.Equal(2, ShapeBorderGeometry.SideOrNone(midpoint.Shape).Width);
         Assert.Equal(Color.Lerp(Colors.Red, Colors.Blue, 0.5)!, midpoint.Color);
@@ -272,21 +272,21 @@ public sealed class MaterialCardTests
             CardTheme = new CardThemeData(
                 Color: Colors.Red,
                 Elevation: 2,
-                Margin: new Thickness(2)),
+                Margin: EdgeInsets.All(2)),
         };
         var b = ThemeData.Dark with
         {
             CardTheme = new CardThemeData(
                 Color: Colors.Blue,
                 Elevation: 10,
-                Margin: new Thickness(10)),
+                Margin: EdgeInsets.All(10)),
         };
 
         ThemeData midpoint = ThemeData.Lerp(a, b, 0.5);
 
         Assert.Equal(Color.Lerp(Colors.Red, Colors.Blue, 0.5)!, midpoint.CardTheme.Color);
         Assert.Equal(6, midpoint.CardTheme.Elevation);
-        Assert.Equal(new Thickness(6), midpoint.CardTheme.Margin);
+        Assert.Equal(EdgeInsets.All(6), midpoint.CardTheme.Margin);
     }
 
     [Fact]

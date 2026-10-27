@@ -172,7 +172,7 @@ internal sealed class KeyboardListenerDemoPageState : State
     {
         return new Container(
             height: 88,
-            padding: new Thickness(12),
+            padding: EdgeInsets.All(12),
             decoration: new BoxDecoration(
                 Color: focused ? new Color(0xFFE0F2F1) : new Color(0xFFF1F3F4),
                 Border: Plumix.Rendering.Border.FromBorderSide(new BorderSide(

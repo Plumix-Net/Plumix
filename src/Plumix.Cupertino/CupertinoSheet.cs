@@ -117,7 +117,7 @@ public sealed class CupertinoSheetTransition : StatefulWidget
         Animation<double> curved,
         Widget child)
     {
-        Thickness viewPadding = MediaQuery.MaybeViewPaddingOf(context) ?? default;
+        EdgeInsets viewPadding = MediaQuery.MaybeViewPaddingOf(context) ?? default;
         double deviceCornerRadius = viewPadding.Top * 0.9;
         double startingRadius = deviceCornerRadius > 20.0 ? deviceCornerRadius : 0.0;
         BorderRadius radius = secondaryAnimation.Status == AnimationStatus.Dismissed
@@ -411,7 +411,7 @@ public sealed class CupertinoSheetRoute<T> : PageRoute, ICupertinoSheetRoute
             return body;
         }
 
-        MediaQueryData media = MediaQuery.Of(context).CopyWith(padding: new Thickness(0.0, 15.0, 0.0, 0.0));
+        MediaQueryData media = MediaQuery.Of(context).CopyWith(padding: EdgeInsets.FromLTRB(0.0, 15.0, 0.0, 0.0));
         Color handleColor = CupertinoColors.TertiaryLabel.ResolveFrom(context);
         return new Stack(
             fit: StackFit.Expand,

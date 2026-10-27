@@ -387,7 +387,7 @@ public sealed class SelectionOverlayTests : IDisposable
         Assert.Contains(FindDescendants<RenderConstrainedBox>(fixture.RenderView), box =>
             box.AdditionalConstraints == BoxConstraints.Tight(new Size(48, 48)));
         Assert.Contains(FindDescendants<RenderPadding>(fixture.RenderView), value =>
-            value.Padding == new Thickness(13, 13, 13, 13));
+            value.Padding == EdgeInsets.FromLTRB(13, 13, 13, 13));
 
         overlay.Dispose();
     }

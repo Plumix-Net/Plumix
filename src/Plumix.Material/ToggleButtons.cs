@@ -561,25 +561,25 @@ internal sealed class RenderSelectToggleButton : RenderShiftedBox
         set => SetLayoutProperty(ref _textDirection, value);
     }
 
-    private Thickness ChildPadding => Direction == Axis.Horizontal
+    private EdgeInsets ChildPadding => Direction == Axis.Horizontal
         ? TextDirection == TextDirection.Ltr
-            ? new Thickness(
+            ? EdgeInsets.FromLTRB(
                 LeadingBorderSide.Width,
                 BorderSide.Width,
                 TrailingBorderSide.Width,
                 BorderSide.Width)
-            : new Thickness(
+            : EdgeInsets.FromLTRB(
                 TrailingBorderSide.Width,
                 BorderSide.Width,
                 LeadingBorderSide.Width,
                 BorderSide.Width)
         : VerticalDirection == VerticalDirection.Down
-            ? new Thickness(
+            ? EdgeInsets.FromLTRB(
                 BorderSide.Width,
                 LeadingBorderSide.Width,
                 BorderSide.Width,
                 TrailingBorderSide.Width)
-            : new Thickness(
+            : EdgeInsets.FromLTRB(
                 BorderSide.Width,
                 TrailingBorderSide.Width,
                 BorderSide.Width,
@@ -593,7 +593,7 @@ internal sealed class RenderSelectToggleButton : RenderShiftedBox
             return;
         }
 
-        Thickness padding = ChildPadding;
+        EdgeInsets padding = ChildPadding;
         Child.Layout(Constraints.Deflate(padding), parentUsesSize: true);
         Size = Constraints.Constrain(Inflate(Child.Size, padding));
         ((BoxParentData)Child.parentData!).offset = new Point(padding.Left, padding.Top);
@@ -606,7 +606,7 @@ internal sealed class RenderSelectToggleButton : RenderShiftedBox
             return ComputeEmptySize(constraints);
         }
 
-        Thickness padding = ChildPadding;
+        EdgeInsets padding = ChildPadding;
         Size childSize = Child.GetDryLayout(constraints.Deflate(padding));
         return constraints.Constrain(Inflate(childSize, padding));
     }
@@ -956,7 +956,7 @@ internal sealed class RenderSelectToggleButton : RenderShiftedBox
         BottomLeft,
     }
 
-    private static Size Inflate(Size size, Thickness padding)
+    private static Size Inflate(Size size, EdgeInsets padding)
     {
         return new Size(
             size.Width + padding.Left + padding.Right,

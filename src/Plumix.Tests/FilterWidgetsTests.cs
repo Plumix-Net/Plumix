@@ -386,7 +386,7 @@ public sealed class FilterWidgetsTests
                 return Brushes.Red;
             },
             child: child);
-        var padding = new RenderPadding(new Thickness(7.0, 5.0, 0.0, 0.0))
+        var padding = new RenderPadding(EdgeInsets.FromLTRB(7.0, 5.0, 0.0, 0.0))
         {
             Child = renderObject,
         };

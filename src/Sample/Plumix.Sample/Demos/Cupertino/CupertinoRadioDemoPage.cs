@@ -30,7 +30,7 @@ internal sealed class CupertinoRadioDemoPageState : State
             new CupertinoThemeData(brightness: _dark ? Brightness.Dark : Brightness.Light),
             new Container(
                 color: _dark ? new Color(0xFF1C1C1E) : CupertinoColors.White,
-                padding: new Thickness(12.0),
+                padding: EdgeInsets.All(12.0),
                 child: new Column(
                     crossAxisAlignment: CrossAxisAlignment.Stretch,
                     spacing: 12.0,
@@ -92,7 +92,7 @@ internal sealed class CupertinoRadioDemoPageState : State
         Color? fillColor = null)
     {
         return new Container(
-            padding: new Thickness(10.0, 8.0),
+            padding: EdgeInsets.Symmetric(horizontal: 10.0, vertical: 8.0),
             decoration: new BoxDecoration(
                 Color: _dark ? new Color(0xFF2C2C2E) : new Color(0xFFF1F4F9),
                 BorderRadius: BorderRadius.Circular(10.0),
@@ -126,7 +126,7 @@ internal sealed class CupertinoRadioDemoPageState : State
     {
         return new CupertinoButton(
             onPressed: () => SetState(onPressed),
-            padding: new Thickness(12.0, 6.0),
+            padding: EdgeInsets.Symmetric(horizontal: 12.0, vertical: 6.0),
             child: new Text(label, style: new TextStyle(FontSize: 12.0, Color: CupertinoColors.ActiveBlue)));
     }
 

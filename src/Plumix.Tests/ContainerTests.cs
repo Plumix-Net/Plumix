@@ -15,7 +15,7 @@ public sealed class ContainerTests
         var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new Container(
-                margin: new Thickness(4),
+                margin: EdgeInsets.All(4),
                 width: 30,
                 height: 20,
                 child: new SizedBox(width: 8, height: 6)));
@@ -25,7 +25,7 @@ public sealed class ContainerTests
         owner.PumpFrame();
 
         var outer = RequireRenderObject<RenderPadding>(root.ChildElement);
-        Assert.Equal(new Thickness(4), outer.Padding);
+        Assert.Equal(EdgeInsets.All(4), outer.Padding);
         Assert.IsType<RenderConstrainedBox>(outer.Child);
     }
 
@@ -53,7 +53,7 @@ public sealed class ContainerTests
         var root = new TestRootElement(
             new Container(
                 alignment: Alignment.TopLeft,
-                padding: new Thickness(6, 4, 2, 1),
+                padding: EdgeInsets.FromLTRB(6, 4, 2, 1),
                 child: new SizedBox(width: 8, height: 6)));
 
         root.Attach(owner);
@@ -61,7 +61,7 @@ public sealed class ContainerTests
         owner.PumpFrame();
 
         var padding = RequireRenderObject<RenderPadding>(root.ChildElement);
-        Assert.Equal(new Thickness(6, 4, 2, 1), padding.Padding);
+        Assert.Equal(EdgeInsets.FromLTRB(6, 4, 2, 1), padding.Padding);
         var align = Assert.IsType<RenderPositionedBox>(padding.Child);
         Assert.Equal(Alignment.TopLeft, align.Alignment);
     }
@@ -110,7 +110,7 @@ public sealed class ContainerTests
         var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new Container(
-                margin: new Thickness(5),
+                margin: EdgeInsets.All(5),
                 transform: Matrix4.TranslationValues(12, 0, 0.0),
                 child: new SizedBox(width: 8, height: 6)));
 
@@ -121,7 +121,7 @@ public sealed class ContainerTests
         var transform = RequireRenderObject<RenderTransform>(root.ChildElement);
         Assert.Equal(Matrix4.TranslationValues(12, 0, 0.0), transform.DebugTransformMatrix());
         var marginPadding = Assert.IsType<RenderPadding>(transform.Child);
-        Assert.Equal(new Thickness(5), marginPadding.Padding);
+        Assert.Equal(EdgeInsets.All(5), marginPadding.Padding);
     }
 
     [Fact]
@@ -142,11 +142,11 @@ public sealed class ContainerTests
 
         var margin = RequireRenderObject<RenderPadding>(root.ChildElement);
         Assert.Equal(
-            new Thickness(1, 0, 7, 0),
+            EdgeInsets.FromLTRB(1, 0, 7, 0),
             margin.Padding.Resolve(margin.TextDirection));
         var padding = Assert.IsType<RenderPadding>(margin.Child);
         Assert.Equal(
-            new Thickness(3, 2, 9, 4),
+            EdgeInsets.FromLTRB(3, 2, 9, 4),
             padding.Padding.Resolve(padding.TextDirection));
     }
 

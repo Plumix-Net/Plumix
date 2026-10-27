@@ -28,7 +28,7 @@ internal sealed class ContainerDemoPageState : State
 
     public override Widget Build(BuildContext context)
     {
-        var margin = _withMargin ? new Thickness(12, 8, 12, 8) : (Thickness?)null;
+        var margin = _withMargin ? EdgeInsets.FromLTRB(12, 8, 12, 8) : (EdgeInsets?)null;
         var constraints = _clampConstraints
             ? new BoxConstraints(MinWidth: 80, MaxWidth: 120, MinHeight: 50, MaxHeight: 76)
             : (BoxConstraints?)null;
@@ -97,7 +97,7 @@ internal sealed class ContainerDemoPageState : State
                     width: 240,
                     height: 160,
                     color: new Color(0xFFE7EDF6),
-                    padding: new Thickness(8),
+                    padding: EdgeInsets.All(8),
                     child: new Container(
                         margin: margin,
                         width: 150,
@@ -130,7 +130,7 @@ internal sealed class ContainerDemoPageState : State
                 background: (Color)Avalonia.Media.Color.Parse(colorHex),
                 foreground: Colors.Black,
                 fontSize: 12,
-                padding: new Thickness(10, 8)));
+                padding: EdgeInsets.Symmetric(horizontal: 10, vertical: 8)));
     }
 
     private void SetAlignment(Alignment alignment)

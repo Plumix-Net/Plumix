@@ -438,8 +438,8 @@ public sealed class ShapeBorderTests
         Assert.Equal(2.0, scaled.Side.Width);
 
         var directionalInsets = new LinearBorder(new BorderSide(Green, 4.0), start: edge);
-        Assert.Equal(new Thickness(4, 0, 0, 0), directionalInsets.Dimensions.Resolve(TextDirection.Ltr));
-        Assert.Equal(new Thickness(0, 0, 4, 0), directionalInsets.Dimensions.Resolve(TextDirection.Rtl));
+        Assert.Equal(EdgeInsets.FromLTRB(4, 0, 0, 0), directionalInsets.Dimensions.Resolve(TextDirection.Ltr));
+        Assert.Equal(EdgeInsets.FromLTRB(0, 0, 4, 0), directionalInsets.Dimensions.Resolve(TextDirection.Rtl));
     }
 
     [Fact]

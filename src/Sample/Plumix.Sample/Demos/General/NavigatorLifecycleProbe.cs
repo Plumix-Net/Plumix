@@ -107,7 +107,7 @@ internal sealed class NavigatorLifecycleProbe : StatefulWidget
             background: new Color(0xFFE0F2F1),
             foreground: Colors.Black,
             fontSize: 12,
-            padding: new Thickness(8, 6));
+            padding: EdgeInsets.Symmetric(horizontal: 8, vertical: 6));
     }
 }
 

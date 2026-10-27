@@ -227,7 +227,7 @@ public sealed class DatePickerDartParityTests : IDisposable
             Assert.Equal(Clip.AntiAlias, dialogMaterial.ClipBehavior);
 
             Dialog dialog = tester.Widget<Dialog>(Find.ByType<Dialog>());
-            Assert.Equal(new Thickness(16.0, 24.0), dialog.InsetPadding);
+            Assert.Equal(EdgeInsets.Symmetric(horizontal: 16.0, vertical: 24.0), dialog.InsetPadding);
         }, useMaterial3: theme.UseMaterial3);
     }
 
@@ -751,7 +751,7 @@ public sealed class DatePickerDartParityTests : IDisposable
         Finder subHeaderText = Find.Text("January 2016");
         Finder cancelButtonText = Find.Text("Cancel");
         Finder okButtonText = Find.Text("OK");
-        var insetPadding = new Thickness(16.0, 24.0);
+        var insetPadding = EdgeInsets.Symmetric(horizontal: 16.0, vertical: 24.0);
 
         tester.View.PhysicalSize = WideWindowSize;
         try
@@ -1796,7 +1796,7 @@ public sealed class DatePickerDartParityTests : IDisposable
 
             // Simulate the portait mode on a device with a small display when the virtual
             // keyboard is visible.
-            tester.View.ViewInsets = new Thickness(0, 0, 0, 1000);
+            tester.View.ViewInsets = FakeViewPadding.Create(bottom: 1000);
             tester.PumpAndSettle();
 
             // Text field is visible and header is hidden.
@@ -2512,10 +2512,10 @@ public sealed class DatePickerDartParityTests : IDisposable
                     initialDate: _initialDate,
                     firstDate: _firstDate,
                     lastDate: _lastDate,
-                    insetPadding: new Thickness(10.0, 20.0, 30.0, 40.0)))));
+                    insetPadding: EdgeInsets.FromLTRB(10.0, 20.0, 30.0, 40.0)))));
 
         Dialog dialog = tester.Widget<Dialog>(Find.ByType<Dialog>());
-        Assert.Equal(new Thickness(10.0, 20.0, 30.0, 40.0), dialog.InsetPadding);
+        Assert.Equal(EdgeInsets.FromLTRB(10.0, 20.0, 30.0, 40.0), dialog.InsetPadding);
     }
 
     // ---- group('Landscape input-only date picker headers use headlineSmall') ----
@@ -2631,7 +2631,7 @@ public sealed class DatePickerDartParityTests : IDisposable
             Assert.Equal(Clip.AntiAlias, dialogMaterial.ClipBehavior);
 
             Dialog dialog = tester.Widget<Dialog>(Find.ByType<Dialog>());
-            Assert.Equal(new Thickness(16.0, 24.0), dialog.InsetPadding);
+            Assert.Equal(EdgeInsets.Symmetric(horizontal: 16.0, vertical: 24.0), dialog.InsetPadding);
         }, useMaterial3: theme.UseMaterial3);
     }
 

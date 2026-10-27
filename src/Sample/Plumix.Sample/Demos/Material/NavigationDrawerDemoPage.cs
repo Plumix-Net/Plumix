@@ -85,12 +85,12 @@ public sealed class NavigationDrawerDemoPage : StatefulWidget
                                         onDestinationSelected: index => SetState(() => _selectedIndex = index),
                                         backgroundColor: _useWidgetOverrides ? new Color(0xFFFFF8E1) : null,
                                         indicatorColor: _useWidgetOverrides ? new Color(0xFFFFCC80) : null,
-                                        tilePadding: new Thickness(_useWidgetOverrides ? 18 : 12, 0),
+                                        tilePadding: EdgeInsets.Symmetric(horizontal: _useWidgetOverrides ? 18 : 12),
                                         header: new Padding(
-                                            new Thickness(28, 20, 16, 12),
+                                            EdgeInsets.FromLTRB(28, 20, 16, 12),
                                             new Text("Destinations", style: new TextStyle(FontSize: 16))),
                                         footer: new Padding(
-                                            new Thickness(28, 12, 16, 20),
+                                            EdgeInsets.FromLTRB(28, 12, 16, 20),
                                             new Text(
                                                 "Navigation footer",
                                                 style: new TextStyle(
@@ -99,7 +99,7 @@ public sealed class NavigationDrawerDemoPage : StatefulWidget
                                         children:
                                         [
                                             new Padding(
-                                                new Thickness(28, 8),
+                                                EdgeInsets.Symmetric(horizontal: 28, vertical: 8),
                                                 new Text(
                                                     "Primary",
                                                     style: new TextStyle(

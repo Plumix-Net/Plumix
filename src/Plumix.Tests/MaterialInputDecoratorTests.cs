@@ -658,14 +658,14 @@ public sealed class MaterialInputDecoratorTests
     {
         var outline = new OutlineInputBorder(new BorderSide(Colors.Black, 4.0));
         // strokeAlign defaults to inside (-1), so strokeInset == width.
-        Assert.Equal(new Thickness(4.0), outline.Dimensions);
+        Assert.Equal(EdgeInsets.All(4.0), outline.Dimensions);
 
         var centered = new OutlineInputBorder(
             new BorderSide(Colors.Black, 4.0, BorderStyle.Solid, BorderSide.StrokeAlignCenter));
-        Assert.Equal(new Thickness(2.0), centered.Dimensions);
+        Assert.Equal(EdgeInsets.All(2.0), centered.Dimensions);
 
         var underline = new UnderlineInputBorder(new BorderSide(Colors.Black, 3.0));
-        Assert.Equal(new Thickness(0, 0, 0, 3.0), underline.Dimensions);
+        Assert.Equal(EdgeInsets.FromLTRB(0, 0, 0, 3.0), underline.Dimensions);
         Assert.Equal(default, InputBorder.None.Dimensions);
         Assert.False(InputBorder.None.IsOutline);
         // _NoInputBorder.copyWith ignores its argument and returns another empty border.
@@ -889,7 +889,7 @@ public sealed class MaterialInputDecoratorTests
         var probe = new PaintingContext(new OffsetLayer());
         var squared = new UnderlineInputBorder(new BorderSide(Colors.Black, 2.0), BorderRadius.Zero);
         squared.Paint(probe, new Rect(0, 0, 100, 100), gapStart: null);
-        Assert.Equal(new Thickness(0, 0, 0, 2.0), squared.Dimensions);
+        Assert.Equal(EdgeInsets.FromLTRB(0, 0, 0, 2.0), squared.Dimensions);
 
         // A border with no style paints nothing at all.
         var invisible = new UnderlineInputBorder(BorderSide.None);

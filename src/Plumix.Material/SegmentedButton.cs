@@ -107,7 +107,7 @@ public sealed class SegmentedButton<T> : StatefulWidget
         Color? overlayColor = null,
         double? elevation = null,
         TextStyle? textStyle = null,
-        Thickness? padding = null,
+        EdgeInsetsGeometry? padding = null,
         Size? minimumSize = null,
         Size? fixedSize = null,
         Size? maximumSize = null,
@@ -479,7 +479,7 @@ public sealed class SegmentedButtonState<T> : State<SegmentedButton<T>>
             widget.Style,
             segmentedThemeStyle,
             defaults) ?? default;
-        Thickness padding = paddingGeometry.Resolve(TextDirection.Ltr);
+        EdgeInsets padding = paddingGeometry.Resolve(TextDirection.Ltr);
         TextStyle? textStyle = ResolveValue(
             static style => style.TextStyle,
             states,

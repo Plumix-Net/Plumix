@@ -192,7 +192,7 @@ public sealed class ClipWidgetsTests
             child: new PaintBox(),
             clipper: new RectPathClipper(),
             clipBehavior: clipBehavior);
-        var padding = new RenderPadding(new Thickness(12, 8, 0, 0))
+        var padding = new RenderPadding(EdgeInsets.FromLTRB(12, 8, 0, 0))
         {
             Child = clip,
         };
@@ -219,7 +219,7 @@ public sealed class ClipWidgetsTests
             child: new CompositingPaintBox(),
             clipper: new RectPathClipper(),
             clipBehavior: clipBehavior);
-        var padding = new RenderPadding(new Thickness(12, 8, 0, 0))
+        var padding = new RenderPadding(EdgeInsets.FromLTRB(12, 8, 0, 0))
         {
             Child = clip,
         };

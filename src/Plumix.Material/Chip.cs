@@ -15,7 +15,7 @@ public sealed class Chip : StatelessWidget
         Widget label,
         Widget? avatar = null,
         TextStyle? labelStyle = null,
-        Thickness? labelPadding = null,
+        EdgeInsetsGeometry? labelPadding = null,
         Widget? deleteIcon = null,
         Action? onDeleted = null,
         Color? deleteIconColor = null,
@@ -27,7 +27,7 @@ public sealed class Chip : StatelessWidget
         bool autofocus = false,
         IWidgetStateProperty<Color?>? color = null,
         Color? backgroundColor = null,
-        Thickness? padding = null,
+        EdgeInsetsGeometry? padding = null,
         VisualDensity? visualDensity = null,
         MaterialTapTargetSize? materialTapTargetSize = null,
         double? elevation = null,
@@ -76,7 +76,7 @@ public sealed class Chip : StatelessWidget
     public Widget? Avatar { get; }
     public Widget Label { get; }
     public TextStyle? LabelStyle { get; }
-    public Thickness? LabelPadding { get; }
+    public EdgeInsetsGeometry? LabelPadding { get; }
     public Widget? DeleteIcon { get; }
     public Action? OnDeleted { get; }
     public Color? DeleteIconColor { get; }
@@ -88,7 +88,7 @@ public sealed class Chip : StatelessWidget
     public bool Autofocus { get; }
     public IWidgetStateProperty<Color?>? Color { get; }
     public Color? BackgroundColor { get; }
-    public Thickness? Padding { get; }
+    public EdgeInsetsGeometry? Padding { get; }
     public VisualDensity? VisualDensity { get; }
     public MaterialTapTargetSize? MaterialTapTargetSize { get; }
     public double? Elevation { get; }

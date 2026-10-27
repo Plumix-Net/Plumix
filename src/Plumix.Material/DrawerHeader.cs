@@ -49,7 +49,7 @@ public sealed class DrawerHeader : StatelessWidget
         double statusBarHeight = MediaQuery.PaddingOf(context).Top;
         TextDirection direction = Directionality.Of(context);
         var divider = Divider.CreateBorderSide(context);
-        Thickness resolvedPadding = Padding.Resolve(direction);
+        EdgeInsets resolvedPadding = Padding.Resolve(direction);
         Widget? child = Child;
         if (child is not null)
         {
@@ -61,7 +61,7 @@ public sealed class DrawerHeader : StatelessWidget
         var animated = new AnimatedContainer(
             duration: Duration,
             curve: Curve,
-            padding: new Thickness(
+            padding: EdgeInsets.FromLTRB(
                 resolvedPadding.Left,
                 resolvedPadding.Top + statusBarHeight,
                 resolvedPadding.Right,

@@ -152,7 +152,7 @@ public sealed class MaterialNavigationSurfacesTests
                 new IconThemeData(Color: Colors.Black, Size: 16)),
             LabelBehavior: NavigationDestinationLabelBehavior.AlwaysHide,
             OverlayColor: WidgetStateProperty<Color?>.All(Colors.Black),
-            LabelPadding: new Thickness(0, 2, 0, 0));
+            LabelPadding: EdgeInsets.FromLTRB(0, 2, 0, 0));
         NavigationBarThemeData end = begin.CopyWith(
             height: 80,
             backgroundColor: Colors.White,
@@ -168,7 +168,7 @@ public sealed class MaterialNavigationSurfacesTests
                 new IconThemeData(Color: Colors.White, Size: 24)),
             labelBehavior: NavigationDestinationLabelBehavior.AlwaysShow,
             overlayColor: WidgetStateProperty<Color?>.All(Colors.White),
-            labelPadding: new Thickness(0, 6, 0, 0));
+            labelPadding: EdgeInsets.FromLTRB(0, 6, 0, 0));
 
         NavigationBarThemeData midpoint = NavigationBarThemeData.Lerp(begin, end, 0.5)!;
         IReadOnlySet<WidgetState> states = new HashSet<WidgetState> { WidgetState.Selected, WidgetState.Hovered };
@@ -181,7 +181,7 @@ public sealed class MaterialNavigationSurfacesTests
         Assert.Equal(15, midpoint.LabelTextStyle!.Resolve(states)!.FontSize);
         Assert.Equal(20, midpoint.IconTheme!.Resolve(states)!.Size);
         ColorMatchers.AssertSameColorAs(Color.FromARGB(0xFF, 127, 127, 127), midpoint.OverlayColor!.Resolve(states));
-        Assert.Equal(new Thickness(0, 4, 0, 0), midpoint.LabelPadding);
+        Assert.Equal(EdgeInsets.FromLTRB(0, 4, 0, 0), midpoint.LabelPadding);
         Assert.Equal(NavigationDestinationLabelBehavior.AlwaysShow, midpoint.LabelBehavior);
     }
 
@@ -328,7 +328,7 @@ public sealed class MaterialNavigationSurfacesTests
             elevation: double.NaN));
         Assert.Throws<ArgumentOutOfRangeException>(() => new NavigationDrawer(
             children: DrawerDestinations(),
-            tilePadding: new Thickness(-1, 0, 0, 0)));
+            tilePadding: EdgeInsets.FromLTRB(-1, 0, 0, 0)));
 
         var destination = new NavigationDrawerDestination(
             icon: new Icon(Icons.Menu),

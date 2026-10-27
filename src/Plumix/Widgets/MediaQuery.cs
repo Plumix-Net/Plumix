@@ -47,10 +47,10 @@ public sealed record MediaQueryData
     public MediaQueryData(
         Size Size = default,
         double DevicePixelRatio = 1.0,
-        Thickness Padding = default,
-        Thickness ViewInsets = default,
-        Thickness SystemGestureInsets = default,
-        Thickness ViewPadding = default,
+        EdgeInsets Padding = default,
+        EdgeInsets ViewInsets = default,
+        EdgeInsets SystemGestureInsets = default,
+        EdgeInsets ViewPadding = default,
         double TextScaleFactor = 1.0,
         TextScaler? TextScaler = null,
         bool AccessibleNavigation = false,
@@ -112,13 +112,13 @@ public sealed record MediaQueryData
 
     public double DevicePixelRatio { get; init; }
 
-    public Thickness Padding { get; init; }
+    public EdgeInsets Padding { get; init; }
 
-    public Thickness ViewInsets { get; init; }
+    public EdgeInsets ViewInsets { get; init; }
 
-    public Thickness SystemGestureInsets { get; init; }
+    public EdgeInsets SystemGestureInsets { get; init; }
 
-    public Thickness ViewPadding { get; init; }
+    public EdgeInsets ViewPadding { get; init; }
 
     public double TextScaleFactor => TextScaler.TextScaleFactor;
 
@@ -208,10 +208,10 @@ public sealed record MediaQueryData
     public MediaQueryData CopyWith(
         Size? size = null,
         double? devicePixelRatio = null,
-        Thickness? padding = null,
-        Thickness? viewInsets = null,
-        Thickness? systemGestureInsets = null,
-        Thickness? viewPadding = null,
+        EdgeInsets? padding = null,
+        EdgeInsets? viewInsets = null,
+        EdgeInsets? systemGestureInsets = null,
+        EdgeInsets? viewPadding = null,
         double? textScaleFactor = null,
         TextScaler? textScaler = null,
         bool? accessibleNavigation = null,
@@ -357,14 +357,12 @@ public sealed record MediaQueryData
         }
 
         return CopyWith(
-            padding: CopyThickness(
-                Padding,
+            padding: Padding.CopyWith(
                 left: removeLeft ? 0.0 : null,
                 top: removeTop ? 0.0 : null,
                 right: removeRight ? 0.0 : null,
                 bottom: removeBottom ? 0.0 : null),
-            viewPadding: CopyThickness(
-                ViewPadding,
+            viewPadding: ViewPadding.CopyWith(
                 left: removeLeft ? Math.Max(0.0, ViewPadding.Left - Padding.Left) : null,
                 top: removeTop ? Math.Max(0.0, ViewPadding.Top - Padding.Top) : null,
                 right: removeRight ? Math.Max(0.0, ViewPadding.Right - Padding.Right) : null,
@@ -383,14 +381,12 @@ public sealed record MediaQueryData
         }
 
         return CopyWith(
-            viewPadding: CopyThickness(
-                ViewPadding,
+            viewPadding: ViewPadding.CopyWith(
                 left: removeLeft ? Math.Max(0.0, ViewPadding.Left - ViewInsets.Left) : null,
                 top: removeTop ? Math.Max(0.0, ViewPadding.Top - ViewInsets.Top) : null,
                 right: removeRight ? Math.Max(0.0, ViewPadding.Right - ViewInsets.Right) : null,
                 bottom: removeBottom ? Math.Max(0.0, ViewPadding.Bottom - ViewInsets.Bottom) : null),
-            viewInsets: CopyThickness(
-                ViewInsets,
+            viewInsets: ViewInsets.CopyWith(
                 left: removeLeft ? 0.0 : null,
                 top: removeTop ? 0.0 : null,
                 right: removeRight ? 0.0 : null,
@@ -409,14 +405,12 @@ public sealed record MediaQueryData
         }
 
         return CopyWith(
-            padding: CopyThickness(
-                Padding,
+            padding: Padding.CopyWith(
                 left: removeLeft ? 0.0 : null,
                 top: removeTop ? 0.0 : null,
                 right: removeRight ? 0.0 : null,
                 bottom: removeBottom ? 0.0 : null),
-            viewPadding: CopyThickness(
-                ViewPadding,
+            viewPadding: ViewPadding.CopyWith(
                 left: removeLeft ? 0.0 : null,
                 top: removeTop ? 0.0 : null,
                 right: removeRight ? 0.0 : null,
@@ -497,10 +491,10 @@ public sealed record MediaQueryData
         return new MediaQueryData(
             Size: new Size(view.PhysicalSize.Width / devicePixelRatio, view.PhysicalSize.Height / devicePixelRatio),
             DevicePixelRatio: devicePixelRatio,
-            Padding: FromViewPadding(view.Padding, devicePixelRatio),
-            ViewInsets: FromViewPadding(view.ViewInsets, devicePixelRatio),
-            SystemGestureInsets: FromViewPadding(view.SystemGestureInsets, devicePixelRatio),
-            ViewPadding: FromViewPadding(view.ViewPadding, devicePixelRatio),
+            Padding: EdgeInsets.FromViewPadding(view.Padding, devicePixelRatio),
+            ViewInsets: EdgeInsets.FromViewPadding(view.ViewInsets, devicePixelRatio),
+            SystemGestureInsets: EdgeInsets.FromViewPadding(view.SystemGestureInsets, devicePixelRatio),
+            ViewPadding: EdgeInsets.FromViewPadding(view.ViewPadding, devicePixelRatio),
             TextScaler: platformData?.TextScaler ?? new SystemTextScaler(platformDispatcher),
             AccessibleNavigation: platformData?.AccessibleNavigation ?? accessibilityFeatures.AccessibleNavigation,
             AlwaysUse24HourFormat: platformData?.AlwaysUse24HourFormat
@@ -531,50 +525,26 @@ public sealed record MediaQueryData
                                       ?? platformDispatcher.ParagraphSpacingOverride);
     }
 
-    /// <summary>Dart's <c>EdgeInsets.fromViewPadding</c>: physical insets to logical pixels.</summary>
-    private static Thickness FromViewPadding(Thickness padding, double devicePixelRatio)
+    public static EdgeInsets ComputePadding(EdgeInsets viewPadding, EdgeInsets viewInsets)
     {
-        return new Thickness(
-            padding.Left / devicePixelRatio,
-            padding.Top / devicePixelRatio,
-            padding.Right / devicePixelRatio,
-            padding.Bottom / devicePixelRatio);
-    }
-
-    public static Thickness ComputePadding(Thickness viewPadding, Thickness viewInsets)
-    {
-        return new Thickness(
+        return EdgeInsets.FromLTRB(
             Math.Max(0.0, viewPadding.Left - viewInsets.Left),
             Math.Max(0.0, viewPadding.Top - viewInsets.Top),
             Math.Max(0.0, viewPadding.Right - viewInsets.Right),
             Math.Max(0.0, viewPadding.Bottom - viewInsets.Bottom));
     }
 
-    private static Thickness ShrinkToSubScreen(
-        Thickness insets,
+    private static EdgeInsets ShrinkToSubScreen(
+        EdgeInsets insets,
         Rect subScreen,
         double rightInset,
         double bottomInset)
     {
-        return new Thickness(
+        return EdgeInsets.FromLTRB(
             Math.Max(0.0, insets.Left - subScreen.Left),
             Math.Max(0.0, insets.Top - subScreen.Top),
             Math.Max(0.0, insets.Right - rightInset),
             Math.Max(0.0, insets.Bottom - bottomInset));
-    }
-
-    private static Thickness CopyThickness(
-        Thickness source,
-        double? left = null,
-        double? top = null,
-        double? right = null,
-        double? bottom = null)
-    {
-        return new Thickness(
-            left ?? source.Left,
-            top ?? source.Top,
-            right ?? source.Right,
-            bottom ?? source.Bottom);
     }
 }
 
@@ -773,24 +743,24 @@ public sealed class MediaQuery : InheritedModel<object>
     public static Brightness? MaybePlatformBrightnessOf(BuildContext context) =>
         MaybeOf(context, Aspect.PlatformBrightness)?.PlatformBrightness;
 
-    public static Thickness PaddingOf(BuildContext context) => Of(context, Aspect.Padding).Padding;
+    public static EdgeInsets PaddingOf(BuildContext context) => Of(context, Aspect.Padding).Padding;
 
-    public static Thickness? MaybePaddingOf(BuildContext context) => MaybeOf(context, Aspect.Padding)?.Padding;
+    public static EdgeInsets? MaybePaddingOf(BuildContext context) => MaybeOf(context, Aspect.Padding)?.Padding;
 
-    public static Thickness ViewInsetsOf(BuildContext context) => Of(context, Aspect.ViewInsets).ViewInsets;
+    public static EdgeInsets ViewInsetsOf(BuildContext context) => Of(context, Aspect.ViewInsets).ViewInsets;
 
-    public static Thickness? MaybeViewInsetsOf(BuildContext context) =>
+    public static EdgeInsets? MaybeViewInsetsOf(BuildContext context) =>
         MaybeOf(context, Aspect.ViewInsets)?.ViewInsets;
 
-    public static Thickness SystemGestureInsetsOf(BuildContext context) =>
+    public static EdgeInsets SystemGestureInsetsOf(BuildContext context) =>
         Of(context, Aspect.SystemGestureInsets).SystemGestureInsets;
 
-    public static Thickness? MaybeSystemGestureInsetsOf(BuildContext context) =>
+    public static EdgeInsets? MaybeSystemGestureInsetsOf(BuildContext context) =>
         MaybeOf(context, Aspect.SystemGestureInsets)?.SystemGestureInsets;
 
-    public static Thickness ViewPaddingOf(BuildContext context) => Of(context, Aspect.ViewPadding).ViewPadding;
+    public static EdgeInsets ViewPaddingOf(BuildContext context) => Of(context, Aspect.ViewPadding).ViewPadding;
 
-    public static Thickness? MaybeViewPaddingOf(BuildContext context) =>
+    public static EdgeInsets? MaybeViewPaddingOf(BuildContext context) =>
         MaybeOf(context, Aspect.ViewPadding)?.ViewPadding;
 
     public static bool AlwaysUse24HourFormatOf(BuildContext context) =>

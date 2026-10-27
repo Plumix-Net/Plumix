@@ -313,7 +313,7 @@ internal sealed class EditableTextDemoPageState : State
                 onTap: onTap,
                 child: new Container(
                     color: background,
-                    padding: new Thickness(10, 8),
+                    padding: EdgeInsets.Symmetric(horizontal: 10, vertical: 8),
                     child: new Text(label, style: new TextStyle(FontSize: 12, Color: MaterialColors.Black))));
         }
     }

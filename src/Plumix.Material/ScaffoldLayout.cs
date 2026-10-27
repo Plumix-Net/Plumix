@@ -97,7 +97,7 @@ internal sealed class BodyBuilder : StatelessWidget
 
             return new MediaQuery(
                 data: metrics.CopyWith(
-                    padding: new Thickness(metrics.Padding.Left, top, metrics.Padding.Right, bottom)),
+                    padding: EdgeInsets.FromLTRB(metrics.Padding.Left, top, metrics.Padding.Right, bottom)),
                 child: Body);
         });
     }
@@ -111,8 +111,8 @@ internal sealed class BodyBuilder : StatelessWidget
 internal sealed class ScaffoldLayout : MultiChildLayoutDelegate
 {
     public ScaffoldLayout(
-        Thickness minInsets,
-        Thickness minViewPadding,
+        EdgeInsets minInsets,
+        EdgeInsets minViewPadding,
         ScaffoldGeometryNotifier geometryNotifier,
         FloatingActionButtonLocation previousFloatingActionButtonLocation,
         FloatingActionButtonLocation currentFloatingActionButtonLocation,
@@ -146,8 +146,8 @@ internal sealed class ScaffoldLayout : MultiChildLayoutDelegate
 
     public bool ExtendBody { get; }
     public bool ExtendBodyBehindAppBar { get; }
-    public Thickness MinInsets { get; }
-    public Thickness MinViewPadding { get; }
+    public EdgeInsets MinInsets { get; }
+    public EdgeInsets MinViewPadding { get; }
     public ScaffoldGeometryNotifier GeometryNotifier { get; }
     public FloatingActionButtonLocation PreviousFloatingActionButtonLocation { get; }
     public FloatingActionButtonLocation CurrentFloatingActionButtonLocation { get; }

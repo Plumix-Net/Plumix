@@ -1,6 +1,7 @@
 using Avalonia;
 using Avalonia.Controls.Platform;
 using Xunit;
+using Plumix.Rendering;
 
 namespace Plumix.Tests;
 
@@ -14,11 +15,11 @@ public sealed class PlumixHostViewInsetsTests
     public void OpenKeyboard_InsetsTheCoveredBottom()
     {
         // iOS: the frame includes the home-indicator strip, so the inset is the whole frame.
-        Assert.Equal(new Thickness(0, 0, 0, 336),
+        Assert.Equal(EdgeInsets.FromLTRB(0, 0, 0, 336),
             PlumixHost.ResolveViewInsets(InputPaneState.Open, new Rect(0, 538, 402, 336), Screen));
         // Android: Avalonia reports the pane above the 24 dp navigation bar; the inset reaches the bottom,
         // so the content no longer slides under the keyboard by the bar's height.
-        Assert.Equal(new Thickness(0, 0, 0, 300),
+        Assert.Equal(EdgeInsets.FromLTRB(0, 0, 0, 300),
             PlumixHost.ResolveViewInsets(InputPaneState.Open, new Rect(0, 574, 402, 276), Screen));
     }
 
@@ -38,7 +39,7 @@ public sealed class PlumixHostViewInsetsTests
     public void HardwareKeyboard_InsetsOnlyTheVisibleShortcutBar()
     {
         // With a hardware keyboard iOS "opens" a full-height frame of which only the bar is on screen.
-        Assert.Equal(new Thickness(0, 0, 0, 55),
+        Assert.Equal(EdgeInsets.FromLTRB(0, 0, 0, 55),
             PlumixHost.ResolveViewInsets(InputPaneState.Open, new Rect(0, 819, 402, 336), Screen));
     }
 
@@ -47,7 +48,7 @@ public sealed class PlumixHostViewInsetsTests
     {
         var view = new Rect(0, 100, 402, 500);
 
-        Assert.Equal(new Thickness(0, 0, 0, 62),
+        Assert.Equal(EdgeInsets.FromLTRB(0, 0, 0, 62),
             PlumixHost.ResolveViewInsets(InputPaneState.Open, new Rect(0, 538, 402, 336), view));
         Assert.Equal(default, PlumixHost.ResolveViewInsets(InputPaneState.Open, new Rect(0, 700, 402, 174), view));
     }

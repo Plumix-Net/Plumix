@@ -59,7 +59,7 @@ public sealed class TextField : StatefulWidget
         Action? onTap = null,
         bool onTapAlwaysCalled = false,
         Action<PointerDownEvent>? onTapOutside = null,
-        Thickness? scrollPadding = null,
+        EdgeInsets? scrollPadding = null,
         MouseCursor? mouseCursor = null,
         TextFieldCounterBuilder? buildCounter = null,
         bool canRequestFocus = true,
@@ -129,7 +129,7 @@ public sealed class TextField : StatefulWidget
         OnTap = onTap;
         OnTapAlwaysCalled = onTapAlwaysCalled;
         OnTapOutside = onTapOutside;
-        ScrollPadding = scrollPadding ?? new Thickness(20);
+        ScrollPadding = scrollPadding ?? EdgeInsets.All(20);
         MouseCursor = mouseCursor;
         BuildCounter = buildCounter;
         CanRequestFocus = canRequestFocus;
@@ -194,7 +194,7 @@ public sealed class TextField : StatefulWidget
     public Action? OnTap { get; }
     public bool OnTapAlwaysCalled { get; }
     public Action<PointerDownEvent>? OnTapOutside { get; }
-    public Thickness ScrollPadding { get; }
+    public EdgeInsets ScrollPadding { get; }
     public MouseCursor? MouseCursor { get; }
     public TextFieldCounterBuilder? BuildCounter { get; }
     public bool CanRequestFocus { get; }

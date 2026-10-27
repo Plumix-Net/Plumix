@@ -76,7 +76,7 @@ internal sealed class ProxyWidgetsDemoPageState : State
                     width: 220,
                     height: 140,
                     color: new Color(0xFFE7EDF6),
-                    padding: new Thickness(8),
+                    padding: EdgeInsets.All(8),
                     child: new ClipRect(
                         clipper: new FixedRectClipper(clip),
                         child: new Plumix.Widgets.Transform(
@@ -87,7 +87,7 @@ internal sealed class ProxyWidgetsDemoPageState : State
                                     width: 140,
                                     height: 90,
                                     color: new Color(0xFF111111),
-                                    padding: new Thickness(8),
+                                    padding: EdgeInsets.All(8),
                                     child: new Text(
                                         "Layer",
                                         style: new TextStyle(
@@ -238,7 +238,7 @@ internal sealed class ProxyWidgetsDemoPageState : State
                 background: (Color)Avalonia.Media.Color.Parse(colorHex),
                 foreground: Colors.Black,
                 fontSize: 12,
-                padding: new Thickness(10, 8)));
+                padding: EdgeInsets.Symmetric(horizontal: 10, vertical: 8)));
     }
 
     private void ChangeOpacity(double delta)

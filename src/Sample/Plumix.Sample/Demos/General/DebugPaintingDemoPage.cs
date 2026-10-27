@@ -87,7 +87,7 @@ internal sealed class DebugPaintingDemoPageState : State
     {
         return new Container(
             color: Colors.White,
-            padding: new Thickness(12),
+            padding: EdgeInsets.All(12),
             child: new Column(
                 crossAxisAlignment: CrossAxisAlignment.Stretch,
                 spacing: 8,
@@ -127,7 +127,7 @@ internal sealed class DebugPaintingDemoPageState : State
     {
         return new Container(
             color: Colors.White,
-            padding: new Thickness(12),
+            padding: EdgeInsets.All(12),
             child: new Column(
                 crossAxisAlignment: CrossAxisAlignment.Stretch,
                 spacing: 8,
@@ -163,6 +163,6 @@ internal sealed class DebugPaintingDemoPageState : State
                 background: new Color(0xFFDCE3ED),
                 foreground: Colors.Black,
                 fontSize: 12,
-                padding: new Thickness(10, 8)));
+                padding: EdgeInsets.Symmetric(horizontal: 10, vertical: 8)));
     }
 }

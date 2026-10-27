@@ -182,11 +182,13 @@ public sealed class MaterialDropdownTests : IDisposable
 
         Assert.NotNull(FindParagraph(harness.RenderView, "Selected two"));
         Assert.Equal(1, Assert.Single(FindDescendants<RenderIndexedStack>(harness.RenderView)).Index);
-        Assert.Contains(FindDescendants<RenderPadding>(harness.RenderView), value => value.Padding == new Thickness(3));
+        Assert.Contains(
+            FindDescendants<RenderPadding>(harness.RenderView),
+            value => value.Padding == EdgeInsets.All(3));
         // `_kAlignedButtonPadding` is directional: start 16, end 4.
         Assert.Contains(
             FindDescendants<RenderPadding>(harness.RenderView),
-            value => value.Padding == new Thickness(16, 0, 4, 0));
+            value => value.Padding == EdgeInsets.FromLTRB(16, 0, 4, 0));
         Assert.Empty(UnderlineBorders(harness));
 
         BuildErrors.Throws<InvalidOperationException>(() =>
@@ -732,7 +734,7 @@ public sealed class MaterialDropdownTests : IDisposable
         // The form field always uses `_kUnalignedButtonPadding` because it carries an InputDecoration.
         Assert.DoesNotContain(
             FindDescendants<RenderPadding>(harness.RenderView),
-            value => value.Padding == new Thickness(16, 0, 4, 0));
+            value => value.Padding == EdgeInsets.FromLTRB(16, 0, 4, 0));
         Assert.NotNull(FindParagraph(harness.RenderView, "One"));
     }
 
@@ -744,7 +746,7 @@ public sealed class MaterialDropdownTests : IDisposable
         // (SkParagraph's empty-line metrics), so InputDecorator drops the 16 px-baseline button 2 px
         // below the hint. Offsets read from the same tree in flutter_test.
         using var harness = new WidgetRenderHarness(Wrap(new Padding(
-            new Thickness(28),
+            EdgeInsets.All(28),
             new Column(
                 crossAxisAlignment: CrossAxisAlignment.Stretch,
                 children:
@@ -1162,7 +1164,7 @@ public sealed class MaterialDropdownTests : IDisposable
         ButtonStyle style = CaptureMenuButtonDefaults(theme, textScaleFactor);
 
         Assert.Equal(
-            new Thickness(expectedHorizontal, 0.0, expectedHorizontal, 0.0),
+            EdgeInsets.FromLTRB(expectedHorizontal, 0.0, expectedHorizontal, 0.0),
             style.Padding!.Resolve(new HashSet<WidgetState>()));
     }
 
@@ -1198,7 +1200,7 @@ public sealed class MaterialDropdownTests : IDisposable
 
         Assert.Contains(
             FindDescendants<RenderPadding>(harness.RenderView),
-            padding => padding.Padding == new Thickness(expectedSpacing, 0.0, 0.0, 0.0));
+            padding => padding.Padding == EdgeInsets.FromLTRB(expectedSpacing, 0.0, 0.0, 0.0));
     }
 
     [Fact]
@@ -1236,7 +1238,7 @@ public sealed class MaterialDropdownTests : IDisposable
         Assert.Equal(
             2,
             FindDescendants<RenderPadding>(harness.RenderView)
-                .Count(padding => padding.Padding == new Thickness(12.0, 0.0, 0.0, 0.0)));
+                .Count(padding => padding.Padding == EdgeInsets.FromLTRB(12.0, 0.0, 0.0, 0.0)));
     }
 
     [Theory]
@@ -1658,10 +1660,10 @@ public sealed class MaterialDropdownTests : IDisposable
         MenuStyle menu = CaptureMenuStyleDefaults(horizontal: false);
 
         Assert.Equal(
-            new Thickness(4.0, 0.0, 4.0, 0.0),
+            EdgeInsets.FromLTRB(4.0, 0.0, 4.0, 0.0),
             bar.Padding!.Resolve(new HashSet<WidgetState>())!.Value.Resolve(TextDirection.Ltr));
         Assert.Equal(
-            new Thickness(0.0, 8.0, 0.0, 8.0),
+            EdgeInsets.FromLTRB(0.0, 8.0, 0.0, 8.0),
             menu.Padding!.Resolve(new HashSet<WidgetState>())!.Value.Resolve(TextDirection.Ltr));
         Assert.Equal((AlignmentGeometry)AlignmentDirectional.BottomStart, bar.Alignment);
         Assert.Equal((AlignmentGeometry)AlignmentDirectional.TopEnd, menu.Alignment);

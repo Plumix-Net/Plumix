@@ -156,8 +156,8 @@ internal sealed class ChipRenderWidget : SlottedMultiChildRenderObjectWidget<Chi
         Widget label,
         Widget? avatar,
         Widget? deleteIcon,
-        Thickness padding,
-        Thickness labelPadding,
+        EdgeInsets padding,
+        EdgeInsets labelPadding,
         VisualDensity visualDensity,
         TextDirection textDirection,
         bool isEnabled,
@@ -195,8 +195,8 @@ internal sealed class ChipRenderWidget : SlottedMultiChildRenderObjectWidget<Chi
     public Widget Label { get; }
     public Widget? Avatar { get; }
     public Widget? DeleteIcon { get; }
-    public Thickness Padding { get; }
-    public Thickness LabelPadding { get; }
+    public EdgeInsets Padding { get; }
+    public EdgeInsets LabelPadding { get; }
     public VisualDensity VisualDensity { get; }
     public TextDirection TextDirection { get; }
     public bool IsEnabled { get; }
@@ -271,8 +271,8 @@ internal sealed class RenderChip : RenderBox, ISlottedRenderObjectContainer
     private RenderBox? _avatar;
     private RenderBox? _label;
     private RenderBox? _deleteIcon;
-    private Thickness _padding;
-    private Thickness _labelPadding;
+    private EdgeInsets _padding;
+    private EdgeInsets _labelPadding;
     private VisualDensity _visualDensity;
     private TextDirection _textDirection;
     private bool _isEnabled;
@@ -290,8 +290,8 @@ internal sealed class RenderChip : RenderBox, ISlottedRenderObjectContainer
     private Rect _deleteButtonRect;
 
     public RenderChip(
-        Thickness padding,
-        Thickness labelPadding,
+        EdgeInsets padding,
+        EdgeInsets labelPadding,
         VisualDensity visualDensity,
         TextDirection textDirection,
         bool isEnabled,
@@ -329,13 +329,13 @@ internal sealed class RenderChip : RenderBox, ISlottedRenderObjectContainer
     public Rect PressRect => _pressRect;
     public Rect DeleteButtonRect => _deleteButtonRect;
 
-    public Thickness Padding
+    public EdgeInsets Padding
     {
         get => _padding;
         set => SetLayoutValue(ref _padding, value);
     }
 
-    public Thickness LabelPadding
+    public EdgeInsets LabelPadding
     {
         get => _labelPadding;
         set => SetLayoutValue(ref _labelPadding, value);
@@ -918,9 +918,9 @@ internal sealed class RenderChip : RenderBox, ISlottedRenderObjectContainer
         MarkNeedsPaint();
     }
 
-    private static double Horizontal(Thickness value) => value.Left + value.Right;
+    private static double Horizontal(EdgeInsets value) => value.Left + value.Right;
 
-    private static double Vertical(Thickness value) => value.Top + value.Bottom;
+    private static double Vertical(EdgeInsets value) => value.Top + value.Bottom;
 
     private static BoxParentData ParentDataOf(RenderBox child) => (BoxParentData)child.parentData!;
 

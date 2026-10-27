@@ -138,7 +138,7 @@ public sealed class ParagraphSelectionDartParityTests
         tester.PumpWidget(new MaterialApp(home: new SelectionArea(Text.Rich(new TextSpan("head ", children:
         [
             // An intervening render object exercises ancestor traversal, not only the direct parent.
-            new WidgetSpan(new Padding(new Thickness(2), new Text("inner"))),
+            new WidgetSpan(new Padding(EdgeInsets.All(2), new Text("inner"))),
             new TextSpan(" tail\nnext"),
         ])))));
         var paragraphs = tester.ElementsOfType<RichText>()

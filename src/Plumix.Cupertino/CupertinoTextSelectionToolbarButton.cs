@@ -29,7 +29,7 @@ public sealed class CupertinoTextSelectionToolbarButton : StatefulWidget
             Color.FromARGB(0x10, 0xFF, 0xFF, 0xFF));
 
     // Value measured from screenshot of iOS 16.0.2.
-    private static readonly Thickness ToolbarButtonPadding = new(16.0, 18.0);
+    private static readonly EdgeInsets ToolbarButtonPadding = EdgeInsets.Symmetric(horizontal: 16.0, vertical: 18.0);
 
     private CupertinoTextSelectionToolbarButton(
         Action? onPressed,
@@ -258,7 +258,7 @@ public sealed class CupertinoDesktopTextSelectionToolbarButton : StatefulWidget
         LetterSpacing: -0.15,
         FontWeight: FontWeight.Normal);
 
-    private static readonly Thickness ToolbarButtonPadding = new(8.0, 2.0, 8.0, 5.0);
+    private static readonly EdgeInsets ToolbarButtonPadding = EdgeInsets.FromLTRB(8.0, 2.0, 8.0, 5.0);
 
     private static readonly CupertinoDynamicColor ToolbarTextColor =
         CupertinoDynamicColor.WithBrightness(CupertinoColors.Black, CupertinoColors.White);

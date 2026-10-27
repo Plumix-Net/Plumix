@@ -36,7 +36,7 @@ public partial class SnackBarThemeData
         ShapeBorder? shape = null,
         SnackBarBehavior? behavior = null,
         double? width = null,
-        Thickness? insetPadding = null,
+        EdgeInsets? insetPadding = null,
         bool? showCloseIcon = null,
         Color? closeIconColor = null,
         double? actionOverflowThreshold = null,
@@ -103,7 +103,7 @@ public partial class SnackBarThemeData
 
     public virtual double? Width { get; }
 
-    public virtual Thickness? InsetPadding { get; }
+    public virtual EdgeInsets? InsetPadding { get; }
 
     public virtual bool? ShowCloseIcon { get; }
 
@@ -126,7 +126,7 @@ public partial class SnackBarThemeData
         ShapeBorder? shape = null,
         SnackBarBehavior? behavior = null,
         double? width = null,
-        Thickness? insetPadding = null,
+        EdgeInsets? insetPadding = null,
         bool? showCloseIcon = null,
         Color? closeIconColor = null,
         double? actionOverflowThreshold = null,

@@ -65,7 +65,7 @@ internal sealed class FractionallySizedBoxDemoPageState : State
                     width: 260,
                     height: 190,
                     color: new Color(0xFFE7EDF6),
-                    padding: new Thickness(10),
+                    padding: EdgeInsets.All(10),
                     child: new FractionallySizedBox(
                         alignment: _alignment,
                         widthFactor: _widthFactor,
@@ -95,7 +95,7 @@ internal sealed class FractionallySizedBoxDemoPageState : State
                 background: (Color)Avalonia.Media.Color.Parse(colorHex),
                 foreground: Colors.Black,
                 fontSize: 12,
-                padding: new Thickness(10, 8)));
+                padding: EdgeInsets.Symmetric(horizontal: 10, vertical: 8)));
     }
 
     private void SetWidthFactor(double? value)

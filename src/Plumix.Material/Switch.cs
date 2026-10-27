@@ -51,7 +51,7 @@ public sealed class Switch : StatelessWidget
         FocusNode? focusNode = null,
         Action<bool>? onFocusChange = null,
         bool autofocus = false,
-        Thickness? padding = null,
+        EdgeInsetsGeometry? padding = null,
         Key? key = null) : this(
             switchType: SwitchType.Material,
             applyCupertinoTheme: false,
@@ -115,7 +115,7 @@ public sealed class Switch : StatelessWidget
         FocusNode? focusNode,
         Action<bool>? onFocusChange,
         bool autofocus,
-        Thickness? padding,
+        EdgeInsetsGeometry? padding,
         Key? key) : base(key)
     {
         if (activeThumbImage is null && onActiveThumbImageError is not null)
@@ -193,7 +193,7 @@ public sealed class Switch : StatelessWidget
         FocusNode? focusNode = null,
         Action<bool>? onFocusChange = null,
         bool autofocus = false,
-        Thickness? padding = null,
+        EdgeInsetsGeometry? padding = null,
         bool? applyCupertinoTheme = null,
         Key? key = null)
     {
@@ -283,7 +283,7 @@ public sealed class Switch : StatelessWidget
 
     public bool Autofocus { get; }
 
-    public Thickness? Padding { get; }
+    public EdgeInsetsGeometry? Padding { get; }
 
     public bool? ApplyCupertinoTheme { get; }
 
@@ -369,9 +369,9 @@ public sealed class Switch : StatelessWidget
         MaterialTapTargetSize effectiveMaterialTapTargetSize = MaterialTapTargetSize
                                                                ?? switchTheme.MaterialTapTargetSize
                                                                ?? theme.MaterialTapTargetSize;
-        Thickness effectivePadding = Padding ?? switchTheme.Padding ?? defaults.Padding!.Value;
-        double horizontal = effectivePadding.Left + effectivePadding.Right;
-        double vertical = effectivePadding.Top + effectivePadding.Bottom;
+        EdgeInsetsGeometry effectivePadding = Padding ?? switchTheme.Padding ?? defaults.Padding!.Value;
+        double horizontal = effectivePadding.Horizontal;
+        double vertical = effectivePadding.Vertical;
         return effectiveMaterialTapTargetSize == Plumix.Material.MaterialTapTargetSize.Padded
             ? new Size(switchConfig.SwitchWidth + horizontal, switchConfig.SwitchHeight + vertical)
             : new Size(
@@ -1212,7 +1212,7 @@ internal static class SwitchDefaults
                 return null;
             }),
             SplashRadius: RadialReactionRadius,
-            Padding: new Thickness(0.0));
+            Padding: EdgeInsets.Zero);
     }
 
     public static SwitchThemeData Material3(BuildContext context)
@@ -1296,7 +1296,7 @@ internal static class SwitchDefaults
                     : null;
             }),
             SplashRadius: 40.0 / 2,
-            Padding: new Thickness(4.0, 0.0, 4.0, 0.0));
+            Padding: EdgeInsets.FromLTRB(4.0, 0.0, 4.0, 0.0));
     }
 
     public static SwitchThemeData Cupertino(BuildContext context)

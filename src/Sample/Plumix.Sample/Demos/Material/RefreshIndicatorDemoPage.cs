@@ -124,10 +124,10 @@ internal sealed class RefreshIndicatorDemoPageState : State
         return ListView.Builder(
             itemCount: 24,
             itemExtent: 54,
-            padding: new Thickness(8),
+            padding: EdgeInsets.All(8),
             itemBuilder: (_, index) => new Container(
                 color: index % 2 == 0 ? Colors.White : new Color(0xFFF5F7FA),
-                padding: new Thickness(12, 10),
+                padding: EdgeInsets.Symmetric(horizontal: 12, vertical: 10),
                 child: new Text($"refresh row #{index + 1}", style: new TextStyle(FontSize: 13, Color: Colors.Black))));
     }
 
@@ -161,7 +161,7 @@ internal sealed class RefreshIndicatorDemoPageState : State
                 style: TextButton.StyleFrom(
                     foregroundColor: Colors.Black,
                     backgroundColor: new Color(0xFFE9F0FF),
-                    padding: new Thickness(10, 8),
+                    padding: EdgeInsets.Symmetric(horizontal: 10, vertical: 8),
                     minimumSize: new Size(0, 36),
                     shape: new RoundedRectangleBorder(
                         borderRadius: BorderRadius.Circular(8)))));

@@ -154,7 +154,7 @@ public sealed class MaterialAboutTests : IDisposable
         Assert.NotNull(FindParagraph(harness.RenderView, "View licenses"));
         Assert.NotNull(FindParagraph(harness.RenderView, "Close"));
         Assert.Contains(FindDescendants<RenderPadding>(harness.RenderView), padding =>
-            padding.Padding == new Thickness(24, 0));
+            padding.Padding == EdgeInsets.Symmetric(horizontal: 24));
     }
 
     [Fact]
@@ -427,12 +427,12 @@ public sealed class MaterialAboutTests : IDisposable
         RegisterSampleLicenses();
         using var harness = new WidgetRenderHarness(BuildThemed(
             NavigatorHosting(new LicensePage(applicationName: "Padding demo")),
-            padding: new Thickness(20.0, 27.0, 12.0, 34.0)));
+            padding: EdgeInsets.FromLTRB(20.0, 27.0, 12.0, 34.0)));
 
         PumpUntilLoaded(harness, NestedWidth, () => FindParagraph(harness.RenderView, "app") is not null);
 
         var sliverPadding = FindWidgets<SliverPadding>(harness.RootElement).First();
-        Assert.Equal(new Thickness(20.0, 0.0, 12.0, 34.0), sliverPadding.Padding);
+        Assert.Equal(EdgeInsets.FromLTRB(20.0, 0.0, 12.0, 34.0), sliverPadding.Padding);
     }
 
     [Theory]
@@ -444,7 +444,7 @@ public sealed class MaterialAboutTests : IDisposable
         RegisterSampleLicenses();
         using var harness = new WidgetRenderHarness(BuildThemed(
             NavigatorHosting(new LicensePage(applicationName: "Gutter demo")),
-            padding: new Thickness(20.0, 27.0, 12.0, 34.0),
+            padding: EdgeInsets.FromLTRB(20.0, 27.0, 12.0, 34.0),
             width: width));
 
         PumpUntilLoaded(harness, width, () => FindParagraph(harness.RenderView, "app") is not null);
@@ -453,7 +453,7 @@ public sealed class MaterialAboutTests : IDisposable
 
         var detailPadding = FindWidgets<SliverPadding>(harness.RootElement).Last();
         Assert.Equal(
-            new Thickness(expectedGutter + 20.0, 0.0, expectedGutter + 12.0, expectedGutter + 34.0),
+            EdgeInsets.FromLTRB(expectedGutter + 20.0, 0.0, expectedGutter + 12.0, expectedGutter + 34.0),
             detailPadding.Padding);
     }
 
@@ -472,21 +472,21 @@ public sealed class MaterialAboutTests : IDisposable
         PumpUntilLoaded(harness, NestedWidth, () => FindParagraph(harness.RenderView, "Plain line") is not null);
 
         Assert.Equal(
-            new Thickness(0.0, 8.0, 0.0, 0.0),
+            EdgeInsets.FromLTRB(0.0, 8.0, 0.0, 0.0),
             PaddingAroundText(harness, "Plain line").Resolve(TextDirection.Ltr));
         Assert.Equal(
-            new Thickness(16.0, 8.0, 0.0, 0.0),
+            EdgeInsets.FromLTRB(16.0, 8.0, 0.0, 0.0),
             PaddingAroundText(harness, "one level in").Resolve(TextDirection.Ltr));
         Assert.Equal(
-            new Thickness(32.0, 8.0, 0.0, 0.0),
+            EdgeInsets.FromLTRB(32.0, 8.0, 0.0, 0.0),
             PaddingAroundText(harness, "two levels in").Resolve(TextDirection.Ltr));
         Assert.Equal(
-            new Thickness(0.0, 16.0, 0.0, 0.0),
+            EdgeInsets.FromLTRB(0.0, 16.0, 0.0, 0.0),
             PaddingAroundText(harness, "centered heading").Resolve(TextDirection.Ltr));
 
         // The divider that separates each license entry.
         Assert.Contains(FindDescendants<RenderPadding>(harness.RenderView), padding =>
-            padding.Padding == new Thickness(18.0));
+            padding.Padding == EdgeInsets.All(18.0));
     }
 
     [Fact]
@@ -814,7 +814,7 @@ public sealed class MaterialAboutTests : IDisposable
     private static Widget BuildThemed(
         Widget child,
         ThemeData? theme = null,
-        Thickness? padding = null,
+        EdgeInsets? padding = null,
         double width = NestedWidth) =>
         new MediaQuery(
             new MediaQueryData(Size: new Size(width, 560), Padding: padding ?? default),

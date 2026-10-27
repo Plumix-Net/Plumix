@@ -88,7 +88,7 @@ public sealed class AnimatedListDemoPage : StatefulWidget
                     sizeFactor: animation,
                     child: new SizedBox(height: 4)),
                 initialItemCount: _items.Count,
-                padding: new Thickness(4),
+                padding: EdgeInsets.All(4),
                 key: _listKey);
         }
 
@@ -98,7 +98,7 @@ public sealed class AnimatedListDemoPage : StatefulWidget
                 slivers:
                 [
                     new SliverPadding(
-                        new Thickness(4),
+                        EdgeInsets.All(4),
                         new SliverAnimatedList(
                             itemBuilder: (_, index, animation) => BuildTile(
                                 _sliverItems[index],
@@ -116,8 +116,8 @@ public sealed class AnimatedListDemoPage : StatefulWidget
                 sizeFactor: animation,
                 key: key,
                 child: new Container(
-                    margin: new Thickness(0, 2),
-                    padding: new Thickness(12),
+                    margin: EdgeInsets.Symmetric(vertical: 2),
+                    padding: EdgeInsets.All(12),
                     decoration: new BoxDecoration(
                         Color: value < 10 ? new Color(0xFFEADDFF) : new Color(0xFFD7E3FF),
                         BorderRadius: BorderRadius.Circular(10)),

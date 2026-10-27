@@ -565,13 +565,13 @@ internal sealed class DayPeriodControl : StatelessWidget
                             onPressed: SetAm,
                             selected: amSelected,
                             label: localizations.AnteMeridiemAbbreviation,
-                            padding: new Thickness(0, inset, 0, 0),
+                            padding: EdgeInsets.FromLTRB(0, inset, 0, 0),
                             shape: amShape)),
                         new Expanded(new AmPmButton(
                             onPressed: SetPm,
                             selected: pmSelected,
                             label: localizations.PostMeridiemAbbreviation,
-                            padding: new Thickness(0, 0, 0, inset),
+                            padding: EdgeInsets.FromLTRB(0, 0, 0, inset),
                             shape: pmShape)),
                     ])));
         }
@@ -591,13 +591,13 @@ internal sealed class DayPeriodControl : StatelessWidget
                         onPressed: SetAm,
                         selected: amSelected,
                         label: localizations.AnteMeridiemAbbreviation,
-                        padding: new Thickness(0, landscapeInset),
+                        padding: EdgeInsets.Symmetric(vertical: landscapeInset),
                         shape: amShape)),
                     new Expanded(new AmPmButton(
                         onPressed: SetPm,
                         selected: pmSelected,
                         label: localizations.PostMeridiemAbbreviation,
-                        padding: new Thickness(0, landscapeInset),
+                        padding: EdgeInsets.Symmetric(vertical: landscapeInset),
                         shape: pmShape)),
                 ])));
     }
@@ -609,7 +609,7 @@ internal sealed class AmPmButton : StatelessWidget
         Action onPressed,
         bool selected,
         string label,
-        Thickness padding,
+        EdgeInsets padding,
         OutlinedBorder shape,
         Key? key = null) : base(key)
     {
@@ -623,7 +623,7 @@ internal sealed class AmPmButton : StatelessWidget
     public Action OnPressed { get; }
     public bool Selected { get; }
     public string Label { get; }
-    public Thickness Padding { get; }
+    public EdgeInsets Padding { get; }
     public OutlinedBorder Shape { get; }
 
     public override Widget Build(BuildContext context)
@@ -964,7 +964,7 @@ internal sealed class TimePickerInputState : RestorationState<TimePickerInput>
                         children:
                         [
                             new Padding(
-                                new Thickness(0, 0, 0, 10),
+                                EdgeInsets.FromLTRB(0, 0, 0, 10),
                                 new HourTextField(
                                     restorationId: "hour_text_field",
                                     selectedTime: _selectedTime.Value,
@@ -993,7 +993,7 @@ internal sealed class TimePickerInputState : RestorationState<TimePickerInput>
                         children:
                         [
                             new Padding(
-                                new Thickness(0, 0, 0, 10),
+                                EdgeInsets.FromLTRB(0, 0, 0, 10),
                                 new MinuteTextField(
                                     restorationId: "minute_text_field",
                                     selectedTime: _selectedTime.Value,
@@ -2520,7 +2520,7 @@ internal sealed class TimePickerDialogState : RestorationState<TimePickerDialog>
             shape: shape,
             elevation: pickerTheme.Elevation ?? defaultTheme.Elevation,
             backgroundColor: pickerTheme.BackgroundColor ?? defaultTheme.BackgroundColor,
-            insetPadding: new Thickness(16, inputMode ? 0 : 24),
+            insetPadding: EdgeInsets.Symmetric(horizontal: 16, vertical: inputMode ? 0 : 24),
             child: new Padding(
                 (pickerTheme.Padding ?? defaultTheme.Padding).Resolve(
                     Directionality.MaybeOf(context) ?? TextDirection.Ltr),

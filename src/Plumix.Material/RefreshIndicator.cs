@@ -29,8 +29,8 @@ public sealed class RefreshProgressIndicator : CircularProgressIndicator
         string? semanticsValue = null,
         StrokeCap? strokeCap = null,
         double elevation = 2.0,
-        Thickness? indicatorMargin = null,
-        Thickness? indicatorPadding = null,
+        EdgeInsetsGeometry? indicatorMargin = null,
+        EdgeInsetsGeometry? indicatorPadding = null,
         Key? key = null) : base(
         value: value,
         backgroundColor: backgroundColor,
@@ -49,15 +49,15 @@ public sealed class RefreshProgressIndicator : CircularProgressIndicator
         }
 
         Elevation = elevation;
-        IndicatorMargin = indicatorMargin ?? new Thickness(4);
-        IndicatorPadding = indicatorPadding ?? new Thickness(12);
+        IndicatorMargin = indicatorMargin ?? EdgeInsets.All(4);
+        IndicatorPadding = indicatorPadding ?? EdgeInsets.All(12);
     }
 
     public double Elevation { get; }
 
-    public Thickness IndicatorMargin { get; }
+    public EdgeInsetsGeometry IndicatorMargin { get; }
 
-    public Thickness IndicatorPadding { get; }
+    public EdgeInsetsGeometry IndicatorPadding { get; }
 
     public override State CreateState() => new RefreshProgressIndicatorState();
 
@@ -519,8 +519,8 @@ public sealed class RefreshIndicatorState : State<RefreshIndicator>
                 child: transition);
             transition = new Padding(
                 atTop
-                    ? new Thickness(0, CurrentWidget.Displacement, 0, 0)
-                    : new Thickness(0, 0, 0, CurrentWidget.Displacement),
+                    ? EdgeInsets.FromLTRB(0, CurrentWidget.Displacement, 0, 0)
+                    : EdgeInsets.FromLTRB(0, 0, 0, CurrentWidget.Displacement),
                 transition);
             transition = new SizeTransition(
                 sizeFactor: _positionFactor!,

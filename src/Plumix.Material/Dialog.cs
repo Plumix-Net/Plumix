@@ -13,7 +13,7 @@ namespace Plumix.Material;
 
 public class Dialog : StatelessWidget
 {
-    internal static readonly Thickness DefaultInsetPadding = new(40, 24);
+    internal static readonly EdgeInsets DefaultInsetPadding = EdgeInsets.Symmetric(horizontal: 40, vertical: 24);
 
     public Dialog(
         Color? backgroundColor = null,
@@ -22,7 +22,7 @@ public class Dialog : StatelessWidget
         Color? surfaceTintColor = null,
         TimeSpan? insetAnimationDuration = null,
         Curve? insetAnimationCurve = null,
-        Thickness? insetPadding = null,
+        EdgeInsets? insetPadding = null,
         Clip? clipBehavior = null,
         ShapeBorder? shape = null,
         AlignmentGeometry? alignment = null,
@@ -56,7 +56,7 @@ public class Dialog : StatelessWidget
         Color? surfaceTintColor,
         TimeSpan insetAnimationDuration,
         Curve insetAnimationCurve,
-        Thickness? insetPadding,
+        EdgeInsets? insetPadding,
         Clip? clipBehavior,
         ShapeBorder? shape,
         AlignmentGeometry? alignment,
@@ -92,7 +92,7 @@ public class Dialog : StatelessWidget
     public Color? SurfaceTintColor { get; }
     public TimeSpan InsetAnimationDuration { get; }
     public Curve InsetAnimationCurve { get; }
-    public Thickness? InsetPadding { get; }
+    public EdgeInsets? InsetPadding { get; }
     public Clip? ClipBehavior { get; }
     public ShapeBorder? Shape { get; }
     public AlignmentGeometry? Alignment { get; }
@@ -116,7 +116,7 @@ public class Dialog : StatelessWidget
         surfaceTintColor: null,
         insetAnimationDuration: insetAnimationDuration ?? TimeSpan.Zero,
         insetAnimationCurve: insetAnimationCurve ?? Curves.Decelerate,
-        insetPadding: default(Thickness),
+        insetPadding: default(EdgeInsets),
         clipBehavior: Clip.None,
         shape: null,
         alignment: null,
@@ -220,7 +220,7 @@ public class Dialog : StatelessWidget
         return 1.0 + ((1.0 / 3.0 - 1.0) * (clamped - 1.0));
     }
 
-    internal static Thickness Add(Thickness a, Thickness b) => new(
+    internal static EdgeInsets Add(EdgeInsets a, EdgeInsets b) => new(
         a.Left + b.Left,
         a.Top + b.Top,
         a.Right + b.Right,
@@ -231,7 +231,7 @@ public sealed class SimpleDialogOption : StatelessWidget
 {
     public SimpleDialogOption(
         Action? onPressed = null,
-        Thickness? padding = null,
+        EdgeInsets? padding = null,
         Widget? child = null,
         Key? key = null) : base(key)
     {
@@ -243,7 +243,7 @@ public sealed class SimpleDialogOption : StatelessWidget
 
     public Action? OnPressed { get; }
 
-    public Thickness? Padding { get; }
+    public EdgeInsets? Padding { get; }
 
     public Widget? Child { get; }
 
@@ -252,7 +252,7 @@ public sealed class SimpleDialogOption : StatelessWidget
         return new InkWell(
             onTap: OnPressed,
             child: new Padding(
-                Padding ?? new Thickness(24, 8),
+                Padding ?? EdgeInsets.Symmetric(horizontal: 24, vertical: 8),
                 Child ?? new SizedBox()));
     }
 }
@@ -271,7 +271,7 @@ public sealed class SimpleDialog : StatelessWidget
         Color? shadowColor = null,
         Color? surfaceTintColor = null,
         string? semanticLabel = null,
-        Thickness? insetPadding = null,
+        EdgeInsets? insetPadding = null,
         Clip? clipBehavior = null,
         ShapeBorder? shape = null,
         AlignmentGeometry? alignment = null,
@@ -310,7 +310,7 @@ public sealed class SimpleDialog : StatelessWidget
     public Color? ShadowColor { get; }
     public Color? SurfaceTintColor { get; }
     public string? SemanticLabel { get; }
-    public Thickness? InsetPadding { get; }
+    public EdgeInsets? InsetPadding { get; }
     public Clip? ClipBehavior { get; }
     public ShapeBorder? Shape { get; }
     public AlignmentGeometry? Alignment { get; }
@@ -337,8 +337,8 @@ public sealed class SimpleDialog : StatelessWidget
         Widget? titleWidget = null;
         if (Title is not null)
         {
-            Thickness titlePadding = TitlePadding.Resolve(direction);
-            var padding = new Thickness(
+            EdgeInsets titlePadding = TitlePadding.Resolve(direction);
+            var padding = EdgeInsets.FromLTRB(
                 titlePadding.Left * paddingScale,
                 titlePadding.Top * paddingScale,
                 titlePadding.Right * paddingScale,
@@ -356,8 +356,8 @@ public sealed class SimpleDialog : StatelessWidget
         Widget? contentWidget = null;
         if (Children is not null)
         {
-            Thickness contentPadding = ContentPadding.Resolve(direction);
-            var padding = new Thickness(
+            EdgeInsets contentPadding = ContentPadding.Resolve(direction);
+            var padding = EdgeInsets.FromLTRB(
                 contentPadding.Left * paddingScale,
                 Title is null ? contentPadding.Top * paddingScale : contentPadding.Top,
                 contentPadding.Right * paddingScale,
@@ -427,7 +427,7 @@ public class AlertDialog : StatelessWidget
         Color? shadowColor = null,
         Color? surfaceTintColor = null,
         string? semanticLabel = null,
-        Thickness? insetPadding = null,
+        EdgeInsets? insetPadding = null,
         Clip? clipBehavior = null,
         ShapeBorder? shape = null,
         AlignmentGeometry? alignment = null,
@@ -491,7 +491,7 @@ public class AlertDialog : StatelessWidget
     public Color? ShadowColor { get; }
     public Color? SurfaceTintColor { get; }
     public string? SemanticLabel { get; }
-    public Thickness? InsetPadding { get; }
+    public EdgeInsets? InsetPadding { get; }
     public Clip? ClipBehavior { get; }
     public ShapeBorder? Shape { get; }
     public AlignmentGeometry? Alignment { get; }
@@ -521,7 +521,7 @@ public class AlertDialog : StatelessWidget
         Color? shadowColor = null,
         Color? surfaceTintColor = null,
         string? semanticLabel = null,
-        Thickness? insetPadding = null,
+        EdgeInsets? insetPadding = null,
         Clip? clipBehavior = null,
         ShapeBorder? shape = null,
         AlignmentGeometry? alignment = null,
@@ -558,7 +558,7 @@ public class AlertDialog : StatelessWidget
         {
             bool belowIsTitle = Title is not null;
             bool belowIsContent = !belowIsTitle && Content is not null;
-            Thickness padding = (IconPadding ?? EdgeInsetsGeometry.Only(
+            EdgeInsets padding = (IconPadding ?? EdgeInsetsGeometry.Only(
                 left: 24,
                 top: 24,
                 right: 24,
@@ -574,7 +574,7 @@ public class AlertDialog : StatelessWidget
         Widget? titleWidget = null;
         if (Title is not null)
         {
-            Thickness padding = (TitlePadding ?? EdgeInsetsGeometry.Only(
+            EdgeInsets padding = (TitlePadding ?? EdgeInsetsGeometry.Only(
                 left: 24,
                 top: Icon is null ? 24 : 0,
                 right: 24,
@@ -594,7 +594,7 @@ public class AlertDialog : StatelessWidget
         Widget? contentWidget = null;
         if (Content is not null)
         {
-            Thickness padding = (ContentPadding ?? EdgeInsetsGeometry.Only(
+            EdgeInsets padding = (ContentPadding ?? EdgeInsetsGeometry.Only(
                 left: 24,
                 top: theme.UseMaterial3 ? 16 : 20,
                 right: 24,
@@ -611,7 +611,7 @@ public class AlertDialog : StatelessWidget
         if (Actions is not null)
         {
             double spacing = (ButtonPadding?.Horizontal ?? 16) / 2.0;
-            Thickness defaultActionsPadding = theme.UseMaterial3
+            EdgeInsets defaultActionsPadding = theme.UseMaterial3
                 ? defaults.ActionsPadding!.Value.Resolve(direction)
                 : defaults.ActionsPadding!.Value.Add(EdgeInsetsGeometry.All(spacing)).Resolve(direction);
             actionsWidget = new Padding(
@@ -678,7 +678,7 @@ public class AlertDialog : StatelessWidget
             child: dialogChild);
     }
 
-    private static Thickness ScaleTopAndHorizontal(Thickness padding, double factor, bool scaleTop) => new(
+    private static EdgeInsets ScaleTopAndHorizontal(EdgeInsets padding, double factor, bool scaleTop) => new(
         padding.Left * factor,
         scaleTop ? padding.Top * factor : padding.Top,
         padding.Right * factor,
@@ -715,7 +715,7 @@ internal sealed class AdaptiveAlertDialog : AlertDialog
         Color? shadowColor,
         Color? surfaceTintColor,
         string? semanticLabel,
-        Thickness? insetPadding,
+        EdgeInsets? insetPadding,
         Clip? clipBehavior,
         ShapeBorder? shape,
         AlignmentGeometry? alignment,
@@ -848,7 +848,7 @@ internal sealed class FullWindowDialogWrapper : StatelessWidget
     {
         DialogThemeData windowDialogTheme = DialogTheme.Of(context) with
         {
-            InsetPadding = new Thickness(0),
+            InsetPadding = EdgeInsets.Zero,
             // No rounded corners.
             Shape = new RoundedRectangleBorder(),
             // Align to top-left so it fills from corner.

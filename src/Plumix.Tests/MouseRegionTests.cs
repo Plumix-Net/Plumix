@@ -100,7 +100,7 @@ public sealed class MouseRegionTests : IDisposable
             new Align(
                 alignment: Alignment.TopLeft,
                 child: new Padding(
-                    insets: new Thickness(10, 10, 0, 0),
+                    insets: EdgeInsets.FromLTRB(10, 10, 0, 0),
                     child: new MouseRegion(
                         child: new SizedBox(width: 60, height: 40),
                         onExit: e =>

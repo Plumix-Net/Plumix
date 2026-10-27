@@ -203,7 +203,7 @@ public sealed class DateRangePickerDartParityTests : IDisposable
             Assert.Equal(Clip.AntiAlias, dialogMaterial.ClipBehavior);
 
             Dialog dialog = tester.Widget<Dialog>(Find.ByType<Dialog>());
-            Assert.Equal(new Thickness(0), dialog.InsetPadding);
+            Assert.Equal(EdgeInsets.Zero, dialog.InsetPadding);
         }, useMaterial3: theme.UseMaterial3);
     }
 
@@ -226,7 +226,7 @@ public sealed class DateRangePickerDartParityTests : IDisposable
             Assert.Equal(Clip.AntiAlias, dialogMaterial.ClipBehavior);
 
             Dialog dialog = tester.Widget<Dialog>(Find.ByType<Dialog>());
-            Assert.Equal(new Thickness(0), dialog.InsetPadding);
+            Assert.Equal(EdgeInsets.Zero, dialog.InsetPadding);
         }, useMaterial3: theme.UseMaterial3);
     }
 
@@ -1056,7 +1056,7 @@ public sealed class DateRangePickerDartParityTests : IDisposable
             Assert.Equal(Clip.AntiAlias, dialogMaterial.ClipBehavior);
 
             Dialog dialog = tester.Widget<Dialog>(Find.ByType<Dialog>());
-            Assert.Equal(new Thickness(16.0, 24.0), dialog.InsetPadding);
+            Assert.Equal(EdgeInsets.Symmetric(horizontal: 16.0, vertical: 24.0), dialog.InsetPadding);
         }, useMaterial3: theme.UseMaterial3);
     }
 
@@ -1409,7 +1409,7 @@ public sealed class DateRangePickerDartParityTests : IDisposable
 
             // Simulate the portait mode on a device with a small display when the virtual
             // keyboard is visible.
-            tester.View.ViewInsets = new Thickness(0, 0, 0, 1000);
+            tester.View.ViewInsets = FakeViewPadding.Create(bottom: 1000);
             tester.PumpAndSettle();
 
             // Text fields are visible and header is hidden
@@ -1882,7 +1882,7 @@ public sealed class DateRangePickerDartParityTests : IDisposable
             Assert.Equal(Clip.AntiAlias, dialogMaterial.ClipBehavior);
 
             Dialog dialog = tester.Widget<Dialog>(Find.ByType<Dialog>());
-            Assert.Equal(new Thickness(0), dialog.InsetPadding);
+            Assert.Equal(EdgeInsets.Zero, dialog.InsetPadding);
         });
     }
 
@@ -1928,7 +1928,7 @@ public sealed class DateRangePickerDartParityTests : IDisposable
             Assert.Equal(Clip.AntiAlias, dialogMaterial.ClipBehavior);
 
             Dialog dialog = tester.Widget<Dialog>(Find.ByType<Dialog>());
-            Assert.Equal(new Thickness(16.0, 24.0), dialog.InsetPadding);
+            Assert.Equal(EdgeInsets.Symmetric(horizontal: 16.0, vertical: 24.0), dialog.InsetPadding);
         });
     }
 

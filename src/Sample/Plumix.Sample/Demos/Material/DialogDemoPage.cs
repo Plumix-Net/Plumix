@@ -123,7 +123,7 @@ public sealed class DialogDemoPage : StatefulWidget
                 context,
                 routeContext => new Dialog(
                     child: new Padding(
-                        new Thickness(24),
+                        EdgeInsets.All(24),
                         new Column(
                             mainAxisSize: MainAxisSize.Min,
                             spacing: 16,

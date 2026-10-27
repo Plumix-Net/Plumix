@@ -336,7 +336,7 @@ public sealed class RenderingDebugTests : IDisposable
         var painted = new List<RenderObject>();
         RenderingDebug.OnProfilePaint = renderObject => painted.Add(renderObject);
         var leaf = new DebugPaintProbeRenderBox();
-        var padding = new RenderPadding(new Thickness(4.0), leaf);
+        var padding = new RenderPadding(EdgeInsets.All(4.0), leaf);
 
         Paint(padding, new Size(40.0, 40.0));
 
@@ -610,7 +610,7 @@ public sealed class RenderingDebugTests : IDisposable
     public void PaintSizeEnabled_MakesRenderPaddingDrawItsConstructionLines()
     {
         RenderingDebug.PaintSizeEnabled = true;
-        var padding = new RenderPadding(new Thickness(6.0), new DebugPaintProbeRenderBox());
+        var padding = new RenderPadding(EdgeInsets.All(6.0), new DebugPaintProbeRenderBox());
 
         OffsetLayer layer = Paint(padding, new Size(60.0, 60.0));
 

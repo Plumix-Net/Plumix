@@ -21,7 +21,7 @@ public sealed class CupertinoDesktopTextSelectionToolbar : StatelessWidget
     private const double ToolbarBlurSigma = 20.0;
     private const double ToolbarBorderRadius = 8.0;
 
-    private static readonly Thickness ToolbarPadding = new(6.0);
+    private static readonly EdgeInsets ToolbarPadding = EdgeInsets.All(6.0);
 
     private static readonly Plumix.Rendering.BoxShadow[] ToolbarShadow =
     [
@@ -67,7 +67,7 @@ public sealed class CupertinoDesktopTextSelectionToolbar : StatelessWidget
         var localAdjustment = new Vector(ToolbarScreenPadding, paddingAbove);
 
         return new Padding(
-            new Thickness(
+            EdgeInsets.FromLTRB(
                 ToolbarScreenPadding,
                 paddingAbove,
                 ToolbarScreenPadding,

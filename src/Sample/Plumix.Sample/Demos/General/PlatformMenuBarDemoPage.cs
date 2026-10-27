@@ -69,7 +69,7 @@ internal sealed class PlatformMenuBarDemoPageState : State<PlatformMenuBarDemoPa
                         + "Native menus require a host with system-menu support.",
                         style: new TextStyle(Color: MaterialColors.Black54)),
                     new Container(
-                        padding: new Thickness(12),
+                        padding: EdgeInsets.All(12),
                         color: new Color(0xFFF4F7FA),
                         child: new Text(
                             "Plumix demo\n  Say hello (Ctrl+H)\n  Unavailable action (disabled)\n"

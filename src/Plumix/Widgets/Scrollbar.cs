@@ -51,7 +51,7 @@ public sealed class ScrollbarPainter : CustomPainter, IListenable
     private TextDirection? _textDirection;
     private double _thickness;
     private EdgeInsetsGeometry _padding;
-    private Thickness _resolvedPadding;
+    private EdgeInsets _resolvedPadding;
     private double _mainAxisMargin;
     private double _crossAxisMargin;
     private Radius? _radius;

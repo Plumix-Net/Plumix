@@ -393,7 +393,7 @@ public class IconButton : StatelessWidget
         double? iconSize = null,
         BorderSide? side = null,
         BorderRadius? shape = null,
-        Thickness? padding = null,
+        EdgeInsetsGeometry? padding = null,
         MouseCursor? enabledMouseCursor = null,
         MouseCursor? disabledMouseCursor = null,
         VisualDensity? visualDensity = null,
@@ -538,7 +538,7 @@ public class IconButton : StatelessWidget
             unadjustedConstraints);
         var ambientIconTheme = Plumix.Widgets.IconTheme.Of(context);
         double effectiveIconSize = IconSize ?? ambientIconTheme.Size ?? 24.0;
-        Thickness effectivePadding = Padding?.Resolve(Directionality.Of(context)) ?? new Thickness(8);
+        EdgeInsets effectivePadding = Padding?.Resolve(Directionality.Of(context)) ?? EdgeInsets.All(8);
         Plumix.Rendering.Alignment effectiveAlignment = Alignment
                                                          ?? Plumix.Rendering.Alignment.Center;
         bool effectiveEnableFeedback = EnableFeedback ?? true;
@@ -633,7 +633,7 @@ public class IconButton : StatelessWidget
                 ? WidgetStateProperty<BorderSide?>.ResolveWith(states =>
                     ResolveOutlinedBorderSide(theme, states))
                 : null,
-            Padding: WidgetStateProperty<EdgeInsetsGeometry?>.All(new Thickness(8)),
+            Padding: WidgetStateProperty<EdgeInsetsGeometry?>.All(EdgeInsets.All(8)),
             Shape: WidgetStateProperty<OutlinedBorder?>.All(new RoundedRectangleBorder(borderRadius: 
                 Plumix.Rendering.BorderRadius.Circular(9999))),
             MinimumSize: WidgetStateProperty<Size?>.All(new Size(40, 40)),

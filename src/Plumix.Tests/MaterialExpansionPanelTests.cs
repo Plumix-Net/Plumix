@@ -36,7 +36,7 @@ public sealed class MaterialExpansionPanelTests : IDisposable
 
         Assert.Empty(list.Children);
         Assert.Equal(TimeSpan.FromMilliseconds(200), list.AnimationDuration);
-        Assert.Equal(new Thickness(0, 16), list.ExpandedHeaderPadding);
+        Assert.Equal(EdgeInsets.Symmetric(vertical: 16), list.ExpandedHeaderPadding);
         Assert.Equal(2, list.Elevation);
         Assert.Equal(16, list.MaterialGapSize);
         Assert.Null(list.DividerColor);
@@ -68,7 +68,7 @@ public sealed class MaterialExpansionPanelTests : IDisposable
 
         Assert.Equal(CrossFadeState.ShowSecond, Assert.Single(harness.FindWidgets<AnimatedCrossFade>()).CrossFadeState);
         Assert.Equal(
-            new Thickness(0, 16),
+            EdgeInsets.Symmetric(vertical: 16),
             Assert.Single(
                 harness.FindWidgets<AnimatedContainer>(),
                 container => container.Child is ConstrainedBox box && box.Constraints.MinHeight == 48.0).Margin);
@@ -217,7 +217,7 @@ public sealed class MaterialExpansionPanelTests : IDisposable
             harness.FindWidgets<IgnorePointer>(),
             ignore => ReferenceEquals(ignore.Child, expandIcon));
         Assert.True(iconIgnorePointer.Ignoring);
-        Assert.Equal(new Thickness(12.0), expandIcon.Padding);
+        Assert.Equal(EdgeInsets.All(12.0), expandIcon.Padding);
         Assert.NotNull(expandIcon.OnPressed);
 
         var mergeable = Assert.Single(harness.FindWidgets<MergeableMaterial>());

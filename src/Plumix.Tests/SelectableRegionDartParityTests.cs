@@ -214,7 +214,7 @@ public sealed class SelectableRegionDartParityTests : IDisposable
         PlatformDefaults.DebugTargetPlatformOverride = TargetPlatform.Linux;
         using var focus = new FocusNode();
         using var tester = new FrameworkDartTester();
-        Widget Region() => new Align(alignment: Alignment.TopLeft, child: new Padding(new Thickness(100, 80, 0, 0),
+        Widget Region() => new Align(alignment: Alignment.TopLeft, child: new Padding(new EdgeInsets(100, 80, 0, 0),
             new SizedBox(width: 250, height: 100,
                 child: new SelectionArea(new Text("hello world"), focusNode: focus))));
         tester.PumpWidget(App(Region(), TargetPlatform.Linux));

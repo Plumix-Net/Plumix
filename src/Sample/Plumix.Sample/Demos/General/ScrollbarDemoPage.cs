@@ -103,7 +103,7 @@ internal sealed class ScrollbarDemoPageState : State
                                         child: new MediaQuery(
                                             data: MediaQuery.Of(context) with
                                             {
-                                                Padding = _safeArea ? new Thickness(12, 24, 20, 40) : default,
+                                                Padding = _safeArea ? EdgeInsets.FromLTRB(12, 24, 20, 40) : default,
                                             },
                                             child: new RawScrollbar(
                                                     controller: _rawController,
@@ -133,10 +133,10 @@ internal sealed class ScrollbarDemoPageState : State
         itemCount: 70,
         controller: controller,
         itemExtent: 40,
-        padding: new Thickness(10),
+        padding: EdgeInsets.All(10),
         itemBuilder: (_, index) => new Container(
             color: index % 2 == 0 ? Colors.White : new Color(0xFFF4F7FA),
-            padding: new Thickness(10, 8),
+            padding: EdgeInsets.Symmetric(horizontal: 10, vertical: 8),
             child: new Text($"{prefix} row #{index}", style: new TextStyle(FontSize: 13, Color: Colors.Black))),
         addAutomaticKeepAlives: false);
 }

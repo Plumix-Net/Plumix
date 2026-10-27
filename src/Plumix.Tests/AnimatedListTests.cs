@@ -171,7 +171,7 @@ public sealed class AnimatedListTests : IDisposable
         var key = new LabeledGlobalKey<AnimatedGridState>("animated-grid");
         BuildContext? itemContext = null;
         Widget grid = new MediaQuery(
-            data: new MediaQueryData(Padding: new Thickness(10, 20, 30, 40)),
+            data: new MediaQueryData(Padding: EdgeInsets.FromLTRB(10, 20, 30, 40)),
             child: new AnimatedGrid(
                 itemBuilder: (context, _, _) =>
                 {
@@ -196,7 +196,7 @@ public sealed class AnimatedListTests : IDisposable
         Assert.Equal(CacheExtentStyle.Viewport, viewport.CacheExtentStyle);
         Assert.Equal(1.5, viewport.CacheExtent);
         RenderSliverPadding padding = Assert.Single(FindDescendants<RenderSliverPadding>(harness.RenderView));
-        Assert.Equal(new Thickness(0, 20, 0, 40), padding.Padding);
+        Assert.Equal(EdgeInsets.FromLTRB(0, 20, 0, 40), padding.Padding);
     }
 
     [Fact]
@@ -482,7 +482,7 @@ public sealed class AnimatedListTests : IDisposable
         var key = new LabeledGlobalKey<AnimatedListState>("animated-list");
         BuildContext? itemContext = null;
         Widget list = new MediaQuery(
-            data: new MediaQueryData(Padding: new Thickness(10, 20, 30, 40)),
+            data: new MediaQueryData(Padding: EdgeInsets.FromLTRB(10, 20, 30, 40)),
             child: new AnimatedList(
                 itemBuilder: (context, _, _) =>
                 {
@@ -503,7 +503,7 @@ public sealed class AnimatedListTests : IDisposable
         RenderViewport viewport = Assert.Single(FindDescendants<RenderViewport>(harness.RenderView));
         Assert.Equal(Clip.None, viewport.ClipBehavior);
         RenderSliverPadding padding = Assert.Single(FindDescendants<RenderSliverPadding>(harness.RenderView));
-        Assert.Equal(new Thickness(0, 20, 0, 40), padding.Padding);
+        Assert.Equal(EdgeInsets.FromLTRB(0, 20, 0, 40), padding.Padding);
     }
 
     [Fact]

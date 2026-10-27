@@ -82,7 +82,7 @@ public sealed record UnderlineTabIndicator : Decoration
 
     internal Rect IndicatorRectFor(Rect rect, TextDirection textDirection)
     {
-        Thickness resolved = Insets.Resolve(textDirection);
+        EdgeInsets resolved = Insets.Resolve(textDirection);
         var indicator = new Rect(
             rect.Left + resolved.Left,
             rect.Top + resolved.Top,

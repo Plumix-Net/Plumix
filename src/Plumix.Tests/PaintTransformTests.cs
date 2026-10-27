@@ -19,7 +19,7 @@ public sealed class PaintTransformTests
     public void ApplyPaintTransform_RenderBox_TranslatesByTheChildParentDataOffset()
     {
         var child = new RenderConstrainedBox(BoxConstraints.Tight(new Size(20, 10)));
-        var padded = new RenderPadding(new Thickness(12, 7, 0, 0), child);
+        var padded = new RenderPadding(EdgeInsets.FromLTRB(12, 7, 0, 0), child);
         var renderView = new RenderView(new FlutterView(new Size(800, 600))) { Child = padded };
         var pipeline = new PipelineOwner(renderView);
         pipeline.Attach(renderView);
@@ -38,7 +38,7 @@ public sealed class PaintTransformTests
     {
         var child = new RenderConstrainedBox(BoxConstraints.Tight(new Size(20, 10)));
         var scaled = new RenderTransform(Matrix4.Diagonal3Values(2.0, 3.0, 1.0)) { Child = child };
-        var padded = new RenderPadding(new Thickness(5, 9, 0, 0), scaled);
+        var padded = new RenderPadding(EdgeInsets.FromLTRB(5, 9, 0, 0), scaled);
         var renderView = new RenderView(new FlutterView(new Size(800, 600))) { Child = padded };
         var pipeline = new PipelineOwner(renderView);
         pipeline.Attach(renderView);
@@ -57,7 +57,7 @@ public sealed class PaintTransformTests
     public void GetTransformTo_ResolvesInsideSubtreesHiddenFromSemantics()
     {
         var child = new RenderConstrainedBox(BoxConstraints.Tight(new Size(20, 10)));
-        var padded = new RenderPadding(new Thickness(4, 6, 0, 0), child);
+        var padded = new RenderPadding(EdgeInsets.FromLTRB(4, 6, 0, 0), child);
         var excluded = new RenderExcludeSemantics(child: padded);
         var renderView = new RenderView(new FlutterView(new Size(800, 600))) { Child = excluded };
         var pipeline = new PipelineOwner(renderView);

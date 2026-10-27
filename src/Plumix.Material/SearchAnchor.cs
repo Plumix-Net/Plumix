@@ -233,7 +233,7 @@ public class SearchAnchor : StatefulWidget
         TextCapitalization? textCapitalization = null,
         TextInputActionType? textInputAction = null,
         TextInputType? keyboardType = null,
-        Thickness? scrollPadding = null,
+        EdgeInsets? scrollPadding = null,
         EditableTextContextMenuBuilder? contextMenuBuilder = null,
         bool enabled = true,
         SmartDashesType? smartDashesType = null,
@@ -1046,7 +1046,7 @@ internal sealed class SearchViewContent : StatefulWidget
                         removeTop: true,
                         child: new ListView(
                             children: _result,
-                            padding: new Thickness(0, 0, 0, MediaQuery.ViewInsetsOf(context).Bottom),
+                            padding: EdgeInsets.FromLTRB(0, 0, 0, MediaQuery.ViewInsetsOf(context).Bottom),
                             shrinkWrap: effectiveShrinkWrap))
                     : Current.ViewBuilder(_result);
                 columnChildren.Add(new FadeTransition(opacity: _viewDividerFade!, child: viewDivider));
@@ -1155,7 +1155,7 @@ public sealed class SearchBar : StatefulWidget
         bool autoFocus = false,
         TextInputActionType? textInputAction = null,
         TextInputType? keyboardType = null,
-        Thickness? scrollPadding = null,
+        EdgeInsets? scrollPadding = null,
         EditableTextContextMenuBuilder? contextMenuBuilder = null,
         bool readOnly = false,
         SmartDashesType? smartDashesType = null,
@@ -1187,7 +1187,7 @@ public sealed class SearchBar : StatefulWidget
         AutoFocus = autoFocus;
         TextInputAction = textInputAction;
         KeyboardType = keyboardType;
-        ScrollPadding = scrollPadding ?? new Thickness(20);
+        ScrollPadding = scrollPadding ?? EdgeInsets.All(20);
         ContextMenuBuilder = contextMenuBuilder ?? TextField.DefaultContextMenuBuilder;
         ReadOnly = readOnly;
         SmartDashesType = smartDashesType;
@@ -1219,7 +1219,7 @@ public sealed class SearchBar : StatefulWidget
     public bool AutoFocus { get; }
     public TextInputActionType? TextInputAction { get; }
     public TextInputType? KeyboardType { get; }
-    public Thickness ScrollPadding { get; }
+    public EdgeInsets ScrollPadding { get; }
     public EditableTextContextMenuBuilder ContextMenuBuilder { get; }
     public bool ReadOnly { get; }
     public SmartDashesType? SmartDashesType { get; }

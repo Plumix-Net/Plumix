@@ -59,7 +59,7 @@ internal sealed class FlowDemoPageState : State
                 new RepaintBoundary(
                     child: new Container(
                         color: Colors.White,
-                        padding: new Thickness(12),
+                        padding: EdgeInsets.All(12),
                         child: new Text(
                             "Explicit RepaintBoundary keeps this footer in its own composited display list.",
                             style: new TextStyle(FontSize: 12, Color: MaterialColors.BlueGrey)))),
@@ -84,7 +84,7 @@ internal sealed class FlowDemoPageState : State
                 background: new Color(0xFFDCE3ED),
                 foreground: MaterialColors.Black,
                 fontSize: 12,
-                padding: new Thickness(10, 8)));
+                padding: EdgeInsets.Symmetric(horizontal: 10, vertical: 8)));
     }
 }
 

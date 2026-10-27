@@ -137,6 +137,6 @@ internal sealed class CupertinoActionSheetDemoPageState : State
             background: background,
             foreground: Colors.Black,
             fontSize: 12.0,
-            padding: new Thickness(10.0, 8.0));
+            padding: EdgeInsets.Symmetric(horizontal: 10.0, vertical: 8.0));
     }
 }

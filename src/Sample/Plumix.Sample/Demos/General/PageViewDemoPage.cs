@@ -55,10 +55,10 @@ public sealed class PageViewDemoPage : StatefulWidget
                             controller: _controller,
                             onPageChanged: page => SetState(() => _page = page),
                             itemBuilder: (_, index) => new Padding(
-                                new Thickness(8, 12),
+                                EdgeInsets.Symmetric(horizontal: 8, vertical: 12),
                                 new Container(
                                     color: PageColors[index],
-                                    padding: new Thickness(16),
+                                    padding: EdgeInsets.All(16),
                                     child: new Center(
                                         child: new Text(
                                             $"page #{index}",

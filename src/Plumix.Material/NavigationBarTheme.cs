@@ -20,7 +20,7 @@ public sealed record NavigationBarThemeData(
     WidgetStateProperty<IconThemeData?>? IconTheme = null,
     NavigationDestinationLabelBehavior? LabelBehavior = null,
     IWidgetStateProperty<Color?>? OverlayColor = null,
-    Thickness? LabelPadding = null)
+    EdgeInsetsGeometry? LabelPadding = null)
 {
     public NavigationBarThemeData CopyWith(
         double? height = null,
@@ -34,7 +34,7 @@ public sealed record NavigationBarThemeData(
         WidgetStateProperty<IconThemeData?>? iconTheme = null,
         NavigationDestinationLabelBehavior? labelBehavior = null,
         IWidgetStateProperty<Color?>? overlayColor = null,
-        Thickness? labelPadding = null)
+        EdgeInsetsGeometry? labelPadding = null)
     {
         return new NavigationBarThemeData(
             Height: height ?? Height,
@@ -88,7 +88,7 @@ public sealed record NavigationBarThemeData(
                 a?.OverlayColor,
                 b?.OverlayColor,
                 clampedT),
-            LabelPadding: MaterialThemeLerp.Thickness(a?.LabelPadding, b?.LabelPadding, clampedT));
+            LabelPadding: MaterialThemeLerp.EdgeInsets(a?.LabelPadding, b?.LabelPadding, clampedT));
     }
 }
 

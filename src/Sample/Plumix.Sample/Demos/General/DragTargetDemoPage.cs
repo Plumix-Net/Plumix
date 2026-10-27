@@ -74,7 +74,7 @@ internal sealed class DragTargetDemoContentState : State
                         ]),
                     new Container(
                         color: new Color(0xFFF4F0FA),
-                        padding: new Thickness(12),
+                        padding: EdgeInsets.All(12),
                         child: new Text(
                             $"accepted={_acceptedCount}; {_status}",
                             style: new TextStyle(FontSize: 13, Color: new Color(0xFF332D41)))),
@@ -115,7 +115,7 @@ internal sealed class DragTargetDemoContentState : State
                         behavior: HitTestBehavior.Opaque,
                         child: new Container(
                             color: new Color(0xFFEADDFF),
-                            padding: new Thickness(12),
+                            padding: EdgeInsets.All(12),
                             alignment: Alignment.Center,
                             child: new Text(
                                 "Portal inherits page context.\nTap here, then outside.",

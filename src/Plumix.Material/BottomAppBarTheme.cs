@@ -15,7 +15,7 @@ public sealed record BottomAppBarThemeData(
     double? Height = null,
     Color? SurfaceTintColor = null,
     Color? ShadowColor = null,
-    Thickness? Padding = null)
+    EdgeInsetsGeometry? Padding = null)
 {
     public BottomAppBarThemeData CopyWith(
         Color? color = null,
@@ -24,7 +24,7 @@ public sealed record BottomAppBarThemeData(
         double? height = null,
         Color? surfaceTintColor = null,
         Color? shadowColor = null,
-        Thickness? padding = null)
+        EdgeInsetsGeometry? padding = null)
     {
         return new BottomAppBarThemeData(
             Color: color ?? Color,
@@ -54,7 +54,7 @@ public sealed record BottomAppBarThemeData(
                 b?.SurfaceTintColor,
                 clampedT),
             ShadowColor: MaterialThemeLerp.Color(a?.ShadowColor, b?.ShadowColor, clampedT),
-            Padding: MaterialThemeLerp.Thickness(a?.Padding, b?.Padding, clampedT));
+            Padding: MaterialThemeLerp.EdgeInsets(a?.Padding, b?.Padding, clampedT));
     }
 }
 

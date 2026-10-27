@@ -450,7 +450,7 @@ internal sealed class DateRangePickerDialogState : RestorationState<DateRangePic
         Color? shadowColor;
         Color? surfaceTintColor;
         ShapeBorder? shape;
-        Thickness insetPadding;
+        EdgeInsets insetPadding;
         bool showEntryModeButton = EntryMode.Value == DatePickerEntryMode.Calendar
             || EntryMode.Value == DatePickerEntryMode.Input;
         switch (EntryMode.Value)
@@ -488,7 +488,7 @@ internal sealed class DateRangePickerDialogState : RestorationState<DateRangePic
                             ? localizations.DateRangePickerHelpText
                             : localizations.DateRangePickerHelpText.ToUpperInvariant()));
                 size = MediaQuery.SizeOf(context);
-                insetPadding = new Thickness(0);
+                insetPadding = EdgeInsets.Zero;
                 elevation = datePickerTheme.RangePickerElevation ?? defaults.RangePickerElevation!;
                 shadowColor = datePickerTheme.RangePickerShadowColor ?? defaults.RangePickerShadowColor!;
                 surfaceTintColor = datePickerTheme.RangePickerSurfaceTintColor
@@ -569,7 +569,7 @@ internal sealed class DateRangePickerDialogState : RestorationState<DateRangePic
                     ? datePickerTheme.Shape ?? defaults.Shape
                     : datePickerTheme.Shape ?? dialogTheme.Shape ?? defaults.Shape;
 
-                insetPadding = new Thickness(16.0, 24.0);
+                insetPadding = EdgeInsets.Symmetric(horizontal: 16.0, vertical: 24.0);
                 break;
         }
 

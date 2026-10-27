@@ -115,7 +115,7 @@ public sealed partial class MaterialTimePickerDialogTests : IDisposable
         Assert.Equal(6, dialog.Elevation);
         var shape = Assert.IsType<RoundedRectangleBorder>(dialog.Shape);
         Assert.Equal(28, shape.BorderRadius.Physical.TopLeft);
-        Assert.Equal(new Thickness(16, 24), dialog.InsetPadding);
+        Assert.Equal(EdgeInsets.Symmetric(horizontal: 16, vertical: 24), dialog.InsetPadding);
     }
 
     [Fact]
@@ -125,7 +125,7 @@ public sealed partial class MaterialTimePickerDialogTests : IDisposable
             new TimeOfDay(7, 0),
             initialEntryMode: TimePickerEntryMode.Input)));
         harness.Pump(ViewSize);
-        Assert.Equal(new Thickness(16, 0), FindWidget<Dialog>(harness).InsetPadding);
+        Assert.Equal(EdgeInsets.Symmetric(horizontal: 16), FindWidget<Dialog>(harness).InsetPadding);
     }
 
     // ---- Dial labels and formats --------------------------------------------------------

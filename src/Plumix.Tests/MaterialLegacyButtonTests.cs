@@ -202,7 +202,7 @@ public sealed class MaterialLegacyButtonTests
             TextTheme: ButtonTextTheme.Accent,
             MinWidth: 104,
             Height: 44,
-            Padding: new Thickness(19, 3),
+            Padding: EdgeInsets.Symmetric(horizontal: 19, vertical: 3),
             Shape: BorderRadius.Circular(9),
             FocusColor: Colors.DarkOrange,
             HoverColor: Colors.DarkCyan);
@@ -255,7 +255,7 @@ public sealed class MaterialLegacyButtonTests
         var raw = Assert.IsType<RawMaterialButton>(tree.FindWidget<RawMaterialButton>());
         Assert.Equal(EdgeInsetsGeometry.DirectionalOnly(start: 14, end: 6), raw.Padding);
         Assert.Equal(
-            new Thickness(expectedLeft, 0, expectedRight, 0),
+            EdgeInsets.FromLTRB(expectedLeft, 0, expectedRight, 0),
             FindButtonContentPadding(tree.RenderRoot).Resolve(textDirection));
     }
 
@@ -306,7 +306,7 @@ public sealed class MaterialLegacyButtonTests
                 hoverColor: Colors.Green,
                 highlightColor: Colors.Crimson,
                 splashColor: Colors.Blue,
-                padding: new Thickness(10, 8),
+                padding: EdgeInsets.Symmetric(horizontal: 10, vertical: 8),
                 visualDensity: VisualDensity.Compact,
                 constraints: new BoxConstraints(MinWidth: 88, MinHeight: 36),
                 shape: new RoundedRectangleBorder(borderRadius: BorderRadius.Circular(7)),
@@ -327,7 +327,7 @@ public sealed class MaterialLegacyButtonTests
         Assert.Equal(Colors.Crimson, ink.HighlightColor);
         Assert.Equal(Colors.Blue, ink.SplashColor);
         Assert.Same(material.Shape, ink.CustomBorder);
-        Assert.Equal(new Thickness(2, 0), FindButtonContentPadding(tree.RenderRoot));
+        Assert.Equal(EdgeInsets.Symmetric(horizontal: 2), FindButtonContentPadding(tree.RenderRoot));
         Assert.Equal(80, constrained.Constraints.MinWidth);
         Assert.Equal(28, constrained.Constraints.MinHeight);
         Assert.Equal(new Size(40, 40), tapTarget.MinSize);

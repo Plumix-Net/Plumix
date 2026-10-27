@@ -1,6 +1,7 @@
 using Avalonia;
 using Plumix.Foundation;
 using Plumix.UI;
+using Plumix.Rendering;
 
 namespace Plumix.Widgets;
 
@@ -35,7 +36,7 @@ public sealed class DisplayFeatureSubScreen : StatelessWidget
         Rect closestSubScreen = ClosestToAnchorPoint(subScreens, resolvedAnchorPoint);
 
         return new Padding(
-            new Thickness(
+            EdgeInsets.FromLTRB(
                 closestSubScreen.Left,
                 closestSubScreen.Top,
                 parentSize.Width - closestSubScreen.Right,

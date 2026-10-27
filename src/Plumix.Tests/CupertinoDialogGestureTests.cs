@@ -187,7 +187,7 @@ public sealed class CupertinoDialogGestureTests : IDisposable
             behavior: HitTestBehavior.Opaque,
             child: new ConstrainedBox(
                 new BoxConstraints(MinHeight: sheet ? 57.0 : 45.0),
-                child: new Padding(new Thickness(10, 16), child: new Center(child: new Text("Legacy")))));
+                child: new Padding(EdgeInsets.Symmetric(10, 16), child: new Center(child: new Text("Legacy")))));
         using var harness = Harness(sheet
             ? new CupertinoActionSheet(actions: [legacy])
             : new CupertinoAlertDialog(actions: [legacy]));

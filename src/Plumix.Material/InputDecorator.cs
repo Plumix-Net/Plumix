@@ -1097,7 +1097,7 @@ public sealed class InputDecorator : StatefulWidget
         {
             if (decoration.ContentPadding is { } declared)
             {
-                Thickness resolved = declared.Resolve(textDirection);
+                EdgeInsets resolved = declared.Resolve(textDirection);
                 return EdgeInsetsGeometry.DirectionalOnly(
                     start: flipHorizontal ? resolved.Right : resolved.Left,
                     top: resolved.Top,

@@ -24,7 +24,7 @@ public sealed class NavigationRailDestination
         Widget? selectedIcon = null,
         Color? indicatorColor = null,
         ShapeBorder? indicatorShape = null,
-        Thickness? padding = null,
+        EdgeInsetsGeometry? padding = null,
         bool disabled = false)
     {
         Icon = icon ?? throw new ArgumentNullException(nameof(icon));
@@ -41,7 +41,7 @@ public sealed class NavigationRailDestination
     public Color? IndicatorColor { get; }
     public ShapeBorder? IndicatorShape { get; }
     public Widget Label { get; }
-    public Thickness? Padding { get; }
+    public EdgeInsetsGeometry? Padding { get; }
     public bool Disabled { get; }
 }
 
@@ -472,7 +472,7 @@ internal sealed class NavigationRailDestinationTileState : State<NavigationRailD
 
         Widget themedIcon = new IconTheme(iconTheme, icon);
         Widget styledLabel = new DefaultTextStyle(labelStyle, destination.Label);
-        Thickness destinationPadding = destination.Padding ?? default;
+        EdgeInsets destinationPadding = (destination.Padding ?? EdgeInsets.Zero).Resolve(Directionality.Of(context));
         double indicatorVerticalOffset = iconTheme.Size is > 32.0
             ? (iconTheme.Size.Value - 32.0) / 2.0
             : 0.0;
@@ -566,7 +566,7 @@ internal sealed class NavigationRailDestinationTileState : State<NavigationRailD
                         MinWidth: widget.MinWidth,
                         MinHeight: widget.UseMaterial3 ? 0.0 : widget.MinWidth),
                     child: new Padding(
-                        destination.Padding ?? new Thickness(8.0, 0.0),
+                        destination.Padding ?? EdgeInsets.Symmetric(horizontal: 8.0),
                         new ClipRect(
                             child: new Column(
                                 mainAxisSize: MainAxisSize.Min,
@@ -600,7 +600,7 @@ internal sealed class NavigationRailDestinationTileState : State<NavigationRailD
                         MinWidth: widget.MinWidth,
                         MinHeight: widget.UseMaterial3 ? 0.0 : widget.MinWidth),
                     child: new Padding(
-                        destination.Padding ?? new Thickness(8.0, 0.0),
+                        destination.Padding ?? EdgeInsets.Symmetric(horizontal: 8.0),
                         new Column(
                             children:
                             [
@@ -671,7 +671,7 @@ internal sealed class NavigationRailDestinationTileState : State<NavigationRailD
 
     private static Point ResolveLabelIndicatorOffset(
         double minWidth,
-        Thickness padding,
+        EdgeInsets padding,
         double verticalOffset)
     {
         double horizontalCenter = minWidth < 72.0
