@@ -50,7 +50,9 @@ public sealed class EditableTextInputConnectionDartParityTests : IDisposable
             controller: _controller,
             focusNode: _focusNode,
             style: style ?? new TextStyle(FontSize: 14),
-            multiline: multiline,
+            cursorColor: new Color(0xFF000000),
+            backgroundCursorColor: new Color(0xFF9E9E9E),
+            maxLines: multiline ? null : 1,
             onAppPrivateCommand: onAppPrivateCommand);
 
     private FrameworkDartTester PumpFocused(Widget field)
@@ -244,7 +246,13 @@ public sealed class EditableTextInputConnectionDartParityTests : IDisposable
         using (tester)
         {
             tester.PumpWidget(new TestWidgetsApp(
-                home: new EditableText(controller: _controller, focusNode: _focusNode, readOnly: true)));
+                home: new EditableText(
+                    controller: _controller,
+                    focusNode: _focusNode,
+                    readOnly: true,
+                    style: new TextStyle(FontSize: 14.0, Color: new Color(0xFF000000)),
+                    cursorColor: new Color(0xFF000000),
+                    backgroundCursorColor: new Color(0xFF9E9E9E))));
             _focusNode.RequestFocus();
             tester.Pump();
 
@@ -372,7 +380,12 @@ public sealed class EditableTextInputConnectionDartParityTests : IDisposable
                     alignment: Alignment.TopLeft,
                     child: new SizedBox(
                         width: 200,
-                        child: new EditableText(controller: _controller, focusNode: _focusNode))));
+                        child: new EditableText(
+                            controller: _controller,
+                            focusNode: _focusNode,
+                            style: new TextStyle(FontSize: 14.0, Color: new Color(0xFF000000)),
+                            cursorColor: new Color(0xFF000000),
+                            backgroundCursorColor: new Color(0xFF9E9E9E)))));
             host.PumpFrameForTests(new Size(300, 200));
             Assert.Null(RequestClient(host));
 
@@ -442,7 +455,12 @@ public sealed class EditableTextInputConnectionDartParityTests : IDisposable
                     alignment: Alignment.TopLeft,
                     child: new SizedBox(
                         width: 200,
-                        child: new EditableText(controller: _controller, focusNode: _focusNode))));
+                        child: new EditableText(
+                            controller: _controller,
+                            focusNode: _focusNode,
+                            style: new TextStyle(FontSize: 14.0, Color: new Color(0xFF000000)),
+                            cursorColor: new Color(0xFF000000),
+                            backgroundCursorColor: new Color(0xFF9E9E9E)))));
             host.PumpFrameForTests(new Size(300, 200));
             _focusNode.RequestFocus();
             EventLoop.FlushMicrotasks();

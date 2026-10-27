@@ -216,7 +216,10 @@ public sealed class ContextMenuControllerTests : IDisposable
         using var harness = new Harness(new EditableText(
             text, focusNode: focus, key: key,
             selectionControls: CupertinoTextSelectionHandleControls.Instance,
-            contextMenuBuilder: (_, _) => new Text("built-in")));
+            contextMenuBuilder: (_, _) => new Text("built-in"),
+            style: new TextStyle(FontSize: 14.0, Color: new Color(0xFF000000)),
+            cursorColor: new Color(0xFF000000),
+            backgroundCursorColor: new Color(0xFF9E9E9E)));
         focus.RequestFocus();
         harness.Pump();
         EditableText.EditableTextState state = key.CurrentState!;

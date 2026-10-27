@@ -132,7 +132,6 @@ internal sealed class TestTextField : StatefulWidget
                         focusNode: EffectiveFocusNode,
                         groupId: Widget.GroupId,
                         maxLines: Widget.MaxLines,
-                        multiline: Widget.MaxLines != 1,
                         onChanged: Widget.OnChanged,
                         onSubmitted: Widget.OnSubmitted,
                         readOnly: Widget.ReadOnly,

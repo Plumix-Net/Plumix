@@ -75,7 +75,11 @@ public sealed class MaterialSelectionTests
                     key: key,
                     controller: controller,
                     contextMenuBuilder: (_, state) => new SizedBox(
-                        child: new Text(state.ContextMenuButtonItems.Count.ToString()))))),
+                        child: new Text(state.ContextMenuButtonItems.Count.ToString())),
+                    focusNode: new FocusNode(),
+                    style: new TextStyle(FontSize: 14.0, Color: new Color(0xFF000000)),
+                    cursorColor: new Color(0xFF000000),
+                    backgroundCursorColor: new Color(0xFF9E9E9E)))),
             ThemeData.Light));
         harness.Pump(new Size(320, 120));
         key.CurrentState!.ShowToolbar();

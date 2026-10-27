@@ -18,6 +18,43 @@ public sealed class MaterialTextFieldTests : IDisposable
     public void Dispose() => FocusManager.Instance.ResetForTests();
 
 
+    // Flutter: 'text_field_test.dart: Cannot request focus when canRequestFocus is false', plus
+    // `_canRequestFocus`: a disabled field cannot take focus either, unless the navigation mode is
+    // directional.
+    [Fact]
+    public void TextField_CanRequestFocusAndEnabledDriveTheFocusNode()
+    {
+        using var focusNode = new FocusNode();
+        using var tester = new FrameworkDartTester();
+        Widget Field(bool canRequestFocus = true, bool enabled = true,
+            NavigationMode mode = NavigationMode.Traditional) =>
+            new MaterialApp(home: new Plumix.Material.Material(child: new MediaQuery(
+                new MediaQueryData(Size: new Size(800, 600), NavigationMode: mode),
+                new Center(child: new TextField(
+                    focusNode: focusNode,
+                    canRequestFocus: canRequestFocus,
+                    enabled: enabled)))));
+
+        tester.PumpWidget(Field());
+        Assert.True(focusNode.CanRequestFocus);
+        focusNode.RequestFocus();
+        tester.Pump();
+        Assert.True(focusNode.HasFocus);
+
+        tester.PumpWidget(Field(canRequestFocus: false));
+        Assert.False(focusNode.CanRequestFocus);
+        Assert.False(focusNode.HasFocus);
+        focusNode.RequestFocus();
+        tester.Pump();
+        Assert.False(focusNode.HasFocus);
+
+        tester.PumpWidget(Field(enabled: false));
+        Assert.False(focusNode.CanRequestFocus);
+
+        tester.PumpWidget(Field(canRequestFocus: false, mode: NavigationMode.Directional));
+        Assert.True(focusNode.CanRequestFocus);
+    }
+
     [Theory]
     [InlineData(false)]
     [InlineData(true)]

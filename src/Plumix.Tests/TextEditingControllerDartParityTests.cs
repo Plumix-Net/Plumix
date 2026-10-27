@@ -204,7 +204,12 @@ public sealed class TextEditingControllerDartParityTests
         var color = new Color(0xFF010203);
         using var controller = new ContextController();
         tester.PumpWidget(new Directionality(TextDirection.Ltr,
-            new DefaultTextStyle(new TextStyle(Color: color), new EditableText(controller))));
+            new DefaultTextStyle(new TextStyle(Color: color), new EditableText(
+                controller,
+                focusNode: new FocusNode(),
+                style: new TextStyle(FontSize: 14.0, Color: new Color(0xFF000000)),
+                cursorColor: new Color(0xFF000000),
+                backgroundCursorColor: new Color(0xFF9E9E9E)))));
         Assert.Equal(color, controller.ContextColor);
     }
 
@@ -217,7 +222,13 @@ public sealed class TextEditingControllerDartParityTests
         using var controller = new TextEditingController("hello");
         tester.PumpWidget(new Directionality(TextDirection.Ltr,
             new Align(alignment: Alignment.TopLeft, child: new SizedBox(width: 200,
-                child: new EditableText(controller, focusNode: focus, selectAllOnFocus: false)))));
+                child: new EditableText(
+                    controller,
+                    focusNode: focus,
+                    selectAllOnFocus: false,
+                    style: new TextStyle(FontSize: 14.0, Color: new Color(0xFF000000)),
+                    cursorColor: new Color(0xFF000000),
+                    backgroundCursorColor: new Color(0xFF9E9E9E))))));
         Assert.Equal(TextSelection.Invalid, controller.Selection);
         focus.RequestFocus();
         tester.Pump();

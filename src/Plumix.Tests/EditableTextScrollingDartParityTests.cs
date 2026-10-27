@@ -48,11 +48,11 @@ public sealed class EditableTextScrollingDartParityTests : IDisposable
         Action<TextSelection, SelectionChangedCause?>? onSelectionChanged = null) =>
         new(
             controller: controller,
-            focusNode: focusNode,
-            multiline: multiline,
-            maxLines: maxLines,
+            focusNode: focusNode ?? new FocusNode(),
+            style: new TextStyle(FontSize: 14.0, Color: new Color(0xFF000000)),
+            cursorColor: new Color(0xFF000000),
+            maxLines: multiline ? maxLines : 1,
             readOnly: readOnly,
-            padding: new Thickness(0),
             scrollController: scrollController,
             scrollPhysics: scrollPhysics,
             scrollPadding: scrollPadding,

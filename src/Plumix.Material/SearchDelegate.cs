@@ -340,7 +340,13 @@ internal sealed class SearchPage<T> : StatefulWidget
 
 internal sealed class SearchPageState<T> : State<SearchPage<T>>
 {
-    private readonly FocusNode _focusNode = new();
+    // This node is owned, but not hosted by, the search page. Hosting is done by the text field.
+    private readonly FocusNode _focusNode;
+
+    public SearchPageState()
+    {
+        _focusNode = new FocusNode(onKeyEvent: HandleKeyEvent);
+    }
 
     private SearchPage<T> Current => (SearchPage<T>)StateWidget;
 
@@ -395,8 +401,7 @@ internal sealed class SearchPageState<T> : State<SearchPage<T>>
             enableSuggestions: searchDelegate.EnableSuggestions,
             keyboardType: searchDelegate.KeyboardType,
             decoration: new InputDecoration(hintText: fieldLabel),
-            onSubmitted: _ => ShowResults(),
-            onKeyEvent: HandleKeyEvent);
+            onSubmitted: _ => ShowResults());
         title = new Semantics(
             inputType: SemanticsInputType.Search,
             child: title);

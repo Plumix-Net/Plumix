@@ -48,13 +48,11 @@ public sealed class EditableTextCursorDartParityTests : IDisposable
             focusNode: _focusNode,
             autofocus: autofocus,
             style: new TextStyle(FontSize: 10.0),
-            padding: new Thickness(0),
             cursorColor: CursorColor,
             backgroundCursorColor: new Color(0xFF9E9E9E),
             obscureText: obscureText,
             cursorOpacityAnimates: cursorOpacityAnimates,
             showCursor: showCursor,
-            multiline: multiline,
             maxLines: multiline ? null : 1);
 
     private static FrameworkDartTester Pump(Widget field, TargetPlatform platform = TargetPlatform.Android)
@@ -472,7 +470,6 @@ public sealed class EditableTextCursorDartParityTests : IDisposable
             controller: _controller,
             focusNode: _focusNode,
             autofocus: true,
-            multiline: true,
             maxLines: 10,
             showSelectionHandles: true,
             style: new TextStyle(FontSize: 10.0),
