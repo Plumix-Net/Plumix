@@ -678,6 +678,35 @@ public sealed class MaterialSearchTests : IDisposable
         Assert.False(searchDelegate.IsActive);
     }
 
+    // Flutter: 'search_test.dart: Can close search with escape button and return null'
+    [Fact]
+    public async Task SearchDelegate_EscapeOnTheFocusedFieldClosesTheSearchWithNull()
+    {
+        var searchDelegate = new TestSearchDelegate();
+        var host = new SearchLaunchHost(searchDelegate, "esc");
+        using var harness = new WidgetRenderHarness(Wrap(
+            ThemeData.Light,
+            new Navigator(new BuilderPageRoute(_ => host))));
+        var state = harness.FindState<SearchLaunchHostState>();
+        state.Open();
+        harness.Pump(new Size(640, 420));
+        AnimationPump.Prime();
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(AnimationPump.CurrentSeconds + 0.4));
+        harness.Pump(new Size(640, 420));
+        Assert.True(searchDelegate.IsActive);
+
+        // The search page's own focus node, hosted by the field, handles the key.
+        Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.Escape)));
+        harness.Pump(new Size(640, 420));
+        AnimationPump.Prime();
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(AnimationPump.CurrentSeconds + 0.4));
+        harness.Pump(new Size(640, 420));
+
+        Assert.Equal(AnimationStatus.Dismissed, searchDelegate.TransitionAnimation.Status);
+        Assert.Null(await state.Result);
+        Assert.False(searchDelegate.IsActive);
+    }
+
     [Fact]
     public void SearchDelegate_ForwardsInputConfigurationSwitcherAndSearchSemantics()
     {

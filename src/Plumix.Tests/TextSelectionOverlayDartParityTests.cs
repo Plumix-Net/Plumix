@@ -53,10 +53,8 @@ public sealed class TextSelectionOverlayDartParityTests : IDisposable
             controller: _controller,
             focusNode: _focusNode,
             style: new TextStyle(FontSize: 10.0),
-            padding: new Thickness(0),
             cursorColor: new Color(0xFF2196F3),
             backgroundCursorColor: new Color(0xFF9E9E9E),
-            multiline: multiline,
             maxLines: multiline ? null : 1,
             obscureText: obscureText,
             readOnly: readOnly,
@@ -513,7 +511,7 @@ public sealed class TextSelectionOverlayDartParityTests : IDisposable
                 cursorColor: new Color(0xFF2196F3),
                 backgroundCursorColor: new Color(0xFF9E9E9E),
                 enableInteractiveSelection: false,
-                multiline: true)));
+                maxLines: null)));
             tester.Pump();
             state.UpdateEditingValue(new TextEditingValue("abc", TextSelection.Collapsed(3)));
             tester.Pump();
@@ -602,14 +600,38 @@ public sealed class TextSelectionOverlayDartParityTests : IDisposable
         Assert.Same(ToolbarOptions.Empty, Field().ToolbarOptions);
         Assert.Equal(
             new ToolbarOptions(Copy: true, Cut: true, Paste: true, SelectAll: true),
-            new EditableText(_controller).ToolbarOptions);
+            new EditableText(
+                _controller,
+                focusNode: new FocusNode(),
+                style: new TextStyle(FontSize: 14.0, Color: new Color(0xFF000000)),
+                cursorColor: new Color(0xFF000000),
+                backgroundCursorColor: new Color(0xFF9E9E9E)).ToolbarOptions);
         Assert.Equal(
             new ToolbarOptions(Paste: true, SelectAll: true),
-            new EditableText(_controller, obscureText: true).ToolbarOptions);
+            new EditableText(
+                _controller,
+                obscureText: true,
+                focusNode: new FocusNode(),
+                style: new TextStyle(FontSize: 14.0, Color: new Color(0xFF000000)),
+                cursorColor: new Color(0xFF000000),
+                backgroundCursorColor: new Color(0xFF9E9E9E)).ToolbarOptions);
         Assert.Equal(
             new ToolbarOptions(Copy: true, SelectAll: true),
-            new EditableText(_controller, readOnly: true).ToolbarOptions);
-        Assert.Same(ToolbarOptions.Empty, new EditableText(_controller, readOnly: true, obscureText: true).ToolbarOptions);
+            new EditableText(
+                _controller,
+                readOnly: true,
+                focusNode: new FocusNode(),
+                style: new TextStyle(FontSize: 14.0, Color: new Color(0xFF000000)),
+                cursorColor: new Color(0xFF000000),
+                backgroundCursorColor: new Color(0xFF9E9E9E)).ToolbarOptions);
+        Assert.Same(ToolbarOptions.Empty, new EditableText(
+            _controller,
+            readOnly: true,
+            obscureText: true,
+            focusNode: new FocusNode(),
+            style: new TextStyle(FontSize: 14.0, Color: new Color(0xFF000000)),
+            cursorColor: new Color(0xFF000000),
+            backgroundCursorColor: new Color(0xFF9E9E9E)).ToolbarOptions);
     }
 
     [Fact]

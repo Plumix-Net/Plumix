@@ -137,9 +137,6 @@ public sealed partial class EditableText
         // supposed to run.
         private bool _tickersEnabled = true;
 
-        // The cursor color the last build resolved, before the blink opacity is applied.
-        private Color _resolvedCursorColor = new(0x00000000);
-
         private AnimationController CursorBlinkOpacityController
         {
             get
@@ -165,34 +162,30 @@ public sealed partial class EditableText
         /// or the "off" state). A complete cursor blink period is twice this value.</summary>
         public TimeSpan CursorBlinkInterval => CursorBlinkHalfPeriod;
 
-        /// Dart's `widget.showCursor`, which the widget resolves to `showCursor ?? !readOnly`.
-        private bool EffectiveShowCursor => Widget.ShowCursor ?? !Widget.ReadOnly;
-
         private bool ShowBlinkingCursor =>
             _focusNode?.HasFocus == true
             && EditingValue.Selection.IsCollapsed
-            && EffectiveShowCursor
+            && Widget.ShowCursor
             && _tickersEnabled
             && RenderEditable?.FloatingCursorOn != true;
 
         private void OnCursorColorTick()
         {
-            double effectiveOpacity = Math.Min(_resolvedCursorColor.Alpha / 255.0, CursorBlinkOpacityController.Value);
+            Color cursorColor = Widget.CursorColor;
+            double effectiveOpacity = Math.Min(cursorColor.Alpha / 255.0, CursorBlinkOpacityController.Value);
             if (RenderEditable is { } renderEditable)
             {
-                renderEditable.CursorColor = _resolvedCursorColor.WithOpacity(effectiveOpacity);
+                renderEditable.CursorColor = cursorColor.WithOpacity(effectiveOpacity);
             }
 
             UpdateCursorVisibility();
         }
 
-        /// The cursor visibility Dart's `_onCursorColorTick` computes. The placeholder that hides
-        /// the cursor is C#-only.
+        /// The cursor visibility Dart's `_onCursorColorTick` computes.
         private void UpdateCursorVisibility()
         {
             _cursorVisibilityNotifier.Value =
-                EffectiveShowCursor
-                && !ShowPlaceholder
+                Widget.ShowCursor
                 && (DebugDeterministicCursor || CursorBlinkOpacityController.Value > 0);
         }
 
@@ -205,7 +198,7 @@ public sealed partial class EditableText
                 throw new AssertionError("The cursor timer and the blink animation must not run together.");
             }
 
-            if (!EffectiveShowCursor)
+            if (!Widget.ShowCursor)
             {
                 return;
             }

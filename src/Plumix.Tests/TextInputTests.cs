@@ -36,7 +36,11 @@ public sealed class TextInputTests : IDisposable
             new DefaultTextEditingShortcuts(new EditableText(
                 controller: controller,
                 autofocus: true,
-                multiline: true))));
+                maxLines: null,
+                focusNode: new FocusNode(),
+                style: new TextStyle(FontSize: 14.0, Color: new Color(0xFF000000)),
+                cursorColor: new Color(0xFF000000),
+                backgroundCursorColor: new Color(0xFF9E9E9E)))));
         tester.Pump();
 
         Assert.True(HostTextInput.InsertText("ab"));
@@ -77,7 +81,12 @@ public sealed class TextInputTests : IDisposable
                 alignment: Alignment.TopLeft,
                 child: new SizedBox(
                     width: 200,
-                    child: new EditableText(controller: controller, focusNode: focusNode)))));
+                    child: new EditableText(
+                        controller: controller,
+                        focusNode: focusNode,
+                        style: new TextStyle(FontSize: 14.0, Color: new Color(0xFF000000)),
+                        cursorColor: new Color(0xFF000000),
+                        backgroundCursorColor: new Color(0xFF9E9E9E))))));
         focusNode.RequestFocus();
         tester.Pump();
 
@@ -218,7 +227,10 @@ public sealed class TextInputTests : IDisposable
             new EditableText(
                 controller: controller,
                 autofocus: true,
-                placeholder: "Type here"));
+                focusNode: new FocusNode(),
+                style: new TextStyle(FontSize: 14.0, Color: new Color(0xFF000000)),
+                cursorColor: new Color(0xFF000000),
+                backgroundCursorColor: new Color(0xFF9E9E9E)));
 
         Assert.Equal(string.Empty, controller.Text);
 
@@ -240,7 +252,13 @@ public sealed class TextInputTests : IDisposable
         try
         {
             var controller = new TextEditingController();
-            using FrameworkDartTester tester = PumpField(new EditableText(controller: controller, autofocus: true));
+            using FrameworkDartTester tester = PumpField(new EditableText(
+                controller: controller,
+                autofocus: true,
+                focusNode: new FocusNode(),
+                style: new TextStyle(FontSize: 14.0, Color: new Color(0xFF000000)),
+                cursorColor: new Color(0xFF000000),
+                backgroundCursorColor: new Color(0xFF9E9E9E)));
             Assert.True(HostTextInput.InsertText("abcd"));
 
             Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.Backspace)));
@@ -271,7 +289,11 @@ public sealed class TextInputTests : IDisposable
         using FrameworkDartTester tester = PumpField(
             new EditableText(
                 controller: controller,
-                autofocus: true));
+                autofocus: true,
+                focusNode: new FocusNode(),
+                style: new TextStyle(FontSize: 14.0, Color: new Color(0xFF000000)),
+                cursorColor: new Color(0xFF000000),
+                backgroundCursorColor: new Color(0xFF9E9E9E)));
 
         Assert.True(HostTextInput.SetMarkedText("ni"));
         Assert.Equal("ni", controller.Text);
@@ -307,7 +329,11 @@ public sealed class TextInputTests : IDisposable
         using FrameworkDartTester tester = PumpField(
             new EditableText(
                 controller: controller,
-                autofocus: true));
+                autofocus: true,
+                focusNode: new FocusNode(),
+                style: new TextStyle(FontSize: 14.0, Color: new Color(0xFF000000)),
+                cursorColor: new Color(0xFF000000),
+                backgroundCursorColor: new Color(0xFF9E9E9E)));
 
         Assert.True(HostTextInput.InsertText("abcd"));
         Assert.Equal(TextSelection.Collapsed(4), controller.Selection);
@@ -337,7 +363,11 @@ public sealed class TextInputTests : IDisposable
         using FrameworkDartTester tester = PumpField(
             new EditableText(
                 controller: controller,
-                autofocus: true));
+                autofocus: true,
+                focusNode: new FocusNode(),
+                style: new TextStyle(FontSize: 14.0, Color: new Color(0xFF000000)),
+                cursorColor: new Color(0xFF000000),
+                backgroundCursorColor: new Color(0xFF9E9E9E)));
 
         Assert.True(HostTextInput.InsertText("alpha"));
         Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.KeyA, control: true)));
@@ -366,7 +396,13 @@ public sealed class TextInputTests : IDisposable
         try
         {
             var controller = new TextEditingController("before");
-            using FrameworkDartTester tester = PumpField(new EditableText(controller: controller, autofocus: true));
+            using FrameworkDartTester tester = PumpField(new EditableText(
+                controller: controller,
+                autofocus: true,
+                focusNode: new FocusNode(),
+                style: new TextStyle(FontSize: 14.0, Color: new Color(0xFF000000)),
+                cursorColor: new Color(0xFF000000),
+                backgroundCursorColor: new Color(0xFF9E9E9E)));
 
             Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.KeyV, control: true)));
             Assert.Equal("before", controller.Text);
@@ -397,7 +433,11 @@ public sealed class TextInputTests : IDisposable
             autofocus: true,
             readOnly: readOnly,
             obscureText: obscureText,
-            enableInteractiveSelection: enableInteractiveSelection));
+            enableInteractiveSelection: enableInteractiveSelection,
+            focusNode: new FocusNode(),
+            style: new TextStyle(FontSize: 14.0, Color: new Color(0xFF000000)),
+            cursorColor: new Color(0xFF000000),
+            backgroundCursorColor: new Color(0xFF9E9E9E)));
 
         Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.KeyX, control: true)));
         Assert.Equal("alpha", controller.Text);
@@ -422,7 +462,13 @@ public sealed class TextInputTests : IDisposable
     {
         using var clipboard = new MockClipboardPlatform("xy");
         var controller = new TextEditingController("abcdef", new TextSelection(5, 2));
-        using FrameworkDartTester tester = PumpField(new EditableText(controller: controller, autofocus: true));
+        using FrameworkDartTester tester = PumpField(new EditableText(
+            controller: controller,
+            autofocus: true,
+            focusNode: new FocusNode(),
+            style: new TextStyle(FontSize: 14.0, Color: new Color(0xFF000000)),
+            cursorColor: new Color(0xFF000000),
+            backgroundCursorColor: new Color(0xFF9E9E9E)));
 
         Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.KeyV, control: true)));
         Assert.True(EventLoopPump.SpinUntil(() => controller.Text == "abxyf"));
@@ -467,7 +513,11 @@ public sealed class TextInputTests : IDisposable
         using FrameworkDartTester tester = PumpField(
             new EditableText(
                 controller: controller,
-                autofocus: true));
+                autofocus: true,
+                focusNode: new FocusNode(),
+                style: new TextStyle(FontSize: 14.0, Color: new Color(0xFF000000)),
+                cursorColor: new Color(0xFF000000),
+                backgroundCursorColor: new Color(0xFF9E9E9E)));
 
         Assert.True(HostTextInput.InsertText("abcd"));
         Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowLeft)));
@@ -494,8 +544,11 @@ public sealed class TextInputTests : IDisposable
         using FrameworkDartTester tester = PumpField(
             new EditableText(
                 controller: controller,
-                enabled: false,
-                autofocus: true));
+                focusNode: new FocusNode(canRequestFocus: false),
+                autofocus: true,
+                style: new TextStyle(FontSize: 14.0, Color: new Color(0xFF000000)),
+                cursorColor: new Color(0xFF000000),
+                backgroundCursorColor: new Color(0xFF9E9E9E)));
 
         bool textHandled = HostTextInput.InsertText("x");
         bool compositionUpdateHandled = HostTextInput.SetMarkedText("y");
@@ -519,7 +572,11 @@ public sealed class TextInputTests : IDisposable
             new EditableText(
                 controller: controller,
                 autofocus: true,
-                onChanged: value => changes.Add(value)));
+                onChanged: value => changes.Add(value),
+                focusNode: new FocusNode(),
+                style: new TextStyle(FontSize: 14.0, Color: new Color(0xFF000000)),
+                cursorColor: new Color(0xFF000000),
+                backgroundCursorColor: new Color(0xFF9E9E9E)));
 
         Assert.True(HostTextInput.InsertText("a"));
         Assert.True(HostTextInput.InsertText("b"));

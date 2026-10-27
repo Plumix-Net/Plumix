@@ -63,7 +63,6 @@ public sealed class TextField : StatefulWidget
         MouseCursor? mouseCursor = null,
         TextFieldCounterBuilder? buildCounter = null,
         bool canRequestFocus = true,
-        FocusOnKeyEventCallback? onKeyEvent = null,
         IReadOnlyList<TextInputFormatter>? inputFormatters = null,
         IReadOnlyList<string>? autofillHints = null,
         double cursorWidth = 2.0,
@@ -134,7 +133,6 @@ public sealed class TextField : StatefulWidget
         MouseCursor = mouseCursor;
         BuildCounter = buildCounter;
         CanRequestFocus = canRequestFocus;
-        OnKeyEvent = onKeyEvent;
         InputFormatters = inputFormatters;
         AutofillHints = autofillHints;
         CursorWidth = cursorWidth;
@@ -200,7 +198,6 @@ public sealed class TextField : StatefulWidget
     public MouseCursor? MouseCursor { get; }
     public TextFieldCounterBuilder? BuildCounter { get; }
     public bool CanRequestFocus { get; }
-    public FocusOnKeyEventCallback? OnKeyEvent { get; }
     public IReadOnlyList<TextInputFormatter>? InputFormatters { get; }
 
     /// <summary>A list of strings that helps the autofill service identify the type of this field.
@@ -309,6 +306,29 @@ public sealed class TextField : StatefulWidget
             _selectionGestureDetectorBuilder = new TextFieldSelectionGestureDetectorBuilder(this);
             AttachController(Current.Controller);
             AttachFocusNode(Current.FocusNode);
+            _focusNode!.CanRequestFocus = Current.CanRequestFocus && IsEnabled;
+        }
+
+        private bool IsEnabled => Current.Enabled ?? Current.Decoration?.Enabled ?? true;
+
+        /// Dart's `_canRequestFocus`: directional navigation can always focus the field.
+        private bool CanRequestFocus
+        {
+            get
+            {
+                NavigationMode mode = MediaQuery.MaybeNavigationModeOf(Context) ?? NavigationMode.Traditional;
+                return mode switch
+                {
+                    NavigationMode.Directional => true,
+                    _ => Current.CanRequestFocus && IsEnabled,
+                };
+            }
+        }
+
+        public override void DidChangeDependencies()
+        {
+            base.DidChangeDependencies();
+            _focusNode!.CanRequestFocus = CanRequestFocus;
         }
 
         private bool ShouldShowSelectionHandles(SelectionChangedCause? cause)
@@ -397,6 +417,7 @@ public sealed class TextField : StatefulWidget
                 AttachController(Current.Controller, previousValue);
             }
             if (!ReferenceEquals(old.FocusNode, Current.FocusNode)) { DetachFocusNode(); AttachFocusNode(Current.FocusNode); }
+            _focusNode!.CanRequestFocus = CanRequestFocus;
         }
 
         public override Widget Build(BuildContext context)
@@ -454,25 +475,19 @@ public sealed class TextField : StatefulWidget
 
             Widget editable = new EditableText(
                 controller: _controller!,
-                focusNode: _focusNode,
+                focusNode: _focusNode!,
+                style: baseStyle,
+                cursorColor: cursorColor,
+                backgroundCursorColor: CupertinoColors.InactiveGray,
                 onSelectionHandleTapped: HandleSelectionHandleTapped,
                 dragStartBehavior: Current.DragStartBehavior,
                 onChanged: Current.OnChanged,
                 autofocus: Current.Autofocus,
-                enabled: enabled,
-                multiline: multiline,
                 minLines: Current.MinLines,
                 maxLines: Current.MaxLines,
                 expands: Current.Expands,
-                fontSize: baseStyle.FontSize ?? 16,
-                textColor: baseStyle.Color ?? theme.ColorScheme.OnSurface,
-                backgroundColor: Colors.Transparent,
-                focusedBackgroundColor: Colors.Transparent,
-                cursorColor: cursorColor,
                 selectionColor: selectionColor,
                 mouseCursor: _resolvedMouseCursor,
-                padding: new Avalonia.Thickness(0),
-                style: baseStyle,
                 readOnly: Current.ReadOnly || !enabled,
                 obscureText: Current.ObscureText,
                 obscuringCharacter: Current.ObscuringCharacter,
@@ -489,8 +504,6 @@ public sealed class TextField : StatefulWidget
                 scrollPadding: Current.ScrollPadding,
                 autocorrect: Current.Autocorrect,
                 enableSuggestions: Current.EnableSuggestions,
-                canRequestFocus: Current.CanRequestFocus,
-                onKeyEvent: Current.OnKeyEvent,
                 inputFormatters: formatters,
                 autofillHints: Current.AutofillHints,
                 cursorWidth: Current.CursorWidth,
@@ -511,7 +524,6 @@ public sealed class TextField : StatefulWidget
                 showSelectionHandles: _showSelectionHandles,
                 onTapOutside: Current.OnTapOutside,
                 rendererIgnoresPointer: true,
-                backgroundCursorColor: CupertinoColors.InactiveGray,
                 autocorrectionTextRectColor: theme.Platform == TargetPlatform.IOS ? selectionColor : null,
                 restorationId: "editable",
                 key: _editableTextKey);

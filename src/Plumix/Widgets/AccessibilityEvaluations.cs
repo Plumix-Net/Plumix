@@ -553,8 +553,8 @@ public class MinimumTextContrastEvaluation : ContrastEvaluation
         }
         else if (widget is EditableText editableText)
         {
-            isBold = editableText.Style?.FontWeight == FontWeight.Bold;
-            fontSize = editableText.Style?.FontSize;
+            isBold = editableText.Style.FontWeight == FontWeight.Bold;
+            fontSize = editableText.Style.FontSize;
         }
         else
         {

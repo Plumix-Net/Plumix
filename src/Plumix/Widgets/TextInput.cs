@@ -1071,26 +1071,18 @@ public sealed partial class EditableText : StatefulWidget
 {
     public EditableText(
         TextEditingController controller,
-        FocusNode? focusNode = null,
+        FocusNode focusNode,
+        TextStyle style,
+        Color cursorColor,
+        Color backgroundCursorColor,
         UndoHistoryController? undoController = null,
-        string? placeholder = null,
         Action<string>? onChanged = null,
         bool autofocus = false,
-        bool enabled = true,
-        bool multiline = false,
         int? minLines = null,
-        int? maxLines = null,
+        int? maxLines = 1,
         bool expands = false,
-        double fontSize = 14,
-        Color? textColor = null,
-        Color? placeholderColor = null,
-        Color? backgroundColor = null,
-        Color? focusedBackgroundColor = null,
-        Color? cursorColor = null,
         Color? selectionColor = null,
         MouseCursor? mouseCursor = null,
-        Thickness? padding = null,
-        TextStyle? style = null,
         StrutStyle? strutStyle = null,
         bool readOnly = false,
         bool obscureText = false,
@@ -1109,11 +1101,9 @@ public sealed partial class EditableText : StatefulWidget
         ScrollPhysics? scrollPhysics = null,
         bool? autocorrect = null,
         bool enableSuggestions = true,
-        bool canRequestFocus = true,
-        FocusOnKeyEventCallback? onKeyEvent = null,
         IReadOnlyList<TextInputFormatter>? inputFormatters = null,
         bool? showCursor = null,
-        double cursorWidth = 1.0,
+        double cursorWidth = 2.0,
         double? cursorHeight = null,
         Radius? cursorRadius = null,
         BoxHeightStyle? selectionHeightStyle = null,
@@ -1121,7 +1111,7 @@ public sealed partial class EditableText : StatefulWidget
         bool cursorOpacityAnimates = false,
         Point? cursorOffset = null,
         bool paintCursorAboveText = false,
-        bool enableInteractiveSelection = true,
+        bool? enableInteractiveSelection = null,
         bool? selectAllOnFocus = null,
         ToolbarOptions? toolbarOptions = null,
         EditableTextContextMenuBuilder? contextMenuBuilder = null,
@@ -1133,7 +1123,6 @@ public sealed partial class EditableText : StatefulWidget
         Action<TextSelection, SelectionChangedCause?>? onSelectionChanged = null,
         bool rendererIgnoresPointer = false,
         IReadOnlyList<string>? autofillHints = null,
-        string? autofillHintText = null,
         IAutofillClient? autofillClient = null,
         Brightness keyboardAppearance = Brightness.Light,
         bool enableIMEPersonalizedLearning = true,
@@ -1142,7 +1131,6 @@ public sealed partial class EditableText : StatefulWidget
         bool scribbleEnabled = true,
         bool stylusHandwritingEnabled = DefaultStylusHandwritingEnabled,
         Clip clipBehavior = Clip.HardEdge,
-        Color? backgroundCursorColor = null,
         Color? autocorrectionTextRectColor = null,
         ScrollBehavior? scrollBehavior = null,
         DragStartBehavior dragStartBehavior = DragStartBehavior.Start,
@@ -1154,7 +1142,12 @@ public sealed partial class EditableText : StatefulWidget
         Key? key = null) : base(key)
     {
         if (string.IsNullOrEmpty(obscuringCharacter) || obscuringCharacter.Length != 1)
-            throw new ArgumentException("obscuringCharacter must contain exactly one UTF-16 character.", nameof(obscuringCharacter));
+        {
+            throw new ArgumentException(
+                "obscuringCharacter must contain exactly one UTF-16 character.",
+                nameof(obscuringCharacter));
+        }
+
         if (maxLines.HasValue && maxLines.Value <= 0) throw new ArgumentOutOfRangeException(nameof(maxLines));
         if (minLines.HasValue && minLines.Value <= 0) throw new ArgumentOutOfRangeException(nameof(minLines));
         if (maxLines.HasValue && minLines.HasValue && minLines.Value > maxLines.Value)
@@ -1163,25 +1156,17 @@ public sealed partial class EditableText : StatefulWidget
             throw new ArgumentException("minLines and maxLines must be null when expands is true.", nameof(expands));
         Controller = controller;
         FocusNode = focusNode;
+        Style = style;
+        CursorColor = cursorColor;
+        BackgroundCursorColor = backgroundCursorColor;
         UndoController = undoController;
-        Placeholder = placeholder;
         OnChanged = onChanged;
         Autofocus = autofocus;
-        Enabled = enabled;
-        Multiline = multiline;
         MinLines = minLines;
-        MaxLines = multiline ? maxLines : 1;
+        MaxLines = maxLines;
         Expands = expands;
-        FontSize = fontSize;
-        TextColor = textColor ?? new Color(0xFF000000);
-        PlaceholderColor = placeholderColor ?? new Color(0xFF757575);
-        BackgroundColor = backgroundColor ?? new Color(0xFFF5F5F5);
-        FocusedBackgroundColor = focusedBackgroundColor ?? new Color(0xFFE8F0FE);
-        CursorColor = cursorColor;
         SelectionColor = selectionColor;
         MouseCursor = mouseCursor;
-        Padding = padding ?? new Thickness(8, 6);
-        Style = style;
         StrutStyle = strutStyle;
         ReadOnly = readOnly;
         ObscureText = obscureText;
@@ -1192,7 +1177,7 @@ public sealed partial class EditableText : StatefulWidget
         TextDirection = textDirection;
         AutofillHints = ReferenceEquals(autofillHints, AutofillDisabled) ? null : autofillHints ?? [];
         AutofillClient = autofillClient;
-        KeyboardType = keyboardType ?? InferKeyboardType(AutofillHints, multiline);
+        KeyboardType = keyboardType ?? InferKeyboardType(AutofillHints, multiline: maxLines != 1);
         TextInputAction = textInputAction;
         TextCapitalization = textCapitalization;
         SmartDashesType = smartDashesType ?? (obscureText ? SmartDashesType.Disabled : SmartDashesType.Enabled);
@@ -1202,8 +1187,6 @@ public sealed partial class EditableText : StatefulWidget
         ScrollPhysics = scrollPhysics;
         Autocorrect = autocorrect ?? InferAutocorrect(AutofillHints);
         EnableSuggestions = enableSuggestions;
-        CanRequestFocus = canRequestFocus;
-        OnKeyEvent = onKeyEvent;
         // Dart prepends the single-line formatter to a one-line field's formatters.
         InputFormatters = MaxLines == 1
             ? [FilteringTextInputFormatter.SingleLineFormatter, .. inputFormatters ?? []]
@@ -1212,7 +1195,7 @@ public sealed partial class EditableText : StatefulWidget
         OnTapUpOutside = onTapUpOutside;
         GroupId = groupId ?? typeof(EditableText);
         OnAppPrivateCommand = onAppPrivateCommand;
-        ShowCursor = showCursor;
+        ShowCursor = showCursor ?? !readOnly;
         CursorWidth = cursorWidth;
         CursorHeight = cursorHeight;
         CursorRadius = cursorRadius ?? Radius.Zero;
@@ -1221,7 +1204,7 @@ public sealed partial class EditableText : StatefulWidget
         CursorOpacityAnimates = cursorOpacityAnimates;
         CursorOffset = cursorOffset ?? default;
         PaintCursorAboveText = paintCursorAboveText;
-        EnableInteractiveSelection = enableInteractiveSelection;
+        EnableInteractiveSelection = enableInteractiveSelection ?? (!readOnly || !obscureText);
         SelectAllOnFocus = selectAllOnFocus ?? DefaultSelectAllOnFocus();
         ToolbarOptions = selectionControls is ITextSelectionHandleControls && toolbarOptions is null
             ? ToolbarOptions.Empty
@@ -1240,7 +1223,6 @@ public sealed partial class EditableText : StatefulWidget
         }
         OnSelectionChanged = onSelectionChanged;
         RendererIgnoresPointer = rendererIgnoresPointer;
-        AutofillHintText = autofillHintText;
         KeyboardAppearance = keyboardAppearance;
         EnableIMEPersonalizedLearning = enableIMEPersonalizedLearning;
         EnableInlinePrediction = enableInlinePrediction;
@@ -1248,46 +1230,35 @@ public sealed partial class EditableText : StatefulWidget
         ScribbleEnabled = scribbleEnabled;
         StylusHandwritingEnabled = stylusHandwritingEnabled;
         ClipBehavior = clipBehavior;
-        BackgroundCursorColor = backgroundCursorColor;
         AutocorrectionTextRectColor = autocorrectionTextRectColor;
         ScrollBehavior = scrollBehavior;
         DragStartBehavior = dragStartBehavior;
         RestorationId = restorationId;
     }
 
+    /// <summary>Controls the text being edited.</summary>
     public TextEditingController Controller { get; }
 
-    public FocusNode? FocusNode { get; }
-    public UndoHistoryController? UndoController { get; }
+    /// <summary>Controls whether this widget has keyboard focus.</summary>
+    public FocusNode FocusNode { get; }
 
-    public string? Placeholder { get; }
+    public UndoHistoryController? UndoController { get; }
 
     public Action<string>? OnChanged { get; }
 
     public bool Autofocus { get; }
 
-    public bool Enabled { get; }
-
-    public bool Multiline { get; }
     public int? MinLines { get; }
     public int? MaxLines { get; }
     public bool Expands { get; }
 
-    public double FontSize { get; }
-
-    public Color TextColor { get; }
-
-    public Color PlaceholderColor { get; }
-
-    public Color BackgroundColor { get; }
-
-    public Color FocusedBackgroundColor { get; }
-    public Color? CursorColor { get; }
+    /// <summary>The color to use when painting the cursor.</summary>
+    public Color CursorColor { get; }
     public Color? SelectionColor { get; }
     public MouseCursor? MouseCursor { get; }
 
-    public Thickness Padding { get; }
-    public TextStyle? Style { get; }
+    /// <summary>The text style to use for the editable text.</summary>
+    public TextStyle Style { get; }
     public StrutStyle? StrutStyle { get; }
     public bool ReadOnly { get; }
     public bool ObscureText { get; }
@@ -1306,8 +1277,6 @@ public sealed partial class EditableText : StatefulWidget
     public ScrollPhysics? ScrollPhysics { get; }
     public bool Autocorrect { get; }
     public bool EnableSuggestions { get; }
-    public bool CanRequestFocus { get; }
-    public FocusOnKeyEventCallback? OnKeyEvent { get; }
 
     /// <summary>Formatters applied, in order, to every user-driven edit.</summary>
     public IReadOnlyList<TextInputFormatter>? InputFormatters { get; }
@@ -1328,7 +1297,8 @@ public sealed partial class EditableText : StatefulWidget
     /// <c>EditableText.onAppPrivateCommand</c>.</summary>
     public AppPrivateCommandCallback? OnAppPrivateCommand { get; }
 
-    public bool? ShowCursor { get; }
+    /// <summary>Whether to show the cursor; defaults to <c>!readOnly</c>.</summary>
+    public bool ShowCursor { get; }
     public double CursorWidth { get; }
     /// <summary>Overrides the caret height; <c>null</c> uses the preferred line height.</summary>
     public double? CursorHeight { get; }
@@ -1343,6 +1313,9 @@ public sealed partial class EditableText : StatefulWidget
     /// <summary>Whether to enable user interface affordances for changing the text selection.
     /// Dart's <c>selectionEnabled</c>.</summary>
     public bool SelectionEnabled => EnableInteractiveSelection;
+
+    /// Dart's `_userSelectionEnabled`: a read-only obscured field never lets the user select.
+    internal bool UserSelectionEnabled => EnableInteractiveSelection && (!ReadOnly || !ObscureText);
     public bool SelectAllOnFocus { get; }
     public ToolbarOptions ToolbarOptions { get; }
     public EditableTextContextMenuBuilder? ContextMenuBuilder { get; }
@@ -1367,7 +1340,6 @@ public sealed partial class EditableText : StatefulWidget
     /// <summary>The <see cref="IAutofillClient"/> that directs the autofill of this field, when it
     /// is not the <see cref="EditableTextState"/> itself.</summary>
     public IAutofillClient? AutofillClient { get; }
-    public string? AutofillHintText { get; }
     public Brightness KeyboardAppearance { get; }
     public bool EnableIMEPersonalizedLearning { get; }
     public bool? EnableInlinePrediction { get; }
@@ -1378,9 +1350,7 @@ public sealed partial class EditableText : StatefulWidget
 
     /// <summary>The color of the regular cursor while the floating cursor is shown (Dart's
     /// <c>backgroundCursorColor</c>, typically <c>CupertinoColors.inactiveGray</c>).</summary>
-    /// <remarks>Dart declares it <c>required</c>; Plumix keeps it optional like the widget's other
-    /// C#-defaulted colors, and a null color paints no background caret.</remarks>
-    public Color? BackgroundCursorColor { get; }
+    public Color BackgroundCursorColor { get; }
 
     /// <summary>The color of the rect the iOS keyboard asks for before autocorrecting a range;
     /// null disables painting it.</summary>
@@ -1644,7 +1614,6 @@ public sealed partial class EditableText : StatefulWidget
 
         private TextEditingController? _controller;
         private FocusNode? _focusNode;
-        private bool _ownsFocusNode;
         private readonly ValueNotifier<bool> _cursorVisibilityNotifier = new(false);
         private readonly GlobalKey _editableRenderKey = new EditableRenderKey(Guid.NewGuid());
         private RenderEditable? _renderEditable;
@@ -1714,8 +1683,7 @@ public sealed partial class EditableText : StatefulWidget
                     ? new AutofillConfiguration(
                         uniqueIdentifier: AutofillId,
                         autofillHints: autofillHints,
-                        currentEditingValue: CurrentTextEditingValue,
-                        hintText: Widget.AutofillHintText)
+                        currentEditingValue: CurrentTextEditingValue)
                     : AutofillConfiguration.Disabled;
                 // Dart reads `View.of(context)`; a tree mounted outside a `View` (the hand-rolled test
                 // harnesses) sends no view id, and the host plugin falls back to view 0.
@@ -1729,7 +1697,7 @@ public sealed partial class EditableText : StatefulWidget
                     smartDashesType: Widget.SmartDashesType,
                     smartQuotesType: Widget.SmartQuotesType,
                     enableSuggestions: Widget.EnableSuggestions,
-                    enableInteractiveSelection: Widget.EnableInteractiveSelection,
+                    enableInteractiveSelection: Widget.UserSelectionEnabled,
                     inputAction: Widget.TextInputAction
                                  ?? (Equals(Widget.KeyboardType, TextInputType.Multiline)
                                      ? TextInputActionType.Newline
@@ -1753,7 +1721,7 @@ public sealed partial class EditableText : StatefulWidget
                 case TextInputActionType.Newline:
                     // If this is a multiline EditableText, do nothing for a "newline" action; the
                     // newline is already inserted. Otherwise, finalize editing.
-                    if (!Widget.Multiline)
+                    if (!IsMultiline)
                     {
                         FinalizeEditing(action, shouldUnfocus: true);
                     }
@@ -2078,7 +2046,7 @@ public sealed partial class EditableText : StatefulWidget
 
             if (!ReferenceEquals(oldEditableText.FocusNode, Widget.FocusNode))
             {
-                DetachFocusNode(disposeOwned: true);
+                DetachFocusNode();
                 AttachFocusNode(Widget.FocusNode);
             }
             if (!ReferenceEquals(oldEditableText.AutofillClient, Widget.AutofillClient))
@@ -2088,9 +2056,7 @@ public sealed partial class EditableText : StatefulWidget
             }
 
             DidUpdateWidgetForSelectionOverlay(oldEditableText);
-            if (!Equals(Widget.Style, oldEditableText.Style)
-                || Widget.FontSize != oldEditableText.FontSize
-                || !Equals(Widget.TextColor, oldEditableText.TextColor))
+            if (!Equals(Widget.Style, oldEditableText.Style))
             {
                 // The _textInputConnection will pick up the new style when it attaches in
                 // _openInputConnection.
@@ -2180,7 +2146,7 @@ public sealed partial class EditableText : StatefulWidget
             _appLifecycleListener?.Dispose();
             FocusManager.Instance.RemoveListener(ResetJustResumed);
             DetachController();
-            DetachFocusNode(disposeOwned: true);
+            DetachFocusNode();
             _cursorTimer?.Cancel();
             _cursorTimer = null;
             _backingCursorBlinkOpacityController?.Dispose();
@@ -2191,38 +2157,24 @@ public sealed partial class EditableText : StatefulWidget
             base.Dispose();
         }
 
-        /// Whether the field shows its <see cref="EditableText.Placeholder"/> instead of its text.
-        private bool ShowPlaceholder =>
-            string.IsNullOrEmpty(_controller!.Text) && !string.IsNullOrEmpty(Widget.Placeholder);
-
-        /// Dart's `_style`: <see cref="EditableText.Style"/> (over the widget's C#-only font size and
-        /// text color) merged with a bold font weight when <see cref="MediaQuery.BoldTextOf"/> asks
-        /// for it. Set in `didChangeDependencies` and when the style changes in `didUpdateWidget`.
+        /// Dart's `_style`: <see cref="EditableText.Style"/> merged with a bold font weight when
+        /// <see cref="MediaQuery.BoldTextOf"/> asks for it. Set in `didChangeDependencies` and when the
+        /// style changes in `didUpdateWidget`.
         private TextStyle _style = new();
 
         private TextStyle ResolveStyle()
         {
-            TextStyle style = Widget.Style ?? new TextStyle();
-            style = style.CopyWith(fontSize: style.FontSize ?? Widget.FontSize, color: style.Color ?? Widget.TextColor);
             return MediaQuery.BoldTextOf(Context)
-                ? style.Merge(new TextStyle(FontWeight: FontWeight.Bold))
-                : style;
+                ? Widget.Style.Merge(new TextStyle(FontWeight: FontWeight.Bold))
+                : Widget.Style;
         }
 
         /// Dart's `EditableText.strutStyle` getter: built from the widget's style (before the bold
         /// merge) with a forced strut height unless the widget carries its own strut.
         private StrutStyle EditableStrutStyle()
         {
-            TextStyle style = Widget.Style ?? new TextStyle();
-            style = style.CopyWith(fontSize: style.FontSize ?? Widget.FontSize);
-            return Widget.StrutStyle?.InheritFromTextStyle(style)
-                   ?? StrutStyle.FromTextStyle(style, forceStrutHeight: true);
-        }
-
-        /// The style the text is laid out with: `_style`, recolored for the C#-only placeholder.
-        private TextStyle EffectiveTextStyle(bool showPlaceholder)
-        {
-            return showPlaceholder ? _style.CopyWith(color: Widget.PlaceholderColor) : _style;
+            return Widget.StrutStyle?.InheritFromTextStyle(Widget.Style)
+                   ?? StrutStyle.FromTextStyle(Widget.Style, forceStrutHeight: true);
         }
 
         // The text spacing overrides the last build read, so a value pushed ahead of the rebuild
@@ -2233,29 +2185,22 @@ public sealed partial class EditableText : StatefulWidget
 
         /// Dart's `_OverridingTextStyleTextSpanUtils.applyTextSpacingOverrides(textSpan: buildTextSpan())`,
         /// the span `build` hands to `_Editable`.
-        private TextSpan BuildEditableTextSpan(bool showPlaceholder)
+        private TextSpan BuildEditableTextSpan()
         {
             return OverridingTextStyleTextSpanUtils.ApplyTextSpacingOverrides(
                 lineHeightScaleFactor: _lineHeightScaleFactor,
                 letterSpacing: _letterSpacing,
                 wordSpacing: _wordSpacing,
-                textSpan: BuildTextSpan(showPlaceholder));
+                textSpan: BuildTextSpan());
         }
 
         /// Builds the text span the editable displays. Dart's `EditableTextState.buildTextSpan`:
         /// obscured text is replaced by the obscuring character, received spell check results style the
         /// misspelled words, and otherwise the controller builds the span, underlining the composing
-        /// region while the field is focused and editable. A shown placeholder is C#-only.
-        public TextSpan BuildTextSpan() => BuildTextSpan(ShowPlaceholder);
-
-        private TextSpan BuildTextSpan(bool showPlaceholder)
+        /// region while the field is focused and editable.
+        public TextSpan BuildTextSpan()
         {
-            TextStyle style = EffectiveTextStyle(showPlaceholder);
-            if (showPlaceholder)
-            {
-                return new TextSpan(style: style, text: Widget.Placeholder);
-            }
-
+            TextStyle style = _style;
             TextEditingValue value = _controller!.Value;
             if (Widget.ObscureText)
             {
@@ -2284,23 +2229,18 @@ public sealed partial class EditableText : StatefulWidget
         }
 
         /// Dart's `EditableTextState._cursorColor`: the cursor color faded by the blink opacity.
-        private Color CursorColor(DefaultSelectionStyle selectionStyle)
+        private Color CursorColor()
         {
-            Color cursorColor = Widget.CursorColor ?? selectionStyle.CursorColor ?? Widget.TextColor;
-            _resolvedCursorColor = cursorColor;
+            Color cursorColor = Widget.CursorColor;
             double effectiveOpacity = Math.Min(cursorColor.Alpha / 255.0, CursorBlinkOpacityController.Value);
             return cursorColor.WithOpacity(effectiveOpacity);
         }
 
         public override Widget Build(BuildContext context)
         {
-            DefaultSelectionStyle selectionStyle = DefaultSelectionStyle.Of(context);
             _lineHeightScaleFactor = MediaQuery.MaybeLineHeightScaleFactorOverrideOf(context);
             _letterSpacing = MediaQuery.MaybeLetterSpacingOverrideOf(context);
             _wordSpacing = MediaQuery.MaybeWordSpacingOverrideOf(context);
-            bool showPlaceholder = ShowPlaceholder;
-            var backgroundColor = _focusNode!.HasFocus ? Widget.FocusedBackgroundColor : Widget.BackgroundColor;
-            TextStyle style = EffectiveTextStyle(showPlaceholder);
             UpdateCursorVisibility();
             SemanticsInputType inputType;
             if (Widget.KeyboardType.Equals(TextInputType.Phone))
@@ -2322,22 +2262,20 @@ public sealed partial class EditableText : StatefulWidget
 
             Widget BuildEditable(ViewportOffset offset) => new EditableRenderObjectWidget(
                 key: _editableRenderKey,
-                inlineSpan: BuildEditableTextSpan(showPlaceholder),
-                value: showPlaceholder
-                    ? new TextEditingValue(selection: TextSelection.Collapsed(0))
-                    : _controller!.Value,
+                inlineSpan: BuildEditableTextSpan(),
+                value: _controller!.Value,
                 startHandleLayerLink: _startHandleLayerLink,
                 endHandleLayerLink: _endHandleLayerLink,
-                cursorColor: CursorColor(selectionStyle),
+                cursorColor: CursorColor(),
                 showCursor: _cursorVisibilityNotifier,
                 forceLine: true,
                 readOnly: Widget.ReadOnly,
-                hasFocus: _focusNode.HasFocus,
+                hasFocus: _focusNode!.HasFocus,
                 maxLines: Widget.MaxLines,
                 minLines: Widget.MinLines,
                 expands: Widget.Expands,
                 strutStyle: EditableStrutStyle().Merge(new StrutStyle(Height: _lineHeightScaleFactor)),
-                selectionColor: Widget.SelectionColor ?? selectionStyle.SelectionColor,
+                selectionColor: Widget.SelectionColor,
                 textScaler: MediaQuery.TextScalerOf(context),
                 textAlign: Widget.TextAlign,
                 textDirection: Widget.TextDirection ?? Directionality.Of(context),
@@ -2352,7 +2290,7 @@ public sealed partial class EditableText : StatefulWidget
                 paintCursorAboveText: Widget.PaintCursorAboveText,
                 selectionHeightStyle: Widget.SelectionHeightStyle,
                 selectionWidthStyle: Widget.SelectionWidthStyle,
-                enableInteractiveSelection: Widget.EnableInteractiveSelection,
+                enableInteractiveSelection: Widget.UserSelectionEnabled,
                 textSelectionDelegate: this,
                 devicePixelRatio: MediaQuery.MaybeDevicePixelRatioOf(context) ?? 1.0,
                 clipBehavior: Widget.ClipBehavior,
@@ -2386,15 +2324,13 @@ public sealed partial class EditableText : StatefulWidget
                     actions: ActionsMap,
                     child: new Builder(builder: actionsContext => new TextFieldTapRegion(
                         groupId: Widget.GroupId,
-                        onTapOutside: _focusNode.HasFocus
+                        onTapOutside: _focusNode!.HasFocus
                             ? @event => OnTapOutside(actionsContext, @event)
                             : null,
                         onTapUpOutside: @event => OnTapUpOutside(actionsContext, @event),
                         debugLabel: Constants.KReleaseMode ? null : "EditableText",
                         child: new MouseRegion(
-                            cursor: Widget.MouseCursor
-                                    ?? selectionStyle.MouseCursor
-                                    ?? SystemMouseCursors.Text,
+                            cursor: Widget.MouseCursor ?? SystemMouseCursors.Text,
                             child: new UndoHistory<TextEditingValue>(
                                 value: Widget.Controller,
                                 onTriggered: value =>
@@ -2409,13 +2345,8 @@ public sealed partial class EditableText : StatefulWidget
                                 child: new Focus(
                                     focusNode: _focusNode,
                                     includeSemantics: false,
-                                    canRequestFocus: Widget.Enabled && Widget.CanRequestFocus,
-                                    onKeyEvent: Widget.OnKeyEvent,
                                     debugLabel: Constants.KReleaseMode ? null : "EditableText",
-                                    child: new Container(
-                                        color: backgroundColor,
-                                        padding: Widget.Padding,
-                                        child: BuildScrollable(context, BuildViewport)))))))));
+                                    child: BuildScrollable(context, BuildViewport))))))));
         }
 
         /// Dart's `shouldChangeUndoStack` for the text field's `UndoHistory`.
@@ -2464,7 +2395,7 @@ public sealed partial class EditableText : StatefulWidget
             {
                 OpenInputConnection();
             }
-            else if (Widget.Enabled && Widget.CanRequestFocus)
+            else
             {
                 FlagInternalFocus();
                 _focusNode.RequestFocus();
@@ -2490,15 +2421,14 @@ public sealed partial class EditableText : StatefulWidget
             _controller = null;
         }
 
-        private void AttachFocusNode(FocusNode? externalNode)
+        private void AttachFocusNode(FocusNode focusNode)
         {
-            _focusNode = externalNode ?? new FocusNode();
-            _ownsFocusNode = externalNode is null;
+            _focusNode = focusNode;
             _hadFocus = _focusNode.HasFocus;
             _focusNode.AddListener(HandleFocusNodeChanged);
         }
 
-        private void DetachFocusNode(bool disposeOwned)
+        private void DetachFocusNode()
         {
             if (_focusNode == null)
             {
@@ -2506,19 +2436,7 @@ public sealed partial class EditableText : StatefulWidget
             }
 
             _focusNode.RemoveListener(HandleFocusNodeChanged);
-
-            if (_ownsFocusNode)
-            {
-                _focusNode.OnKeyEvent = null;
-            }
-
-            if (disposeOwned && _ownsFocusNode)
-            {
-                _focusNode.Dispose();
-            }
-
             _focusNode = null;
-            _ownsFocusNode = false;
         }
 
         private void HandleFocusNodeChanged()
@@ -2576,7 +2494,7 @@ public sealed partial class EditableText : StatefulWidget
             TextSelection? selection = null;
             bool shouldSelectAll = Widget.SelectAllOnFocus
                                    && Widget.SelectionEnabled
-                                   && !Widget.Multiline
+                                   && !IsMultiline
                                    && !_nextFocusChangeIsInternal
                                    && !_justResumed;
             // Reset _justResumed as soon as it has been consumed.
@@ -2594,45 +2512,6 @@ public sealed partial class EditableText : StatefulWidget
             }
 
             return selection;
-        }
-
-        private static string BuildDisplayText(
-            string text,
-            bool showPlaceholder,
-            string? placeholder,
-            bool hasFocus,
-            TextSelection selection,
-            TextRange? composing)
-        {
-            if (showPlaceholder)
-            {
-                return placeholder ?? string.Empty;
-            }
-
-            if (!hasFocus)
-            {
-                return text;
-            }
-
-            if (composing.HasValue)
-            {
-                var composingRange = composing.Value.Clamp(text.Length);
-                if (!composingRange.IsCollapsed)
-                {
-                    return text[..composingRange.Start] + "{" + text[composingRange.Start..composingRange.End] + "}" + text[composingRange.End..];
-                }
-            }
-
-            var clampedSelection = selection.Clamp(text.Length);
-            if (clampedSelection.IsCollapsed)
-            {
-                int caretOffset = clampedSelection.ExtentOffset;
-                return text[..caretOffset] + "|" + text[caretOffset..];
-            }
-
-            int start = clampedSelection.Start;
-            int end = clampedSelection.End;
-            return text[..start] + "[" + text[start..end] + "]" + text[end..];
         }
 
         public SuggestionSpan? FindSuggestionSpanAtCursorIndex(int cursorIndex)

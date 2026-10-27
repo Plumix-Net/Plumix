@@ -476,7 +476,12 @@ public sealed class AutofillTests : IDisposable
         var focusNode = new FocusNode();
         using var harness = new WidgetRenderHarness(new Directionality(
             TextDirection.Ltr,
-            new AutofillGroup(new EditableText(new TextEditingController(), focusNode: focusNode))));
+            new AutofillGroup(new EditableText(
+                new TextEditingController(),
+                focusNode: focusNode,
+                style: new TextStyle(FontSize: 14.0, Color: new Color(0xFF000000)),
+                cursorColor: new Color(0xFF000000),
+                backgroundCursorColor: new Color(0xFF9E9E9E)))));
         harness.Pump(new Size(300, 100));
         _log.Clear();
 
@@ -496,7 +501,10 @@ public sealed class AutofillTests : IDisposable
             new AutofillGroup(new EditableText(
                 new TextEditingController(),
                 focusNode: focusNode,
-                autofillHints: EditableText.AutofillDisabled))));
+                autofillHints: EditableText.AutofillDisabled,
+                style: new TextStyle(FontSize: 14.0, Color: new Color(0xFF000000)),
+                cursorColor: new Color(0xFF000000),
+                backgroundCursorColor: new Color(0xFF9E9E9E)))));
         harness.Pump(new Size(300, 100));
         _log.Clear();
 
@@ -517,7 +525,13 @@ public sealed class AutofillTests : IDisposable
             new AutofillGroup(new Builder(context =>
             {
                 group = AutofillGroup.Of(context);
-                return new EditableText(controller, autofillHints: [AutofillHints.Username]);
+                return new EditableText(
+                    controller,
+                    autofillHints: [AutofillHints.Username],
+                    focusNode: new FocusNode(),
+                    style: new TextStyle(FontSize: 14.0, Color: new Color(0xFF000000)),
+                    cursorColor: new Color(0xFF000000),
+                    backgroundCursorColor: new Color(0xFF9E9E9E));
             }))));
         harness.Pump(new Size(300, 100));
 
@@ -613,7 +627,11 @@ public sealed class AutofillTests : IDisposable
         new EditableText(
             new TextEditingController(text: id),
             autofillHints: hints,
-            key: key);
+            key: key,
+            focusNode: new FocusNode(),
+            style: new TextStyle(FontSize: 14.0, Color: new Color(0xFF000000)),
+            cursorColor: new Color(0xFF000000),
+            backgroundCursorColor: new Color(0xFF9E9E9E));
 
     private void Inbound(MethodCall call)
     {

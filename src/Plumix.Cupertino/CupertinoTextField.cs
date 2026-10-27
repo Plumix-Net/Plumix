@@ -661,7 +661,7 @@ public sealed class CupertinoTextField : StatefulWidget
 }
 
 internal sealed class CupertinoTextFieldState
-    : RestorationState<CupertinoTextField>, ITextSelectionGestureDetectorBuilderDelegate
+    : RestorationState<CupertinoTextField>, ITextSelectionGestureDetectorBuilderDelegate, IAutofillClient
 {
     private readonly GlobalKey<EditableText.EditableTextState> _editableTextKey =
         new GlobalObjectKey<EditableText.EditableTextState>(new object());
@@ -722,6 +722,40 @@ internal sealed class CupertinoTextFieldState
         _focusNode!.CanRequestFocus = Current.Enabled;
     }
 
+    // AutofillClient implementation start.
+
+    /// <inheritdoc/>
+    public string AutofillId => _editableTextKey.CurrentState!.AutofillId;
+
+    /// <inheritdoc/>
+    public void Autofill(TextEditingValue newEditingValue) =>
+        _editableTextKey.CurrentState!.Autofill(newEditingValue);
+
+    /// <inheritdoc/>
+    /// <remarks>Dart's <c>textInputConfiguration</c>: the field's own configuration with the
+    /// placeholder as the autofill hint text.</remarks>
+    public TextInputConfiguration TextInputConfiguration
+    {
+        get
+        {
+            IReadOnlyList<string>? autofillHints =
+                ReferenceEquals(Current.AutofillHints, EditableText.AutofillDisabled)
+                    ? null
+                    : Current.AutofillHints ?? [];
+            AutofillConfiguration autofillConfiguration = autofillHints is not null
+                ? new AutofillConfiguration(
+                    uniqueIdentifier: AutofillId,
+                    autofillHints: autofillHints,
+                    currentEditingValue: _controller!.Value,
+                    hintText: Current.Placeholder)
+                : AutofillConfiguration.Disabled;
+            return _editableTextKey.CurrentState!.TextInputConfiguration.CopyWith(
+                autofillConfiguration: autofillConfiguration);
+        }
+    }
+
+    // AutofillClient implementation end.
+
     public override Widget Build(BuildContext context)
     {
         EnsureController();
@@ -753,23 +787,17 @@ internal sealed class CupertinoTextFieldState
 
         Widget editable = new EditableText(
             controller: _controller!,
-            focusNode: _focusNode,
+            focusNode: _focusNode!,
+            style: textStyle,
+            cursorColor: cursorColor,
+            backgroundCursorColor: CupertinoDynamicColor.Resolve(CupertinoColors.InactiveGray, context),
             undoController: Current.UndoController,
             onChanged: Current.OnChanged,
             autofocus: Current.Autofocus,
-            enabled: Current.Enabled,
-            multiline: Current.MaxLines != 1,
             minLines: Current.MinLines,
             maxLines: Current.MaxLines,
             expands: Current.Expands,
-            fontSize: textStyle.FontSize ?? 17.0,
-            textColor: textStyle.Color ?? CupertinoColors.Label,
-            backgroundColor: CupertinoColors.Transparent,
-            focusedBackgroundColor: CupertinoColors.Transparent,
-            cursorColor: cursorColor,
             selectionColor: _focusNode!.HasFocus ? selectionColor : null,
-            padding: new Thickness(0.0),
-            style: textStyle,
             strutStyle: Current.StrutStyle,
             readOnly: Current.ReadOnly || !Current.Enabled,
             obscureText: Current.ObscureText,
@@ -788,7 +816,6 @@ internal sealed class CupertinoTextFieldState
             scrollPhysics: Current.ScrollPhysics,
             autocorrect: Current.Autocorrect,
             enableSuggestions: Current.EnableSuggestions,
-            canRequestFocus: Current.Enabled,
             inputFormatters: inputFormatters,
             showCursor: Current.ShowCursor,
             cursorWidth: Current.CursorWidth,
@@ -813,7 +840,7 @@ internal sealed class CupertinoTextFieldState
             groupId: Current.GroupId,
             rendererIgnoresPointer: true,
             autofillHints: Current.AutofillHints,
-            autofillHintText: Current.Placeholder,
+            autofillClient: this,
             keyboardAppearance: Current.KeyboardAppearance ?? CupertinoTheme.BrightnessOf(context),
             enableIMEPersonalizedLearning: Current.EnableIMEPersonalizedLearning,
             enableInlinePrediction: Current.EnableInlinePrediction,
@@ -821,7 +848,6 @@ internal sealed class CupertinoTextFieldState
             scribbleEnabled: Current.ScribbleEnabled,
             stylusHandwritingEnabled: Current.StylusHandwritingEnabled,
             clipBehavior: Current.ClipBehavior,
-            backgroundCursorColor: CupertinoDynamicColor.Resolve(CupertinoColors.InactiveGray, context),
             autocorrectionTextRectColor: selectionColor,
             dragStartBehavior: Current.DragStartBehavior,
             restorationId: "editable",

@@ -139,7 +139,10 @@ public sealed class EditableTextScribeDartParityTests : IDisposable
                         focusNode: _focusNode,
                         key: key,
                         stylusHandwritingEnabled: false,
-                        maxLines: 1))))));
+                        maxLines: 1,
+                        style: new TextStyle(FontSize: 14.0, Color: new Color(0xFF000000)),
+                        cursorColor: new Color(0xFF000000),
+                        backgroundCursorColor: new Color(0xFF9E9E9E)))))));
         tester.Pump();
 
         TestGesture gesture = tester.StartGesture(FieldCenter(tester), PointerDeviceKind.Stylus);

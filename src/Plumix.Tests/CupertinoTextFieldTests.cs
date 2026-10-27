@@ -22,6 +22,22 @@ public sealed class CupertinoTextFieldTests : IDisposable
 
     public void Dispose() => FocusManager.Instance.ResetForTests();
 
+    // Flutter: 'text_field_test.dart: autofill info has placeholder text'
+    [Fact]
+    public void AutofillInfoHasPlaceholderText()
+    {
+        using var tester = new FrameworkDartTester();
+        tester.PumpWidget(new CupertinoApp(home: new CupertinoTextField(placeholder: "placeholder text")));
+        tester.Tap(Find.ByType<CupertinoTextField>());
+        tester.Pump();
+
+        var autofill = (System.Collections.IDictionary)tester.TestTextInput.SetClientArgs!["autofill"]!;
+        Assert.Equal("placeholder text", autofill["hintText"]);
+        // The field is the autofill client, and shares its editable's id.
+        EditableText.EditableTextState editable = tester.State<EditableText.EditableTextState>();
+        Assert.Equal(editable.AutofillId, autofill["uniqueIdentifier"]);
+    }
+
     [Fact]
     public void Constructors_ExposeFlutterDefaultsAndContracts()
     {
@@ -82,7 +98,6 @@ public sealed class CupertinoTextFieldTests : IDisposable
         Text placeholderText = Assert.Single(harness.FindWidgets<Text>(), text => text.Data == "Search");
         ColorMatchers.AssertSameColorAs(new Color(placeholder), placeholderText.Style?.Color);
         EditableText editable = Assert.Single(harness.FindWidgets<EditableText>());
-        Assert.Equal(new Thickness(0.0), editable.Padding);
         Assert.Equal(2.0, editable.CursorWidth);
         Assert.Equal(Radius.Circular(2.0), editable.CursorRadius);
         Assert.Equal(new Point(-2.0, 0.0), editable.CursorOffset);
