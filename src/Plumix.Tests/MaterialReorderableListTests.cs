@@ -16,39 +16,48 @@ namespace Plumix.Tests;
 [Collection(SchedulerTestCollection.Name)]
 public sealed class MaterialReorderableListTests
 {
+    // Flutter: the ReorderableList/SliverReorderableList/ReorderableListView constructor asserts.
+    [DebugOnlyFact]
+    public void ReorderableLists_AssertCallbacksKeysAndExtentContracts()
+    {
+        IndexedWidgetBuilder builder = (_, index) => new SizedBox(key: new ValueKey<int>(index));
+        ReorderCallback callback = (_, _) => { };
+
+        Assert.Throws<AssertionError>(() => new ReorderableList(builder, 1));
+        Assert.Throws<AssertionError>(() => new ReorderableList(
+            builder,
+            1,
+            onReorder: callback,
+            onReorderItem: callback));
+        Assert.Throws<AssertionError>(() => new ReorderableList(
+            builder,
+            -1,
+            onReorderItem: callback));
+        Assert.Throws<AssertionError>(() => new ReorderableList(
+            builder,
+            1,
+            onReorderItem: callback,
+            itemExtent: 40,
+            itemExtentBuilder: (_, _) => 40));
+        Assert.Throws<AssertionError>(() => new SliverReorderableList(
+            builder,
+            1,
+            onReorderItem: callback,
+            itemExtent: 40,
+            prototypeItem: new SizedBox()));
+        Assert.Throws<AssertionError>(() => new ReorderableListView(
+            [new SizedBox()],
+            onReorderItem: callback));
+    }
+
     [Fact]
-    public void ReorderableLists_ValidateCallbacksKeysAndExtentContracts()
+    public void ReorderableLists_ExposeCallbacksAndDefaults()
     {
         IndexedWidgetBuilder builder = (_, index) => new SizedBox(key: new ValueKey<int>(index));
         ReorderCallback callback = (_, _) => { };
         ReorderDragBoundaryProvider boundaryProvider = _ =>
             new FixedRectDragBoundaryDelegate(new Rect(0, 0, 100, 100));
         ChildIndexGetter childIndexGetter = _ => 0;
-
-        Assert.Throws<ArgumentException>(() => new ReorderableList(builder, 1));
-        Assert.Throws<ArgumentException>(() => new ReorderableList(
-            builder,
-            1,
-            onReorder: callback,
-            onReorderItem: callback));
-        Assert.Throws<ArgumentOutOfRangeException>(() => new ReorderableList(
-            builder,
-            -1,
-            onReorderItem: callback));
-        Assert.Throws<ArgumentException>(() => new ReorderableList(
-            builder,
-            1,
-            onReorderItem: callback,
-            itemExtent: 40,
-            itemExtentBuilder: (_, _) => 40));
-        Assert.Throws<ArgumentOutOfRangeException>(() => new ReorderableList(
-            builder,
-            1,
-            onReorderItem: callback,
-            autoScrollerVelocityScalar: 0));
-        Assert.Throws<ArgumentException>(() => new ReorderableListView(
-            [new SizedBox()],
-            onReorderItem: callback));
 
         ReorderableListView list = ReorderableListView.Builder(
             builder,
@@ -86,11 +95,6 @@ public sealed class MaterialReorderableListTests
             scrollCacheExtent: ScrollCacheExtent.Viewport(1.5));
         Assert.Equal(1.5, cachedList.ScrollCacheExtent!.Value);
         Assert.Equal(CacheExtentStyle.Viewport, cachedList.ScrollCacheExtent.Style);
-        Assert.Throws<ArgumentOutOfRangeException>(() => ReorderableListView.Builder(
-            builder,
-            3,
-            onReorderItem: callback,
-            anchor: -0.01));
     }
 
     [Fact]

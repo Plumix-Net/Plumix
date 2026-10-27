@@ -56,11 +56,6 @@ public sealed partial class RenderParagraph : RenderBox,
         }
     }
 
-    /// Convenience constructor building a single unstyled [TextSpan].
-    public RenderParagraph(string text) : this(new TextSpan(text ?? string.Empty))
-    {
-    }
-
     /// The text painter this paragraph lays out and paints with.
     internal TextPainter TextPainter => _textPainter;
 
@@ -140,9 +135,6 @@ public sealed partial class RenderParagraph : RenderBox,
             }
         }
     }
-
-    /// The flattened plain-text representation of [Text].
-    public string PlainText => _textPainter.PlainText;
 
     /// How the text should be aligned horizontally.
     public TextAlign TextAlign
@@ -421,82 +413,6 @@ public sealed partial class RenderParagraph : RenderBox,
 
             return children;
         }
-    }
-
-    // -- Root style projection ------------------------------------------------
-    //
-    // Flutter's RenderParagraph exposes no font properties; every style lives on
-    // the InlineSpan tree. These accessors project the root span's style so that
-    // callers holding a paragraph can still read and write the resolved style.
-
-    private TextStyle RootStyle => Text.Style ?? TextStyle.Fallback;
-
-    private void UpdateRootStyle(TextStyle style)
-    {
-        InlineSpan text = Text;
-        Text = text is TextSpan span
-            ? new TextSpan(
-                text: span.Text,
-                children: span.Children,
-                style: style,
-                recognizer: span.Recognizer,
-                mouseCursor: span.MouseCursor,
-                onEnter: span.OnEnter,
-                onExit: span.OnExit,
-                semanticsLabel: span.SemanticsLabel,
-                semanticsIdentifier: span.SemanticsIdentifier,
-                locale: span.Locale,
-                spellOut: span.SpellOut)
-            : new TextSpan(children: [text], style: style);
-    }
-
-    public FontFamily FontFamily
-    {
-        get => RootStyle.FontFamily ?? Avalonia.Media.FontFamily.Default;
-        set => UpdateRootStyle(RootStyle.CopyWith(fontFamily: value ?? Avalonia.Media.FontFamily.Default));
-    }
-
-    public FontStyle FontStyle
-    {
-        get => RootStyle.FontStyle ?? Avalonia.Media.FontStyle.Normal;
-        set => UpdateRootStyle(RootStyle.CopyWith(fontStyle: value));
-    }
-
-    public FontWeight FontWeight
-    {
-        get => RootStyle.FontWeight ?? Avalonia.Media.FontWeight.Normal;
-        set => UpdateRootStyle(RootStyle.CopyWith(fontWeight: value));
-    }
-
-    public double FontSize
-    {
-        get => RootStyle.FontSize ?? TextDefaults.DefaultFontSize;
-        set => UpdateRootStyle(RootStyle.CopyWith(fontSize: value));
-    }
-
-    public IBrush Foreground
-    {
-        get => new SolidColorBrush(RootStyle.Color ?? new Color(0xFF000000));
-        set => UpdateRootStyle(RootStyle.CopyWith(
-            color: value is ISolidColorBrush solid ? (Color)solid.Color : new Color(0xFF000000)));
-    }
-
-    public double? Height
-    {
-        get => RootStyle.Height;
-        set => UpdateRootStyle(RootStyle.CopyWith(height: value));
-    }
-
-    public double LetterSpacing
-    {
-        get => RootStyle.LetterSpacing ?? 0;
-        set => UpdateRootStyle(RootStyle.CopyWith(letterSpacing: value));
-    }
-
-    public Plumix.UI.TextDecoration? TextDecoration
-    {
-        get => RootStyle.Decoration;
-        set => UpdateRootStyle(RootStyle.CopyWith(decoration: value));
     }
 
     // -- Layout --------------------------------------------------------------------

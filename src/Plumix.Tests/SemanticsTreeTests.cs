@@ -3,6 +3,7 @@
 
 using Avalonia;
 using Avalonia.Media;
+using Plumix.Painting;
 using Plumix.Rendering;
 using Xunit;
 using Plumix.UI;
@@ -257,8 +258,8 @@ public sealed class SemanticsTreeTests
             new RenderFlex(
                 children:
                 [
-                    new RenderParagraph("One"),
-                    new RenderParagraph("Two"),
+                    new RenderParagraph(new TextSpan("One")),
+                    new RenderParagraph(new TextSpan("Two")),
                 ],
                 direction: Axis.Horizontal,
                 textDirection: TextDirection.Ltr));
@@ -359,7 +360,7 @@ public sealed class SemanticsTreeTests
     [Fact]
     public void ExcludeSemantics_RemovesSubtreeFromSemanticsTree()
     {
-        var excluded = new ExcludeSemanticsRenderBox(new RenderParagraph("Hidden"));
+        var excluded = new ExcludeSemanticsRenderBox(new RenderParagraph(new TextSpan("Hidden")));
         var renderView = new RenderView(new FlutterView(new Size(800, 600)))
         {
             Child = excluded

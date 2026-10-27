@@ -76,10 +76,9 @@ public sealed class ReorderableListView : StatefulWidget
         mouseCursor: mouseCursor,
         key: key)
     {
-        if (children.Any(child => child.Key is null))
-        {
-            throw new ArgumentException("All ReorderableListView children must have a key.", nameof(children));
-        }
+        DebugAssertions.Assert(
+            children.All(child => child.Key is not null),
+            "All children of this widget must have a key.");
     }
 
     private ReorderableListView(
@@ -115,21 +114,9 @@ public sealed class ReorderableListView : StatefulWidget
         MouseCursor? mouseCursor,
         Key? key) : base(key)
     {
-        if (!double.IsFinite(anchor) || anchor < 0.0 || anchor > 1.0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(anchor));
-        }
-
-        ReorderableList.ValidateArguments(
-            itemCount,
-            onReorder,
-            onReorderItem,
-            itemExtent,
-            itemExtentBuilder,
-            prototypeItem,
-            cacheExtent,
-            autoScrollerVelocityScalar);
-        ItemBuilder = itemBuilder ?? throw new ArgumentNullException(nameof(itemBuilder));
+        ReorderableList.DebugAssertArguments(
+            itemCount, onReorder, onReorderItem, itemExtent, itemExtentBuilder, prototypeItem);
+        ItemBuilder = itemBuilder;
         ItemCount = itemCount;
         OnReorder = onReorder;
         OnReorderItem = onReorderItem;
@@ -332,8 +319,7 @@ public sealed class ReorderableListView : StatefulWidget
                     prototypeItem: widget.PrototypeItem,
                     proxyDecorator: widget.ProxyDecorator ?? DefaultProxyDecorator,
                     autoScrollerVelocityScalar: widget.AutoScrollerVelocityScalar ?? 50.0,
-                    dragBoundaryProvider: widget.DragBoundaryProvider,
-                    scrollController: effectiveController)));
+                    dragBoundaryProvider: widget.DragBoundaryProvider)));
 
             if (widget.Footer is not null)
             {
@@ -362,12 +348,12 @@ public sealed class ReorderableListView : StatefulWidget
         private Widget BuildItem(BuildContext context, int index)
         {
             Widget item = CurrentWidget.ItemBuilder(context, index);
-            if (item.Key is null)
+            if (Constants.KDebugMode && item.Key is null)
             {
-                throw new InvalidOperationException("Every ReorderableListView item must have a key.");
+                throw new FlutterError("Every item of ReorderableListView must have a key.");
             }
 
-            Key itemGlobalKey = new ReorderableListViewChildKey(item.Key, this);
+            Key itemGlobalKey = new ReorderableListViewChildKey(item.Key!, this);
             if (!CurrentWidget.BuildDefaultDragHandles)
             {
                 return new KeyedSubtree(item, itemGlobalKey);
