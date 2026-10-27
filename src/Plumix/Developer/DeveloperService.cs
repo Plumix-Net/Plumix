@@ -1,12 +1,12 @@
 using Plumix.Foundation;
 
-// C#-only infrastructure: the `postEvent` and `inspect` functions of `dart:developer`. Dart hands
+// C#-only infrastructure: the `postEvent`, `inspect` and `getCurrentTag` functions of `dart:developer`. Dart hands
 // both to the VM service, which forwards them to a connected tool (DevTools, an IDE). .NET has no
 // VM service, so the calls surface as in-process events a tool bridge (or a test) can subscribe to.
 
 namespace Plumix.Developer;
 
-/// <summary>The <c>postEvent</c> and <c>inspect</c> functions of <c>dart:developer</c>.</summary>
+/// <summary>The <c>postEvent</c>, <c>inspect</c> and <c>getCurrentTag</c> functions of <c>dart:developer</c>.</summary>
 public static class DeveloperService
 {
     /// <summary>The stream <see cref="PostEvent"/> posts to by default.</summary>
@@ -48,6 +48,10 @@ public static class DeveloperService
         ObjectInspected?.Invoke(@object);
         return @object;
     }
+
+    /// <summary>Returns the current <see cref="UserTag"/>.</summary>
+    /// <remarks><c>dart:developer</c>'s <c>getCurrentTag</c>.</remarks>
+    public static UserTag GetCurrentTag() => UserTag.Current;
 
     /// <summary>Drops every listener, for a test that subscribes.</summary>
     internal static void ResetForTests()

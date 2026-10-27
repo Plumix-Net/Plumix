@@ -293,6 +293,18 @@ public sealed class PlatformDispatcher
     /// </remarks>
     public Action? OnMetricsChanged { get; set; }
 
+    /// <summary>Called when the platform configuration changes.</summary>
+    /// <remarks>
+    /// dart:ui's <c>PlatformDispatcher.onPlatformConfigurationChanged</c>. The engine invokes it before the
+    /// specific callback whenever it records a changed configuration: the user settings
+    /// (<see cref="UpdateTextScaleFactor(double, Func{double, double})"/>, the platform brightness a host
+    /// reports through <see cref="NotifyPlatformBrightnessChanged"/>), the locales
+    /// (<see cref="UpdateLocales"/>), <see cref="UpdateSemanticsEnabled"/> and
+    /// <see cref="UpdateAccessibilityFeatures"/>. The framework does not install it; flutter_test's test
+    /// values do not invoke it.
+    /// </remarks>
+    public Action? OnPlatformConfigurationChanged { get; set; }
+
     private double _textScaleFactor = 1.0;
     private double? _textScaleFactorTestValue;
 
@@ -323,7 +335,8 @@ public sealed class PlatformDispatcher
 
     /// <summary>
     /// Records the platform's text scale factor together with the platform's font scaling function for the
-    /// same configuration, and invokes <see cref="OnTextScaleFactorChanged"/> when the factor changed.
+    /// same configuration, and invokes <see cref="OnPlatformConfigurationChanged"/> and, when the factor
+    /// changed, <see cref="OnTextScaleFactorChanged"/>.
     /// </summary>
     /// <param name="textScaleFactor">The user's font size preference.</param>
     /// <param name="scaledFontSize">
@@ -346,14 +359,21 @@ public sealed class PlatformDispatcher
         }
 
         _scaledFontSize = scaledFontSize ?? _scaledFontSize;
-        if (textScaleFactor == _textScaleFactor)
+        bool textScaleFactorChanged = textScaleFactor != _textScaleFactor;
+        // The engine notifies a settings message that carries a configuration id even when no value
+        // changed; the font scaling function stands in for that id.
+        if (!textScaleFactorChanged && scaledFontSize is null)
         {
             return;
         }
 
         _textScaleFactor = textScaleFactor;
-        _cachedFontSizes = null;
-        OnTextScaleFactorChanged?.Invoke();
+        OnPlatformConfigurationChanged?.Invoke();
+        if (textScaleFactorChanged)
+        {
+            _cachedFontSizes = null;
+            OnTextScaleFactorChanged?.Invoke();
+        }
     }
 
     private Func<double, double>? _scaledFontSize;
@@ -456,6 +476,20 @@ public sealed class PlatformDispatcher
     /// </remarks>
     public Action? OnPlatformBrightnessChanged { get; set; }
 
+    /// <summary>
+    /// Reports that the host's <see cref="PlatformBrightness"/> changed: invokes
+    /// <see cref="OnPlatformConfigurationChanged"/>, then <see cref="OnPlatformBrightnessChanged"/>.
+    /// </summary>
+    /// <remarks>
+    /// The engine-side <c>_updateUserSettingsData</c> for its <c>platformBrightness</c> key. The brightness
+    /// itself lives in the implicit view's platform data, which the host updates first.
+    /// </remarks>
+    internal void NotifyPlatformBrightnessChanged()
+    {
+        OnPlatformConfigurationChanged?.Invoke();
+        OnPlatformBrightnessChanged?.Invoke();
+    }
+
     private IReadOnlyList<Locale> _locales = [];
     private IReadOnlyList<Locale>? _localesTestValue;
 
@@ -533,6 +567,7 @@ public sealed class PlatformDispatcher
         }
 
         _locales = [.. locales];
+        OnPlatformConfigurationChanged?.Invoke();
         OnLocaleChanged?.Invoke();
     }
 
@@ -684,6 +719,7 @@ public sealed class PlatformDispatcher
         }
 
         SemanticsEnabled = enabled;
+        OnPlatformConfigurationChanged?.Invoke();
         OnSemanticsEnabledChanged?.Invoke();
     }
 
@@ -727,6 +763,7 @@ public sealed class PlatformDispatcher
         }
 
         _accessibilityFeatures = newFeatures;
+        OnPlatformConfigurationChanged?.Invoke();
         OnAccessibilityFeaturesChanged?.Invoke();
     }
 

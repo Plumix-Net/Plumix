@@ -85,7 +85,15 @@ internal readonly record struct PendingAutofocus(FocusScopeNode Scope, FocusNode
             && AutofocusNode.Ancestors.Contains(Scope);
         if (shouldApply)
         {
-            AutofocusNode.DoRequestFocus(findFirstFocus: true);
+            FocusNode autofocusNode = AutofocusNode;
+            System.Diagnostics.Debug.Assert(FocusManager.FocusDebug(() => $"Applying autofocus: {autofocusNode}"));
+            autofocusNode.DoRequestFocus(findFirstFocus: true);
+        }
+        else
+        {
+            FocusNode autofocusNode = AutofocusNode;
+            System.Diagnostics.Debug.Assert(
+                FocusManager.FocusDebug(() => $"Autofocus request discarded for node: {autofocusNode}."));
         }
     }
 }
@@ -104,6 +112,10 @@ public sealed class FocusAttachment
 
     public void Detach()
     {
+        System.Diagnostics.Debug.Assert(
+            FocusManager.FocusDebug(
+                () => "Detaching node:",
+                () => [_node, $"With enclosing scope {DartString.Of(_node.EnclosingScope)}"]));
         if (!IsAttached)
         {
             return;
@@ -430,6 +442,15 @@ public class FocusNode : ChangeNotifier, IDiagnosticableTree
                 scope?.DoRequestFocus(findFirstFocus: true);
                 break;
         }
+
+        System.Diagnostics.Debug.Assert(
+            FocusManager.FocusDebug(
+                () => "Unfocused node:",
+                () =>
+                [
+                    $"primary focus was {this}",
+                    $"next focus will be {DartString.Of(Manager?.MarkedForFocus)}",
+                ]));
     }
 
     /// <summary>Dart parity source: <c>FocusNode.consumeKeyboardToken</c>.</summary>
@@ -691,6 +712,9 @@ public class FocusNode : ChangeNotifier, IDiagnosticableTree
     {
         if (!CanRequestFocus)
         {
+            System.Diagnostics.Debug.Assert(
+                FocusManager.FocusDebug(
+                    () => $"Node NOT requesting focus because canRequestFocus is false: {this}"));
             return;
         }
 
@@ -708,6 +732,7 @@ public class FocusNode : ChangeNotifier, IDiagnosticableTree
         }
 
         _hasKeyboardToken = true;
+        System.Diagnostics.Debug.Assert(FocusManager.FocusDebug(() => $"Node requesting focus: {this}"));
         MarkNextFocus(this);
     }
 
@@ -722,6 +747,10 @@ public class FocusNode : ChangeNotifier, IDiagnosticableTree
                 continue;
             }
 
+            System.Diagnostics.Debug.Assert(
+                FocusManager.FocusDebug(
+                    () => $"Setting {scopeFocus} as focused child for scope:",
+                    () => [scopeAncestor]));
             scopeAncestor.RemoveFocusedChild(scopeFocus);
             scopeAncestor.AddFocusedChild(scopeFocus);
             scopeFocus = scopeAncestor;
@@ -882,6 +911,8 @@ public sealed class FocusScopeNode : FocusNode
             throw new ArgumentException("Unexpected self-reference in SetFirstFocus.", nameof(scope));
         }
 
+        System.Diagnostics.Debug.Assert(
+            FocusManager.FocusDebug(() => $"Setting scope as first focus in {this} to node:", () => [scope]));
         if (scope.Parent == null)
         {
             Reparent(scope);
@@ -906,6 +937,8 @@ public sealed class FocusScopeNode : FocusNode
             Reparent(node);
         }
 
+        System.Diagnostics.Debug.Assert(
+            FocusManager.FocusDebug(() => $"Autofocus scheduled for {node}: scope {this}"));
         Manager?.AddPendingAutofocus(new PendingAutofocus(this, node));
         Manager?.MarkNeedsUpdate();
     }
@@ -988,6 +1021,54 @@ internal sealed class FocusAppLifecycleListener : WidgetsBindingObserver
 /// of the class.</remarks>
 public sealed class FocusManager : ChangeNotifier, IDiagnosticableTree
 {
+    /// <summary>
+    /// Setting to true will cause extensive logging to occur when focus changes occur.
+    /// </summary>
+    /// <remarks>
+    /// Dart's top-level <c>debugFocusChanges</c>. Can be used to debug focus issues: each time the focus
+    /// changes, the focus tree will be printed and requests for focus and other focus operations will be
+    /// logged. This has no effect in release builds.
+    /// </remarks>
+    public static bool DebugFocusChanges { get; set; }
+
+    /// <summary>
+    /// Dart's private top-level <c>_focusDebug</c>: prints <paramref name="messageFunc"/> (and each of
+    /// <paramref name="detailsFunc"/>'s details) through <see cref="Print.DebugPrint"/> when
+    /// <see cref="DebugFocusChanges"/> is set.
+    /// </summary>
+    /// <remarks>
+    /// Always call it inside an assert, so it is removed outside a debug build and the closures avoid
+    /// the string interpolation while <see cref="DebugFocusChanges"/> is false:
+    /// <c>System.Diagnostics.Debug.Assert(FocusManager.FocusDebug(() => $"Blah {foo}"));</c>.
+    /// It throws an <see cref="InvalidOperationException"/> (Dart's <c>StateError</c>) when called in a
+    /// release build.
+    /// </remarks>
+    internal static bool FocusDebug(Func<string> messageFunc, Func<IEnumerable<object>>? detailsFunc = null)
+    {
+        if (Constants.KReleaseMode)
+        {
+            throw new InvalidOperationException(
+                "_focusDebug was called in Release mode. It should always be wrapped in "
+                + "an assert. Always call _focusDebug like so:\n"
+                + "  assert(_focusDebug(() => 'Blah $foo'));");
+        }
+
+        if (!DebugFocusChanges)
+        {
+            return true;
+        }
+
+        Print.DebugPrint($"FOCUS: {messageFunc()}");
+        IEnumerable<object> details = detailsFunc?.Invoke() ?? [];
+        foreach (object detail in details)
+        {
+            Print.DebugPrint($"    {detail}");
+        }
+
+        // Return true so that it can be used inside of an assert.
+        return true;
+    }
+
     private readonly HashSet<FocusNode> _dirtyNodes = [];
     private readonly List<PendingAutofocus> _pendingAutofocuses = [];
     private FocusScopeNode _rootScope = new(debugLabel: "Root Focus Scope");
@@ -1033,12 +1114,15 @@ public sealed class FocusManager : ChangeNotifier, IDiagnosticableTree
         {
             if (!ReferenceEquals(PrimaryFocus, _rootScope))
             {
+                System.Diagnostics.Debug.Assert(
+                    FocusDebug(() => $"focus changed while app was paused, ignoring {DartString.Of(_suspendedNode)}"));
                 _suspendedNode = null;
             }
             else if (_suspendedNode != null)
             {
                 if (MarkedForFocus == null)
                 {
+                    System.Diagnostics.Debug.Assert(FocusDebug(() => $"requesting focus for {_suspendedNode}"));
                     _suspendedNode.RequestFocus();
                 }
 
@@ -1050,6 +1134,7 @@ public sealed class FocusManager : ChangeNotifier, IDiagnosticableTree
 
         if (!ReferenceEquals(PrimaryFocus, _rootScope))
         {
+            System.Diagnostics.Debug.Assert(FocusDebug(() => $"suspending {DartString.Of(PrimaryFocus)}"));
             MarkedForFocus = _rootScope;
             _suspendedNode = PrimaryFocus;
             ApplyFocusChangesIfNeeded();
@@ -1190,6 +1275,9 @@ public sealed class FocusManager : ChangeNotifier, IDiagnosticableTree
     /// <summary>Dart parity source: <c>FocusManager._markDetached</c>.</summary>
     internal void MarkDetached(FocusNode node)
     {
+        // The node has been removed from the tree, so it no longer needs to be
+        // notified of changes.
+        System.Diagnostics.Debug.Assert(FocusDebug(() => $"Node was detached: {node}"));
         if (ReferenceEquals(PrimaryFocus, node))
         {
             PrimaryFocus = null;
@@ -1211,8 +1299,9 @@ public sealed class FocusManager : ChangeNotifier, IDiagnosticableTree
     /// <summary>Dart parity source: <c>FocusManager._markPropertiesChanged</c>.</summary>
     internal void MarkPropertiesChanged(FocusNode node)
     {
-        _dirtyNodes.Add(node);
         MarkNeedsUpdate();
+        System.Diagnostics.Debug.Assert(FocusDebug(() => $"Properties changed for node {node}."));
+        _dirtyNodes.Add(node);
     }
 
     /// <summary>Dart parity source: <c>FocusManager._markNextFocus</c>.</summary>
@@ -1234,6 +1323,10 @@ public sealed class FocusManager : ChangeNotifier, IDiagnosticableTree
     /// <summary>Dart parity source: <c>FocusManager._markNeedsUpdate</c>.</summary>
     internal void MarkNeedsUpdate()
     {
+        System.Diagnostics.Debug.Assert(
+            FocusDebug(
+                () => $"Scheduling update, current focus is {DartString.Of(PrimaryFocus)}, "
+                      + $"next focus will be {DartString.Of(MarkedForFocus)}"));
         if (_haveScheduledUpdate)
         {
             return;
@@ -1272,6 +1365,10 @@ public sealed class FocusManager : ChangeNotifier, IDiagnosticableTree
             MarkedForFocus = _rootScope;
         }
 
+        System.Diagnostics.Debug.Assert(
+            FocusDebug(() => $"Refreshing focus state. Next focus will be {DartString.Of(MarkedForFocus)}"));
+        // A node has requested to be the next focus, and isn't already the primary
+        // focus.
         if (MarkedForFocus != null && !ReferenceEquals(MarkedForFocus, PrimaryFocus))
         {
             HashSet<FocusNode> previousPath = previousFocus?.Ancestors.ToHashSet() ?? [];
@@ -1285,6 +1382,9 @@ public sealed class FocusManager : ChangeNotifier, IDiagnosticableTree
 
         if (!ReferenceEquals(previousFocus, PrimaryFocus))
         {
+            System.Diagnostics.Debug.Assert(
+                FocusDebug(
+                    () => $"Updating focus from {DartString.Of(previousFocus)} to {DartString.Of(PrimaryFocus)}"));
             if (previousFocus != null)
             {
                 _dirtyNodes.Add(previousFocus);
@@ -1301,12 +1401,28 @@ public sealed class FocusManager : ChangeNotifier, IDiagnosticableTree
             node.Notify();
         }
 
+        System.Diagnostics.Debug.Assert(
+            FocusDebug(() => $"Notified {_dirtyNodes.Count} dirty nodes:", () => _dirtyNodes));
         _dirtyNodes.Clear();
         if (!ReferenceEquals(previousFocus, PrimaryFocus))
         {
             PrimaryFocusChanged?.Invoke();
             NotifyListeners();
         }
+
+        System.Diagnostics.Debug.Assert(DebugDumpFocusTreeIfFocusChangesLogged());
+    }
+
+    // The `assert(() { if (debugFocusChanges) debugDumpFocusTree(); return true; }())` closure at the end of
+    // Dart's `applyFocusChangesIfNeeded`.
+    private static bool DebugDumpFocusTreeIfFocusChangesLogged()
+    {
+        if (DebugFocusChanges)
+        {
+            DebugDumpFocusTree();
+        }
+
+        return true;
     }
 
     /// <summary>

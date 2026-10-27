@@ -740,8 +740,8 @@ public partial class PlumixHost : Control, ICustomHitTest
 
     /// <summary>
     /// The platform theme changed: reports the new brightness through
-    /// <see cref="PlatformDispatcher.OnPlatformBrightnessChanged"/> when it differs (the engine's
-    /// <c>_updatePlatformBrightness</c>), and the high-contrast bit through the accessibility features.
+    /// <see cref="PlatformDispatcher.NotifyPlatformBrightnessChanged"/> when it differs (the engine's
+    /// <c>_updateUserSettingsData</c>), and the high-contrast bit through the accessibility features.
     /// </summary>
     private void OnPlatformSettingsChanged()
     {
@@ -750,7 +750,7 @@ public partial class PlumixHost : Control, ICustomHitTest
         dispatcher.UpdateImplicitViewPlatformData(_view, GetMediaQueryData());
         if (WidgetsBinding.IsImplicitView(_view) && dispatcher.PlatformBrightness != previous)
         {
-            dispatcher.OnPlatformBrightnessChanged?.Invoke();
+            dispatcher.NotifyPlatformBrightnessChanged();
         }
 
         ReportAccessibilityFeatures();
