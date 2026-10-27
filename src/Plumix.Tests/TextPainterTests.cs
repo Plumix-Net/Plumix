@@ -809,6 +809,34 @@ public sealed class TextPainterTests
         Assert.Equal(height, painter.PreferredLineHeight);
     }
 
+    // SkParagraph's `computeEmptyMetrics` distributes an empty line's height override by the strut's
+    // half-leading flag, not by the text style's `leadingDistribution`; values read from flutter_test.
+    [Theory]
+    [InlineData("x", false, false, 16.0)]
+    [InlineData("", false, false, 18.0)]
+    [InlineData("", false, true, 18.0)]
+    [InlineData("", true, false, 16.0)]
+    public void EmptyParagraph_HalfLeadingFollowsTheStrutNotTheTextStyle(
+        string text,
+        bool strut,
+        bool evenParagraphBehavior,
+        double baseline)
+    {
+        using var painter = new TextPainter(
+            text: new TextSpan(
+                text,
+                style: new TextStyle(FontSize: 16, Height: 1.5, LeadingDistribution: TextLeadingDistribution.Even)),
+            textDirection: TextDirection.Ltr,
+            strutStyle: strut ? new StrutStyle(FontSize: 10) : null,
+            textHeightBehavior: evenParagraphBehavior
+                ? new TextHeightBehavior(LeadingDistribution: TextLeadingDistribution.Even)
+                : null);
+        painter.Layout();
+
+        Assert.Equal(24.0, painter.Height);
+        Assert.Equal(baseline, painter.ComputeDistanceToActualBaseline(TextBaseline.Alphabetic));
+    }
+
     [Fact]
     public void PlainText_FlattensPlaceholders()
     {

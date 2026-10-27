@@ -272,6 +272,14 @@ internal sealed class ParagraphContent
     public TextLeadingDistribution DefaultLeadingDistribution =>
         Style.TextHeightBehavior?.LeadingDistribution ?? TextLeadingDistribution.Proportional;
 
+    /// How an empty line distributes its height override: SkParagraph's `computeEmptyMetrics` reads the
+    /// strut's half-leading flag, never the text style's. dart:ui's `_NativeParagraphBuilder` sets that
+    /// flag only for an enabled strut (`strutStyle.leadingDistribution ?? textHeightBehavior's`).
+    public TextLeadingDistribution EmptyLineLeadingDistribution =>
+        Style.StrutStyle is { IsEnabled: true } strut
+            ? strut.LeadingDistribution ?? DefaultLeadingDistribution
+            : TextLeadingDistribution.Proportional;
+
     /// The resolved style of the code unit at `index`.
     public ResolvedTextStyle StyleAt(int index)
     {

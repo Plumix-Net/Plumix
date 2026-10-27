@@ -600,7 +600,9 @@ internal sealed class HeadlessParagraph : Paragraph
                 ResolvedTextStyle emptyStyle = line.Start > 0
                     ? _content.StyleAt(line.Start - 1)
                     : Text.Length == 0 ? _content.EmptyStyle : _content.DefaultStyle;
-                AddStyle(emptyStyle);
+                // SkParagraph's `computeEmptyMetrics` distributes an empty line's height override by the
+                // strut's half-leading flag, never by the text style's own `leadingDistribution`.
+                AddStyle(emptyStyle with { LeadingDistribution = _content.EmptyLineLeadingDistribution });
             }
 
             double ascent = metrics.Ascent;
