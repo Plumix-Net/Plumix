@@ -42,6 +42,9 @@ internal sealed partial class FrameworkDartTester : IDisposable
     private readonly PipelineOwner _pipelineOwner;
     private EnginePhase _phase = EnginePhase.SendSemanticsUpdate;
     private readonly FrameworkDartTester? _previousCurrent;
+    private readonly Action? _previousWarmUpFrameOverride;
+    private readonly bool _previousAllowFirstFrameLeavesFrames;
+    private readonly bool _previousDisableShadows;
     private Widget _lastRootWidget = new SizedBox();
 
     /// <param name="fakeGestureTimers">
@@ -104,6 +107,17 @@ internal sealed partial class FrameworkDartTester : IDisposable
         _previousOnError = FlutterError.OnError;
         FlutterError.OnError = HandleError;
         _drawFrame = DrawFrame;
+        _previousWarmUpFrameOverride = SchedulerBinding.Instance.ScheduleWarmUpFrameOverrideForTests;
+        _previousAllowFirstFrameLeavesFrames = RendererBinding.Instance.AllowFirstFrameLeavesFramesToTests;
+        // AutomatedTestWidgetsFlutterBinding's scheduleWarmUpFrame and allowFirstFrame overrides: the
+        // warm-up frame runs at once instead of on timers the test might never run.
+        SchedulerBinding.Instance.ScheduleWarmUpFrameOverrideForTests = RunWarmUpFrame;
+        RendererBinding.Instance.AllowFirstFrameLeavesFramesToTests = true;
+        // AutomatedTestWidgetsFlutterBinding.disableShadows: tests paint elevation shadows as outlines
+        // unless they opt in to real ones with `RenderingDebug.DisableShadows = false`.
+        _previousDisableShadows = RenderingDebug.DisableShadows;
+        RenderingDebug.DisableShadows = true;
+
         double seconds = Math.Max(
             FrameClock.CurrentSeconds,
             SchedulerBinding.Instance.CurrentSystemFrameTimeStamp.TotalSeconds);
@@ -185,6 +199,29 @@ internal sealed partial class FrameworkDartTester : IDisposable
                 SchedulerBinding.Instance.HandleDrawFrame();
             }
             // AutomatedTestWidgetsFlutterBinding.pump drains the fake-async microtasks after the frame.
+            EventLoop.FlushMicrotasks();
+        }
+        finally
+        {
+            binding.DrawFrameOverrideForTests = previous;
+        }
+    }
+
+    /// <summary>
+    /// flutter_test's <c>AutomatedTestWidgetsFlutterBinding.scheduleWarmUpFrame</c>: the begin and
+    /// draw halves of the frame run synchronously, with the microtasks drained after each.
+    /// </summary>
+    private void RunWarmUpFrame()
+    {
+        RendererBinding binding = RendererBinding.Instance;
+        binding.EnsurePersistentFrameCallback();
+        Action? previous = binding.DrawFrameOverrideForTests;
+        binding.DrawFrameOverrideForTests = _drawFrame;
+        try
+        {
+            SchedulerBinding.Instance.HandleBeginFrame(null);
+            EventLoop.FlushMicrotasks();
+            SchedulerBinding.Instance.HandleDrawFrame();
             EventLoop.FlushMicrotasks();
         }
         finally
@@ -338,8 +375,9 @@ internal sealed partial class FrameworkDartTester : IDisposable
     public static string IgnoringHashCodes(string value) => Regex.Replace(value, "#[0-9a-fA-F]{5}", "#00000");
 
     /// <summary>
-    /// Ends the test the way <c>TestWidgetsFlutterBinding</c> does: an exception that was reported and
-    /// never taken fails the test, then the tree is replaced and unmounted.
+    /// Ends the test the way <c>TestWidgetsFlutterBinding</c> does: the tree is replaced and unmounted,
+    /// then an exception that was reported and never taken fails the test, and so does a timer still
+    /// pending on the fake clock (<c>AutomatedTestWidgetsFlutterBinding._verifyInvariants</c>).
     /// </summary>
     public void Dispose()
     {
@@ -353,6 +391,7 @@ internal sealed partial class FrameworkDartTester : IDisposable
         var unexpected = new List<FlutterErrorDetails>(_unexpected);
         _semanticsHandle?.Dispose();
         _semanticsHandle = null;
+        IReadOnlyList<Timer> pendingTimers = [];
         try
         {
             try
@@ -365,6 +404,8 @@ internal sealed partial class FrameworkDartTester : IDisposable
             {
                 // Teardown of a deliberately broken tree may fail; the test's own assertions already ran.
             }
+
+            pendingTimers = _timers?.PendingTimers ?? [];
         }
         finally
         {
@@ -381,6 +422,9 @@ internal sealed partial class FrameworkDartTester : IDisposable
             }
 
             FlutterError.OnError = _previousOnError;
+            SchedulerBinding.Instance.ScheduleWarmUpFrameOverrideForTests = _previousWarmUpFrameOverride;
+            RendererBinding.Instance.AllowFirstFrameLeavesFramesToTests = _previousAllowFirstFrameLeavesFrames;
+            RenderingDebug.DisableShadows = _previousDisableShadows;
             _timers?.Dispose();
             HardwareKeyboard.Instance.ClearState();
             GestureBinding.Instance.SamplingClock = new SamplingClock();
@@ -397,6 +441,16 @@ internal sealed partial class FrameworkDartTester : IDisposable
             throw new XunitException(
                 "A test reported exceptions that were never taken with TakeException():\n"
                 + string.Join("\n---\n", messages));
+        }
+
+        if (pendingTimers.Count > 0)
+        {
+            IEnumerable<string> timers = pendingTimers.Select(static timer =>
+                $"Timer (duration: {timer.Duration}, periodic: {timer.IsPeriodic}), created:\n"
+                + timer.CreationStackTrace);
+            throw new XunitException(
+                "A Timer is still pending even after the widget tree was disposed.\nPending timers:\n"
+                + string.Join("\n", timers));
         }
     }
 

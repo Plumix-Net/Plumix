@@ -118,22 +118,21 @@ public sealed class WidgetInspectorServiceExtensionsDartParityTests : IDisposabl
     {
         FrameworkDartTester tester = CreateTester();
         Assert.True(WidgetsApp.DebugAllowBannerOverride);
-        Action<Action> previousTimerRun = PlatformDispatcher.Instance.TimerRun;
-        PlatformDispatcher.Instance.TimerRun = static callback => callback();
         try
         {
             Task<ServiceExtensionResponse> pendingResponse = BindingBase.InvokeServiceExtensionAsync(
                 "ext.flutter.debugAllowBanner",
                 new Dictionary<string, string> { ["enabled"] = "false" });
-            // Changing the banner reassembles the root and waits for SchedulerBinding.Instance.EndOfFrame.
-            tester.Pump();
+            // The wrapper first waits one outer event-loop turn (a zero-duration timer), then changing
+            // the banner reassembles the root and waits for SchedulerBinding.Instance.EndOfFrame.
+            tester.Pump(TimeSpan.Zero);
+            Assert.True(pendingResponse.IsCompleted, "The extension is still waiting for its frame.");
             ServiceExtensionResponse response = await pendingResponse;
             Assert.Contains("\"enabled\":\"false\"", response.Result);
             Assert.False(WidgetsApp.DebugAllowBannerOverride);
         }
         finally
         {
-            PlatformDispatcher.Instance.TimerRun = previousTimerRun;
             WidgetsApp.DebugAllowBannerOverride = true;
         }
     }
@@ -895,18 +894,9 @@ public sealed class WidgetInspectorServiceExtensionsDartParityTests : IDisposabl
             Assert.StartsWith("Another exception was thrown:", (string)error["renderedErrorText"]!);
 
             // Reloads the app: reassembleApplication, then a pump for the frame it waits on.
-            Action<Action> previousTimerRun = PlatformDispatcher.Instance.TimerRun;
-            PlatformDispatcher.Instance.TimerRun = static callback => callback();
-            try
-            {
-                _ = BindingBase.ReassembleApplication();
-                tester.Pump();
-                HotReloadTests.WaitForUnlock();
-            }
-            finally
-            {
-                PlatformDispatcher.Instance.TimerRun = previousTimerRun;
-            }
+            _ = BindingBase.ReassembleApplication();
+            tester.Pump(TimeSpan.Zero);
+            HotReloadTests.WaitForUnlock();
 
             // Send another error.
             FlutterError.ReportError(new FlutterErrorDetails(

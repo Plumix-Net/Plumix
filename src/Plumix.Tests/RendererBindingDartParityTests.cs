@@ -19,8 +19,8 @@ namespace Plumix.Tests;
 public sealed class RendererBindingDartParityTests : IDisposable
 {
     private readonly List<(RenderView View, PipelineOwner Owner)> _views = [];
-    private readonly Action<Action> _previousTimerRun = PlatformDispatcher.Instance.TimerRun;
-    private readonly List<Action> _timers = [];
+    // Warm-up frames and service-extension waits are Timer.run turns on a fake clock the test drives.
+    private readonly FakeGestureTimers _timers = new();
     private TimeSpan _clock = TimeSpan.FromSeconds(1);
 
     // Views other test classes left registered in the process-wide binding; Dart's tests get a
@@ -31,7 +31,6 @@ public sealed class RendererBindingDartParityTests : IDisposable
     {
         SchedulerBinding.ResetForTests();
         GestureBinding.Instance.ResetForTests();
-        PlatformDispatcher.Instance.TimerRun = _timers.Add;
         _parkedViews = [.. RendererBinding.Instance.RenderViews];
         foreach (RenderView view in _parkedViews)
         {
@@ -51,7 +50,7 @@ public sealed class RendererBindingDartParityTests : IDisposable
             RendererBinding.Instance.AddRenderView(view);
         }
 
-        PlatformDispatcher.Instance.TimerRun = _previousTimerRun;
+        _timers.Dispose();
         SchedulerBinding.ResetForTests();
         GestureBinding.Instance.ResetForTests();
     }
@@ -607,10 +606,9 @@ public sealed class RendererBindingDartParityTests : IDisposable
     }
 
     [DebugOnlyFact]
-    public async Task InvokeServiceExtension_WrapsTheResultAndReportsErrors()
+    public void InvokeServiceExtension_WrapsTheResultAndReportsErrors()
     {
-        PlatformDispatcher.Instance.TimerRun = static callback => callback();
-        ServiceExtensionResponse response = await BindingBase.InvokeServiceExtensionAsync("ext.flutter.debugPaint");
+        ServiceExtensionResponse response = FakeGestureTimers.InvokeServiceExtension("ext.flutter.debugPaint");
         Assert.False(response.IsError);
         using (JsonDocument result = JsonDocument.Parse(response.Result!))
         {
@@ -624,7 +622,7 @@ public sealed class RendererBindingDartParityTests : IDisposable
         FlutterError.OnError = reported.Add;
         try
         {
-            ServiceExtensionResponse error = await BindingBase.InvokeServiceExtensionAsync(
+            ServiceExtensionResponse error = FakeGestureTimers.InvokeServiceExtension(
                 "ext.flutter.timeDilation",
                 new Dictionary<string, string> { ["timeDilation"] = "not a number" });
             Assert.True(error.IsError);
@@ -639,7 +637,7 @@ public sealed class RendererBindingDartParityTests : IDisposable
             FlutterError.OnError = previous;
         }
 
-        ServiceExtensionResponse unknown = await BindingBase.InvokeServiceExtensionAsync("ext.flutter.nope");
+        ServiceExtensionResponse unknown = FakeGestureTimers.InvokeServiceExtension("ext.flutter.nope");
         Assert.Equal(ServiceExtensionResponse.MethodNotFound, unknown.ErrorCode);
     }
 
@@ -689,15 +687,7 @@ public sealed class RendererBindingDartParityTests : IDisposable
         SchedulerBinding.Instance.HandleDrawFrame();
     }
 
-    private void RunTimers()
-    {
-        while (_timers.Count > 0)
-        {
-            Action timer = _timers[0];
-            _timers.RemoveAt(0);
-            timer();
-        }
-    }
+    private void RunTimers() => _timers.RunDueTimers();
 
     private static RenderBox Labelled(string label, Action onTap) =>
         new RenderSemanticsAnnotations(

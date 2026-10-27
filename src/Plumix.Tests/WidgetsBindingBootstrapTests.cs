@@ -20,15 +20,13 @@ public sealed class WidgetsBindingBootstrapTests : IDisposable
 {
     private readonly WidgetsBinding _binding = WidgetsBinding.Instance;
     private readonly PlatformDispatcher _dispatcher = PlatformDispatcher.Instance;
-    private readonly Action<Action> _previousTimerRun;
-    private readonly Queue<Action> _turns = [];
+    // runApp's root attachment and warm-up frame are Timer.run turns on a fake clock the test drives.
+    private readonly FakeGestureTimers _turns = new();
 
     public WidgetsBindingBootstrapTests()
     {
-        _previousTimerRun = _dispatcher.TimerRun;
         SchedulerBinding.ResetForTests();
         _binding.ResetRootForTests();
-        _dispatcher.TimerRun = _turns.Enqueue;
         StatefulProbe.Reset();
     }
 
@@ -36,7 +34,7 @@ public sealed class WidgetsBindingBootstrapTests : IDisposable
     {
         _binding.ResetRootForTests();
         SchedulerBinding.ResetForTests();
-        _dispatcher.TimerRun = _previousTimerRun;
+        _turns.Dispose();
     }
 
     [Fact]
@@ -70,7 +68,7 @@ public sealed class WidgetsBindingBootstrapTests : IDisposable
 
         Assert.Null(_binding.RootElement);
         Assert.False(didBuild);
-        Assert.Equal(3, _turns.Count);
+        Assert.Equal(3, _turns.PendingTimerCount);
 
         RunNextTurn();
 
@@ -129,7 +127,7 @@ public sealed class WidgetsBindingBootstrapTests : IDisposable
             () => PlumixExtensions.RunApp(new SizedBox()));
 
         Assert.Contains("RunWidget", error.Message, StringComparison.Ordinal);
-        Assert.Empty(_turns);
+        Assert.Equal(0, _turns.PendingTimerCount);
     }
 
     [Fact]
@@ -247,17 +245,12 @@ public sealed class WidgetsBindingBootstrapTests : IDisposable
         Assert.NotNull(_dispatcher.OnDrawFrame);
     }
 
-    private void RunNextTurn()
-    {
-        Assert.NotEmpty(_turns);
-        _turns.Dequeue()();
-    }
+    private void RunNextTurn() => Assert.True(_turns.RunNextTimer(), "No event-loop turn is pending.");
 
     private void DrainTurns()
     {
-        while (_turns.Count > 0)
+        while (_turns.RunNextTimer())
         {
-            RunNextTurn();
         }
     }
 

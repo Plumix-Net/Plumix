@@ -18,15 +18,14 @@ public sealed class WidgetsBindingDartParityTests : IDisposable
     private readonly WidgetsBinding _binding = WidgetsBinding.Instance;
     private readonly List<FlutterErrorDetails> _errors = [];
     private readonly FlutterExceptionHandler? _previousOnError = FlutterError.OnError;
-    private readonly Action<Action> _previousTimerRun = PlatformDispatcher.Instance.TimerRun;
-    private readonly Queue<Action> _turns = [];
+    // Timer.run turns (warm-up frames, scheduled tasks) run on a fake clock the test drives.
+    private readonly FakeGestureTimers _turns = new();
     private readonly List<WidgetsBindingObserver> _observers = [];
 
     public WidgetsBindingDartParityTests()
     {
         SchedulerBinding.ResetForTests();
         FlutterError.OnError = _errors.Add;
-        PlatformDispatcher.Instance.TimerRun = _turns.Enqueue;
     }
 
     public void Dispose()
@@ -39,7 +38,7 @@ public sealed class WidgetsBindingDartParityTests : IDisposable
         }
 
         FlutterError.OnError = _previousOnError;
-        PlatformDispatcher.Instance.TimerRun = _previousTimerRun;
+        _turns.Dispose();
         PlatformDispatcher.Instance.SetLocalesTestValue(null);
         _binding.ResetLifecycleStateForTests();
         SchedulerBinding.ResetForTests();
@@ -716,13 +715,7 @@ public sealed class WidgetsBindingDartParityTests : IDisposable
         return reply;
     }
 
-    private void DrainTurns()
-    {
-        while (_turns.Count > 0)
-        {
-            _turns.Dequeue()();
-        }
-    }
+    private void DrainTurns() => _turns.RunDueTimers();
 
     private sealed class ThrowingObserver(bool tracksBackGesture = false) : WidgetsBindingObserver
     {

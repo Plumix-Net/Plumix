@@ -74,7 +74,7 @@ public partial class WidgetsBinding
     internal void ScheduleAttachRootWidget(Widget rootWidget)
     {
         ArgumentNullException.ThrowIfNull(rootWidget);
-        PlatformDispatcher.Instance.TimerRun(() => AttachRootWidget(rootWidget));
+        Timer.Run(() => AttachRootWidget(rootWidget));
     }
 
     /// <summary>Attaches <paramref name="rootWidget"/> below a debug-labelled <see cref="RootWidget"/>.</summary>

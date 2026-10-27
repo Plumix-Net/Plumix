@@ -15,22 +15,22 @@ namespace Plumix.Tests;
 [Collection(SchedulerTestCollection.Name)]
 public sealed class LocalizationsDartParityTests : IDisposable
 {
-    private readonly Action<Action> _previousTimerRun = PlatformDispatcher.Instance.TimerRun;
     private readonly Locale? _previousApplicationLocale = PlatformDispatcher.Instance.ApplicationLocale;
-    private readonly Queue<Action> _turns = [];
+
+    // Root attachment and warm-up frames are Timer.run turns on a fake clock the test drives.
+    private readonly FakeGestureTimers _turns = new();
 
     public LocalizationsDartParityTests()
     {
         SchedulerBinding.ResetForTests();
         RendererBinding.Instance.ResetFirstFrameSent();
-        PlatformDispatcher.Instance.TimerRun = _turns.Enqueue;
         PlatformDispatcher.Instance.ResetApplicationLocaleForTests(null);
     }
 
     public void Dispose()
     {
         EventLoop.FlushMicrotasks();
-        PlatformDispatcher.Instance.TimerRun = _previousTimerRun;
+        _turns.Dispose();
         PlatformDispatcher.Instance.ResetApplicationLocaleForTests(_previousApplicationLocale);
         SchedulerBinding.ResetForTests();
         RendererBinding.Instance.ResetFirstFrameSent();
@@ -54,17 +54,22 @@ public sealed class LocalizationsDartParityTests : IDisposable
         Assert.Empty(tester.ElementsWithText("loaded"));
         Assert.False(RendererBinding.Instance.SendFramesToEngine);
 
-        bool localeAvailableWhenFramesAllowed = false;
-        PlatformDispatcher.Instance.TimerRun = turn =>
+        // The locale reaches the platform before the first frame is allowed.
+        bool framesAllowedWhenLocaleReported = true;
+        void OnLocale(Locale locale) => framesAllowedWhenLocaleReported = RendererBinding.Instance.SendFramesToEngine;
+        PlatformDispatcher.Instance.ApplicationLocaleChanged += OnLocale;
+        try
         {
-            localeAvailableWhenFramesAllowed = RendererBinding.Instance.SendFramesToEngine
-                && PlatformDispatcher.Instance.ApplicationLocale == new Locale("fo");
-            _turns.Enqueue(turn);
-        };
-        numbers.Completion.SetResult([42]);
-        EventLoop.FlushMicrotasks();
+            numbers.Completion.SetResult([42]);
+            EventLoop.FlushMicrotasks();
+        }
+        finally
+        {
+            PlatformDispatcher.Instance.ApplicationLocaleChanged -= OnLocale;
+        }
 
-        Assert.True(localeAvailableWhenFramesAllowed);
+        Assert.False(framesAllowedWhenLocaleReported);
+        Assert.Equal(new Locale("fo"), PlatformDispatcher.Instance.ApplicationLocale);
         Assert.True(RendererBinding.Instance.SendFramesToEngine);
         Assert.Empty(tester.ElementsWithText("loaded"));
         EventLoop.FlushMicrotasks();
@@ -270,7 +275,7 @@ public sealed class LocalizationsDartParityTests : IDisposable
         Assert.Equal(["supported:unsupported", "supported:first", "load:first"], calls);
         Assert.Equal("first", Localizations.Of<string>(tester.ElementOfType<Text>()));
         Assert.True(RendererBinding.Instance.SendFramesToEngine);
-        Assert.Empty(_turns);
+        Assert.Equal(0, _turns.PendingTimerCount);
     }
 
     [Fact]
@@ -311,7 +316,7 @@ public sealed class LocalizationsDartParityTests : IDisposable
             return new Text(Localizations.Of<string>(context));
         })));
         Assert.Single(tester.ElementsWithText("direct"));
-        Assert.Empty(_turns);
+        Assert.Equal(0, _turns.PendingTimerCount);
     }
 
     [Fact]
@@ -519,10 +524,8 @@ public sealed class LocalizationsDartParityTests : IDisposable
 
     private void DrainTurns()
     {
-        while (_turns.TryDequeue(out Action? turn))
+        while (_turns.RunNextTimer())
         {
-            turn();
-            EventLoop.FlushMicrotasks();
         }
     }
 

@@ -83,6 +83,9 @@ public sealed class Timer
     /// <summary>Creation order: timers due at the same time fire in it.</summary>
     internal long Sequence { get; }
 
+    /// <summary>Where a timer on the fake clock was created; null on the real clock.</summary>
+    internal System.Diagnostics.StackTrace? CreationStackTrace { get; set; }
+
     /// <summary>The event-loop time at which the timer fires next.</summary>
     internal TimeSpan Deadline { get; set; }
 

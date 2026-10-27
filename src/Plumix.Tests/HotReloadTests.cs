@@ -15,18 +15,17 @@ namespace Plumix.Tests;
 [Collection(SchedulerTestCollection.Name)]
 public sealed class HotReloadTests : IDisposable
 {
-    private readonly Action<Action> _previousTimerRun = PlatformDispatcher.Instance.TimerRun;
-    private readonly List<Action> _timers = [];
+    // The warm-up frame of a reassemble is two Timer.run turns; they run on a fake clock the test drives.
+    private readonly FakeGestureTimers _timers = new();
 
     public HotReloadTests()
     {
         SchedulerBinding.ResetForTests();
-        PlatformDispatcher.Instance.TimerRun = _timers.Add;
     }
 
     public void Dispose()
     {
-        PlatformDispatcher.Instance.TimerRun = _previousTimerRun;
+        _timers.Dispose();
         SchedulerBinding.ResetForTests();
     }
 
@@ -260,15 +259,7 @@ public sealed class HotReloadTests : IDisposable
         }
     }
 
-    private void RunTimers()
-    {
-        while (_timers.Count > 0)
-        {
-            Action timer = _timers[0];
-            _timers.RemoveAt(0);
-            timer();
-        }
-    }
+    private void RunTimers() => _timers.RunDueTimers();
 
     private sealed class KeyProbeHost : PlumixHost
     {

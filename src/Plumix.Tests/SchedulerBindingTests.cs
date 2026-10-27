@@ -730,9 +730,8 @@ public sealed class SchedulerBindingTests
     public void ScheduleWarmUpFrame_RunsBeginAndDrawOnSeparateTurnsAndLocksEventsUntilTheFrameEnds()
     {
         SchedulerBinding.ResetForTests();
-        List<Action> turns = [];
-        Action<Action> previousTimerRun = PlatformDispatcher.Instance.TimerRun;
-        PlatformDispatcher.Instance.TimerRun = turns.Add;
+        // The two halves of the warm-up frame are Timer.run turns on a fake clock the test drives.
+        var turns = new FakeGestureTimers();
         try
         {
             List<string> order = [];
@@ -747,33 +746,33 @@ public sealed class SchedulerBindingTests
 
             // Two turns, one for the begin half and one for the draw half. A second call while the
             // warm-up frame is in flight adds none.
-            Assert.Equal(2, turns.Count);
+            Assert.Equal(2, turns.PendingTimerCount);
             SchedulerBinding.Instance.ScheduleWarmUpFrame();
-            Assert.Equal(2, turns.Count);
+            Assert.Equal(2, turns.PendingTimerCount);
 
             // Events are locked, so a scheduled task queues without arming a turn of its own.
             bool taskRan = false;
             Assert.True(SchedulerBinding.Instance.Locked);
             SchedulerBinding.Instance.ScheduleTask(() => taskRan = true, Priority.Animation);
-            Assert.Equal(2, turns.Count);
+            Assert.Equal(2, turns.PendingTimerCount);
 
             // The begin turn ends like any event-loop turn, by draining the microtasks it queued.
-            turns[0]();
+            Assert.True(turns.RunNextTimer());
             Assert.Equal(["begin", "microtask"], order);
 
-            turns[1]();
+            Assert.True(turns.RunNextTimer());
             Assert.Equal(["begin", "microtask", "draw"], order);
             Assert.False(SchedulerBinding.Instance.Locked);
 
             // Unlocking re-arms the queue that stayed unserviced while locked.
             Assert.False(taskRan);
-            Assert.Equal(3, turns.Count);
-            turns[2]();
+            Assert.Equal(1, turns.PendingTimerCount);
+            Assert.True(turns.RunNextTimer());
             Assert.True(taskRan);
         }
         finally
         {
-            PlatformDispatcher.Instance.TimerRun = previousTimerRun;
+            turns.Dispose();
             SchedulerBinding.ResetForTests();
         }
     }
@@ -782,9 +781,8 @@ public sealed class SchedulerBindingTests
     public void ScheduleWarmUpFrame_SwallowsAHostFrameThatArrivesMidWarmUpAndReschedulesIt()
     {
         SchedulerBinding.ResetForTests();
-        List<Action> turns = [];
-        Action<Action> previousTimerRun = PlatformDispatcher.Instance.TimerRun;
-        PlatformDispatcher.Instance.TimerRun = turns.Add;
+        // The two halves of the warm-up frame are Timer.run turns on a fake clock the test drives.
+        var turns = new FakeGestureTimers();
         try
         {
             int frames = 0;
@@ -792,7 +790,7 @@ public sealed class SchedulerBindingTests
             SchedulerBinding.Instance.EnsureFrameCallbacksRegistered();
             SchedulerBinding.Instance.ScheduleWarmUpFrame();
 
-            turns[0]();
+            Assert.True(turns.RunNextTimer());
 
             // A host frame delivered between the two halves of the warm-up frame is dropped: neither
             // half of it reaches the pipeline.
@@ -804,13 +802,13 @@ public sealed class SchedulerBindingTests
 
             // The drop installs a post-frame callback that asks for the dropped frame again; it runs
             // in the warm-up frame's own post-frame phase.
-            turns[1]();
+            Assert.True(turns.RunNextTimer());
             Assert.Equal(1, frames);
             Assert.True(SchedulerBinding.Instance.HasScheduledFrame);
         }
         finally
         {
-            PlatformDispatcher.Instance.TimerRun = previousTimerRun;
+            turns.Dispose();
             SchedulerBinding.ResetForTests();
         }
     }

@@ -390,7 +390,10 @@ public static class BindingBase
     /// </summary>
     /// <remarks>
     /// dart:developer's side of <c>registerExtension</c>. An unknown method is answered with
-    /// <see cref="ServiceExtensionResponse.MethodNotFound"/>.
+    /// <see cref="ServiceExtensionResponse.MethodNotFound"/>. The VM runs the extension in the
+    /// isolate, so the handler starts on the framework thread (<see cref="EventLoop.RunAsync"/>) and
+    /// every <c>await</c> inside it resumes as a microtask there, not on a thread-pool thread that
+    /// would race the frames the extension waits for.
     /// </remarks>
     public static Task<ServiceExtensionResponse> InvokeServiceExtensionAsync(
         string method,
@@ -404,6 +407,7 @@ public static class BindingBase
                 JsonSerializer.Serialize(new Dictionary<string, string> { ["method"] = method })));
         }
 
+        using EventLoop.FrameworkThreadScope scope = EventLoop.EnterFrameworkThread();
         return handler(parameters ?? new Dictionary<string, string>());
     }
 
@@ -443,7 +447,7 @@ public static class BindingBase
     private static Task<bool> WaitForOuterEventLoop()
     {
         var completer = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
-        PlatformDispatcher.Instance.TimerRun(() => completer.SetResult(true));
+        Timer.Run(() => completer.SetResult(true));
         return completer.Task;
     }
 

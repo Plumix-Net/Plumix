@@ -45,6 +45,21 @@ public static partial class EventLoop
     /// <summary>The number of active timers on the fake clock: <c>FakeAsync.pendingTimers.length</c>.</summary>
     internal static int PendingFakeTimerCount => _fakeTimerQueue?.Count ?? 0;
 
+    /// <summary>The active timers on the fake clock, in firing order: <c>FakeAsync.pendingTimers</c>.</summary>
+    internal static IReadOnlyList<Timer> PendingFakeTimers => _fakeTimerQueue?.Snapshot() ?? [];
+
+    /// <summary>
+    /// Runs one turn of the event loop on the fake clock: fires the earliest pending timer, moving the
+    /// clock to its deadline when that is later, with the microtasks drained before and after it.
+    /// </summary>
+    /// <returns><see langword="false"/> when no timer is pending.</returns>
+    internal static bool RunNextFakeTimer()
+    {
+        TimerQueue queue = _fakeTimerQueue
+            ?? throw new InvalidOperationException("Fake time is not in use; see EventLoop.UseFakeTime.");
+        return queue.FireNext();
+    }
+
     /// <summary>The scope <see cref="UseFakeTime"/> returns.</summary>
     internal readonly struct FakeTimeScope : IDisposable
     {
@@ -121,6 +136,12 @@ internal sealed class TimerQueue
 
     public void Add(Timer timer)
     {
+        if (_fake)
+        {
+            // FakeAsync's `FakeTimer.creationStackTrace`, for the pending-timer report of a test.
+            timer.CreationStackTrace = new System.Diagnostics.StackTrace(2, fNeedFileInfo: false);
+        }
+
         lock (_sync)
         {
             timer.Deadline = Now + timer.Duration;
@@ -146,6 +167,33 @@ internal sealed class TimerQueue
             _timers.Remove(timer);
             timer.Queue = null;
         }
+    }
+
+    /// <summary>The pending timers in firing order.</summary>
+    public IReadOnlyList<Timer> Snapshot()
+    {
+        lock (_sync)
+        {
+            return [.. _timers];
+        }
+    }
+
+    /// <summary>See <see cref="EventLoop.RunNextFakeTimer"/>.</summary>
+    public bool FireNext()
+    {
+        EventLoop.FlushMicrotasks();
+        if (TakeDue(TimeSpan.MaxValue) is not { } timer)
+        {
+            return false;
+        }
+
+        if (timer.Deadline > _fakeNow)
+        {
+            _fakeNow = timer.Deadline;
+        }
+
+        Fire(timer);
+        return true;
     }
 
     /// <summary>Drops every pending timer; none of them stays active.</summary>

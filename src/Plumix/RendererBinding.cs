@@ -501,11 +501,18 @@ public sealed class RendererBinding
         // Always schedule a warm up frame even if the deferral count is not down to
         // zero yet since the removal of a deferral may uncover new deferrals that
         // are lower in the widget tree.
-        if (!_firstFrameSent)
+        if (!_firstFrameSent && !AllowFirstFrameLeavesFramesToTests)
         {
             SchedulerBinding.Instance.ScheduleWarmUpFrame();
         }
     }
+
+    /// <summary>
+    /// flutter_test's <c>AutomatedTestWidgetsFlutterBinding.allowFirstFrame</c> override: a test
+    /// harness that pumps its own frames sets this so that allowing the first frame does not force a
+    /// warm-up frame, giving the test full control over frame scheduling.
+    /// </summary>
+    internal bool AllowFirstFrameLeavesFramesToTests { get; set; }
 
     /// <summary>Call this to pretend that no frames have been sent to the platform yet.</summary>
     /// <remarks>Flutter's <c>RendererBinding.resetFirstFrameSent</c>.</remarks>
