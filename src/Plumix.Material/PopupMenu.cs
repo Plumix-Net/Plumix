@@ -466,6 +466,7 @@ public sealed class PopupMenuButtonState<T> : State<PopupMenuButton<T>>
 
     public override Widget Build(BuildContext context)
     {
+        DebugAssertions.Assert(MaterialDebug.DebugCheckHasMaterialLocalizations(context));
         PopupMenuButton<T> widget = CurrentWidget;
         _popupMenuTheme = PopupMenuTheme.Of(context);
         MaterialLocalizations localizations = MaterialLocalizations.Of(context);
@@ -673,6 +674,7 @@ public static class PopupMenus
         bool? requestFocus = null)
     {
         if (items is null || items.Count == 0) throw new ArgumentException("Popup menu items must not be empty.", nameof(items));
+        DebugAssertions.Assert(MaterialDebug.DebugCheckHasMaterialLocalizations(context));
         if (position.HasValue == (positionBuilder is not null))
             throw new ArgumentException("Exactly one of position and positionBuilder must be provided.");
         if (semanticLabel is null

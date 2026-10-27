@@ -55,9 +55,12 @@ public readonly record struct TimeOfDay : IComparable<TimeOfDay>
     public TimeOfDay Replacing(int? hour = null, int? minute = null) =>
         new(hour ?? Hour, minute ?? Minute);
 
-    public string Format(BuildContext context) => MaterialLocalizations.Of(context).FormatTimeOfDay(
-        this,
-        MediaQuery.MaybeAlwaysUse24HourFormatOf(context) ?? false);
+    public string Format(BuildContext context)
+    {
+        DebugAssertions.Assert(MaterialDebug.DebugCheckHasMaterialLocalizations(context));
+        MaterialLocalizations localizations = MaterialLocalizations.Of(context);
+        return localizations.FormatTimeOfDay(this, MediaQuery.MaybeAlwaysUse24HourFormatOf(context) ?? false);
+    }
 
     public bool IsBefore(TimeOfDay other) => CompareTo(other) < 0;
     public bool IsAfter(TimeOfDay other) => CompareTo(other) > 0;

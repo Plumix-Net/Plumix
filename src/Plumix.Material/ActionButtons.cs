@@ -15,6 +15,7 @@ internal static class ActionButton
         string tooltip,
         Action onPressedCallback)
     {
+        DebugAssertions.Assert(MaterialDebug.DebugCheckHasMaterialLocalizations(context));
         return new IconButton(
             key: standardComponent?.Key(),
             icon: button.Icon,

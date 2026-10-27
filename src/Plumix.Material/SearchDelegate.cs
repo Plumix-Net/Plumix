@@ -371,6 +371,7 @@ internal sealed class SearchPageState<T> : State<SearchPage<T>>
 
     public override Widget Build(BuildContext context)
     {
+        DebugAssertions.Assert(MaterialDebug.DebugCheckHasMaterialLocalizations(context));
         var searchDelegate = Current.SearchDelegate;
         var theme = searchDelegate.AppBarTheme(context);
         string fieldLabel = searchDelegate.SearchFieldLabel ?? MaterialLocalizations.Of(context).SearchFieldLabel;

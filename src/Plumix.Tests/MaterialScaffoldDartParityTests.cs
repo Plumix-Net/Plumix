@@ -250,7 +250,7 @@ public sealed class MaterialScaffoldDartParityTests
     public void ScaffoldSlotsDemoSupportsKeyboardAndResizeControlsAtNarrowWidth()
     {
         using var tester = new FrameworkDartTester(logicalSize: new Size(350, 700));
-        tester.PumpWidget(Shell(new ScaffoldSlotsDemoPage()));
+        tester.PumpWidget(MaterialLocalizationsTesting.Localized(Shell(new ScaffoldSlotsDemoPage())));
         Assert.Null(tester.TakeException());
         tester.Tap(Find.Text("Keyboard off"));
         tester.Pump();

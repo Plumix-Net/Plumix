@@ -300,6 +300,7 @@ public sealed class ReorderableListView : StatefulWidget
 
         public override Widget Build(BuildContext context)
         {
+            DebugAssertions.Assert(MaterialDebug.DebugCheckHasMaterialLocalizations(context));
             var widget = CurrentWidget;
             bool usePrimary = widget.Primary ?? (widget.ScrollDirection == Axis.Vertical
                                                   && widget.ScrollController is null);

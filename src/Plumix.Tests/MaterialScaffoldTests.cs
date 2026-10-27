@@ -4556,7 +4556,8 @@ public sealed class MaterialScaffoldTests
                 base.PerformRebuild();
                 _child = UpdateChild(
                     _child,
-                    new MediaQuery(new MediaQueryData(), new Directionality(Plumix.UI.TextDirection.Ltr, Widget)),
+                    MaterialLocalizationsTesting.Localized(
+                        new MediaQuery(new MediaQueryData(), new Directionality(Plumix.UI.TextDirection.Ltr, Widget))),
                     Slot);
             }
 
@@ -4697,7 +4698,8 @@ public sealed class MaterialScaffoldTests
             // Like flutter_test's view, the root always provides a MediaQuery.
             _child = UpdateChild(
                 _child,
-                new MediaQuery(new MediaQueryData(), new Directionality(Plumix.UI.TextDirection.Ltr, Widget)),
+                MaterialLocalizationsTesting.Localized(
+                    new MediaQuery(new MediaQueryData(), new Directionality(Plumix.UI.TextDirection.Ltr, Widget))),
                 Slot);
         }
 

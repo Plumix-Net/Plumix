@@ -142,6 +142,7 @@ public sealed class UserAccountsDrawerHeader : StatefulWidget
 
         public override Widget Build(BuildContext context)
         {
+            DebugAssertions.Assert(MaterialDebug.DebugCheckHasMaterialLocalizations(context));
             var widget = CurrentWidget;
             var theme = Theme.Of(context);
             var localizations = MaterialLocalizations.Of(context);
@@ -287,6 +288,7 @@ public sealed class UserAccountsDrawerHeader : StatefulWidget
 
         public override Widget Build(BuildContext context)
         {
+            DebugAssertions.Assert(MaterialDebug.DebugCheckHasMaterialLocalizations(context));
             var widget = CurrentWidget;
             var theme = Theme.Of(context);
             var direction = Directionality.Of(context);

@@ -108,6 +108,7 @@ public sealed class AdaptiveTextSelectionToolbar : StatelessWidget
             return CupertinoTextSelectionToolbarButton.GetButtonLabel(context, buttonItem);
         }
 
+        DebugAssertions.Assert(MaterialDebug.DebugCheckHasMaterialLocalizations(context));
         MaterialLocalizations localizations = MaterialLocalizations.Of(context);
         return buttonItem.Type switch
         {

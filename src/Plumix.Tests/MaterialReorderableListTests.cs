@@ -829,7 +829,7 @@ public sealed class MaterialReorderableListTests
                 new MediaQueryData(new Size(360, 640)),
                 new Localizations(
                     locale: new Locale("en"),
-                    delegates: [DefaultWidgetsLocalizations.Delegate],
+                    delegates: [DefaultMaterialLocalizations.Delegate, DefaultWidgetsLocalizations.Delegate],
                     child: new Theme(
                         theme ?? ThemeData.Light,
                         Overlay.Wrap(child)))));

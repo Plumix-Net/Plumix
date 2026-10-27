@@ -955,7 +955,10 @@ public sealed class MaterialRadioExpansionTileTests : IDisposable
             protected override void PerformRebuild()
             {
                 base.PerformRebuild();
-                _child = UpdateChild(_child, new Directionality(Plumix.UI.TextDirection.Ltr, Widget), Slot);
+                _child = UpdateChild(
+                    _child,
+                    MaterialLocalizationsTesting.Localized(new Directionality(Plumix.UI.TextDirection.Ltr, Widget)),
+                    Slot);
             }
 
             public override void Update(Widget newWidget)

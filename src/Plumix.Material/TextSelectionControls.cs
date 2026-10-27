@@ -265,6 +265,7 @@ internal sealed class TextSelectionControlsToolbar : StatefulWidget
 
         public override Widget Build(BuildContext context)
         {
+            DebugAssertions.Assert(MaterialDebug.DebugCheckHasMaterialLocalizations(context));
             TextSelectionControlsToolbar widget = CurrentWidget;
 
             // If there are no buttons to be shown, don't render anything.

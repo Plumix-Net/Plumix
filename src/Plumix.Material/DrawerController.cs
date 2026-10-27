@@ -150,6 +150,7 @@ public sealed class DrawerControllerState : State<DrawerController>
 
     public override Widget Build(BuildContext context)
     {
+        DebugAssertions.Assert(MaterialDebug.DebugCheckHasMaterialLocalizations(context));
         Widget result = _controller.Value <= 0
             ? BuildClosedDrawer(context)
             : BuildOpenDrawer(context);

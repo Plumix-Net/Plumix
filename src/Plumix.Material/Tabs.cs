@@ -1576,6 +1576,7 @@ public sealed class TabBar : StatefulWidget, IPreferredSizeWidget
 
         public override Widget Build(BuildContext context)
         {
+            DebugAssertions.Assert(MaterialDebug.DebugCheckHasMaterialLocalizations(context));
             var theme = Theme.Of(context);
             TabBarThemeData tabBarTheme = TabBarTheme.Of(context);
             TabBarDefaults defaults = ResolveDefaults(context);

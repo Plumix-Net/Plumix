@@ -183,7 +183,7 @@ public sealed class MaterialDrawerTests
             var androidTheme = ThemeData.Light with { Platform = TargetPlatform.IOS };
             using (var androidHarness = new WidgetRenderHarness(Root(androidTheme, new Drawer())))
             {
-                Semantics semantics = Assert.Single(androidHarness.FindWidgets<Semantics>());
+                Semantics semantics = Assert.Single(androidHarness.FindWidgets<Semantics>(), IsDrawerSemantics);
                 Assert.Equal(DefaultMaterialLocalizations.Instance.DrawerLabel, semantics.Properties.Label);
                 Assert.True(semantics.Properties.ScopesRoute);
                 Assert.True(semantics.Properties.NamesRoute);
@@ -193,13 +193,16 @@ public sealed class MaterialDrawerTests
             PlatformDefaults.DebugTargetPlatformOverride = TargetPlatform.IOS;
             var iosTheme = ThemeData.Light with { Platform = TargetPlatform.Android };
             using var iosHarness = new WidgetRenderHarness(Root(iosTheme, new Drawer()));
-            Assert.Null(Assert.Single(iosHarness.FindWidgets<Semantics>()).Properties.Label);
+            Assert.Null(Assert.Single(iosHarness.FindWidgets<Semantics>(), IsDrawerSemantics).Properties.Label);
         }
         finally
         {
             PlatformDefaults.DebugTargetPlatformOverride = previous;
         }
     }
+
+    // The harness's Localizations adds its own (text-direction-only) Semantics above the drawer's.
+    private static bool IsDrawerSemantics(Semantics semantics) => semantics.Properties.ScopesRoute == true;
 
     [Fact]
     public void Drawer_AllowsZeroArea()
@@ -312,7 +315,7 @@ public sealed class MaterialDrawerTests
             protected override void PerformRebuild()
             {
                 base.PerformRebuild();
-                _child = UpdateChild(_child, Widget, Slot);
+                _child = UpdateChild(_child, MaterialLocalizationsTesting.Localized(Widget), Slot);
             }
 
             public override void Update(Widget newWidget)
