@@ -10,7 +10,7 @@ Use this block as the fastest machine-readable status summary.
 framework_plan_version: 2
 last_updated: 2026-10-27
 north_star: "Flutter-like widget/rendering framework in C# with Avalonia as host infrastructure."
-current_phase: "RC preparation: sample capture parity is the open blocker, 2 of 164 routes left (/dropdown, /selection)."
+current_phase: "RC preparation: every blocker met (2026-10-27); next are the release gates on the tagged commit."
 latest_release: "v0.4.0-beta.3 (2026-10-24); next: v1.0.0-rc.1, criteria in the Release Candidate section"
 flutter_pin: "3.47.0 (4cf24164269); material_ui 1.0.0; cupertino_ui 1.0.0 — see AGENTS.md"
 open_work_outside_controls: "docs/ai/BACKLOG.md (control-level gaps, host-level gaps; the 3.44->3.47 re-port table is down to subsystem-blocked rows)"
@@ -93,8 +93,8 @@ Blockers (all must close):
 
 - M5 and M6 are `done` (met 2026-10-27).
 - Every sample route in `SampleScreenCaptureTests` matches the Dart capture, or its residual
-  difference is a `docs/ai/DIVERGENCES.md` row. (2026-10-27: 162 of 164; `/dropdown` and `/selection` left, see
-  `docs/ai/BACKLOG.md`.)
+  difference is a `docs/ai/DIVERGENCES.md` row. (met 2026-10-27: 162 of 164 within Skia AA noise; `/image` and
+  `/desktop-text-selection-toolbar` are `DIVERGENCES.md` rows).
 - No qualified marker in `docs/ai/PORT_MAP.md` (met 2026-10-27).
 - Control-level gaps (`docs/ai/BACKLOG.md`) that change an existing signature, type or default are
   closed (met 2026-10-27: state-property slots on `IWidgetStateProperty`, `AnimationController` errors,

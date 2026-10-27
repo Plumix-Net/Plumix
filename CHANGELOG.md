@@ -8,6 +8,11 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased]
+- Text: an empty line's leading follows the strut's half-leading flag, not the style's (SkParagraph `computeEmptyMetrics`).
+- Headless paragraphs: hard-break and placeholder-only line metrics and the half-spacing shift follow SkParagraph `TextWrapper`.
+- Headless paragraphs shape FlutterTest marks like HarfBuzz (per-glyph spacing, composition, mark widths per shaper).
+- `SelectableText` merges `DefaultTextStyle` and passes an unforced `StrutStyle()` (selectable_text.dart).
+- Sample capture parity: every route matches the Dart capture or is a `DIVERGENCES.md` row (RC blocker met).
 - Headless paragraphs fake bold (w600+)/italic FlutterTest glyphs and paint backgrounds, shadows, decorations (SkParagraph).
 - Headless paragraphs keep the half letter-spacing lead-in unless an alignment shift applies (SkParagraph `TextLine`).
 - `Badge` composes `Container(clipBehavior, ShapeDecoration(StadiumBorder))` like badge.dart (badge.dart).
