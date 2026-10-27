@@ -84,13 +84,12 @@ internal sealed class RouterDemoPageState : State
 
     private static Widget BuildAction(string label, Action onTap, Color background)
     {
-        return new CounterTapButton(
-            label: label,
+        return new GestureDetector(
             onTap: onTap,
-            background: background,
-            foreground: Colors.Black,
-            fontSize: 12,
-            padding: new Thickness(10, 8));
+            child: new Container(
+                padding: new Thickness(10, 8),
+                color: background,
+                child: new Text(label, style: new TextStyle(FontSize: 12, Color: Colors.Black))));
     }
 }
 

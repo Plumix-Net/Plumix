@@ -79,13 +79,12 @@ internal sealed class NavigatorPagesDemoPageState : State
 
     private static Widget BuildAction(string label, System.Action onTap, Color background)
     {
-        return new CounterTapButton(
-            label: label,
+        return new GestureDetector(
             onTap: onTap,
-            background: background,
-            foreground: Colors.Black,
-            fontSize: 12,
-            padding: new Thickness(10, 8));
+            child: new Container(
+                padding: new Thickness(10, 8),
+                color: background,
+                child: new Text(label, style: new TextStyle(FontSize: 12, Color: Colors.Black))));
     }
 }
 
@@ -132,14 +131,15 @@ internal sealed class SampleDeclarativePageRoute : PageRoute
                             style: new TextStyle(
                                 FontSize: 12,
                                 Color: MaterialColors.Grey)),
-                        new CounterTapButton(
-                            label: "Pop this page",
+                        new GestureDetector(
                             // Qualified: `Route.Navigator` shadows the widget type inside a Route.
                             onTap: () => Plumix.Widgets.Navigator.Of(context).MaybePop(),
-                            background: new Color(0xFFFFFFFF),
-                            foreground: Colors.Black,
-                            fontSize: 12,
-                            padding: new Thickness(10, 6)),
+                            child: new Container(
+                                padding: new Thickness(10, 6),
+                                color: new Color(0xFFFFFFFF),
+                                child: new Text(
+                                    "Pop this page",
+                                    style: new TextStyle(FontSize: 12, Color: Colors.Black)))),
                     ])));
     }
 }

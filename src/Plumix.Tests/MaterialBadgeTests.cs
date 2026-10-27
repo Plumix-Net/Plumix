@@ -166,7 +166,7 @@ public sealed class MaterialBadgeTests
 
         RenderBadgePositioner positioner = FindDescendant<RenderBadgePositioner>(harness.RenderView)!;
         Assert.Equal((AlignmentGeometry)AlignmentDirectional.TopEnd, positioner.Alignment);
-        Assert.NotEmpty(FindDescendants<RenderClipRRect>(harness.RenderView));
+        Assert.NotEmpty(FindDescendants<RenderClipPath>(harness.RenderView));
     }
 
     [Fact]

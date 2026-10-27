@@ -244,13 +244,14 @@ public sealed class TextFieldDemoPage : StatefulWidget
                                         ? "Enter a display name"
                                         : value.Length < 3 ? "Use at least 3 characters" : null,
                                     onSaved: value => SetState(() => _formStatus = $"saved: {value}")),
-                                new Row(
+                                new Wrap(
                                     spacing: 8,
+                                    runSpacing: 8,
                                     children:
                                     [
-                                        Control("Validate", ValidateForm),
-                                        Control("Save", SaveForm),
-                                        Control("Reset", ResetForm),
+                                        FormControl("Validate", ValidateForm),
+                                        FormControl("Save", SaveForm),
+                                        FormControl("Reset", ResetForm),
                                     ]),
                                 new Text($"Form status: {_formStatus}", style: new TextStyle(FontSize: 13)),
                             ])),
@@ -353,6 +354,10 @@ public sealed class TextFieldDemoPage : StatefulWidget
             states.Contains(WidgetState.Error) ? Colors.Crimson : Colors.Indigo;
 
         private static Widget Control(string label, Action action) => new TextButton(new Text(label), action);
+
+        // Dart's `_control`: the form buttons use a 12 px label.
+        private static Widget FormControl(string label, Action action) =>
+            new TextButton(new Text(label, style: new TextStyle(FontSize: 12)), action);
     }
     private sealed class DemoInputTextStyle : WidgetStateTextStyle
     {
