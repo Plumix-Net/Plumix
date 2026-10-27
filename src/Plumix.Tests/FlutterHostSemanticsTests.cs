@@ -144,8 +144,8 @@ public sealed class PlumixHostSemanticsTests : IDisposable
         Assert.NotNull(rect);
         Assert.Equal(button.GlobalRect, rect!.Value);
 
-        // Unknown view and unknown node both resolve to null instead of throwing: the platform may
-        // be acting on a tree the framework has already replaced.
+        // The host's own query answers only for its view and resolves an unknown node to null; the
+        // binding's lookup is the one that asserts like Dart's.
         Assert.Null(host.GetRectOfSemanticsNodeInViewCoordinates(viewId: 999, nodeId: button.Id));
         Assert.Null(host.GetRectOfSemanticsNodeInViewCoordinates(viewId: 0, nodeId: -1));
     }

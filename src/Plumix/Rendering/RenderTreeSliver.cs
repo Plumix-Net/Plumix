@@ -80,11 +80,11 @@ public class RenderTreeSliver : RenderSliverVariedExtentList
 
     /// <summary>Creates the sliver that lays out the rows of a <see cref="TreeSliver{T}"/>.</summary>
     public RenderTreeSliver(
-        IRenderSliverBoxChildManager? childManager,
+        IRenderSliverBoxChildManager childManager,
         ItemExtentBuilder itemExtentBuilder,
         Dictionary<UniqueKey, TreeSliverNodesAnimation> activeAnimations,
         double indentation)
-        : base(itemExtentBuilder, childManager)
+        : base(childManager, itemExtentBuilder)
     {
         _activeAnimations = activeAnimations;
         _indentation = indentation;
@@ -231,7 +231,7 @@ public class RenderTreeSliver : RenderSliverVariedExtentList
         double position = 0.0;
         int index = 0;
         double totalAnimationOffset = 0.0;
-        int? childCount = ChildManager?.EstimatedChildCount;
+        int? childCount = ChildManager.EstimatedChildCount;
         while (position < scrollOffset)
         {
             if (childCount is not null && index > childCount.Value - 1)
@@ -278,7 +278,7 @@ public class RenderTreeSliver : RenderSliverVariedExtentList
         double position = 0.0;
         int currentIndex = 0;
         double totalAnimationOffset = 0.0;
-        int? childCount = ChildManager?.EstimatedChildCount;
+        int? childCount = ChildManager.EstimatedChildCount;
         while (currentIndex < index)
         {
             if (childCount is not null && currentIndex > childCount.Value - 1)

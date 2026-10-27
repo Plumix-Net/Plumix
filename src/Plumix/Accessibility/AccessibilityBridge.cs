@@ -383,11 +383,21 @@ public sealed class AccessibilityBridge
     /// </summary>
     /// <remarks>
     /// The engine's <c>DispatchAccessibilityAction</c>: the action reaches the framework as a
-    /// <see cref="PlatformDispatcher.OnSemanticsActionEvent"/> for this bridge's view.
+    /// <see cref="PlatformDispatcher.OnSemanticsActionEvent"/> for this bridge's view. The engine
+    /// only acts on a node its tree still holds (Android's <c>performAction</c> answers <c>false</c>
+    /// for an unknown virtual view id, and the desktop node delegates die with their nodes), so an
+    /// action for a node the framework no longer has — a platform peer that outlived its node, or an
+    /// action posted across a frame — is dropped here, which is what lets
+    /// <see cref="RendererBinding.GetRectOfSemanticsNodeInViewCoordinates"/> assert like Dart's.
     /// </remarks>
     public void DispatchAction(int nodeId, SemanticsActions action, object? arguments = null)
     {
         using EventLoop.FrameworkThreadScope scope = EventLoop.EnterFrameworkThread();
+        if (!RendererBinding.Instance.HasSemanticsNode(ViewId, nodeId))
+        {
+            return;
+        }
+
         PlatformDispatcher.Instance.DispatchSemanticsActionEvent(
             new SemanticsActionEvent(action, ViewId, nodeId, arguments));
     }

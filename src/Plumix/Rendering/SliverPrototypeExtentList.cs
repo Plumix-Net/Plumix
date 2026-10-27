@@ -17,8 +17,8 @@ public class RenderSliverPrototypeExtentList : RenderSliverFixedExtentBoxAdaptor
     private RenderBox? _prototypeChild;
 
     public RenderSliverPrototypeExtentList(
-        RenderBox? prototypeChild = null,
-        IRenderSliverBoxChildManager? childManager = null)
+        IRenderSliverBoxChildManager childManager,
+        RenderBox? prototypeChild = null)
         : base(childManager)
     {
         PrototypeChild = prototypeChild;

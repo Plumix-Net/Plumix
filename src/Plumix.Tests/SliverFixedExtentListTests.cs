@@ -62,7 +62,8 @@ public sealed class SliverFixedExtentListTests
         double itemExtent,
         int expected)
     {
-        var sliver = new RenderSliverFixedExtentList(itemExtent);
+        // Flutter's `TestRenderSliverFixedExtentBoxAdaptor` passes an empty `TestRenderSliverBoxChildManager`.
+        var sliver = new RenderSliverFixedExtentList(new ListChildManager([]), itemExtent);
 
         Assert.Equal(expected, sliver.GetMaxChildIndexForScrollOffset(scrollOffset, itemExtent));
     }
@@ -240,7 +241,7 @@ public sealed class SliverFixedExtentListTests
     {
         ItemExtentBuilder builder = (_, _) => 30.0;
         var manager = new ListChildManager([new FixedSizeBox(new Size(400, 100))]);
-        var sliver = new RenderSliverVariedExtentList(builder, manager);
+        var sliver = new RenderSliverVariedExtentList(manager, builder);
         manager.Attach(sliver);
         PipelineOwner pipeline = Harness(sliver, new TestViewportOffset());
         pipeline.FlushLayout(new Size(800, 600));
@@ -262,7 +263,7 @@ public sealed class SliverFixedExtentListTests
             new FixedSizeBox(new Size(400, 100)),
         ]);
         ItemExtentBuilder builder = (index, _) => 100.0 + (index * 50);
-        var sliver = new RenderSliverVariedExtentList(builder, manager);
+        var sliver = new RenderSliverVariedExtentList(manager, builder);
         manager.Attach(sliver);
         PipelineOwner pipeline = Harness(sliver, new TestViewportOffset());
         pipeline.FlushLayout(new Size(800, 600));
@@ -333,7 +334,7 @@ public sealed class SliverFixedExtentListTests
             double itemExtent,
             double totalExtent,
             IRenderSliverBoxChildManager childManager)
-            : base(itemExtent, childManager)
+            : base(childManager, itemExtent)
         {
             _totalExtent = totalExtent;
         }
@@ -387,7 +388,7 @@ public sealed class SliverFixedExtentListTests
 
         public RenderSliverFixedExtentList CreateFixedExtentList(double itemExtent)
         {
-            var sliver = new RenderSliverFixedExtentList(itemExtent, this);
+            var sliver = new RenderSliverFixedExtentList(this, itemExtent);
             _renderObject = sliver;
             return sliver;
         }

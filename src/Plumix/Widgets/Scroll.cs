@@ -1199,36 +1199,12 @@ internal class SliverMultiBoxAdaptorElement : RenderObjectElement, IRenderSliver
         return widget.Delegate.Build(this, index);
     }
 
-    protected override void OnMount()
-    {
-        base.OnMount();
-        TypedRenderObject.ChildManager = this;
-    }
-
-    protected override void OnActivate()
-    {
-        base.OnActivate();
-        TypedRenderObject.ChildManager = this;
-    }
-
-    protected override void OnDeactivate()
-    {
-        if (RenderObject is RenderSliverMultiBoxAdaptor renderObject
-            && ReferenceEquals(renderObject.ChildManager, this))
-        {
-            renderObject.ChildManager = null;
-        }
-
-        base.OnDeactivate();
-    }
-
     /// <remarks>Flutter's <c>SliverMultiBoxAdaptorElement.update</c>: a new delegate instance only
     /// rebuilds the children when it is of a different runtime type or says so itself.</remarks>
     public override void Update(Widget newWidget)
     {
         SliverChildDelegate oldDelegate = TypedWidget.Delegate;
         base.Update(newWidget);
-        TypedRenderObject.ChildManager = this;
         SliverChildDelegate newDelegate = ((SliverMultiBoxAdaptorWidget)newWidget).Delegate;
         if (!ReferenceEquals(newDelegate, oldDelegate)
             && (newDelegate.GetType() != oldDelegate.GetType() || newDelegate.ShouldRebuild(oldDelegate)))
@@ -1643,7 +1619,8 @@ public sealed class SliverList : SliverMultiBoxAdaptorWidget
 
     public override RenderObject CreateRenderObject(BuildContext context)
     {
-        return new RenderSliverList();
+        var element = (SliverMultiBoxAdaptorElement)context;
+        return new RenderSliverList(childManager: element);
     }
 }
 
@@ -1714,7 +1691,8 @@ public sealed class SliverFixedExtentList : SliverMultiBoxAdaptorWidget
 
     public override RenderObject CreateRenderObject(BuildContext context)
     {
-        return new RenderSliverFixedExtentList(ItemExtent);
+        var element = (SliverMultiBoxAdaptorElement)context;
+        return new RenderSliverFixedExtentList(childManager: element, itemExtent: ItemExtent);
     }
 
     public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
@@ -1789,7 +1767,8 @@ public class SliverVariedExtentList : SliverMultiBoxAdaptorWidget
 
     public override RenderObject CreateRenderObject(BuildContext context)
     {
-        return new RenderSliverVariedExtentList(ItemExtentBuilder);
+        var element = (SliverMultiBoxAdaptorElement)context;
+        return new RenderSliverVariedExtentList(childManager: element, itemExtentBuilder: ItemExtentBuilder);
     }
 
     public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
@@ -1865,7 +1844,8 @@ public sealed class SliverPrototypeExtentList : SliverMultiBoxAdaptorWidget
 
     public override RenderObject CreateRenderObject(BuildContext context)
     {
-        return new RenderSliverPrototypeExtentList();
+        var element = (SliverPrototypeExtentListElement)context;
+        return new RenderSliverPrototypeExtentList(childManager: element);
     }
 }
 
@@ -2084,7 +2064,8 @@ public sealed class SliverGrid : SliverMultiBoxAdaptorWidget
 
     public override RenderObject CreateRenderObject(BuildContext context)
     {
-        return new RenderSliverGrid(GridDelegate);
+        var element = (SliverMultiBoxAdaptorElement)context;
+        return new RenderSliverGrid(childManager: element, gridDelegate: GridDelegate);
     }
 
     public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)

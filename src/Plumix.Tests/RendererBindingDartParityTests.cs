@@ -228,7 +228,7 @@ public sealed class RendererBindingDartParityTests : IDisposable
     }
 
     [Fact]
-    public void GetRectOfSemanticsNodeInViewCoordinates_ResolvesOnlyRegisteredViews()
+    public void GetRectOfSemanticsNodeInViewCoordinates_ResolvesARegisteredView()
     {
         using var handle = new SemanticsScope();
         (_, PipelineOwner owner) = AddView(8114, Labelled("rect", () => { }));
@@ -238,8 +238,23 @@ public sealed class RendererBindingDartParityTests : IDisposable
         Assert.Equal(
             new Rect(0, 0, 100, 100),
             SemanticsBinding.Instance.GetRectOfSemanticsNodeInViewCoordinates(8114, node));
-        Assert.Null(SemanticsBinding.Instance.GetRectOfSemanticsNodeInViewCoordinates(8199, node));
-        Assert.Null(SemanticsBinding.Instance.GetRectOfSemanticsNodeInViewCoordinates(8114, -1));
+    }
+
+    /// <summary>semantics_binding_test.dart: "getRectOfSemanticsNodeInViewCoordinates asserts for
+    /// unknown views and nodes".</summary>
+    [DebugOnlyFact]
+    public void GetRectOfSemanticsNodeInViewCoordinates_AssertsForUnknownViewsAndNodes()
+    {
+        using var handle = new SemanticsScope();
+        (_, PipelineOwner owner) = AddView(8116, Labelled("rect", () => { }));
+        PumpFrame();
+        int node = FindNode(owner, "rect");
+
+        Assert.NotNull(owner.SemanticsOwner!.GetSemanticsNode(node));
+        Assert.Throws<AssertionError>(
+            () => SemanticsBinding.Instance.GetRectOfSemanticsNodeInViewCoordinates(999, node));
+        Assert.Throws<AssertionError>(
+            () => SemanticsBinding.Instance.GetRectOfSemanticsNodeInViewCoordinates(8116, -1));
     }
 
     [Fact]

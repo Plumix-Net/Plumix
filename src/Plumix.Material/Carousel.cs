@@ -602,8 +602,15 @@ internal sealed class SliverFixedExtentCarousel : SliverMultiBoxAdaptorWidget
 
     public bool Infinite { get; }
 
-    public override RenderObject CreateRenderObject(BuildContext context) =>
-        new RenderSliverFixedExtentCarousel(maxExtent: ItemExtent, minExtent: MinExtent, infinite: Infinite);
+    public override RenderObject CreateRenderObject(BuildContext context)
+    {
+        var element = (SliverMultiBoxAdaptorElement)context;
+        return new RenderSliverFixedExtentCarousel(
+            childManager: element,
+            minExtent: MinExtent,
+            maxExtent: ItemExtent,
+            infinite: Infinite);
+    }
 
     public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
@@ -639,11 +646,16 @@ internal sealed class SliverWeightedCarousel : SliverMultiBoxAdaptorWidget
 
     public bool Infinite { get; }
 
-    public override RenderObject CreateRenderObject(BuildContext context) => new RenderSliverWeightedCarousel(
-        consumeMaxWeight: ConsumeMaxWeight,
-        shrinkExtent: ShrinkExtent,
-        weights: Weights,
-        infinite: Infinite);
+    public override RenderObject CreateRenderObject(BuildContext context)
+    {
+        var element = (SliverMultiBoxAdaptorElement)context;
+        return new RenderSliverWeightedCarousel(
+            childManager: element,
+            consumeMaxWeight: ConsumeMaxWeight,
+            shrinkExtent: ShrinkExtent,
+            weights: Weights,
+            infinite: Infinite);
+    }
 
     public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
@@ -666,7 +678,12 @@ internal sealed class RenderSliverFixedExtentCarousel : RenderSliverFixedExtentB
     private double _minExtent;
     private bool _infinite;
 
-    public RenderSliverFixedExtentCarousel(double maxExtent, double minExtent, bool infinite)
+    public RenderSliverFixedExtentCarousel(
+        IRenderSliverBoxChildManager childManager,
+        double maxExtent,
+        double minExtent,
+        bool infinite)
+        : base(childManager)
     {
         _maxExtent = maxExtent;
         _minExtent = minExtent;
@@ -818,10 +835,12 @@ internal sealed class RenderSliverWeightedCarousel : RenderSliverFixedExtentBoxA
     private bool _infinite;
 
     public RenderSliverWeightedCarousel(
+        IRenderSliverBoxChildManager childManager,
         bool consumeMaxWeight,
         double shrinkExtent,
         IReadOnlyList<int> weights,
         bool infinite)
+        : base(childManager)
     {
         _consumeMaxWeight = consumeMaxWeight;
         _shrinkExtent = shrinkExtent;
@@ -978,7 +997,7 @@ internal sealed class RenderSliverWeightedCarousel : RenderSliverFixedExtentBoxA
     public override int GetMaxChildIndexForScrollOffset(double scrollOffset, double itemExtent)
     {
         SliverConstraints constraints = Constraints;
-        int? childCount = ChildManager?.EstimatedChildCount;
+        int? childCount = ChildManager.EstimatedChildCount;
         int firstVisibleItemIndex = FirstVisibleItemIndex;
         if (_infinite && childCount is null)
         {
@@ -1019,7 +1038,7 @@ internal sealed class RenderSliverWeightedCarousel : RenderSliverFixedExtentBoxA
 
     public override double ComputeMaxScrollOffset(SliverConstraints constraints, double itemExtent)
     {
-        return _infinite ? double.PositiveInfinity : (ChildManager?.ChildCount ?? 0) * MaxChildExtent;
+        return _infinite ? double.PositiveInfinity : ChildManager.ChildCount * MaxChildExtent;
     }
 
     /// <summary>
@@ -1030,8 +1049,8 @@ internal sealed class RenderSliverWeightedCarousel : RenderSliverFixedExtentBoxA
     protected override void PerformLayout()
     {
         SliverConstraints constraints = Constraints;
-        IRenderSliverBoxChildManager? childManager = ChildManager;
-        if (childManager is null || _weights.Count == 0)
+        IRenderSliverBoxChildManager childManager = ChildManager;
+        if (_weights.Count == 0)
         {
             Geometry = SliverGeometry.Zero;
             return;

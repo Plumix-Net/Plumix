@@ -654,7 +654,11 @@ public sealed class ScrollPipelineTests
             itemBuilder: (_, _) => new SizedBox(),
             itemExtentBuilder: initialBuilder).Delegate.Build(null!, 0));
 
-        var renderObject = Assert.IsType<RenderSliverVariedExtentList>(widget.CreateRenderObject(null!));
+        // Dart's createRenderObject casts its context to the SliverMultiBoxAdaptorElement it installs
+        // as the child manager.
+        Element element = widget.CreateElement();
+        var renderObject = Assert.IsType<RenderSliverVariedExtentList>(widget.CreateRenderObject(element));
+        Assert.Same(element, renderObject.ChildManager);
         ItemExtentBuilder updatedBuilder = (index, _) => 48 + index;
         var updatedWidget = new SliverVariedExtentList(childDelegate, updatedBuilder);
         updatedWidget.UpdateRenderObject(null!, renderObject);
@@ -680,7 +684,7 @@ public sealed class ScrollPipelineTests
             return index < extents.Length ? extents[index] : null;
         };
         var manager = new TestSliverChildManager(childCount: extents.Length, childExtent: 5);
-        var sliver = new RenderSliverVariedExtentList(builder, manager);
+        var sliver = new RenderSliverVariedExtentList(manager, builder);
         manager.AttachOwner(sliver);
 
         sliver.Layout(TestSliverConstraints.Create(
@@ -730,7 +734,7 @@ public sealed class ScrollPipelineTests
     {
         using var renderErrors = RenderErrorRethrowScope.Enter();
         var manager = new TestSliverChildManager(childCount: 1, childExtent: 10);
-        var sliver = new RenderSliverVariedExtentList((_, _) => double.NaN, manager);
+        var sliver = new RenderSliverVariedExtentList(manager, (_, _) => double.NaN);
         manager.AttachOwner(sliver);
 
         // Flutter has no extent validation of its own: a NaN item extent reaches the child's box
@@ -749,7 +753,7 @@ public sealed class ScrollPipelineTests
     {
         var manager = new TestSliverChildManager(childCount: 4, childExtent: 5);
         var prototype = new FixedSizeBox(new Size(40, 60));
-        var sliver = new RenderSliverPrototypeExtentList(prototype, manager);
+        var sliver = new RenderSliverPrototypeExtentList(manager, prototype);
         manager.AttachOwner(sliver);
         var constraints = TestSliverConstraints.Create(
             Axis: Axis.Vertical,

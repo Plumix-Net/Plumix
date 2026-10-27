@@ -345,6 +345,36 @@ public sealed class AccessibilityBridgeTests : IDisposable
         Assert.Equal(["tap", "gain"], log);
     }
 
+    // The engine only acts on nodes its tree still holds: a peer that outlived its node, or an
+    // unknown id, never reaches the framework's action listeners (which may look the node up, as
+    // RenderTapRegionSurface does through getRectOfSemanticsNodeInViewCoordinates).
+    [Fact]
+    public void DropsActionsForNodesTheFrameworkNoLongerHolds()
+    {
+        var seen = new List<SemanticsActionEvent>();
+        void Listener(SemanticsActionEvent actionEvent) => seen.Add(actionEvent);
+
+        Pump(new Column(children: [Box("stays"), Box("goes")]));
+        AccessibilityNode stale = Find("goes");
+        Pump(new Column(children: [Box("stays")]));
+        Assert.False(stale.IsAttached);
+
+        SemanticsBinding.Instance.AddSemanticsActionListener(Listener);
+        try
+        {
+            stale.PerformAction(SemanticsActions.Tap);
+            _bridge.DispatchAction(nodeId: -1, SemanticsActions.Tap);
+            Assert.Empty(seen);
+
+            Find("stays").PerformAction(SemanticsActions.Tap);
+            Assert.Equal(Find("stays").Id, Assert.Single(seen).NodeId);
+        }
+        finally
+        {
+            SemanticsBinding.Instance.RemoveSemanticsActionListener(Listener);
+        }
+    }
+
     // SetLastFocusedId: the old node loses accessibility focus before the new one gains it.
     [Fact]
     public void MovingAccessibilityFocusTellsTheOldNodeFirst()

@@ -2653,29 +2653,31 @@ public abstract class RenderSliverMultiBoxAdaptor : RenderSliver,
     private readonly ContainerRenderObjectMixin<RenderBox, SliverMultiBoxAdaptorParentData> _container;
     private readonly Dictionary<int, RenderBox> _keepAliveBucket = [];
     private readonly List<RenderBox> _debugDanglingKeepAlives = [];
-    private IRenderSliverBoxChildManager? _childManager;
+    private readonly IRenderSliverBoxChildManager _childManager;
     private bool _debugChildIntegrityEnabled = true;
 
-    protected RenderSliverMultiBoxAdaptor(IRenderSliverBoxChildManager? childManager = null)
+    /// <summary>Creates a sliver with multiple box children.</summary>
+    /// <remarks>
+    /// Flutter's <c>RenderSliverMultiBoxAdaptor({required childManager})</c>: the widget layer
+    /// passes its <c>SliverMultiBoxAdaptorElement</c>, which <c>CreateRenderObject</c> receives as
+    /// the <see cref="BuildContext"/>.
+    /// </remarks>
+    protected RenderSliverMultiBoxAdaptor(IRenderSliverBoxChildManager childManager)
     {
+        ArgumentNullException.ThrowIfNull(childManager);
         _container = new ContainerRenderObjectMixin<RenderBox, SliverMultiBoxAdaptorParentData>(this);
         _childManager = childManager;
     }
 
-    public IRenderSliverBoxChildManager? ChildManager
-    {
-        get => _childManager;
-        set
-        {
-            if (ReferenceEquals(_childManager, value))
-            {
-                return;
-            }
-
-            _childManager = value;
-            MarkNeedsLayout();
-        }
-    }
+    /// <summary>
+    /// The delegate that manages the children of this object.
+    /// </summary>
+    /// <remarks>
+    /// Rather than having a concrete list of children, a <see cref="RenderSliverMultiBoxAdaptor"/>
+    /// uses an <see cref="IRenderSliverBoxChildManager"/> to create children during layout in
+    /// order to fill the viewport. Flutter's <c>childManager</c>.
+    /// </remarks>
+    public IRenderSliverBoxChildManager ChildManager => _childManager;
 
     /// <summary>
     /// Whether the child-integrity check is enabled. Setting it immediately performs the check.
@@ -2718,7 +2720,7 @@ public abstract class RenderSliverMultiBoxAdaptor : RenderSliver,
         var childParentData = (SliverMultiBoxAdaptorParentData)child.parentData!;
         if (!childParentData.KeptAlive)
         {
-            _childManager?.DidAdoptChild((RenderBox)child);
+            _childManager.DidAdoptChild((RenderBox)child);
         }
     }
 
@@ -2740,7 +2742,7 @@ public abstract class RenderSliverMultiBoxAdaptor : RenderSliver,
         if (!childParentData.KeptAlive)
         {
             _container.Move(child, after);
-            _childManager?.DidAdoptChild(child);
+            _childManager.DidAdoptChild(child);
 
             // The slot may change even when the position does not, so the layout still has to re-run.
             MarkNeedsLayout();
@@ -2760,7 +2762,7 @@ public abstract class RenderSliverMultiBoxAdaptor : RenderSliver,
             _debugDanglingKeepAlives.Remove(child);
         }
 
-        _childManager?.DidAdoptChild(child);
+        _childManager.DidAdoptChild(child);
         if (Constants.KDebugMode
             && _keepAliveBucket.TryGetValue(childParentData.Index!.Value, out RenderBox? displaced))
         {
@@ -3003,7 +3005,7 @@ public abstract class RenderSliverMultiBoxAdaptor : RenderSliver,
     }
 
     /// <remarks>Flutter's <c>RenderSliverMultiBoxAdaptor._debugAssertChildListLocked</c>.</remarks>
-    private bool DebugAssertChildListLocked() => _childManager?.DebugAssertChildListLocked() ?? true;
+    private bool DebugAssertChildListLocked() => _childManager.DebugAssertChildListLocked();
 
     /// <summary>Verifies that the child-list indices are in strictly increasing order.</summary>
     /// <remarks>
@@ -3066,7 +3068,7 @@ public abstract class RenderSliverMultiBoxAdaptor : RenderSliver,
             return true;
         }
 
-        _childManager?.SetDidUnderflow(true);
+        _childManager.SetDidUnderflow(true);
         return false;
     }
 
@@ -3081,7 +3083,7 @@ public abstract class RenderSliverMultiBoxAdaptor : RenderSliver,
             return FirstChild;
         }
 
-        _childManager?.SetDidUnderflow(true);
+        _childManager.SetDidUnderflow(true);
         return null;
     }
 
@@ -3101,7 +3103,7 @@ public abstract class RenderSliverMultiBoxAdaptor : RenderSliver,
             return child;
         }
 
-        _childManager?.SetDidUnderflow(true);
+        _childManager.SetDidUnderflow(true);
         return null;
     }
 
@@ -3194,7 +3196,7 @@ public abstract class RenderSliverMultiBoxAdaptor : RenderSliver,
                         {
                             foreach (RenderBox keepAliveChild in noLongerKeptAlive)
                             {
-                                _childManager?.RemoveChild(keepAliveChild);
+                                _childManager.RemoveChild(keepAliveChild);
                             }
                         },
                         Constraints);
@@ -3237,7 +3239,7 @@ public abstract class RenderSliverMultiBoxAdaptor : RenderSliver,
                     return;
                 }
 
-                _childManager?.CreateChild(index, after);
+                _childManager.CreateChild(index, after);
             },
             Constraints);
     }
@@ -3274,7 +3276,7 @@ public abstract class RenderSliverMultiBoxAdaptor : RenderSliver,
         }
 
         Debug.Assert(ReferenceEquals(child.Parent, this));
-        _childManager?.RemoveChild(child);
+        _childManager.RemoveChild(child);
         Debug.Assert(child.Parent is null);
     }
 

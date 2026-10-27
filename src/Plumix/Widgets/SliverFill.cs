@@ -68,7 +68,9 @@ internal sealed class SliverFillViewportRenderObjectWidget : SliverMultiBoxAdapt
 
     public override RenderObject CreateRenderObject(BuildContext context)
     {
+        var element = (SliverMultiBoxAdaptorElement)context;
         return new RenderSliverFillViewport(
+            childManager: element,
             viewportFraction: ViewportFraction,
             allowImplicitScrolling: AllowImplicitScrolling);
     }

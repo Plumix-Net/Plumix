@@ -382,19 +382,47 @@ public sealed class RendererBinding
     /// Flutter's <c>RendererBinding.getRectOfSemanticsNodeInViewCoordinates</c>: the walk up the
     /// semantics ancestors accumulates the view's root transform, which scales logical to physical
     /// pixels, so the inverse of <see cref="ViewConfiguration.ToMatrix"/> is pre-multiplied to
-    /// answer in logical pixels. Dart asserts on each of the three failed lookups; Plumix returns
-    /// <c>null</c>, see <c>docs/ai/DIVERGENCES.md</c>.
+    /// answer in logical pixels. Each of the three lookups asserts in debug and answers
+    /// <c>null</c> otherwise: callers should only ask in response to a semantics action, which the
+    /// platform side only delivers for a node of the live tree (see
+    /// <see cref="Accessibility.AccessibilityBridge.DispatchAction"/>).
     /// </remarks>
     public Rect? GetRectOfSemanticsNodeInViewCoordinates(int viewId, int nodeId)
     {
         if (!_viewIdToRenderView.TryGetValue(viewId, out RenderView? renderView))
         {
+            if (Constants.KDebugMode)
+            {
+                throw new AssertionError(
+                    $"getRectOfSemanticsNodeInViewCoordinates was called for unknown view {viewId}.");
+            }
+
             return null;
         }
 
         SemanticsOwner? semanticsOwner = renderView.Owner?.SemanticsOwner;
-        if (semanticsOwner?.GetSemanticsNode(nodeId) is not { } node)
+        if (semanticsOwner is null)
         {
+            if (Constants.KDebugMode)
+            {
+                throw new AssertionError(
+                    $"getRectOfSemanticsNodeInViewCoordinates was called for view {viewId}, but the view does "
+                    + "not have a SemanticsOwner. Semantics must be enabled for the lookup to succeed.");
+            }
+
+            return null;
+        }
+
+        SemanticsNode? node = semanticsOwner.GetSemanticsNode(nodeId);
+        if (node is null)
+        {
+            if (Constants.KDebugMode)
+            {
+                throw new AssertionError(
+                    $"getRectOfSemanticsNodeInViewCoordinates was called for unknown node {nodeId} in view "
+                    + $"{viewId}.");
+            }
+
             return null;
         }
 
@@ -418,6 +446,20 @@ public sealed class RendererBinding
 
         return MatrixUtils.TransformRect(transform, node.Rect);
     }
+
+    /// <summary>
+    /// Whether the view <paramref name="viewId"/> is registered, has a semantics owner, and that
+    /// owner holds the node <paramref name="nodeId"/>: the three lookups
+    /// <see cref="GetRectOfSemanticsNodeInViewCoordinates"/> asserts on.
+    /// </summary>
+    /// <remarks>
+    /// C#-only. The engine only delivers a semantics action for a node its mirror of the tree still
+    /// holds; Plumix's platform side asks the framework instead, because a platform peer can outlive
+    /// its node and a bridge can post an action across a frame.
+    /// </remarks>
+    internal bool HasSemanticsNode(int viewId, int nodeId) =>
+        _viewIdToRenderView.TryGetValue(viewId, out RenderView? renderView)
+        && renderView.Owner?.SemanticsOwner?.GetSemanticsNode(nodeId) is not null;
 
     /// <summary>
     /// Replaces the composed <c>drawFrame</c> the persistent frame callback runs, the way

@@ -10,14 +10,13 @@ namespace Plumix.Rendering;
 /// <remarks>
 /// Flutter's <c>RenderSliverList</c>. Each child is forced to have the
 /// <see cref="SliverConstraints.CrossAxisExtent"/> in the cross axis but determines its own main axis
-/// extent. The child manager is optional here and assigned by the element after construction (see
-/// <see cref="RenderSliverMultiBoxAdaptor.ChildManager"/>).
+/// extent.
 /// </remarks>
 public class RenderSliverList : RenderSliverMultiBoxAdaptor
 {
     /// <summary>Creates a sliver that places multiple box children in a linear array along the
     /// main axis.</summary>
-    public RenderSliverList(IRenderSliverBoxChildManager? childManager = null) : base(childManager)
+    public RenderSliverList(IRenderSliverBoxChildManager childManager) : base(childManager)
     {
     }
 
@@ -25,13 +24,7 @@ public class RenderSliverList : RenderSliverMultiBoxAdaptor
     protected override void PerformLayout()
     {
         SliverConstraints constraints = Constraints;
-        IRenderSliverBoxChildManager? childManager = ChildManager;
-        if (childManager is null)
-        {
-            Geometry = SliverGeometry.Zero;
-            return;
-        }
-
+        IRenderSliverBoxChildManager childManager = ChildManager;
         childManager.DidStartLayout();
         childManager.SetDidUnderflow(false);
 
