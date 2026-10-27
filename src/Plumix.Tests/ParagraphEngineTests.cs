@@ -4,6 +4,7 @@ using Plumix.Painting;
 using Plumix.UI;
 using Plumix.Widgets;
 using Xunit;
+using TextDecoration = Plumix.UI.TextDecoration;
 using TextStyle = Plumix.Widgets.TextStyle;
 
 namespace Plumix.Tests;
@@ -439,6 +440,90 @@ public sealed class ParagraphEngineTests
 
         Assert.Equal(height, paragraph.Height, 6);
         Assert.Equal(top, paragraph.GetBoxesForPlaceholders()[0].Top, 6);
+    }
+
+    // C#-only: flutter_tester pixels (FlutterTest, captured with `matchesGoldenFile`). SkParagraph's
+    // OneLineShaper emboldens a regular typeface for w600+ requests, so the 40 px glyph at x = 10.3 bleeds
+    // into column 9 only when bold.
+    [Fact]
+    public void Paint_SemiboldAndHeavier_FakeBoldsTheGlyph()
+    {
+        Assert.Equal(255, PaintedPixel("X", new ParagraphTextStyle(FontSize: 40), new Point(10.3, 0.3), 9, 20).R);
+        Assert.Equal(207, PaintedPixel(
+            "X",
+            new ParagraphTextStyle(FontSize: 40, FontWeight: FontWeight.SemiBold),
+            new Point(10.3, 0.3),
+            9,
+            20).R);
+    }
+
+    // C#-only: flutter_tester pixels. TextLine::paintBackground fills the run's CSS-height clip, which a
+    // 1.43 line height extends above and below the glyph box.
+    [Fact]
+    public void Paint_Background_FillsTheRunClip()
+    {
+        var style = new ParagraphTextStyle(
+            FontSize: 16,
+            Height: 1.43,
+            Color: new Color(0xFF000000),
+            Background: new Paint { Color = new Color(0xFFFFE8A3) });
+
+        Assert.Equal((255, 232, 163, 255), PaintedPixel("XX", style, default, 10, 1));
+        Assert.Equal((255, 232, 163, 255), PaintedPixel("XX", style, default, 10, 21));
+        Assert.Equal((0, 0, 0, 255), PaintedPixel("XX", style, default, 10, 10));
+    }
+
+    // C#-only: flutter_tester pixels. TextLine::paintShadow draws the glyphs offset in the shadow color
+    // before the text.
+    [Fact]
+    public void Paint_Shadow_DrawsOffsetGlyphsBelowTheText()
+    {
+        var style = new ParagraphTextStyle(
+            FontSize: 16,
+            Color: new Color(0xFF000000),
+            Shadows: [new Rendering.Shadow(new Color(0xFF0000FF), new Point(3, 3))]);
+
+        Assert.Equal((0, 0, 255, 255), PaintedPixel("XX", style, default, 20, 18));
+        Assert.Equal((0, 0, 0, 255), PaintedPixel("XX", style, default, 20, 10));
+    }
+
+    // C#-only: Decorations::paint draws after the glyphs and across the run's whole clip, spaces included;
+    // FlutterTest's thin underline metrics tint one or two rows.
+    [Theory]
+    [InlineData(TextDecoration.Underline)]
+    [InlineData(TextDecoration.Overline)]
+    [InlineData(TextDecoration.LineThrough)]
+    public void Paint_Decoration_SpansTheSpaceBetweenGlyphs(TextDecoration decoration)
+    {
+        var style = new ParagraphTextStyle(
+            FontSize: 20,
+            Color: new Color(0xFF000000),
+            Decoration: decoration,
+            DecorationColor: new Color(0xFFFF0000));
+        int redRows = Enumerable.Range(0, 40)
+            .Count(y => PaintedPixel("X X", style, new Point(0, 10), 30, y) is { R: > 200, G: < 230 });
+
+        Assert.InRange(redRows, 1, 3);
+    }
+
+    private static (byte R, byte G, byte B, byte A) PaintedPixel(
+        string text,
+        ParagraphTextStyle style,
+        Point offset,
+        int x,
+        int y)
+    {
+        var builder = new ParagraphBuilder(new ParagraphStyle());
+        builder.PushStyle(style);
+        builder.AddText(text);
+        using Paragraph paragraph = builder.Build();
+        paragraph.Layout(new ParagraphConstraints(400));
+        var recorder = new PictureRecorder();
+        var canvas = new Canvas(recorder);
+        canvas.DrawRect(new Rect(0, 0, 80, 60), new Paint { Color = new Color(0xFFFFFFFF) });
+        canvas.DrawParagraph(paragraph, offset);
+        using Avalonia.Media.Imaging.Bitmap image = recorder.EndRecording().ToImageSync(80, 60);
+        return RasterBackend.PixelAt(image, x, y);
     }
 
     private static Paragraph Build(string text, ParagraphStyle style)

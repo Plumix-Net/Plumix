@@ -20,6 +20,7 @@ internal sealed class HeadlessParagraph : Paragraph
     private const double AscentRatio = 0.75;
     private const double DescentRatio = 0.25;
     private const double Epsilon = 1e-9;
+    private const int FlutterTestFontWeight = 400;
 
     private readonly ParagraphContent _content;
     private readonly List<Cluster> _clusters = [];
@@ -759,8 +760,8 @@ internal sealed class HeadlessParagraph : Paragraph
         List<Placed> visual = Reorder(sequence);
         bool ltr = _baseLevel == 0;
         TextAlign align = _content.Style.TextAlign ?? TextAlign.Start;
-        // SkParagraph starts an unaligned letter-spaced line half a spacing in; a line it shifts for
-        // alignment starts exactly at the shift.
+        // SkParagraph starts a letter-spaced line half a spacing in; `TextLine::format` replaces that shift
+        // with the alignment shift only when the line is narrower than the paragraph (`delta > 0`).
         double halfSpacing = visual.Count > 0 && visual[0].Cluster is { } first
             ? LetterSpacingOf(first.FirstCodePoint, first.Style) / 2.0
             : 0.0;
@@ -788,7 +789,8 @@ internal sealed class HeadlessParagraph : Paragraph
                     TextAlign.End => ltr ? 1.0 : 0.0,
                     _ => ltr ? 0.0 : 1.0,
                 };
-                x0 = fraction == 0.0 ? halfSpacing : fraction * (_width - contentWidth);
+                double delta = _width - contentWidth;
+                x0 = fraction == 0.0 || delta <= 0.0 ? halfSpacing : fraction * delta;
             }
         }
 
@@ -809,6 +811,7 @@ internal sealed class HeadlessParagraph : Paragraph
         _maxLineRight = Math.Max(_maxLineRight, x);
         line.Left = x0;
         line.ContentWidth = contentWidth;
+        line.TrailingStart = trailingStart;
         line.Visual = visual;
     }
 
@@ -1255,11 +1258,12 @@ internal sealed class HeadlessParagraph : Paragraph
     }
 
     /// <remarks>
-    /// Paints the glyph outlines of the `FlutterTest` font (`kFlutterTestFont` in the engine's
-    /// `runtime/test_font_data.cc`): a covered code point is a solid box one em wide from the ascent
-    /// to the descent, `p` only its descent part, `É` only its ascent part, whitespace nothing, and any
-    /// code point the font does not cover its `.notdef` frame. The shapes are painted with the run's
-    /// foreground paint, or its color.
+    /// Paints each line the way SkParagraph's `TextLine::paint` does: the style runs' backgrounds, their
+    /// shadows, the glyphs, then their decorations. Glyphs are the outlines of the `FlutterTest` font
+    /// (`kFlutterTestFont` in the engine's `runtime/test_font_data.cc`): a covered code point is a solid box
+    /// one em wide from the ascent to the descent, `p` only its descent part, `É` only its ascent part,
+    /// whitespace nothing, and any code point the font does not cover its `.notdef` frame. The shapes are
+    /// painted with the run's foreground paint, or its color.
     /// </remarks>
     internal override Action<DrawingContext>? CreateDrawAction(Point offset)
     {
@@ -1268,31 +1272,206 @@ internal sealed class HeadlessParagraph : Paragraph
             return null;
         }
 
-        var shapes = new List<(Geometry Shape, IBrush Brush)>();
-        var glyphs = new List<FlutterTestGlyphDraw.Glyph>();
-        double left = double.PositiveInfinity;
-        double top = double.PositiveInfinity;
-        double right = double.NegativeInfinity;
-        double bottom = double.NegativeInfinity;
-        void Add(int codePoint, double x, double baseline, ResolvedTextStyle style)
+        // Skia operations batch into one custom draw; shader-painted glyphs are Avalonia geometry.
+        var steps = new List<object>();
+        Rect? bounds = null;
+        void Include(Rect rect) => bounds = bounds is { } current ? current.Union(rect) : rect;
+        void AddOperation(FlutterTestGlyphDraw.Operation operation)
         {
-            double fontSize = style.FontSize;
-            left = Math.Min(left, x);
-            right = Math.Max(right, x + fontSize);
-            top = Math.Min(top, baseline - (fontSize * AscentRatio));
-            bottom = Math.Max(bottom, baseline + (fontSize * DescentRatio));
-            if (style.Foreground is { Shader: { } shader })
+            if (steps.Count == 0 || steps[^1] is not List<FlutterTestGlyphDraw.Operation> batch)
             {
-                shapes.Add((FlutterTestGlyph(ShapeOf(codePoint), x, fontSize, baseline, fontSize), shader));
-                return;
+                batch = [];
+                steps.Add(batch);
             }
 
-            glyphs.Add(new FlutterTestGlyphDraw.Glyph(codePoint, x, baseline, fontSize,
-                style.Foreground?.Color ?? style.Color));
+            batch.Add(operation);
         }
 
-        void AddText(string text, int start, int end, double x, double baseline, ResolvedTextStyle style)
+        for (int lineIndex = 0; lineIndex < _lines.Count; lineIndex++)
         {
+            Line line = _lines[lineIndex];
+            // SkParagraph's TextLine paints its blob at floor(baseline + 0.5).
+            double baseline = offset.Y + Math.Floor(line.Baseline + 0.5);
+            List<StyleRun> runs = StyleRunsOf(line, lineIndex, offset);
+            foreach (StyleRun run in runs)
+            {
+                if (run.Style.Background is { } background)
+                {
+                    AddOperation(new FlutterTestGlyphDraw.BackgroundOperation(run.Clip, background.Color));
+                    Include(run.Clip);
+                }
+            }
+
+            foreach (StyleRun run in runs)
+            {
+                if (run.Style.Shadows is not { Count: > 0 } shadows)
+                {
+                    continue;
+                }
+
+                List<FlutterTestGlyphDraw.Glyph> glyphs = GlyphsOf(run, offset.X, baseline);
+                foreach (Rendering.Shadow shadow in shadows)
+                {
+                    // TextShadow::hasShadow.
+                    if (shadow.Offset == default && shadow.BlurRadius == 0.0)
+                    {
+                        continue;
+                    }
+
+                    AddOperation(new FlutterTestGlyphDraw.GlyphsOperation(
+                        glyphs,
+                        new FlutterTestGlyphDraw.TextShadowDraw(shadow.Offset, shadow.Color, shadow.BlurSigma)));
+                    Include(run.Clip.Translate(shadow.Offset).Inflate((shadow.BlurSigma * 3.0) + 1.0));
+                }
+            }
+
+            foreach (StyleRun run in runs)
+            {
+                if (run.Style.Foreground is { Shader: { } shader })
+                {
+                    foreach (FlutterTestGlyphDraw.Glyph glyph in GlyphsOf(run, offset.X, baseline))
+                    {
+                        steps.Add((FlutterTestGlyph(ShapeOf(glyph.CodePoint), glyph.X, glyph.FontSize,
+                            glyph.Baseline, glyph.FontSize), (IBrush)shader));
+                    }
+                }
+                else
+                {
+                    AddOperation(new FlutterTestGlyphDraw.GlyphsOperation(GlyphsOf(run, offset.X, baseline)));
+                }
+
+                Include(run.Clip.Union(new Rect(
+                    run.Left,
+                    baseline - (run.Style.FontSize * AscentRatio),
+                    run.Right - run.Left + run.Style.FontSize,
+                    run.Style.FontSize)));
+            }
+
+            foreach (StyleRun run in runs)
+            {
+                ResolvedTextStyle style = run.Style;
+                if (style.Decoration == TextDecoration.None)
+                {
+                    continue;
+                }
+
+                AddOperation(new FlutterTestGlyphDraw.DecorationOperation(
+                    run.Clip,
+                    run.CorrectAscent,
+                    style.FontSize * AscentRatio,
+                    style.FontSize,
+                    style.Decoration,
+                    style.DecorationStyle,
+                    style.DecorationThickness ?? 1.0,
+                    style.DecorationColor ?? style.Foreground?.Color ?? style.Color));
+                Include(run.Clip.Inflate(style.FontSize));
+            }
+        }
+
+        if (steps.Count == 0 || bounds is not { } drawBounds)
+        {
+            return null;
+        }
+
+        Rect inflated = drawBounds.Inflate(1.0);
+        var draws = steps
+            .Select(step => step is List<FlutterTestGlyphDraw.Operation> batch
+                ? new FlutterTestGlyphDraw(batch, inflated)
+                : step)
+            .ToList();
+        return context =>
+        {
+            foreach (object draw in draws)
+            {
+                if (draw is FlutterTestGlyphDraw custom)
+                {
+                    context.Custom(custom);
+                }
+                else
+                {
+                    (Geometry shape, IBrush brush) = ((Geometry, IBrush))draw;
+                    context.DrawGeometry(brush, null, shape);
+                }
+            }
+        };
+    }
+
+    /// <summary>
+    /// SkParagraph's `TextLine::iterateThroughSingleRunByStyles` pieces of a line: consecutive visual items of
+    /// one style and direction, with the `ClipContext.clip` each is painted against. LTR paragraphs leave the
+    /// line's trailing spaces out of the clip (`measureTextInsideOneRun` stops at the line advance).
+    /// </summary>
+    private List<StyleRun> StyleRunsOf(Line line, int lineIndex, Point offset)
+    {
+        TextHeightBehavior behavior = _content.Style.TextHeightBehavior ?? new TextHeightBehavior();
+        bool trimAscent = lineIndex == 0 && !behavior.ApplyHeightToFirstAscent;
+        bool trimDescent = lineIndex == _lines.Count - 1 && !behavior.ApplyHeightToLastDescent;
+        double lineHeight = line.Ascent + line.Descent;
+        // InternalLineMetrics::delta(): the rounded line height minus the unrounded one.
+        double delta = Math.Round(lineHeight, MidpointRounding.AwayFromZero) - lineHeight;
+        var runs = new List<StyleRun>();
+        StyleRun? current = null;
+        foreach (Placed item in line.Visual)
+        {
+            if (item.Cluster is { } cluster
+                && (cluster.Placeholder is not null
+                    || cluster.HardBreak
+                    || (_baseLevel == 0 && _clusters.IndexOf(cluster) >= line.TrailingStart)))
+            {
+                current = null;
+                continue;
+            }
+
+            if (current is { } open
+                && !open.IsEllipsis
+                && !item.IsEllipsis
+                && open.Level == item.Level
+                && Equals(open.Style, item.Style)
+                && Math.Abs(open.Right - (offset.X + item.X)) < Epsilon)
+            {
+                open.Items.Add(item);
+                open.Right = offset.X + item.X + item.Width;
+                open.Clip = open.Clip.WithWidth(open.Right - open.Left);
+                continue;
+            }
+
+            ResolvedTextStyle style = item.Style;
+            double fontSize = style.FontSize;
+            (double ascent, double descent) = VerticalMetrics(fontSize, style.Height, style.LeadingDistribution);
+            ascent = trimAscent ? fontSize * AscentRatio : ascent;
+            descent = trimDescent ? fontSize * DescentRatio : descent;
+            // LineMetrics::runTop and Run::calculateHeight (CSS metric style).
+            double top = offset.Y + line.Top + line.Ascent - ascent + delta;
+            double left = offset.X + item.X;
+            current = new StyleRun(style, item.Level, item.IsEllipsis, ascent)
+            {
+                Left = left,
+                Right = left + item.Width,
+                Clip = new Rect(left, top, item.Width, ascent + descent),
+            };
+            current.Items.Add(item);
+            runs.Add(current);
+        }
+
+        return runs;
+    }
+
+    private List<FlutterTestGlyphDraw.Glyph> GlyphsOf(StyleRun run, double offsetX, double baseline)
+    {
+        var glyphs = new List<FlutterTestGlyphDraw.Glyph>();
+        ResolvedTextStyle style = run.Style;
+        // OneLineShaper::shape fakes the weight and slant the regular, upright FlutterTest lacks.
+        int weight = (int)style.FontWeight;
+        bool fakeBold = weight >= 600 && weight - FlutterTestFontWeight >= 200;
+        bool fakeItalic = style.FontStyle != FontStyle.Normal;
+        Color color = style.Foreground?.Color ?? style.Color;
+        string ellipsis = _content.Style.Ellipsis ?? string.Empty;
+        foreach (Placed item in run.Items)
+        {
+            (string text, int start, int end) = item.Cluster is { } cluster
+                ? (_content.Text, cluster.Start, cluster.End)
+                : (ellipsis, 0, ellipsis.Length);
+            double x = offsetX + item.X;
             int cursor = start;
             while (cursor < end)
             {
@@ -1305,55 +1484,36 @@ internal sealed class HeadlessParagraph : Paragraph
 
                 if (!Rune.IsValid(codePoint) || !Rune.IsWhiteSpace(new Rune(codePoint)))
                 {
-                    Add(codePoint, x, baseline, style);
+                    glyphs.Add(new FlutterTestGlyphDraw.Glyph(
+                        codePoint, x, baseline, style.FontSize, color, fakeBold, fakeItalic));
                 }
 
                 x += style.FontSize;
             }
         }
 
-        foreach (Line line in _lines)
-        {
-            // SkParagraph's TextLine paints its blob at floor(baseline + 0.5).
-            double baseline = offset.Y + Math.Floor(line.Baseline + 0.5);
-            foreach (Placed item in line.Visual)
-            {
-                double x = offset.X + item.X;
-                if (item.Cluster is not { } cluster)
-                {
-                    string ellipsis = _content.Style.Ellipsis ?? string.Empty;
-                    AddText(ellipsis, 0, ellipsis.Length, x, baseline, item.Style);
-                    continue;
-                }
+        return glyphs;
+    }
 
-                if (cluster.Placeholder is not null || cluster.HardBreak)
-                {
-                    continue;
-                }
+    /// <summary>One style run of a line and its paint clip, in paragraph-offset coordinates.</summary>
+    private sealed class StyleRun(ResolvedTextStyle style, int level, bool isEllipsis, double correctAscent)
+    {
+        public ResolvedTextStyle Style { get; } = style;
 
-                AddText(_content.Text, cluster.Start, cluster.End, x, baseline, item.Style);
-            }
-        }
+        public int Level { get; } = level;
 
-        if (glyphs.Count == 0 && shapes.Count == 0)
-        {
-            return null;
-        }
+        public bool IsEllipsis { get; } = isEllipsis;
 
-        var bounds = new Rect(left, top, right - left, bottom - top).Inflate(1.0);
-        var draw = glyphs.Count == 0 ? null : new FlutterTestGlyphDraw(glyphs, bounds);
-        return context =>
-        {
-            foreach ((Geometry shape, IBrush brush) in shapes)
-            {
-                context.DrawGeometry(brush, null, shape);
-            }
+        /// The run's height-adjusted ascent (`Run::correctAscent`) as a positive distance.
+        public double CorrectAscent { get; } = correctAscent;
 
-            if (draw is not null)
-            {
-                context.Custom(draw);
-            }
-        };
+        public List<Placed> Items { get; } = [];
+
+        public double Left { get; init; }
+
+        public double Right { get; set; }
+
+        public Rect Clip { get; set; }
     }
 
     private enum GlyphShape
@@ -1499,6 +1659,9 @@ internal sealed class HeadlessParagraph : Paragraph
         public double Left { get; set; }
 
         public double ContentWidth { get; set; }
+
+        /// The index of the first trailing (hanging space or hard break) cluster.
+        public int TrailingStart { get; set; }
 
         public List<Placed> Visual { get; set; } = [];
     }
