@@ -8,6 +8,7 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased]
+- iOS AOT Bloc counter crash closed; `HostBinaryCompatibilityTests` binds sample packages to Plumix (C#-only).
 - Breaking: one dart:ui `Brightness` in `Plumix.UI` replaces `PlatformBrightness` and Material's enum (window.dart).
 - Breaking: `Plumix.Timer` (dart:async `Timer`) on the event loop with a fake test clock; `GestureTimer` removed.
 - Snack bar, tooltip, menu hover, search, magnifier, expansion-tile and gesture timers run on `Timer` (scaffold.dart).

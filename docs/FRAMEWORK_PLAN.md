@@ -10,7 +10,7 @@ Use this block as the fastest machine-readable status summary.
 framework_plan_version: 2
 last_updated: 2026-10-27
 north_star: "Flutter-like widget/rendering framework in C# with Avalonia as host infrastructure."
-current_phase: "RC preparation: M5 cross-host stability (iOS AOT crash) and sample capture parity are the open blockers."
+current_phase: "RC preparation: sample capture parity is the open blocker (M5 closed 2026-10-27)."
 latest_release: "v0.4.0-beta.3 (2026-10-24); next: v1.0.0-rc.1, criteria in the Release Candidate section"
 flutter_pin: "3.47.0 (4cf24164269); material_ui 1.0.0; cupertino_ui 1.0.0 — see AGENTS.md"
 open_work_outside_controls: "docs/ai/BACKLOG.md (control-level gaps, host-level gaps; the 3.44->3.47 re-port table is down to subsystem-blocked rows)"
@@ -27,14 +27,14 @@ status:
   desktop_widget_host_app_flow: done
   material_library_rewrite: done
   cupertino_library_port: done
-  browser_android_ios_sample_hosts: in_progress
+  browser_android_ios_sample_hosts: done
   docs_alignment_and_tracking: done
 milestones:
   - { id: M1, title: "Core parity hardening", status: done }
   - { id: M2, title: "Input/focus/accessibility completion", status: done }
   - { id: M3, title: "Port-first widget set expansion", status: done }
   - { id: M4, title: "Material library rewrite", status: done }
-  - { id: M5, title: "Cross-host sample parity and stability", status: in_progress }
+  - { id: M5, title: "Cross-host sample parity and stability", status: done }
   - { id: M6, title: "Cupertino library port", status: done }
   - { id: RC, title: "v1.0.0-rc.1 API freeze (criteria: Release Candidate section)", status: planned }
 ```
@@ -67,8 +67,10 @@ remains from those passes is tracked as rows in `docs/ai/DIVERGENCES.md`, qualif
 
 ### M5. Cross-Host Sample Parity and Stability
 
-Status: `in_progress` (the Android, iOS and Browser hosts build as of 2026-10-27; open: the iOS AOT
-crash in `docs/ai/BACKLOG.md` > Host-level gaps).
+`done` (2026-10-27): the Android, iOS and Browser hosts build, and the iOS sample runs AOT-only (Release,
+simulator) through the Bloc counter and its restored named route. The earlier `ExecutionEngineException`
+came from a prebuilt `Plumix.Bloc` bound to renamed framework members; `HostBinaryCompatibilityTests`
+now binds the sample's packages against the in-tree framework.
 
 Exit criteria:
 
@@ -89,8 +91,7 @@ until `1.0.0`, and any `Breaking:` entry means a new RC.
 
 Blockers (all must close):
 
-- M5 is `done` (M6 closed on 2026-10-27). The Android, iOS and Browser hosts build as of 2026-10-27;
-  what remains for M5 is the iOS AOT `ExecutionEngineException` (`docs/ai/BACKLOG.md` > Host-level gaps).
+- M5 and M6 are `done` (met 2026-10-27).
 - Every sample route in `SampleScreenCaptureTests` matches the Dart capture, or its residual
   difference is a `docs/ai/DIVERGENCES.md` row.
 - No qualified marker in `docs/ai/PORT_MAP.md` (met 2026-10-27).
@@ -112,7 +113,7 @@ Release gates (on the commit that gets the tag):
 
 Known limitations (listed in the RC release notes, not blockers):
 
-- `docs/ai/BACKLOG.md` > Host-level gaps, except the iOS AOT crash: platform views, `flutter/menu`,
+- `docs/ai/BACKLOG.md` > Host-level gaps: platform views, `flutter/menu`,
   the rest of `SystemChrome.*`, accessibility features and semantics focus on desktop/Android,
   `GestureSettings`, text spacing overrides, windowing-owner gaps, the iOS system context menu.
 - The upstream re-port row (platform-view hit-test), blocked on platform views.

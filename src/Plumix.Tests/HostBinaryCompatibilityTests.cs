@@ -12,7 +12,8 @@ namespace Plumix.Tests;
 
 /// <summary>
 /// Binds every external type and member reference of the shipped Plumix assemblies against the
-/// Avalonia/SkiaSharp/HarfBuzzSharp assemblies loaded by the test run, the way the JIT binds them.
+/// Avalonia/SkiaSharp/HarfBuzzSharp assemblies loaded by the test run, and of the sample's prebuilt
+/// packages against the Plumix assemblies built here, the way the JIT binds them.
 /// </summary>
 /// <remarks>
 /// A package compiled against one Avalonia and run on another fails only when the code path that
@@ -24,6 +25,7 @@ namespace Plumix.Tests;
 public sealed class HostBinaryCompatibilityTests
 {
     private static readonly string[] HostAssemblyPrefixes = ["Avalonia", "SkiaSharp", "HarfBuzzSharp"];
+    private static readonly string[] FrameworkAssemblies = ["Plumix", "Plumix.Material", "Plumix.Cupertino"];
 
     public static TheoryData<string> ShippedAssemblies() =>
     [
@@ -38,6 +40,25 @@ public sealed class HostBinaryCompatibilityTests
     {
         Assembly assembly = AppDomain.CurrentDomain.GetAssemblies()
             .Single(item => item.GetName().Name == assemblyName);
+        AssertReferencesBind(assembly, IsHostAssembly, "host");
+    }
+
+    /// <summary>
+    /// The sample consumes Plumix.Bloc as a prebuilt NuGet package while it builds Plumix from source, so a
+    /// framework rename leaves the package pointing at a member that is gone. The JIT only throws once that
+    /// path runs; Mono AOT drops every method that needs the member, and the iOS sample hit
+    /// ExecutionEngineException opening the Bloc counter (Plumix.Bloc 0.1.0-alpha.1 still called
+    /// BuildContext.DependOnInherited).
+    /// </summary>
+    [Fact]
+    public void EverySamplePackageReferenceBindsAgainstTheInTreeFramework()
+    {
+        AssertReferencesBind(typeof(Plumix.Bloc.IBlocBase).Assembly, IsFrameworkAssembly, "framework");
+    }
+
+    private static void AssertReferencesBind(Assembly assembly, Func<string, bool> inScope, string scopeName)
+    {
+        string assemblyName = assembly.GetName().Name!;
         Module module = assembly.ManifestModule;
         using var stream = File.OpenRead(assembly.Location);
         using var reader = new PEReader(stream);
@@ -47,7 +68,7 @@ public sealed class HostBinaryCompatibilityTests
         int checkedReferences = 0;
         foreach (TypeReferenceHandle handle in metadata.TypeReferences)
         {
-            if (!IsHostScope(metadata, handle))
+            if (!IsInScope(metadata, handle, inScope))
             {
                 continue;
             }
@@ -61,9 +82,9 @@ public sealed class HostBinaryCompatibilityTests
         {
             MemberReference member = metadata.GetMemberReference(handle);
             if (member.Parent.Kind != HandleKind.TypeReference
-                || !IsHostScope(metadata, (TypeReferenceHandle)member.Parent))
+                || !IsInScope(metadata, (TypeReferenceHandle)member.Parent, inScope))
             {
-                // Members of generic host instantiations (TypeSpec parents) need a generic context to
+                // Members of generic instantiations (TypeSpec parents) need a generic context to
                 // bind; their open type is still checked through its TypeReference above.
                 continue;
             }
@@ -73,9 +94,9 @@ public sealed class HostBinaryCompatibilityTests
                 () => $"{TypeName(metadata, (TypeReferenceHandle)member.Parent)}::{metadata.GetString(member.Name)}");
         }
 
-        Assert.True(checkedReferences > 0, $"{assemblyName} has no host references to check.");
+        Assert.True(checkedReferences > 0, $"{assemblyName} has no {scopeName} references to check.");
         Assert.True(failures.Count == 0,
-            $"{assemblyName} references host members missing at run time:\n{string.Join('\n', failures)}");
+            $"{assemblyName} references {scopeName} members missing at run time:\n{string.Join('\n', failures)}");
     }
 
     private static void Bind(List<string> failures, Func<object?> resolve, Func<string> describe)
@@ -91,17 +112,21 @@ public sealed class HostBinaryCompatibilityTests
         }
     }
 
-    private static bool IsHostScope(MetadataReader metadata, TypeReferenceHandle type)
+    private static bool IsHostAssembly(string name) =>
+        HostAssemblyPrefixes.Any(prefix => name.StartsWith(prefix, StringComparison.Ordinal));
+
+    private static bool IsFrameworkAssembly(string name) => FrameworkAssemblies.Contains(name);
+
+    private static bool IsInScope(MetadataReader metadata, TypeReferenceHandle type, Func<string, bool> inScope)
     {
         EntityHandle scope = metadata.GetTypeReference(type).ResolutionScope;
         switch (scope.Kind)
         {
             case HandleKind.AssemblyReference:
                 AssemblyReference reference = metadata.GetAssemblyReference((AssemblyReferenceHandle)scope);
-                string name = metadata.GetString(reference.Name);
-                return HostAssemblyPrefixes.Any(prefix => name.StartsWith(prefix, StringComparison.Ordinal));
+                return inScope(metadata.GetString(reference.Name));
             case HandleKind.TypeReference:
-                return IsHostScope(metadata, (TypeReferenceHandle)scope);
+                return IsInScope(metadata, (TypeReferenceHandle)scope, inScope);
             default:
                 return false;
         }
