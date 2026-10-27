@@ -105,7 +105,8 @@ public sealed class WidgetInspectorServiceExtensionsDartParityTests : IDisposabl
     {
         foreach (string name in new[]
                  {
-                     "debugDumpApp", "showPerformanceOverlay", "didSendFirstFrameEvent", "profileWidgetBuilds",
+                     "debugDumpApp", "debugDumpFocusTree", "showPerformanceOverlay", "didSendFirstFrameEvent",
+                     "profileWidgetBuilds",
                      "profileUserWidgetBuilds", "debugAllowBanner", "accessibilityEvaluations",
                  })
         {

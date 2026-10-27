@@ -1132,6 +1132,7 @@ public class PlumixHost : Control, ICustomHitTest
         }
 
         _attachedTopLevel.ActualThemeVariantChanged += HandleActualThemeVariantChanged;
+        HostSystemFonts.Attach(_attachedTopLevel);
         if (s_listensToSystemBack)
         {
             _attachedTopLevel.BackRequested += HandleTopLevelBackRequested;
