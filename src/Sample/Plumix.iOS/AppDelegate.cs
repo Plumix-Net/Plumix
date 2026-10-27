@@ -9,6 +9,7 @@ using Avalonia.Threading;
 using System.Collections.Generic;
 using Plumix.UI;
 using Plumix.Widgets;
+using Locale = Plumix.Widgets.Locale;
 
 // Dart parity source (reference): dart_sample/lib/main.dart (platform host bootstrap, adapted)
 
@@ -55,8 +56,10 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>
             center.AddObserver(
                 UIApplication.ContentSizeCategoryChangedNotification,
                 _ => ReportTextScaleFactor()),
+            center.AddObserver(NSLocale.CurrentLocaleDidChangeNotification, _ => ReportLocales()),
         ];
         ReportTextScaleFactor();
+        ReportLocales();
     }
 
     [Export("application:shouldSaveSecureApplicationState:")]
@@ -119,6 +122,25 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>
             _ => large,
         };
         PlatformDispatcher.Instance.UpdateTextScaleFactor(bodySize / large);
+    }
+
+    // FlutterEngine's onLocaleUpdated: the user's preferred languages, in order, split into the subtags
+    // dart:ui's _updateLocales reads; identifiers without a language code are skipped.
+    private static void ReportLocales()
+    {
+        List<Locale> locales = [];
+        foreach (string identifier in NSLocale.PreferredLanguages)
+        {
+            using var locale = new NSLocale(identifier);
+            if (string.IsNullOrEmpty(locale.LanguageCode))
+            {
+                continue;
+            }
+
+            locales.Add(new Locale(locale.LanguageCode, locale.CountryCode, locale.ScriptCode));
+        }
+
+        PlumixHost.UpdatePlatformLocales(locales);
     }
 
     private static void DispatchLifecycleState(AppLifecycleState state)

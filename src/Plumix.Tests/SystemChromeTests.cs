@@ -319,9 +319,9 @@ public sealed class SystemChromeTests : IDisposable
             systemNavigationBarDividerColor: new Color(0xFF654321),
             systemStatusBarContrastEnforced: true,
             statusBarColor: new Color(0xFFABCDEF),
-            statusBarBrightness: PlatformBrightness.Dark,
-            statusBarIconBrightness: PlatformBrightness.Light,
-            systemNavigationBarIconBrightness: PlatformBrightness.Dark,
+            statusBarBrightness: Brightness.Dark,
+            statusBarIconBrightness: Brightness.Light,
+            systemNavigationBarIconBrightness: Brightness.Dark,
             systemNavigationBarContrastEnforced: false).ToString();
 
         Assert.StartsWith("SystemUiOverlayStyle#", text);
@@ -350,17 +350,17 @@ public sealed class SystemChromeTests : IDisposable
     {
         var a = new SystemUiOverlayStyle(
             systemNavigationBarColor: new Color(0xFF123456),
-            statusBarBrightness: PlatformBrightness.Dark);
+            statusBarBrightness: Brightness.Dark);
         var b = new SystemUiOverlayStyle(
             systemNavigationBarColor: new Color(0xFF123456),
-            statusBarBrightness: PlatformBrightness.Dark);
+            statusBarBrightness: Brightness.Dark);
         Assert.Equal(a, b);
         Assert.True(a == b);
         Assert.Equal(a.GetHashCode(), b.GetHashCode());
 
         var c = new SystemUiOverlayStyle(
             systemNavigationBarColor: new Color(0xFF654321),
-            statusBarBrightness: PlatformBrightness.Dark);
+            statusBarBrightness: Brightness.Dark);
         Assert.NotEqual(a, c);
         Assert.True(a != c);
         Assert.NotEqual(a.GetHashCode(), c.GetHashCode());
@@ -372,17 +372,17 @@ public sealed class SystemChromeTests : IDisposable
     {
         var original = new SystemUiOverlayStyle(
             systemNavigationBarColor: new Color(0xFF123456),
-            statusBarBrightness: PlatformBrightness.Dark,
+            statusBarBrightness: Brightness.Dark,
             systemStatusBarContrastEnforced: true);
 
         SystemUiOverlayStyle copy = original.CopyWith(
             systemNavigationBarColor: new Color(0xFF654321),
-            statusBarIconBrightness: PlatformBrightness.Light);
+            statusBarIconBrightness: Brightness.Light);
 
         Assert.Equal(new Color(0xFF654321), copy.SystemNavigationBarColor);
-        Assert.Equal(PlatformBrightness.Dark, copy.StatusBarBrightness);
+        Assert.Equal(Brightness.Dark, copy.StatusBarBrightness);
         Assert.Equal(true, copy.SystemStatusBarContrastEnforced);
-        Assert.Equal(PlatformBrightness.Light, copy.StatusBarIconBrightness);
+        Assert.Equal(Brightness.Light, copy.StatusBarIconBrightness);
         Assert.Null(copy.SystemNavigationBarDividerColor);
     }
 
@@ -394,11 +394,11 @@ public sealed class SystemChromeTests : IDisposable
         new SystemUiOverlayStyle(
             systemNavigationBarColor: new Color(0xFF123456),
             systemNavigationBarDividerColor: new Color(0xFF654321),
-            systemNavigationBarIconBrightness: PlatformBrightness.Light,
+            systemNavigationBarIconBrightness: Brightness.Light,
             systemNavigationBarContrastEnforced: true,
             statusBarColor: new Color(0xFFABCDEF),
-            statusBarBrightness: PlatformBrightness.Dark,
-            statusBarIconBrightness: PlatformBrightness.Light,
+            statusBarBrightness: Brightness.Dark,
+            statusBarIconBrightness: Brightness.Light,
             systemStatusBarContrastEnforced: false).DebugFillProperties(builder);
 
         Assert.Equal(
@@ -425,17 +425,17 @@ public sealed class SystemChromeTests : IDisposable
     public void OverlayStyle_LightAndDarkConstants()
     {
         Assert.Equal(new Color(0xFF000000), SystemUiOverlayStyle.Light.SystemNavigationBarColor);
-        Assert.Equal(PlatformBrightness.Light, SystemUiOverlayStyle.Light.SystemNavigationBarIconBrightness);
-        Assert.Equal(PlatformBrightness.Light, SystemUiOverlayStyle.Light.StatusBarIconBrightness);
-        Assert.Equal(PlatformBrightness.Dark, SystemUiOverlayStyle.Light.StatusBarBrightness);
+        Assert.Equal(Brightness.Light, SystemUiOverlayStyle.Light.SystemNavigationBarIconBrightness);
+        Assert.Equal(Brightness.Light, SystemUiOverlayStyle.Light.StatusBarIconBrightness);
+        Assert.Equal(Brightness.Dark, SystemUiOverlayStyle.Light.StatusBarBrightness);
         Assert.Null(SystemUiOverlayStyle.Light.StatusBarColor);
         Assert.Null(SystemUiOverlayStyle.Light.SystemNavigationBarDividerColor);
 
         Assert.Equal(new Color(0xFF000000), SystemUiOverlayStyle.Dark.SystemNavigationBarColor);
         // Dart keeps light navigation bar icons in both constants.
-        Assert.Equal(PlatformBrightness.Light, SystemUiOverlayStyle.Dark.SystemNavigationBarIconBrightness);
-        Assert.Equal(PlatformBrightness.Dark, SystemUiOverlayStyle.Dark.StatusBarIconBrightness);
-        Assert.Equal(PlatformBrightness.Light, SystemUiOverlayStyle.Dark.StatusBarBrightness);
+        Assert.Equal(Brightness.Light, SystemUiOverlayStyle.Dark.SystemNavigationBarIconBrightness);
+        Assert.Equal(Brightness.Dark, SystemUiOverlayStyle.Dark.StatusBarIconBrightness);
+        Assert.Equal(Brightness.Light, SystemUiOverlayStyle.Dark.StatusBarBrightness);
     }
 
     // The host decodes the platform message back into the style it was built from.
@@ -445,11 +445,11 @@ public sealed class SystemChromeTests : IDisposable
         var style = new SystemUiOverlayStyle(
             systemNavigationBarColor: new Color(0xFF123456),
             systemNavigationBarDividerColor: new Color(0x10654321),
-            systemNavigationBarIconBrightness: PlatformBrightness.Dark,
+            systemNavigationBarIconBrightness: Brightness.Dark,
             systemNavigationBarContrastEnforced: false,
             statusBarColor: new Color(0x00000000),
-            statusBarBrightness: PlatformBrightness.Light,
-            statusBarIconBrightness: PlatformBrightness.Dark,
+            statusBarBrightness: Brightness.Light,
+            statusBarIconBrightness: Brightness.Dark,
             systemStatusBarContrastEnforced: true);
         var codec = new JsonMethodCodec();
 

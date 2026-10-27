@@ -18,6 +18,9 @@ public sealed class MaterialSearchTests : IDisposable
     // branch is chosen by the test rather than inherited from the host OS.
     private static ThemeData DesktopTheme { get; } = new(platform: TargetPlatform.MacOS);
 
+    // The search view refreshes its suggestions from a zero-duration `Timer`, which `Settle` fires.
+    private readonly FakeGestureTimers _timers = new();
+
     public MaterialSearchTests()
     {
         SchedulerBinding.ResetForTests();
@@ -27,6 +30,7 @@ public sealed class MaterialSearchTests : IDisposable
 
     public void Dispose()
     {
+        _timers.Dispose();
         GestureBinding.Instance.ResetForTests();
         FocusManager.Instance.ResetForTests();
         SchedulerBinding.ResetForTests();
@@ -747,7 +751,7 @@ public sealed class MaterialSearchTests : IDisposable
         Assert.Equal(Colors.White, resolved.AppBarTheme.BackgroundColor);
         Assert.Equal(MaterialColors.Grey, resolved.AppBarTheme.IconTheme?.Color);
         Assert.Equal(31, resolved.AppBarTheme.IconTheme?.Size);
-        Assert.Equal(PlatformBrightness.Dark, resolved.AppBarTheme.SystemOverlayStyle?.StatusBarIconBrightness);
+        Assert.Equal(Brightness.Dark, resolved.AppBarTheme.SystemOverlayStyle?.StatusBarIconBrightness);
         Assert.Equal(InputBorder.None, resolved.InputDecorationTheme.Border);
     }
 
@@ -805,12 +809,13 @@ public sealed class MaterialSearchTests : IDisposable
         Assert.NotNull(FindParagraph(harness.RenderView, "Themed suggestion"));
     }
 
-    private static void Settle(WidgetRenderHarness harness, Size size)
+    private void Settle(WidgetRenderHarness harness, Size size)
     {
         for (int i = 0; i < 3; i++)
         {
             harness.Pump(size);
             AnimationPump.Prime();
+            _timers.Elapse(TimeSpan.FromSeconds(0.7));
             SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(AnimationPump.CurrentSeconds + 0.7));
         }
 

@@ -12,12 +12,6 @@ namespace Plumix.Material;
 
 // Dart parity source: material_ui/lib/src/theme_data.dart
 
-public enum Brightness
-{
-    Light,
-    Dark,
-}
-
 public enum MaterialTapTargetSize
 {
     Padded,
@@ -603,6 +597,7 @@ public sealed record ThemeData : IDiagnosticable
         DialogTheme = dialogTheme ?? new DialogThemeData();
         PopupMenuTheme = popupMenuTheme ?? new PopupMenuThemeData();
         ButtonTheme = buttonTheme ?? new ButtonThemeData(
+            ColorScheme: ColorScheme,
             ButtonColor: isDark ? swatch.Shade600 : Colors.Grey.Shade300,
             DisabledColor: disabledColor,
             FocusColor: focusColor,
@@ -1786,8 +1781,8 @@ public class MaterialBasedCupertinoThemeData : CupertinoThemeData
         _cupertinoOverrideTheme = cupertinoOverrideTheme;
     }
 
-    public override PlatformBrightness? Brightness =>
-        _cupertinoOverrideTheme.Brightness ?? ToPlatformBrightness(_materialTheme.Brightness);
+    public override Brightness? Brightness =>
+        _cupertinoOverrideTheme.Brightness ?? _materialTheme.Brightness;
 
     public override Color PrimaryColor =>
         _cupertinoOverrideTheme.PrimaryColor ?? _materialTheme.ColorScheme.Primary;
@@ -1805,7 +1800,7 @@ public class MaterialBasedCupertinoThemeData : CupertinoThemeData
     /// Material theme — create a new Material <see cref="Theme"/> for that.
     /// </summary>
     public override MaterialBasedCupertinoThemeData CopyWith(
-        PlatformBrightness? brightness = null,
+        Brightness? brightness = null,
         Color? primaryColor = null,
         Color? primaryContrastingColor = null,
         CupertinoTextThemeData? textTheme = null,
@@ -1837,13 +1832,6 @@ public class MaterialBasedCupertinoThemeData : CupertinoThemeData
             _materialTheme,
             cupertinoOverrideThemeWithTextTheme.ResolveFrom(context));
     }
-
-
-    // `Brightness` names this type's own property here, so the Material enum needs qualifying.
-    private static PlatformBrightness ToPlatformBrightness(Plumix.Material.Brightness brightness) =>
-        brightness == Plumix.Material.Brightness.Dark
-            ? PlatformBrightness.Dark
-            : PlatformBrightness.Light;
 }
 
 /// <summary>
@@ -1865,7 +1853,7 @@ public class CupertinoBasedMaterialThemeData
         MaterialTheme = new ThemeData(
             colorScheme: ColorScheme.FromSeed(
                 seedColor: themeData.PrimaryColor,
-                brightness: themeData.Brightness == PlatformBrightness.Dark
+                brightness: themeData.Brightness == Brightness.Dark
                     ? Brightness.Dark
                     : Brightness.Light,
                 primary: themeData.PrimaryColor,

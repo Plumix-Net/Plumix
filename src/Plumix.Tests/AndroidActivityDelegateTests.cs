@@ -1,5 +1,6 @@
 using System.Globalization;
 using Avalonia;
+using Plumix.Gestures;
 using Plumix.Painting;
 using Plumix.UI;
 using Plumix.Widgets;
@@ -43,12 +44,97 @@ public sealed class AndroidActivityDelegateTests : IDisposable
             Assert.Equal(2.0, dispatcher.TextScaleFactor);
             Assert.Equal(1, changes);
             using var tester = new FrameworkDartTester();
-            Assert.Equal(TextScaler.Linear(2.0), MediaQueryData.FromView(tester.View).TextScaler);
+            TextScaler scaler = MediaQueryData.FromView(tester.View).TextScaler;
+            Assert.Equal(2.0, Assert.IsType<SystemTextScaler>(scaler).TextScaleFactor);
+            Assert.Equal(28.0, scaler.Scale(14.0));
         }
         finally
         {
             dispatcher.UpdateTextScaleFactor(1.0);
             dispatcher.OnTextScaleFactorChanged = previous;
+        }
+    }
+
+    // FlutterView.sendUserSettingsToFlutter on Android 14+: the configuration's getScaledFontSize reaches
+    // the SystemTextScaler through PlatformDispatcher.scaleFontSize.
+    [Fact]
+    public void ConfigurationChanged_ReportsTheConfigurationsFontScalingCurve()
+    {
+        PlatformDispatcher dispatcher = PlatformDispatcher.Instance;
+        try
+        {
+            var activity = new AndroidActivityDelegate(new AndroidRestorationChannel(true, _messenger), _ => { });
+
+            activity.OnConfigurationChanged(2f, fontSize => fontSize <= 20 ? fontSize * 2 : 40 + (fontSize - 20));
+
+            using var tester = new FrameworkDartTester();
+            TextScaler scaler = MediaQueryData.FromView(tester.View).TextScaler;
+            Assert.Equal(28.0, scaler.Scale(14.0));
+            Assert.Equal(52.0, scaler.Scale(32.0));
+        }
+        finally
+        {
+            dispatcher.ResetScaledFontSizeForTests();
+            dispatcher.UpdateTextScaleFactor(1.0);
+        }
+    }
+
+    // FlutterView.sendViewportMetricsToFlutter's physicalTouchSlop (ViewConfiguration.getScaledTouchSlop)
+    // becomes the view's gesture settings in logical pixels (DeviceGestureSettings.fromView).
+    [Fact]
+    public void ScaledTouchSlop_ReachesTheViewsGestureSettings()
+    {
+        var host = new MetricsHost();
+        try
+        {
+            host.ArrangeContent(new Size(400, 800));
+            Assert.Null(host.RootFlutterView.GestureSettings);
+            Assert.Null(MediaQueryData.FromView(host.RootFlutterView).GestureSettings);
+
+            var activity = new AndroidActivityDelegate(new AndroidRestorationChannel(true, _messenger), _ => { });
+            activity.OnScaledTouchSlopChanged(24);
+            // The host is not attached, so the slop arrives with its next metrics update.
+            host.ArrangeContent(new Size(800, 400));
+
+            Assert.Equal(new DeviceGestureSettings(TouchSlop: 24), host.RootFlutterView.GestureSettings);
+            Assert.Equal(24, MediaQueryData.FromView(host.RootFlutterView).GestureSettings?.TouchSlop);
+            Assert.Equal(48, MediaQueryData.FromView(host.RootFlutterView).GestureSettings?.PanSlop);
+            Assert.Throws<ArgumentOutOfRangeException>(() => activity.OnScaledTouchSlopChanged(-1));
+        }
+        finally
+        {
+            PlumixHost.UpdatePhysicalTouchSlop(null);
+        }
+    }
+
+    // LocalizationPlugin.sendLocalesToFlutter: the configuration's ordered locale list replaces the
+    // single-culture list the host reports, including the report WidgetHost makes before runApp.
+    [Fact]
+    public void LocalesChanged_ReportsTheOrderedPreferredLanguages()
+    {
+        PlatformDispatcher dispatcher = PlatformDispatcher.Instance;
+        IReadOnlyList<Locale> previousLocales = dispatcher.Locales;
+        Action? previous = dispatcher.OnLocaleChanged;
+        int changes = 0;
+        dispatcher.OnLocaleChanged = () => changes++;
+        try
+        {
+            var activity = new AndroidActivityDelegate(new AndroidRestorationChannel(true, _messenger), _ => { });
+            Locale[] preferred = [new("de", "DE"), new("sr", "RS", "Latn"), new("en", "US")];
+
+            activity.OnLocalesChanged(preferred);
+            PlumixHost.ReportLocales();
+            activity.OnLocalesChanged([]);
+
+            Assert.Equal(preferred, dispatcher.Locales);
+            Assert.Equal(new Locale("de", "DE"), dispatcher.Locale);
+            Assert.Equal(1, changes);
+        }
+        finally
+        {
+            PlumixHost.ResetPlatformLocalesForTests();
+            dispatcher.UpdateLocales(previousLocales);
+            dispatcher.OnLocaleChanged = previous;
         }
     }
 
@@ -288,5 +374,10 @@ public sealed class AndroidActivityDelegateTests : IDisposable
             Calls.Add("pop");
             return Task.FromResult(false);
         }
+    }
+
+    private sealed class MetricsHost : PlumixHost
+    {
+        public void ArrangeContent(Size size) => ArrangeOverride(size);
     }
 }

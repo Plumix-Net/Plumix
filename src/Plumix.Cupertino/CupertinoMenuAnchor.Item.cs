@@ -178,7 +178,7 @@ public sealed class CupertinoMenuItem : StatelessWidget, CupertinoMenuEntry
         Action<bool>? onHover = null,
         Action? onPressed = null,
         WidgetStateProperty<BoxDecoration>? decoration = null,
-        WidgetStateProperty<MouseCursor>? mouseCursor = null,
+        IWidgetStateProperty<MouseCursor>? mouseCursor = null,
         HitTestBehavior behavior = HitTestBehavior.Opaque,
         bool requestCloseOnActivate = true,
         bool requestFocusOnHover = true,
@@ -240,7 +240,7 @@ public sealed class CupertinoMenuItem : StatelessWidget, CupertinoMenuEntry
 
     public WidgetStateProperty<BoxDecoration>? Decoration { get; }
 
-    public WidgetStateProperty<MouseCursor>? MouseCursor { get; }
+    public IWidgetStateProperty<MouseCursor>? MouseCursor { get; }
 
     public HitTestBehavior Behavior { get; }
 
@@ -327,7 +327,7 @@ public sealed class CupertinoMenuItem : StatelessWidget, CupertinoMenuEntry
     /// <summary>Dart parity source: <c>CupertinoMenuItem._resolveDefaultSubtitleStyle</c>.</summary>
     internal static TextStyle ResolveDefaultSubtitleStyle(BuildContext context, TextScaler textScaler)
     {
-        bool isDark = CupertinoTheme.MaybeBrightnessOf(context) == PlatformBrightness.Dark;
+        bool isDark = CupertinoTheme.MaybeBrightnessOf(context) == Brightness.Dark;
         return CupertinoDynamicTypeStyle.Subhead
             .ResolveTextStyle(textScaler)
             .CopyWith(
@@ -572,7 +572,7 @@ internal sealed class CupertinoMenuItemInteractionHandler : StatefulWidget
 {
     public CupertinoMenuItemInteractionHandler(
         Widget child,
-        WidgetStateProperty<MouseCursor> mouseCursor,
+        IWidgetStateProperty<MouseCursor> mouseCursor,
         WidgetStateProperty<BoxDecoration> decoration,
         HitTestBehavior behavior,
         bool autofocus,
@@ -597,7 +597,7 @@ internal sealed class CupertinoMenuItemInteractionHandler : StatefulWidget
 
     public Widget Child { get; }
 
-    public WidgetStateProperty<MouseCursor> MouseCursor { get; }
+    public IWidgetStateProperty<MouseCursor> MouseCursor { get; }
 
     public WidgetStateProperty<BoxDecoration> Decoration { get; }
 
@@ -783,7 +783,7 @@ internal sealed class CupertinoMenuItemInteractionHandlerState : State<Cupertino
                                          || !hasBackground
                                          || decoration.BackgroundBlendMode is not null
                         ? decoration.BackgroundBlendMode
-                        : CupertinoTheme.MaybeBrightnessOf(context) == PlatformBrightness.Light
+                        : CupertinoTheme.MaybeBrightnessOf(context) == Brightness.Light
                             ? BlendMode.Multiply
                             : BlendMode.Plus),
                 child: child));

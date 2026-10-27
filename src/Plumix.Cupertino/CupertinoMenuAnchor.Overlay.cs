@@ -200,7 +200,7 @@ internal sealed class CupertinoMenuOverlayState : State<CupertinoMenuOverlay>, W
             child: panel);
         panel = new CustomPaint(
             painter: new CupertinoMenuShadowPainter(
-                CupertinoTheme.MaybeBrightnessOf(context) ?? PlatformBrightness.Light,
+                CupertinoTheme.MaybeBrightnessOf(context) ?? Brightness.Light,
                 _fadeAnimation),
             child: panel);
         panel = new FocusScope(
@@ -448,14 +448,14 @@ internal sealed class CupertinoMenuShadowPainter : CustomPainter
 
     private const double KShadowOpacity = 0.12;
 
-    public CupertinoMenuShadowPainter(PlatformBrightness brightness, Animation<double> repaint)
+    public CupertinoMenuShadowPainter(Brightness brightness, Animation<double> repaint)
         : base(repaint)
     {
         Brightness = brightness;
         RepaintAnimation = repaint;
     }
 
-    public PlatformBrightness Brightness { get; }
+    public Brightness Brightness { get; }
 
     public Animation<double> RepaintAnimation { get; }
 

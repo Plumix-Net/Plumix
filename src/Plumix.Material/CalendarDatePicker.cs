@@ -1325,7 +1325,7 @@ internal sealed class DayState : State<Day>
         }
 
         T? Resolve<T>(
-            Func<DatePickerThemeData?, WidgetStateProperty<T?>?> getProperty,
+            Func<DatePickerThemeData?, IWidgetStateProperty<T?>?> getProperty,
             IReadOnlySet<WidgetState> states) where T : class
         {
             return EffectiveValue(theme => getProperty(theme)?.Resolve(states));
@@ -1575,7 +1575,7 @@ internal sealed class YearPickerState : State<YearPicker>
         }
 
         T? Resolve<T>(
-            Func<DatePickerThemeData?, WidgetStateProperty<T?>?> getProperty,
+            Func<DatePickerThemeData?, IWidgetStateProperty<T?>?> getProperty,
             IReadOnlySet<WidgetState> states) where T : class
         {
             return EffectiveValue(theme => getProperty(theme)?.Resolve(states));

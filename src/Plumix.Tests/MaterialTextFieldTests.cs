@@ -357,6 +357,29 @@ public sealed class MaterialTextFieldTests : IDisposable
     }
 
     [Fact]
+    public void TextField_SelectionBoxStyles_PassToEditableTextUnresolved()
+    {
+        // Dart: TextField forwards selectionHeightStyle/selectionWidthStyle as given; null leaves
+        // EditableText's platform defaults in place.
+        using var harness = new WidgetRenderHarness(Wrap(new TextField(useDecoration: false)));
+        harness.Pump(new Size(360, 100));
+        RenderEditable editable = Assert.Single(FindDescendants<RenderEditable>(harness.RenderView));
+        Assert.Null(new TextField().SelectionHeightStyle);
+        Assert.Null(new TextField().SelectionWidthStyle);
+        Assert.Equal(EditableText.DefaultSelectionHeightStyle, editable.SelectionHeightStyle);
+        Assert.Equal(EditableText.DefaultSelectionWidthStyle, editable.SelectionWidthStyle);
+
+        using var styled = new WidgetRenderHarness(Wrap(new TextField(
+            useDecoration: false,
+            selectionHeightStyle: BoxHeightStyle.IncludeLineSpacingBottom,
+            selectionWidthStyle: BoxWidthStyle.Tight)));
+        styled.Pump(new Size(360, 100));
+        editable = Assert.Single(FindDescendants<RenderEditable>(styled.RenderView));
+        Assert.Equal(BoxHeightStyle.IncludeLineSpacingBottom, editable.SelectionHeightStyle);
+        Assert.Equal(BoxWidthStyle.Tight, editable.SelectionWidthStyle);
+    }
+
+    [Fact]
     public void DefaultSpellCheckService_MergesSortedResultsAndRetainsOlderDuplicate()
     {
         var oldAtTwo = new SuggestionSpan(new TextRange(2, 4), ["old"]);

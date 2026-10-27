@@ -5,6 +5,9 @@
 // pages use the CSS names for illustrative swatches, so `Colors` stays bound to the CSS set
 // here; reach the Material palette through the `MaterialColors` alias instead.
 global using Color = Plumix.UI.Color;
+// dart:ui's `Brightness` lives in `Plumix.UI`; Material re-exports it in Dart, so every file here
+// sees it unqualified too.
+global using Brightness = Plumix.UI.Brightness;
 global using Colors = Plumix.Sample.CssColors;
 global using MaterialColors = Plumix.Material.Colors;
 global using Plumix.Sample;

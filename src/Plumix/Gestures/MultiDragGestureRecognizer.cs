@@ -418,7 +418,7 @@ public sealed class VerticalMultiDragGestureRecognizer : MultiDragGestureRecogni
 
 internal sealed class DelayedPointerState : MultiDragPointerState
 {
-    private GestureTimer? _timer;
+    private Timer? _timer;
     private GestureMultiDragStartCallback? _starter;
 
     public DelayedPointerState(
@@ -427,7 +427,7 @@ internal sealed class DelayedPointerState : MultiDragPointerState
         PointerDeviceKind kind,
         DeviceGestureSettings? gestureSettings) : base(initialPosition, kind, gestureSettings)
     {
-        _timer = GestureTimer.Start(delay, DelayPassed);
+        _timer = new Timer(delay, DelayPassed);
     }
 
     private void DelayPassed()

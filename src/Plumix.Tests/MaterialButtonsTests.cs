@@ -3655,6 +3655,50 @@ public sealed class MaterialButtonsTests
     }
 
     [Fact]
+    public void ButtonStyle_OverlayColorAcceptsAWidgetStateColor()
+    {
+        var pressed = new Color(0xff0000ff);
+        var idle = new Color(0xff00ff00);
+        WidgetStateColor overlay = WidgetStateColor.ResolveWith(
+            states => states.Contains(WidgetState.Pressed) ? pressed : idle);
+        var style = new ButtonStyle(OverlayColor: overlay);
+
+        Assert.Same(overlay, style.Merge(new ButtonStyle()).OverlayColor);
+        Assert.Same(overlay, new ButtonStyle().CopyWith(overlayColor: overlay).OverlayColor);
+        Assert.Equal(style, new ButtonStyle(OverlayColor: overlay));
+
+        var other = new ButtonStyle(OverlayColor: WidgetStateProperty<Color?>.All(new Color(0xffff0000)));
+        ButtonStyle lerped = Assert.IsType<ButtonStyle>(ButtonStyle.Lerp(style, other, 0.0));
+        Assert.Equal(pressed, lerped.OverlayColor!.Resolve(new HashSet<WidgetState> { WidgetState.Pressed }));
+        Assert.Equal(idle, lerped.OverlayColor!.Resolve(new HashSet<WidgetState>()));
+    }
+
+    [Fact]
+    public void StateResolvingValueTypes_FillTheirWidgetStatePropertySlots()
+    {
+        // Dart's `WidgetStateColor`, `WidgetStateTextStyle` and `WidgetStateMouseCursor` implement
+        // `WidgetStateProperty`, so every state-property slot of their value type accepts them.
+        var pressed = new HashSet<WidgetState> { WidgetState.Pressed };
+        var disabled = new HashSet<WidgetState> { WidgetState.Disabled };
+        var pressedColor = new Color(0xff0000ff);
+        var pressedStyle = new TextStyle(FontSize: 20.0);
+        var style = new ButtonStyle(
+            TextStyle: WidgetStateTextStyle.ResolveWith(
+                states => states.Contains(WidgetState.Pressed) ? pressedStyle : new TextStyle()),
+            BackgroundColor: WidgetStateColor.ResolveWith(
+                states => states.Contains(WidgetState.Pressed) ? pressedColor : new Color(0xff000000)),
+            MouseCursor: WidgetStateMouseCursor.Clickable);
+        var switchTheme = new SwitchThemeData(
+            ThumbColor: WidgetStateColor.ResolveWith(
+                states => states.Contains(WidgetState.Pressed) ? pressedColor : new Color(0xff000000)));
+
+        Assert.Same(pressedStyle, style.TextStyle!.Resolve(pressed));
+        Assert.Equal(pressedColor, style.BackgroundColor!.Resolve(pressed));
+        Assert.Same(SystemMouseCursors.Basic, style.MouseCursor!.Resolve(disabled));
+        Assert.Equal(pressedColor, switchTheme.ThumbColor!.Resolve(pressed));
+    }
+
+    [Fact]
     public void TextButton_StyleFrom_AppliesForegroundAndTextStyle()
     {
         var owner = TestBuildOwner.Create();

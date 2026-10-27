@@ -409,64 +409,30 @@ public sealed class TapAndDragGestureTests : IDisposable
 }
 
 /// <summary>
-/// Replaces the dispatcher-backed <see cref="GestureTimer"/> with a virtual clock, the way Flutter's
-/// gesture tests run under `FakeAsync`.
+/// flutter_test's <c>FakeAsync</c> for the framework's <see cref="Timer"/>s: while it lives, timers run
+/// on the event loop's fake clock, which only <see cref="Elapse"/> moves.
 /// </summary>
+/// <remarks>
+/// Instances nest and share one clock (<see cref="EventLoop.UseFakeTime"/>), so a test that creates one
+/// next to a <see cref="FrameworkDartTester"/> with fake timers elapses the same clock the tester pumps.
+/// </remarks>
 internal sealed class FakeGestureTimers : IDisposable
 {
-    private readonly List<PendingTimer> _pending = [];
-    private TimeSpan _now;
-
-    public FakeGestureTimers()
-    {
-        GestureTimer.Factory = Create;
-    }
+    private EventLoop.FakeTimeScope _scope = EventLoop.UseFakeTime();
 
     /// <summary>
     /// Advances the clock, firing due timers in deadline order (creation order on ties) with the
     /// clock at each deadline, the way <c>FakeAsync.elapse</c> does: a press deadline fires before
     /// a long-press deadline even when the long press timer was created first.
     /// </summary>
-    public void Elapse(TimeSpan duration)
-    {
-        TimeSpan end = _now + duration;
-        int guard = 0;
-        while (_pending.Where(entry => entry.Due <= end).OrderBy(entry => entry.Due).FirstOrDefault() is { } next)
-        {
-            if (++guard > 10000)
-            {
-                throw new InvalidOperationException("FakeGestureTimers: a timer keeps rescheduling itself.");
-            }
+    public void Elapse(TimeSpan duration) => EventLoop.ElapseFakeTime(duration);
 
-            _pending.Remove(next);
-            if (next.Due > _now)
-            {
-                _now = next.Due;
-            }
-
-            next.Timer.FireNow();
-        }
-
-        _now = end;
-    }
+    /// <summary>The number of active timers on the fake clock: <c>FakeAsync.pendingTimers.length</c>.</summary>
+    public int PendingTimerCount => EventLoop.PendingFakeTimerCount;
 
     public void Dispose()
     {
-        _pending.Clear();
-        GestureTimer.ResetFactory();
-    }
-
-    private GestureTimer Create(TimeSpan duration, Action callback)
-    {
-        var timer = new ManualGestureTimer(callback);
-        _pending.Add(new PendingTimer(_now + duration, timer));
-        return timer;
-    }
-
-    private sealed record PendingTimer(TimeSpan Due, ManualGestureTimer Timer);
-
-    private sealed class ManualGestureTimer(Action callback) : GestureTimer
-    {
-        public void FireNow() => Fire(callback);
+        _scope.Dispose();
+        _scope = default;
     }
 }

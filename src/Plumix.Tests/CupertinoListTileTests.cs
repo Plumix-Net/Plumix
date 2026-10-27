@@ -113,7 +113,7 @@ public sealed class CupertinoListTileTests : IDisposable
             backgroundColor: normal,
             backgroundColorActivated: activated,
             onTap: () => completion.Task);
-        using var harness = new CupertinoThemeTestHarness(Wrap(tile, PlatformBrightness.Dark));
+        using var harness = new CupertinoThemeTestHarness(Wrap(tile, Brightness.Dark));
         harness.Pump(ViewSize);
 
         Assert.Equal(0xFF223344u, BackgroundColor(harness.RenderView).ToARGB32());
@@ -207,7 +207,7 @@ public sealed class CupertinoListTileTests : IDisposable
 
     private static Widget Wrap(
         Widget child,
-        PlatformBrightness brightness = PlatformBrightness.Light,
+        Brightness brightness = Brightness.Light,
         TextDirection direction = TextDirection.Ltr)
     {
         return new MediaQuery(

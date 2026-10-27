@@ -89,7 +89,7 @@ public sealed class CupertinoActionSheetTests : IDisposable
 
         using var dark = new CupertinoThemeTestHarness(Wrap(
             Sheet(actions: [Action("Plain"), Action("Destroy", destructive: true)]),
-            brightness: PlatformBrightness.Dark));
+            brightness: Brightness.Dark));
         dark.Pump(PhoneSize);
 
         Assert.Equal(new Color(0xFF0A84FF), ParagraphColor(Paragraph(dark, "Plain")));
@@ -119,7 +119,7 @@ public sealed class CupertinoActionSheetTests : IDisposable
 
         using var dark = new CupertinoThemeTestHarness(Wrap(
             Sheet(title: new Text("Title"), actions: [Action("One")]),
-            brightness: PlatformBrightness.Dark));
+            brightness: Brightness.Dark));
         dark.Pump(PhoneSize);
         Assert.Equal(new Color(0x96F1F1F1), ParagraphColor(Paragraph(dark, "Title")));
     }
@@ -423,7 +423,7 @@ public sealed class CupertinoActionSheetTests : IDisposable
 
         using var dark = new CupertinoThemeTestHarness(Wrap(
             Sheet(actions: [Action("One")]),
-            brightness: PlatformBrightness.Dark));
+            brightness: Brightness.Dark));
         dark.Pump(PhoneSize);
         Assert.Single(dark.FindWidgets<FocusableActionDetector>()).OnShowFocusHighlight!(true);
         dark.Pump(PhoneSize);
@@ -437,7 +437,7 @@ public sealed class CupertinoActionSheetTests : IDisposable
                 new CupertinoActionSheetAction(
                     new Text("One"), () => { }, focusColor: new Color(0xFFFFAAAA)),
             ]),
-            brightness: PlatformBrightness.Dark));
+            brightness: Brightness.Dark));
         custom.Pump(PhoneSize);
         Assert.Single(custom.FindWidgets<FocusableActionDetector>()).OnShowFocusHighlight!(true);
         custom.Pump(PhoneSize);
@@ -562,7 +562,7 @@ public sealed class CupertinoActionSheetTests : IDisposable
         double textScaleFactor = 1.0,
         Size? size = null,
         Thickness viewPadding = default,
-        PlatformBrightness brightness = PlatformBrightness.Light)
+        Brightness brightness = Brightness.Light)
     {
         return new Directionality(
             TextDirection.Ltr,

@@ -25,10 +25,10 @@ public sealed class CheckboxListTile : StatelessWidget
         Action<bool?>? onChanged,
         MouseCursor? mouseCursor = null,
         Color? activeColor = null,
-        WidgetStateProperty<Color?>? fillColor = null,
+        IWidgetStateProperty<Color?>? fillColor = null,
         Color? checkColor = null,
         Color? hoverColor = null,
-        WidgetStateProperty<Color?>? overlayColor = null,
+        IWidgetStateProperty<Color?>? overlayColor = null,
         double? splashRadius = null,
         MaterialTapTargetSize? materialTapTargetSize = null,
         VisualDensity? visualDensity = null,
@@ -113,10 +113,10 @@ public sealed class CheckboxListTile : StatelessWidget
         Action<bool?>? onChanged,
         MouseCursor? mouseCursor,
         Color? activeColor,
-        WidgetStateProperty<Color?>? fillColor,
+        IWidgetStateProperty<Color?>? fillColor,
         Color? checkColor,
         Color? hoverColor,
-        WidgetStateProperty<Color?>? overlayColor,
+        IWidgetStateProperty<Color?>? overlayColor,
         double? splashRadius,
         MaterialTapTargetSize? materialTapTargetSize,
         VisualDensity? visualDensity,
@@ -214,10 +214,10 @@ public sealed class CheckboxListTile : StatelessWidget
         Action<bool?>? onChanged,
         MouseCursor? mouseCursor = null,
         Color? activeColor = null,
-        WidgetStateProperty<Color?>? fillColor = null,
+        IWidgetStateProperty<Color?>? fillColor = null,
         Color? checkColor = null,
         Color? hoverColor = null,
-        WidgetStateProperty<Color?>? overlayColor = null,
+        IWidgetStateProperty<Color?>? overlayColor = null,
         double? splashRadius = null,
         MaterialTapTargetSize? materialTapTargetSize = null,
         VisualDensity? visualDensity = null,
@@ -310,7 +310,7 @@ public sealed class CheckboxListTile : StatelessWidget
     public Color? ActiveColor { get; }
 
     /// <summary>The color that fills the checkbox, in all <see cref="WidgetState"/>s.</summary>
-    public WidgetStateProperty<Color?>? FillColor { get; }
+    public IWidgetStateProperty<Color?>? FillColor { get; }
 
     /// <summary>The color to use for the check icon when this checkbox is checked.</summary>
     public Color? CheckColor { get; }
@@ -319,7 +319,7 @@ public sealed class CheckboxListTile : StatelessWidget
     public Color? HoverColor { get; }
 
     /// <summary>The color for the checkbox's <see cref="Plumix.Material.Material"/>.</summary>
-    public WidgetStateProperty<Color?>? OverlayColor { get; }
+    public IWidgetStateProperty<Color?>? OverlayColor { get; }
 
     /// <summary>The splash radius of the circular ink response.</summary>
     public double? SplashRadius { get; }

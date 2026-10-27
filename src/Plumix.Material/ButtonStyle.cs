@@ -19,23 +19,23 @@ public delegate Widget ButtonLayerBuilder(
 /// `DebugFillProperties` follow `material_ui/lib/src/button_style.dart` exactly.
 /// </summary>
 public sealed record ButtonStyle(
-    WidgetStateProperty<TextStyle?>? TextStyle = null,
-    WidgetStateProperty<Color?>? BackgroundColor = null,
-    WidgetStateProperty<Color?>? ForegroundColor = null,
-    WidgetStateProperty<Color?>? OverlayColor = null,
-    WidgetStateProperty<Color?>? ShadowColor = null,
-    WidgetStateProperty<Color?>? SurfaceTintColor = null,
+    IWidgetStateProperty<TextStyle?>? TextStyle = null,
+    IWidgetStateProperty<Color?>? BackgroundColor = null,
+    IWidgetStateProperty<Color?>? ForegroundColor = null,
+    IWidgetStateProperty<Color?>? OverlayColor = null,
+    IWidgetStateProperty<Color?>? ShadowColor = null,
+    IWidgetStateProperty<Color?>? SurfaceTintColor = null,
     WidgetStateProperty<double?>? Elevation = null,
     WidgetStateProperty<EdgeInsetsGeometry?>? Padding = null,
     WidgetStateProperty<Size?>? MinimumSize = null,
     WidgetStateProperty<Size?>? FixedSize = null,
     WidgetStateProperty<Size?>? MaximumSize = null,
-    WidgetStateProperty<Color?>? IconColor = null,
+    IWidgetStateProperty<Color?>? IconColor = null,
     WidgetStateProperty<double?>? IconSize = null,
     IconAlignment? IconAlignment = null,
     WidgetStateProperty<BorderSide?>? Side = null,
     WidgetStateProperty<OutlinedBorder?>? Shape = null,
-    WidgetStateProperty<MouseCursor?>? MouseCursor = null,
+    IWidgetStateProperty<MouseCursor?>? MouseCursor = null,
     VisualDensity? VisualDensity = null,
     MaterialTapTargetSize? TapTargetSize = null,
     TimeSpan? AnimationDuration = null,
@@ -47,23 +47,23 @@ public sealed record ButtonStyle(
 {
     /// Dart's `ButtonStyle.copyWith`: a null argument keeps the current value, it never clears one.
     public ButtonStyle CopyWith(
-        WidgetStateProperty<TextStyle?>? textStyle = null,
-        WidgetStateProperty<Color?>? backgroundColor = null,
-        WidgetStateProperty<Color?>? foregroundColor = null,
-        WidgetStateProperty<Color?>? overlayColor = null,
-        WidgetStateProperty<Color?>? shadowColor = null,
-        WidgetStateProperty<Color?>? surfaceTintColor = null,
+        IWidgetStateProperty<TextStyle?>? textStyle = null,
+        IWidgetStateProperty<Color?>? backgroundColor = null,
+        IWidgetStateProperty<Color?>? foregroundColor = null,
+        IWidgetStateProperty<Color?>? overlayColor = null,
+        IWidgetStateProperty<Color?>? shadowColor = null,
+        IWidgetStateProperty<Color?>? surfaceTintColor = null,
         WidgetStateProperty<double?>? elevation = null,
         WidgetStateProperty<EdgeInsetsGeometry?>? padding = null,
         WidgetStateProperty<Size?>? minimumSize = null,
         WidgetStateProperty<Size?>? fixedSize = null,
         WidgetStateProperty<Size?>? maximumSize = null,
-        WidgetStateProperty<Color?>? iconColor = null,
+        IWidgetStateProperty<Color?>? iconColor = null,
         WidgetStateProperty<double?>? iconSize = null,
         IconAlignment? iconAlignment = null,
         WidgetStateProperty<BorderSide?>? side = null,
         WidgetStateProperty<OutlinedBorder?>? shape = null,
-        WidgetStateProperty<MouseCursor?>? mouseCursor = null,
+        IWidgetStateProperty<MouseCursor?>? mouseCursor = null,
         VisualDensity? visualDensity = null,
         MaterialTapTargetSize? tapTargetSize = null,
         TimeSpan? animationDuration = null,
@@ -200,27 +200,27 @@ public sealed record ButtonStyle(
     {
         ArgumentNullException.ThrowIfNull(properties);
         object nullDefault = DiagnosticsDefaults.NullValue;
-        properties.Add(new DiagnosticsProperty<WidgetStateProperty<TextStyle?>?>(
+        properties.Add(new DiagnosticsProperty<IWidgetStateProperty<TextStyle?>?>(
             "textStyle",
             TextStyle,
             defaultValue: nullDefault));
-        properties.Add(new DiagnosticsProperty<WidgetStateProperty<Color?>?>(
+        properties.Add(new DiagnosticsProperty<IWidgetStateProperty<Color?>?>(
             "backgroundColor",
             BackgroundColor,
             defaultValue: nullDefault));
-        properties.Add(new DiagnosticsProperty<WidgetStateProperty<Color?>?>(
+        properties.Add(new DiagnosticsProperty<IWidgetStateProperty<Color?>?>(
             "foregroundColor",
             ForegroundColor,
             defaultValue: nullDefault));
-        properties.Add(new DiagnosticsProperty<WidgetStateProperty<Color?>?>(
+        properties.Add(new DiagnosticsProperty<IWidgetStateProperty<Color?>?>(
             "overlayColor",
             OverlayColor,
             defaultValue: nullDefault));
-        properties.Add(new DiagnosticsProperty<WidgetStateProperty<Color?>?>(
+        properties.Add(new DiagnosticsProperty<IWidgetStateProperty<Color?>?>(
             "shadowColor",
             ShadowColor,
             defaultValue: nullDefault));
-        properties.Add(new DiagnosticsProperty<WidgetStateProperty<Color?>?>(
+        properties.Add(new DiagnosticsProperty<IWidgetStateProperty<Color?>?>(
             "surfaceTintColor",
             SurfaceTintColor,
             defaultValue: nullDefault));
@@ -244,7 +244,7 @@ public sealed record ButtonStyle(
             "maximumSize",
             MaximumSize,
             defaultValue: nullDefault));
-        properties.Add(new DiagnosticsProperty<WidgetStateProperty<Color?>?>(
+        properties.Add(new DiagnosticsProperty<IWidgetStateProperty<Color?>?>(
             "iconColor",
             IconColor,
             defaultValue: nullDefault));
@@ -264,7 +264,7 @@ public sealed record ButtonStyle(
             "shape",
             Shape,
             defaultValue: nullDefault));
-        properties.Add(new DiagnosticsProperty<WidgetStateProperty<MouseCursor?>?>(
+        properties.Add(new DiagnosticsProperty<IWidgetStateProperty<MouseCursor?>?>(
             "mouseCursor",
             MouseCursor,
             defaultValue: nullDefault));
@@ -335,8 +335,8 @@ public sealed record ButtonStyle(
     internal MouseCursor? ResolveMouseCursor(IReadOnlySet<WidgetState> states) => MouseCursor?.Resolve(states);
 
     private static WidgetStateProperty<Color?>? LerpColor(
-        WidgetStateProperty<Color?>? a,
-        WidgetStateProperty<Color?>? b,
+        IWidgetStateProperty<Color?>? a,
+        IWidgetStateProperty<Color?>? b,
         double t)
     {
         return WidgetStateProperty<Color?>.Lerp(a, b, t, MaterialThemeLerp.Color);

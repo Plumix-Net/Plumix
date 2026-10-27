@@ -218,7 +218,7 @@ public sealed class CupertinoColorsTests
             Resolve(
                 VibrancyDependentColor1,
                 child => new MediaQuery(
-                    new MediaQueryData(PlatformBrightness: PlatformBrightness.Dark),
+                    new MediaQueryData(PlatformBrightness: Brightness.Dark),
                     child)));
 
         // CupertinoTheme takes precedence over MediaQuery.
@@ -227,9 +227,9 @@ public sealed class CupertinoColorsTests
             Resolve(
                 VibrancyDependentColor1,
                 child => new CupertinoTheme(
-                    new CupertinoThemeData(brightness: PlatformBrightness.Light),
+                    new CupertinoThemeData(brightness: Brightness.Light),
                     new MediaQuery(
-                        new MediaQueryData(PlatformBrightness: PlatformBrightness.Dark),
+                        new MediaQueryData(PlatformBrightness: Brightness.Dark),
                         child))));
     }
 
@@ -293,7 +293,7 @@ public sealed class CupertinoColorsTests
             rainbow,
             child => new MediaQuery(
                 new MediaQueryData(
-                    PlatformBrightness: dark ? PlatformBrightness.Dark : PlatformBrightness.Light,
+                    PlatformBrightness: dark ? Brightness.Dark : Brightness.Light,
                     HighContrast: highContrast),
                 new CupertinoUserInterfaceLevel(
                     elevated ? CupertinoUserInterfaceLevelData.Elevated : CupertinoUserInterfaceLevelData.Base,
@@ -307,7 +307,7 @@ public sealed class CupertinoColorsTests
     {
         CupertinoDynamicColor? resolved = null;
         using var harness = new CupertinoThemeTestHarness(new MediaQuery(
-            new MediaQueryData(PlatformBrightness: PlatformBrightness.Dark, HighContrast: true),
+            new MediaQueryData(PlatformBrightness: Brightness.Dark, HighContrast: true),
             new CupertinoUserInterfaceLevel(
                 CupertinoUserInterfaceLevelData.Elevated,
                 new Builder(context =>

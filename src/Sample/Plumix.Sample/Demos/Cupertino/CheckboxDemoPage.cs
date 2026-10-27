@@ -180,7 +180,7 @@ internal sealed class CheckboxDemoPageState : State
                         Color: new Color(0xFF1C1C1E),
                         BorderRadius: BorderRadius.Circular(10)),
                     child: new CupertinoTheme(
-                        new CupertinoThemeData(brightness: PlatformBrightness.Dark),
+                        new CupertinoThemeData(brightness: Brightness.Dark),
                         new Row(
                             spacing: 10,
                             children:

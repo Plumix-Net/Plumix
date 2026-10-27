@@ -64,7 +64,7 @@ public sealed class CupertinoContextMenuTests : IDisposable
             isDefaultAction: true,
             isDestructiveAction: true,
             trailingIcon: new IconData(0x2713));
-        using var light = new CupertinoThemeTestHarness(WrapPlain(action, PlatformBrightness.Light));
+        using var light = new CupertinoThemeTestHarness(WrapPlain(action, Brightness.Light));
         light.Pump(ViewSize);
 
         ConstrainedBox constrained = Assert.Single(light.FindWidgets<ConstrainedBox>());
@@ -81,7 +81,7 @@ public sealed class CupertinoContextMenuTests : IDisposable
 
         using var dark = new CupertinoThemeTestHarness(WrapPlain(
             new CupertinoContextMenuAction(new Text("Copy")),
-            PlatformBrightness.Dark));
+            Brightness.Dark));
         dark.Pump(ViewSize);
         ColorMatchers.AssertSameColorAs(
             new Color(0xFF212122),
@@ -191,7 +191,7 @@ public sealed class CupertinoContextMenuTests : IDisposable
 
     private static Widget WrapPlain(
         Widget child,
-        PlatformBrightness brightness = PlatformBrightness.Light)
+        Brightness brightness = Brightness.Light)
     {
         return WrapEnvironment(
             new Align(alignment: Alignment.TopLeft, child: child),
@@ -205,7 +205,7 @@ public sealed class CupertinoContextMenuTests : IDisposable
 
     private static Widget WrapEnvironment(
         Widget child,
-        PlatformBrightness brightness = PlatformBrightness.Light)
+        Brightness brightness = Brightness.Light)
     {
         return new MediaQuery(
             data: new MediaQueryData(

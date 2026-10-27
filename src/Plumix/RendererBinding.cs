@@ -654,44 +654,27 @@ public sealed class RendererBinding
     /// Flutter's <c>_BindingPipelineManifold</c>: semantics follow <see cref="SemanticsBinding"/>,
     /// and visual updates ask the scheduler for a frame.
     /// </summary>
-    /// <remarks>
-    /// Dart's manifold extends <c>ChangeNotifier</c>; <see cref="PipelineManifold"/> is a C# class, so
-    /// the notifier is a field, and it reports the manifold's creation to
-    /// <see cref="FlutterMemoryAllocations"/> when it is constructed, as Dart's constructor does.
-    /// </remarks>
-    private sealed class BindingPipelineManifold : PipelineManifold, IDisposable
+    private sealed class BindingPipelineManifold : ChangeNotifier, PipelineManifold
     {
-        private readonly ManifoldNotifier _notifier = new();
-
         public BindingPipelineManifold(RendererBinding binding)
         {
-            _ = binding;
-            SemanticsBinding.Instance.AddSemanticsEnabledListener(_notifier.NotifyListeners);
-        }
-
-        public override bool SemanticsEnabled => SemanticsBinding.Instance.SemanticsEnabled;
-
-        public override void RequestVisualUpdate() => SchedulerBinding.Instance.EnsureVisualUpdate();
-
-        public override void AddListener(Action listener) => _notifier.AddListener(listener);
-
-        public override void RemoveListener(Action listener) => _notifier.RemoveListener(listener);
-
-        public void Dispose()
-        {
-            SemanticsBinding.Instance.RemoveSemanticsEnabledListener(_notifier.NotifyListeners);
-            _notifier.Dispose();
-        }
-
-        private sealed class ManifoldNotifier : ChangeNotifier
-        {
-            public ManifoldNotifier()
+            if (FlutterMemoryAllocations.KFlutterMemoryAllocationsEnabled)
             {
-                if (FlutterMemoryAllocations.KFlutterMemoryAllocationsEnabled)
-                {
-                    MaybeDispatchObjectCreation(this);
-                }
+                MaybeDispatchObjectCreation(this);
             }
+
+            _ = binding;
+            SemanticsBinding.Instance.AddSemanticsEnabledListener(NotifyListeners);
+        }
+
+        public bool SemanticsEnabled => SemanticsBinding.Instance.SemanticsEnabled;
+
+        public void RequestVisualUpdate() => SchedulerBinding.Instance.EnsureVisualUpdate();
+
+        public override void Dispose()
+        {
+            SemanticsBinding.Instance.RemoveSemanticsEnabledListener(NotifyListeners);
+            base.Dispose();
         }
     }
 

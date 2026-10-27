@@ -72,6 +72,8 @@ public sealed class TextField : StatefulWidget
         bool? cursorOpacityAnimates = null,
         Color? cursorColor = null,
         Color? cursorErrorColor = null,
+        BoxHeightStyle? selectionHeightStyle = null,
+        BoxWidthStyle? selectionWidthStyle = null,
         UndoHistoryController? undoController = null,
         string? restorationId = null,
         bool? enableInteractiveSelection = null,
@@ -142,6 +144,8 @@ public sealed class TextField : StatefulWidget
         UndoController = undoController;
         CursorColor = cursorColor;
         CursorErrorColor = cursorErrorColor;
+        SelectionHeightStyle = selectionHeightStyle;
+        SelectionWidthStyle = selectionWidthStyle;
         RestorationId = restorationId;
         EnableInteractiveSelection = enableInteractiveSelection ?? (!readOnly || !obscureText);
         SelectionControls = selectionControls;
@@ -212,6 +216,15 @@ public sealed class TextField : StatefulWidget
     public UndoHistoryController? UndoController { get; }
     public Color? CursorColor { get; }
     public Color? CursorErrorColor { get; }
+
+    /// <summary>Controls how tall the selection highlight boxes are computed to be; null uses
+    /// <see cref="EditableText.DefaultSelectionHeightStyle"/>.</summary>
+    public BoxHeightStyle? SelectionHeightStyle { get; }
+
+    /// <summary>Controls how wide the selection highlight boxes are computed to be; null uses
+    /// <see cref="EditableText.DefaultSelectionWidthStyle"/>.</summary>
+    public BoxWidthStyle? SelectionWidthStyle { get; }
+
     public string? RestorationId { get; }
     public bool EnableInteractiveSelection { get; }
     public TextSelectionControls? SelectionControls { get; }
@@ -486,6 +499,8 @@ public sealed class TextField : StatefulWidget
                 cursorOpacityAnimates: cursorOpacityAnimates,
                 cursorOffset: cursorOffset,
                 paintCursorAboveText: applePlatform,
+                selectionHeightStyle: Current.SelectionHeightStyle,
+                selectionWidthStyle: Current.SelectionWidthStyle,
                 undoController: Current.UndoController,
                 enableInteractiveSelection: Current.EnableInteractiveSelection,
                 contextMenuBuilder: Current.ContextMenuBuilder,

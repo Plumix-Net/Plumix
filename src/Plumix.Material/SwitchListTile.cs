@@ -32,14 +32,14 @@ public sealed class SwitchListTile : StatelessWidget
         ImageErrorListener? onActiveThumbImageError = null,
         ImageProvider? inactiveThumbImage = null,
         ImageErrorListener? onInactiveThumbImageError = null,
-        WidgetStateProperty<Color?>? thumbColor = null,
-        WidgetStateProperty<Color?>? trackColor = null,
-        WidgetStateProperty<Color?>? trackOutlineColor = null,
+        IWidgetStateProperty<Color?>? thumbColor = null,
+        IWidgetStateProperty<Color?>? trackColor = null,
+        IWidgetStateProperty<Color?>? trackOutlineColor = null,
         WidgetStateProperty<Icon?>? thumbIcon = null,
         MaterialTapTargetSize? materialTapTargetSize = null,
         DragStartBehavior dragStartBehavior = DragStartBehavior.Start,
         MouseCursor? mouseCursor = null,
-        WidgetStateProperty<Color?>? overlayColor = null,
+        IWidgetStateProperty<Color?>? overlayColor = null,
         double? splashRadius = null,
         FocusNode? focusNode = null,
         WidgetStatesController? statesController = null,
@@ -128,14 +128,14 @@ public sealed class SwitchListTile : StatelessWidget
         ImageErrorListener? onActiveThumbImageError,
         ImageProvider? inactiveThumbImage,
         ImageErrorListener? onInactiveThumbImageError,
-        WidgetStateProperty<Color?>? thumbColor,
-        WidgetStateProperty<Color?>? trackColor,
-        WidgetStateProperty<Color?>? trackOutlineColor,
+        IWidgetStateProperty<Color?>? thumbColor,
+        IWidgetStateProperty<Color?>? trackColor,
+        IWidgetStateProperty<Color?>? trackOutlineColor,
         WidgetStateProperty<Icon?>? thumbIcon,
         MaterialTapTargetSize? materialTapTargetSize,
         DragStartBehavior dragStartBehavior,
         MouseCursor? mouseCursor,
-        WidgetStateProperty<Color?>? overlayColor,
+        IWidgetStateProperty<Color?>? overlayColor,
         double? splashRadius,
         FocusNode? focusNode,
         WidgetStatesController? statesController,
@@ -247,14 +247,14 @@ public sealed class SwitchListTile : StatelessWidget
         ImageErrorListener? onActiveThumbImageError = null,
         ImageProvider? inactiveThumbImage = null,
         ImageErrorListener? onInactiveThumbImageError = null,
-        WidgetStateProperty<Color?>? thumbColor = null,
-        WidgetStateProperty<Color?>? trackColor = null,
-        WidgetStateProperty<Color?>? trackOutlineColor = null,
+        IWidgetStateProperty<Color?>? thumbColor = null,
+        IWidgetStateProperty<Color?>? trackColor = null,
+        IWidgetStateProperty<Color?>? trackOutlineColor = null,
         WidgetStateProperty<Icon?>? thumbIcon = null,
         MaterialTapTargetSize? materialTapTargetSize = null,
         DragStartBehavior dragStartBehavior = DragStartBehavior.Start,
         MouseCursor? mouseCursor = null,
-        WidgetStateProperty<Color?>? overlayColor = null,
+        IWidgetStateProperty<Color?>? overlayColor = null,
         double? splashRadius = null,
         FocusNode? focusNode = null,
         WidgetStatesController? statesController = null,
@@ -366,13 +366,13 @@ public sealed class SwitchListTile : StatelessWidget
     public ImageErrorListener? OnInactiveThumbImageError { get; }
 
     /// <summary>The color of this switch's thumb, in all <see cref="WidgetState"/>s.</summary>
-    public WidgetStateProperty<Color?>? ThumbColor { get; }
+    public IWidgetStateProperty<Color?>? ThumbColor { get; }
 
     /// <summary>The color of this switch's track, in all <see cref="WidgetState"/>s.</summary>
-    public WidgetStateProperty<Color?>? TrackColor { get; }
+    public IWidgetStateProperty<Color?>? TrackColor { get; }
 
     /// <summary>The outline color of this switch's track, in all <see cref="WidgetState"/>s.</summary>
-    public WidgetStateProperty<Color?>? TrackOutlineColor { get; }
+    public IWidgetStateProperty<Color?>? TrackOutlineColor { get; }
 
     /// <summary>The icon to use on the thumb of this switch, in all <see cref="WidgetState"/>s.</summary>
     public WidgetStateProperty<Icon?>? ThumbIcon { get; }
@@ -387,7 +387,7 @@ public sealed class SwitchListTile : StatelessWidget
     public MouseCursor? MouseCursor { get; }
 
     /// <summary>The color for the switch's <see cref="Plumix.Material.Material"/>.</summary>
-    public WidgetStateProperty<Color?>? OverlayColor { get; }
+    public IWidgetStateProperty<Color?>? OverlayColor { get; }
 
     /// <summary>The splash radius of the circular ink response.</summary>
     public double? SplashRadius { get; }

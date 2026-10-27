@@ -10,7 +10,7 @@ using Xunit;
 
 // Ports flutter/packages/flutter/test/widgets/scrollable_fling_test.dart, scrollable_of_test.dart,
 // scrollable_restoration_test.dart, scrollable_dispose_test.dart, scrollable_animations_test.dart
-// and the Scrollable parts of scrollable_helpers_test.dart.
+// and scrollable_helpers_test.dart.
 
 namespace Plumix.Tests;
 
@@ -976,6 +976,73 @@ public sealed class ScrollableMiscDartParityTests
     }
 
     // ---------------------------------------------------------------- scrollable_helpers_test.dart
+
+    // Flutter: 'scrollable_helpers_test.dart: ScrollableDetails copyWith / == / hashCode'
+    [Fact]
+    public void ScrollableDetails_CopyWithEqualsAndHashCode()
+    {
+        using var controller = new ScrollController();
+        var details = new ScrollableDetails(
+            Direction: AxisDirection.Down,
+            Controller: controller,
+            Physics: new AlwaysScrollableScrollPhysics(),
+            DecorationClipBehavior: Clip.HardEdge);
+        ScrollableDetails copiedDetails = details.CopyWith();
+        Assert.Equal(details, copiedDetails);
+        Assert.Equal(details.GetHashCode(), copiedDetails.GetHashCode());
+
+        // One instance stands in for Dart's canonicalized `const ClampingScrollPhysics()`.
+        var clamping = new ClampingScrollPhysics();
+        copiedDetails = details.CopyWith(
+            direction: AxisDirection.Left,
+            physics: clamping,
+            decorationClipBehavior: Clip.None);
+        Assert.Equal(
+            new ScrollableDetails(
+                Direction: AxisDirection.Left,
+                Controller: controller,
+                Physics: clamping,
+                DecorationClipBehavior: Clip.None),
+            copiedDetails);
+    }
+
+    // Flutter: 'scrollable_helpers_test.dart: ScrollableDetails toString'
+    [DebugOnlyFact]
+    public void ScrollableDetails_ToString()
+    {
+        using var controller = new ScrollController();
+        var bareDetails = new ScrollableDetails(Direction: AxisDirection.Right);
+        Assert.Equal(
+            "ScrollableDetails#00000(axisDirection: AxisDirection.right)",
+            FrameworkDartTester.IgnoringHashCodes(bareDetails.ToString()));
+        var fullDetails = new ScrollableDetails(
+            Direction: AxisDirection.Down,
+            Controller: controller,
+            Physics: new AlwaysScrollableScrollPhysics(),
+            DecorationClipBehavior: Clip.HardEdge);
+        Assert.Equal(
+            "ScrollableDetails#00000("
+            + "axisDirection: AxisDirection.down, "
+            + "scroll controller: ScrollController#00000(no clients), "
+            + "scroll physics: AlwaysScrollableScrollPhysics, "
+            + "decorationClipBehavior: Clip.hardEdge)",
+            FrameworkDartTester.IgnoringHashCodes(fullDetails.ToString()));
+    }
+
+    // Flutter: 'scrollable_helpers_test.dart: ScrollableDetails deprecated clipBehavior is backwards compatible'
+    [Fact]
+    public void ScrollableDetails_DeprecatedClipBehaviorIsBackwardsCompatible()
+    {
+#pragma warning disable CS0618 // Exercises the deprecated clipBehavior, as the Dart test does.
+        var deprecatedClip = new ScrollableDetails(Direction: AxisDirection.Right, ClipBehavior: Clip.HardEdge);
+        Assert.Equal(Clip.HardEdge, deprecatedClip.ClipBehavior);
+        Assert.Equal(Clip.HardEdge, deprecatedClip.DecorationClipBehavior);
+
+        var newClip = new ScrollableDetails(Direction: AxisDirection.Right, DecorationClipBehavior: Clip.HardEdge);
+        Assert.Equal(Clip.HardEdge, newClip.ClipBehavior);
+        Assert.Equal(Clip.HardEdge, newClip.DecorationClipBehavior);
+#pragma warning restore CS0618
+    }
 
     // scrollable_helpers_test.dart: modifierKey, evaluated with the default (Android) target platform.
     private static readonly LogicalKeyboardKey ModifierKey = PlatformDefaults.TargetPlatform == TargetPlatform.MacOS

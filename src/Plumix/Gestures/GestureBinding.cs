@@ -212,11 +212,10 @@ public sealed class GestureBinding : IHitTestTarget
             _frameTimeAge.Start();
         }
 
-        _resamplingTimer ??= new Timer(
-            _ => EventLoop.ScheduleMicrotask(HandleSampleTimeChanged),
-            null,
-            SamplingInterval,
-            SamplingInterval);
+        if (_resamplingTimer?.IsActive != true)
+        {
+            _resamplingTimer = Timer.Periodic(SamplingInterval, _ => HandleSampleTimeChanged());
+        }
 
         long intervals = _frameTimeAge!.Elapsed.Ticks / SamplingInterval.Ticks;
         DateTime sampleTime = _frameTime
@@ -313,7 +312,7 @@ public sealed class GestureBinding : IHitTestTarget
 
     private void StopResamplingTimer()
     {
-        _resamplingTimer?.Dispose();
+        _resamplingTimer?.Cancel();
         _resamplingTimer = null;
     }
 

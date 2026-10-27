@@ -706,6 +706,43 @@ public sealed class PipelineOwnerTreeTests
         Assert.Equal(2, notifications);
     }
 
+    [Fact]
+    public void HostPipelineManifold_MemoryEventsCarryTheManifold()
+    {
+        var events = new List<ObjectEvent>();
+        FlutterMemoryAllocations.Instance.AddListener(events.Add);
+        var manifold = new HostPipelineManifold();
+        try
+        {
+            manifold.AddListener(() => { });
+            manifold.Dispose();
+        }
+        finally
+        {
+            FlutterMemoryAllocations.Instance.RemoveListener(events.Add);
+        }
+
+        if (Constants.KDebugMode)
+        {
+            Assert.Collection(
+                events,
+                @event => Assert.Same(manifold, Assert.IsType<ObjectCreated>(@event).Object),
+                @event => Assert.Same(manifold, Assert.IsType<ObjectDisposed>(@event).Object));
+        }
+        else
+        {
+            Assert.Empty(events);
+        }
+    }
+
+    [Fact]
+    public void BindingPipelineManifold_IsTheChangeNotifierTheRootOwnerListensTo()
+    {
+        // Dart's `_BindingPipelineManifold extends ChangeNotifier implements PipelineManifold`.
+        PipelineManifold? manifold = RendererBinding.Instance.RootPipelineOwner.ManifoldForTest;
+        Assert.IsAssignableFrom<ChangeNotifier>(manifold);
+    }
+
     private static List<PipelineOwner> TreeWalk(PipelineOwner root)
     {
         var results = new List<PipelineOwner> { root };

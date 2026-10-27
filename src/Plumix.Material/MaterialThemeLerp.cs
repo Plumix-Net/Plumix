@@ -189,8 +189,8 @@ internal static class MaterialThemeLerp
     }
 
     public static WidgetStateProperty<T?>? StateProperty<T>(
-        WidgetStateProperty<T?>? a,
-        WidgetStateProperty<T?>? b,
+        IWidgetStateProperty<T?>? a,
+        IWidgetStateProperty<T?>? b,
         double t,
         Func<T?, T?, double, T?> lerp)
     {
@@ -248,8 +248,8 @@ internal static class MaterialThemeLerp
     }
 
     public static WidgetStateProperty<TextStyle?>? TextStyleStateProperty(
-        WidgetStateProperty<TextStyle?>? a,
-        WidgetStateProperty<TextStyle?>? b,
+        IWidgetStateProperty<TextStyle?>? a,
+        IWidgetStateProperty<TextStyle?>? b,
         double t)
     {
         return StateProperty(a, b, t, TextStyle);
@@ -272,8 +272,8 @@ internal static class MaterialThemeLerp
     }
 
     public static WidgetStateProperty<Color?>? ColorStateProperty(
-        WidgetStateProperty<Color?>? a,
-        WidgetStateProperty<Color?>? b,
+        IWidgetStateProperty<Color?>? a,
+        IWidgetStateProperty<Color?>? b,
         double t)
     {
         if (a is null && b is null)

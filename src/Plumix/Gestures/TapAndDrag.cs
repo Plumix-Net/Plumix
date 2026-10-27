@@ -208,7 +208,7 @@ public abstract class BaseTapAndDragGestureRecognizer : OneSequenceGestureRecogn
     private int _consecutiveTapCount;
     private OffsetPair? _originPosition;
     private PointerButtons? _previousButtons;
-    private GestureTimer? _consecutiveTapTimer;
+    private Timer? _consecutiveTapTimer;
     private Point? _lastTapOffset;
 
     // -- Tap-and-drag state --------------------------------------------------------------------
@@ -218,7 +218,7 @@ public abstract class BaseTapAndDragGestureRecognizer : OneSequenceGestureRecogn
     private bool _sentTapDown;
     private bool _wonArenaForPrimaryPointer;
     private int? _primaryPointer;
-    private GestureTimer? _deadlineTimer;
+    private Timer? _deadlineTimer;
     private TapDragState _dragState = TapDragState.Ready;
     private PointerEvent? _start;
     private OffsetPair _initialPosition;
@@ -226,7 +226,7 @@ public abstract class BaseTapAndDragGestureRecognizer : OneSequenceGestureRecogn
     private double _globalDistanceMoved;
     private double _globalDistanceMovedAllAxes;
     private TapDragUpdateDetails? _lastDragUpdateDetails;
-    private GestureTimer? _dragUpdateThrottleTimer;
+    private Timer? _dragUpdateThrottleTimer;
 
     protected BaseTapAndDragGestureRecognizer(GestureBinding? binding = null) : base(binding)
     {
@@ -327,7 +327,7 @@ public abstract class BaseTapAndDragGestureRecognizer : OneSequenceGestureRecogn
         _dragState = TapDragState.Possible;
         _initialPosition = new OffsetPair(Local: @event.LocalPosition, Global: @event.Position);
         _currentPosition = _initialPosition;
-        _deadlineTimer = GestureTimer.Start(_deadline, DidExceedDeadline);
+        _deadlineTimer = new Timer(_deadline, DidExceedDeadline);
     }
 
     protected override void HandleNonAllowedPointer(PointerDownEvent @event)
@@ -599,7 +599,7 @@ public abstract class BaseTapAndDragGestureRecognizer : OneSequenceGestureRecogn
 
     private void ConsecutiveTapTimerStart()
     {
-        _consecutiveTapTimer ??= GestureTimer.Start(GestureConstants.DoubleTapTimeout, () => { });
+        _consecutiveTapTimer ??= new Timer(GestureConstants.DoubleTapTimeout, () => { });
     }
 
     private void ConsecutiveTapTimerStop()
@@ -760,7 +760,7 @@ public abstract class BaseTapAndDragGestureRecognizer : OneSequenceGestureRecogn
         if (DragUpdateThrottleFrequency is { } throttle)
         {
             _lastDragUpdateDetails = details;
-            _dragUpdateThrottleTimer ??= GestureTimer.Start(throttle, HandleDragUpdateThrottled);
+            _dragUpdateThrottleTimer ??= new Timer(throttle, HandleDragUpdateThrottled);
             return;
         }
 

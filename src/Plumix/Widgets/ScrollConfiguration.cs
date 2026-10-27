@@ -19,13 +19,27 @@ public enum ScrollViewKeyboardDismissBehavior
     OnDrag,
 }
 
+/// <summary>
+/// Describes the aspects of a <see cref="Scrollable"/> that a <see cref="ScrollBehavior"/> decorates.
+/// </summary>
+/// <remarks>
+/// Dart's <c>ScrollableDetails</c> (<c>scrollable_helpers.dart</c>). Its deprecated
+/// <c>clipBehavior</c> constructor parameter is the trailing <paramref name="ClipBehavior"/> here,
+/// so positional callers keep their meaning; as in Dart it wins over
+/// <paramref name="DecorationClipBehavior"/>.
+/// </remarks>
 public sealed record ScrollableDetails(
     AxisDirection Direction,
     ScrollController? Controller = null,
     ScrollPhysics? Physics = null,
-    Clip? DecorationClipBehavior = null)
+    Clip? DecorationClipBehavior = null,
+    Clip? ClipBehavior = null)
 {
-    [Obsolete("Use DecorationClipBehavior; this clip applies to scroll decorators, not the viewport.")]
+    /// <summary>The clip applied to decorators like scrollbars and overscroll indicators.</summary>
+    public Clip? DecorationClipBehavior { get; init; } = ClipBehavior ?? DecorationClipBehavior;
+
+    [Obsolete("Migrate to DecorationClipBehavior. This clip applies to decorators, and does not "
+              + "directly clip a scroll view. This feature was deprecated after v3.9.0-1.0.pre.")]
     public Clip? ClipBehavior => DecorationClipBehavior;
 
     public static ScrollableDetails Vertical(
@@ -67,6 +81,29 @@ public sealed record ScrollableDetails(
             Physics = physics ?? Physics,
             DecorationClipBehavior = decorationClipBehavior ?? DecorationClipBehavior,
         };
+    }
+
+    public override string ToString()
+    {
+        var description = new List<string>
+        {
+            $"axisDirection: {nameof(AxisDirection)}.{Diagnostics.EnumName(Direction)}",
+        };
+
+        void AddIfNonNull(string prefix, object? value)
+        {
+            if (value != null)
+            {
+                description.Add(prefix + value);
+            }
+        }
+
+        AddIfNonNull("scroll controller: ", Controller);
+        AddIfNonNull("scroll physics: ", Physics);
+        AddIfNonNull(
+            "decorationClipBehavior: ",
+            DecorationClipBehavior is { } clip ? $"{nameof(Clip)}.{Diagnostics.EnumName(clip)}" : null);
+        return $"{Diagnostics.DescribeIdentity(this)}({string.Join(", ", description)})";
     }
 }
 

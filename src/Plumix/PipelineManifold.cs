@@ -13,22 +13,19 @@ namespace Plumix;
 /// <see cref="PipelineOwner.Attach(PipelineManifold)"/>; the manifold notifies its listeners when
 /// <see cref="SemanticsEnabled"/> changes, and every attached owner creates or disposes its
 /// <see cref="Rendering.SemanticsOwner"/> in response.
+/// Dart declares it <c>abstract class PipelineManifold implements Listenable</c>, which implementations
+/// implement rather than extend; it is an interface under Dart's name here, so an implementation can
+/// extend <see cref="ChangeNotifier"/> as Dart's <c>_BindingPipelineManifold</c> does.
 /// </remarks>
-public abstract class PipelineManifold : IListenable
+public interface PipelineManifold : IListenable
 {
     /// <summary>Whether the owners attached to this manifold should produce a semantics tree.</summary>
     /// <remarks>Flutter's <c>PipelineManifold.semanticsEnabled</c>.</remarks>
-    public abstract bool SemanticsEnabled { get; }
+    bool SemanticsEnabled { get; }
 
     /// <summary>Asks the layer above the pipeline to schedule a new frame.</summary>
     /// <remarks>Flutter's <c>PipelineManifold.requestVisualUpdate</c>.</remarks>
-    public abstract void RequestVisualUpdate();
-
-    /// <inheritdoc />
-    public abstract void AddListener(Action listener);
-
-    /// <inheritdoc />
-    public abstract void RemoveListener(Action listener);
+    void RequestVisualUpdate();
 }
 
 /// <summary>
@@ -41,9 +38,8 @@ public abstract class PipelineManifold : IListenable
 /// <c>SemanticsBinding.semanticsEnabled</c> and <c>RendererBinding.ensureVisualUpdate</c>. Plumix has
 /// no binding layer, so a host constructs this instead and drives both itself.
 /// </remarks>
-public sealed class HostPipelineManifold : PipelineManifold, IDisposable
+public sealed class HostPipelineManifold : ChangeNotifier, PipelineManifold
 {
-    private readonly ChangeNotifier _notifier = new();
     private bool _semanticsEnabled;
 
     /// <summary>Creates a manifold that forwards visual updates to <paramref name="onNeedVisualUpdate"/>.</summary>
@@ -57,7 +53,7 @@ public sealed class HostPipelineManifold : PipelineManifold, IDisposable
     public Action? OnNeedVisualUpdate { get; set; }
 
     /// <inheritdoc />
-    public override bool SemanticsEnabled => _semanticsEnabled;
+    public bool SemanticsEnabled => _semanticsEnabled;
 
     /// <summary>
     /// Turns semantics production on or off for every <see cref="PipelineOwner"/> attached to this
@@ -71,18 +67,9 @@ public sealed class HostPipelineManifold : PipelineManifold, IDisposable
         }
 
         _semanticsEnabled = value;
-        _notifier.NotifyListeners();
+        NotifyListeners();
     }
 
     /// <inheritdoc />
-    public override void RequestVisualUpdate() => OnNeedVisualUpdate?.Invoke();
-
-    /// <inheritdoc />
-    public override void AddListener(Action listener) => _notifier.AddListener(listener);
-
-    /// <inheritdoc />
-    public override void RemoveListener(Action listener) => _notifier.RemoveListener(listener);
-
-    /// <inheritdoc />
-    public void Dispose() => _notifier.Dispose();
+    public void RequestVisualUpdate() => OnNeedVisualUpdate?.Invoke();
 }

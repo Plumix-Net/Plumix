@@ -183,7 +183,7 @@ public abstract class ToggleableState : State
     protected Widget BuildToggleable(
         CustomPainter painter,
         Size size,
-        WidgetStateProperty<MouseCursor>? mouseCursor,
+        IWidgetStateProperty<MouseCursor>? mouseCursor,
         Action onTap,
         FocusNode? focusNode,
         Action<bool>? onFocusChange,
@@ -259,7 +259,7 @@ public abstract class ToggleableState : State
 
     protected Widget BuildToggleableChild(
         Widget child,
-        WidgetStateProperty<MouseCursor>? mouseCursor,
+        IWidgetStateProperty<MouseCursor>? mouseCursor,
         Action onTap,
         FocusNode? focusNode,
         Action<bool>? onFocusChange,

@@ -149,6 +149,8 @@ def related(cs_files: list[str]) -> tuple[list[str], list[str]]:
         for t in TESTS_DIR.glob(f"*{stem}*Tests.cs"):
             tests.add(t.relative_to(REPO).as_posix())
         for demo in CS_DEMOS.rglob(f"*{stem}*.cs"):
+            if any(p in demo.parts for p in ("obj", "bin")):
+                continue
             demos.add(demo.relative_to(REPO).as_posix())
         if DART_DEMOS.is_dir():
             for demo in DART_DEMOS.rglob(f"*{snake(stem)}*.dart"):

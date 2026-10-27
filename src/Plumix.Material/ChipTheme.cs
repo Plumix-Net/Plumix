@@ -9,7 +9,7 @@ namespace Plumix.Material;
 // Dart parity source: material_ui/lib/src/chip_theme.dart
 
 public sealed partial record ChipThemeData(
-    WidgetStateProperty<Color?>? Color = null,
+    IWidgetStateProperty<Color?>? Color = null,
     Color? BackgroundColor = null,
     Color? DeleteIconColor = null,
     Color? DisabledColor = null,
@@ -38,7 +38,7 @@ public sealed partial record ChipThemeData(
     }
 
     public ChipThemeData CopyWith(
-        WidgetStateProperty<Color?>? color = null,
+        IWidgetStateProperty<Color?>? color = null,
         Color? backgroundColor = null,
         Color? deleteIconColor = null,
         Color? disabledColor = null,
@@ -102,7 +102,7 @@ public sealed partial record ChipThemeData(
         Brightness effectiveBrightness = brightness
                                          ?? ThemeData.EstimateBrightnessForColor(primaryColor!);
         Color baseColor = primaryColor
-                          ?? (effectiveBrightness == global::Plumix.Material.Brightness.Light
+                          ?? (effectiveBrightness == global::Plumix.UI.Brightness.Light
                               ? Colors.Black
                               : Colors.White);
         return new ChipThemeData(

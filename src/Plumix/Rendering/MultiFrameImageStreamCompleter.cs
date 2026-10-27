@@ -19,7 +19,7 @@ public sealed class MultiFrameImageStreamCompleter : ImageStreamCompleter
     private TimeSpan _shownTimestamp;
     private TimeSpan? _frameDuration;
     private int _framesEmitted;
-    private GestureTimer? _timer;
+    private Timer? _timer;
     private bool _frameCallbackScheduled;
 
     public MultiFrameImageStreamCompleter(
@@ -94,7 +94,7 @@ public sealed class MultiFrameImageStreamCompleter : ImageStreamCompleter
         }
 
         TimeSpan delay = _frameDuration.Value - (timestamp - _shownTimestamp);
-        _timer = GestureTimer.Start(delay * Scheduler.TimeDilation, ScheduleAppFrame);
+        _timer = new Timer(delay * Scheduler.TimeDilation, ScheduleAppFrame);
     }
 
     private async Task DecodeNextFrameAndSchedule()

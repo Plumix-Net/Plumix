@@ -102,7 +102,7 @@ public sealed class CupertinoMenuAnchorTests : IDisposable
         ColorMatchers.AssertSameColorAs(Color.FromRGBO(0, 0, 0, 0.08), lightBox.Color);
         Assert.Equal(8.0, Assert.Single(light.FindWidgets<SizedBox>()).Height);
 
-        using var dark = new CupertinoThemeTestHarness(Wrap(divider, PlatformBrightness.Dark));
+        using var dark = new CupertinoThemeTestHarness(Wrap(divider, Brightness.Dark));
         dark.Pump(ViewSize);
         ColorMatchers.AssertSameColorAs(
             Color.FromRGBO(0, 0, 0, 0.16),
@@ -179,7 +179,7 @@ public sealed class CupertinoMenuAnchorTests : IDisposable
 
         using var dark = new CupertinoThemeTestHarness(Wrap(
             new CupertinoMenuItem(child: new Text("Dark"), onPressed: static () => { }),
-            PlatformBrightness.Dark));
+            Brightness.Dark));
         dark.Pump(ViewSize);
         Assert.Equal(
             Color.FromARGB(245, 255, 255, 255),
@@ -526,7 +526,7 @@ public sealed class CupertinoMenuAnchorTests : IDisposable
         bool enabled,
         bool destructive)
     {
-        PlatformBrightness brightness = dark ? PlatformBrightness.Dark : PlatformBrightness.Light;
+        Brightness brightness = dark ? Brightness.Dark : Brightness.Light;
         using var harness = new CupertinoThemeTestHarness(Wrap(new CupertinoMenuItem(
             child: new Text("Title"),
             subtitle: new Text("Subtitle"),
@@ -595,7 +595,7 @@ public sealed class CupertinoMenuAnchorTests : IDisposable
         RenderParagraph paragraph = FindParagraph(harness.RenderView, "Subtitle");
         Assert.Equal(BlendMode.HardLight, paragraph.Text.Style!.Foreground!.BlendMode);
 
-        harness.PumpWidget(Wrap(item, PlatformBrightness.Dark));
+        harness.PumpWidget(Wrap(item, Brightness.Dark));
         harness.Pump(ViewSize);
         Assert.Same(paragraph, FindParagraph(harness.RenderView, "Subtitle"));
         Assert.Equal(BlendMode.Plus, paragraph.Text.Style!.Foreground!.BlendMode);
@@ -609,7 +609,7 @@ public sealed class CupertinoMenuAnchorTests : IDisposable
     {
         using var harness = new CupertinoThemeTestHarness(Wrap(new CupertinoMenuItem(
             child: new Text("Title"),
-            subtitle: new Text("A")), dark ? PlatformBrightness.Dark : PlatformBrightness.Light));
+            subtitle: new Text("A")), dark ? Brightness.Dark : Brightness.Light));
         harness.Pump(ViewSize);
         TextStyle style = FindParagraph(harness.RenderView, "A").Text.Style!;
         var paragraphStyle = new ParagraphStyle(
@@ -728,17 +728,17 @@ public sealed class CupertinoMenuAnchorTests : IDisposable
     public void ShadowPainter_TracksTheFadeAnimationAndComparesBrightnessAndRepaintSource()
     {
         var fade = new ProxyAnimation(new ConstantAnimation<double>(0.5));
-        var painter = new CupertinoMenuShadowPainter(PlatformBrightness.Light, fade);
+        var painter = new CupertinoMenuShadowPainter(Brightness.Light, fade);
 
         Assert.Equal(0.5, painter.ShadowAnimation, precision: 6);
-        Assert.False(painter.ShouldRepaint(new CupertinoMenuShadowPainter(PlatformBrightness.Light, fade)));
-        Assert.True(painter.ShouldRepaint(new CupertinoMenuShadowPainter(PlatformBrightness.Dark, fade)));
+        Assert.False(painter.ShouldRepaint(new CupertinoMenuShadowPainter(Brightness.Light, fade)));
+        Assert.True(painter.ShouldRepaint(new CupertinoMenuShadowPainter(Brightness.Dark, fade)));
         Assert.True(painter.ShouldRepaint(
-            new CupertinoMenuShadowPainter(PlatformBrightness.Light, new ProxyAnimation())));
+            new CupertinoMenuShadowPainter(Brightness.Light, new ProxyAnimation())));
 
         // The clamp keeps the unbounded spring's overshoot out of the shadow.
         var overshoot = new CupertinoMenuShadowPainter(
-            PlatformBrightness.Light,
+            Brightness.Light,
             new ProxyAnimation(new ConstantAnimation<double>(1.4)));
         Assert.Equal(1.0, overshoot.ShadowAnimation, precision: 6);
     }
@@ -1044,7 +1044,7 @@ public sealed class CupertinoMenuAnchorTests : IDisposable
 
     private static Widget Wrap(
         Widget child,
-        PlatformBrightness brightness = PlatformBrightness.Light,
+        Brightness brightness = Brightness.Light,
         double textScale = 1.0,
         Size? size = null)
     {

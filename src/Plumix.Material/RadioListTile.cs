@@ -19,9 +19,9 @@ public sealed class RadioListTile<T> : StatefulWidget
         MouseCursor? mouseCursor = null,
         bool toggleable = false,
         Color? activeColor = null,
-        WidgetStateProperty<Color?>? fillColor = null,
+        IWidgetStateProperty<Color?>? fillColor = null,
         Color? hoverColor = null,
-        WidgetStateProperty<Color?>? overlayColor = null,
+        IWidgetStateProperty<Color?>? overlayColor = null,
         double? splashRadius = null,
         MaterialTapTargetSize? materialTapTargetSize = null,
         Widget? title = null,
@@ -49,7 +49,7 @@ public sealed class RadioListTile<T> : StatefulWidget
         ListTileTitleAlignment? titleAlignment = null,
         bool? enabled = null,
         bool internalAddSemanticForOnTap = false,
-        WidgetStateProperty<Color?>? radioBackgroundColor = null,
+        IWidgetStateProperty<Color?>? radioBackgroundColor = null,
         WidgetStateBorderSide? radioSide = null,
         WidgetStateProperty<double?>? radioInnerRadius = null,
         Key? key = null) : this(
@@ -105,9 +105,9 @@ public sealed class RadioListTile<T> : StatefulWidget
         MouseCursor? mouseCursor,
         bool toggleable,
         Color? activeColor,
-        WidgetStateProperty<Color?>? fillColor,
+        IWidgetStateProperty<Color?>? fillColor,
         Color? hoverColor,
-        WidgetStateProperty<Color?>? overlayColor,
+        IWidgetStateProperty<Color?>? overlayColor,
         double? splashRadius,
         MaterialTapTargetSize? materialTapTargetSize,
         Widget? title,
@@ -136,7 +136,7 @@ public sealed class RadioListTile<T> : StatefulWidget
         bool? enabled,
         bool internalAddSemanticForOnTap,
         bool useCupertinoCheckmarkStyle,
-        WidgetStateProperty<Color?>? radioBackgroundColor,
+        IWidgetStateProperty<Color?>? radioBackgroundColor,
         WidgetStateBorderSide? radioSide,
         WidgetStateProperty<double?>? radioInnerRadius,
         bool adaptive,
@@ -196,9 +196,9 @@ public sealed class RadioListTile<T> : StatefulWidget
     public MouseCursor? MouseCursor { get; }
     public bool Toggleable { get; }
     public Color? ActiveColor { get; }
-    public WidgetStateProperty<Color?>? FillColor { get; }
+    public IWidgetStateProperty<Color?>? FillColor { get; }
     public Color? HoverColor { get; }
-    public WidgetStateProperty<Color?>? OverlayColor { get; }
+    public IWidgetStateProperty<Color?>? OverlayColor { get; }
     public double? SplashRadius { get; }
     public MaterialTapTargetSize? MaterialTapTargetSize { get; }
     public Widget? Title { get; }
@@ -227,7 +227,7 @@ public sealed class RadioListTile<T> : StatefulWidget
     public bool? Enabled { get; }
     public bool InternalAddSemanticForOnTap { get; }
     public bool UseCupertinoCheckmarkStyle { get; }
-    public WidgetStateProperty<Color?>? RadioBackgroundColor { get; }
+    public IWidgetStateProperty<Color?>? RadioBackgroundColor { get; }
     public WidgetStateBorderSide? RadioSide { get; }
     public WidgetStateProperty<double?>? RadioInnerRadius { get; }
 
@@ -238,9 +238,9 @@ public sealed class RadioListTile<T> : StatefulWidget
         MouseCursor? mouseCursor = null,
         bool toggleable = false,
         Color? activeColor = null,
-        WidgetStateProperty<Color?>? fillColor = null,
+        IWidgetStateProperty<Color?>? fillColor = null,
         Color? hoverColor = null,
-        WidgetStateProperty<Color?>? overlayColor = null,
+        IWidgetStateProperty<Color?>? overlayColor = null,
         double? splashRadius = null,
         MaterialTapTargetSize? materialTapTargetSize = null,
         Widget? title = null,
@@ -269,7 +269,7 @@ public sealed class RadioListTile<T> : StatefulWidget
         bool? enabled = null,
         bool useCupertinoCheckmarkStyle = false,
         bool internalAddSemanticForOnTap = false,
-        WidgetStateProperty<Color?>? radioBackgroundColor = null,
+        IWidgetStateProperty<Color?>? radioBackgroundColor = null,
         WidgetStateBorderSide? radioSide = null,
         WidgetStateProperty<double?>? radioInnerRadius = null,
         Key? key = null)

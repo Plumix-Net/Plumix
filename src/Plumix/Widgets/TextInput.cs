@@ -1135,7 +1135,7 @@ public sealed partial class EditableText : StatefulWidget
         IReadOnlyList<string>? autofillHints = null,
         string? autofillHintText = null,
         IAutofillClient? autofillClient = null,
-        PlatformBrightness keyboardAppearance = PlatformBrightness.Light,
+        Brightness keyboardAppearance = Brightness.Light,
         bool enableIMEPersonalizedLearning = true,
         bool? enableInlinePrediction = null,
         ContentInsertionConfiguration? contentInsertionConfiguration = null,
@@ -1368,7 +1368,7 @@ public sealed partial class EditableText : StatefulWidget
     /// is not the <see cref="EditableTextState"/> itself.</summary>
     public IAutofillClient? AutofillClient { get; }
     public string? AutofillHintText { get; }
-    public PlatformBrightness KeyboardAppearance { get; }
+    public Brightness KeyboardAppearance { get; }
     public bool EnableIMEPersonalizedLearning { get; }
     public bool? EnableInlinePrediction { get; }
     public ContentInsertionConfiguration? ContentInsertionConfiguration { get; }
@@ -1582,18 +1582,16 @@ public sealed partial class EditableText : StatefulWidget
         Constants.KIsWeb ? BoxHeightStyle.Max : BoxHeightStyle.IncludeLineSpacingMiddle;
 
     /// <summary>The default value for <see cref="SelectionWidthStyle"/>: <see cref="BoxWidthStyle.Max"/>
-    /// on native platforms; on the web, <see cref="BoxWidthStyle.Max"/> for iOS and
-    /// <see cref="BoxWidthStyle.Tight"/> otherwise. Dart's <c>defaultSelectionWidthStyle</c>.</summary>
-    /// <remarks>Dart also answers <see cref="BoxWidthStyle.Max"/> for Safari on any web platform;
-    /// Plumix has no browser detection, so a desktop Safari gets <see cref="BoxWidthStyle.Tight"/>.
-    /// </remarks>
+    /// on native platforms; on the web, <see cref="BoxWidthStyle.Max"/> for iOS and Safari (webkit)
+    /// browsers and <see cref="BoxWidthStyle.Tight"/> otherwise. Dart's <c>defaultSelectionWidthStyle</c>.
+    /// </summary>
     public static BoxWidthStyle DefaultSelectionWidthStyle
     {
         get
         {
-            if (Constants.KIsWeb)
+            if (PlatformDefaults.IsWeb)
             {
-                if (PlatformDefaults.TargetPlatform == TargetPlatform.IOS)
+                if (PlatformDefaults.TargetPlatform == TargetPlatform.IOS || WebBrowserDetection.IsSafari)
                 {
                     // On macOS web, the selection width behavior differs when running on Chrom(e|ium)
                     // (blink) or Safari (webkit).

@@ -174,7 +174,7 @@ public abstract class ButtonStyleButton : StatefulWidget
     /// Dart's `WidgetStateMouseCursor.adaptiveClickable`, wrapped as the `WidgetStateProperty`
     /// `ButtonStyle.mouseCursor` is declared against.
     /// </summary>
-    internal static WidgetStateProperty<MouseCursor?> AdaptiveClickableCursor { get; } =
+    internal static IWidgetStateProperty<MouseCursor?> AdaptiveClickableCursor { get; } =
         WidgetStateProperty<MouseCursor?>.ResolveWith(states =>
             WidgetStateMouseCursor.AdaptiveClickable.Resolve(states));
 
@@ -200,7 +200,7 @@ public abstract class ButtonStyleButton : StatefulWidget
     /// the overlay colour verbatim when it is fully transparent (which defeats every highlight), and
     /// otherwise pressed 0.1 / hovered 0.08 / focused 0.1 over `overlayColor ?? foregroundColor`.
     /// </summary>
-    internal static WidgetStateProperty<Color?>? DefaultOverlayColor(Color? foregroundColor, Color? overlayColor)
+    internal static IWidgetStateProperty<Color?>? DefaultOverlayColor(Color? foregroundColor, Color? overlayColor)
     {
         if (foregroundColor is null && overlayColor is null)
         {
@@ -351,7 +351,7 @@ public sealed class ButtonStyleState : State<ButtonStyleButton>
             return getProperty(widgetStyle) ?? getProperty(themeStyle) ?? getProperty(defaultStyle);
         }
 
-        TValue? ResolveClass<TValue>(Func<ButtonStyle?, WidgetStateProperty<TValue?>?> getProperty)
+        TValue? ResolveClass<TValue>(Func<ButtonStyle?, IWidgetStateProperty<TValue?>?> getProperty)
             where TValue : class
         {
             return EffectiveClass<TValue>(style => getProperty(style) is { } property
@@ -416,7 +416,7 @@ public sealed class ButtonStyleState : State<ButtonStyleButton>
         MouseCursor mouseCursor = WidgetStateMouseCursor.ResolveWith(cursorStates =>
         {
             IReadOnlySet<WidgetState> flags = cursorStates;
-            return EffectiveClass<MouseCursor>(style => style?.MouseCursor?.Resolve(flags));
+            return EffectiveClass<MouseCursor>(style => style?.MouseCursor?.Resolve(flags))!;
         });
         WidgetStateProperty<Color?> overlayColor = WidgetStateProperty<Color?>.ResolveWith(
             overlayStates => EffectiveClass<Color>(style => style?.OverlayColor?.Resolve(overlayStates)));

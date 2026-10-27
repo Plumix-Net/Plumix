@@ -25,7 +25,7 @@ public sealed class CupertinoCheckbox : StatefulWidget
         MouseCursor? mouseCursor = null,
         Color? activeColor = null,
         Color? inactiveColor = null,
-        WidgetStateProperty<Color?>? fillColor = null,
+        IWidgetStateProperty<Color?>? fillColor = null,
         Color? checkColor = null,
         Color? focusColor = null,
         FocusNode? focusNode = null,
@@ -79,7 +79,7 @@ public sealed class CupertinoCheckbox : StatefulWidget
 
     /// The color used to fill this checkbox, resolved in the selected/hovered/focused/disabled
     /// states. Takes precedence over <see cref="ActiveColor"/> when it resolves non-null.
-    public WidgetStateProperty<Color?>? FillColor { get; }
+    public IWidgetStateProperty<Color?>? FillColor { get; }
 
     /// The color used if the checkbox is inactive. Currently unused: <see cref="FillColor"/>
     /// controls the background color in all states, including when unselected.
@@ -345,7 +345,7 @@ internal sealed class CupertinoCheckboxPainter : ToggleablePainter
     private OutlinedBorder _shape = new RoundedRectangleBorder(
         borderRadius: Plumix.Rendering.BorderRadius.Circular(4.0));
     private BorderSide _side;
-    private PlatformBrightness? _brightness;
+    private Brightness? _brightness;
 
     public CupertinoCheckboxPainter(
         Animation<double> position,
@@ -366,7 +366,7 @@ internal sealed class CupertinoCheckboxPainter : ToggleablePainter
 
     internal BorderSide Side => _side;
 
-    internal PlatformBrightness? Brightness => _brightness;
+    internal Brightness? Brightness => _brightness;
 
     internal Color EffectiveFocusColor => FocusColor;
 
@@ -383,7 +383,7 @@ internal sealed class CupertinoCheckboxPainter : ToggleablePainter
         bool isActive,
         OutlinedBorder shape,
         BorderSide side,
-        PlatformBrightness? brightness)
+        Brightness? brightness)
     {
         FocusColor = focusColor;
         DownPosition = downPosition;
@@ -437,7 +437,7 @@ internal sealed class CupertinoCheckboxPainter : ToggleablePainter
         bool value)
     {
         // Draw a gradient in dark mode except when the checkbox is enabled and checked.
-        if (_brightness == PlatformBrightness.Dark && !(IsActive && value))
+        if (_brightness == Plumix.UI.Brightness.Dark && !(IsActive && value))
         {
             DrawFillGradient(
                 context,
@@ -547,7 +547,7 @@ internal sealed class CupertinoCheckboxPainter : ToggleablePainter
         // The checkbox's opacity changes when pressed.
         if (DownPosition is not null)
         {
-            Color pressedColor = _brightness == PlatformBrightness.Light
+            Color pressedColor = _brightness == Plumix.UI.Brightness.Light
                 ? WithOpacity(CupertinoColors.Black, KPressedOverlayOpacity)
                 : WithOpacity(CupertinoColors.White, KPressedOverlayOpacity);
             DrawShape(context, outer, new SolidColorBrush(pressedColor), pen: null);

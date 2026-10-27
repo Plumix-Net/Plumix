@@ -26,9 +26,9 @@ public sealed partial record TabBarThemeData
         TextStyle? LabelStyle = null,
         Color? UnselectedLabelColor = null,
         TextStyle? UnselectedLabelStyle = null,
-        WidgetStateProperty<Color?>? OverlayColor = null,
+        IWidgetStateProperty<Color?>? OverlayColor = null,
         InteractiveInkFeatureFactory? SplashFactory = null,
-        WidgetStateProperty<MouseCursor?>? MouseCursor = null,
+        IWidgetStateProperty<MouseCursor?>? MouseCursor = null,
         TabAlignment? TabAlignment = null,
         TextScaler? TextScaler = null,
         TabIndicatorAnimation? IndicatorAnimation = null,
@@ -79,11 +79,11 @@ public sealed partial record TabBarThemeData
 
     public TextStyle? UnselectedLabelStyle { get; init; }
 
-    public WidgetStateProperty<Color?>? OverlayColor { get; init; }
+    public IWidgetStateProperty<Color?>? OverlayColor { get; init; }
 
     public InteractiveInkFeatureFactory? SplashFactory { get; init; }
 
-    public WidgetStateProperty<MouseCursor?>? MouseCursor { get; init; }
+    public IWidgetStateProperty<MouseCursor?>? MouseCursor { get; init; }
 
     public TabAlignment? TabAlignment { get; init; }
 
@@ -104,9 +104,9 @@ public sealed partial record TabBarThemeData
         TextStyle? labelStyle = null,
         Color? unselectedLabelColor = null,
         TextStyle? unselectedLabelStyle = null,
-        WidgetStateProperty<Color?>? overlayColor = null,
+        IWidgetStateProperty<Color?>? overlayColor = null,
         InteractiveInkFeatureFactory? splashFactory = null,
-        WidgetStateProperty<MouseCursor?>? mouseCursor = null,
+        IWidgetStateProperty<MouseCursor?>? mouseCursor = null,
         TabAlignment? tabAlignment = null,
         TextScaler? textScaler = null,
         TabIndicatorAnimation? indicatorAnimation = null,
@@ -149,9 +149,9 @@ public sealed class TabBarTheme : InheritedTheme
     private readonly TextStyle? _labelStyle;
     private readonly Color? _unselectedLabelColor;
     private readonly TextStyle? _unselectedLabelStyle;
-    private readonly WidgetStateProperty<Color?>? _overlayColor;
+    private readonly IWidgetStateProperty<Color?>? _overlayColor;
     private readonly InteractiveInkFeatureFactory? _splashFactory;
-    private readonly WidgetStateProperty<MouseCursor?>? _mouseCursor;
+    private readonly IWidgetStateProperty<MouseCursor?>? _mouseCursor;
     private readonly TabAlignment? _tabAlignment;
     private readonly TextScaler? _textScaler;
     private readonly TabIndicatorAnimation? _indicatorAnimation;
@@ -169,9 +169,9 @@ public sealed class TabBarTheme : InheritedTheme
         TextStyle? labelStyle = null,
         Color? unselectedLabelColor = null,
         TextStyle? unselectedLabelStyle = null,
-        WidgetStateProperty<Color?>? overlayColor = null,
+        IWidgetStateProperty<Color?>? overlayColor = null,
         InteractiveInkFeatureFactory? splashFactory = null,
-        WidgetStateProperty<MouseCursor?>? mouseCursor = null,
+        IWidgetStateProperty<MouseCursor?>? mouseCursor = null,
         TabAlignment? tabAlignment = null,
         TextScaler? textScaler = null,
         TabIndicatorAnimation? indicatorAnimation = null,
@@ -241,13 +241,13 @@ public sealed class TabBarTheme : InheritedTheme
     public TextStyle? UnselectedLabelStyle =>
         _data is not null ? _data.UnselectedLabelStyle : _unselectedLabelStyle;
 
-    public WidgetStateProperty<Color?>? OverlayColor =>
+    public IWidgetStateProperty<Color?>? OverlayColor =>
         _data is not null ? _data.OverlayColor : _overlayColor;
 
     public InteractiveInkFeatureFactory? SplashFactory =>
         _data is not null ? _data.SplashFactory : _splashFactory;
 
-    public WidgetStateProperty<MouseCursor?>? MouseCursor =>
+    public IWidgetStateProperty<MouseCursor?>? MouseCursor =>
         _data is not null ? _data.MouseCursor : _mouseCursor;
 
     public TabAlignment? TabAlignment => _data is not null ? _data.TabAlignment : _tabAlignment;
@@ -300,9 +300,9 @@ public sealed class TabBarTheme : InheritedTheme
         TextStyle? labelStyle = null,
         Color? unselectedLabelColor = null,
         TextStyle? unselectedLabelStyle = null,
-        WidgetStateProperty<Color?>? overlayColor = null,
+        IWidgetStateProperty<Color?>? overlayColor = null,
         InteractiveInkFeatureFactory? splashFactory = null,
-        WidgetStateProperty<MouseCursor?>? mouseCursor = null,
+        IWidgetStateProperty<MouseCursor?>? mouseCursor = null,
         TabAlignment? tabAlignment = null,
         TextScaler? textScaler = null,
         TabIndicatorAnimation? indicatorAnimation = null)

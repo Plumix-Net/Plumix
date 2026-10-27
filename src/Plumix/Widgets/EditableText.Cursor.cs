@@ -127,7 +127,7 @@ public sealed partial class EditableText
         // obscured text field.
         private const int ObscureShowLatestCharCursorTicks = 3;
 
-        private CursorTimer? _cursorTimer;
+        private Timer? _cursorTimer;
         private AnimationController? _backingCursorBlinkOpacityController;
         private DiscreteKeyFrameSimulation? _iosBlinkCursorSimulationBacking;
         private int _obscureShowCharTicksPending;
@@ -228,7 +228,7 @@ public sealed partial class EditableText
             }
             else
             {
-                _cursorTimer = CursorTimer.Periodic(CursorBlinkHalfPeriod, OnCursorTick);
+                _cursorTimer = Timer.Periodic(CursorBlinkHalfPeriod, _ => OnCursorTick());
             }
         }
 
@@ -250,7 +250,7 @@ public sealed partial class EditableText
                 _cursorTimer?.Cancel();
                 // Schedule this as an async task to avoid blocking tester.pumpAndSettle
                 // indefinitely.
-                _cursorTimer = CursorTimer.OneShot(
+                _cursorTimer = new Timer(
                     TimeSpan.Zero,
                     () => CursorBlinkOpacityController
                         .AnimateWith(IosBlinkCursorSimulation)
@@ -260,7 +260,7 @@ public sealed partial class EditableText
             {
                 if (_cursorTimer?.IsActive != true && _tickersEnabled)
                 {
-                    _cursorTimer = CursorTimer.Periodic(CursorBlinkHalfPeriod, OnCursorTick);
+                    _cursorTimer = Timer.Periodic(CursorBlinkHalfPeriod, _ => OnCursorTick());
                 }
 
                 CursorBlinkOpacityController.SetValue(CursorBlinkOpacityController.Value == 0 ? 1 : 0);
@@ -333,56 +333,6 @@ public sealed partial class EditableText
             }
 
             return obscured;
-        }
-
-        /// <summary>A cancellable one-shot or periodic timer, like Dart's <c>Timer</c>.</summary>
-        /// <remarks>C#-only: runs on <see cref="GestureTimer"/>, whose factory the test harness
-        /// drives with its pump clock the way <c>FakeAsync</c> drives Dart's timers.</remarks>
-        private sealed class CursorTimer
-        {
-            private GestureTimer? _timer;
-
-            private CursorTimer()
-            {
-            }
-
-            public bool IsActive { get; private set; } = true;
-
-            public static CursorTimer OneShot(TimeSpan duration, Action callback)
-            {
-                var timer = new CursorTimer();
-                timer._timer = GestureTimer.Start(duration, () =>
-                {
-                    timer.IsActive = false;
-                    callback();
-                });
-                return timer;
-            }
-
-            public static CursorTimer Periodic(TimeSpan period, Action callback)
-            {
-                var timer = new CursorTimer();
-                void Tick()
-                {
-                    if (!timer.IsActive)
-                    {
-                        return;
-                    }
-
-                    timer._timer = GestureTimer.Start(period, Tick);
-                    callback();
-                }
-
-                timer._timer = GestureTimer.Start(period, Tick);
-                return timer;
-            }
-
-            public void Cancel()
-            {
-                IsActive = false;
-                _timer?.Cancel();
-                _timer = null;
-            }
         }
     }
 }

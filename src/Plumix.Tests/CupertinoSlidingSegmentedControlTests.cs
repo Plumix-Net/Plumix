@@ -91,7 +91,7 @@ public sealed class CupertinoSlidingSegmentedControlTests : IDisposable
                 groupValue: "one",
                 thumbColor: CupertinoColors.SystemGreen,
                 backgroundColor: CupertinoColors.SystemRed),
-            brightness: PlatformBrightness.Dark));
+            brightness: Brightness.Dark));
         dark.Pump(ViewSize);
         ColorMatchers.AssertSameColorAs(CupertinoColors.SystemGreen.DarkColor, FindRender(dark).ThumbColor);
         ColorMatchers.AssertSameColorAs(CupertinoColors.SystemRed.DarkColor, BackgroundColor(dark));
@@ -476,7 +476,7 @@ public sealed class CupertinoSlidingSegmentedControlTests : IDisposable
 
     private static Widget Wrap(
         Widget child,
-        PlatformBrightness brightness = PlatformBrightness.Light,
+        Brightness brightness = Brightness.Light,
         TextDirection direction = TextDirection.Ltr)
     {
         return new MediaQuery(

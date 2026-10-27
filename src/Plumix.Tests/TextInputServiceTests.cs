@@ -294,7 +294,7 @@ public sealed class TextInputServiceTests : IDisposable
         Assert.True(configuration.Autocorrect);
         Assert.Null(configuration.ActionLabel);
         Assert.Equal(TextCapitalization.None, configuration.TextCapitalization);
-        Assert.Equal(PlatformBrightness.Light, configuration.KeyboardAppearance);
+        Assert.Equal(Brightness.Light, configuration.KeyboardAppearance);
         Assert.Null(configuration.EnableInlinePrediction);
         Assert.Null(configuration.ViewId);
         Assert.Empty(configuration.HintLocales);

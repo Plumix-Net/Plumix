@@ -643,7 +643,7 @@ internal sealed class GlowController : ChangeNotifier
     private double _displacement = 0.5;
     private double _displacementTarget = 0.5;
     private double _pullDistance;
-    private GestureTimer? _pullRecedeTimer;
+    private Timer? _pullRecedeTimer;
     private GlowState _state;
 
     public GlowController(Color color, Axis axis, ITickerProvider? vsync = null)
@@ -762,7 +762,7 @@ internal sealed class GlowController : ChangeNotifier
             NotifyListeners();
         }
 
-        _pullRecedeTimer = GestureTimer.Start(PullHoldTime, () => Recede(PullDecayTime));
+        _pullRecedeTimer = new Timer(PullHoldTime, () => Recede(PullDecayTime));
     }
 
     public void ScrollEnd()

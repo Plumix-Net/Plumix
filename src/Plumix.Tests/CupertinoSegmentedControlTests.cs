@@ -61,7 +61,7 @@ public sealed class CupertinoSegmentedControlTests : IDisposable
 
         using var dark = new CupertinoThemeTestHarness(Wrap(
             Control(groupValue: "one"),
-            brightness: PlatformBrightness.Dark));
+            brightness: Brightness.Dark));
         dark.Pump(ViewSize);
         RenderCupertinoSegmentedControl darkRender = FindRender(dark);
         Assert.Equal(0xFF0A84FFu, darkRender.BorderColor.ToARGB32());
@@ -317,7 +317,7 @@ public sealed class CupertinoSegmentedControlTests : IDisposable
 
     private static Widget Wrap(
         Widget child,
-        PlatformBrightness brightness = PlatformBrightness.Light,
+        Brightness brightness = Brightness.Light,
         TextDirection direction = TextDirection.Ltr)
     {
         return new MediaQuery(

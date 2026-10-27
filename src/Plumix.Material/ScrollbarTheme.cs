@@ -13,9 +13,9 @@ public sealed partial record ScrollbarThemeData
         WidgetStateProperty<double?>? thickness = null,
         WidgetStateProperty<bool?>? trackVisibility = null,
         double? radius = null,
-        WidgetStateProperty<Color?>? thumbColor = null,
-        WidgetStateProperty<Color?>? trackColor = null,
-        WidgetStateProperty<Color?>? trackBorderColor = null,
+        IWidgetStateProperty<Color?>? thumbColor = null,
+        IWidgetStateProperty<Color?>? trackColor = null,
+        IWidgetStateProperty<Color?>? trackBorderColor = null,
         double? crossAxisMargin = null,
         double? mainAxisMargin = null,
         double? minThumbLength = null,
@@ -43,9 +43,9 @@ public sealed partial record ScrollbarThemeData
     public WidgetStateProperty<bool?>? TrackVisibility { get; init; }
     public bool? Interactive { get; init; }
     public double? Radius { get; init; }
-    public WidgetStateProperty<Color?>? ThumbColor { get; init; }
-    public WidgetStateProperty<Color?>? TrackColor { get; init; }
-    public WidgetStateProperty<Color?>? TrackBorderColor { get; init; }
+    public IWidgetStateProperty<Color?>? ThumbColor { get; init; }
+    public IWidgetStateProperty<Color?>? TrackColor { get; init; }
+    public IWidgetStateProperty<Color?>? TrackBorderColor { get; init; }
     public double? CrossAxisMargin { get; init; }
     public double? MainAxisMargin { get; init; }
     public double? MinThumbLength { get; init; }
@@ -56,9 +56,9 @@ public sealed partial record ScrollbarThemeData
         WidgetStateProperty<bool?>? trackVisibility = null,
         bool? interactive = null,
         double? radius = null,
-        WidgetStateProperty<Color?>? thumbColor = null,
-        WidgetStateProperty<Color?>? trackColor = null,
-        WidgetStateProperty<Color?>? trackBorderColor = null,
+        IWidgetStateProperty<Color?>? thumbColor = null,
+        IWidgetStateProperty<Color?>? trackColor = null,
+        IWidgetStateProperty<Color?>? trackBorderColor = null,
         double? crossAxisMargin = null,
         double? mainAxisMargin = null,
         double? minThumbLength = null)

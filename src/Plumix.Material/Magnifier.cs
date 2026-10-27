@@ -46,7 +46,9 @@ public sealed class TextMagnifier : StatefulWidget
     {
         private Point? _magnifierPosition;
         private Point _extraFocalPointOffset;
-        private CancellationTokenSource? _positionAnimationCancellation;
+        // A timer that unsets itself after an animation duration. If the timer exists, then the
+        // magnifier animates its position; if not, it tracks the gesture directly.
+        private Timer? _positionShouldBeAnimatedTimer;
 
         private TextMagnifier CurrentWidget => (TextMagnifier)StateWidget;
 
@@ -54,7 +56,7 @@ public sealed class TextMagnifier : StatefulWidget
 
         internal Point ExtraFocalPointOffset => _extraFocalPointOffset;
 
-        internal bool PositionShouldBeAnimated => _positionAnimationCancellation != null;
+        internal bool PositionShouldBeAnimated => _positionShouldBeAnimatedTimer != null;
 
         public override void InitState()
         {
@@ -96,9 +98,7 @@ public sealed class TextMagnifier : StatefulWidget
         public override void Dispose()
         {
             CurrentWidget.MagnifierInfo.RemoveListener(DetermineMagnifierPositionAndFocalPoint);
-            _positionAnimationCancellation?.Cancel();
-            _positionAnimationCancellation?.Dispose();
-            _positionAnimationCancellation = null;
+            _positionShouldBeAnimatedTimer?.Cancel();
             base.Dispose();
         }
 
@@ -136,50 +136,26 @@ public sealed class TextMagnifier : StatefulWidget
                 relativeFocalPointX,
                 unadjustedMagnifierRect.Top - adjustedMagnifierRect.Top);
 
-            bool changedLine = _magnifierPosition.HasValue
-                               && finalMagnifierPosition.Y != _magnifierPosition.Value.Y;
+            Timer? positionShouldBeAnimated = _positionShouldBeAnimatedTimer;
+            if (_magnifierPosition.HasValue && finalMagnifierPosition.Y != _magnifierPosition.Value.Y)
+            {
+                if (_positionShouldBeAnimatedTimer is { IsActive: true })
+                {
+                    _positionShouldBeAnimatedTimer.Cancel();
+                }
+
+                // A timer that deletes itself when it completes; `Mounted`-safe, since the timer is
+                // cancelled in `Dispose`.
+                positionShouldBeAnimated = new Timer(
+                    JumpBetweenLinesAnimationDuration,
+                    () => SetState(() => _positionShouldBeAnimatedTimer = null));
+            }
+
             SetState(() =>
             {
                 _magnifierPosition = finalMagnifierPosition;
+                _positionShouldBeAnimatedTimer = positionShouldBeAnimated;
                 _extraFocalPointOffset = focalPointAdjustment;
-                if (changedLine)
-                {
-                    StartPositionAnimationWindow();
-                }
-            });
-        }
-
-        private void StartPositionAnimationWindow()
-        {
-            _positionAnimationCancellation?.Cancel();
-            _positionAnimationCancellation?.Dispose();
-            _positionAnimationCancellation = new CancellationTokenSource();
-            EventLoop.RunAsync(() => ClearPositionAnimationWindowAsync(_positionAnimationCancellation.Token));
-        }
-
-        private async Task ClearPositionAnimationWindowAsync(CancellationToken cancellationToken)
-        {
-            try
-            {
-                await Task.Delay(JumpBetweenLinesAnimationDuration, cancellationToken);
-            }
-            catch (OperationCanceledException)
-            {
-                return;
-            }
-
-            SchedulerBinding.Instance.AddPostFrameCallback(_ =>
-            {
-                if (!Mounted || cancellationToken.IsCancellationRequested)
-                {
-                    return;
-                }
-
-                SetState(() =>
-                {
-                    _positionAnimationCancellation?.Dispose();
-                    _positionAnimationCancellation = null;
-                });
             });
         }
     }

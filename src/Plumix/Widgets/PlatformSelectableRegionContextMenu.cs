@@ -5,7 +5,7 @@ using Plumix.UI;
 
 // Dart parity sources:
 // - flutter/packages/flutter/lib/src/widgets/_platform_selectable_region_context_menu_io.dart
-// - flutter/packages/flutter/lib/src/widgets/_platform_selectable_region_context_menu_web.dart (adapted)
+// - flutter/packages/flutter/lib/src/widgets/_platform_selectable_region_context_menu_web.dart
 
 namespace Plumix.Widgets;
 

@@ -36,15 +36,15 @@ public sealed class Switch : StatelessWidget
         ImageErrorListener? onActiveThumbImageError = null,
         ImageProvider? inactiveThumbImage = null,
         ImageErrorListener? onInactiveThumbImageError = null,
-        WidgetStateProperty<Color?>? thumbColor = null,
-        WidgetStateProperty<Color?>? trackColor = null,
-        WidgetStateProperty<Color?>? trackOutlineColor = null,
+        IWidgetStateProperty<Color?>? thumbColor = null,
+        IWidgetStateProperty<Color?>? trackColor = null,
+        IWidgetStateProperty<Color?>? trackOutlineColor = null,
         WidgetStateProperty<double?>? trackOutlineWidth = null,
         WidgetStateProperty<Icon?>? thumbIcon = null,
         MaterialTapTargetSize? materialTapTargetSize = null,
         DragStartBehavior dragStartBehavior = DragStartBehavior.Start,
         MouseCursor? mouseCursor = null,
-        WidgetStateProperty<Color?>? overlayColor = null,
+        IWidgetStateProperty<Color?>? overlayColor = null,
         Color? focusColor = null,
         Color? hoverColor = null,
         double? splashRadius = null,
@@ -100,15 +100,15 @@ public sealed class Switch : StatelessWidget
         ImageErrorListener? onActiveThumbImageError,
         ImageProvider? inactiveThumbImage,
         ImageErrorListener? onInactiveThumbImageError,
-        WidgetStateProperty<Color?>? thumbColor,
-        WidgetStateProperty<Color?>? trackColor,
-        WidgetStateProperty<Color?>? trackOutlineColor,
+        IWidgetStateProperty<Color?>? thumbColor,
+        IWidgetStateProperty<Color?>? trackColor,
+        IWidgetStateProperty<Color?>? trackOutlineColor,
         WidgetStateProperty<double?>? trackOutlineWidth,
         WidgetStateProperty<Icon?>? thumbIcon,
         MaterialTapTargetSize? materialTapTargetSize,
         DragStartBehavior dragStartBehavior,
         MouseCursor? mouseCursor,
-        WidgetStateProperty<Color?>? overlayColor,
+        IWidgetStateProperty<Color?>? overlayColor,
         Color? focusColor,
         Color? hoverColor,
         double? splashRadius,
@@ -178,15 +178,15 @@ public sealed class Switch : StatelessWidget
         ImageErrorListener? onActiveThumbImageError = null,
         ImageProvider? inactiveThumbImage = null,
         ImageErrorListener? onInactiveThumbImageError = null,
-        WidgetStateProperty<Color?>? thumbColor = null,
-        WidgetStateProperty<Color?>? trackColor = null,
-        WidgetStateProperty<Color?>? trackOutlineColor = null,
+        IWidgetStateProperty<Color?>? thumbColor = null,
+        IWidgetStateProperty<Color?>? trackColor = null,
+        IWidgetStateProperty<Color?>? trackOutlineColor = null,
         WidgetStateProperty<double?>? trackOutlineWidth = null,
         WidgetStateProperty<Icon?>? thumbIcon = null,
         MaterialTapTargetSize? materialTapTargetSize = null,
         DragStartBehavior dragStartBehavior = DragStartBehavior.Start,
         MouseCursor? mouseCursor = null,
-        WidgetStateProperty<Color?>? overlayColor = null,
+        IWidgetStateProperty<Color?>? overlayColor = null,
         Color? focusColor = null,
         Color? hoverColor = null,
         double? splashRadius = null,
@@ -253,11 +253,11 @@ public sealed class Switch : StatelessWidget
 
     public ImageErrorListener? OnInactiveThumbImageError { get; }
 
-    public WidgetStateProperty<Color?>? ThumbColor { get; }
+    public IWidgetStateProperty<Color?>? ThumbColor { get; }
 
-    public WidgetStateProperty<Color?>? TrackColor { get; }
+    public IWidgetStateProperty<Color?>? TrackColor { get; }
 
-    public WidgetStateProperty<Color?>? TrackOutlineColor { get; }
+    public IWidgetStateProperty<Color?>? TrackOutlineColor { get; }
 
     public WidgetStateProperty<double?>? TrackOutlineWidth { get; }
 
@@ -269,7 +269,7 @@ public sealed class Switch : StatelessWidget
 
     public MouseCursor? MouseCursor { get; }
 
-    public WidgetStateProperty<Color?>? OverlayColor { get; }
+    public IWidgetStateProperty<Color?>? OverlayColor { get; }
 
     public Color? FocusColor { get; }
 
@@ -411,15 +411,15 @@ internal sealed class MaterialSwitch : StatefulWidget
         ImageErrorListener? onActiveThumbImageError,
         ImageProvider? inactiveThumbImage,
         ImageErrorListener? onInactiveThumbImageError,
-        WidgetStateProperty<Color?>? thumbColor,
-        WidgetStateProperty<Color?>? trackColor,
-        WidgetStateProperty<Color?>? trackOutlineColor,
+        IWidgetStateProperty<Color?>? thumbColor,
+        IWidgetStateProperty<Color?>? trackColor,
+        IWidgetStateProperty<Color?>? trackOutlineColor,
         WidgetStateProperty<double?>? trackOutlineWidth,
         WidgetStateProperty<Icon?>? thumbIcon,
         MaterialTapTargetSize? materialTapTargetSize,
         DragStartBehavior dragStartBehavior,
         MouseCursor? mouseCursor,
-        WidgetStateProperty<Color?>? overlayColor,
+        IWidgetStateProperty<Color?>? overlayColor,
         Color? focusColor,
         Color? hoverColor,
         double? splashRadius,
@@ -486,11 +486,11 @@ internal sealed class MaterialSwitch : StatefulWidget
 
     public ImageErrorListener? OnInactiveThumbImageError { get; }
 
-    public WidgetStateProperty<Color?>? ThumbColor { get; }
+    public IWidgetStateProperty<Color?>? ThumbColor { get; }
 
-    public WidgetStateProperty<Color?>? TrackColor { get; }
+    public IWidgetStateProperty<Color?>? TrackColor { get; }
 
-    public WidgetStateProperty<Color?>? TrackOutlineColor { get; }
+    public IWidgetStateProperty<Color?>? TrackOutlineColor { get; }
 
     public WidgetStateProperty<double?>? TrackOutlineWidth { get; }
 
@@ -502,7 +502,7 @@ internal sealed class MaterialSwitch : StatefulWidget
 
     public MouseCursor? MouseCursor { get; }
 
-    public WidgetStateProperty<Color?>? OverlayColor { get; }
+    public IWidgetStateProperty<Color?>? OverlayColor { get; }
 
     public Color? FocusColor { get; }
 
@@ -623,9 +623,8 @@ internal sealed class MaterialSwitchState : ToggleableState<MaterialSwitch>
         }
 
         PositionController.Duration = TimeSpan.FromMilliseconds(switchConfig.ToggleDuration);
-        Color cupertinoPrimaryColor = theme.CupertinoOverrideTheme?.PrimaryColor is { } overrideColor
-            ? CupertinoDynamicColor.Resolve(overrideColor, context)
-            : theme.ColorScheme.Primary;
+        // Dart reads the override unresolved: a CupertinoDynamicColor paints its default variant.
+        Color cupertinoPrimaryColor = theme.CupertinoOverrideTheme?.PrimaryColor ?? theme.ColorScheme.Primary;
 
         IReadOnlySet<WidgetState> baseStates = CurrentWidgetStates;
         var activeStates = new HashSet<WidgetState>(baseStates) { WidgetState.Selected };

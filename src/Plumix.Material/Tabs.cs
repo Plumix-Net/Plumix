@@ -315,7 +315,7 @@ internal abstract class TabBarDefaults
 
     public virtual InteractiveInkFeatureFactory? SplashFactory => null;
 
-    public virtual WidgetStateProperty<Color?>? OverlayColor => null;
+    public virtual IWidgetStateProperty<Color?>? OverlayColor => null;
 
     public virtual BorderRadius? SplashBorderRadius => null;
 }
@@ -403,7 +403,7 @@ internal sealed class TabsPrimaryDefaultsM3 : TabBarDefaults
 
     public override InteractiveInkFeatureFactory? SplashFactory => _theme.SplashFactory;
 
-    public override WidgetStateProperty<Color?>? OverlayColor =>
+    public override IWidgetStateProperty<Color?>? OverlayColor =>
         WidgetStateProperty<Color?>.ResolveWith(states =>
         {
             ColorScheme colors = _theme.ColorScheme;
@@ -476,7 +476,7 @@ internal sealed class TabsSecondaryDefaultsM3 : TabBarDefaults
 
     public override InteractiveInkFeatureFactory? SplashFactory => _theme.SplashFactory;
 
-    public override WidgetStateProperty<Color?>? OverlayColor =>
+    public override IWidgetStateProperty<Color?>? OverlayColor =>
         WidgetStateProperty<Color?>.ResolveWith(states =>
         {
             Color onSurface = _theme.ColorScheme.OnSurface;
@@ -1170,7 +1170,7 @@ public sealed class TabBar : StatefulWidget, IPreferredSizeWidget
         Color? unselectedLabelColor = null,
         TextStyle? unselectedLabelStyle = null,
         DragStartBehavior dragStartBehavior = DragStartBehavior.Start,
-        WidgetStateProperty<Color?>? overlayColor = null,
+        IWidgetStateProperty<Color?>? overlayColor = null,
         MouseCursor? mouseCursor = null,
         bool? enableFeedback = null,
         Action<int>? onTap = null,
@@ -1240,7 +1240,7 @@ public sealed class TabBar : StatefulWidget, IPreferredSizeWidget
         Color? unselectedLabelColor,
         TextStyle? unselectedLabelStyle,
         DragStartBehavior dragStartBehavior,
-        WidgetStateProperty<Color?>? overlayColor,
+        IWidgetStateProperty<Color?>? overlayColor,
         MouseCursor? mouseCursor,
         bool? enableFeedback,
         Action<int>? onTap,
@@ -1319,7 +1319,7 @@ public sealed class TabBar : StatefulWidget, IPreferredSizeWidget
         Color? unselectedLabelColor = null,
         TextStyle? unselectedLabelStyle = null,
         DragStartBehavior dragStartBehavior = DragStartBehavior.Start,
-        WidgetStateProperty<Color?>? overlayColor = null,
+        IWidgetStateProperty<Color?>? overlayColor = null,
         MouseCursor? mouseCursor = null,
         bool? enableFeedback = null,
         Action<int>? onTap = null,
@@ -1404,7 +1404,7 @@ public sealed class TabBar : StatefulWidget, IPreferredSizeWidget
 
     public DragStartBehavior DragStartBehavior { get; }
 
-    public WidgetStateProperty<Color?>? OverlayColor { get; }
+    public IWidgetStateProperty<Color?>? OverlayColor { get; }
 
     public MouseCursor? MouseCursor { get; }
 

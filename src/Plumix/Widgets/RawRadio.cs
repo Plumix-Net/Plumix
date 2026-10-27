@@ -77,8 +77,8 @@ public abstract class WidgetStateProperty<T> : IWidgetStateProperty<T>
     }
 
     public static WidgetStateProperty<T>? Lerp(
-        WidgetStateProperty<T>? a,
-        WidgetStateProperty<T>? b,
+        IWidgetStateProperty<T>? a,
+        IWidgetStateProperty<T>? b,
         double t,
         Func<T, T, double, T> lerpFunction)
     {
@@ -341,7 +341,7 @@ public sealed class RawRadio<T> : StatefulWidget
 {
     public RawRadio(
         T value,
-        WidgetStateProperty<MouseCursor> mouseCursor,
+        IWidgetStateProperty<MouseCursor> mouseCursor,
         bool toggleable,
         FocusNode focusNode,
         bool autofocus,
@@ -367,7 +367,7 @@ public sealed class RawRadio<T> : StatefulWidget
 
     public T Value { get; }
 
-    public WidgetStateProperty<MouseCursor> MouseCursor { get; }
+    public IWidgetStateProperty<MouseCursor> MouseCursor { get; }
 
     public bool Toggleable { get; }
 

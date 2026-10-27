@@ -398,7 +398,7 @@ internal sealed class CupertinoRadioPainter : ToggleablePainter
     private bool? _value;
     private Color _fillColor = null!;
     private bool _checkmarkStyle;
-    private PlatformBrightness? _brightness;
+    private Brightness? _brightness;
     private Color _borderColor = null!;
 
     public CupertinoRadioPainter(
@@ -416,7 +416,7 @@ internal sealed class CupertinoRadioPainter : ToggleablePainter
 
     internal bool CheckmarkStyle => _checkmarkStyle;
 
-    internal PlatformBrightness? Brightness => _brightness;
+    internal Brightness? Brightness => _brightness;
 
     internal Color BorderColor => _borderColor;
 
@@ -433,7 +433,7 @@ internal sealed class CupertinoRadioPainter : ToggleablePainter
         bool checkmarkStyle,
         bool isActive,
         Color borderColor,
-        PlatformBrightness? brightness)
+        Brightness? brightness)
     {
         FocusColor = focusColor;
         DownPosition = downPosition;
@@ -451,7 +451,7 @@ internal sealed class CupertinoRadioPainter : ToggleablePainter
 
     private void DrawPressedOverlay(PaintingContext context, Point center, double radius)
     {
-        Color pressedColor = _brightness == PlatformBrightness.Light
+        Color pressedColor = _brightness == Plumix.UI.Brightness.Light
             ? WithOpacity(CupertinoColors.Black, KPressedOverlayOpacity)
             : WithOpacity(CupertinoColors.White, KPressedOverlayOpacity);
         context.Canvas.DrawCircle(new SolidColorBrush(pressedColor), pen: null, center, radius);
@@ -509,7 +509,7 @@ internal sealed class CupertinoRadioPainter : ToggleablePainter
         {
             Color outerColor = ActiveColor;
             // Draw a gradient in dark mode if the radio is disabled.
-            if (_brightness == PlatformBrightness.Dark && !IsActive)
+            if (_brightness == Plumix.UI.Brightness.Dark && !IsActive)
             {
                 DrawFillGradient(
                     context,
@@ -541,7 +541,7 @@ internal sealed class CupertinoRadioPainter : ToggleablePainter
         else
         {
             Color paintColor = IsActive ? InactiveColor : KDisabledOuterColor;
-            if (_brightness == PlatformBrightness.Dark)
+            if (_brightness == Plumix.UI.Brightness.Dark)
             {
                 DrawFillGradient(
                     context,

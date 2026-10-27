@@ -79,7 +79,7 @@ public sealed class CupertinoAppTests : IDisposable
         CupertinoUserInterfaceLevelData? interfaceLevel = null;
         var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new MediaQuery(
-            data: new MediaQueryData(PlatformBrightness: PlatformBrightness.Dark),
+            data: new MediaQueryData(PlatformBrightness: Brightness.Dark),
             child: new CupertinoApp(
                 navigatorKey: navigatorKey,
                 debugShowCheckedModeBanner: false,
@@ -147,12 +147,12 @@ public sealed class CupertinoAppTests : IDisposable
         Color darkColor = Color.FromARGB(0xFF, 4, 5, 6);
         var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new MediaQuery(
-            data: new MediaQueryData(PlatformBrightness: PlatformBrightness.Light),
+            data: new MediaQueryData(PlatformBrightness: Brightness.Light),
             child: new CupertinoApp(
                 debugShowCheckedModeBanner: false,
                 title: "Dynamic title",
                 color: CupertinoDynamicColor.WithBrightness(lightColor, darkColor),
-                theme: new CupertinoThemeData(brightness: PlatformBrightness.Dark),
+                theme: new CupertinoThemeData(brightness: Brightness.Dark),
                 home: new SizedBox())));
 
         MountAndFlush(root, owner);

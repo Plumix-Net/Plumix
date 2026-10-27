@@ -112,7 +112,7 @@ public sealed class CupertinoFormSectionTests
                 backgroundColor: background,
                 clipBehavior: Clip.AntiAlias,
                 children: [new Text("Row")]),
-            brightness: PlatformBrightness.Dark));
+            brightness: Brightness.Dark));
 
         harness.Pump(ViewSize);
 
@@ -172,7 +172,7 @@ public sealed class CupertinoFormSectionTests
 
     private static Widget Wrap(
         Widget child,
-        PlatformBrightness brightness = PlatformBrightness.Light,
+        Brightness brightness = Brightness.Light,
         bool center = true)
     {
         Widget content = center ? new Center(child: child) : child;

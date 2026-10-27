@@ -28,6 +28,8 @@ public sealed class SelectableText : StatefulWidget
         double? cursorHeight = null,
         Color? cursorColor = null,
         Color? selectionColor = null,
+        BoxHeightStyle? selectionHeightStyle = null,
+        BoxWidthStyle? selectionWidthStyle = null,
         MouseCursor? mouseCursor = null,
         bool enableInteractiveSelection = true,
         TextSelectionControls? selectionControls = null,
@@ -52,6 +54,8 @@ public sealed class SelectableText : StatefulWidget
         CursorHeight = cursorHeight;
         CursorColor = cursorColor;
         SelectionColor = selectionColor;
+        SelectionHeightStyle = selectionHeightStyle;
+        SelectionWidthStyle = selectionWidthStyle;
         MouseCursor = mouseCursor;
         EnableInteractiveSelection = enableInteractiveSelection;
         SelectionControls = selectionControls;
@@ -100,6 +104,15 @@ public sealed class SelectableText : StatefulWidget
     public double? CursorHeight { get; }
     public Color? CursorColor { get; }
     public Color? SelectionColor { get; }
+
+    /// <summary>Controls how tall the selection highlight boxes are computed to be; null uses
+    /// <see cref="EditableText.DefaultSelectionHeightStyle"/>.</summary>
+    public BoxHeightStyle? SelectionHeightStyle { get; }
+
+    /// <summary>Controls how wide the selection highlight boxes are computed to be; null uses
+    /// <see cref="EditableText.DefaultSelectionWidthStyle"/>.</summary>
+    public BoxWidthStyle? SelectionWidthStyle { get; }
+
     public MouseCursor? MouseCursor { get; }
     public bool EnableInteractiveSelection { get; }
     public TextSelectionControls? SelectionControls { get; }
@@ -273,6 +286,8 @@ internal sealed class SelectableTextState : State<SelectableText>, ITextSelectio
             enableInteractiveSelection: Current.EnableInteractiveSelection,
             selectionControls: Current.SelectionControls ?? PlatformSelectionControls(theme.Platform),
             selectionColor: selectionColor,
+            selectionHeightStyle: Current.SelectionHeightStyle,
+            selectionWidthStyle: Current.SelectionWidthStyle,
             cursorColor: cursorColor,
             mouseCursor: Current.MouseCursor ?? selectionStyle.MouseCursor,
             onSelectionChanged: HandleSelectionChanged,

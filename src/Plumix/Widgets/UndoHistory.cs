@@ -71,8 +71,8 @@ public sealed class UndoHistoryState<T> : State<UndoHistory<T>>, IUndoManagerCli
     private static readonly TimeSpan KThrottleDuration = TimeSpan.FromMilliseconds(500);
 
     private readonly UndoStack _stack = new();
-    private Func<T, GestureTimer> _throttledPush = null!;
-    private GestureTimer? _throttleTimer;
+    private Func<T, Timer> _throttledPush = null!;
+    private Timer? _throttleTimer;
     private bool _duringTrigger;
 
     // Record the last value to prevent pushing multiple of the same value in a row onto the undo
@@ -316,9 +316,9 @@ public sealed class UndoHistoryState<T> : State<UndoHistory<T>>, IUndoManagerCli
 
     /// Dart's file-private `_throttle`: the first call starts a timer; calls while it is active only
     /// replace the argument the timer will push.
-    private static Func<TArg, GestureTimer> Throttle<TArg>(TimeSpan duration, Action<TArg> function)
+    private static Func<TArg, Timer> Throttle<TArg>(TimeSpan duration, Action<TArg> function)
     {
-        GestureTimer? timer = null;
+        Timer? timer = null;
         TArg arg = default!;
         return currentArg =>
         {
@@ -328,7 +328,7 @@ public sealed class UndoHistoryState<T> : State<UndoHistory<T>>, IUndoManagerCli
                 return timer;
             }
 
-            timer = GestureTimer.Start(duration, () =>
+            timer = new Timer(duration, () =>
             {
                 function(arg);
                 timer = null;

@@ -330,10 +330,10 @@ public sealed class CupertinoApp : StatefulWidget
         {
             CupertinoThemeData effectiveTheme =
                 (CurrentWidget.Theme ?? new CupertinoThemeData()).ResolveFrom(context);
-            PlatformBrightness brightness = effectiveTheme.Brightness
+            Brightness brightness = effectiveTheme.Brightness
                                             ?? MediaQuery.PlatformBrightnessOf(context);
             SystemChrome.SetSystemUIOverlayStyle(
-                brightness == PlatformBrightness.Dark
+                brightness == Brightness.Dark
                     ? SystemUiOverlayStyle.Light
                     : SystemUiOverlayStyle.Dark);
 

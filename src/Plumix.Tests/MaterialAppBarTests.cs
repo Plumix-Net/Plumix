@@ -192,12 +192,12 @@ public sealed class MaterialAppBarTests
     public void AppBar_SystemOverlayStyle_DerivesBrightnessFromTheBackground(bool useMaterial3)
     {
         SystemUiOverlayStyle onDark = OverlayStyleFor(Colors.Black, useMaterial3);
-        Assert.Equal(PlatformBrightness.Dark, onDark.StatusBarBrightness);
-        Assert.Equal(PlatformBrightness.Light, onDark.StatusBarIconBrightness);
+        Assert.Equal(Brightness.Dark, onDark.StatusBarBrightness);
+        Assert.Equal(Brightness.Light, onDark.StatusBarIconBrightness);
 
         SystemUiOverlayStyle onLight = OverlayStyleFor(Colors.White, useMaterial3);
-        Assert.Equal(PlatformBrightness.Light, onLight.StatusBarBrightness);
-        Assert.Equal(PlatformBrightness.Dark, onLight.StatusBarIconBrightness);
+        Assert.Equal(Brightness.Light, onLight.StatusBarBrightness);
+        Assert.Equal(Brightness.Dark, onLight.StatusBarIconBrightness);
 
         // M3 clears the status-bar color; M2 leaves it untouched.
         Assert.Equal(useMaterial3 ? MaterialColors.Transparent : null, onDark.StatusBarColor);

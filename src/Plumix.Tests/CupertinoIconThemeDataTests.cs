@@ -41,7 +41,7 @@ public sealed class CupertinoIconThemeDataTests
         using var harness = new CupertinoThemeTestHarness(new IconTheme(
             new CupertinoIconThemeData(Color: CupertinoColors.SystemBlue),
             new MediaQuery(
-                new MediaQueryData(PlatformBrightness: PlatformBrightness.Dark),
+                new MediaQueryData(PlatformBrightness: Brightness.Dark),
                 new Builder(context =>
                 {
                     retrieved = IconTheme.Of(context);
@@ -96,7 +96,7 @@ public sealed class CupertinoIconThemeDataTests
         using var harness = new CupertinoThemeTestHarness(new IconTheme(
             copied,
             new MediaQuery(
-                new MediaQueryData(PlatformBrightness: PlatformBrightness.Dark),
+                new MediaQueryData(PlatformBrightness: Brightness.Dark),
                 new Builder(context =>
                 {
                     retrieved = IconTheme.Of(context);

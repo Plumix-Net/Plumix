@@ -99,7 +99,7 @@ public enum SystemUiMode
 /// <summary>Specifies a preference for the style of the system overlays.</summary>
 /// <remarks>
 /// Used by <see cref="AnnotatedRegion{T}"/> and <see cref="SystemChrome.SetSystemUIOverlayStyle"/>.
-/// dart:ui's <c>Brightness</c> is <see cref="PlatformBrightness"/> in Plumix (see
+/// dart:ui's <c>Brightness</c> is <see cref="Brightness"/> in Plumix (see
 /// <c>docs/ai/DIVERGENCES.md</c>); the wire format and the diagnostics still spell it
 /// <c>Brightness.light</c>/<c>Brightness.dark</c>, as Dart does.
 /// </remarks>
@@ -111,9 +111,9 @@ public sealed class SystemUiOverlayStyle : Diagnosticable, IEquatable<SystemUiOv
     /// </summary>
     public static readonly SystemUiOverlayStyle Light = new(
         systemNavigationBarColor: new Color(0xFF000000),
-        systemNavigationBarIconBrightness: PlatformBrightness.Light,
-        statusBarIconBrightness: PlatformBrightness.Light,
-        statusBarBrightness: PlatformBrightness.Dark);
+        systemNavigationBarIconBrightness: Brightness.Light,
+        statusBarIconBrightness: Brightness.Light,
+        statusBarBrightness: Brightness.Dark);
 
     /// <summary>
     /// System overlays should be drawn with a dark color. Intended for applications with a light
@@ -121,19 +121,19 @@ public sealed class SystemUiOverlayStyle : Diagnosticable, IEquatable<SystemUiOv
     /// </summary>
     public static readonly SystemUiOverlayStyle Dark = new(
         systemNavigationBarColor: new Color(0xFF000000),
-        systemNavigationBarIconBrightness: PlatformBrightness.Light,
-        statusBarIconBrightness: PlatformBrightness.Dark,
-        statusBarBrightness: PlatformBrightness.Light);
+        systemNavigationBarIconBrightness: Brightness.Light,
+        statusBarIconBrightness: Brightness.Dark,
+        statusBarBrightness: Brightness.Light);
 
     /// <summary>Creates a new <see cref="SystemUiOverlayStyle"/>.</summary>
     public SystemUiOverlayStyle(
         Color? systemNavigationBarColor = null,
         Color? systemNavigationBarDividerColor = null,
-        PlatformBrightness? systemNavigationBarIconBrightness = null,
+        Brightness? systemNavigationBarIconBrightness = null,
         bool? systemNavigationBarContrastEnforced = null,
         Color? statusBarColor = null,
-        PlatformBrightness? statusBarBrightness = null,
-        PlatformBrightness? statusBarIconBrightness = null,
+        Brightness? statusBarBrightness = null,
+        Brightness? statusBarIconBrightness = null,
         bool? systemStatusBarContrastEnforced = null)
     {
         SystemNavigationBarColor = systemNavigationBarColor;
@@ -155,8 +155,8 @@ public sealed class SystemUiOverlayStyle : Diagnosticable, IEquatable<SystemUiOv
     public Color? SystemNavigationBarDividerColor { get; }
 
     /// <summary>The brightness of the system navigation bar icons. Only honored in Android versions
-    /// O and greater. When set to <see cref="PlatformBrightness.Light"/>, the icons are light.</summary>
-    public PlatformBrightness? SystemNavigationBarIconBrightness { get; }
+    /// O and greater. When set to <see cref="Brightness.Light"/>, the icons are light.</summary>
+    public Brightness? SystemNavigationBarIconBrightness { get; }
 
     /// <summary>
     /// Overrides the contrast enforcement when setting a transparent navigation bar. Only honored
@@ -168,11 +168,11 @@ public sealed class SystemUiOverlayStyle : Diagnosticable, IEquatable<SystemUiOv
     public Color? StatusBarColor { get; }
 
     /// <summary>The brightness of top status bar. Only honored in iOS.</summary>
-    public PlatformBrightness? StatusBarBrightness { get; }
+    public Brightness? StatusBarBrightness { get; }
 
     /// <summary>The brightness of the top status bar icons. Only honored in Android version M and
     /// greater.</summary>
-    public PlatformBrightness? StatusBarIconBrightness { get; }
+    public Brightness? StatusBarIconBrightness { get; }
 
     /// <summary>
     /// Overrides the contrast enforcement when setting a transparent status bar. Only honored in
@@ -223,10 +223,10 @@ public sealed class SystemUiOverlayStyle : Diagnosticable, IEquatable<SystemUiOv
         Color? systemNavigationBarDividerColor = null,
         bool? systemNavigationBarContrastEnforced = null,
         Color? statusBarColor = null,
-        PlatformBrightness? statusBarBrightness = null,
-        PlatformBrightness? statusBarIconBrightness = null,
+        Brightness? statusBarBrightness = null,
+        Brightness? statusBarIconBrightness = null,
         bool? systemStatusBarContrastEnforced = null,
-        PlatformBrightness? systemNavigationBarIconBrightness = null)
+        Brightness? systemNavigationBarIconBrightness = null)
     {
         return new SystemUiOverlayStyle(
             systemNavigationBarColor: systemNavigationBarColor ?? SystemNavigationBarColor,
@@ -305,11 +305,11 @@ public sealed class SystemUiOverlayStyle : Diagnosticable, IEquatable<SystemUiOv
     /// A <c>DiagnosticsProperty&lt;Brightness&gt;</c>: the value prints as dart:ui's
     /// <c>Brightness.light</c>/<c>Brightness.dark</c> rather than the C# enum's type name.
     /// </summary>
-    private static DiagnosticsProperty<PlatformBrightness?> BrightnessProperty(
+    private static DiagnosticsProperty<Brightness?> BrightnessProperty(
         string name,
-        PlatformBrightness? value)
+        Brightness? value)
     {
-        return new DiagnosticsProperty<PlatformBrightness?>(name, value, description: BrightnessToString(value));
+        return new DiagnosticsProperty<Brightness?>(name, value, description: BrightnessToString(value));
     }
 
     /// <summary>Dart's <c>Color.value</c>, carried as a JSON integer.</summary>
@@ -323,17 +323,17 @@ public sealed class SystemUiOverlayStyle : Diagnosticable, IEquatable<SystemUiOv
     };
 
     /// <summary>dart:ui's <c>Brightness.toString</c>.</summary>
-    private static string? BrightnessToString(PlatformBrightness? brightness) => brightness switch
+    private static string? BrightnessToString(Brightness? brightness) => brightness switch
     {
-        PlatformBrightness.Light => "Brightness.light",
-        PlatformBrightness.Dark => "Brightness.dark",
+        Brightness.Light => "Brightness.light",
+        Brightness.Dark => "Brightness.dark",
         _ => null,
     };
 
-    private static PlatformBrightness? BrightnessFromString(object? value) => value switch
+    private static Brightness? BrightnessFromString(object? value) => value switch
     {
-        "Brightness.light" => PlatformBrightness.Light,
-        "Brightness.dark" => PlatformBrightness.Dark,
+        "Brightness.light" => Brightness.Light,
+        "Brightness.dark" => Brightness.Dark,
         _ => null,
     };
 }

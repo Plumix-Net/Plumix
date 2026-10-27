@@ -94,7 +94,7 @@ public sealed class CupertinoTabBarTests : IDisposable
 
         using var darkHarness = new CupertinoThemeTestHarness(Wrap(
             tabBar,
-            brightness: PlatformBrightness.Dark));
+            brightness: Brightness.Dark));
         darkHarness.Pump(ViewSize);
         RenderDecoratedBox darkDecoration = Assert.Single(FindAll<RenderDecoratedBox>(darkHarness.RenderView));
         var darkBox = Assert.IsType<BoxDecoration>(darkDecoration.Decoration);
@@ -130,7 +130,7 @@ public sealed class CupertinoTabBarTests : IDisposable
 
         using var darkHarness = new CupertinoThemeTestHarness(Wrap(
             tabBar,
-            brightness: PlatformBrightness.Dark));
+            brightness: Brightness.Dark));
         darkHarness.Pump(ViewSize);
         Assert.Equal(0xFF757575u, Foreground(FindParagraph(darkHarness.RenderView, "First")!).ToARGB32());
         Assert.Equal(0xFF0A84FFu, Foreground(FindParagraph(darkHarness.RenderView, "Second")!).ToARGB32());
@@ -279,7 +279,7 @@ public sealed class CupertinoTabBarTests : IDisposable
 
     private static Widget Wrap(
         Widget child,
-        PlatformBrightness brightness = PlatformBrightness.Light,
+        Brightness brightness = Brightness.Light,
         MediaQueryData? media = null,
         bool center = true)
     {

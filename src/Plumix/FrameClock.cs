@@ -29,6 +29,9 @@ public static class FrameClock
     /// </remarks>
     public static double CurrentSeconds => _sw.Elapsed.TotalSeconds;
 
+    /// <summary>The elapsed time of the same clock; <see cref="Timer"/> deadlines are read from it.</summary>
+    internal static TimeSpan Elapsed => _sw.Elapsed;
+
     /// <summary>
     /// The monotonic engine timeline pointer events are stamped on, expressed as a UTC date: the wall
     /// clock read once at start-up plus the elapsed time of the monotonic clock.
@@ -69,7 +72,8 @@ public static class FrameClock
         _timer = null;
     }
 
-    private static void Tick()
+    /// <summary>One vsync of the timer: produces the requested frame, if any. Internal for tests.</summary>
+    internal static void Tick()
     {
         if (!_frameRequested)
         {
@@ -90,6 +94,9 @@ public static class FrameClock
         {
             FrameTimingsRecorder.RecordBuildStart();
             PlatformDispatcher.Instance.OnBeginFrame?.Invoke(TimeSpan.FromSeconds(CurrentSeconds));
+            // The engine's `_beginFrame` hook: `onBeginFrame`, then `_updateFrameData` with the number of the
+            // frame's timings recorder, before the microtasks drain.
+            PlatformDispatcher.Instance.UpdateFrameData(FrameTimingsRecorder.Current!.FrameNumber);
             EventLoop.FlushMicrotasks();
             PlatformDispatcher.Instance.OnDrawFrame?.Invoke();
         }

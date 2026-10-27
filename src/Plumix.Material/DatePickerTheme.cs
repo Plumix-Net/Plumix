@@ -49,17 +49,17 @@ public class DatePickerThemeData : IDiagnosticable
         TextStyle? headerHelpStyle = null,
         TextStyle? weekdayStyle = null,
         TextStyle? dayStyle = null,
-        WidgetStateProperty<Color?>? dayForegroundColor = null,
-        WidgetStateProperty<Color?>? dayBackgroundColor = null,
-        WidgetStateProperty<Color?>? dayOverlayColor = null,
+        IWidgetStateProperty<Color?>? dayForegroundColor = null,
+        IWidgetStateProperty<Color?>? dayBackgroundColor = null,
+        IWidgetStateProperty<Color?>? dayOverlayColor = null,
         WidgetStateProperty<OutlinedBorder?>? dayShape = null,
-        WidgetStateProperty<Color?>? todayForegroundColor = null,
-        WidgetStateProperty<Color?>? todayBackgroundColor = null,
+        IWidgetStateProperty<Color?>? todayForegroundColor = null,
+        IWidgetStateProperty<Color?>? todayBackgroundColor = null,
         BorderSide? todayBorder = null,
         TextStyle? yearStyle = null,
-        WidgetStateProperty<Color?>? yearForegroundColor = null,
-        WidgetStateProperty<Color?>? yearBackgroundColor = null,
-        WidgetStateProperty<Color?>? yearOverlayColor = null,
+        IWidgetStateProperty<Color?>? yearForegroundColor = null,
+        IWidgetStateProperty<Color?>? yearBackgroundColor = null,
+        IWidgetStateProperty<Color?>? yearOverlayColor = null,
         WidgetStateProperty<OutlinedBorder?>? yearShape = null,
         Color? rangePickerBackgroundColor = null,
         double? rangePickerElevation = null,
@@ -71,7 +71,7 @@ public class DatePickerThemeData : IDiagnosticable
         TextStyle? rangePickerHeaderHeadlineStyle = null,
         TextStyle? rangePickerHeaderHelpStyle = null,
         Color? rangeSelectionBackgroundColor = null,
-        WidgetStateProperty<Color?>? rangeSelectionOverlayColor = null,
+        IWidgetStateProperty<Color?>? rangeSelectionOverlayColor = null,
         Color? dividerColor = null,
         object? inputDecorationTheme = null,
         ButtonStyle? cancelButtonStyle = null,
@@ -162,22 +162,22 @@ public class DatePickerThemeData : IDiagnosticable
     public virtual TextStyle? DayStyle { get; }
 
     /// <summary>Overrides the default color used to paint the day labels.</summary>
-    public virtual WidgetStateProperty<Color?>? DayForegroundColor { get; }
+    public virtual IWidgetStateProperty<Color?>? DayForegroundColor { get; }
 
     /// <summary>Overrides the default color used to paint the background of the day labels.</summary>
-    public virtual WidgetStateProperty<Color?>? DayBackgroundColor { get; }
+    public virtual IWidgetStateProperty<Color?>? DayBackgroundColor { get; }
 
     /// <summary>Overrides the default highlight color of a focused, hovered, or pressed day.</summary>
-    public virtual WidgetStateProperty<Color?>? DayOverlayColor { get; }
+    public virtual IWidgetStateProperty<Color?>? DayOverlayColor { get; }
 
     /// <summary>Overrides the default shape used to paint the shape decoration of the day labels.</summary>
     public virtual WidgetStateProperty<OutlinedBorder?>? DayShape { get; }
 
     /// <summary>Overrides the default color used to paint the current date label.</summary>
-    public virtual WidgetStateProperty<Color?>? TodayForegroundColor { get; }
+    public virtual IWidgetStateProperty<Color?>? TodayForegroundColor { get; }
 
     /// <summary>Overrides the default color used to paint the background of the current date label.</summary>
-    public virtual WidgetStateProperty<Color?>? TodayBackgroundColor { get; }
+    public virtual IWidgetStateProperty<Color?>? TodayBackgroundColor { get; }
 
     /// <summary>Overrides the border used to paint the current date label.</summary>
     public virtual BorderSide? TodayBorder { get; }
@@ -186,13 +186,13 @@ public class DatePickerThemeData : IDiagnosticable
     public virtual TextStyle? YearStyle { get; }
 
     /// <summary>Overrides the default color used to paint the year labels.</summary>
-    public virtual WidgetStateProperty<Color?>? YearForegroundColor { get; }
+    public virtual IWidgetStateProperty<Color?>? YearForegroundColor { get; }
 
     /// <summary>Overrides the default color used to paint the background of the year labels.</summary>
-    public virtual WidgetStateProperty<Color?>? YearBackgroundColor { get; }
+    public virtual IWidgetStateProperty<Color?>? YearBackgroundColor { get; }
 
     /// <summary>Overrides the default highlight color of a focused, hovered, or pressed year.</summary>
-    public virtual WidgetStateProperty<Color?>? YearOverlayColor { get; }
+    public virtual IWidgetStateProperty<Color?>? YearOverlayColor { get; }
 
     /// <summary>Overrides the default shape used to paint the shape decoration of the year labels.</summary>
     public virtual WidgetStateProperty<OutlinedBorder?>? YearShape { get; }
@@ -228,7 +228,7 @@ public class DatePickerThemeData : IDiagnosticable
     public virtual Color? RangeSelectionBackgroundColor { get; }
 
     /// <summary>Overrides the default highlight color of a focused, hovered, or pressed day within the range.</summary>
-    public virtual WidgetStateProperty<Color?>? RangeSelectionOverlayColor { get; }
+    public virtual IWidgetStateProperty<Color?>? RangeSelectionOverlayColor { get; }
 
     /// <summary>Overrides the default color used to paint the divider between the header and the body.</summary>
     public virtual Color? DividerColor { get; }
@@ -282,17 +282,17 @@ public class DatePickerThemeData : IDiagnosticable
         TextStyle? headerHelpStyle = null,
         TextStyle? weekdayStyle = null,
         TextStyle? dayStyle = null,
-        WidgetStateProperty<Color?>? dayForegroundColor = null,
-        WidgetStateProperty<Color?>? dayBackgroundColor = null,
-        WidgetStateProperty<Color?>? dayOverlayColor = null,
+        IWidgetStateProperty<Color?>? dayForegroundColor = null,
+        IWidgetStateProperty<Color?>? dayBackgroundColor = null,
+        IWidgetStateProperty<Color?>? dayOverlayColor = null,
         WidgetStateProperty<OutlinedBorder?>? dayShape = null,
-        WidgetStateProperty<Color?>? todayForegroundColor = null,
-        WidgetStateProperty<Color?>? todayBackgroundColor = null,
+        IWidgetStateProperty<Color?>? todayForegroundColor = null,
+        IWidgetStateProperty<Color?>? todayBackgroundColor = null,
         BorderSide? todayBorder = null,
         TextStyle? yearStyle = null,
-        WidgetStateProperty<Color?>? yearForegroundColor = null,
-        WidgetStateProperty<Color?>? yearBackgroundColor = null,
-        WidgetStateProperty<Color?>? yearOverlayColor = null,
+        IWidgetStateProperty<Color?>? yearForegroundColor = null,
+        IWidgetStateProperty<Color?>? yearBackgroundColor = null,
+        IWidgetStateProperty<Color?>? yearOverlayColor = null,
         WidgetStateProperty<OutlinedBorder?>? yearShape = null,
         Color? rangePickerBackgroundColor = null,
         double? rangePickerElevation = null,
@@ -304,7 +304,7 @@ public class DatePickerThemeData : IDiagnosticable
         TextStyle? rangePickerHeaderHeadlineStyle = null,
         TextStyle? rangePickerHeaderHelpStyle = null,
         Color? rangeSelectionBackgroundColor = null,
-        WidgetStateProperty<Color?>? rangeSelectionOverlayColor = null,
+        IWidgetStateProperty<Color?>? rangeSelectionOverlayColor = null,
         Color? dividerColor = null,
         Plumix.Material.InputDecorationTheme? inputDecorationTheme = null,
         ButtonStyle? cancelButtonStyle = null,
@@ -625,15 +625,15 @@ public class DatePickerThemeData : IDiagnosticable
             defaultValue: nullDefault));
         properties.Add(new DiagnosticsProperty<TextStyle>("weekDayStyle", WeekdayStyle, defaultValue: nullDefault));
         properties.Add(new DiagnosticsProperty<TextStyle>("dayStyle", DayStyle, defaultValue: nullDefault));
-        properties.Add(new DiagnosticsProperty<WidgetStateProperty<Color?>>(
+        properties.Add(new DiagnosticsProperty<IWidgetStateProperty<Color?>>(
             "dayForegroundColor",
             DayForegroundColor,
             defaultValue: nullDefault));
-        properties.Add(new DiagnosticsProperty<WidgetStateProperty<Color?>>(
+        properties.Add(new DiagnosticsProperty<IWidgetStateProperty<Color?>>(
             "dayBackgroundColor",
             DayBackgroundColor,
             defaultValue: nullDefault));
-        properties.Add(new DiagnosticsProperty<WidgetStateProperty<Color?>>(
+        properties.Add(new DiagnosticsProperty<IWidgetStateProperty<Color?>>(
             "dayOverlayColor",
             DayOverlayColor,
             defaultValue: nullDefault));
@@ -641,25 +641,25 @@ public class DatePickerThemeData : IDiagnosticable
             "dayShape",
             DayShape,
             defaultValue: nullDefault));
-        properties.Add(new DiagnosticsProperty<WidgetStateProperty<Color?>>(
+        properties.Add(new DiagnosticsProperty<IWidgetStateProperty<Color?>>(
             "todayForegroundColor",
             TodayForegroundColor,
             defaultValue: nullDefault));
-        properties.Add(new DiagnosticsProperty<WidgetStateProperty<Color?>>(
+        properties.Add(new DiagnosticsProperty<IWidgetStateProperty<Color?>>(
             "todayBackgroundColor",
             TodayBackgroundColor,
             defaultValue: nullDefault));
         properties.Add(new DiagnosticsProperty<BorderSide?>("todayBorder", TodayBorder, defaultValue: nullDefault));
         properties.Add(new DiagnosticsProperty<TextStyle>("yearStyle", YearStyle, defaultValue: nullDefault));
-        properties.Add(new DiagnosticsProperty<WidgetStateProperty<Color?>>(
+        properties.Add(new DiagnosticsProperty<IWidgetStateProperty<Color?>>(
             "yearForegroundColor",
             YearForegroundColor,
             defaultValue: nullDefault));
-        properties.Add(new DiagnosticsProperty<WidgetStateProperty<Color?>>(
+        properties.Add(new DiagnosticsProperty<IWidgetStateProperty<Color?>>(
             "yearBackgroundColor",
             YearBackgroundColor,
             defaultValue: nullDefault));
-        properties.Add(new DiagnosticsProperty<WidgetStateProperty<Color?>>(
+        properties.Add(new DiagnosticsProperty<IWidgetStateProperty<Color?>>(
             "yearOverlayColor",
             YearOverlayColor,
             defaultValue: nullDefault));
@@ -701,7 +701,7 @@ public class DatePickerThemeData : IDiagnosticable
             "rangeSelectionBackgroundColor",
             RangeSelectionBackgroundColor,
             defaultValue: nullDefault));
-        properties.Add(new DiagnosticsProperty<WidgetStateProperty<Color?>>(
+        properties.Add(new DiagnosticsProperty<IWidgetStateProperty<Color?>>(
             "rangeSelectionOverlayColor",
             RangeSelectionOverlayColor,
             defaultValue: nullDefault));
@@ -862,7 +862,7 @@ internal sealed class DatePickerDefaultsM2 : DatePickerThemeData
 
     public override TextStyle? DayStyle => LateTextTheme.BodySmall;
 
-    public override WidgetStateProperty<Color?>? DayForegroundColor =>
+    public override IWidgetStateProperty<Color?>? DayForegroundColor =>
         WidgetStateProperty<Color?>.ResolveWith(states =>
         {
             if (states.Contains(WidgetState.Selected))
@@ -877,7 +877,7 @@ internal sealed class DatePickerDefaultsM2 : DatePickerThemeData
             return LateColors.OnSurface;
         });
 
-    public override WidgetStateProperty<Color?>? DayBackgroundColor =>
+    public override IWidgetStateProperty<Color?>? DayBackgroundColor =>
         WidgetStateProperty<Color?>.ResolveWith(states =>
         {
             if (states.Contains(WidgetState.Selected))
@@ -888,7 +888,7 @@ internal sealed class DatePickerDefaultsM2 : DatePickerThemeData
             return null;
         });
 
-    public override WidgetStateProperty<Color?>? DayOverlayColor =>
+    public override IWidgetStateProperty<Color?>? DayOverlayColor =>
         WidgetStateProperty<Color?>.ResolveWith(states =>
         {
             if (states.Contains(WidgetState.Selected))
@@ -929,7 +929,7 @@ internal sealed class DatePickerDefaultsM2 : DatePickerThemeData
             return null;
         });
 
-    public override WidgetStateProperty<Color?>? TodayForegroundColor =>
+    public override IWidgetStateProperty<Color?>? TodayForegroundColor =>
         WidgetStateProperty<Color?>.ResolveWith(states =>
         {
             if (states.Contains(WidgetState.Selected))
@@ -944,7 +944,7 @@ internal sealed class DatePickerDefaultsM2 : DatePickerThemeData
             return LateColors.Primary;
         });
 
-    public override WidgetStateProperty<Color?>? TodayBackgroundColor => DayBackgroundColor;
+    public override IWidgetStateProperty<Color?>? TodayBackgroundColor => DayBackgroundColor;
 
     public override BorderSide? TodayBorder => new BorderSide(color: LateColors.Primary);
 
@@ -966,7 +966,7 @@ internal sealed class DatePickerDefaultsM2 : DatePickerThemeData
 
     public override Color? RangeSelectionBackgroundColor => LateColors.Primary.WithOpacity(0.12);
 
-    public override WidgetStateProperty<Color?>? RangeSelectionOverlayColor =>
+    public override IWidgetStateProperty<Color?>? RangeSelectionOverlayColor =>
         WidgetStateProperty<Color?>.ResolveWith(states =>
         {
             if (states.Contains(WidgetState.Selected))
@@ -1071,7 +1071,7 @@ internal sealed class DatePickerDefaultsM3 : DatePickerThemeData
 
     public override TextStyle? DayStyle => LateTextTheme.BodyLarge;
 
-    public override WidgetStateProperty<Color?>? DayForegroundColor =>
+    public override IWidgetStateProperty<Color?>? DayForegroundColor =>
         WidgetStateProperty<Color?>.ResolveWith(states =>
         {
             if (states.Contains(WidgetState.Selected))
@@ -1086,7 +1086,7 @@ internal sealed class DatePickerDefaultsM3 : DatePickerThemeData
             return LateColors.OnSurface;
         });
 
-    public override WidgetStateProperty<Color?>? DayBackgroundColor =>
+    public override IWidgetStateProperty<Color?>? DayBackgroundColor =>
         WidgetStateProperty<Color?>.ResolveWith(states =>
         {
             if (states.Contains(WidgetState.Selected))
@@ -1097,7 +1097,7 @@ internal sealed class DatePickerDefaultsM3 : DatePickerThemeData
             return null;
         });
 
-    public override WidgetStateProperty<Color?>? DayOverlayColor =>
+    public override IWidgetStateProperty<Color?>? DayOverlayColor =>
         WidgetStateProperty<Color?>.ResolveWith(states =>
         {
             if (states.Contains(WidgetState.Selected))
@@ -1138,7 +1138,7 @@ internal sealed class DatePickerDefaultsM3 : DatePickerThemeData
             return null;
         });
 
-    public override WidgetStateProperty<Color?>? TodayForegroundColor =>
+    public override IWidgetStateProperty<Color?>? TodayForegroundColor =>
         WidgetStateProperty<Color?>.ResolveWith(states =>
         {
             if (states.Contains(WidgetState.Selected))
@@ -1153,13 +1153,13 @@ internal sealed class DatePickerDefaultsM3 : DatePickerThemeData
             return LateColors.Primary;
         });
 
-    public override WidgetStateProperty<Color?>? TodayBackgroundColor => DayBackgroundColor;
+    public override IWidgetStateProperty<Color?>? TodayBackgroundColor => DayBackgroundColor;
 
     public override BorderSide? TodayBorder => new BorderSide(color: LateColors.Primary);
 
     public override TextStyle? YearStyle => LateTextTheme.BodyLarge;
 
-    public override WidgetStateProperty<Color?>? YearForegroundColor =>
+    public override IWidgetStateProperty<Color?>? YearForegroundColor =>
         WidgetStateProperty<Color?>.ResolveWith(states =>
         {
             if (states.Contains(WidgetState.Selected))
@@ -1174,7 +1174,7 @@ internal sealed class DatePickerDefaultsM3 : DatePickerThemeData
             return LateColors.OnSurfaceVariant;
         });
 
-    public override WidgetStateProperty<Color?>? YearBackgroundColor =>
+    public override IWidgetStateProperty<Color?>? YearBackgroundColor =>
         WidgetStateProperty<Color?>.ResolveWith(states =>
         {
             if (states.Contains(WidgetState.Selected))
@@ -1185,7 +1185,7 @@ internal sealed class DatePickerDefaultsM3 : DatePickerThemeData
             return null;
         });
 
-    public override WidgetStateProperty<Color?>? YearOverlayColor =>
+    public override IWidgetStateProperty<Color?>? YearOverlayColor =>
         WidgetStateProperty<Color?>.ResolveWith(states =>
         {
             if (states.Contains(WidgetState.Selected))
@@ -1232,7 +1232,7 @@ internal sealed class DatePickerDefaultsM3 : DatePickerThemeData
 
     public override Color? RangeSelectionBackgroundColor => LateColors.SecondaryContainer;
 
-    public override WidgetStateProperty<Color?>? RangeSelectionOverlayColor =>
+    public override IWidgetStateProperty<Color?>? RangeSelectionOverlayColor =>
         WidgetStateProperty<Color?>.ResolveWith(states =>
         {
             if (states.Contains(WidgetState.Pressed))

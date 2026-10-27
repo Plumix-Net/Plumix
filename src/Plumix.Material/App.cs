@@ -566,7 +566,7 @@ public sealed class MaterialApp : StatefulWidget
         {
             return CurrentWidget.ThemeMode == ThemeMode.Dark
                 || (CurrentWidget.ThemeMode == ThemeMode.System
-                    && MediaQuery.PlatformBrightnessOf(context) == PlatformBrightness.Dark);
+                    && MediaQuery.PlatformBrightnessOf(context) == Brightness.Dark);
         }
 
         private Widget BuildMaterialShell(BuildContext context, Widget? child)
@@ -614,7 +614,7 @@ public sealed class MaterialApp : StatefulWidget
             MediaQueryData? mediaQuery = MediaQuery.MaybeOf(context);
             bool useDarkTheme = CurrentWidget.ThemeMode == ThemeMode.Dark
                                 || (CurrentWidget.ThemeMode == ThemeMode.System
-                                    && mediaQuery?.PlatformBrightness == PlatformBrightness.Dark);
+                                    && mediaQuery?.PlatformBrightness == Brightness.Dark);
             bool highContrast = mediaQuery?.HighContrast ?? false;
             ThemeData? theme = null;
             if (useDarkTheme && highContrast)

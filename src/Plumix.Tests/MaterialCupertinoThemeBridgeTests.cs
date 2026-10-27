@@ -43,7 +43,7 @@ public sealed class MaterialCupertinoThemeBridgeTests
     {
         using var harness = TestTheme(new ThemeData(), out CupertinoThemeData theme);
 
-        Assert.Equal(PlatformBrightness.Light, theme.Brightness);
+        Assert.Equal(Brightness.Light, theme.Brightness);
         ColorMatchers.AssertSameColorAs(new Color(0xFF6750A4), theme.PrimaryColor);
         ColorMatchers.AssertSameColorAs(new Color(0xFFFEF7FF), theme.ScaffoldBackgroundColor);
         ColorMatchers.AssertSameColorAs(Colors.White, theme.PrimaryContrastingColor);
@@ -55,7 +55,7 @@ public sealed class MaterialCupertinoThemeBridgeTests
     {
         using var harness = TestTheme(ThemeData.Dark, out CupertinoThemeData theme);
 
-        Assert.Equal(PlatformBrightness.Dark, theme.Brightness);
+        Assert.Equal(Brightness.Dark, theme.Brightness);
         ColorMatchers.AssertSameColorAs(new Color(0xFFD0BCFF), theme.PrimaryColor);
         ColorMatchers.AssertSameColorAs(new Color(0xFF381E72), theme.PrimaryContrastingColor);
         ColorMatchers.AssertSameColorAs(new Color(0xFF141218), theme.ScaffoldBackgroundColor);
@@ -69,7 +69,7 @@ public sealed class MaterialCupertinoThemeBridgeTests
             new ThemeData(useMaterial3: false),
             out CupertinoThemeData theme);
 
-        Assert.Equal(PlatformBrightness.Light, theme.Brightness);
+        Assert.Equal(Brightness.Light, theme.Brightness);
         ColorMatchers.AssertSameColorAs(Colors.White, theme.PrimaryContrastingColor);
         Assert.Equal(17.0, theme.TextTheme.TextStyle.FontSize);
     }
@@ -79,12 +79,12 @@ public sealed class MaterialCupertinoThemeBridgeTests
     {
         using (TestTheme(ThemeData.Dark, out _))
         {
-            Assert.Equal(PlatformBrightness.Dark, CupertinoTheme.BrightnessOf(_context!));
+            Assert.Equal(Brightness.Dark, CupertinoTheme.BrightnessOf(_context!));
         }
 
         using (TestTheme(new ThemeData(), out _))
         {
-            Assert.Equal(PlatformBrightness.Light, CupertinoTheme.BrightnessOf(_context!));
+            Assert.Equal(Brightness.Light, CupertinoTheme.BrightnessOf(_context!));
         }
 
         // Overridable by cupertinoOverrideTheme.
@@ -92,20 +92,20 @@ public sealed class MaterialCupertinoThemeBridgeTests
                    new ThemeData(
                        brightness: Brightness.Light,
                        cupertinoOverrideTheme: new CupertinoThemeData(
-                           brightness: PlatformBrightness.Dark)),
+                           brightness: Brightness.Dark)),
                    out _))
         {
-            Assert.Equal(PlatformBrightness.Dark, CupertinoTheme.BrightnessOf(_context!));
+            Assert.Equal(Brightness.Dark, CupertinoTheme.BrightnessOf(_context!));
         }
 
         using (TestTheme(
                    new ThemeData(
                        brightness: Brightness.Dark,
                        cupertinoOverrideTheme: new CupertinoThemeData(
-                           brightness: PlatformBrightness.Light)),
+                           brightness: Brightness.Light)),
                    out _))
         {
-            Assert.Equal(PlatformBrightness.Light, CupertinoTheme.BrightnessOf(_context!));
+            Assert.Equal(Brightness.Light, CupertinoTheme.BrightnessOf(_context!));
         }
     }
 
@@ -118,7 +118,7 @@ public sealed class MaterialCupertinoThemeBridgeTests
                     scaffoldBackgroundColor: CupertinoColors.LightBackgroundGray)),
             out CupertinoThemeData theme);
 
-        Assert.Equal(PlatformBrightness.Light, theme.Brightness);
+        Assert.Equal(Brightness.Light, theme.Brightness);
         // We took the scaffold background override but the rest are still cascaded to the theme.
         ColorMatchers.AssertSameColorAs(new Color(0xFF6750A4), theme.PrimaryColor);
         ColorMatchers.AssertSameColorAs(Colors.White, theme.PrimaryContrastingColor);

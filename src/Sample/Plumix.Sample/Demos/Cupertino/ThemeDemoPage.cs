@@ -148,7 +148,7 @@ internal sealed class CupertinoThemeDemoPageState : State
         return new MediaQuery(
             MediaQuery.Of(context) with
             {
-                PlatformBrightness = _dark ? PlatformBrightness.Dark : PlatformBrightness.Light,
+                PlatformBrightness = _dark ? Brightness.Dark : Brightness.Light,
                 HighContrast = _highContrast,
             },
             new CupertinoUserInterfaceLevel(

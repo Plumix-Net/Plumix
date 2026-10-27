@@ -67,8 +67,8 @@ public sealed class NavigationBar : StatelessWidget
         ShapeBorder? indicatorShape = null,
         double? height = null,
         NavigationDestinationLabelBehavior? labelBehavior = null,
-        WidgetStateProperty<Color?>? overlayColor = null,
-        WidgetStateProperty<TextStyle?>? labelTextStyle = null,
+        IWidgetStateProperty<Color?>? overlayColor = null,
+        IWidgetStateProperty<TextStyle?>? labelTextStyle = null,
         Thickness? labelPadding = null,
         bool maintainBottomViewPadding = false,
         Key? key = null) : base(key)
@@ -126,8 +126,8 @@ public sealed class NavigationBar : StatelessWidget
     public ShapeBorder? IndicatorShape { get; }
     public double? Height { get; }
     public NavigationDestinationLabelBehavior? LabelBehavior { get; }
-    public WidgetStateProperty<Color?>? OverlayColor { get; }
-    public WidgetStateProperty<TextStyle?>? LabelTextStyle { get; }
+    public IWidgetStateProperty<Color?>? OverlayColor { get; }
+    public IWidgetStateProperty<TextStyle?>? LabelTextStyle { get; }
     public Thickness? LabelPadding { get; }
     public bool MaintainBottomViewPadding { get; }
 
@@ -270,18 +270,18 @@ public sealed class NavigationBar : StatelessWidget
     }
 
     private static WidgetStateProperty<T?> ComposeReferenceProperty<T>(
-        WidgetStateProperty<T?>? widget,
-        WidgetStateProperty<T?>? localTheme,
-        WidgetStateProperty<T?>? defaults) where T : class
+        IWidgetStateProperty<T?>? widget,
+        IWidgetStateProperty<T?>? localTheme,
+        IWidgetStateProperty<T?>? defaults) where T : class
     {
         return WidgetStateProperty<T?>.ResolveWith(states =>
             widget?.Resolve(states) ?? localTheme?.Resolve(states) ?? defaults?.Resolve(states));
     }
 
     private static WidgetStateProperty<Color?> ComposeColorProperty(
-        WidgetStateProperty<Color?>? widget,
-        WidgetStateProperty<Color?>? localTheme,
-        WidgetStateProperty<Color?>? defaults)
+        IWidgetStateProperty<Color?>? widget,
+        IWidgetStateProperty<Color?>? localTheme,
+        IWidgetStateProperty<Color?>? defaults)
     {
         return WidgetStateProperty<Color?>.ResolveWith(states =>
         {
@@ -375,9 +375,9 @@ internal sealed class NavigationBarDestinationTile : StatefulWidget
         NavigationDestinationLabelBehavior labelBehavior,
         Color indicatorColor,
         ShapeBorder indicatorShape,
-        WidgetStateProperty<TextStyle?> labelTextStyle,
+        IWidgetStateProperty<TextStyle?> labelTextStyle,
         WidgetStateProperty<IconThemeData?> iconTheme,
-        WidgetStateProperty<Color?> overlayColor,
+        IWidgetStateProperty<Color?> overlayColor,
         Thickness labelPadding,
         double height,
         Key? key = null) : base(key)
@@ -405,9 +405,9 @@ internal sealed class NavigationBarDestinationTile : StatefulWidget
     public NavigationDestinationLabelBehavior LabelBehavior { get; }
     public Color IndicatorColor { get; }
     public ShapeBorder IndicatorShape { get; }
-    public WidgetStateProperty<TextStyle?> LabelTextStyle { get; }
+    public IWidgetStateProperty<TextStyle?> LabelTextStyle { get; }
     public WidgetStateProperty<IconThemeData?> IconTheme { get; }
-    public WidgetStateProperty<Color?> OverlayColor { get; }
+    public IWidgetStateProperty<Color?> OverlayColor { get; }
     public Thickness LabelPadding { get; }
     public double Height { get; }
 
@@ -566,7 +566,7 @@ internal sealed class NavigationBarIndicatorInkWell : InkResponse
     public NavigationBarIndicatorInkWell(
         GlobalKey iconKey,
         NavigationDestinationLabelBehavior labelBehavior,
-        WidgetStateProperty<Color?>? overlayColor,
+        IWidgetStateProperty<Color?>? overlayColor,
         ShapeBorder? customBorder,
         Action? onTap,
         Widget child)
@@ -680,7 +680,7 @@ internal sealed class NavigationBarCustomDestinationTile : StatelessWidget
         string indexLabel,
         Action onTap,
         double height,
-        WidgetStateProperty<Color?> overlayColor,
+        IWidgetStateProperty<Color?> overlayColor,
         Key? key = null) : base(key)
     {
         Child = child;
@@ -696,7 +696,7 @@ internal sealed class NavigationBarCustomDestinationTile : StatelessWidget
     public string IndexLabel { get; }
     public Action OnTap { get; }
     public double Height { get; }
-    public WidgetStateProperty<Color?> OverlayColor { get; }
+    public IWidgetStateProperty<Color?> OverlayColor { get; }
 
     public override Widget Build(BuildContext context)
     {

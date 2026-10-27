@@ -92,7 +92,7 @@ public sealed class CupertinoSwitchTests
     {
         using var light = new CupertinoThemeTestHarness(Wrap(
             new CupertinoSwitch(value: true, onChanged: _ => { }),
-            PlatformBrightness.Light));
+            Brightness.Light));
         CupertinoSwitchPainter lightPainter = Painter(light);
         ColorMatchers.AssertSameColorAs(new Color(0xFF34C759), lightPainter.ActiveTrackColor);
         ColorMatchers.AssertSameColorAs(new Color(0x28787880), lightPainter.InactiveTrackColor);
@@ -100,7 +100,7 @@ public sealed class CupertinoSwitchTests
 
         using var dark = new CupertinoThemeTestHarness(Wrap(
             new CupertinoSwitch(value: true, onChanged: _ => { }),
-            PlatformBrightness.Dark));
+            Brightness.Dark));
         CupertinoSwitchPainter darkPainter = Painter(dark);
         ColorMatchers.AssertSameColorAs(new Color(0xFF30D158), darkPainter.ActiveTrackColor);
         ColorMatchers.AssertSameColorAs(new Color(0x51787880), darkPainter.InactiveTrackColor);
@@ -122,7 +122,7 @@ public sealed class CupertinoSwitchTests
                 activeTrackColor: CupertinoColors.SystemBlue,
                 inactiveTrackColor: CupertinoColors.SystemBlue,
                 onLabelColor: CupertinoColors.SystemGreen),
-            PlatformBrightness.Dark,
+            Brightness.Dark,
             onOffSwitchLabels: true));
         CupertinoSwitchPainter painter = Painter(harness);
 
@@ -287,7 +287,7 @@ public sealed class CupertinoSwitchTests
 
     private static Widget Wrap(
         Widget child,
-        PlatformBrightness brightness = PlatformBrightness.Light,
+        Brightness brightness = Brightness.Light,
         bool onOffSwitchLabels = false,
         bool highContrast = false,
         Color? primaryColor = null,

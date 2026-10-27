@@ -237,7 +237,7 @@ public sealed class AccessibilityFeaturesDartParityTests
         Assert.False(data.HighContrast);
         Assert.False(data.OnOffSwitchLabels);
         Assert.False(data.SupportsAnnounce);
-        Assert.Equal(PlatformBrightness.Light, data.PlatformBrightness);
+        Assert.Equal(Brightness.Light, data.PlatformBrightness);
         Assert.Null(data.GestureSettings?.TouchSlop);
         Assert.Empty(data.DisplayFeatures ?? []);
         Assert.Null(data.DisplayCornerRadii);
@@ -273,8 +273,8 @@ public sealed class AccessibilityFeaturesDartParityTests
         Assert.Equal(data.CopyWith().GetHashCode(), data.GetHashCode());
         AssertViewData(tester, data);
         AssertDispatcherFeatures(tester, data);
-        Assert.Equal(TextScaler.Linear(tester.PlatformDispatcher.TextScaleFactor), data.TextScaler);
-        Assert.Equal(PlatformBrightness.Light, data.PlatformBrightness);
+        Assert.Equal(123, Assert.IsType<SystemTextScaler>(data.TextScaler).TextScaleFactor);
+        Assert.Equal(Brightness.Light, data.PlatformBrightness);
         Assert.False(data.AlwaysUse24HourFormat);
         Assert.Equal(NavigationMode.Traditional, data.NavigationMode);
     }
@@ -408,7 +408,7 @@ public sealed class AccessibilityFeaturesDartParityTests
             tester.PumpWidget(new MediaQuery(
                 data: new MediaQueryData(
                     TextScaler: TextScaler.Linear(44),
-                    PlatformBrightness: PlatformBrightness.Dark,
+                    PlatformBrightness: Brightness.Dark,
                     AccessibleNavigation: true),
                 child: MediaQuery.FromView(
                     view: tester.View,
@@ -425,7 +425,7 @@ public sealed class AccessibilityFeaturesDartParityTests
             tester.Pump();
             Assert.Equal(10 * 44, data!.TextScaler.Scale(10));
             Assert.Equal(1, rebuildCount);
-            Assert.Equal(PlatformBrightness.Dark, data!.PlatformBrightness);
+            Assert.Equal(Brightness.Dark, data!.PlatformBrightness);
 
             Assert.True(data!.AccessibleNavigation);
             tester.PlatformDispatcher.AccessibilityFeaturesTestValue = new FakeAccessibilityFeatures();
@@ -447,7 +447,7 @@ public sealed class AccessibilityFeaturesDartParityTests
 
     private static MediaQueryData AllOnPlatformData() => new(
         TextScaler: TextScaler.Linear(1234),
-        PlatformBrightness: PlatformBrightness.Dark,
+        PlatformBrightness: Brightness.Dark,
         AccessibleNavigation: true,
         InvertColors: true,
         DisableAnimations: true,

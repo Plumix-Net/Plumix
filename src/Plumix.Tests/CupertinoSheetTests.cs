@@ -274,7 +274,7 @@ public sealed class CupertinoSheetTests : IDisposable
             new Directionality(
                 TextDirection.Ltr,
                 new CupertinoTheme(
-                    new CupertinoThemeData(brightness: PlatformBrightness.Light),
+                    new CupertinoThemeData(brightness: Brightness.Light),
                     new Navigator(initialRoute))));
         return MountWidget(widget);
     }

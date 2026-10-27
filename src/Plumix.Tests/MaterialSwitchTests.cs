@@ -593,6 +593,26 @@ public sealed class MaterialSwitchTests
         Assert.Equal(Colors.Coral, painter.ActiveTrackColor);
     }
 
+    [Fact]
+    public void Switch_AdaptiveApple_ApplyCupertinoTheme_ReadsTheOverridePrimaryUnresolved()
+    {
+        // switch.dart: `theme.cupertinoOverrideTheme?.primaryColor ?? theme.colorScheme.primary` is
+        // never resolved against the context, so a dynamic override paints its default variant.
+        CupertinoDynamicColor primary = CupertinoDynamicColor.WithBrightness(
+            color: new Color(0xFFFF7F50),
+            darkColor: new Color(0xFF000080));
+        var theme = new ThemeData(
+            platform: TargetPlatform.IOS,
+            brightness: Brightness.Dark,
+            cupertinoOverrideTheme: new NoDefaultCupertinoThemeData(primaryColor: primary));
+
+        SwitchPainter painter = MountAndFindPainter(
+            theme,
+            Switch.Adaptive(value: true, onChanged: _ => { }, applyCupertinoTheme: true));
+
+        Assert.Equal(0xFFFF7F50u, painter.ActiveTrackColor!.Value);
+    }
+
     // ---- Interaction ----
 
     [Fact]

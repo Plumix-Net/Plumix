@@ -103,7 +103,7 @@ public sealed class SliderThemeDartParityTestsA : IDisposable
             ShowValueIndicator: ShowValueIndicator.Always,
 #pragma warning restore CS0618
             ValueIndicatorTextStyle: new TextStyle(Color: MaterialColors.Black),
-            MouseCursor: new ClickableMouseCursorProperty(),
+            MouseCursor: WidgetStateMouseCursor.Clickable,
             AllowedInteraction: SliderInteraction.TapOnly,
             Padding: EdgeInsetsGeometry.All(1.0),
             ThumbSize: new WidgetStatePropertyAll<Size?>(new Size(20, 20)),
@@ -1573,18 +1573,5 @@ public sealed class SliderThemeDartParityTestsA : IDisposable
                             labels: new RangeLabels(DartDouble(values.Start), DartDouble(values.End)),
                             onChanged: onChanged,
                             divisions: divisions)))));
-    }
-
-    /// <summary>
-    /// Dart passes <c>WidgetStateMouseCursor.clickable</c>, which implements
-    /// <c>WidgetStateProperty&lt;MouseCursor&gt;</c>; the C# <see cref="WidgetStateMouseCursor"/> derives
-    /// from <see cref="MouseCursor"/> only (recorded divergence), so this forwards to it.
-    /// </summary>
-    private sealed class ClickableMouseCursorProperty : WidgetStateProperty<MouseCursor?>
-    {
-        public override MouseCursor? Resolve(IReadOnlySet<WidgetState> states) =>
-            WidgetStateMouseCursor.Clickable.Resolve(states);
-
-        public override string ToString() => WidgetStateMouseCursor.Clickable.ToString();
     }
 }

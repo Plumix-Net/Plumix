@@ -581,7 +581,7 @@ public sealed class CupertinoTextSelectionToolbarTests : IDisposable
                 anchorAbove: new Point(400.0, 100.0),
                 anchorBelow: new Point(400.0, 140.0),
                 children: [Child()]),
-            brightness: PlatformBrightness.Dark);
+            brightness: Brightness.Dark);
         dark.Pump(new Size(800.0, 600.0));
         ColorMatchers.AssertSameColorAs(
             new Color(0xFF222222),
@@ -714,7 +714,7 @@ public sealed class CupertinoTextSelectionToolbarTests : IDisposable
     private static Widget WrapForHarness(
         Widget child,
         Thickness padding = default,
-        PlatformBrightness brightness = PlatformBrightness.Light)
+        Brightness brightness = Brightness.Light)
     {
         return new CupertinoTheme(
             new CupertinoThemeData(brightness: brightness),
@@ -733,7 +733,7 @@ public sealed class CupertinoTextSelectionToolbarTests : IDisposable
     private static CupertinoThemeTestHarness CreateHarness(
         Widget child,
         Thickness padding = default,
-        PlatformBrightness brightness = PlatformBrightness.Light)
+        Brightness brightness = Brightness.Light)
     {
         return new CupertinoThemeTestHarness(WrapForHarness(child, padding, brightness));
     }

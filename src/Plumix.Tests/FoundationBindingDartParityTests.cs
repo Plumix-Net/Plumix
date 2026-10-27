@@ -132,7 +132,7 @@ public sealed class FoundationBindingDartParityTests : IDisposable
             await Drain(Extension(FoundationServiceExtensions.BrightnessOverride, ("value", "Brightness.dark")));
 
         Assert.Equal("Brightness.dark", result["value"]);
-        Assert.Equal(PlatformBrightness.Dark, FoundationDebug.DebugBrightnessOverride);
+        Assert.Equal(Brightness.Dark, FoundationDebug.DebugBrightnessOverride);
         IReadOnlyDictionary<string, object?> changed = Assert.Single(_stateChanges);
         Assert.Equal("ext.flutter.brightnessOverride", changed["extension"]);
         Assert.Equal("Brightness.dark", changed["value"]);
@@ -147,8 +147,8 @@ public sealed class FoundationBindingDartParityTests : IDisposable
     {
         // media_query.dart, _MediaQueryFromViewState.build.
         using var tester = new FrameworkDartTester();
-        PlatformBrightness? seen = null;
-        FoundationDebug.DebugBrightnessOverride = PlatformBrightness.Dark;
+        Brightness? seen = null;
+        FoundationDebug.DebugBrightnessOverride = Brightness.Dark;
 
         tester.PumpWidget(new Builder(context =>
         {
@@ -156,7 +156,7 @@ public sealed class FoundationBindingDartParityTests : IDisposable
             return new SizedBox();
         }));
 
-        Assert.Equal(PlatformBrightness.Dark, seen);
+        Assert.Equal(Brightness.Dark, seen);
     }
 
     private static Task<Dictionary<string, object?>> Extension(

@@ -132,7 +132,7 @@ public sealed class CupertinoListSectionTests
             new CupertinoListSection(
                 children: [new Text("One"), new Text("Two")],
                 header: new Text("Header")),
-            brightness: PlatformBrightness.Dark));
+            brightness: Brightness.Dark));
         harness.Pump(ViewSize);
 
         Color separator = CupertinoColors.Separator.DarkColor;
@@ -214,7 +214,7 @@ public sealed class CupertinoListSectionTests
 
     private static Widget Wrap(
         Widget child,
-        PlatformBrightness brightness = PlatformBrightness.Light,
+        Brightness brightness = Brightness.Light,
         double devicePixelRatio = 1.0)
     {
         return new MediaQuery(

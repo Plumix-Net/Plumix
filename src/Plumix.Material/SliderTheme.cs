@@ -122,7 +122,7 @@ public partial record SliderThemeData : IDiagnosticable
         TextStyle? ValueIndicatorTextStyle = null,
         double? MinThumbSeparation = null,
         RangeThumbSelector? ThumbSelector = null,
-        WidgetStateProperty<MouseCursor?>? MouseCursor = null,
+        IWidgetStateProperty<MouseCursor?>? MouseCursor = null,
         SliderInteraction? AllowedInteraction = null,
         EdgeInsetsGeometry? Padding = null,
         WidgetStateProperty<Size?>? ThumbSize = null,
@@ -331,7 +331,7 @@ public partial record SliderThemeData : IDiagnosticable
     public virtual RangeThumbSelector? ThumbSelector { get; init; }
 
     /// The cursor for a mouse pointer when it enters or is hovering over the widget.
-    public virtual WidgetStateProperty<MouseCursor?>? MouseCursor { get; init; }
+    public virtual IWidgetStateProperty<MouseCursor?>? MouseCursor { get; init; }
 
     /// Allowed way for the user to interact with the [Slider].
     public virtual SliderInteraction? AllowedInteraction { get; init; }
@@ -382,7 +382,7 @@ public partial record SliderThemeData : IDiagnosticable
         TextStyle? valueIndicatorTextStyle = null,
         double? minThumbSeparation = null,
         RangeThumbSelector? thumbSelector = null,
-        WidgetStateProperty<MouseCursor?>? mouseCursor = null,
+        IWidgetStateProperty<MouseCursor?>? mouseCursor = null,
         SliderInteraction? allowedInteraction = null,
         EdgeInsetsGeometry? padding = null,
         WidgetStateProperty<Size?>? thumbSize = null,
@@ -731,7 +731,7 @@ public partial record SliderThemeData : IDiagnosticable
             "thumbSelector",
             ThumbSelector,
             defaultValue: DefaultOf(defaultData.ThumbSelector)));
-        properties.Add(new DiagnosticsProperty<WidgetStateProperty<MouseCursor?>>(
+        properties.Add(new DiagnosticsProperty<IWidgetStateProperty<MouseCursor?>>(
             "mouseCursor",
             MouseCursor,
             defaultValue: DefaultOf(defaultData.MouseCursor)));

@@ -264,8 +264,8 @@ public sealed partial record ChipThemeData
                 b?.SecondaryLabelStyle,
                 t),
             Brightness: t < 0.5
-                ? a?.Brightness ?? global::Plumix.Material.Brightness.Light
-                : b?.Brightness ?? global::Plumix.Material.Brightness.Light,
+                ? a?.Brightness ?? global::Plumix.UI.Brightness.Light
+                : b?.Brightness ?? global::Plumix.UI.Brightness.Light,
             Elevation: MaterialThemeLerp.Double(a?.Elevation, b?.Elevation, t),
             PressElevation: MaterialThemeLerp.Double(a?.PressElevation, b?.PressElevation, t),
             IconTheme: a?.IconTheme is not null || b?.IconTheme is not null

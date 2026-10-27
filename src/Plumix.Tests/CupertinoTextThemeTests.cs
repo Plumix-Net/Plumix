@@ -133,7 +133,7 @@ public sealed class CupertinoTextThemeTests
         CupertinoTextThemeData? dark = null;
 
         using (new CupertinoThemeTestHarness(new MediaQuery(
-                   new MediaQueryData(PlatformBrightness: PlatformBrightness.Light),
+                   new MediaQueryData(PlatformBrightness: Brightness.Light),
                    new Builder(context =>
                    {
                        light = new CupertinoTextThemeData().ResolveFrom(context);
@@ -143,7 +143,7 @@ public sealed class CupertinoTextThemeTests
         }
 
         using (new CupertinoThemeTestHarness(new MediaQuery(
-                   new MediaQueryData(PlatformBrightness: PlatformBrightness.Dark),
+                   new MediaQueryData(PlatformBrightness: Brightness.Dark),
                    new Builder(context =>
                    {
                        dark = new CupertinoTextThemeData().ResolveFrom(context);
@@ -170,7 +170,7 @@ public sealed class CupertinoTextThemeTests
         var theme = new CupertinoTextThemeData();
 
         using var harness = new CupertinoThemeTestHarness(new MediaQuery(
-            new MediaQueryData(PlatformBrightness: PlatformBrightness.Light),
+            new MediaQueryData(PlatformBrightness: Brightness.Light),
             new Builder(context =>
             {
                 resolved = theme.ResolveFrom(context);

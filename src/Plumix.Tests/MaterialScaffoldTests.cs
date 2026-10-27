@@ -2355,8 +2355,8 @@ public sealed class MaterialScaffoldTests
         var themedStyle = new SystemUiOverlayStyle(
             statusBarColor: Colors.Crimson,
             systemNavigationBarColor: Colors.DarkGreen,
-            statusBarIconBrightness: PlatformBrightness.Light,
-            systemNavigationBarIconBrightness: PlatformBrightness.Light);
+            statusBarIconBrightness: Brightness.Light,
+            systemNavigationBarIconBrightness: Brightness.Light);
         var theme = ThemeData.Light with
         {
             AppBarTheme = new AppBarThemeData(SystemOverlayStyle: themedStyle),
@@ -2383,13 +2383,13 @@ public sealed class MaterialScaffoldTests
         var themedStyle = new SystemUiOverlayStyle(
             statusBarColor: Colors.Crimson,
             systemNavigationBarColor: Colors.DarkGreen,
-            statusBarIconBrightness: PlatformBrightness.Light,
-            systemNavigationBarIconBrightness: PlatformBrightness.Light);
+            statusBarIconBrightness: Brightness.Light,
+            systemNavigationBarIconBrightness: Brightness.Light);
         var widgetStyle = new SystemUiOverlayStyle(
             statusBarColor: Colors.Bisque,
             systemNavigationBarColor: Colors.CadetBlue,
-            statusBarIconBrightness: PlatformBrightness.Dark,
-            systemNavigationBarIconBrightness: PlatformBrightness.Dark);
+            statusBarIconBrightness: Brightness.Dark,
+            systemNavigationBarIconBrightness: Brightness.Dark);
         var theme = ThemeData.Light with
         {
             AppBarTheme = new AppBarThemeData(SystemOverlayStyle: themedStyle),

@@ -841,13 +841,13 @@ internal sealed class MenuBarDefaultsM3 : MenuStyle
 
     private ColorScheme ColorRoles => _colorScheme ??= Theme.Of(_context).ColorScheme;
 
-    public override WidgetStateProperty<Color?>? BackgroundColor =>
+    public override IWidgetStateProperty<Color?>? BackgroundColor =>
         WidgetStateProperty<Color?>.All(ColorRoles.SurfaceContainer);
 
-    public override WidgetStateProperty<Color?>? ShadowColor =>
+    public override IWidgetStateProperty<Color?>? ShadowColor =>
         WidgetStateProperty<Color?>.All(ColorRoles.Shadow);
 
-    public override WidgetStateProperty<Color?>? SurfaceTintColor =>
+    public override IWidgetStateProperty<Color?>? SurfaceTintColor =>
         WidgetStateProperty<Color?>.All(Colors.Transparent);
 
     public override WidgetStateProperty<EdgeInsetsGeometry?>? Padding =>
@@ -874,13 +874,13 @@ internal sealed class MenuDefaultsM3 : MenuStyle
 
     private ColorScheme ColorRoles => _colorScheme ??= Theme.Of(_context).ColorScheme;
 
-    public override WidgetStateProperty<Color?>? BackgroundColor =>
+    public override IWidgetStateProperty<Color?>? BackgroundColor =>
         WidgetStateProperty<Color?>.All(ColorRoles.SurfaceContainer);
 
-    public override WidgetStateProperty<Color?>? SurfaceTintColor =>
+    public override IWidgetStateProperty<Color?>? SurfaceTintColor =>
         WidgetStateProperty<Color?>.All(Colors.Transparent);
 
-    public override WidgetStateProperty<Color?>? ShadowColor =>
+    public override IWidgetStateProperty<Color?>? ShadowColor =>
         WidgetStateProperty<Color?>.All(ColorRoles.Shadow);
 
     public override WidgetStateProperty<EdgeInsetsGeometry?>? Padding =>
@@ -1900,7 +1900,7 @@ public sealed class SubmenuButtonState : State<SubmenuButton>
     private readonly FocusNode _internalFocusNode = new();
     private MenuController? _internalController;
     private MenuAnchorState? _parentAnchor;
-    private CancellationTokenSource? _hoverOpenCancellation;
+    private Timer? _hoverOpenTimer;
     private AnimationStatus _animationStatus = AnimationStatus.Dismissed;
     private bool _isHovered;
     private bool _isOpenOnFocusEnabled = true;
@@ -2208,30 +2208,14 @@ public sealed class SubmenuButtonState : State<SubmenuButton>
             return;
         }
 
-        _hoverOpenCancellation = new CancellationTokenSource();
-        EventLoop.RunAsync(() => DelayOpenAsync(Current.HoverOpenDelay, _hoverOpenCancellation.Token));
-    }
-
-    private async Task DelayOpenAsync(TimeSpan delay, CancellationToken cancellationToken)
-    {
-        try
-        {
-            await Task.Delay(delay, cancellationToken);
-            if (Mounted && Current.Enabled && !cancellationToken.IsCancellationRequested)
-            {
-                Controller.Open();
-            }
-        }
-        catch (TaskCanceledException)
-        {
-        }
+        // The menu controller could change, so this can't be a method group.
+        _hoverOpenTimer = new Timer(Current.HoverOpenDelay, () => Controller.Open());
     }
 
     private void CancelDelayedOpen()
     {
-        _hoverOpenCancellation?.Cancel();
-        _hoverOpenCancellation?.Dispose();
-        _hoverOpenCancellation = null;
+        _hoverOpenTimer?.Cancel();
+        _hoverOpenTimer = null;
     }
 
     private void HandleAnimationStatusChanged(AnimationStatus status)
@@ -2743,7 +2727,7 @@ internal static class MenuButtonStyleComposer
     }
 
     private static WidgetStateProperty<T>? ComposeStateProperty<T>(
-        params WidgetStateProperty<T>?[] layers)
+        params IWidgetStateProperty<T>?[] layers)
     {
         bool hasAny = false;
         foreach (var layer in layers)

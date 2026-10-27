@@ -577,14 +577,14 @@ public sealed class FloatingActionButton : StatelessWidget
 /// </summary>
 internal sealed class FloatingActionButtonEffectiveMouseCursor(
     MouseCursor? widgetCursor,
-    WidgetStateProperty<MouseCursor?>? themeCursor)
+    IWidgetStateProperty<MouseCursor?>? themeCursor)
     : WidgetStateMouseCursor("WidgetStateMouseCursor(FloatingActionButton)")
 {
     public MouseCursor? WidgetCursor { get; } = widgetCursor;
 
-    public WidgetStateProperty<MouseCursor?>? ThemeCursor { get; } = themeCursor;
+    public IWidgetStateProperty<MouseCursor?>? ThemeCursor { get; } = themeCursor;
 
-    public override MouseCursor? Resolve(IReadOnlySet<WidgetState> states)
+    public override MouseCursor Resolve(IReadOnlySet<WidgetState> states)
     {
         MouseCursor? resolvedWidgetCursor = WidgetCursor is WidgetStateMouseCursor stateful
             ? stateful.Resolve(states)

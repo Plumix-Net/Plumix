@@ -1,7 +1,6 @@
 using Plumix.Cupertino;
 using Plumix.Widgets;
 using Xunit;
-using Brightness = Plumix.Material.Brightness;
 using InheritedMaterialTheme = Plumix.Material.InheritedMaterialTheme;
 using ColorScheme = Plumix.Material.ColorScheme;
 using Theme = Plumix.Material.Theme;
@@ -51,7 +50,7 @@ public sealed class MaterialThemeWidgetTests
     {
         Brightness? seen = null;
         using var harness = new CupertinoThemeTestHarness(new MediaQuery(
-            new MediaQueryData(PlatformBrightness: PlatformBrightness.Dark),
+            new MediaQueryData(PlatformBrightness: Brightness.Dark),
             new Builder(context =>
             {
                 seen = Theme.BrightnessOf(context);
@@ -66,7 +65,7 @@ public sealed class MaterialThemeWidgetTests
     {
         Brightness? seen = null;
         using var harness = new CupertinoThemeTestHarness(new MediaQuery(
-            new MediaQueryData(PlatformBrightness: PlatformBrightness.Dark),
+            new MediaQueryData(PlatformBrightness: Brightness.Dark),
             new Theme(
                 new ThemeData(colorScheme: ColorScheme.Light()),
                 new Builder(context =>
@@ -96,7 +95,7 @@ public sealed class MaterialThemeWidgetTests
     {
         Brightness? seen = null;
         using var harness = new CupertinoThemeTestHarness(new MediaQuery(
-            new MediaQueryData(PlatformBrightness: PlatformBrightness.Dark),
+            new MediaQueryData(PlatformBrightness: Brightness.Dark),
             new Builder(context =>
             {
                 seen = Theme.MaybeBrightnessOf(context);
@@ -111,7 +110,7 @@ public sealed class MaterialThemeWidgetTests
     {
         Brightness? seen = null;
         using var harness = new CupertinoThemeTestHarness(new MediaQuery(
-            new MediaQueryData(PlatformBrightness: PlatformBrightness.Dark),
+            new MediaQueryData(PlatformBrightness: Brightness.Dark),
             new Theme(
                 new ThemeData(colorScheme: ColorScheme.Light()),
                 new Builder(context =>

@@ -37,7 +37,7 @@ public sealed class TrackpadPanZoomSynthesizer
     private readonly Action<PointerEvent> _dispatch;
     private readonly TimeSpan _idleTimeout;
 
-    private GestureTimer? _idleTimer;
+    private Timer? _idleTimer;
     private int? _pointer;
     private Point _position;
     private Point _pan;
@@ -126,6 +126,6 @@ public sealed class TrackpadPanZoomSynthesizer
             rotation: _rotation));
 
         _idleTimer?.Cancel();
-        _idleTimer = GestureTimer.Start(_idleTimeout, () => End());
+        _idleTimer = new Timer(_idleTimeout, () => End());
     }
 }

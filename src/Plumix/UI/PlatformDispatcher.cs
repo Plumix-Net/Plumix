@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Avalonia.Threading;
 using Plumix.Foundation;
 using Plumix.Rendering;
@@ -277,10 +278,10 @@ public sealed class PlatformDispatcher
     /// <summary>The setting indicating the current brightness mode of the host platform.</summary>
     /// <remarks>
     /// dart:ui's <c>PlatformDispatcher.platformBrightness</c>: the implicit view's platform data, or
-    /// <see cref="Widgets.PlatformBrightness.Light"/> before a host reported any.
+    /// <see cref="Brightness.Light"/> before a host reported any.
     /// </remarks>
-    public PlatformBrightness PlatformBrightness =>
-        ImplicitViewPlatformData?.PlatformBrightness ?? PlatformBrightness.Light;
+    public Brightness PlatformBrightness =>
+        ImplicitViewPlatformData?.PlatformBrightness ?? Brightness.Light;
 
     /// <summary>
     /// A callback invoked whenever the metrics of any view (its size, device pixel ratio, insets)
@@ -318,20 +319,120 @@ public sealed class PlatformDispatcher
     /// The engine-side <c>_updateUserSettingsData</c> for its <c>textScaleFactor</c> key; hosts call it
     /// (Android's <c>Configuration.fontScale</c>, iOS's Dynamic Type size).
     /// </remarks>
-    public void UpdateTextScaleFactor(double textScaleFactor)
+    public void UpdateTextScaleFactor(double textScaleFactor) => UpdateTextScaleFactor(textScaleFactor, null);
+
+    /// <summary>
+    /// Records the platform's text scale factor together with the platform's font scaling function for the
+    /// same configuration, and invokes <see cref="OnTextScaleFactorChanged"/> when the factor changed.
+    /// </summary>
+    /// <param name="textScaleFactor">The user's font size preference.</param>
+    /// <param name="scaledFontSize">
+    /// The platform's scaled font size (in logical pixels) for an unscaled one, under the configuration that
+    /// produced <paramref name="textScaleFactor"/>; <see cref="ScaleFontSize"/> asks it. <see langword="null"/>
+    /// keeps the function reported before, and while none was ever reported the platform scales linearly.
+    /// </param>
+    /// <remarks>
+    /// The engine-side <c>_updateUserSettingsData</c> with a <c>configurationId</c>: Android 14+ sends one so
+    /// that <c>scaleFontSize</c> can ask the embedder's <c>getScaledFontSize</c> about that configuration's
+    /// nonlinear font scaling curve (<c>TypedValue.applyDimension(COMPLEX_UNIT_SP)</c>). Plumix's host runs
+    /// on the UI thread, so the function stands in for the id. The memoized scaled sizes are dropped only
+    /// when the factor changed, as Dart's are.
+    /// </remarks>
+    public void UpdateTextScaleFactor(double textScaleFactor, Func<double, double>? scaledFontSize)
     {
         if (!double.IsFinite(textScaleFactor) || textScaleFactor <= 0)
         {
             throw new ArgumentOutOfRangeException(nameof(textScaleFactor));
         }
 
+        _scaledFontSize = scaledFontSize ?? _scaledFontSize;
         if (textScaleFactor == _textScaleFactor)
         {
             return;
         }
 
         _textScaleFactor = textScaleFactor;
+        _cachedFontSizes = null;
         OnTextScaleFactorChanged?.Invoke();
+    }
+
+    private Func<double, double>? _scaledFontSize;
+
+    /// <summary>Forgets the platform's font scaling function and the memoized sizes. Test-only.</summary>
+    internal void ResetScaledFontSizeForTests()
+    {
+        _scaledFontSize = null;
+        _cachedFontSizes = null;
+    }
+
+    // The cache is cleared when the text scale factor changes.
+    private Dictionary<int, double>? _cachedFontSizes;
+
+    /// <summary>
+    /// Computes the scaled font size from the given <paramref name="unscaledFontSize"/>, according to the
+    /// user's platform preferences. The return value is always non-negative.
+    /// </summary>
+    /// <remarks>
+    /// dart:ui's <c>PlatformDispatcher.scaleFontSize</c>: integral sizes are scaled by the platform (and
+    /// memoized), fractional ones interpolate between their floor and ceiling, and a platform without a
+    /// font scaling function scales linearly by <see cref="TextScaleFactor"/>. While a test value replaces
+    /// <see cref="TextScaleFactor"/> the scaling is linear, as flutter_test's
+    /// <c>TestPlatformDispatcher.scaleFontSize</c>.
+    /// </remarks>
+    public double ScaleFontSize(double unscaledFontSize)
+    {
+        if (!double.IsFinite(unscaledFontSize) || unscaledFontSize < 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(unscaledFontSize));
+        }
+
+        if (_textScaleFactorTestValue is { } testValue)
+        {
+            return testValue * unscaledFontSize;
+        }
+
+        if (TextScaleFactor == 1.0)
+        {
+            return unscaledFontSize;
+        }
+
+        int unscaledFloor = (int)Math.Floor(unscaledFontSize);
+        int unscaledCeil = (int)Math.Ceiling(unscaledFontSize);
+        if (unscaledFloor == unscaledCeil)
+        {
+            // No need to interpolate if the input value is an integer.
+            return ScaleAndMemoize(unscaledFloor) ?? unscaledFontSize * TextScaleFactor;
+        }
+
+        return (ScaleAndMemoize(unscaledFloor), ScaleAndMemoize(unscaledCeil)) switch
+        {
+            ({ } lower, { } upper) => lower + ((upper - lower) * (unscaledFontSize - unscaledFloor)),
+            _ => unscaledFontSize * TextScaleFactor,
+        };
+    }
+
+    // Dart's `_scaleAndMemoize`: null when the platform scales linearly or reported a negative (error) size.
+    private double? ScaleAndMemoize(int unscaledFontSize)
+    {
+        if (_scaledFontSize is not { } scaledFontSize)
+        {
+            // The platform uses linear scaling, or the platform hasn't sent us a configuration yet.
+            return null;
+        }
+
+        if (_cachedFontSizes?.TryGetValue(unscaledFontSize, out double cachedValue) == true)
+        {
+            return cachedValue;
+        }
+
+        double fontSize = scaledFontSize(unscaledFontSize);
+        if (fontSize >= 0)
+        {
+            return (_cachedFontSizes ??= [])[unscaledFontSize] = fontSize;
+        }
+
+        Debug.Assert(false, $"Unknown error: GetScaledFontSize failed with {fontSize}.");
+        return null;
     }
 
     /// <summary>
@@ -348,7 +449,7 @@ public sealed class PlatformDispatcher
     /// <summary>Whether <see cref="TextScaleFactor"/> currently carries a test value.</summary>
     internal bool HasTextScaleFactorTestValue => _textScaleFactorTestValue is not null;
 
-    /// <summary>A callback invoked whenever <see cref="PlatformBrightness"/> changes.</summary>
+    /// <summary>A callback invoked whenever <see cref="Brightness"/> changes.</summary>
     /// <remarks>
     /// dart:ui's <c>PlatformDispatcher.onPlatformBrightnessChanged</c>; <c>RendererBinding</c> installs
     /// the composed binding's <c>handlePlatformBrightnessChanged</c> here.
@@ -478,10 +579,34 @@ public sealed class PlatformDispatcher
 
     /// <summary>Additional data available on each flutter frame.</summary>
     /// <remarks>
-    /// dart:ui's <c>PlatformDispatcher.frameData</c>. The engine fills it before each frame; no Plumix
-    /// host reports a frame number yet, so it keeps the engine's initial value.
+    /// dart:ui's <c>PlatformDispatcher.frameData</c>. The vsync source (<see cref="FrameClock"/>) reports
+    /// each frame's number through <see cref="UpdateFrameData"/>; it keeps the engine's initial -1 until the
+    /// first vsync-driven frame.
     /// </remarks>
     public FrameData FrameData { get; internal set; } = new(frameNumber: -1);
+
+    /// <summary>A callback invoked when <see cref="FrameData"/> changes.</summary>
+    /// <remarks>dart:ui's <c>PlatformDispatcher.onFrameDataChanged</c>.</remarks>
+    public Action? OnFrameDataChanged { get; set; }
+
+    /// <summary>
+    /// Records the number of the frame being produced and invokes <see cref="OnFrameDataChanged"/> when it
+    /// changed.
+    /// </summary>
+    /// <remarks>
+    /// dart:ui's <c>_updateFrameData</c>, which the engine's <c>_beginFrame</c> hook calls right after
+    /// <see cref="OnBeginFrame"/> with the frame number of the animator's <c>FrameTimingsRecorder</c>.
+    /// </remarks>
+    internal void UpdateFrameData(int frameNumber)
+    {
+        if (FrameData.FrameNumber == frameNumber)
+        {
+            return;
+        }
+
+        FrameData = new FrameData(frameNumber);
+        OnFrameDataChanged?.Invoke();
+    }
 
     /// <summary>A callback invoked for each frame after <see cref="OnBeginFrame"/> has completed.</summary>
     /// <remarks>dart:ui's <c>PlatformDispatcher.onDrawFrame</c>.</remarks>

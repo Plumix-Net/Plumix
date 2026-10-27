@@ -22,12 +22,6 @@ public enum NavigationMode
     Directional,
 }
 
-public enum PlatformBrightness
-{
-    Light,
-    Dark,
-}
-
 public enum DisplayFeatureType
 {
     Fold,
@@ -64,7 +58,7 @@ public sealed record MediaQueryData
         bool DisableAnimations = false,
         bool InvertColors = false,
         NavigationMode NavigationMode = NavigationMode.Traditional,
-        PlatformBrightness PlatformBrightness = PlatformBrightness.Light,
+        Brightness PlatformBrightness = Brightness.Light,
         bool HighContrast = false,
         bool SupportsAnnounce = false,
         int ViewId = 0,
@@ -140,7 +134,7 @@ public sealed record MediaQueryData
 
     public NavigationMode NavigationMode { get; init; }
 
-    public PlatformBrightness PlatformBrightness { get; init; }
+    public Brightness PlatformBrightness { get; init; }
 
     public bool HighContrast { get; init; }
 
@@ -225,7 +219,7 @@ public sealed record MediaQueryData
         bool? disableAnimations = null,
         bool? invertColors = null,
         NavigationMode? navigationMode = null,
-        PlatformBrightness? platformBrightness = null,
+        Brightness? platformBrightness = null,
         bool? highContrast = null,
         bool? supportsAnnounce = null,
         int? viewId = null,
@@ -507,9 +501,7 @@ public sealed record MediaQueryData
             ViewInsets: FromViewPadding(view.ViewInsets, devicePixelRatio),
             SystemGestureInsets: FromViewPadding(view.SystemGestureInsets, devicePixelRatio),
             ViewPadding: FromViewPadding(view.ViewPadding, devicePixelRatio),
-            // Dart's SystemTextScaler, linear here (docs/ai/DIVERGENCES.md: no scaleFontSize).
-            TextScaler: platformData?.TextScaler
-                        ?? Painting.TextScaler.Linear(platformDispatcher.TextScaleFactor),
+            TextScaler: platformData?.TextScaler ?? new SystemTextScaler(platformDispatcher),
             AccessibleNavigation: platformData?.AccessibleNavigation ?? accessibilityFeatures.AccessibleNavigation,
             AlwaysUse24HourFormat: platformData?.AlwaysUse24HourFormat
                                    ?? dispatcherData?.AlwaysUse24HourFormat
@@ -519,7 +511,7 @@ public sealed record MediaQueryData
             NavigationMode: platformData?.NavigationMode ?? NavigationMode.Traditional,
             PlatformBrightness: platformData?.PlatformBrightness
                                 ?? dispatcherData?.PlatformBrightness
-                                ?? PlatformBrightness.Light,
+                                ?? Brightness.Light,
             HighContrast: platformData?.HighContrast ?? accessibilityFeatures.HighContrast,
             SupportsAnnounce: platformData?.SupportsAnnounce ?? accessibilityFeatures.SupportsAnnounce,
             ViewId: view.ViewId,
@@ -772,13 +764,13 @@ public sealed class MediaQuery : InheritedModel<object>
 
     /// <summary>
     /// Dart's <c>MediaQuery.platformBrightnessOf</c>: unlike the other <c>...Of</c> accessors this
-    /// one falls back to <see cref="PlatformBrightness.Light"/> instead of throwing when no
+    /// one falls back to <see cref="Brightness.Light"/> instead of throwing when no
     /// <see cref="MediaQuery"/> ancestor exists.
     /// </summary>
-    public static PlatformBrightness PlatformBrightnessOf(BuildContext context) =>
-        MaybePlatformBrightnessOf(context) ?? PlatformBrightness.Light;
+    public static Brightness PlatformBrightnessOf(BuildContext context) =>
+        MaybePlatformBrightnessOf(context) ?? Brightness.Light;
 
-    public static PlatformBrightness? MaybePlatformBrightnessOf(BuildContext context) =>
+    public static Brightness? MaybePlatformBrightnessOf(BuildContext context) =>
         MaybeOf(context, Aspect.PlatformBrightness)?.PlatformBrightness;
 
     public static Thickness PaddingOf(BuildContext context) => Of(context, Aspect.Padding).Padding;
@@ -1211,4 +1203,50 @@ internal sealed class MediaQueryFromView : StatefulWidget
             return new MediaQuery(data: effectiveData, child: TypedWidget.Child);
         }
     }
+}
+
+/// <summary>
+/// A <see cref="TextScaler"/> that reflects the user's font scale preferences from the platform's
+/// accessibility settings.
+/// </summary>
+/// <remarks>
+/// Dart's <c>SystemTextScaler</c>: <see cref="Scale"/> asks <see cref="PlatformDispatcher.ScaleFontSize"/>,
+/// which follows the platform's (possibly nonlinear) font scaling. Two instances with the same
+/// <see cref="TextScaleFactor"/> are equal. Dart also lets one with a factor of 1.0 equal
+/// <c>TextScaler.noScaling</c>; a C# record cannot equal a record of another type, so here it does not.
+/// </remarks>
+public sealed record SystemTextScaler : TextScaler
+{
+    private readonly PlatformDispatcher _platformDispatcher;
+
+    internal SystemTextScaler(PlatformDispatcher platformDispatcher)
+    {
+        _platformDispatcher = platformDispatcher;
+        TextScaleFactor = platformDispatcher.TextScaleFactor;
+    }
+
+    /// <inheritdoc/>
+    public override double Scale(double fontSize) => _platformDispatcher.ScaleFontSize(fontSize);
+
+    /// <summary>A value that represents the current user preference for the scaling factor for fonts.</summary>
+    /// <remarks>
+    /// This numeric value is typically used to compare <see cref="SystemTextScaler"/>s: two instances with the
+    /// same factor produce the same output for the same input font size. It should not be used in
+    /// arithmetic operations.
+    /// </remarks>
+    public override double TextScaleFactor { get; }
+
+    /// <summary>
+    /// The system's text scale factor decides equality because the <see cref="Scale"/> function's output
+    /// monotonically increases with it.
+    /// </summary>
+    public bool Equals(SystemTextScaler? other) =>
+        other is not null && TextScaleFactor == other.TextScaleFactor;
+
+    public override int GetHashCode() => TextScaleFactor.GetHashCode();
+
+    public override string ToString() =>
+        $"SystemTextScaler ({(TextScaleFactor == 1.0
+            ? "no scaling"
+            : $"{TextScaleFactor.ToString(System.Globalization.CultureInfo.InvariantCulture)}x")})";
 }

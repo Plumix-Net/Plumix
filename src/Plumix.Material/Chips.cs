@@ -48,7 +48,7 @@ public sealed class ActionChip : StatelessWidget
         Clip clipBehavior = Clip.None,
         FocusNode? focusNode = null,
         bool autofocus = false,
-        WidgetStateProperty<Color?>? color = null,
+        IWidgetStateProperty<Color?>? color = null,
         Color? backgroundColor = null,
         Color? disabledColor = null,
         Thickness? padding = null,
@@ -82,7 +82,7 @@ public sealed class ActionChip : StatelessWidget
         Clip clipBehavior,
         FocusNode? focusNode,
         bool autofocus,
-        WidgetStateProperty<Color?>? color,
+        IWidgetStateProperty<Color?>? color,
         Color? backgroundColor,
         Color? disabledColor,
         Thickness? padding,
@@ -141,7 +141,7 @@ public sealed class ActionChip : StatelessWidget
         Clip clipBehavior = Clip.None,
         FocusNode? focusNode = null,
         bool autofocus = false,
-        WidgetStateProperty<Color?>? color = null,
+        IWidgetStateProperty<Color?>? color = null,
         Color? backgroundColor = null,
         Color? disabledColor = null,
         Thickness? padding = null,
@@ -175,7 +175,7 @@ public sealed class ActionChip : StatelessWidget
     public Clip ClipBehavior { get; }
     public FocusNode? FocusNode { get; }
     public bool Autofocus { get; }
-    public WidgetStateProperty<Color?>? Color { get; }
+    public IWidgetStateProperty<Color?>? Color { get; }
     public Color? BackgroundColor { get; }
     public Color? DisabledColor { get; }
     public Thickness? Padding { get; }
@@ -259,7 +259,7 @@ public sealed class ChoiceChip : StatelessWidget
         Clip clipBehavior = Clip.None,
         FocusNode? focusNode = null,
         bool autofocus = false,
-        WidgetStateProperty<Color?>? color = null,
+        IWidgetStateProperty<Color?>? color = null,
         Color? backgroundColor = null,
         Thickness? padding = null,
         VisualDensity? visualDensity = null,
@@ -301,7 +301,7 @@ public sealed class ChoiceChip : StatelessWidget
         Clip clipBehavior,
         FocusNode? focusNode,
         bool autofocus,
-        WidgetStateProperty<Color?>? color,
+        IWidgetStateProperty<Color?>? color,
         Color? backgroundColor,
         Thickness? padding,
         VisualDensity? visualDensity,
@@ -380,7 +380,7 @@ public sealed class ChoiceChip : StatelessWidget
         Clip clipBehavior = Clip.None,
         FocusNode? focusNode = null,
         bool autofocus = false,
-        WidgetStateProperty<Color?>? color = null,
+        IWidgetStateProperty<Color?>? color = null,
         Color? backgroundColor = null,
         Thickness? padding = null,
         VisualDensity? visualDensity = null,
@@ -422,7 +422,7 @@ public sealed class ChoiceChip : StatelessWidget
     public Clip ClipBehavior { get; }
     public FocusNode? FocusNode { get; }
     public bool Autofocus { get; }
-    public WidgetStateProperty<Color?>? Color { get; }
+    public IWidgetStateProperty<Color?>? Color { get; }
     public Color? BackgroundColor { get; }
     public Thickness? Padding { get; }
     public VisualDensity? VisualDensity { get; }
@@ -505,7 +505,7 @@ public sealed class RawChip : StatefulWidget
         bool autofocus = false,
         Color? disabledColor = null,
         Color? selectedColor = null,
-        WidgetStateProperty<Color?>? color = null,
+        IWidgetStateProperty<Color?>? color = null,
         Color? backgroundColor = null,
         Thickness? padding = null,
         VisualDensity? visualDensity = null,
@@ -557,7 +557,7 @@ public sealed class RawChip : StatefulWidget
         bool autofocus,
         Color? disabledColor,
         Color? selectedColor,
-        WidgetStateProperty<Color?>? color,
+        IWidgetStateProperty<Color?>? color,
         Color? backgroundColor,
         Thickness? padding,
         VisualDensity? visualDensity,
@@ -657,7 +657,7 @@ public sealed class RawChip : StatefulWidget
     public bool Autofocus { get; }
     public Color? DisabledColor { get; }
     public Color? SelectedColor { get; }
-    public WidgetStateProperty<Color?>? Color { get; }
+    public IWidgetStateProperty<Color?>? Color { get; }
     public Color? BackgroundColor { get; }
     public Thickness? Padding { get; }
     public VisualDensity? VisualDensity { get; }

@@ -185,13 +185,13 @@ public sealed class AnimationController : Animation<double>, IDisposable
     {
         if (Duration is null)
         {
-            throw new InvalidOperationException(
-                "AnimationController.Forward() called with no default duration.\n"
-                + "The \"Duration\" property should be set, either in the constructor or later, before "
-                + "calling the Forward() function.");
+            throw new FlutterError(
+                "AnimationController.forward() called with no default duration.\n"
+                + "The \"duration\" property should be set, either in the constructor or later, before "
+                + "calling the forward() function.");
         }
 
-        ThrowIfDisposed(nameof(Forward));
+        ThrowIfDisposed("forward");
         _direction = AnimationDirection.Forward;
         if (from.HasValue)
         {
@@ -206,13 +206,13 @@ public sealed class AnimationController : Animation<double>, IDisposable
     {
         if (Duration is null && ReverseDuration is null)
         {
-            throw new InvalidOperationException(
-                "AnimationController.Reverse() called with no default duration or reverseDuration.\n"
-                + "The \"Duration\" or \"ReverseDuration\" property should be set, either in the "
-                + "constructor or later, before calling the Reverse() function.");
+            throw new FlutterError(
+                "AnimationController.reverse() called with no default duration or reverseDuration.\n"
+                + "The \"duration\" or \"reverseDuration\" property should be set, either in the "
+                + "constructor or later, before calling the reverse() function.");
         }
 
-        ThrowIfDisposed(nameof(Reverse));
+        ThrowIfDisposed("reverse");
         _direction = AnimationDirection.Reverse;
         if (from.HasValue)
         {
@@ -233,13 +233,13 @@ public sealed class AnimationController : Animation<double>, IDisposable
 
         if (duration is null)
         {
-            throw new InvalidOperationException(
-                "AnimationController.Toggle() called with no default duration.\n"
-                + "The \"Duration\" property should be set, either in the constructor or later, before "
-                + "calling the Toggle() function.");
+            throw new FlutterError(
+                "AnimationController.toggle() called with no default duration.\n"
+                + "The \"duration\" property should be set, either in the constructor or later, before "
+                + "calling the toggle() function.");
         }
 
-        ThrowIfDisposed(nameof(Toggle));
+        ThrowIfDisposed("toggle");
         _direction = _status.IsForwardOrCompleted() ? AnimationDirection.Reverse : AnimationDirection.Forward;
         if (from.HasValue)
         {
@@ -254,14 +254,14 @@ public sealed class AnimationController : Animation<double>, IDisposable
     {
         if (Duration is null && duration is null)
         {
-            throw new InvalidOperationException(
-                "AnimationController.AnimateTo() called with no explicit duration and no default duration.\n"
-                + "Either the \"duration\" argument to the AnimateTo() method should be provided, or the "
-                + "\"Duration\" property should be set, either in the constructor or later, before calling "
-                + "the AnimateTo() function.");
+            throw new FlutterError(
+                "AnimationController.animateTo() called with no explicit duration and no default duration.\n"
+                + "Either the \"duration\" argument to the animateTo() method should be provided, or the "
+                + "\"duration\" property should be set, either in the constructor or later, before "
+                + "calling the animateTo() function.");
         }
 
-        ThrowIfDisposed(nameof(AnimateTo));
+        ThrowIfDisposed("animateTo");
         _direction = AnimationDirection.Forward;
         return AnimateToInternal(target, duration, curve);
     }
@@ -271,15 +271,15 @@ public sealed class AnimationController : Animation<double>, IDisposable
     {
         if (Duration is null && ReverseDuration is null && duration is null)
         {
-            throw new InvalidOperationException(
-                "AnimationController.AnimateBack() called with no explicit duration and no default "
+            throw new FlutterError(
+                "AnimationController.animateBack() called with no explicit duration and no default "
                 + "duration or reverseDuration.\n"
-                + "Either the \"duration\" argument to the AnimateBack() method should be provided, or "
-                + "the \"Duration\" or \"ReverseDuration\" property should be set, either in the "
-                + "constructor or later, before calling the AnimateBack() function.");
+                + "Either the \"duration\" argument to the animateBack() method should be provided, or the "
+                + "\"duration\" or \"reverseDuration\" property should be set, either in the constructor "
+                + "or later, before calling the animateBack() function.");
         }
 
-        ThrowIfDisposed(nameof(AnimateBack));
+        ThrowIfDisposed("animateBack");
         _direction = AnimationDirection.Reverse;
         return AnimateToInternal(target, duration, curve);
     }
@@ -288,7 +288,7 @@ public sealed class AnimationController : Animation<double>, IDisposable
     public TickerFuture AnimateWith(Simulation simulation)
     {
         ArgumentNullException.ThrowIfNull(simulation);
-        ThrowIfDisposed(nameof(AnimateWith));
+        ThrowIfDisposed("animateWith");
         Stop();
         _direction = AnimationDirection.Forward;
         return StartSimulation(simulation);
@@ -298,7 +298,8 @@ public sealed class AnimationController : Animation<double>, IDisposable
     public TickerFuture AnimateBackWith(Simulation simulation)
     {
         ArgumentNullException.ThrowIfNull(simulation);
-        ThrowIfDisposed(nameof(AnimateBackWith));
+        // Dart's assert names animateWith() here too.
+        ThrowIfDisposed("animateWith");
         Stop();
         _direction = AnimationDirection.Reverse;
         return StartSimulation(simulation);
@@ -317,24 +318,27 @@ public sealed class AnimationController : Animation<double>, IDisposable
         TimeSpan? effectivePeriod = period ?? Duration;
         if (effectivePeriod is null)
         {
-            throw new InvalidOperationException(
-                "AnimationController.Repeat() called without an explicit period and with no default "
+            throw new FlutterError(
+                "AnimationController.repeat() called without an explicit period and with no default "
                 + "Duration.\n"
-                + "Either the \"period\" argument to the Repeat() method should be provided, or the "
-                + "\"Duration\" property should be set, either in the constructor or later, before "
-                + "calling the Repeat() function.");
+                + "Either the \"period\" argument to the repeat() method should be provided, or the "
+                + "\"duration\" property should be set, either in the constructor or later, before "
+                + "calling the repeat() function.");
         }
 
-        if (effectiveMax < effectiveMin || effectiveMax > UpperBound || effectiveMin < LowerBound)
+        if (!(effectiveMax >= effectiveMin))
         {
-            throw new ArgumentOutOfRangeException(
-                nameof(min),
-                "Repeat() requires LowerBound <= min <= max <= UpperBound.");
+            throw new AssertionError("'max >= min': is not true.");
+        }
+
+        if (!(effectiveMax <= UpperBound && effectiveMin >= LowerBound))
+        {
+            throw new AssertionError("'max <= upperBound && min >= lowerBound': is not true.");
         }
 
         if (count is <= 0)
         {
-            throw new ArgumentOutOfRangeException(nameof(count), "Count shall be greater than zero if not null");
+            throw new AssertionError("Count shall be greater than zero if not null");
         }
 
         Stop();
@@ -382,7 +386,6 @@ public sealed class AnimationController : Animation<double>, IDisposable
                 nameof(springDescription));
         }
 
-        ThrowIfDisposed(nameof(Fling));
         Stop();
         return StartSimulation(simulation);
     }
@@ -394,7 +397,7 @@ public sealed class AnimationController : Animation<double>, IDisposable
     /// </param>
     public void Stop(bool canceled = true)
     {
-        ThrowIfDisposed(nameof(Stop));
+        ThrowIfDisposed("stop");
         _simulation = null;
         _lastElapsedDuration = null;
         _ticker!.Stop(canceled: canceled);
@@ -407,7 +410,7 @@ public sealed class AnimationController : Animation<double>, IDisposable
     public void Resync(ITickerProvider vsync)
     {
         ArgumentNullException.ThrowIfNull(vsync);
-        ThrowIfDisposed(nameof(Resync));
+        ThrowIfDisposed("resync");
         Ticker oldTicker = _ticker!;
         _ticker = vsync.CreateTicker(Tick);
         _ticker.AbsorbTicker(oldTicker);
@@ -442,10 +445,16 @@ public sealed class AnimationController : Animation<double>, IDisposable
     {
         if (_ticker is null)
         {
-            throw new ObjectDisposedException(
-                nameof(AnimationController),
-                "AnimationController.Dispose() called more than once. A given AnimationController "
-                + "cannot be disposed more than once.");
+            string type = Diagnostics.DescribeType(GetType());
+            throw new FlutterError(
+            [
+                new ErrorSummary("AnimationController.dispose() called more than once."),
+                new ErrorDescription($"A given {type} cannot be disposed more than once.\n"),
+                new DiagnosticsProperty<AnimationController>(
+                    $"The following {type} object was disposed multiple times",
+                    this,
+                    style: DiagnosticsTreeStyle.ErrorProperty),
+            ]);
         }
 
         if (Constants.KDebugMode)
@@ -508,10 +517,9 @@ public sealed class AnimationController : Animation<double>, IDisposable
     {
         if (_ticker is null)
         {
-            throw new ObjectDisposedException(
-                nameof(AnimationController),
-                $"AnimationController.{member}() called after AnimationController.Dispose(). "
-                + "AnimationController methods should not be used after calling Dispose.");
+            throw new AssertionError(
+                $"AnimationController.{member}() called after AnimationController.dispose()\n"
+                + "AnimationController methods should not be used after calling dispose.");
         }
     }
 

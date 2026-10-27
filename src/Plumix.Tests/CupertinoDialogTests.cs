@@ -318,7 +318,7 @@ public sealed class CupertinoDialogTests : IDisposable
         Widget navigator = new Navigator(new BuilderPageRoute(context =>
             new CaptureContext(value => captured = value, new Text("Underlying"))));
         using var harness = new RenderHarness(Wrap(new CupertinoTheme(
-            new CupertinoThemeData(brightness: PlatformBrightness.Dark),
+            new CupertinoThemeData(brightness: Brightness.Dark),
             navigator)));
         harness.Pump(new Size(600, 600));
 

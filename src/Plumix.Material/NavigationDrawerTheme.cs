@@ -17,7 +17,7 @@ public sealed record NavigationDrawerThemeData(
     Color? IndicatorColor = null,
     ShapeBorder? IndicatorShape = null,
     Size? IndicatorSize = null,
-    WidgetStateProperty<TextStyle?>? LabelTextStyle = null,
+    IWidgetStateProperty<TextStyle?>? LabelTextStyle = null,
     WidgetStateProperty<IconThemeData?>? IconTheme = null)
 {
     public NavigationDrawerThemeData CopyWith(
@@ -29,7 +29,7 @@ public sealed record NavigationDrawerThemeData(
         Color? indicatorColor = null,
         ShapeBorder? indicatorShape = null,
         Size? indicatorSize = null,
-        WidgetStateProperty<TextStyle?>? labelTextStyle = null,
+        IWidgetStateProperty<TextStyle?>? labelTextStyle = null,
         WidgetStateProperty<IconThemeData?>? iconTheme = null)
     {
         return new NavigationDrawerThemeData(

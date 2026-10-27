@@ -20,7 +20,7 @@ public sealed record DataColumn
         string? tooltip = null,
         bool numeric = false,
         DataColumnSortCallback? onSort = null,
-        WidgetStateProperty<MouseCursor?>? mouseCursor = null,
+        IWidgetStateProperty<MouseCursor?>? mouseCursor = null,
         MainAxisAlignment? headingRowAlignment = null)
     {
         Label = label ?? throw new ArgumentNullException(nameof(label));
@@ -37,7 +37,7 @@ public sealed record DataColumn
     public string? Tooltip { get; }
     public bool Numeric { get; }
     public DataColumnSortCallback? OnSort { get; }
-    public WidgetStateProperty<MouseCursor?>? MouseCursor { get; }
+    public IWidgetStateProperty<MouseCursor?>? MouseCursor { get; }
     public MainAxisAlignment? HeadingRowAlignment { get; }
 }
 
@@ -50,8 +50,8 @@ public sealed record DataRow
         Action<bool?>? onSelectChanged = null,
         Action? onLongPress = null,
         Action<bool>? onHover = null,
-        WidgetStateProperty<Color?>? color = null,
-        WidgetStateProperty<MouseCursor?>? mouseCursor = null)
+        IWidgetStateProperty<Color?>? color = null,
+        IWidgetStateProperty<MouseCursor?>? mouseCursor = null)
     {
         Cells = cells ?? throw new ArgumentNullException(nameof(cells));
         Key = key;
@@ -70,8 +70,8 @@ public sealed record DataRow
         Action<bool?>? onSelectChanged = null,
         Action? onLongPress = null,
         Action<bool>? onHover = null,
-        WidgetStateProperty<Color?>? color = null,
-        WidgetStateProperty<MouseCursor?>? mouseCursor = null) => new(
+        IWidgetStateProperty<Color?>? color = null,
+        IWidgetStateProperty<MouseCursor?>? mouseCursor = null) => new(
             cells,
             key: new ValueKey<int?>(index),
             selected: selected,
@@ -87,8 +87,8 @@ public sealed record DataRow
     public Action? OnLongPress { get; }
     public Action<bool>? OnHover { get; }
     public IReadOnlyList<DataCell> Cells { get; }
-    public WidgetStateProperty<Color?>? Color { get; }
-    public WidgetStateProperty<MouseCursor?>? MouseCursor { get; }
+    public IWidgetStateProperty<Color?>? Color { get; }
+    public IWidgetStateProperty<MouseCursor?>? MouseCursor { get; }
 }
 
 public sealed record DataCell
@@ -136,12 +136,12 @@ public sealed class DataTable : StatelessWidget
         bool sortAscending = true,
         Action<bool?>? onSelectAll = null,
         Decoration? decoration = null,
-        WidgetStateProperty<Color?>? dataRowColor = null,
+        IWidgetStateProperty<Color?>? dataRowColor = null,
         double? dataRowHeight = null,
         double? dataRowMinHeight = null,
         double? dataRowMaxHeight = null,
         TextStyle? dataTextStyle = null,
-        WidgetStateProperty<Color?>? headingRowColor = null,
+        IWidgetStateProperty<Color?>? headingRowColor = null,
         double? headingRowHeight = null,
         TextStyle? headingTextStyle = null,
         double? horizontalMargin = null,
@@ -202,12 +202,12 @@ public sealed class DataTable : StatelessWidget
     public bool SortAscending { get; }
     public Action<bool?>? OnSelectAll { get; }
     public Decoration? Decoration { get; }
-    public WidgetStateProperty<Color?>? DataRowColor { get; }
+    public IWidgetStateProperty<Color?>? DataRowColor { get; }
     public double? DataRowMinHeight { get; }
     public double? DataRowMaxHeight { get; }
     public double? DataRowHeight => DataRowMinHeight == DataRowMaxHeight ? DataRowMinHeight : null;
     public TextStyle? DataTextStyle { get; }
-    public WidgetStateProperty<Color?>? HeadingRowColor { get; }
+    public IWidgetStateProperty<Color?>? HeadingRowColor { get; }
     public double? HeadingRowHeight { get; }
     public TextStyle? HeadingTextStyle { get; }
     public double? HorizontalMargin { get; }
@@ -261,10 +261,10 @@ public sealed class DataTable : StatelessWidget
                               ?? dataTableTheme.DataTextStyle
                               ?? globalDataTableTheme.DataTextStyle
                               ?? theme.TextTheme.BodyMedium;
-        WidgetStateProperty<Color?>? effectiveDataRowColor = DataRowColor
+        IWidgetStateProperty<Color?>? effectiveDataRowColor = DataRowColor
                                                                 ?? dataTableTheme.DataRowColor
                                                                 ?? globalDataTableTheme.DataRowColor;
-        WidgetStateProperty<Color?>? effectiveHeadingRowColor = HeadingRowColor
+        IWidgetStateProperty<Color?>? effectiveHeadingRowColor = HeadingRowColor
                                                                    ?? dataTableTheme.HeadingRowColor
                                                                    ?? globalDataTableTheme.HeadingRowColor;
         bool anySelectable = Rows.Any(row => row.OnSelectChanged is not null);
@@ -419,7 +419,7 @@ public sealed class DataTable : StatelessWidget
         double height,
         TextStyle style,
         DataTableThemeData tableTheme,
-        WidgetStateProperty<Color?>? overlayColor,
+        IWidgetStateProperty<Color?>? overlayColor,
         TextDirection textDirection)
     {
         bool sorted = SortColumnIndex == columnIndex;
@@ -487,7 +487,7 @@ public sealed class DataTable : StatelessWidget
         double minHeight,
         double maxHeight,
         TextStyle style,
-        WidgetStateProperty<Color?>? overlayColor,
+        IWidgetStateProperty<Color?>? overlayColor,
         MouseCursor? cursor,
         TextDirection textDirection)
     {
@@ -547,7 +547,7 @@ public sealed class DataTable : StatelessWidget
         bool tristate,
         Action? onRowTap,
         Action<bool?>? onChanged,
-        WidgetStateProperty<Color?>? overlayColor = null,
+        IWidgetStateProperty<Color?>? overlayColor = null,
         MouseCursor? mouseCursor = null)
     {
         ThemeData theme = Theme.Of(context);
@@ -752,7 +752,7 @@ public class TableRowInkWell : InkResponse
         Action<bool>? onHover = null,
         Action? onSecondaryTap = null,
         Action<TapDownDetails>? onSecondaryTapDown = null,
-        WidgetStateProperty<Color?>? overlayColor = null,
+        IWidgetStateProperty<Color?>? overlayColor = null,
         MouseCursor? mouseCursor = null,
         Key? key = null)
         : base(
@@ -808,8 +808,7 @@ public class TableRowInkWell : InkResponse
 
     public override bool DebugCheckContext(BuildContext context)
     {
-        // Dart also asserts `debugCheckHasTable(context)`, which core `widgets/debug.dart` does not
-        // port yet (docs/ai/BACKLOG.md).
+        DebugAssertions.Assert(WidgetsDebug.DebugCheckHasTable(context));
         return base.DebugCheckContext(context);
     }
 }

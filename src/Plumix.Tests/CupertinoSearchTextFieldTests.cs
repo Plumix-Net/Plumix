@@ -64,10 +64,10 @@ public sealed class CupertinoSearchTextFieldTests : IDisposable
     }
 
     [Theory]
-    [InlineData(PlatformBrightness.Light, 0x1E767680u, 0x993C3C43u)]
-    [InlineData(PlatformBrightness.Dark, 0x3D767680u, 0x99EBEBF5u)]
+    [InlineData(Brightness.Light, 0x1E767680u, 0x993C3C43u)]
+    [InlineData(Brightness.Dark, 0x3D767680u, 0x99EBEBF5u)]
     public void Build_ResolvesDefaultDecorationPlaceholderAndIconColors(
-        PlatformBrightness brightness,
+        Brightness brightness,
         uint background,
         uint secondaryLabel)
     {
@@ -351,7 +351,7 @@ public sealed class CupertinoSearchTextFieldTests : IDisposable
 
     private static Widget Wrap(
         Widget child,
-        PlatformBrightness brightness = PlatformBrightness.Light,
+        Brightness brightness = Brightness.Light,
         TextDirection direction = TextDirection.Ltr,
         double textScaleFactor = 1.0)
     {

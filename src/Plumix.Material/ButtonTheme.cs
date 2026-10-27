@@ -39,6 +39,7 @@ public sealed record ButtonThemeData
         Color? HoverColor = null,
         Color? HighlightColor = null,
         Color? SplashColor = null,
+        ColorScheme? ColorScheme = null,
         MaterialTapTargetSize? MaterialTapTargetSize = null)
     {
         ValidateExtent(nameof(MinWidth), MinWidth);
@@ -56,6 +57,7 @@ public sealed record ButtonThemeData
         this.HoverColor = HoverColor;
         this.HighlightColor = HighlightColor;
         this.SplashColor = SplashColor;
+        this.ColorScheme = ColorScheme;
         this.MaterialTapTargetSize = MaterialTapTargetSize;
     }
 
@@ -76,6 +78,14 @@ public sealed record ButtonThemeData
     public Color? HoverColor { get; init; }
     public Color? HighlightColor { get; init; }
     public Color? SplashColor { get; init; }
+
+    /// <summary>
+    /// Defines a button's base colors, and the defaults for the button's minimum size, internal
+    /// padding, and shape. <see cref="ButtonTheme.Of"/> fills it in from the ambient
+    /// <see cref="ThemeData"/> when it is null; the button color getters read it.
+    /// </summary>
+    public ColorScheme? ColorScheme { get; init; }
+
     public MaterialTapTargetSize? MaterialTapTargetSize { get; init; }
 
     public BoxConstraints Constraints => new(MinWidth: MinWidth, MinHeight: Height);
@@ -85,31 +95,51 @@ public sealed record ButtonThemeData
     public BorderRadius EffectiveShape => Shape ?? BorderRadius.Circular(
         TextTheme == ButtonTextTheme.Primary ? 4 : 2);
 
+    /// <summary>The button's overall brightness: its <see cref="MaterialButton.ColorBrightness"/>
+    /// if set, the <see cref="ColorScheme"/>'s brightness otherwise.</summary>
+    public Brightness GetBrightness(MaterialButton button) =>
+        button.ColorBrightness ?? ColorScheme!.Brightness;
+
     public ButtonTextTheme GetTextTheme(MaterialButton button) => button.TextTheme ?? TextTheme;
 
-    public Color GetDisabledTextColor(MaterialButton button, ThemeData theme) =>
-        button.TextColor ?? button.DisabledTextColor ?? ApplyOpacity(theme.ColorScheme.OnSurface, 0.38);
+    public Color GetDisabledTextColor(MaterialButton button) =>
+        button.TextColor ?? button.DisabledTextColor ?? ApplyOpacity(ColorScheme!.OnSurface, 0.38);
 
-    public Color GetDisabledFillColor(MaterialButton button, ThemeData theme) =>
-        button.DisabledColor ?? DisabledColor ?? ApplyOpacity(theme.ColorScheme.OnSurface, 0.38);
+    public Color GetDisabledFillColor(MaterialButton button) =>
+        button.DisabledColor ?? DisabledColor ?? ApplyOpacity(ColorScheme!.OnSurface, 0.38);
 
-    public Color? GetFillColor(MaterialButton button, ThemeData theme)
+    public Color? GetFillColor(MaterialButton button)
     {
-        var explicitFill = button.Enabled ? button.Color : button.DisabledColor;
-        if (explicitFill != null)
+        Color? fillColor = button.Enabled ? button.Color : button.DisabledColor;
+        if (fillColor != null)
         {
-            return explicitFill;
+            return fillColor;
         }
 
-        // Flutter keeps the exact base MaterialButton transparent unless a widget color is set.
-        return null;
+        if (button.GetType() == typeof(MaterialButton))
+        {
+            return null;
+        }
+
+        if (button.Enabled && ButtonColor != null)
+        {
+            return ButtonColor;
+        }
+
+        return GetTextTheme(button) switch
+        {
+            ButtonTextTheme.Primary => button.Enabled
+                ? ButtonColor ?? ColorScheme!.Primary
+                : ApplyOpacity(ColorScheme!.OnSurface, 0.12),
+            _ => button.Enabled ? ColorScheme!.Primary : GetDisabledFillColor(button),
+        };
     }
 
-    public Color GetTextColor(MaterialButton button, ThemeData theme)
+    public Color GetTextColor(MaterialButton button)
     {
         if (!button.Enabled)
         {
-            return GetDisabledTextColor(button, theme);
+            return GetDisabledTextColor(button);
         }
 
         if (button.TextColor != null)
@@ -117,17 +147,24 @@ public sealed record ButtonThemeData
             return button.TextColor!;
         }
 
-        return GetTextTheme(button) switch
+        switch (GetTextTheme(button))
         {
-            ButtonTextTheme.Accent => theme.ColorScheme.Secondary,
-            ButtonTextTheme.Primary => ResolvePrimaryTextColor(button, theme),
-            _ => (button.ColorBrightness ?? theme.Brightness) == Brightness.Dark
-                ? Colors.White
-                : Color.FromARGB(0xDE, 0, 0, 0),
-        };
+            case ButtonTextTheme.Normal:
+                return GetBrightness(button) == Brightness.Dark
+                    ? Colors.White
+                    : Color.FromARGB(0xDE, 0, 0, 0);
+            case ButtonTextTheme.Accent:
+                return ColorScheme!.Secondary;
+            default:
+                Color? fill = GetFillColor(button);
+                bool fillIsDark = fill != null
+                    ? ThemeData.EstimateBrightnessForColor(fill) == Brightness.Dark
+                    : GetBrightness(button) == Brightness.Dark;
+                return fillIsDark ? Colors.White : Colors.Black;
+        }
     }
 
-    public Color GetSplashColor(MaterialButton button, ThemeData theme)
+    public Color GetSplashColor(MaterialButton button)
     {
         if (button.SplashColor != null)
         {
@@ -139,16 +176,16 @@ public sealed record ButtonThemeData
             return SplashColor!;
         }
 
-        return ApplyOpacity(GetTextColor(button, theme), 0.12);
+        return ApplyOpacity(GetTextColor(button), 0.12);
     }
 
-    public Color GetFocusColor(MaterialButton button, ThemeData theme) =>
-        button.FocusColor ?? FocusColor ?? ApplyOpacity(GetTextColor(button, theme), 0.12);
+    public Color GetFocusColor(MaterialButton button) =>
+        button.FocusColor ?? FocusColor ?? ApplyOpacity(GetTextColor(button), 0.12);
 
-    public Color GetHoverColor(MaterialButton button, ThemeData theme) =>
-        button.HoverColor ?? HoverColor ?? ApplyOpacity(GetTextColor(button, theme), 0.04);
+    public Color GetHoverColor(MaterialButton button) =>
+        button.HoverColor ?? HoverColor ?? ApplyOpacity(GetTextColor(button), 0.04);
 
-    public Color GetHighlightColor(MaterialButton button, ThemeData theme)
+    public Color GetHighlightColor(MaterialButton button)
     {
         if (button.HighlightColor != null)
         {
@@ -157,7 +194,7 @@ public sealed record ButtonThemeData
 
         return GetTextTheme(button) == ButtonTextTheme.Primary
             ? Colors.Transparent
-            : HighlightColor ?? ApplyOpacity(GetTextColor(button, theme), 0.16);
+            : HighlightColor ?? ApplyOpacity(GetTextColor(button), 0.16);
     }
 
     public double GetElevation(MaterialButton button) => button.Elevation ?? 2;
@@ -184,27 +221,6 @@ public sealed record ButtonThemeData
 
     public MaterialTapTargetSize GetMaterialTapTargetSize(MaterialButton button) =>
         button.MaterialTapTargetSize ?? MaterialTapTargetSize ?? global::Plumix.Material.MaterialTapTargetSize.Padded;
-
-    private static bool IsDark(Color? color)
-    {
-        if (color == null)
-        {
-            return false;
-        }
-
-        var value = color!;
-        double luminance = ((0.2126 * value.Red) + (0.7152 * value.Green) + (0.0722 * value.Blue)) / 255.0;
-        return Math.Sqrt(luminance) + 0.15 < 0.5;
-    }
-
-    private Color ResolvePrimaryTextColor(MaterialButton button, ThemeData theme)
-    {
-        var fill = GetFillColor(button, theme);
-        bool fillIsDark = fill != null
-            ? IsDark(fill)
-            : (button.ColorBrightness ?? theme.Brightness) == Brightness.Dark;
-        return fillIsDark ? Colors.White : Colors.Black;
-    }
 
     private static Color ApplyOpacity(Color color, double opacity) => color.WithOpacity(opacity);
 
@@ -241,6 +257,7 @@ public sealed class ButtonTheme : InheritedWidget
         Color? hoverColor = null,
         Color? highlightColor = null,
         Color? splashColor = null,
+        ColorScheme? colorScheme = null,
         MaterialTapTargetSize? materialTapTargetSize = null,
         Key? key = null) : this(
         data: new ButtonThemeData(
@@ -257,6 +274,7 @@ public sealed class ButtonTheme : InheritedWidget
             HoverColor: hoverColor,
             HighlightColor: highlightColor,
             SplashColor: splashColor,
+            ColorScheme: colorScheme,
             MaterialTapTargetSize: materialTapTargetSize),
         child: child,
         key: key)
@@ -272,6 +290,26 @@ public sealed class ButtonTheme : InheritedWidget
     public override bool UpdateShouldNotify(InheritedWidget oldWidget) =>
         !Equals(((ButtonTheme)oldWidget).Data, Data);
 
-    public static ButtonThemeData Of(BuildContext context) =>
-        context.DependOnInheritedWidgetOfExactType<ButtonTheme>()?.Data ?? Theme.Of(context).ButtonTheme;
+    /// <summary>
+    /// The closest <see cref="ButtonThemeData"/>, or the ambient <see cref="ThemeData.ButtonTheme"/>,
+    /// with a null <see cref="ButtonThemeData.ColorScheme"/> filled in from the ambient theme.
+    /// </summary>
+    public static ButtonThemeData Of(BuildContext context)
+    {
+        ButtonThemeData? buttonTheme = context.DependOnInheritedWidgetOfExactType<ButtonTheme>()?.Data;
+        if (buttonTheme?.ColorScheme is null)
+        {
+            ThemeData theme = Theme.Of(context);
+            buttonTheme ??= theme.ButtonTheme;
+            if (buttonTheme.ColorScheme is null)
+            {
+                buttonTheme = buttonTheme with
+                {
+                    ColorScheme = theme.ButtonTheme.ColorScheme ?? theme.ColorScheme,
+                };
+            }
+        }
+
+        return buttonTheme;
+    }
 }

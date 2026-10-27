@@ -681,7 +681,7 @@ public sealed class MaterialCheckboxTests
                 data: (ThemeData.Light with { Platform = TargetPlatform.IOS })
                     .CopyWith(brightness: Brightness.Dark),
                 child: new CupertinoTheme(
-                    data: new CupertinoThemeData(brightness: PlatformBrightness.Dark),
+                    data: new CupertinoThemeData(brightness: Brightness.Dark),
                     child: Checkbox.Adaptive(
                         value: false,
                         onChanged: _ => { }))));
@@ -692,7 +692,7 @@ public sealed class MaterialCheckboxTests
 
         // brightness == dark and value == false is exactly the painter's dark-gradient condition.
         CupertinoCheckboxPainter painter = FindCupertinoCheckboxPainter(root.ChildElement);
-        Assert.Equal(PlatformBrightness.Dark, painter.Brightness);
+        Assert.Equal(Brightness.Dark, painter.Brightness);
         Assert.Equal(false, painter.Value);
         Assert.True(painter.IsActive);
     }
@@ -706,7 +706,7 @@ public sealed class MaterialCheckboxTests
                 data: (ThemeData.Light with { Platform = TargetPlatform.IOS })
                     .CopyWith(brightness: Brightness.Dark),
                 child: new CupertinoTheme(
-                    data: new CupertinoThemeData(brightness: PlatformBrightness.Dark),
+                    data: new CupertinoThemeData(brightness: Brightness.Dark),
                     child: Checkbox.Adaptive(
                         value: true,
                         onChanged: _ => { }))));

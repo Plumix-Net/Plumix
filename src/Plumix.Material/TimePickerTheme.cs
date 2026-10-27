@@ -31,8 +31,8 @@ public sealed partial record TimePickerThemeData(
     InputDecorationThemeData? InputDecorationTheme = null,
     EdgeInsetsGeometry? Padding = null,
     ShapeBorder? Shape = null,
-    WidgetStateProperty<Color?>? TimeSelectorSeparatorColor = null,
-    WidgetStateProperty<TextStyle?>? TimeSelectorSeparatorTextStyle = null)
+    IWidgetStateProperty<Color?>? TimeSelectorSeparatorColor = null,
+    IWidgetStateProperty<TextStyle?>? TimeSelectorSeparatorTextStyle = null)
 {
     private readonly Color? _dayPeriodColor = DayPeriodColor;
 
@@ -145,10 +145,10 @@ internal abstract class TimePickerDefaults
     public abstract ShapeBorder Shape { get; }
 
     /// Null for Material 2, matching Dart, where only `_TimePickerDefaultsM3` overrides it.
-    public virtual WidgetStateProperty<Color?>? TimeSelectorSeparatorColor => null;
+    public virtual IWidgetStateProperty<Color?>? TimeSelectorSeparatorColor => null;
 
     /// Null for Material 2, matching Dart, where only `_TimePickerDefaultsM3` overrides it.
-    public virtual WidgetStateProperty<TextStyle?>? TimeSelectorSeparatorTextStyle => null;
+    public virtual IWidgetStateProperty<TextStyle?>? TimeSelectorSeparatorTextStyle => null;
 
     internal static Color WithOpacity(Color color, double opacity) => color.WithOpacity(opacity);
 
@@ -423,9 +423,9 @@ internal sealed class TimePickerDefaultsM3 : TimePickerDefaults
         new RoundedRectangleBorder(borderRadius: Plumix.Rendering.BorderRadius.Circular(28));
 
     // TODO(port): update when Material tokens expose these; taken from the Material 3 time picker spec.
-    public override WidgetStateProperty<Color?>? TimeSelectorSeparatorColor =>
+    public override IWidgetStateProperty<Color?>? TimeSelectorSeparatorColor =>
         WidgetStateProperty<Color?>.All(_colors.OnSurface);
 
-    public override WidgetStateProperty<TextStyle?>? TimeSelectorSeparatorTextStyle =>
+    public override IWidgetStateProperty<TextStyle?>? TimeSelectorSeparatorTextStyle =>
         WidgetStateProperty<TextStyle?>.All(_textTheme.DisplayLarge);
 }

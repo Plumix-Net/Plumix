@@ -122,7 +122,7 @@ internal static class NavBarStatics
         Border? border,
         Color backgroundColor,
         Widget child,
-        PlatformBrightness? brightness = null,
+        Brightness? brightness = null,
         bool updateSystemUiOverlay = true,
         bool enableBackgroundFilterBlur = true)
     {
@@ -130,9 +130,9 @@ internal static class NavBarStatics
         if (updateSystemUiOverlay)
         {
             bool isDark = backgroundColor.ComputeLuminance() < 0.179;
-            PlatformBrightness newBrightness =
-                brightness ?? (isDark ? PlatformBrightness.Dark : PlatformBrightness.Light);
-            SystemUiOverlayStyle overlayStyle = newBrightness == PlatformBrightness.Dark
+            Brightness newBrightness =
+                brightness ?? (isDark ? Brightness.Dark : Brightness.Light);
+            SystemUiOverlayStyle overlayStyle = newBrightness == Brightness.Dark
                 ? SystemUiOverlayStyle.Light
                 : SystemUiOverlayStyle.Dark;
             // [SystemUiOverlayStyle.light] and [SystemUiOverlayStyle.dark] set some system
@@ -213,7 +213,7 @@ public sealed class CupertinoNavigationBar : StatefulWidget, IObstructingPreferr
         Color? backgroundColor = null,
         bool automaticBackgroundVisibility = true,
         bool enableBackgroundFilterBlur = true,
-        PlatformBrightness? brightness = null,
+        Brightness? brightness = null,
         EdgeInsetsDirectional? padding = null,
         bool transitionBetweenRoutes = true,
         object? heroTag = null,
@@ -249,7 +249,7 @@ public sealed class CupertinoNavigationBar : StatefulWidget, IObstructingPreferr
         Color? backgroundColor = null,
         bool automaticBackgroundVisibility = true,
         bool enableBackgroundFilterBlur = true,
-        PlatformBrightness? brightness = null,
+        Brightness? brightness = null,
         EdgeInsetsDirectional? padding = null,
         bool transitionBetweenRoutes = true,
         object? heroTag = null,
@@ -286,7 +286,7 @@ public sealed class CupertinoNavigationBar : StatefulWidget, IObstructingPreferr
         Color? backgroundColor = null,
         bool automaticBackgroundVisibility = true,
         bool enableBackgroundFilterBlur = true,
-        PlatformBrightness? brightness = null,
+        Brightness? brightness = null,
         EdgeInsetsDirectional? padding = null,
         bool transitionBetweenRoutes = true,
         object? heroTag = null,
@@ -324,7 +324,7 @@ public sealed class CupertinoNavigationBar : StatefulWidget, IObstructingPreferr
         Color? backgroundColor = null,
         bool automaticBackgroundVisibility = true,
         bool enableBackgroundFilterBlur = true,
-        PlatformBrightness? brightness = null,
+        Brightness? brightness = null,
         EdgeInsetsDirectional? padding = null,
         bool transitionBetweenRoutes = true,
         object? heroTag = null,
@@ -363,7 +363,7 @@ public sealed class CupertinoNavigationBar : StatefulWidget, IObstructingPreferr
         Color? backgroundColor,
         bool automaticBackgroundVisibility,
         bool enableBackgroundFilterBlur,
-        PlatformBrightness? brightness,
+        Brightness? brightness,
         EdgeInsetsDirectional? padding,
         bool transitionBetweenRoutes,
         object? heroTag,
@@ -423,7 +423,7 @@ public sealed class CupertinoNavigationBar : StatefulWidget, IObstructingPreferr
 
     public bool EnableBackgroundFilterBlur { get; }
 
-    public PlatformBrightness? Brightness { get; }
+    public Brightness? Brightness { get; }
 
     public EdgeInsetsDirectional? Padding { get; }
 

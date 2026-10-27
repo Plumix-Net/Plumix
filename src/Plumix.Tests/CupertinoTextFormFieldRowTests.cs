@@ -98,7 +98,7 @@ public sealed class CupertinoTextFormFieldRowTests : IDisposable
             cursorWidth: 3.14,
             cursorHeight: 6.28,
             cursorColor: CupertinoColors.SystemPurple,
-            keyboardAppearance: PlatformBrightness.Dark,
+            keyboardAppearance: Brightness.Dark,
             scrollPadding: EdgeInsetsGeometry.All(12.0),
             enableInteractiveSelection: false,
             scrollPhysics: scrollPhysics,
@@ -144,7 +144,7 @@ public sealed class CupertinoTextFormFieldRowTests : IDisposable
         Assert.Equal(3.14, textField.CursorWidth);
         Assert.Equal(6.28, textField.CursorHeight);
         Assert.Equal(CupertinoColors.SystemPurple, textField.CursorColor);
-        Assert.Equal(PlatformBrightness.Dark, textField.KeyboardAppearance);
+        Assert.Equal(Brightness.Dark, textField.KeyboardAppearance);
         Assert.Equal(EdgeInsetsGeometry.All(12.0), textField.ScrollPadding);
         Assert.False(textField.EnableInteractiveSelection);
         Assert.Same(scrollPhysics, textField.ScrollPhysics);
@@ -373,7 +373,7 @@ public sealed class CupertinoTextFormFieldRowTests : IDisposable
     private static Widget Wrap(Widget child)
     {
         return new MediaQuery(
-            data: new MediaQueryData(PlatformBrightness: PlatformBrightness.Light),
+            data: new MediaQueryData(PlatformBrightness: Brightness.Light),
             child: new Localizations(
                 locale: new Locale("en", "US"),
                 delegates:
@@ -384,7 +384,7 @@ public sealed class CupertinoTextFormFieldRowTests : IDisposable
                 child: new Directionality(
                     TextDirection.Ltr,
                     new CupertinoTheme(
-                        new CupertinoThemeData(brightness: PlatformBrightness.Light),
+                        new CupertinoThemeData(brightness: Brightness.Light),
                         new Center(child: child)))));
     }
 

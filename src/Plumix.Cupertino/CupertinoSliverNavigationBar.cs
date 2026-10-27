@@ -26,7 +26,7 @@ public sealed class CupertinoSliverNavigationBar : StatefulWidget
         Color? backgroundColor = null,
         bool automaticBackgroundVisibility = true,
         bool enableBackgroundFilterBlur = true,
-        PlatformBrightness? brightness = null,
+        Brightness? brightness = null,
         EdgeInsetsDirectional? padding = null,
         bool transitionBetweenRoutes = true,
         object? heroTag = null,
@@ -70,7 +70,7 @@ public sealed class CupertinoSliverNavigationBar : StatefulWidget
         Color? backgroundColor = null,
         bool automaticBackgroundVisibility = true,
         bool enableBackgroundFilterBlur = true,
-        PlatformBrightness? brightness = null,
+        Brightness? brightness = null,
         EdgeInsetsDirectional? padding = null,
         bool transitionBetweenRoutes = true,
         object? heroTag = null,
@@ -118,7 +118,7 @@ public sealed class CupertinoSliverNavigationBar : StatefulWidget
         Color? backgroundColor = null,
         bool automaticBackgroundVisibility = true,
         bool enableBackgroundFilterBlur = true,
-        PlatformBrightness? brightness = null,
+        Brightness? brightness = null,
         EdgeInsetsDirectional? padding = null,
         bool transitionBetweenRoutes = true,
         object? heroTag = null,
@@ -166,7 +166,7 @@ public sealed class CupertinoSliverNavigationBar : StatefulWidget
         Color? backgroundColor = null,
         bool automaticBackgroundVisibility = true,
         bool enableBackgroundFilterBlur = true,
-        PlatformBrightness? brightness = null,
+        Brightness? brightness = null,
         EdgeInsetsDirectional? padding = null,
         bool transitionBetweenRoutes = true,
         object? heroTag = null,
@@ -218,7 +218,7 @@ public sealed class CupertinoSliverNavigationBar : StatefulWidget
         Color? backgroundColor,
         bool automaticBackgroundVisibility,
         bool enableBackgroundFilterBlur,
-        PlatformBrightness? brightness,
+        Brightness? brightness,
         EdgeInsetsDirectional? padding,
         bool transitionBetweenRoutes,
         object? heroTag,
@@ -303,7 +303,7 @@ public sealed class CupertinoSliverNavigationBar : StatefulWidget
 
     public bool EnableBackgroundFilterBlur { get; }
 
-    public PlatformBrightness? Brightness { get; }
+    public Brightness? Brightness { get; }
 
     public EdgeInsetsDirectional? Padding { get; }
 

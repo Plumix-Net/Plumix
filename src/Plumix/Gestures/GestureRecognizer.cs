@@ -398,7 +398,7 @@ public abstract class PrimaryPointerGestureRecognizer : OneSequenceGestureRecogn
     private readonly double? _preAcceptSlopTolerance;
     private readonly double? _postAcceptSlopTolerance;
     private bool _gestureAccepted;
-    private GestureTimer? _timer;
+    private Timer? _timer;
 
     protected PrimaryPointerGestureRecognizer(
         TimeSpan? deadline = null,
@@ -472,7 +472,7 @@ public abstract class PrimaryPointerGestureRecognizer : OneSequenceGestureRecogn
             InitialPosition = new OffsetPair(Local: @event.LocalPosition, Global: @event.Position);
             if (Deadline is { } deadline)
             {
-                _timer = GestureTimer.Start(deadline, () => DidExceedDeadlineWithEvent(@event));
+                _timer = new Timer(deadline, () => DidExceedDeadlineWithEvent(@event));
             }
         }
     }

@@ -162,12 +162,6 @@ internal sealed class DialogWindowRoute<T> : Route
         }
     }
 
-    /// <summary>
-    /// Plumix's abstract <see cref="Route.BuildPage"/>, which Dart's <c>Route</c> does not have: the
-    /// dialog's content renders through the <see cref="WindowManager"/>, so the route has no page.
-    /// </summary>
-    public override Widget BuildPage(BuildContext context) => SizedBox.Shrink();
-
     public override bool DidPop(object? result)
     {
         if (_entry is not null)

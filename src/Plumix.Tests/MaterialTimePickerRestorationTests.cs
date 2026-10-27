@@ -335,15 +335,8 @@ public sealed partial class MaterialTimePickerDialogTests
     [InlineData(TargetPlatform.MacOS, false)]
     public void DialVibrationDebouncesAndCancelsWhenDisposed(TargetPlatform platform, bool vibrates)
     {
-        var timers = new List<PickerTimer>();
+        using var timers = new FakeGestureTimers();
         int vibrations = 0;
-        GestureTimer.Factory = (duration, callback) =>
-        {
-            Assert.Equal(TimeSpan.FromMilliseconds(100), duration);
-            var timer = new PickerTimer(callback);
-            timers.Add(timer);
-            return timer;
-        };
         SystemChannels.Platform.SetPlatformMethodCallHandler(call =>
         {
             if (call.Method == "HapticFeedback.vibrate") vibrations++;
@@ -359,18 +352,18 @@ public sealed partial class MaterialTimePickerDialogTests
                 model.OnSelectedTimeChanged(new TimeOfDay(8, 0));
                 model.OnSelectedTimeChanged(new TimeOfDay(9, 0));
                 model.OnHourMinuteModeChanged(HourMinuteMode.Minute);
-                Assert.Equal(vibrates ? 3 : 0, timers.Count);
-                foreach (PickerTimer timer in timers) timer.FireNow();
+                timers.Elapse(TimeSpan.FromMilliseconds(99));
+                Assert.Equal(0, vibrations);
+                timers.Elapse(TimeSpan.FromMilliseconds(1));
                 Assert.Equal(vibrates ? 1 : 0, vibrations);
                 model.OnSelectedTimeChanged(new TimeOfDay(9, 15));
             }
 
-            foreach (PickerTimer timer in timers) timer.FireNow();
+            timers.Elapse(TimeSpan.FromSeconds(1));
             Assert.Equal(vibrates ? 1 : 0, vibrations);
         }
         finally
         {
-            GestureTimer.ResetFactory();
             SystemChannels.Platform.SetPlatformMethodCallHandler(null);
         }
     }
@@ -407,11 +400,6 @@ public sealed partial class MaterialTimePickerDialogTests
     {
         public override double Scale(double fontSize) => fontSize * (fontSize == 14 ? 1.05 : 1.4);
         public override double TextScaleFactor => 1.0;
-    }
-
-    private sealed class PickerTimer(Action callback) : GestureTimer
-    {
-        public void FireNow() => Fire(callback);
     }
 
     private sealed class PickerRouteObserver : NavigatorObserver

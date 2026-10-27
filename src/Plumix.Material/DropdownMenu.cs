@@ -499,7 +499,7 @@ public sealed class DropdownMenuState<T> : State<DropdownMenu<T>>
                 var defaultStyle = new MenuItemButton().DefaultStyleOf(Context);
 
                 // Dart's local `resolveFocusedColor`.
-                static Color? ResolveFocusedColor(WidgetStateProperty<Color?>? colorStateProperty) =>
+                static Color? ResolveFocusedColor(IWidgetStateProperty<Color?>? colorStateProperty) =>
                     colorStateProperty?.Resolve(new HashSet<WidgetState> { WidgetState.Focused });
 
                 Color focusedForegroundColor =

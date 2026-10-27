@@ -353,7 +353,7 @@ public sealed class CupertinoTabScaffoldTests : IDisposable
                        tabBar: BuildTabBar(2),
                        backgroundColor: background,
                        tabBuilder: (_, _) => new SizedBox()),
-                   brightness: PlatformBrightness.Light)))
+                   brightness: Brightness.Light)))
         {
             lightHarness.Pump(ViewSize);
             Assert.Contains(lightHarness.FindWidgets<DecoratedBox>(), widget =>
@@ -368,7 +368,7 @@ public sealed class CupertinoTabScaffoldTests : IDisposable
                     tabBar: BuildTabBar(2),
                     backgroundColor: background,
                     tabBuilder: (_, _) => new SizedBox())),
-            brightness: PlatformBrightness.Dark));
+            brightness: Brightness.Dark));
         darkHarness.Pump(ViewSize);
 
         Assert.Contains(darkHarness.FindWidgets<DecoratedBox>(), widget =>
@@ -457,7 +457,7 @@ public sealed class CupertinoTabScaffoldTests : IDisposable
         Thickness padding = default,
         Thickness viewInsets = default,
         double textScaleFactor = 1.0,
-        PlatformBrightness brightness = PlatformBrightness.Light,
+        Brightness brightness = Brightness.Light,
         RestorationBucket? bucket = null)
     {
         return new MediaQuery(

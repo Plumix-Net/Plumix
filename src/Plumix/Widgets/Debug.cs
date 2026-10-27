@@ -17,6 +17,28 @@ public delegate void RebuildDirtyWidgetCallback(Element e, bool builtOnce);
 /// </summary>
 public static class WidgetsDebug
 {
+    /// <summary>Dart's <c>debugCheckHasTable</c>: throws a <see cref="FlutterError"/> in debug builds
+    /// when <paramref name="context"/> is neither a <see cref="Table"/> nor below one. Always returns
+    /// <see langword="true"/> otherwise.</summary>
+    public static bool DebugCheckHasTable(BuildContext context)
+    {
+        if (!Constants.KDebugMode
+            || context.Widget is Table
+            || context.FindAncestorWidgetOfExactType<Table>() is not null)
+        {
+            return true;
+        }
+
+        throw new FlutterError(
+        [
+            new ErrorSummary("No Table widget found."),
+            new ErrorDescription(
+                $"{Diagnostics.DescribeType(context.Widget.GetType())} widgets require a Table widget ancestor."),
+            context.DescribeWidget("The specific widget that could not find a Table ancestor was"),
+            context.DescribeOwnershipChain("The ownership chain for the affected widget is"),
+        ]);
+    }
+
     /// <summary>Dart's debug-only, non-dependent MediaQuery ancestor check.</summary>
     public static bool DebugCheckHasMediaQuery(BuildContext context)
     {

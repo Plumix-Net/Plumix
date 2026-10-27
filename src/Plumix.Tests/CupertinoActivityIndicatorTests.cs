@@ -80,7 +80,7 @@ public sealed class CupertinoActivityIndicatorTests : IDisposable
 
         using (var dark = new WidgetRenderHarness(
             new MediaQuery(
-                data: new MediaQueryData(PlatformBrightness: PlatformBrightness.Dark),
+                data: new MediaQueryData(PlatformBrightness: Brightness.Dark),
                 child: new CupertinoActivityIndicator(animating: false, radius: 35))))
         {
             dark.Pump(new Size(800, 600));

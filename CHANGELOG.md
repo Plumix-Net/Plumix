@@ -8,6 +8,29 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased]
+- Breaking: one dart:ui `Brightness` in `Plumix.UI` replaces `PlatformBrightness` and Material's enum (window.dart).
+- Breaking: `Plumix.Timer` (dart:async `Timer`) on the event loop with a fake test clock; `GestureTimer` removed.
+- Snack bar, tooltip, menu hover, search, magnifier, expansion-tile and gesture timers run on `Timer` (scaffold.dart).
+- Breaking: a second `AnimationController.Dispose` throws a `FlutterError` (animation_controller.dart).
+- Breaking: `AnimationController` duration/dispose/`repeat` checks throw Dart's errors (animation_controller.dart).
+- Breaking: Color/TextStyle/MouseCursor state-property slots are `IWidgetStateProperty`, as in Dart (widget_state.dart).
+- Breaking: `WidgetStateMouseCursor` resolves a non-null `MouseCursor`, as in Dart (widget_state.dart).
+- Breaking: `WidgetStateProperty<T>.Lerp` and `MaterialThemeLerp` lerps take `IWidgetStateProperty` (C#-only).
+- Breaking: `PipelineManifold` is an interface; `HostPipelineManifold` extends `ChangeNotifier` (rendering/object.dart).
+- Breaking: `BuildPage` moves from `Route` to `ModalRoute`, as Dart's `buildPage` (widgets/routes.dart).
+- Breaking: `ButtonThemeData.Get*Color(button)` drop `ThemeData` and read the new `ColorScheme` (button_theme.dart).
+- `ButtonTheme.Of` fills a missing `colorScheme`; `ThemeData.buttonTheme` defaults carry one (button_theme.dart).
+- `Switch.adaptive` reads `cupertinoOverrideTheme.primaryColor` unresolved, as Dart does (switch.dart).
+- `TextField`/`SelectableText` gain `selectionHeightStyle`/`selectionWidthStyle` (text_field.dart).
+- `ScrollableDetails` gains the deprecated `clipBehavior` parameter and Dart's `toString` (scrollable_helpers.dart).
+- `debugCheckHasTable`, asserted by `TableRowInkWell` (widgets/debug.dart, data_table.dart).
+- `PlatformDispatcher.FrameData` carries the vsync's frame number; `OnFrameDataChanged` added (hooks.dart).
+- Breaking: `MediaQueryData.FromView` uses `SystemTextScaler` over `ScaleFontSize` (media_query.dart).
+- Android 14+ reports its nonlinear font scaling curve to `ScaleFontSize` (platform_dispatcher.dart).
+- Breaking: `DefaultSelectionWidthStyle` is `Max` on web Safari via `BrowserDetection` (editable_text.dart).
+- Hosts report the OS's ordered preferred languages: Android, iOS, macOS, Windows, Linux (C#-only).
+- Android reports `ViewConfiguration` touch slop as the view's `GestureSettings` (gesture_settings.dart).
+- Browser host ports the web engine's typography observer: text scale and text spacing overrides (C#-only).
 - Hosts point Avalonia's dispatcher at its platform clock; Android timers busy-spun and stalled rendering (C#-only).
 - `MediaQuery.textScaler` follows the system font size (`PlatformDispatcher.TextScaleFactor`, platform_dispatcher.dart).
 - Automation peers report a selected node without a tap action; tappable selectable nodes stay invocable (C#-only).

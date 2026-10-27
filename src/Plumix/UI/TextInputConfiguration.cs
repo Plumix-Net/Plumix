@@ -303,7 +303,7 @@ public class TextInputConfiguration : IEquatable<TextInputConfiguration>
         bool enableInteractiveSelection = true,
         string? actionLabel = null,
         TextInputActionType inputAction = TextInputActionType.Done,
-        PlatformBrightness keyboardAppearance = PlatformBrightness.Light,
+        Brightness keyboardAppearance = Brightness.Light,
         TextCapitalization textCapitalization = TextCapitalization.None,
         AutofillConfiguration? autofillConfiguration = null,
         bool enableIMEPersonalizedLearning = true,
@@ -367,7 +367,7 @@ public class TextInputConfiguration : IEquatable<TextInputConfiguration>
     public TextInputActionType InputAction { get; }
 
     /// <summary>The appearance of the keyboard.</summary>
-    public PlatformBrightness KeyboardAppearance { get; }
+    public Brightness KeyboardAppearance { get; }
 
     /// <summary>How to capitalize the text the user enters.</summary>
     public TextCapitalization TextCapitalization { get; }
@@ -409,7 +409,7 @@ public class TextInputConfiguration : IEquatable<TextInputConfiguration>
         bool? enableInteractiveSelection = null,
         string? actionLabel = null,
         TextInputActionType? inputAction = null,
-        PlatformBrightness? keyboardAppearance = null,
+        Brightness? keyboardAppearance = null,
         TextCapitalization? textCapitalization = null,
         bool? enableIMEPersonalizedLearning = null,
         IReadOnlyList<string>? allowedMimeTypes = null,

@@ -565,8 +565,6 @@ public abstract class Route
     protected internal virtual void ChangedExternalState()
     {
     }
-
-    public abstract Widget BuildPage(BuildContext context);
 }
 
 /// <summary>
@@ -1273,6 +1271,13 @@ public abstract class ModalRoute : TransitionRoute
         ChangedInternalState();
         MaybeDispatchNavigationNotification();
     }
+
+    /// <summary>Override this method to build the primary content of this route.</summary>
+    /// <remarks>
+    /// Flutter's <c>ModalRoute.buildPage</c>. The route's animations are not parameters here; the page
+    /// reads <see cref="TransitionRoute.Animation"/> and <see cref="TransitionRoute.SecondaryAnimation"/>.
+    /// </remarks>
+    public abstract Widget BuildPage(BuildContext context);
 
     /// <summary>
     /// Builds the barrier painted below the route's page. Subclasses override this to create their own barrier.

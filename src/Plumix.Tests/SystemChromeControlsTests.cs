@@ -62,30 +62,30 @@ public sealed class SystemChromeControlsTests : IDisposable
     }
 
     [Theory]
-    [InlineData(PlatformBrightness.Light)]
-    [InlineData(PlatformBrightness.Dark)]
-    public void CupertinoApp_StyleFollowsTheThemeBrightness(PlatformBrightness brightness)
+    [InlineData(Brightness.Light)]
+    [InlineData(Brightness.Dark)]
+    public void CupertinoApp_StyleFollowsTheThemeBrightness(Brightness brightness)
     {
         Pump(new CupertinoApp(
             theme: new CupertinoThemeData(brightness: brightness),
             home: new CupertinoPageScaffold(child: new Text("Hello"))));
 
         Assert.Equal(
-            brightness == PlatformBrightness.Dark ? SystemUiOverlayStyle.Light : SystemUiOverlayStyle.Dark,
+            brightness == Brightness.Dark ? SystemUiOverlayStyle.Light : SystemUiOverlayStyle.Dark,
             SystemChrome.LatestStyle);
     }
 
     [Theory]
-    [InlineData(PlatformBrightness.Light)]
-    [InlineData(PlatformBrightness.Dark)]
-    public void CupertinoApp_StyleFollowsThePlatformBrightnessWithoutAThemeBrightness(PlatformBrightness brightness)
+    [InlineData(Brightness.Light)]
+    [InlineData(Brightness.Dark)]
+    public void CupertinoApp_StyleFollowsThePlatformBrightnessWithoutAThemeBrightness(Brightness brightness)
     {
         Pump(new MediaQuery(
             data: new MediaQueryData(PlatformBrightness: brightness),
             child: new CupertinoApp(builder: (_, _) => new Placeholder())));
 
         Assert.Equal(
-            brightness == PlatformBrightness.Dark ? SystemUiOverlayStyle.Light : SystemUiOverlayStyle.Dark,
+            brightness == Brightness.Dark ? SystemUiOverlayStyle.Light : SystemUiOverlayStyle.Dark,
             SystemChrome.LatestStyle);
     }
 
@@ -102,12 +102,12 @@ public sealed class SystemChromeControlsTests : IDisposable
     {
         Pump(new CupertinoApp(home: new CupertinoNavigationBar(
             backgroundColor: new Color(0xF0F9F9F9),
-            brightness: PlatformBrightness.Dark)));
+            brightness: Brightness.Dark)));
         AssertSameStatusBarStyle(SystemChrome.LatestStyle!, SystemUiOverlayStyle.Light);
 
         Pump(new CupertinoApp(home: new CupertinoNavigationBar(
             backgroundColor: new Color(0xF01D1D1D),
-            brightness: PlatformBrightness.Light)));
+            brightness: Brightness.Light)));
         AssertSameStatusBarStyle(SystemChrome.LatestStyle!, SystemUiOverlayStyle.Dark);
 
         Pump(new CupertinoApp(home: new CustomScrollView(slivers:
@@ -115,7 +115,7 @@ public sealed class SystemChromeControlsTests : IDisposable
             new CupertinoSliverNavigationBar(
                 largeTitle: new Text("Title"),
                 backgroundColor: new Color(0xF0F9F9F9),
-                brightness: PlatformBrightness.Dark),
+                brightness: Brightness.Dark),
         ])));
         AssertSameStatusBarStyle(SystemChrome.LatestStyle!, SystemUiOverlayStyle.Light);
 
@@ -124,7 +124,7 @@ public sealed class SystemChromeControlsTests : IDisposable
             new CupertinoSliverNavigationBar(
                 largeTitle: new Text("Title"),
                 backgroundColor: new Color(0xF01D1D1D),
-                brightness: PlatformBrightness.Light),
+                brightness: Brightness.Light),
         ])));
         AssertSameStatusBarStyle(SystemChrome.LatestStyle!, SystemUiOverlayStyle.Dark);
     }
@@ -149,21 +149,21 @@ public sealed class SystemChromeControlsTests : IDisposable
                         child: new Text("Push Page 2")),
                 ])))));
 
-        Assert.Equal(PlatformBrightness.Light, SystemChrome.LatestStyle!.StatusBarBrightness);
-        Assert.Equal(PlatformBrightness.Dark, SystemChrome.LatestStyle!.StatusBarIconBrightness);
+        Assert.Equal(Brightness.Light, SystemChrome.LatestStyle!.StatusBarBrightness);
+        Assert.Equal(Brightness.Dark, SystemChrome.LatestStyle!.StatusBarIconBrightness);
 
         _tester.Tap(_tester.ElementsWithText("Push Page 2").Single());
         Settle();
 
-        Assert.Equal(PlatformBrightness.Dark, SystemChrome.LatestStyle!.StatusBarBrightness);
-        Assert.Equal(PlatformBrightness.Light, SystemChrome.LatestStyle!.StatusBarIconBrightness);
+        Assert.Equal(Brightness.Dark, SystemChrome.LatestStyle!.StatusBarBrightness);
+        Assert.Equal(Brightness.Light, SystemChrome.LatestStyle!.StatusBarIconBrightness);
 
         // Returning to the previous page reverts the system UI.
         Navigator.Of(scaffoldKey.CurrentContext!).Pop();
         Settle();
 
-        Assert.Equal(PlatformBrightness.Light, SystemChrome.LatestStyle!.StatusBarBrightness);
-        Assert.Equal(PlatformBrightness.Dark, SystemChrome.LatestStyle!.StatusBarIconBrightness);
+        Assert.Equal(Brightness.Light, SystemChrome.LatestStyle!.StatusBarBrightness);
+        Assert.Equal(Brightness.Dark, SystemChrome.LatestStyle!.StatusBarIconBrightness);
     }
 
     /// <summary>

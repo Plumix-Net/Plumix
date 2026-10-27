@@ -1,11 +1,14 @@
 using System.Runtime.Versioning;
 using Android.Content.Res;
 using Android.OS;
+using Android.Util;
 using Android.Views;
 using Android.Window;
 using Avalonia;
 using Avalonia.Android;
 using Plumix.UI;
+using AndroidViewConfiguration = Android.Views.ViewConfiguration;
+using Locale = Plumix.Widgets.Locale;
 
 // C#-only host infrastructure parity source:
 // flutter/engine/src/flutter/shell/platform/android/io/flutter/embedding/android/FlutterActivity.java
@@ -15,8 +18,8 @@ namespace Plumix.Android;
 
 /// <summary>
 /// The Activity of a Plumix application on Android: an <see cref="AvaloniaMainActivity"/> that hands the
-/// framework its lifecycle, saved restoration data, the user's font size and (on Android 14+) predictive
-/// back gestures.
+/// framework its lifecycle, saved restoration data, the user's font size and preferred languages, the
+/// display's touch slop and (on Android 14+) predictive back gestures.
 /// </summary>
 /// <remarks>
 /// Flutter's <c>FlutterActivity</c>. Derive the application's launcher Activity from it; overrides must
@@ -46,7 +49,7 @@ public class PlumixMainActivity : AvaloniaMainActivity
             Delegate.BackCallbackNeededChanged = SetBackCallbackRegistered;
         }
 
-        Delegate.OnConfigurationChanged(Resources?.Configuration?.FontScale ?? 1f);
+        ReportConfiguration(Resources?.Configuration);
         Delegate.OnCreate(savedInstanceState?.GetByteArray(FrameworkRestorationBundleKey));
         base.OnCreate(savedInstanceState);
 
@@ -102,7 +105,69 @@ public class PlumixMainActivity : AvaloniaMainActivity
     public override void OnConfigurationChanged(Configuration newConfig)
     {
         base.OnConfigurationChanged(newConfig);
-        Delegate.OnConfigurationChanged(newConfig.FontScale);
+        ReportConfiguration(newConfig);
+    }
+
+    // FlutterView.sendUserSettingsToFlutter (the font scale and, on Android 14+, the display metrics that
+    // answer getScaledFontSize), its viewport metrics' physicalTouchSlop, and
+    // LocalizationPlugin.sendLocalesToFlutter.
+    private void ReportConfiguration(Configuration? configuration)
+    {
+        Delegate.OnConfigurationChanged(configuration?.FontScale ?? 1f, CreateScaledFontSize());
+        if (AndroidViewConfiguration.Get(this) is { } viewConfiguration)
+        {
+            Delegate.OnScaledTouchSlopChanged(viewConfiguration.ScaledTouchSlop);
+        }
+
+        if (configuration is not null)
+        {
+            Delegate.OnLocalesChanged(ReadLocales(configuration));
+        }
+    }
+
+    // FlutterJNI.getScaledFontSize over the DisplayMetrics of the configuration being reported (the engine's
+    // SettingsChannel.ConfigurationQueue keeps a copy per sent configuration).
+    private Func<double, double>? CreateScaledFontSize()
+    {
+        if (!OperatingSystem.IsAndroidVersionAtLeast(34) || Resources?.DisplayMetrics is not { } current)
+        {
+            return null;
+        }
+
+        var metrics = new DisplayMetrics();
+        metrics.SetTo(current);
+        return fontSize => TypedValue.ApplyDimension(ComplexUnitType.Sp, (float)fontSize, metrics) / metrics.Density;
+    }
+
+    private static List<Locale> ReadLocales(Configuration configuration)
+    {
+        List<Locale> locales = [];
+        if (OperatingSystem.IsAndroidVersionAtLeast(24))
+        {
+            LocaleList localeList = configuration.Locales;
+            for (int index = 0; index < localeList.Size(); index++)
+            {
+                AddLocale(locales, localeList.Get(index));
+            }
+        }
+        else
+        {
+#pragma warning disable CA1422 // Configuration.locale is the API 23 source of the locale.
+            AddLocale(locales, configuration.Locale);
+#pragma warning restore CA1422
+        }
+
+        return locales;
+    }
+
+    // dart:ui's _updateLocales: Locale.fromSubtags with empty country and script codes as null. A locale
+    // without a language (the root locale) has no Locale.
+    private static void AddLocale(List<Locale> locales, Java.Util.Locale? locale)
+    {
+        if (locale is not null && !string.IsNullOrEmpty(locale.Language))
+        {
+            locales.Add(new Locale(locale.Language, locale.Country, locale.Script));
+        }
     }
 
     public override void OnWindowFocusChanged(bool hasFocus)

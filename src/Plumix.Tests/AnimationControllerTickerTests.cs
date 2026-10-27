@@ -1,3 +1,4 @@
+using Plumix.Foundation;
 using Plumix.Physics;
 using Plumix.Rendering;
 using Xunit;
@@ -180,26 +181,103 @@ public sealed class AnimationControllerTickerTests : IDisposable
         Assert.True(unbounded.IsUnbounded);
     }
 
-    [Fact]
-    public void AnimationController_MissingDurations_ThrowWithTheSourceMessages()
+    [DebugOnlyFact]
+    public void AnimationController_ErrorHandling()
+    {
+        // test('AnimationController error handling')
+        var controller = new AnimationController();
+
+        Assert.Throws<FlutterError>(() => controller.Forward());
+        Assert.Throws<FlutterError>(() => controller.Reverse());
+        Assert.Throws<FlutterError>(() => controller.AnimateTo(0.5));
+        Assert.Throws<FlutterError>(() => controller.Repeat());
+
+        controller.Dispose();
+        FlutterError result = Assert.Throws<FlutterError>(() => controller.Dispose());
+        Assert.Equal(
+            "FlutterError\n"
+            + "   AnimationController.dispose() called more than once.\n"
+            + "   A given AnimationController cannot be disposed more than once.\n"
+            + "   The following AnimationController object was disposed multiple\n"
+            + "   times:\n"
+            + "     AnimationController#00000(⏮ 0.000; paused; DISPOSED)\n",
+            FrameworkDartTester.IgnoringHashCodes(result.ToStringDeep()));
+        var builder = new DiagnosticPropertiesBuilder();
+        result.DebugFillProperties(builder);
+        DiagnosticsNode controllerProperty = builder.Properties[^1];
+        Assert.Equal(
+            "The following AnimationController object was disposed multiple times",
+            controllerProperty.Name);
+        Assert.Same(controller, controllerProperty.Value);
+    }
+
+    [DebugOnlyFact]
+    public void AnimationController_RepeatThrowsIfPeriodIsNotSpecified()
     {
         using var controller = new AnimationController();
+        Assert.Throws<FlutterError>(() => controller.Repeat());
+        Assert.Throws<FlutterError>(() => controller.Repeat());
+    }
 
-        Assert.Contains(
-            "no default duration",
-            Assert.Throws<InvalidOperationException>(() => controller.Forward()).Message);
-        Assert.Contains(
-            "no default duration or reverseDuration",
-            Assert.Throws<InvalidOperationException>(() => controller.Reverse()).Message);
-        Assert.Contains(
-            "no explicit duration and no default duration",
-            Assert.Throws<InvalidOperationException>(() => controller.AnimateTo(0.5)).Message);
-        Assert.Contains(
-            "no explicit duration and no default duration or reverseDuration",
-            Assert.Throws<InvalidOperationException>(() => controller.AnimateBack(0.5)).Message);
-        Assert.Contains(
-            "without an explicit period",
-            Assert.Throws<InvalidOperationException>(() => controller.Repeat()).Message);
+    [DebugOnlyFact]
+    public void AnimationController_ForwardWithoutDefaultDuration_ThrowsFlutterError()
+    {
+        // group('AnimationController "duration" error test')
+        using var controller = new AnimationController();
+        FlutterError error = Assert.Throws<FlutterError>(() => controller.Forward());
+        Assert.Equal(
+            "FlutterError\n"
+            + "   AnimationController.forward() called with no default duration.\n"
+            + "   The \"duration\" property should be set, either in the constructor\n"
+            + "   or later, before calling the forward() function.\n",
+            error.ToStringDeep());
+    }
+
+    [DebugOnlyFact]
+    public void AnimationController_AnimateToWithoutAnyDuration_ThrowsFlutterError()
+    {
+        using var controller = new AnimationController();
+        FlutterError error = Assert.Throws<FlutterError>(() => controller.AnimateTo(0.8));
+        Assert.Equal(
+            "FlutterError\n"
+            + "   AnimationController.animateTo() called with no explicit duration\n"
+            + "   and no default duration.\n"
+            + "   Either the \"duration\" argument to the animateTo() method should\n"
+            + "   be provided, or the \"duration\" property should be set, either in\n"
+            + "   the constructor or later, before calling the animateTo()\n"
+            + "   function.\n",
+            error.ToStringDeep());
+    }
+
+    [DebugOnlyFact]
+    public void AnimationController_ReverseWithoutAnyDuration_ThrowsFlutterError()
+    {
+        using var controller = new AnimationController();
+        FlutterError error = Assert.Throws<FlutterError>(() => controller.Reverse());
+        Assert.Equal(
+            "FlutterError\n"
+            + "   AnimationController.reverse() called with no default duration or\n"
+            + "   reverseDuration.\n"
+            + "   The \"duration\" or \"reverseDuration\" property should be set,\n"
+            + "   either in the constructor or later, before calling the reverse()\n"
+            + "   function.\n",
+            error.ToStringDeep());
+    }
+
+    [DebugOnlyFact]
+    public void AnimationController_AnimateBackWithoutAnyDuration_ThrowsFlutterError()
+    {
+        using var controller = new AnimationController();
+        FlutterError error = Assert.Throws<FlutterError>(() => controller.AnimateBack(0.8));
+        Assert.Equal(
+            "FlutterError\n"
+            + "   AnimationController.animateBack() called with no explicit\n"
+            + "   duration and no default duration or reverseDuration.\n"
+            + "   Either the \"duration\" argument to the animateBack() method should\n"
+            + "   be provided, or the \"duration\" or \"reverseDuration\" property\n"
+            + "   should be set, either in the constructor or later, before calling\n"
+            + "   the animateBack() function.\n",
+            error.ToStringDeep());
     }
 
     [Fact]
@@ -450,8 +528,13 @@ public sealed class AnimationControllerTickerTests : IDisposable
     {
         using var controller = new AnimationController(duration: TimeSpan.FromMilliseconds(100));
 
-        Assert.Throws<ArgumentOutOfRangeException>(() => controller.Repeat(count: 0));
-        Assert.Throws<ArgumentOutOfRangeException>(() => controller.Repeat(count: -1));
+        // group('count tests for repeated animation'): zero and negative counts throw an assertion.
+        Assert.Throws<AssertionError>(() => controller.Repeat(reverse: true, count: 0));
+        Assert.Throws<AssertionError>(() => controller.Repeat(reverse: true, count: -1));
+        // Dart's `max >= min` and bounds asserts.
+        Assert.Throws<AssertionError>(() => controller.Repeat(min: 0.6, max: 0.4));
+        Assert.Throws<AssertionError>(() => controller.Repeat(min: -0.1));
+        Assert.Throws<AssertionError>(() => controller.Repeat(max: 1.1));
 
         controller.Repeat(count: 1);
         Tick(0.0);
@@ -602,13 +685,13 @@ public sealed class AnimationControllerTickerTests : IDisposable
 
         Assert.False(future.Task.IsCompleted);
         Assert.True(future.OrCancel.IsFaulted);
-        Assert.Throws<ObjectDisposedException>(() => controller.Forward());
-        Assert.Throws<ObjectDisposedException>(() => controller.Reverse());
-        Assert.Throws<ObjectDisposedException>(() => controller.AnimateTo(0.0));
-        Assert.Throws<ObjectDisposedException>(() => controller.AnimateBack(0.0));
-        Assert.Throws<ObjectDisposedException>(() => controller.AnimateWith(new IdentitySimulation()));
-        Assert.Throws<ObjectDisposedException>(() => controller.Stop());
-        Assert.Throws<ObjectDisposedException>(() => controller.Dispose());
+        Assert.Throws<AssertionError>(() => controller.Forward());
+        Assert.Throws<AssertionError>(() => controller.Reverse());
+        Assert.Throws<AssertionError>(() => controller.AnimateTo(0.0));
+        Assert.Throws<AssertionError>(() => controller.AnimateBack(0.0));
+        Assert.Throws<AssertionError>(() => controller.AnimateWith(new IdentitySimulation()));
+        Assert.Throws<AssertionError>(() => controller.Stop());
+        Assert.Throws<FlutterError>(() => controller.Dispose());
     }
 
     [DebugOnlyFact]

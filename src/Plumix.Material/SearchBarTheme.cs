@@ -10,15 +10,15 @@ namespace Plumix.Material;
 
 public sealed partial record SearchBarThemeData(
     WidgetStateProperty<double?>? Elevation = null,
-    WidgetStateProperty<Color?>? BackgroundColor = null,
-    WidgetStateProperty<Color?>? ShadowColor = null,
-    WidgetStateProperty<Color?>? SurfaceTintColor = null,
-    WidgetStateProperty<Color?>? OverlayColor = null,
+    IWidgetStateProperty<Color?>? BackgroundColor = null,
+    IWidgetStateProperty<Color?>? ShadowColor = null,
+    IWidgetStateProperty<Color?>? SurfaceTintColor = null,
+    IWidgetStateProperty<Color?>? OverlayColor = null,
     WidgetStateProperty<BorderSide?>? Side = null,
     WidgetStateProperty<OutlinedBorder?>? Shape = null,
     WidgetStateProperty<EdgeInsetsGeometry?>? Padding = null,
-    WidgetStateProperty<TextStyle?>? TextStyle = null,
-    WidgetStateProperty<TextStyle?>? HintStyle = null,
+    IWidgetStateProperty<TextStyle?>? TextStyle = null,
+    IWidgetStateProperty<TextStyle?>? HintStyle = null,
     BoxConstraints? Constraints = null,
     TextCapitalization? TextCapitalization = null);
 

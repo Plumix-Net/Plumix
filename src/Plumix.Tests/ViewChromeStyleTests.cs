@@ -230,11 +230,11 @@ public sealed class ViewChromeStyleTests : IDisposable
         Assert.Equal(MaterialBlue500, SystemChrome.LatestStyle?.SystemNavigationBarColor);
 
         PumpWidget(new AnnotatedRegion<SystemUiOverlayStyle>(
-            value: new SystemUiOverlayStyle(statusBarIconBrightness: PlatformBrightness.Light),
+            value: new SystemUiOverlayStyle(statusBarIconBrightness: Brightness.Light),
             child: SizedBox.Expand()));
 
         Assert.Equal(
-            new SystemUiOverlayStyle(statusBarIconBrightness: PlatformBrightness.Light),
+            new SystemUiOverlayStyle(statusBarIconBrightness: Brightness.Light),
             SystemChrome.LatestStyle);
     }
 

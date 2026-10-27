@@ -52,7 +52,7 @@ public sealed class CupertinoThemeTests
     {
         using var harness = TestTheme(
             new CupertinoThemeData(
-                brightness: PlatformBrightness.Dark,
+                brightness: Brightness.Dark,
                 textTheme: new CupertinoTextThemeData(textStyle: new TextStyle(Color: CupertinoColors.Black))),
             out CupertinoThemeData theme);
 
@@ -79,7 +79,7 @@ public sealed class CupertinoThemeTests
         // Changing another property also triggers a rebuild.
         harness.PumpWidget(new CupertinoTheme(
             new CupertinoThemeData(
-                brightness: PlatformBrightness.Light,
+                brightness: Brightness.Light,
                 barBackgroundColor: barBackground,
                 textTheme: new CupertinoTextThemeData(
                     textStyle: new TextStyle(FontFamily: new FontFamily("Skeuomorphic")))),
@@ -90,7 +90,7 @@ public sealed class CupertinoThemeTests
 
         harness.PumpWidget(new CupertinoTheme(
             new CupertinoThemeData(
-                brightness: PlatformBrightness.Light,
+                brightness: Brightness.Light,
                 barBackgroundColor: barBackground,
                 textTheme: new CupertinoTextThemeData(
                     textStyle: new TextStyle(FontFamily: new FontFamily("Flat")))),
@@ -120,14 +120,14 @@ public sealed class CupertinoThemeTests
     public void CopyWith_Works()
     {
         var originalTheme = new CupertinoThemeData(
-            brightness: PlatformBrightness.Dark,
+            brightness: Brightness.Dark,
             applyThemeToAll: true);
 
         using var harness = TestTheme(
             originalTheme.CopyWith(primaryColor: CupertinoColors.SystemGreen, applyThemeToAll: false),
             out CupertinoThemeData theme);
 
-        Assert.Equal(PlatformBrightness.Dark, theme.Brightness);
+        Assert.Equal(Brightness.Dark, theme.Brightness);
         ColorMatchers.AssertSameColorAs(CupertinoColors.SystemGreen.DarkColor, theme.PrimaryColor);
         // Now check calculated derivatives.
         ColorMatchers.AssertSameColorAs(CupertinoColors.SystemGreen.DarkColor, theme.TextTheme.ActionTextStyle.Color);
@@ -148,7 +148,7 @@ public sealed class CupertinoThemeTests
 
         // Works in dark mode when primaryColor is a CupertinoDynamicColor.
         using (TestIconTheme(
-                   themeData.CopyWith(brightness: PlatformBrightness.Dark),
+                   themeData.CopyWith(brightness: Brightness.Dark),
                    out IconThemeData darkIconTheme))
         {
             ColorMatchers.AssertSameColorAs(primaryColor.DarkColor, darkIconTheme.Color);
@@ -176,9 +176,9 @@ public sealed class CupertinoThemeTests
     [Fact]
     public void CupertinoThemeData_Equality()
     {
-        var a = new CupertinoThemeData(brightness: PlatformBrightness.Dark);
+        var a = new CupertinoThemeData(brightness: Brightness.Dark);
         CupertinoThemeData b = a.CopyWith();
-        CupertinoThemeData c = a.CopyWith(brightness: PlatformBrightness.Light);
+        CupertinoThemeData c = a.CopyWith(brightness: Brightness.Light);
 
         Assert.Equal(a, b);
         Assert.Equal(b, a);
@@ -194,7 +194,7 @@ public sealed class CupertinoThemeTests
     {
         var a = new NoDefaultCupertinoThemeData();
         NoDefaultCupertinoThemeData b = a.CopyWith();
-        NoDefaultCupertinoThemeData c = a.CopyWith(brightness: PlatformBrightness.Light);
+        NoDefaultCupertinoThemeData c = a.CopyWith(brightness: Brightness.Light);
 
         Assert.Equal(a, b);
         Assert.NotEqual(a, c);
@@ -219,9 +219,9 @@ public sealed class CupertinoThemeTests
     }
 
     [Theory]
-    [InlineData(PlatformBrightness.Light)]
-    [InlineData(PlatformBrightness.Dark)]
-    public void Of_ResolvesColors(PlatformBrightness brightness)
+    [InlineData(Brightness.Light)]
+    [InlineData(Brightness.Dark)]
+    public void Of_ResolvesColors(Brightness brightness)
     {
         var data = new CupertinoThemeData(
             brightness: brightness,
@@ -235,9 +235,9 @@ public sealed class CupertinoThemeTests
     }
 
     [Theory]
-    [InlineData(PlatformBrightness.Light)]
-    [InlineData(PlatformBrightness.Dark)]
-    public void Of_ResolvesDefaultValues(PlatformBrightness brightness)
+    [InlineData(Brightness.Light)]
+    [InlineData(Brightness.Dark)]
+    public void Of_ResolvesDefaultValues(Brightness brightness)
     {
         CupertinoDynamicColor primaryColor = CupertinoColors.SystemRed;
         var data = new CupertinoThemeData(brightness: brightness, primaryColor: primaryColor);
@@ -276,14 +276,14 @@ public sealed class CupertinoThemeTests
     [Fact]
     public void BrightnessOf_PrefersTheThemeAndFallsBackToTheMediaQuery()
     {
-        PlatformBrightness? fromTheme = null;
-        PlatformBrightness? fromMediaQuery = null;
-        PlatformBrightness? maybeWithoutAncestors = null;
+        Brightness? fromTheme = null;
+        Brightness? fromMediaQuery = null;
+        Brightness? maybeWithoutAncestors = null;
 
         using var themed = new CupertinoThemeTestHarness(new MediaQuery(
-            new MediaQueryData(PlatformBrightness: PlatformBrightness.Light),
+            new MediaQueryData(PlatformBrightness: Brightness.Light),
             new CupertinoTheme(
-                new CupertinoThemeData(brightness: PlatformBrightness.Dark),
+                new CupertinoThemeData(brightness: Brightness.Dark),
                 new Builder(context =>
                 {
                     fromTheme = CupertinoTheme.BrightnessOf(context);
@@ -291,7 +291,7 @@ public sealed class CupertinoThemeTests
                 }))));
 
         using var unthemed = new CupertinoThemeTestHarness(new MediaQuery(
-            new MediaQueryData(PlatformBrightness: PlatformBrightness.Dark),
+            new MediaQueryData(PlatformBrightness: Brightness.Dark),
             new Builder(context =>
             {
                 fromMediaQuery = CupertinoTheme.BrightnessOf(context);
@@ -304,8 +304,8 @@ public sealed class CupertinoThemeTests
             return new SizedBox();
         }));
 
-        Assert.Equal(PlatformBrightness.Dark, fromTheme);
-        Assert.Equal(PlatformBrightness.Dark, fromMediaQuery);
+        Assert.Equal(Brightness.Dark, fromTheme);
+        Assert.Equal(Brightness.Dark, fromMediaQuery);
         Assert.Null(maybeWithoutAncestors);
     }
 
@@ -330,9 +330,9 @@ public sealed class CupertinoThemeTests
         ColorMatchers.AssertSameColorAs(CupertinoColors.SystemPink.Color, captured!.PrimaryColor);
     }
 
-    private static Color Variant(CupertinoDynamicColor color, PlatformBrightness brightness)
+    private static Color Variant(CupertinoDynamicColor color, Brightness brightness)
     {
-        return brightness == PlatformBrightness.Dark ? color.DarkColor : color.Color;
+        return brightness == Brightness.Dark ? color.DarkColor : color.Color;
     }
 
     private CupertinoThemeTestHarness TestTheme(CupertinoThemeData data, out CupertinoThemeData theme)

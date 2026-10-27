@@ -208,8 +208,8 @@ public static class BindingBase
                     {
                         FoundationDebug.DebugBrightnessOverride = value switch
                         {
-                            "Brightness.light" => Widgets.PlatformBrightness.Light,
-                            "Brightness.dark" => Widgets.PlatformBrightness.Dark,
+                            "Brightness.light" => Brightness.Light,
+                            "Brightness.dark" => Brightness.Dark,
                             _ => null,
                         };
                         PostExtensionStateChangedEvent(
@@ -236,11 +236,11 @@ public static class BindingBase
         return Task.CompletedTask;
     }
 
-    private static Widgets.PlatformBrightness EffectivePlatformBrightness() =>
+    private static Brightness EffectivePlatformBrightness() =>
         FoundationDebug.DebugBrightnessOverride ?? PlatformDispatcher.Instance.PlatformBrightness;
 
     /// <summary>dart:ui's <c>Brightness.toString()</c>, e.g. <c>Brightness.dark</c>.</summary>
-    private static string BrightnessToString(Widgets.PlatformBrightness brightness) =>
+    private static string BrightnessToString(Brightness brightness) =>
         "Brightness." + Diagnostics.EnumName(brightness);
 
     /// <summary>Registers a service extension that takes no arguments and returns an empty map.</summary>

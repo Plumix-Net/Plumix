@@ -100,7 +100,7 @@ public abstract class WidgetStateBorderSide
 /// `createSession` does.
 // Dart's `WidgetStateMouseCursor extends MouseCursor implements WidgetStateProperty<MouseCursor>`,
 // so `WidgetStateProperty.resolveAs` resolves it.
-public abstract class WidgetStateMouseCursor : MouseCursor, IWidgetStateProperty<MouseCursor?>
+public abstract class WidgetStateMouseCursor : MouseCursor, IWidgetStateProperty<MouseCursor>
 {
     /// <summary>Creates a state-resolving cursor. Dart's `const WidgetStateMouseCursor()`.</summary>
     protected WidgetStateMouseCursor(string debugDescription)
@@ -111,17 +111,16 @@ public abstract class WidgetStateMouseCursor : MouseCursor, IWidgetStateProperty
     /// <inheritdoc />
     public override string DebugDescription { get; }
 
-    public abstract MouseCursor? Resolve(IReadOnlySet<WidgetState> states);
+    public abstract MouseCursor Resolve(IReadOnlySet<WidgetState> states);
 
     /// <inheritdoc />
     protected internal override MouseCursorSession CreateSession(int device)
     {
-        MouseCursor resolved = Resolve(EmptyWidgetStates) ?? SystemMouseCursors.Basic;
-        return resolved.CreateSession(device);
+        return Resolve(EmptyWidgetStates).CreateSession(device);
     }
 
     public static WidgetStateMouseCursor ResolveWith(
-        Func<IReadOnlySet<WidgetState>, MouseCursor?> resolver,
+        Func<IReadOnlySet<WidgetState>, MouseCursor> resolver,
         string debugDescription = "WidgetStateMouseCursor()")
     {
         ArgumentNullException.ThrowIfNull(resolver);
@@ -157,9 +156,9 @@ public abstract class WidgetStateMouseCursor : MouseCursor, IWidgetStateProperty
     private static readonly IReadOnlySet<WidgetState> EmptyWidgetStates = new HashSet<WidgetState>();
 
     private sealed class ResolverWidgetStateMouseCursor(
-        Func<IReadOnlySet<WidgetState>, MouseCursor?> resolver,
+        Func<IReadOnlySet<WidgetState>, MouseCursor> resolver,
         string debugDescription) : WidgetStateMouseCursor(debugDescription)
     {
-        public override MouseCursor? Resolve(IReadOnlySet<WidgetState> states) => resolver(states);
+        public override MouseCursor Resolve(IReadOnlySet<WidgetState> states) => resolver(states);
     }
 }

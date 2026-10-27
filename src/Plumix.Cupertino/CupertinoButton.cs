@@ -460,7 +460,7 @@ public sealed class CupertinoButton : StatefulWidget
                 ? WithOpacity(
                     blendable,
                     Current.Style == CupertinoButtonStyle.Tinted
-                        ? CupertinoTheme.BrightnessOf(context) == PlatformBrightness.Light
+                        ? CupertinoTheme.BrightnessOf(context) == Brightness.Light
                             ? CupertinoConstants.CupertinoButtonTintedOpacityLight
                             : CupertinoConstants.CupertinoButtonTintedOpacityDark
                         : Current.Color is { } widgetColor ? widgetColor.Alpha / 255.0 : 1.0)

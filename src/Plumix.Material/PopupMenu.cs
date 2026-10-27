@@ -90,7 +90,7 @@ public class PopupMenuItem<T> : PopupMenuEntry<T>
         double height = 48,
         Thickness? padding = null,
         TextStyle? textStyle = null,
-        WidgetStateProperty<TextStyle?>? labelTextStyle = null,
+        IWidgetStateProperty<TextStyle?>? labelTextStyle = null,
         MouseCursor? mouseCursor = null,
         Key? key = null) : base(key)
     {
@@ -112,7 +112,7 @@ public class PopupMenuItem<T> : PopupMenuEntry<T>
     public override double Height { get; }
     public Thickness? Padding { get; }
     public TextStyle? TextStyle { get; }
-    public WidgetStateProperty<TextStyle?>? LabelTextStyle { get; }
+    public IWidgetStateProperty<TextStyle?>? LabelTextStyle { get; }
     public MouseCursor? MouseCursor { get; }
     internal override bool IsEnabled => Enabled;
 
@@ -244,7 +244,7 @@ public sealed class CheckedPopupMenuItem<T> : PopupMenuItem<T>
         bool enabled = true,
         double height = 48,
         Thickness? padding = null,
-        WidgetStateProperty<TextStyle?>? labelTextStyle = null,
+        IWidgetStateProperty<TextStyle?>? labelTextStyle = null,
         MouseCursor? mouseCursor = null,
         Key? key = null)
         : base(

@@ -129,6 +129,34 @@ public sealed class MaterialSelectionTests
     }
 
     [Fact]
+    public void SelectableText_SelectionBoxStyles_PassToEditableTextUnresolved()
+    {
+        var plain = new SelectableText("Plain");
+        Assert.Null(plain.SelectionHeightStyle);
+        Assert.Null(plain.SelectionWidthStyle);
+        using (var harness = new WidgetRenderHarness(Root(plain, ThemeData.Light)))
+        {
+            harness.Pump(new Size(320, 120));
+            RenderEditable editable = FindEditables(harness.RenderView).Single();
+            Assert.Equal(EditableText.DefaultSelectionHeightStyle, editable.SelectionHeightStyle);
+            Assert.Equal(EditableText.DefaultSelectionWidthStyle, editable.SelectionWidthStyle);
+        }
+
+        using (var harness = new WidgetRenderHarness(Root(
+                   new SelectableText(
+                       "Styled",
+                       selectionHeightStyle: BoxHeightStyle.IncludeLineSpacingTop,
+                       selectionWidthStyle: BoxWidthStyle.Tight),
+                   ThemeData.Light)))
+        {
+            harness.Pump(new Size(320, 120));
+            RenderEditable editable = FindEditables(harness.RenderView).Single();
+            Assert.Equal(BoxHeightStyle.IncludeLineSpacingTop, editable.SelectionHeightStyle);
+            Assert.Equal(BoxWidthStyle.Tight, editable.SelectionWidthStyle);
+        }
+    }
+
+    [Fact]
     public void SelectableText_SelectAllAndCopyUseReadOnlyKeyboardFlow()
     {
         using var clipboard = new MockClipboardPlatform();

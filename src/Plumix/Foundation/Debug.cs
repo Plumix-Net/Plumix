@@ -1,5 +1,7 @@
 // Dart parity source: flutter/packages/flutter/lib/src/foundation/debug.dart
 
+using Plumix.UI;
+
 namespace Plumix.Foundation;
 
 /// <summary>
@@ -34,11 +36,11 @@ public static class FoundationDebug
     /// dispatcher.
     /// </summary>
     /// <remarks>
-    /// Dart's <c>debugBrightnessOverride</c> (<see cref="Widgets.PlatformBrightness"/> is dart:ui's
+    /// Dart's <c>debugBrightnessOverride</c> (<see cref="Brightness"/> is dart:ui's
     /// <c>Brightness</c>). <c>MediaQuery.FromView</c> reads it outside release builds, and the
     /// <c>brightnessOverride</c> service extension writes it.
     /// </remarks>
-    public static Widgets.PlatformBrightness? DebugBrightnessOverride { get; set; }
+    public static Brightness? DebugBrightnessOverride { get; set; }
 
     /// <summary>
     /// Runs <paramref name="action"/>; while <see cref="DebugInstrumentationEnabled"/> is set, prints

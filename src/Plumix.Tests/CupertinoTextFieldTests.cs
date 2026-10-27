@@ -58,10 +58,10 @@ public sealed class CupertinoTextFieldTests : IDisposable
     }
 
     [Theory]
-    [InlineData(PlatformBrightness.Light, 0xFFFFFFFFu, 0x33000000u, 0x4C3C3C43u)]
-    [InlineData(PlatformBrightness.Dark, 0xFF000000u, 0x33FFFFFFu, 0x4CEBEBF5u)]
+    [InlineData(Brightness.Light, 0xFFFFFFFFu, 0x33000000u, 0x4C3C3C43u)]
+    [InlineData(Brightness.Dark, 0xFF000000u, 0x33FFFFFFu, 0x4CEBEBF5u)]
     public void Build_ResolvesDecorationPlaceholderAndEditableDefaults(
-        PlatformBrightness brightness,
+        Brightness brightness,
         uint background,
         uint border,
         uint placeholder)
@@ -259,7 +259,7 @@ public sealed class CupertinoTextFieldTests : IDisposable
 
     private static Widget Wrap(
         Widget child,
-        PlatformBrightness brightness = PlatformBrightness.Light,
+        Brightness brightness = Brightness.Light,
         TextDirection direction = TextDirection.Ltr)
     {
         return new MediaQuery(

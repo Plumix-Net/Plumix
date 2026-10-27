@@ -138,7 +138,7 @@ public sealed class CupertinoPickerTests : IDisposable
             [new Text("0"), new Text("1")],
             backgroundColor: background);
 
-        using var light = new CupertinoThemeTestHarness(Wrap(picker, PlatformBrightness.Light));
+        using var light = new CupertinoThemeTestHarness(Wrap(picker, Brightness.Light));
         light.Pump(ViewSize);
         Assert.Contains(
             light.FindWidgets<DecoratedBox>(),
@@ -148,7 +148,7 @@ public sealed class CupertinoPickerTests : IDisposable
             CupertinoColors.Label.Color,
             Assert.Single(light.FindWidgets<DefaultTextStyle>()).Style.Color);
 
-        using var dark = new CupertinoThemeTestHarness(Wrap(picker, PlatformBrightness.Dark));
+        using var dark = new CupertinoThemeTestHarness(Wrap(picker, Brightness.Dark));
         dark.Pump(ViewSize);
         Assert.Contains(
             dark.FindWidgets<DecoratedBox>(),
@@ -415,7 +415,7 @@ public sealed class CupertinoPickerTests : IDisposable
 
     private static Widget Wrap(
         Widget child,
-        PlatformBrightness brightness = PlatformBrightness.Light)
+        Brightness brightness = Brightness.Light)
     {
         return new Directionality(
             TextDirection.Ltr,

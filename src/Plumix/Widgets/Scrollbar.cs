@@ -922,7 +922,7 @@ public class RawScrollbarState<T> : State<T> where T : RawScrollbar
     private Point? _lastDragUpdateOffset;
     private double? _startDragThumbOffset;
     private ScrollController? _cachedController;
-    private GestureTimer? _fadeoutTimer;
+    private Timer? _fadeoutTimer;
     private AnimationController _fadeoutAnimationController = null!;
     private CurvedAnimation _fadeoutOpacityAnimation = null!;
     private bool _hoverIsActive;
@@ -1160,7 +1160,7 @@ public class RawScrollbarState<T> : State<T> where T : RawScrollbar
         }
 
         _fadeoutTimer?.Cancel();
-        _fadeoutTimer = GestureTimer.Start(CurrentWidget.TimeToFade, () =>
+        _fadeoutTimer = new Timer(CurrentWidget.TimeToFade, () =>
         {
             _fadeoutAnimationController.Reverse();
             _fadeoutTimer = null;

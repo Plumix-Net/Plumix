@@ -166,7 +166,7 @@ public sealed class Stepper : StatefulWidget
         ControlsWidgetBuilder? controlsBuilder = null,
         double? elevation = null,
         EdgeInsetsGeometry? margin = null,
-        WidgetStateProperty<Color>? connectorColor = null,
+        IWidgetStateProperty<Color>? connectorColor = null,
         double? connectorThickness = null,
         StepIconBuilder? stepIconBuilder = null,
         double? stepIconHeight = null,
@@ -256,7 +256,7 @@ public sealed class Stepper : StatefulWidget
     public EdgeInsetsGeometry? Margin { get; }
 
     /// <summary>Customize connected lines colors.</summary>
-    public WidgetStateProperty<Color>? ConnectorColor { get; }
+    public IWidgetStateProperty<Color>? ConnectorColor { get; }
 
     /// <summary>The thickness of the connecting lines.</summary>
     public double? ConnectorThickness { get; }

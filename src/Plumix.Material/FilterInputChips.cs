@@ -33,7 +33,7 @@ public sealed class FilterChip : StatelessWidget
         Clip clipBehavior = Clip.None,
         FocusNode? focusNode = null,
         bool autofocus = false,
-        WidgetStateProperty<Color?>? color = null,
+        IWidgetStateProperty<Color?>? color = null,
         Color? backgroundColor = null,
         Thickness? padding = null,
         VisualDensity? visualDensity = null,
@@ -80,7 +80,7 @@ public sealed class FilterChip : StatelessWidget
         Clip clipBehavior,
         FocusNode? focusNode,
         bool autofocus,
-        WidgetStateProperty<Color?>? color,
+        IWidgetStateProperty<Color?>? color,
         Color? backgroundColor,
         Thickness? padding,
         VisualDensity? visualDensity,
@@ -162,7 +162,7 @@ public sealed class FilterChip : StatelessWidget
         Clip clipBehavior = Clip.None,
         FocusNode? focusNode = null,
         bool autofocus = false,
-        WidgetStateProperty<Color?>? color = null,
+        IWidgetStateProperty<Color?>? color = null,
         Color? backgroundColor = null,
         Thickness? padding = null,
         VisualDensity? visualDensity = null,
@@ -209,7 +209,7 @@ public sealed class FilterChip : StatelessWidget
     public Clip ClipBehavior { get; }
     public FocusNode? FocusNode { get; }
     public bool Autofocus { get; }
-    public WidgetStateProperty<Color?>? Color { get; }
+    public IWidgetStateProperty<Color?>? Color { get; }
     public Color? BackgroundColor { get; }
     public Thickness? Padding { get; }
     public VisualDensity? VisualDensity { get; }
@@ -310,7 +310,7 @@ public sealed class InputChip : StatelessWidget
         Clip clipBehavior = Clip.None,
         FocusNode? focusNode = null,
         bool autofocus = false,
-        WidgetStateProperty<Color?>? color = null,
+        IWidgetStateProperty<Color?>? color = null,
         Color? backgroundColor = null,
         Thickness? padding = null,
         VisualDensity? visualDensity = null,
@@ -398,7 +398,7 @@ public sealed class InputChip : StatelessWidget
     public Clip ClipBehavior { get; }
     public FocusNode? FocusNode { get; }
     public bool Autofocus { get; }
-    public WidgetStateProperty<Color?>? Color { get; }
+    public IWidgetStateProperty<Color?>? Color { get; }
     public Color? BackgroundColor { get; }
     public Thickness? Padding { get; }
     public VisualDensity? VisualDensity { get; }

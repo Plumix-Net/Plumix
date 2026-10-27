@@ -354,11 +354,11 @@ public sealed class CupertinoCheckboxTests
 
         using var dark = new CupertinoThemeTestHarness(Wrap(
             new CupertinoCheckbox(value: true, onChanged: _ => { }),
-            themeBrightness: PlatformBrightness.Dark));
+            themeBrightness: Brightness.Dark));
         CupertinoCheckboxPainter darkPainter = Painter(dark);
         ColorMatchers.AssertSameColorAs(new Color(0xFF3264D7), darkPainter.ActiveColor);
         ColorMatchers.AssertSameColorAs(new Color(0xFFDEE8F8), darkPainter.CheckColor);
-        Assert.Equal(PlatformBrightness.Dark, darkPainter.Brightness);
+        Assert.Equal(Brightness.Dark, darkPainter.Brightness);
         // The unselected fill stays white; dark mode replaces it with the gradient at paint time.
         Assert.Equal(CupertinoColors.White, darkPainter.InactiveColor);
     }
@@ -512,13 +512,13 @@ public sealed class CupertinoCheckboxTests
 
     private static Widget Wrap(
         Widget child,
-        PlatformBrightness? themeBrightness = null,
+        Brightness? themeBrightness = null,
         bool center = true)
     {
         Widget content = center ? new Center(child: child) : child;
         // `CupertinoThemeData.brightness` stays null unless set, exactly as in a plain CupertinoApp.
         return new MediaQuery(
-            data: new MediaQueryData(PlatformBrightness: themeBrightness ?? PlatformBrightness.Light),
+            data: new MediaQueryData(PlatformBrightness: themeBrightness ?? Brightness.Light),
             child: new Directionality(
                 TextDirection.Ltr,
                 new CupertinoTheme(

@@ -29,11 +29,11 @@ public sealed class Checkbox : StatefulWidget
         bool tristate = false,
         MouseCursor? mouseCursor = null,
         Color? activeColor = null,
-        WidgetStateProperty<Color?>? fillColor = null,
+        IWidgetStateProperty<Color?>? fillColor = null,
         Color? checkColor = null,
         Color? focusColor = null,
         Color? hoverColor = null,
-        WidgetStateProperty<Color?>? overlayColor = null,
+        IWidgetStateProperty<Color?>? overlayColor = null,
         double? splashRadius = null,
         MaterialTapTargetSize? materialTapTargetSize = null,
         VisualDensity? visualDensity = null,
@@ -74,11 +74,11 @@ public sealed class Checkbox : StatefulWidget
         bool tristate,
         MouseCursor? mouseCursor,
         Color? activeColor,
-        WidgetStateProperty<Color?>? fillColor,
+        IWidgetStateProperty<Color?>? fillColor,
         Color? checkColor,
         Color? focusColor,
         Color? hoverColor,
-        WidgetStateProperty<Color?>? overlayColor,
+        IWidgetStateProperty<Color?>? overlayColor,
         double? splashRadius,
         MaterialTapTargetSize? materialTapTargetSize,
         VisualDensity? visualDensity,
@@ -130,7 +130,7 @@ public sealed class Checkbox : StatefulWidget
 
     public Color? ActiveColor { get; }
 
-    public WidgetStateProperty<Color?>? FillColor { get; }
+    public IWidgetStateProperty<Color?>? FillColor { get; }
 
     public Color? CheckColor { get; }
 
@@ -138,7 +138,7 @@ public sealed class Checkbox : StatefulWidget
 
     public Color? HoverColor { get; }
 
-    public WidgetStateProperty<Color?>? OverlayColor { get; }
+    public IWidgetStateProperty<Color?>? OverlayColor { get; }
 
     public double? SplashRadius { get; }
 
@@ -164,11 +164,11 @@ public sealed class Checkbox : StatefulWidget
         bool tristate = false,
         MouseCursor? mouseCursor = null,
         Color? activeColor = null,
-        WidgetStateProperty<Color?>? fillColor = null,
+        IWidgetStateProperty<Color?>? fillColor = null,
         Color? checkColor = null,
         Color? focusColor = null,
         Color? hoverColor = null,
-        WidgetStateProperty<Color?>? overlayColor = null,
+        IWidgetStateProperty<Color?>? overlayColor = null,
         double? splashRadius = null,
         MaterialTapTargetSize? materialTapTargetSize = null,
         VisualDensity? visualDensity = null,

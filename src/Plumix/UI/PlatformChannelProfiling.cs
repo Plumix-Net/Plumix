@@ -87,13 +87,7 @@ public static class PlatformChannelProfiling
         Stats.Clear();
     }
 
-    private static void DefaultScheduleTimer(TimeSpan delay, Action callback)
-    {
-        // A Dart timer returns to the isolate. Delay on the pool, then return through the event loop.
-        _ = Task.Delay(delay).ContinueWith(
-            _ => EventLoop.ScheduleMicrotask(callback), CancellationToken.None,
-            TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
-    }
+    private static void DefaultScheduleTimer(TimeSpan delay, Action callback) => _ = new Timer(delay, callback);
 
     internal static void ResetForTests()
     {

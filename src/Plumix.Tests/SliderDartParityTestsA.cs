@@ -1160,9 +1160,7 @@ public sealed class SliderDartParityTestsA : IDisposable
                         child: new Center(
                             child: new StatefulBuilder((context, setState) => new Slider(
                                 value: value,
-                                // Dart passes `WidgetStateColor.resolveWith`; `Slider.OverlayColor` is a
-                                // `WidgetStateProperty<Color?>`, which a C# `WidgetStateColor` is not.
-                                overlayColor: WidgetStateProperty<Color?>.ResolveWith(states =>
+                                overlayColor: WidgetStateColor.ResolveWith(states =>
                                     states.Contains(WidgetState.Focused)
                                         ? MaterialColors.Purple.Shade500
                                         : MaterialColors.Transparent),
@@ -1268,9 +1266,7 @@ public sealed class SliderDartParityTestsA : IDisposable
                     child: new Center(
                         child: new StatefulBuilder((context, setState) => new Slider(
                             value: value,
-                            // Dart passes `WidgetStateColor.resolveWith`; `Slider.OverlayColor` is a
-                            // `WidgetStateProperty<Color?>`, which a C# `WidgetStateColor` is not.
-                            overlayColor: WidgetStateProperty<Color?>.ResolveWith(states =>
+                            overlayColor: WidgetStateColor.ResolveWith(states =>
                                 states.Contains(WidgetState.Hovered)
                                     ? MaterialColors.Cyan.Shade500
                                     : MaterialColors.Transparent),
@@ -1399,9 +1395,7 @@ public sealed class SliderDartParityTestsA : IDisposable
                                 key: sliderKey,
                                 value: value,
                                 focusNode: focusNode,
-                                // Dart passes `WidgetStateColor.resolveWith`; `Slider.OverlayColor` is a
-                                // `WidgetStateProperty<Color?>`, which a C# `WidgetStateColor` is not.
-                                overlayColor: WidgetStateProperty<Color?>.ResolveWith(states =>
+                                overlayColor: WidgetStateColor.ResolveWith(states =>
                                     states.Contains(WidgetState.Dragged)
                                         ? MaterialColors.Lime.Shade500
                                         : MaterialColors.Transparent),

@@ -473,7 +473,7 @@ public sealed class CupertinoButtonTests : IDisposable
                 onPressed: () => { },
                 color: background,
                 disabledColor: inactive),
-            PlatformBrightness.Dark));
+            Brightness.Dark));
         Assert.Equal(new Color(0xFF654321), Decoration(dark).Color);
 
         using var light = new CupertinoThemeTestHarness(Wrap(new CupertinoButton(
@@ -494,7 +494,7 @@ public sealed class CupertinoButtonTests : IDisposable
 
         using var dark = new CupertinoThemeTestHarness(Wrap(
             new CupertinoButton(child: Box(0.0, 0.0), onPressed: () => { }),
-            PlatformBrightness.Dark));
+            Brightness.Dark));
         ColorMatchers.AssertSameColorAs(CupertinoColors.SystemBlue.DarkColor, TextStyleOf(dark).Color);
     }
 
@@ -510,7 +510,7 @@ public sealed class CupertinoButtonTests : IDisposable
 
         using var dark = new CupertinoThemeTestHarness(Wrap(
             CupertinoButton.Tinted(child: Box(0.0, 0.0), onPressed: () => { }),
-            PlatformBrightness.Dark));
+            Brightness.Dark));
         ColorMatchers.AssertSameColorAs(CupertinoColors.SystemBlue.DarkColor, TextStyleOf(dark).Color);
         Assert.Equal(
             WithOpacity(CupertinoColors.ActiveBlue.DarkColor, 0.26),
@@ -527,7 +527,7 @@ public sealed class CupertinoButtonTests : IDisposable
 
         using var dark = new CupertinoThemeTestHarness(Wrap(
             CupertinoButton.Filled(child: Box(0.0, 0.0), onPressed: () => { }),
-            PlatformBrightness.Dark));
+            Brightness.Dark));
         Assert.Equal(CupertinoColors.White, TextStyleOf(dark).Color);
         Assert.Equal(CupertinoColors.SystemBlue.DarkColor, Decoration(dark).Color);
 
@@ -856,11 +856,11 @@ public sealed class CupertinoButtonTests : IDisposable
 
     private static Widget Wrap(
         Widget child,
-        PlatformBrightness? themeBrightness = null,
+        Brightness? themeBrightness = null,
         CupertinoTextThemeData? textTheme = null)
     {
         return new MediaQuery(
-            data: new MediaQueryData(PlatformBrightness: themeBrightness ?? PlatformBrightness.Light),
+            data: new MediaQueryData(PlatformBrightness: themeBrightness ?? Brightness.Light),
             child: new Directionality(
                 TextDirection.Ltr,
                 new CupertinoTheme(

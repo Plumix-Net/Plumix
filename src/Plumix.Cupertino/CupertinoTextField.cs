@@ -83,7 +83,7 @@ public sealed class CupertinoTextField : StatefulWidget
         Color? cursorColor = null,
         BoxHeightStyle? selectionHeightStyle = null,
         BoxWidthStyle? selectionWidthStyle = null,
-        PlatformBrightness? keyboardAppearance = null,
+        Brightness? keyboardAppearance = null,
         EdgeInsetsGeometry? scrollPadding = null,
         DragStartBehavior dragStartBehavior = DragStartBehavior.Start,
         bool? enableInteractiveSelection = null,
@@ -234,7 +234,7 @@ public sealed class CupertinoTextField : StatefulWidget
         Color? cursorColor = null,
         BoxHeightStyle? selectionHeightStyle = null,
         BoxWidthStyle? selectionWidthStyle = null,
-        PlatformBrightness? keyboardAppearance = null,
+        Brightness? keyboardAppearance = null,
         EdgeInsetsGeometry? scrollPadding = null,
         DragStartBehavior dragStartBehavior = DragStartBehavior.Start,
         bool? enableInteractiveSelection = null,
@@ -387,7 +387,7 @@ public sealed class CupertinoTextField : StatefulWidget
         Color? cursorColor,
         BoxHeightStyle? selectionHeightStyle,
         BoxWidthStyle? selectionWidthStyle,
-        PlatformBrightness? keyboardAppearance,
+        Brightness? keyboardAppearance,
         EdgeInsetsGeometry? scrollPadding,
         DragStartBehavior dragStartBehavior,
         bool? enableInteractiveSelection,
@@ -549,7 +549,7 @@ public sealed class CupertinoTextField : StatefulWidget
     public Color? CursorColor { get; }
     public BoxHeightStyle? SelectionHeightStyle { get; }
     public BoxWidthStyle? SelectionWidthStyle { get; }
-    public PlatformBrightness? KeyboardAppearance { get; }
+    public Brightness? KeyboardAppearance { get; }
     public EdgeInsetsGeometry ScrollPadding { get; }
     public DragStartBehavior DragStartBehavior { get; }
     public bool EnableInteractiveSelection { get; }
@@ -993,7 +993,7 @@ internal sealed class CupertinoTextFieldState
         }
 
         string label = Current.ClearButtonSemanticLabel ?? CupertinoLocalizations.Of(context).ClearButtonLabel;
-        Color color = CupertinoTheme.BrightnessOf(context) == PlatformBrightness.Dark
+        Color color = CupertinoTheme.BrightnessOf(context) == Brightness.Dark
             ? new Color(0x33FFFFFF)
             : new Color(0x33000000);
         return new Semantics(
@@ -1045,7 +1045,7 @@ internal sealed class CupertinoTextFieldState
             return Current.Decoration;
         }
 
-        bool dark = CupertinoTheme.BrightnessOf(context) == PlatformBrightness.Dark;
+        bool dark = CupertinoTheme.BrightnessOf(context) == Brightness.Dark;
         return new BoxDecoration(
             Color: Current.Enabled
                 ? dark ? CupertinoColors.Black : CupertinoColors.White
@@ -1217,7 +1217,7 @@ internal sealed class CupertinoTextFieldState
 
     private static Color DisabledBackground(BuildContext context)
     {
-        return CupertinoTheme.BrightnessOf(context) == PlatformBrightness.Dark
+        return CupertinoTheme.BrightnessOf(context) == Brightness.Dark
             ? new Color(0xFF050505)
             : new Color(0xFFFAFAFA);
     }

@@ -181,7 +181,7 @@ public sealed class SegmentedButton<T> : StatefulWidget
                     : enabled);
     }
 
-    private static WidgetStateProperty<Color?>? BuildOverlayColor(
+    private static IWidgetStateProperty<Color?>? BuildOverlayColor(
         Color? foreground,
         Color? selectedForeground,
         Color? overlay)
@@ -565,7 +565,7 @@ public sealed class SegmentedButtonState<T> : State<SegmentedButton<T>>
     }
 
     private static TValue? ResolveValue<TValue>(
-        Func<ButtonStyle, WidgetStateProperty<TValue?>?> selector,
+        Func<ButtonStyle, IWidgetStateProperty<TValue?>?> selector,
         IReadOnlySet<WidgetState> states,
         params ButtonStyle?[] styles) where TValue : struct
     {
@@ -581,7 +581,7 @@ public sealed class SegmentedButtonState<T> : State<SegmentedButton<T>>
     }
 
     private static TValue? ResolveValue<TValue>(
-        Func<ButtonStyle, WidgetStateProperty<TValue?>?> selector,
+        Func<ButtonStyle, IWidgetStateProperty<TValue?>?> selector,
         IReadOnlySet<WidgetState> states,
         params ButtonStyle?[] styles) where TValue : class
     {

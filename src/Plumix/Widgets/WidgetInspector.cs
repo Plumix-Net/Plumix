@@ -1367,11 +1367,10 @@ internal sealed class WidgetInspectorButton : StatefulWidget
 }
 
 /// <summary>Flutter's private <c>_WidgetInspectorButtonState</c>.</summary>
-/// <remarks>Dart's <c>Timer</c>s are <see cref="GestureTimer"/>s, Plumix's one-shot timer.</remarks>
 internal sealed class WidgetInspectorButtonState : State<WidgetInspectorButton>
 {
-    private GestureTimer? _tooltipVisibleTimer;
-    private GestureTimer? _tooltipHiddenTimer;
+    private Timer? _tooltipVisibleTimer;
+    private Timer? _tooltipHiddenTimer;
 
     public override void Dispose()
     {
@@ -1415,7 +1414,7 @@ internal sealed class WidgetInspectorButtonState : State<WidgetInspectorButton>
 
     private void TooltipVisibilityChangedAfter(TimeSpan duration, bool isVisible)
     {
-        GestureTimer? timer = isVisible ? _tooltipVisibleTimer : _tooltipHiddenTimer;
+        Timer? timer = isVisible ? _tooltipVisibleTimer : _tooltipHiddenTimer;
         if (timer?.IsActive ?? false)
         {
             timer.Cancel();
@@ -1423,11 +1422,11 @@ internal sealed class WidgetInspectorButtonState : State<WidgetInspectorButton>
 
         if (isVisible)
         {
-            _tooltipVisibleTimer = GestureTimer.Start(duration, () => Widget.OnTooltipVisible());
+            _tooltipVisibleTimer = new Timer(duration, () => Widget.OnTooltipVisible());
         }
         else
         {
-            _tooltipHiddenTimer = GestureTimer.Start(duration, () => Widget.OnTooltipHidden());
+            _tooltipHiddenTimer = new Timer(duration, () => Widget.OnTooltipHidden());
         }
     }
 }

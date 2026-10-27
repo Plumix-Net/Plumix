@@ -90,7 +90,7 @@ public sealed class ColorSubtypeTests
         Color? plainResolved = null;
         var style = new TextStyle(Color: CupertinoColors.Label);
         using var harness = new CupertinoThemeTestHarness(new CupertinoTheme(
-            new CupertinoThemeData(brightness: PlatformBrightness.Dark),
+            new CupertinoThemeData(brightness: Brightness.Dark),
             new Builder(context =>
             {
                 resolved = CupertinoDynamicColor.MaybeResolve(style.Color, context);
@@ -113,7 +113,7 @@ public sealed class ColorSubtypeTests
                 BackgroundColor: CupertinoColors.SystemGreen,
                 DecorationColor: CupertinoColors.SystemBlue));
         using var harness = new CupertinoThemeTestHarness(new CupertinoTheme(
-            new CupertinoThemeData(brightness: PlatformBrightness.Dark),
+            new CupertinoThemeData(brightness: Brightness.Dark),
             new Builder(context =>
             {
                 resolved = textTheme.ResolveFrom(context);
@@ -135,7 +135,7 @@ public sealed class ColorSubtypeTests
         IconThemeData? dynamicResolved = null;
         var dynamicTheme = new CupertinoIconThemeData(Color: CupertinoColors.SystemBlue);
         using var harness = new CupertinoThemeTestHarness(new CupertinoTheme(
-            new CupertinoThemeData(brightness: PlatformBrightness.Dark),
+            new CupertinoThemeData(brightness: Brightness.Dark),
             new Builder(context =>
             {
                 plainResolved = plain.Resolve(context);

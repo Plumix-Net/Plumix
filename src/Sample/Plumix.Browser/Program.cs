@@ -20,6 +20,8 @@ internal sealed partial class Program
     private static async Task Main(string[] args)
     {
         await BrowserTextSegmentation.InitializeAsync();
+        ReportNavigator();
+        await BrowserTypographySettings.InitializeAsync();
         await BuildAvaloniaApp()
             .WithInterFont()
             .StartBrowserAppAsync("out");
@@ -30,6 +32,15 @@ internal sealed partial class Program
             await BrowserAccessibilityBridge.AttachAsync(host, "out");
             await BrowserSelectionContextMenu.InitializeAsync(host, "out");
         }
+    }
+
+    // The web engine's BrowserDetection reads `window.navigator` itself; Plumix's core has no DOM access.
+    private static void ReportNavigator()
+    {
+        using JSObject navigator = JSHost.GlobalThis.GetPropertyAsJSObject("navigator")!;
+        BrowserDetection.Instance.ReportNavigator(
+            navigator.GetPropertyAsString("vendor") ?? string.Empty,
+            navigator.GetPropertyAsString("userAgent") ?? string.Empty);
     }
 
     public static AppBuilder BuildAvaloniaApp()

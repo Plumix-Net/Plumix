@@ -758,9 +758,8 @@ public sealed class MaterialSnackBarTests : IDisposable
     [Fact]
     public async Task ScaffoldMessenger_TimeoutClosesWithItsOwnReasonAndPersistSurvivesIt()
     {
-        // The timer itself hands back through the host dispatcher, which no unit-test harness
-        // pumps; what is asserted here is the decision the timer callback makes, plus the reason
-        // it reports. End-to-end expiry is verified at runtime through the sample.
+        // The display timer runs on the event loop's fake clock, which this test elapses.
+        using var timers = new FakeGestureTimers();
         using var harness = NewMessenger();
         var messenger = harness.FindState<ScaffoldMessengerState>();
 
@@ -769,7 +768,11 @@ public sealed class MaterialSnackBarTests : IDisposable
         AnimationPump.Advance(0.4);
         harness.Pump(new Size(360, 220));
 
-        messenger.HideCurrentSnackBar(SnackBarClosedReason.Timeout);
+        // The default four-second duration starts once the entrance animation has completed.
+        timers.Elapse(TimeSpan.FromMilliseconds(3999));
+        Assert.False(transient.Closed.IsCompleted);
+        Assert.NotNull(FindParagraph(harness.RenderView, "Transient"));
+        timers.Elapse(TimeSpan.FromMilliseconds(1));
         AnimationPump.Advance(0.4);
         harness.Pump(new Size(360, 220));
         await Task.Yield();
@@ -784,7 +787,7 @@ public sealed class MaterialSnackBarTests : IDisposable
         Assert.True(persistent.Feature.Persist);
         AnimationPump.Advance(0.4);
         harness.Pump(new Size(360, 220));
-        await Task.Delay(60);
+        timers.Elapse(TimeSpan.FromMilliseconds(60));
         harness.Pump(new Size(360, 220));
         Assert.False(persistent.Closed.IsCompleted);
         Assert.NotNull(FindParagraph(harness.RenderView, "Persistent"));

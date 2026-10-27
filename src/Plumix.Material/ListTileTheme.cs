@@ -48,7 +48,7 @@ public sealed partial record ListTileThemeData(
     double? MinLeadingWidth = null,
     double? MinTileHeight = null,
     bool? EnableFeedback = null,
-    WidgetStateProperty<MouseCursor?>? MouseCursor = null,
+    IWidgetStateProperty<MouseCursor?>? MouseCursor = null,
     VisualDensity? VisualDensity = null,
     ListTileTitleAlignment? TitleAlignment = null,
     ListTileControlAffinity? ControlAffinity = null,
@@ -72,7 +72,7 @@ public sealed partial record ListTileThemeData(
         double? minLeadingWidth = null,
         double? minTileHeight = null,
         bool? enableFeedback = null,
-        WidgetStateProperty<MouseCursor?>? mouseCursor = null,
+        IWidgetStateProperty<MouseCursor?>? mouseCursor = null,
         VisualDensity? visualDensity = null,
         ListTileTitleAlignment? titleAlignment = null,
         ListTileControlAffinity? controlAffinity = null,
@@ -117,7 +117,7 @@ public sealed class ListTileTheme : InheritedTheme
     private readonly Color? _tileColor;
     private readonly Color? _selectedTileColor;
     private readonly bool? _enableFeedback;
-    private readonly WidgetStateProperty<MouseCursor?>? _mouseCursor;
+    private readonly IWidgetStateProperty<MouseCursor?>? _mouseCursor;
     private readonly double? _horizontalTitleGap;
     private readonly double? _minVerticalPadding;
     private readonly double? _minLeadingWidth;
@@ -136,7 +136,7 @@ public sealed class ListTileTheme : InheritedTheme
         Color? tileColor = null,
         Color? selectedTileColor = null,
         bool? enableFeedback = null,
-        WidgetStateProperty<MouseCursor?>? mouseCursor = null,
+        IWidgetStateProperty<MouseCursor?>? mouseCursor = null,
         double? horizontalTitleGap = null,
         double? minVerticalPadding = null,
         double? minLeadingWidth = null,
@@ -276,7 +276,7 @@ public sealed class ListTileTheme : InheritedTheme
         double? minLeadingWidth = null,
         double? minTileHeight = null,
         ListTileTitleAlignment? titleAlignment = null,
-        WidgetStateProperty<MouseCursor?>? mouseCursor = null,
+        IWidgetStateProperty<MouseCursor?>? mouseCursor = null,
         VisualDensity? visualDensity = null,
         ListTileControlAffinity? controlAffinity = null,
         bool? isThreeLine = null,

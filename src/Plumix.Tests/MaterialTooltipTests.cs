@@ -387,6 +387,7 @@ public sealed class MaterialTooltipTests
         try
         {
             int triggered = 0;
+            using var timers = new FakeGestureTimers();
             using var harness = new WidgetRenderHarness(
                 new Theme(
                     ThemeData.Light,
@@ -403,10 +404,12 @@ public sealed class MaterialTooltipTests
             listener!.OnEnter?.Invoke(PointerEnter(1));
             double clock = AnimationPump.CurrentSeconds;
             AnimationPump.Prime();
+            timers.Elapse(TimeSpan.FromMilliseconds(200));
             SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(clock + 0.20));
             harness.Pump(new Size(160, 80));
             Assert.Null(FindParagraph(harness.RenderView, "Delayed tip"));
 
+            timers.Elapse(TimeSpan.FromMilliseconds(200));
             SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(clock + 0.40));
             harness.Pump(new Size(160, 80));
             Assert.NotNull(FindParagraph(harness.RenderView, "Delayed tip"));
@@ -416,10 +419,12 @@ public sealed class MaterialTooltipTests
             listener!.OnExit?.Invoke(PointerExit(1));
             clock = AnimationPump.CurrentSeconds;
             AnimationPump.Prime();
+            timers.Elapse(TimeSpan.FromMilliseconds(100));
             SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(clock + 0.10));
             harness.Pump(new Size(160, 80));
             Assert.NotNull(FindParagraph(harness.RenderView, "Delayed tip"));
 
+            timers.Elapse(TimeSpan.FromMilliseconds(200));
             SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(clock + 0.30));
             SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(clock + 0.50));
             harness.Pump(new Size(160, 80));

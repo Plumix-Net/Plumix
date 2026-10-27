@@ -230,7 +230,7 @@ public sealed class CupertinoDatePickerTests : IDisposable
                 mode: CupertinoDatePickerMode.Time,
                 initialDateTime: new DateTime(2025, 1, 1, 12, 15, 0),
                 showTimeSeparator: true),
-            PlatformBrightness.Dark));
+            Brightness.Dark));
         dark.Pump(ViewSize);
         Assert.Single(dark.FindWidgets<Text>(), text => text.Data == ":");
         Assert.Contains(
@@ -289,7 +289,7 @@ public sealed class CupertinoDatePickerTests : IDisposable
 
     private static Widget Wrap(
         Widget child,
-        PlatformBrightness brightness = PlatformBrightness.Light)
+        Brightness brightness = Brightness.Light)
     {
         return new Directionality(
             TextDirection.Ltr,

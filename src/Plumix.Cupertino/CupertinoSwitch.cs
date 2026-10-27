@@ -31,10 +31,10 @@ public sealed class CupertinoSwitch : StatefulWidget
         ImageErrorListener? onActiveThumbImageError = null,
         ImageProvider? inactiveThumbImage = null,
         ImageErrorListener? onInactiveThumbImageError = null,
-        WidgetStateProperty<Color?>? trackOutlineColor = null,
+        IWidgetStateProperty<Color?>? trackOutlineColor = null,
         WidgetStateProperty<double?>? trackOutlineWidth = null,
         WidgetStateProperty<Icon?>? thumbIcon = null,
-        WidgetStateProperty<MouseCursor>? mouseCursor = null,
+        IWidgetStateProperty<MouseCursor>? mouseCursor = null,
         FocusNode? focusNode = null,
         Action<bool>? onFocusChange = null,
         bool autofocus = false,
@@ -120,13 +120,13 @@ public sealed class CupertinoSwitch : StatefulWidget
 
     public ImageErrorListener? OnInactiveThumbImageError { get; }
 
-    public WidgetStateProperty<Color?>? TrackOutlineColor { get; }
+    public IWidgetStateProperty<Color?>? TrackOutlineColor { get; }
 
     public WidgetStateProperty<double?>? TrackOutlineWidth { get; }
 
     public WidgetStateProperty<Icon?>? ThumbIcon { get; }
 
-    public WidgetStateProperty<MouseCursor>? MouseCursor { get; }
+    public IWidgetStateProperty<MouseCursor>? MouseCursor { get; }
 
     public FocusNode? FocusNode { get; }
 

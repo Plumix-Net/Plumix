@@ -390,7 +390,7 @@ internal sealed class CupertinoActionSheetActionState : State<CupertinoActionShe
 
     private Color EffectiveFocusBackgroundColor(BuildContext context)
     {
-        double opacity = CupertinoTheme.BrightnessOf(context) == PlatformBrightness.Light
+        double opacity = CupertinoTheme.BrightnessOf(context) == Brightness.Light
             ? CupertinoConstants.CupertinoButtonTintedOpacityLight
             : CupertinoConstants.CupertinoButtonTintedOpacityDark;
         Color baseColor = Current.FocusColor ?? CupertinoColors.ActiveBlue.Color;

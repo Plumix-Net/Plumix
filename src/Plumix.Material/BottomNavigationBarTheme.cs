@@ -22,7 +22,7 @@ public sealed record BottomNavigationBarThemeData(
     BottomNavigationBarType? Type = null,
     bool? EnableFeedback = null,
     BottomNavigationBarLandscapeLayout? LandscapeLayout = null,
-    WidgetStateProperty<MouseCursor?>? MouseCursor = null)
+    IWidgetStateProperty<MouseCursor?>? MouseCursor = null)
 {
     public BottomNavigationBarThemeData CopyWith(
         Color? backgroundColor = null,
@@ -38,7 +38,7 @@ public sealed record BottomNavigationBarThemeData(
         BottomNavigationBarType? type = null,
         bool? enableFeedback = null,
         BottomNavigationBarLandscapeLayout? landscapeLayout = null,
-        WidgetStateProperty<MouseCursor?>? mouseCursor = null)
+        IWidgetStateProperty<MouseCursor?>? mouseCursor = null)
     {
         return new BottomNavigationBarThemeData(
             BackgroundColor: backgroundColor ?? BackgroundColor,
@@ -152,7 +152,7 @@ public sealed record BottomNavigationBarThemeData(
             "landscapeLayout",
             LandscapeLayout,
             defaultValue: nullDefault));
-        properties.Add(new DiagnosticsProperty<WidgetStateProperty<MouseCursor?>?>(
+        properties.Add(new DiagnosticsProperty<IWidgetStateProperty<MouseCursor?>?>(
             "mouseCursor",
             MouseCursor,
             defaultValue: nullDefault));

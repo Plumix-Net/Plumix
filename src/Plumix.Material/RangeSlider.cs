@@ -51,8 +51,8 @@ public class RangeSlider : StatefulWidget
         RangeLabels? labels = null,
         Color? activeColor = null,
         Color? inactiveColor = null,
-        WidgetStateProperty<Color?>? overlayColor = null,
-        WidgetStateProperty<MouseCursor?>? mouseCursor = null,
+        IWidgetStateProperty<Color?>? overlayColor = null,
+        IWidgetStateProperty<MouseCursor?>? mouseCursor = null,
         SemanticFormatterCallback? semanticFormatterCallback = null,
         EdgeInsetsGeometry? padding = null,
         bool? year2023 = null,
@@ -125,10 +125,10 @@ public class RangeSlider : StatefulWidget
     /// The highlight color that's typically used to indicate that the range slider thumb is hovered or
     /// dragged.
     /// </summary>
-    public WidgetStateProperty<Color?>? OverlayColor { get; }
+    public IWidgetStateProperty<Color?>? OverlayColor { get; }
 
     /// <summary>The cursor for a mouse pointer when it enters or is hovering over the widget.</summary>
-    public WidgetStateProperty<MouseCursor?>? MouseCursor { get; }
+    public IWidgetStateProperty<MouseCursor?>? MouseCursor { get; }
 
     /// <summary>
     /// The callback used to create a semantic value from the slider's values. Defaults to formatting values
@@ -203,7 +203,7 @@ public class RangeSlider : StatefulWidget
 
         public AnimationController EndPositionController { get; private set; } = null!;
 
-        public GestureTimer? InteractionTimer { get; set; }
+        public Timer? InteractionTimer { get; set; }
 
         // Value Indicator paint Animation that appears on the Overlay.
         public PaintRangeValueIndicator? PaintTopValueIndicator { get; set; }
@@ -1420,7 +1420,7 @@ internal sealed class RenderRangeSlider : RenderBox
             {
                 _state.ValueIndicatorController.Forward();
                 _state.InteractionTimer?.Cancel();
-                _state.InteractionTimer = GestureTimer.Start(
+                _state.InteractionTimer = new Timer(
                     MultiplyDuration(MinimumInteractionTime, Scheduler.TimeDilation),
                     () =>
                     {

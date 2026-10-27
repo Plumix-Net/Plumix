@@ -127,6 +127,9 @@ public partial class PipelineOwner : DiagnosticableTree
     /// <remarks>Flutter's <c>PipelineOwner.nodesNeedingPaint</c>.</remarks>
     internal IReadOnlyCollection<RenderObject> NodesNeedingPaintForTest => _nodesNeedingPaint;
 
+    /// <summary>The manifold this owner is attached to, for the parity tests.</summary>
+    internal PipelineManifold? ManifoldForTest => _manifold;
+
     /// <summary>Requests that the host schedule a new frame.</summary>
     /// <remarks>
     /// Flutter's <c>PipelineOwner.requestVisualUpdate</c>: <see cref="OnNeedVisualUpdate"/> wins, and

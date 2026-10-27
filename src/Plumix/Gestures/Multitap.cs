@@ -13,7 +13,7 @@ internal sealed class CountdownZoned
 {
     public CountdownZoned(TimeSpan duration)
     {
-        GestureTimer.Start(duration, () => Timeout = true);
+        _ = new Timer(duration, () => Timeout = true);
     }
 
     public bool Timeout { get; private set; }
@@ -96,7 +96,7 @@ public class DoubleTapGestureRecognizer : GestureRecognizer
     // - Waiting on second tap: no trackers, `_firstTap` non-null (arena held).
     // - Second tap in progress: trackers present, `_firstTap` non-null.
     private readonly Dictionary<int, TapTracker> _trackers = [];
-    private GestureTimer? _doubleTapTimer;
+    private Timer? _doubleTapTimer;
     private TapTracker? _firstTap;
 
     public DoubleTapGestureRecognizer(
@@ -325,7 +325,7 @@ public class DoubleTapGestureRecognizer : GestureRecognizer
 
     private void StartDoubleTapTimer()
     {
-        _doubleTapTimer ??= GestureTimer.Start(GestureConstants.DoubleTapTimeout, Reset);
+        _doubleTapTimer ??= new Timer(GestureConstants.DoubleTapTimeout, Reset);
     }
 
     private void StopDoubleTapTimer()
@@ -360,7 +360,7 @@ internal sealed class TapGesture : TapTracker
 {
     private readonly MultiTapGestureRecognizer _gestureRecognizer;
     private bool _wonArena;
-    private GestureTimer? _timer;
+    private Timer? _timer;
     private OffsetPair _lastPosition;
     private OffsetPair? _finalPosition;
 
@@ -380,7 +380,7 @@ internal sealed class TapGesture : TapTracker
         StartTrackingPointer(gestureRecognizer.Router, HandleEvent);
         if (longTapDelay > TimeSpan.Zero)
         {
-            _timer = GestureTimer.Start(longTapDelay, () =>
+            _timer = new Timer(longTapDelay, () =>
             {
                 _timer = null;
                 _gestureRecognizer.DispatchLongTap(@event.Pointer, _lastPosition);
@@ -679,7 +679,7 @@ public class SerialTapGestureRecognizer : GestureRecognizer
 {
     private readonly List<TapTracker> _completedTaps = [];
     private readonly Dictionary<int, GestureDisposition> _gestureResolutions = [];
-    private GestureTimer? _serialTapTimer;
+    private Timer? _serialTapTimer;
     private TapTracker? _pendingTap;
 
     public SerialTapGestureRecognizer(GestureBinding? binding = null) : base(binding)
@@ -841,7 +841,7 @@ public class SerialTapGestureRecognizer : GestureRecognizer
 
     private void StartSerialTapTimer()
     {
-        _serialTapTimer ??= GestureTimer.Start(GestureConstants.DoubleTapTimeout, Reset);
+        _serialTapTimer ??= new Timer(GestureConstants.DoubleTapTimeout, Reset);
     }
 
     private void StopSerialTapTimer()

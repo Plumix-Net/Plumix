@@ -607,7 +607,7 @@ internal sealed class LargeTitleNavigationBarSliverDelegate : SliverPersistentHe
         Widget? userMiddle,
         Color backgroundColor,
         bool automaticBackgroundVisibility,
-        PlatformBrightness? brightness,
+        Brightness? brightness,
         Border? border,
         EdgeInsetsDirectional? padding,
         Color actionsForegroundColor,
@@ -657,7 +657,7 @@ internal sealed class LargeTitleNavigationBarSliverDelegate : SliverPersistentHe
 
     public bool AutomaticBackgroundVisibility { get; }
 
-    public PlatformBrightness? Brightness { get; }
+    public Brightness? Brightness { get; }
 
     public Border? Border { get; }
 

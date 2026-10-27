@@ -746,7 +746,7 @@ public sealed class ViewTests
         using var tree = new ViewTree(new MediaQuery(
             data: new MediaQueryData(
                 Size: new Size(1, 1),
-                PlatformBrightness: PlatformBrightness.Dark,
+                PlatformBrightness: Brightness.Dark,
                 HighContrast: true,
                 TextScaleFactor: 2.0),
             child: new View(view, new Builder(context =>
@@ -756,7 +756,7 @@ public sealed class ViewTests
             }))));
 
         Assert.Equal(new Size(800, 600), data!.Size);
-        Assert.Equal(PlatformBrightness.Dark, data.PlatformBrightness);
+        Assert.Equal(Brightness.Dark, data.PlatformBrightness);
         Assert.True(data.HighContrast);
         Assert.Equal(2.0, data.TextScaleFactor);
     }

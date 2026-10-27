@@ -43,14 +43,14 @@ public sealed class CupertinoTheme : StatelessWidget
     /// <summary>
     /// The brightness the nearest ancestor theme declares, falling back to the platform brightness.
     /// </summary>
-    public static PlatformBrightness BrightnessOf(BuildContext context)
+    public static Brightness BrightnessOf(BuildContext context)
     {
         InheritedCupertinoTheme? inheritedTheme = context.DependOnInheritedWidgetOfExactType<InheritedCupertinoTheme>();
         return inheritedTheme?.Theme.Data.Brightness ?? MediaQuery.PlatformBrightnessOf(context);
     }
 
     /// <summary>The null-tolerant form of <see cref="BrightnessOf"/>.</summary>
-    public static PlatformBrightness? MaybeBrightnessOf(BuildContext context)
+    public static Brightness? MaybeBrightnessOf(BuildContext context)
     {
         InheritedCupertinoTheme? inheritedTheme = context.DependOnInheritedWidgetOfExactType<InheritedCupertinoTheme>();
         return inheritedTheme?.Theme.Data.Brightness ?? MediaQuery.MaybePlatformBrightnessOf(context);
@@ -99,7 +99,7 @@ public class CupertinoThemeData : NoDefaultCupertinoThemeData
     // separate only because Dart's default constructor is named-only; C# cannot declare both, so a
     // subclass reaches Dart's `raw` behavior by calling this one positionally.
     public CupertinoThemeData(
-        PlatformBrightness? brightness = null,
+        Brightness? brightness = null,
         Color? primaryColor = null,
         Color? primaryContrastingColor = null,
         CupertinoTextThemeData? textTheme = null,
@@ -121,7 +121,7 @@ public class CupertinoThemeData : NoDefaultCupertinoThemeData
     }
 
     private protected CupertinoThemeData(
-        PlatformBrightness? brightness,
+        Brightness? brightness,
         Color? primaryColor,
         Color? primaryContrastingColor,
         CupertinoTextThemeData? textTheme,
@@ -192,7 +192,7 @@ public class CupertinoThemeData : NoDefaultCupertinoThemeData
     }
 
     public override CupertinoThemeData CopyWith(
-        PlatformBrightness? brightness = null,
+        Brightness? brightness = null,
         Color? primaryColor = null,
         Color? primaryContrastingColor = null,
         CupertinoTextThemeData? textTheme = null,
@@ -257,7 +257,7 @@ public class CupertinoThemeData : NoDefaultCupertinoThemeData
 /// </summary>
 public class NoDefaultCupertinoThemeData
 {
-    private readonly PlatformBrightness? _brightness;
+    private readonly Brightness? _brightness;
     private readonly Color? _primaryColor;
     private readonly Color? _primaryContrastingColor;
     private readonly CupertinoTextThemeData? _textTheme;
@@ -267,7 +267,7 @@ public class NoDefaultCupertinoThemeData
     private readonly bool? _applyThemeToAll;
 
     public NoDefaultCupertinoThemeData(
-        PlatformBrightness? brightness = null,
+        Brightness? brightness = null,
         Color? primaryColor = null,
         Color? primaryContrastingColor = null,
         CupertinoTextThemeData? textTheme = null,
@@ -287,7 +287,7 @@ public class NoDefaultCupertinoThemeData
     }
 
     /// <summary>The brightness descendants should assume, or null to defer to the platform.</summary>
-    public virtual PlatformBrightness? Brightness => _brightness;
+    public virtual Brightness? Brightness => _brightness;
 
     public virtual Color? PrimaryColor => _primaryColor;
 
@@ -320,7 +320,7 @@ public class NoDefaultCupertinoThemeData
     }
 
     public virtual NoDefaultCupertinoThemeData CopyWith(
-        PlatformBrightness? brightness = null,
+        Brightness? brightness = null,
         Color? primaryColor = null,
         Color? primaryContrastingColor = null,
         CupertinoTextThemeData? textTheme = null,
@@ -382,7 +382,7 @@ public class NoDefaultCupertinoThemeData
 internal sealed class CupertinoThemeDefaults
 {
     internal CupertinoThemeDefaults(
-        PlatformBrightness? brightness,
+        Brightness? brightness,
         Color primaryColor,
         Color primaryContrastingColor,
         Color barBackgroundColor,
@@ -401,7 +401,7 @@ internal sealed class CupertinoThemeDefaults
         TextThemeDefaults = textThemeDefaults;
     }
 
-    internal PlatformBrightness? Brightness { get; }
+    internal Brightness? Brightness { get; }
 
     internal Color PrimaryColor { get; }
 

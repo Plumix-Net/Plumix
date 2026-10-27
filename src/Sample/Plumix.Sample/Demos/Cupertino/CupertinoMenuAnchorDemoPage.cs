@@ -36,7 +36,7 @@ internal sealed class CupertinoMenuAnchorDemoPageState : State
                     onPressed: () => SetState(() => _darkMenu = !_darkMenu)),
                 new CupertinoTheme(
                     data: new CupertinoThemeData(
-                        brightness: _darkMenu ? PlatformBrightness.Dark : PlatformBrightness.Light),
+                        brightness: _darkMenu ? Brightness.Dark : Brightness.Light),
                     child: new CupertinoMenuAnchor(
                         enableLongPressToOpen: true,
                         menuChildren:

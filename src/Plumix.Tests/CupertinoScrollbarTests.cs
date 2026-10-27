@@ -139,9 +139,9 @@ public sealed class CupertinoScrollbarTests
 
     // Flutter: "Scrollbar dark mode".
     [Theory]
-    [InlineData(PlatformBrightness.Light)]
-    [InlineData(PlatformBrightness.Dark)]
-    public void ThumbColorResolvesTheDynamicScrollbarColor(PlatformBrightness brightness)
+    [InlineData(Brightness.Light)]
+    [InlineData(Brightness.Dark)]
+    public void ThumbColorResolvesTheDynamicScrollbarColor(Brightness brightness)
     {
         using var timers = new FakeGestureTimers();
         using var controller = new ScrollController();
@@ -151,7 +151,7 @@ public sealed class CupertinoScrollbarTests
             brightness: brightness));
         Settle(harness);
 
-        Color expected = brightness == PlatformBrightness.Dark ? DarkThumb : LightThumb;
+        Color expected = brightness == Brightness.Dark ? DarkThumb : LightThumb;
         ColorMatchers.AssertSameColorAs(expected, RequirePainter(harness).Color);
     }
 
@@ -161,9 +161,9 @@ public sealed class CupertinoScrollbarTests
         using var timers = new FakeGestureTimers();
         using var controller = new ScrollController();
         using var harness = new WidgetRenderHarness(new MediaQuery(
-            data: new MediaQueryData(PlatformBrightness: PlatformBrightness.Light),
+            data: new MediaQueryData(PlatformBrightness: Brightness.Light),
             child: new CupertinoTheme(
-                data: new CupertinoThemeData(brightness: PlatformBrightness.Dark),
+                data: new CupertinoThemeData(brightness: Brightness.Dark),
                 child: new Directionality(
                     textDirection: TextDirection.Ltr,
                     child: new CupertinoScrollbar(
@@ -400,7 +400,7 @@ public sealed class CupertinoScrollbarTests
         ScrollController controller,
         double contentExtent,
         bool thumbVisibility = true,
-        PlatformBrightness brightness = PlatformBrightness.Light,
+        Brightness brightness = Brightness.Light,
         ScrollbarOrientation? scrollbarOrientation = null,
         TargetPlatform platform = TargetPlatform.IOS)
     {

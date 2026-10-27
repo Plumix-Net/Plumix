@@ -77,6 +77,96 @@ public sealed class MaterialLegacyButtonTests
     }
 
     [Fact]
+    public void ButtonThemeData_ColorScheme_DefaultsToNullAndCopies()
+    {
+        // button_theme_test.dart: 'ButtonThemeData.copyWith' (the colorScheme expectations).
+        Assert.Null(new ButtonThemeData().ColorScheme);
+        ButtonThemeData copy = new ButtonThemeData() with { ColorScheme = ColorScheme.Dark() };
+        Assert.Equal(ColorScheme.Dark(), copy.ColorScheme);
+        Assert.NotEqual(new ButtonThemeData(), copy);
+
+        // theme_data.dart: the default buttonTheme carries the theme's colorScheme.
+        ThemeData theme = ThemeData.Light;
+        Assert.Equal(theme.ColorScheme, theme.ButtonTheme.ColorScheme);
+    }
+
+    [Fact]
+    public void ButtonTheme_Of_FillsAMissingColorSchemeFromTheAmbientTheme()
+    {
+        ColorScheme local = ColorScheme.Light(secondary: Colors.Teal);
+        ButtonThemeData? withoutScheme = null;
+        ButtonThemeData? withScheme = null;
+        using (var tree = Build(new Theme(
+                   data: ThemeData.Light,
+                   child: new ButtonTheme(
+                       data: new ButtonThemeData(MinWidth: 70),
+                       child: new Builder(context =>
+                       {
+                           withoutScheme = ButtonTheme.Of(context);
+                           return new SizedBox();
+                       })))))
+        {
+            tree.Pump(HarnessSize);
+        }
+
+        using (var tree = Build(new Theme(
+                   data: ThemeData.Light,
+                   child: new ButtonTheme(
+                       colorScheme: local,
+                       child: new Builder(context =>
+                       {
+                           withScheme = ButtonTheme.Of(context);
+                           return new SizedBox();
+                       })))))
+        {
+            tree.Pump(HarnessSize);
+        }
+
+        Assert.Equal(70, withoutScheme!.MinWidth);
+        Assert.Equal(ThemeData.Light.ColorScheme, withoutScheme.ColorScheme);
+        Assert.Same(local, withScheme!.ColorScheme);
+    }
+
+    [Fact]
+    public void MaterialButton_ColorsReadTheButtonThemeColorScheme()
+    {
+        ColorScheme local = ColorScheme.Light(secondary: Colors.Teal, onSurface: Colors.Indigo);
+        using var enabled = Build(new Theme(
+            data: ThemeData.Light,
+            child: new ButtonTheme(
+                colorScheme: local,
+                textTheme: ButtonTextTheme.Accent,
+                child: new MaterialButton(onPressed: () => { }, child: new Text("Accent")))));
+        var raw = Assert.IsType<RawMaterialButton>(enabled.FindWidget<RawMaterialButton>());
+        Assert.Equal(Colors.Teal, raw.TextStyle?.Color);
+
+        using var disabled = Build(new Theme(
+            data: ThemeData.Light,
+            child: new ButtonTheme(
+                colorScheme: local,
+                child: new MaterialButton(onPressed: null, child: new Text("Off")))));
+        raw = Assert.IsType<RawMaterialButton>(disabled.FindWidget<RawMaterialButton>());
+        Assert.Equal(Colors.Indigo.WithOpacity(0.38), raw.TextStyle?.Color);
+    }
+
+    [Fact]
+    public void ButtonThemeData_PrimaryTextColorEstimatesTheFillBrightnessLikeThemeData()
+    {
+        var data = new ButtonThemeData(ColorScheme: ColorScheme.Light());
+        var onDark = new MaterialButton(
+            onPressed: () => { },
+            textTheme: ButtonTextTheme.Primary,
+            color: new Color(0xFF616161));
+        var onLight = new MaterialButton(
+            onPressed: () => { },
+            textTheme: ButtonTextTheme.Primary,
+            color: new Color(0xFFFFC107));
+        Assert.Equal(Colors.White, data.GetTextColor(onDark));
+        Assert.Equal(Colors.Black, data.GetTextColor(onLight));
+        Assert.Equal(Brightness.Light, data.GetBrightness(onLight));
+    }
+
+    [Fact]
     public void MaterialButton_Defaults_AreResolvedThroughRawMaterialButton()
     {
         using var tree = Build(new Theme(

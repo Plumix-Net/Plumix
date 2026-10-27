@@ -336,6 +336,37 @@ public sealed class InkWellDartParityTests : IDisposable
         gesture.Up();
     }
 
+    // C#-only: the test above with Dart's other usual argument, a `WidgetStateColor`, which the
+    // `IWidgetStateProperty<Color?>` slot accepts as Dart's `WidgetStateProperty<Color?>` does.
+    [Fact]
+    public void InkWellChangesColorOnPressedWithAWidgetStateColorOverlayColor()
+    {
+        using FrameworkDartTester tester = CreateTester();
+        var pressedColor = new Color(0xffdd00ff);
+
+        tester.PumpWidget(
+            new MaterialWidget(
+                child: new Directionality(
+                    textDirection: TextDirection.Ltr,
+                    child: new Container(
+                        alignment: Alignment.TopLeft,
+                        child: SizedBox.Square(
+                            dimension: 100,
+                            child: new InkWell(
+                                splashFactory: NoSplash.SplashFactory,
+                                overlayColor: WidgetStateColor.ResolveWith(states =>
+                                    states.Contains(WidgetState.Pressed)
+                                        ? pressedColor
+                                        : new Color(0xffbadbad)),
+                                onTap: () => { }))))));
+        tester.PumpAndSettle();
+        TestGesture gesture = StartGesture(tester, tester.GetRect(InkWellOf(tester)).Center);
+        RenderObject inkFeatures = GetInkFeatures(tester);
+        tester.PumpAndSettle();
+        PaintAssert.Paints(inkFeatures, PaintPattern.Paints.Rect(rect: Ltrb(0, 0, 100, 100), color: pressedColor));
+        gesture.Up();
+    }
+
     // Flutter: "Ink well overlayColor resolution respects WidgetState.selected" / "when focused"
     [Fact]
     public void InkWellOverlayColorResolutionRespectsSelectedWhenFocused()

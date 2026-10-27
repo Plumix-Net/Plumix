@@ -94,7 +94,7 @@ public class Slider : StatefulWidget
         Color? inactiveColor = null,
         Color? secondaryActiveColor = null,
         Color? thumbColor = null,
-        WidgetStateProperty<Color?>? overlayColor = null,
+        IWidgetStateProperty<Color?>? overlayColor = null,
         MouseCursor? mouseCursor = null,
         SemanticFormatterCallback? semanticFormatterCallback = null,
         FocusNode? focusNode = null,
@@ -148,7 +148,7 @@ public class Slider : StatefulWidget
         Color? inactiveColor,
         Color? secondaryActiveColor,
         Color? thumbColor,
-        WidgetStateProperty<Color?>? overlayColor,
+        IWidgetStateProperty<Color?>? overlayColor,
         MouseCursor? mouseCursor,
         SemanticFormatterCallback? semanticFormatterCallback,
         FocusNode? focusNode,
@@ -228,7 +228,7 @@ public class Slider : StatefulWidget
         Color? inactiveColor = null,
         Color? secondaryActiveColor = null,
         Color? thumbColor = null,
-        WidgetStateProperty<Color?>? overlayColor = null,
+        IWidgetStateProperty<Color?>? overlayColor = null,
         SemanticFormatterCallback? semanticFormatterCallback = null,
         FocusNode? focusNode = null,
         bool autofocus = false,
@@ -341,7 +341,7 @@ public class Slider : StatefulWidget
     /// The highlight color that's typically used to indicate that the slider thumb is focused, hovered,
     /// or dragged.
     /// </summary>
-    public WidgetStateProperty<Color?>? OverlayColor { get; }
+    public IWidgetStateProperty<Color?>? OverlayColor { get; }
 
     /// <summary>
     /// The cursor for a mouse pointer when it enters or is hovering over the widget.
@@ -499,7 +499,7 @@ internal sealed partial class SliderState : State<Slider>
     internal AnimationController PositionController { get; private set; } = null!;
 
     /// <summary>Dart's <c>interactionTimer</c>.</summary>
-    internal GestureTimer? InteractionTimer { get; set; }
+    internal Timer? InteractionTimer { get; set; }
 
     private bool Enabled => Widget.OnChanged != null;
 
@@ -1682,7 +1682,7 @@ internal sealed class RenderSlider : RenderBox
                 {
                     _state.ValueIndicatorController.Forward();
                     _state.InteractionTimer?.Cancel();
-                    _state.InteractionTimer = GestureTimer.Start(
+                    _state.InteractionTimer = new Timer(
                         DurationTimes(MinimumInteractionTime, Scheduler.TimeDilation),
                         () =>
                         {

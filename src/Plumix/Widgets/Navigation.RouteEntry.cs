@@ -560,11 +560,11 @@ internal sealed class RouteEntry : RouteTransitionRecord
     // Dart's `_kAndroidRefocusingDelayDuration`.
     private static readonly TimeSpan AndroidRefocusingDelayDuration = TimeSpan.FromMilliseconds(300);
 
-    // Dart's `Future<void>.delayed`, over the timer seam the framework's other dart:async timers use.
+    // Dart's `Future<void>.delayed`, which completes from a `Timer`.
     private static Task Delayed(TimeSpan duration)
     {
         var completer = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-        _ = Gestures.GestureTimer.Start(duration, () => completer.TrySetResult());
+        _ = new Timer(duration, () => completer.TrySetResult());
         return completer.Task;
     }
 

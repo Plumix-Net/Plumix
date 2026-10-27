@@ -92,9 +92,9 @@ public sealed class CupertinoFormRowTests
     }
 
     [Theory]
-    [InlineData(PlatformBrightness.Light)]
-    [InlineData(PlatformBrightness.Dark)]
-    public void Build_ResolvesPrefixAndHelperLabelColorForBrightness(PlatformBrightness brightness)
+    [InlineData(Brightness.Light)]
+    [InlineData(Brightness.Dark)]
+    public void Build_ResolvesPrefixAndHelperLabelColorForBrightness(Brightness brightness)
     {
         using var harness = new CupertinoThemeTestHarness(Wrap(
             new CupertinoFormRow(
@@ -105,7 +105,7 @@ public sealed class CupertinoFormRowTests
 
         harness.Pump(ViewSize);
 
-        Color expected = brightness == PlatformBrightness.Light
+        Color expected = brightness == Brightness.Light
             ? CupertinoColors.Label.Color
             : CupertinoColors.Label.DarkColor;
         RenderParagraph prefix = Assert.IsType<RenderParagraph>(FindParagraph(harness.RenderView, "Prefix"));
@@ -132,7 +132,7 @@ public sealed class CupertinoFormRowTests
     private static Widget Wrap(
         Widget child,
         TextDirection direction = TextDirection.Ltr,
-        PlatformBrightness brightness = PlatformBrightness.Light)
+        Brightness brightness = Brightness.Light)
     {
         return new MediaQuery(
             data: new MediaQueryData(PlatformBrightness: brightness),

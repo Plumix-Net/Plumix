@@ -204,14 +204,14 @@ public class SearchAnchor : StatefulWidget
         Action? onClose = null,
         Action? onOpen = null,
         WidgetStateProperty<double?>? barElevation = null,
-        WidgetStateProperty<Color?>? barBackgroundColor = null,
-        WidgetStateProperty<Color?>? barOverlayColor = null,
+        IWidgetStateProperty<Color?>? barBackgroundColor = null,
+        IWidgetStateProperty<Color?>? barOverlayColor = null,
         WidgetStateProperty<BorderSide?>? barSide = null,
         WidgetStateProperty<OutlinedBorder?>? barShape = null,
         WidgetStateProperty<EdgeInsetsGeometry?>? barPadding = null,
         EdgeInsetsGeometry? viewBarPadding = null,
-        WidgetStateProperty<TextStyle?>? barTextStyle = null,
-        WidgetStateProperty<TextStyle?>? barHintStyle = null,
+        IWidgetStateProperty<TextStyle?>? barTextStyle = null,
+        IWidgetStateProperty<TextStyle?>? barHintStyle = null,
         ViewBuilder? viewBuilder = null,
         Widget? viewLeading = null,
         IReadOnlyList<Widget>? viewTrailing = null,
@@ -881,7 +881,7 @@ internal sealed class SearchViewContent : StatefulWidget
         private CurvedAnimation? _viewIconsFade;
         private CurvedAnimation? _viewDividerFade;
         private CurvedAnimation? _viewListFade;
-        private int _refreshGeneration;
+        private Timer? _timer;
 
         private SearchViewContent Current => (SearchViewContent)StateWidget;
 
@@ -943,7 +943,7 @@ internal sealed class SearchViewContent : StatefulWidget
             _viewIconsFade?.Dispose();
             _viewDividerFade?.Dispose();
             _viewListFade?.Dispose();
-            _refreshGeneration++;
+            _timer?.Cancel();
 
             base.Dispose();
         }
@@ -1108,18 +1108,8 @@ internal sealed class SearchViewContent : StatefulWidget
 
         private void ScheduleSuggestionsRefresh()
         {
-            // Dart coalesces bursts of dependency changes through Timer(Duration.zero, ...); the post-frame
-            // callback plays that role here, with the generation counter as the cancellation token.
-            int generation = ++_refreshGeneration;
-            SchedulerBinding.Instance.AddPostFrameCallback(_ =>
-            {
-                if (generation != _refreshGeneration || !Mounted)
-                {
-                    return;
-                }
-
-                RunScheduledRefresh();
-            });
+            _timer?.Cancel();
+            _timer = new Timer(TimeSpan.Zero, RunScheduledRefresh);
         }
 
         private async void RunScheduledRefresh()
@@ -1127,7 +1117,8 @@ internal sealed class SearchViewContent : StatefulWidget
             _searchValue = Current.SearchController.Text;
             BuildContext context = Context;
             IReadOnlyList<Widget> suggestions = await Current.SuggestionsBuilder(context, Current.SearchController);
-            _refreshGeneration++;
+            _timer?.Cancel();
+            _timer = null;
             if (Mounted)
             {
                 SetState(() => _result = suggestions);
@@ -1150,15 +1141,15 @@ public sealed class SearchBar : StatefulWidget
         Action<string>? onSubmitted = null,
         BoxConstraints? constraints = null,
         WidgetStateProperty<double?>? elevation = null,
-        WidgetStateProperty<Color?>? backgroundColor = null,
-        WidgetStateProperty<Color?>? shadowColor = null,
-        WidgetStateProperty<Color?>? surfaceTintColor = null,
-        WidgetStateProperty<Color?>? overlayColor = null,
+        IWidgetStateProperty<Color?>? backgroundColor = null,
+        IWidgetStateProperty<Color?>? shadowColor = null,
+        IWidgetStateProperty<Color?>? surfaceTintColor = null,
+        IWidgetStateProperty<Color?>? overlayColor = null,
         WidgetStateProperty<BorderSide?>? side = null,
         WidgetStateProperty<OutlinedBorder?>? shape = null,
         WidgetStateProperty<EdgeInsetsGeometry?>? padding = null,
-        WidgetStateProperty<TextStyle?>? textStyle = null,
-        WidgetStateProperty<TextStyle?>? hintStyle = null,
+        IWidgetStateProperty<TextStyle?>? textStyle = null,
+        IWidgetStateProperty<TextStyle?>? hintStyle = null,
         TextCapitalization? textCapitalization = null,
         bool enabled = true,
         bool autoFocus = false,
@@ -1214,15 +1205,15 @@ public sealed class SearchBar : StatefulWidget
     public Action<string>? OnSubmitted { get; }
     public BoxConstraints? Constraints { get; }
     public WidgetStateProperty<double?>? Elevation { get; }
-    public WidgetStateProperty<Color?>? BackgroundColor { get; }
-    public WidgetStateProperty<Color?>? ShadowColor { get; }
-    public WidgetStateProperty<Color?>? SurfaceTintColor { get; }
-    public WidgetStateProperty<Color?>? OverlayColor { get; }
+    public IWidgetStateProperty<Color?>? BackgroundColor { get; }
+    public IWidgetStateProperty<Color?>? ShadowColor { get; }
+    public IWidgetStateProperty<Color?>? SurfaceTintColor { get; }
+    public IWidgetStateProperty<Color?>? OverlayColor { get; }
     public WidgetStateProperty<BorderSide?>? Side { get; }
     public WidgetStateProperty<OutlinedBorder?>? Shape { get; }
     public WidgetStateProperty<EdgeInsetsGeometry?>? Padding { get; }
-    public WidgetStateProperty<TextStyle?>? TextStyle { get; }
-    public WidgetStateProperty<TextStyle?>? HintStyle { get; }
+    public IWidgetStateProperty<TextStyle?>? TextStyle { get; }
+    public IWidgetStateProperty<TextStyle?>? HintStyle { get; }
     public TextCapitalization? TextCapitalization { get; }
     public bool Enabled { get; }
     public bool AutoFocus { get; }
@@ -1300,7 +1291,7 @@ public sealed class SearchBar : StatefulWidget
                 searchBarTheme.SurfaceTintColor,
                 defaults.SurfaceTintColor,
                 states)!;
-            WidgetStateProperty<Color?>? effectiveOverlayColor =
+            IWidgetStateProperty<Color?>? effectiveOverlayColor =
                 CurrentWidget.OverlayColor ?? searchBarTheme.OverlayColor ?? defaults.OverlayColor;
             BorderSide? effectiveSide = Resolve(CurrentWidget.Side, searchBarTheme.Side, defaults.Side, states);
             OutlinedBorder? effectiveShape = Resolve(
@@ -1403,9 +1394,9 @@ public sealed class SearchBar : StatefulWidget
         }
 
         private static T? Resolve<T>(
-            WidgetStateProperty<T?>? widgetValue,
-            WidgetStateProperty<T?>? themeValue,
-            WidgetStateProperty<T?>? defaultValue,
+            IWidgetStateProperty<T?>? widgetValue,
+            IWidgetStateProperty<T?>? themeValue,
+            IWidgetStateProperty<T?>? defaultValue,
             IReadOnlySet<WidgetState> states)
         {
             return ResolveProperty(widgetValue, states)
@@ -1413,7 +1404,7 @@ public sealed class SearchBar : StatefulWidget
                    ?? ResolveProperty(defaultValue, states);
         }
 
-        private static T? ResolveProperty<T>(WidgetStateProperty<T?>? property, IReadOnlySet<WidgetState> states)
+        private static T? ResolveProperty<T>(IWidgetStateProperty<T?>? property, IReadOnlySet<WidgetState> states)
         {
             return property is null ? default : property.Resolve(states);
         }

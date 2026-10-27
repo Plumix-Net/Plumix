@@ -144,8 +144,50 @@ public sealed class AndroidActivityDelegate
     /// An Activity that does not list <c>fontScale</c> in its <c>configChanges</c> is recreated when the
     /// setting changes, and its <c>onCreate</c> reports the new value.
     /// </remarks>
-    public void OnConfigurationChanged(float fontScale) =>
-        PlatformDispatcher.Instance.UpdateTextScaleFactor(fontScale);
+    public void OnConfigurationChanged(float fontScale) => OnConfigurationChanged(fontScale, null);
+
+    /// <summary>
+    /// <c>Activity.onCreate</c> and <c>Activity.onConfigurationChanged</c>: reports the user's font size
+    /// (<c>Configuration.fontScale</c>) together with the configuration's font scaling function, as
+    /// <c>FlutterView.sendUserSettingsToFlutter</c> does on Android 14+.
+    /// </summary>
+    /// <param name="fontScale">The configuration's <c>fontScale</c>.</param>
+    /// <param name="scaledFontSize">
+    /// The engine's <c>FlutterJNI.getScaledFontSize</c> for this configuration: an sp font size converted by
+    /// <c>TypedValue.applyDimension(COMPLEX_UNIT_SP)</c> over a copy of its <c>DisplayMetrics</c>, divided by
+    /// the density. Android 14+ scales fonts nonlinearly; <see langword="null"/> keeps linear scaling.
+    /// </param>
+    /// <remarks>
+    /// <c>SystemTextScaler</c> asks it through <see cref="PlatformDispatcher.ScaleFontSize"/>.
+    /// </remarks>
+    public void OnConfigurationChanged(float fontScale, Func<double, double>? scaledFontSize) =>
+        PlatformDispatcher.Instance.UpdateTextScaleFactor(fontScale, scaledFontSize);
+
+    /// <summary>
+    /// <c>Activity.onCreate</c> and <c>Activity.onConfigurationChanged</c>: reports the configuration's
+    /// preferred locales (<c>Configuration.getLocales</c>, in order), as the engine's
+    /// <c>LocalizationPlugin.sendLocalesToFlutter</c> does.
+    /// </summary>
+    /// <remarks>
+    /// An Activity that does not list <c>locale</c> in its <c>configChanges</c> is recreated when the
+    /// user changes the system languages, and its <c>onCreate</c> reports the new list.
+    /// </remarks>
+    public void OnLocalesChanged(IReadOnlyList<Locale> locales) => PlumixHost.UpdatePlatformLocales(locales);
+
+    /// <summary>
+    /// <c>Activity.onCreate</c> and <c>Activity.onConfigurationChanged</c>: reports the display's touch slop
+    /// (<c>ViewConfiguration.getScaledTouchSlop</c>, in physical pixels), which the engine's <c>FlutterView</c>
+    /// sends with its viewport metrics as <c>physicalTouchSlop</c>.
+    /// </summary>
+    /// <remarks>
+    /// Every host view republishes its metrics, so <c>MediaQueryData.GestureSettings</c> carries the slop in
+    /// logical pixels and the gesture recognizers use it instead of <c>kTouchSlop</c>.
+    /// </remarks>
+    public void OnScaledTouchSlopChanged(int scaledTouchSlop)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegative(scaledTouchSlop);
+        PlumixHost.UpdatePhysicalTouchSlop(scaledTouchSlop);
+    }
 
     /// <summary><c>OnBackAnimationCallback.onBackStarted</c> (Android 14+ predictive back).</summary>
     public void OnBackStarted(PredictiveBackEvent backEvent) =>

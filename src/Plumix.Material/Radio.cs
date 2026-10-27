@@ -29,10 +29,10 @@ public sealed class Radio<T> : StatefulWidget
         MouseCursor? mouseCursor = null,
         bool toggleable = false,
         Color? activeColor = null,
-        WidgetStateProperty<Color?>? fillColor = null,
+        IWidgetStateProperty<Color?>? fillColor = null,
         Color? focusColor = null,
         Color? hoverColor = null,
-        WidgetStateProperty<Color?>? overlayColor = null,
+        IWidgetStateProperty<Color?>? overlayColor = null,
         double? splashRadius = null,
         MaterialTapTargetSize? materialTapTargetSize = null,
         VisualDensity? visualDensity = null,
@@ -40,7 +40,7 @@ public sealed class Radio<T> : StatefulWidget
         bool autofocus = false,
         bool? enabled = null,
         RadioGroupRegistry<T>? groupRegistry = null,
-        WidgetStateProperty<Color?>? backgroundColor = null,
+        IWidgetStateProperty<Color?>? backgroundColor = null,
         WidgetStateBorderSide? side = null,
         WidgetStateProperty<double?>? innerRadius = null,
         Key? key = null)
@@ -78,10 +78,10 @@ public sealed class Radio<T> : StatefulWidget
         MouseCursor? mouseCursor,
         bool toggleable,
         Color? activeColor,
-        WidgetStateProperty<Color?>? fillColor,
+        IWidgetStateProperty<Color?>? fillColor,
         Color? focusColor,
         Color? hoverColor,
-        WidgetStateProperty<Color?>? overlayColor,
+        IWidgetStateProperty<Color?>? overlayColor,
         double? splashRadius,
         MaterialTapTargetSize? materialTapTargetSize,
         VisualDensity? visualDensity,
@@ -89,7 +89,7 @@ public sealed class Radio<T> : StatefulWidget
         bool autofocus,
         bool? enabled,
         RadioGroupRegistry<T>? groupRegistry,
-        WidgetStateProperty<Color?>? backgroundColor,
+        IWidgetStateProperty<Color?>? backgroundColor,
         WidgetStateBorderSide? side,
         WidgetStateProperty<double?>? innerRadius,
         bool useCupertinoCheckmarkStyle,
@@ -132,13 +132,13 @@ public sealed class Radio<T> : StatefulWidget
 
     public Color? ActiveColor { get; }
 
-    public WidgetStateProperty<Color?>? FillColor { get; }
+    public IWidgetStateProperty<Color?>? FillColor { get; }
 
     public Color? FocusColor { get; }
 
     public Color? HoverColor { get; }
 
-    public WidgetStateProperty<Color?>? OverlayColor { get; }
+    public IWidgetStateProperty<Color?>? OverlayColor { get; }
 
     public double? SplashRadius { get; }
 
@@ -154,7 +154,7 @@ public sealed class Radio<T> : StatefulWidget
 
     public RadioGroupRegistry<T>? GroupRegistry { get; }
 
-    public WidgetStateProperty<Color?>? BackgroundColor { get; }
+    public IWidgetStateProperty<Color?>? BackgroundColor { get; }
 
     public WidgetStateBorderSide? Side { get; }
 
@@ -169,10 +169,10 @@ public sealed class Radio<T> : StatefulWidget
         MouseCursor? mouseCursor = null,
         bool toggleable = false,
         Color? activeColor = null,
-        WidgetStateProperty<Color?>? fillColor = null,
+        IWidgetStateProperty<Color?>? fillColor = null,
         Color? focusColor = null,
         Color? hoverColor = null,
-        WidgetStateProperty<Color?>? overlayColor = null,
+        IWidgetStateProperty<Color?>? overlayColor = null,
         double? splashRadius = null,
         MaterialTapTargetSize? materialTapTargetSize = null,
         VisualDensity? visualDensity = null,
@@ -181,7 +181,7 @@ public sealed class Radio<T> : StatefulWidget
         bool useCupertinoCheckmarkStyle = false,
         bool? enabled = null,
         RadioGroupRegistry<T>? groupRegistry = null,
-        WidgetStateProperty<Color?>? backgroundColor = null,
+        IWidgetStateProperty<Color?>? backgroundColor = null,
         WidgetStateBorderSide? side = null,
         WidgetStateProperty<double?>? innerRadius = null,
         Key? key = null)

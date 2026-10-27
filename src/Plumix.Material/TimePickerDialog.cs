@@ -2019,7 +2019,7 @@ internal sealed class TimePickerBodyState : RestorationState<TimePickerBody>
     private RestorableEnumN<Orientation>? _orientationValue;
     private RestorableEnumN<Orientation> _orientation =>
         _orientationValue ??= new(Current.Orientation, Enum.GetValues<Orientation>());
-    private GestureTimer? _vibrateTimer;
+    private Timer? _vibrateTimer;
 
     private TimePickerBody Current => Widget;
 
@@ -2046,7 +2046,7 @@ internal sealed class TimePickerBodyState : RestorationState<TimePickerBody>
 
     public override void Dispose()
     {
-        _vibrateTimer?.Dispose();
+        _vibrateTimer?.Cancel();
         _vibrateTimer = null;
         _orientation.Dispose();
         _selectedTime.Dispose();
@@ -2065,8 +2065,8 @@ internal sealed class TimePickerBodyState : RestorationState<TimePickerBody>
             case TargetPlatform.Fuchsia:
             case TargetPlatform.Linux:
             case TargetPlatform.Windows:
-                _vibrateTimer?.Dispose();
-                _vibrateTimer = GestureTimer.Start(TimePickerConstants.VibrateCommitDelay, () =>
+                _vibrateTimer?.Cancel();
+                _vibrateTimer = new Timer(TimePickerConstants.VibrateCommitDelay, () =>
                 {
                     HapticFeedback.Vibrate();
                     _vibrateTimer = null;

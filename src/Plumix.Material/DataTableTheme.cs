@@ -13,20 +13,20 @@ public sealed partial record DataTableThemeData
 {
     public DataTableThemeData(
         Decoration? decoration = null,
-        WidgetStateProperty<Color?>? dataRowColor = null,
+        IWidgetStateProperty<Color?>? dataRowColor = null,
         double? dataRowHeight = null,
         double? dataRowMinHeight = null,
         double? dataRowMaxHeight = null,
         TextStyle? dataTextStyle = null,
-        WidgetStateProperty<Color?>? headingRowColor = null,
+        IWidgetStateProperty<Color?>? headingRowColor = null,
         double? headingRowHeight = null,
         TextStyle? headingTextStyle = null,
         double? horizontalMargin = null,
         double? columnSpacing = null,
         double? dividerThickness = null,
         double? checkboxHorizontalMargin = null,
-        WidgetStateProperty<MouseCursor?>? headingCellCursor = null,
-        WidgetStateProperty<MouseCursor?>? dataRowCursor = null,
+        IWidgetStateProperty<MouseCursor?>? headingCellCursor = null,
+        IWidgetStateProperty<MouseCursor?>? dataRowCursor = null,
         MainAxisAlignment? headingRowAlignment = null)
     {
         if (dataRowHeight.HasValue && (dataRowMinHeight.HasValue || dataRowMaxHeight.HasValue))
@@ -56,38 +56,38 @@ public sealed partial record DataTableThemeData
     }
 
     public Decoration? Decoration { get; init; }
-    public WidgetStateProperty<Color?>? DataRowColor { get; init; }
+    public IWidgetStateProperty<Color?>? DataRowColor { get; init; }
     public double? DataRowMinHeight { get; init; }
     public double? DataRowMaxHeight { get; init; }
     public double? DataRowHeight => DataRowMinHeight == DataRowMaxHeight ? DataRowMinHeight : null;
     public TextStyle? DataTextStyle { get; init; }
-    public WidgetStateProperty<Color?>? HeadingRowColor { get; init; }
+    public IWidgetStateProperty<Color?>? HeadingRowColor { get; init; }
     public double? HeadingRowHeight { get; init; }
     public TextStyle? HeadingTextStyle { get; init; }
     public double? HorizontalMargin { get; init; }
     public double? ColumnSpacing { get; init; }
     public double? DividerThickness { get; init; }
     public double? CheckboxHorizontalMargin { get; init; }
-    public WidgetStateProperty<MouseCursor?>? HeadingCellCursor { get; init; }
-    public WidgetStateProperty<MouseCursor?>? DataRowCursor { get; init; }
+    public IWidgetStateProperty<MouseCursor?>? HeadingCellCursor { get; init; }
+    public IWidgetStateProperty<MouseCursor?>? DataRowCursor { get; init; }
     public MainAxisAlignment? HeadingRowAlignment { get; init; }
 
     public DataTableThemeData CopyWith(
         Decoration? decoration = null,
-        WidgetStateProperty<Color?>? dataRowColor = null,
+        IWidgetStateProperty<Color?>? dataRowColor = null,
         double? dataRowHeight = null,
         double? dataRowMinHeight = null,
         double? dataRowMaxHeight = null,
         TextStyle? dataTextStyle = null,
-        WidgetStateProperty<Color?>? headingRowColor = null,
+        IWidgetStateProperty<Color?>? headingRowColor = null,
         double? headingRowHeight = null,
         TextStyle? headingTextStyle = null,
         double? horizontalMargin = null,
         double? columnSpacing = null,
         double? dividerThickness = null,
         double? checkboxHorizontalMargin = null,
-        WidgetStateProperty<MouseCursor?>? headingCellCursor = null,
-        WidgetStateProperty<MouseCursor?>? dataRowCursor = null,
+        IWidgetStateProperty<MouseCursor?>? headingCellCursor = null,
+        IWidgetStateProperty<MouseCursor?>? dataRowCursor = null,
         MainAxisAlignment? headingRowAlignment = null)
     {
         if (dataRowHeight.HasValue && (dataRowMinHeight.HasValue || dataRowMaxHeight.HasValue))

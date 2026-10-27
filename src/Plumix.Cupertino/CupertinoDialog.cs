@@ -492,7 +492,7 @@ public sealed class CupertinoPopupSurface : StatelessWidget
         ImageFilter? filter = null;
         if (DebugIsVibrancePainted)
         {
-            bool dark = CupertinoTheme.BrightnessOf(context) == PlatformBrightness.Dark;
+            bool dark = CupertinoTheme.BrightnessOf(context) == Brightness.Dark;
             ImageFilter saturation = new ImageFilter.ColorMatrix(
                 dark ? DarkSaturationMatrix : LightSaturationMatrix);
             filter = BlurSigma > 0

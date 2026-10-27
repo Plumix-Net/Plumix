@@ -252,10 +252,7 @@ public static class Print
         _debugPrintCompleter = null;
     }
 
-    private static void DefaultScheduleTimer(TimeSpan delay, Action callback)
-    {
-        _ = Task.Delay(delay).ContinueWith(_ => callback(), TaskScheduler.Default);
-    }
+    private static void DefaultScheduleTimer(TimeSpan delay, Action callback) => _ = new Timer(delay, callback);
 
     private static void DebugPrintTask()
     {

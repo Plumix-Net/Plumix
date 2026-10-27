@@ -255,13 +255,13 @@ public sealed class CupertinoRadioTests
     {
         using var dark = new CupertinoThemeTestHarness(Wrap(
             new CupertinoRadio<string>(value: "a", groupValue: "b", onChanged: _ => { }),
-            themeBrightness: PlatformBrightness.Dark));
-        Assert.Equal(PlatformBrightness.Dark, Painter(dark).Brightness);
+            themeBrightness: Brightness.Dark));
+        Assert.Equal(Brightness.Dark, Painter(dark).Brightness);
         Assert.False(PaintIsEmpty(Painter(dark), CupertinoRadioSize));
 
         using var light = new CupertinoThemeTestHarness(Wrap(
             new CupertinoRadio<string>(value: "a", groupValue: "b", onChanged: _ => { }),
-            themeBrightness: PlatformBrightness.Light));
+            themeBrightness: Brightness.Light));
         Assert.False(PaintIsEmpty(Painter(light), CupertinoRadioSize));
     }
 
@@ -290,15 +290,15 @@ public sealed class CupertinoRadioTests
     {
         using var selected = new CupertinoThemeTestHarness(Wrap(
             new CupertinoRadio<string>(value: "a", groupValue: "a", onChanged: _ => { }),
-            themeBrightness: PlatformBrightness.Dark));
+            themeBrightness: Brightness.Dark));
         CupertinoRadioPainter selectedPainter = Painter(selected);
         ColorMatchers.AssertSameColorAs(Color.FromARGB(255, 50, 100, 215), selectedPainter.ActiveColor);
         ColorMatchers.AssertSameColorAs(Color.FromARGB(255, 222, 232, 248), selectedPainter.FillColor);
-        Assert.Equal(PlatformBrightness.Dark, selectedPainter.Brightness);
+        Assert.Equal(Brightness.Dark, selectedPainter.Brightness);
 
         using var unselected = new CupertinoThemeTestHarness(Wrap(
             new CupertinoRadio<string>(value: "a", groupValue: "b", onChanged: _ => { }),
-            themeBrightness: PlatformBrightness.Dark));
+            themeBrightness: Brightness.Dark));
         ColorMatchers.AssertSameColorAs(Color.FromARGB(64, 0, 0, 0), Painter(unselected).BorderColor);
     }
 
@@ -316,7 +316,7 @@ public sealed class CupertinoRadioTests
 
         using var dark = new CupertinoThemeTestHarness(Wrap(
             new CupertinoRadio<string>(value: "a", groupValue: "a"),
-            themeBrightness: PlatformBrightness.Dark));
+            themeBrightness: Brightness.Dark));
         ColorMatchers.AssertSameColorAs(Color.FromARGB(64, 255, 255, 255), Painter(dark).FillColor);
         // The disabled border stays black in both brightnesses.
         ColorMatchers.AssertSameColorAs(Color.FromARGB(64, 0, 0, 0), Painter(dark).BorderColor);
@@ -590,13 +590,13 @@ public sealed class CupertinoRadioTests
 
     private static Widget Wrap(
         Widget child,
-        PlatformBrightness? themeBrightness = null,
+        Brightness? themeBrightness = null,
         bool center = true)
     {
         Widget content = center ? new Center(child: child) : child;
         // `CupertinoThemeData.brightness` stays null unless set, exactly as in a plain CupertinoApp.
         return new MediaQuery(
-            data: new MediaQueryData(PlatformBrightness: themeBrightness ?? PlatformBrightness.Light),
+            data: new MediaQueryData(PlatformBrightness: themeBrightness ?? Brightness.Light),
             child: new Directionality(
                 TextDirection.Ltr,
                 new CupertinoTheme(
@@ -607,7 +607,7 @@ public sealed class CupertinoRadioTests
     private static Widget WrapLocalized(Widget child)
     {
         return new MediaQuery(
-            data: new MediaQueryData(PlatformBrightness: PlatformBrightness.Light),
+            data: new MediaQueryData(PlatformBrightness: Brightness.Light),
             child: new Directionality(
                 TextDirection.Ltr,
                 new Localizations(

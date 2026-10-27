@@ -90,6 +90,34 @@ public class PlumixHost : Control, ICustomHitTest
     /// </summary>
     internal static Action? SystemNavigatorPopHandler { get; set; }
 
+    // The Android embedder's `ViewportMetrics.physicalTouchSlop` (`ViewConfiguration.getScaledTouchSlop`),
+    // which its `FlutterView` sends with every metrics update. The other embedders send none, so
+    // `FlutterView.gestureSettings` carries no touch slop there and recognizers use `kTouchSlop`.
+    private static double? s_physicalTouchSlop;
+
+    /// <summary>
+    /// Records the platform's touch slop in physical pixels, or <see langword="null"/> where the platform
+    /// reports none, and republishes the metrics of every attached host with it.
+    /// </summary>
+    internal static void UpdatePhysicalTouchSlop(double? physicalTouchSlop)
+    {
+        if (physicalTouchSlop is { } slop && (!double.IsFinite(slop) || slop < 0))
+        {
+            throw new ArgumentOutOfRangeException(nameof(physicalTouchSlop));
+        }
+
+        if (s_physicalTouchSlop == physicalTouchSlop)
+        {
+            return;
+        }
+
+        s_physicalTouchSlop = physicalTouchSlop;
+        foreach (PlumixHost host in s_attachedHosts.ToArray())
+        {
+            host.OnMetricsChanged();
+        }
+    }
+
     // Dart's engine numbers its views and hands the implicit one id 0; every Plumix host is a view of
     // its own, so ids are taken from a process-wide counter (the `RendererBinding` registry is keyed
     // by them).
@@ -714,7 +742,7 @@ public class PlumixHost : Control, ICustomHitTest
     private void OnPlatformSettingsChanged()
     {
         PlatformDispatcher dispatcher = PlatformDispatcher.Instance;
-        PlatformBrightness previous = dispatcher.PlatformBrightness;
+        Brightness previous = dispatcher.PlatformBrightness;
         dispatcher.UpdateImplicitViewPlatformData(_view, GetMediaQueryData());
         if (WidgetsBinding.IsImplicitView(_view) && dispatcher.PlatformBrightness != previous)
         {
@@ -974,7 +1002,11 @@ public class PlumixHost : Control, ICustomHitTest
             ViewInsets: viewInsets,
             ViewPadding: viewPadding,
             PlatformBrightness: ResolvePlatformBrightness(),
-            ViewId: _view.ViewId);
+            ViewId: _view.ViewId,
+            // `DeviceGestureSettings.fromView`: the view's physical touch slop in logical pixels.
+            GestureSettings: s_physicalTouchSlop is { } touchSlop
+                ? new DeviceGestureSettings(TouchSlop: touchSlop / scale)
+                : null);
     }
 
     protected void ScheduleVisualUpdate()
@@ -1162,22 +1194,58 @@ public class PlumixHost : Control, ICustomHitTest
             : AppLifecycleState.Resumed;
         WidgetsBinding.Instance.HandleAppLifecycleStateChanged(state);
         UpdateViewFocusForWindowActivation(active: state == AppLifecycleState.Resumed);
-        // Avalonia has no locale-change notification; the user changes the system language in another
-        // window, so the culture is re-read when this one comes back.
+        // Avalonia has no locale-change notification; the user changes the system languages in another
+        // window, so the preferred languages (and the culture) are re-read when this one comes back.
         System.Globalization.CultureInfo.CurrentCulture.ClearCachedData();
         ReportLocales();
     }
 
     /// <summary>
-    /// Reports the system UI culture as the platform's preferred locale list, as the engine's
-    /// <c>_updateLocales</c> does; <see cref="PlatformDispatcher.UpdateLocales"/> notifies only a change.
+    /// Reports the platform's preferred locale list, as the engine's <c>_updateLocales</c> does:
+    /// the list an embedder reported through <see cref="UpdatePlatformLocales"/>, else the desktop OS's
+    /// preferred languages (<see cref="DesktopLocales"/>), else the system UI culture.
+    /// <see cref="PlatformDispatcher.UpdateLocales"/> notifies only a change.
     /// </summary>
-    /// <remarks>.NET exposes one UI culture rather than the user's ordered language list.</remarks>
+    /// <remarks>
+    /// The mobile embedders (Android, iOS) report their list themselves; the desktop list is read again on
+    /// every call, which the host makes when its window is activated.
+    /// </remarks>
     internal static void ReportLocales()
     {
         PlatformDispatcher.Instance.UpdateLocales(
-            [Locale.FromCultureInfo(System.Globalization.CultureInfo.CurrentUICulture)]);
+            s_platformLocales
+            ?? DesktopLocales.Read()
+            ?? [Locale.FromCultureInfo(System.Globalization.CultureInfo.CurrentUICulture)]);
     }
+
+    // The OS's ordered preferred-language list, once an embedder reported one; null until then.
+    private static IReadOnlyList<Locale>? s_platformLocales;
+
+    /// <summary>
+    /// Reports the platform's preferred locales, in the user's order of preference, as the engine's
+    /// localization <c>setLocale</c> message does, and notifies the framework when they changed.
+    /// </summary>
+    /// <remarks>
+    /// An embedder that can read the OS's preferred-language list calls this at start-up and whenever the
+    /// list changes (Android's <c>Configuration.getLocales</c> through <see cref="AndroidActivityDelegate"/>,
+    /// iOS's <c>NSLocale.preferredLanguages</c> on <c>NSCurrentLocaleDidChangeNotification</c>). From then on
+    /// the hosts report this list instead of the system UI culture. An empty list is ignored, as the iOS
+    /// engine sends none.
+    /// </remarks>
+    public static void UpdatePlatformLocales(IReadOnlyList<Locale> locales)
+    {
+        ArgumentNullException.ThrowIfNull(locales);
+        if (locales.Count == 0)
+        {
+            return;
+        }
+
+        s_platformLocales = [.. locales];
+        ReportLocales();
+    }
+
+    /// <summary>Forgets the locale list an embedder reported. Test-only.</summary>
+    internal static void ResetPlatformLocalesForTests() => s_platformLocales = null;
 
     internal void UpdateViewFocusForWindowActivation(bool active)
     {
@@ -1248,11 +1316,11 @@ public class PlumixHost : Control, ICustomHitTest
         OnPlatformSettingsChanged();
     }
 
-    private PlatformBrightness ResolvePlatformBrightness()
+    private Brightness ResolvePlatformBrightness()
     {
         return _attachedTopLevel?.ActualThemeVariant == ThemeVariant.Dark
-            ? PlatformBrightness.Dark
-            : PlatformBrightness.Light;
+            ? Brightness.Dark
+            : Brightness.Light;
     }
 
     private bool ResolveHighContrast()
@@ -1596,7 +1664,7 @@ public class PlumixHost : Control, ICustomHitTest
         var iconBrightness = style.StatusBarIconBrightness ?? style.SystemNavigationBarIconBrightness;
         if (iconBrightness.HasValue)
         {
-            var systemBarTheme = iconBrightness.Value == PlatformBrightness.Dark
+            var systemBarTheme = iconBrightness.Value == Brightness.Dark
                 ? SystemBarTheme.Light
                 : SystemBarTheme.Dark;
             TrySetInsetsManagerSystemBarTheme(_insetsManager, systemBarTheme);

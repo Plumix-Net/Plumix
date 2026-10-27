@@ -45,8 +45,9 @@ internal sealed partial class FrameworkDartTester : IDisposable
     private Widget _lastRootWidget = new SizedBox();
 
     /// <param name="fakeGestureTimers">
-    /// Runs the gesture recognizers' timers (long press, double tap, ...) on the pump clock, the way
-    /// <c>testWidgets</c> runs them under <c>FakeAsync</c>.
+    /// Runs every framework <see cref="Timer"/> created during the test (long press, double tap, snack
+    /// bar, tooltip, ...) on the pump clock, the way <c>testWidgets</c> runs them under <c>FakeAsync</c>.
+    /// On by default, as in Dart; <see langword="false"/> leaves them on the real clock.
     /// </param>
     /// <param name="devicePixelRatio">
     /// The view's ratio; the logical size stays 800x600. flutter_test's own view runs at 3.0.
@@ -64,7 +65,7 @@ internal sealed partial class FrameworkDartTester : IDisposable
     /// platform side of the text input channel from the start instead of from its first use.
     /// </param>
     public FrameworkDartTester(
-        bool fakeGestureTimers = false,
+        bool fakeGestureTimers = true,
         double devicePixelRatio = 1.0,
         Size? logicalSize = null,
         bool semanticsEnabled = true,
@@ -163,7 +164,12 @@ internal sealed partial class FrameworkDartTester : IDisposable
     public void Pump(TimeSpan? duration = null, EnginePhase phase = EnginePhase.SendSemanticsUpdate)
     {
         _clock += duration ?? TimeSpan.Zero;
-        _timers?.Elapse(duration ?? TimeSpan.Zero);
+        // Like AutomatedTestWidgetsFlutterBinding.pump, only an explicit duration elapses fake time.
+        if (duration is { } elapsed)
+        {
+            _timers?.Elapse(elapsed);
+        }
+
         _phase = phase;
         RendererBinding binding = RendererBinding.Instance;
         binding.EnsurePersistentFrameCallback();

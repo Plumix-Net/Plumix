@@ -8,10 +8,10 @@ Use this block as the fastest machine-readable status summary.
 
 ```yaml
 framework_plan_version: 2
-last_updated: 2026-10-24
+last_updated: 2026-10-27
 north_star: "Flutter-like widget/rendering framework in C# with Avalonia as host infrastructure."
-current_phase: "M6 Cupertino library port (docs/CUPERTINO_TODO.md); M5 cross-host stability continues in parallel."
-latest_release: "v0.4.0-beta.1 (2026-10-24); next: v1.0.0-rc.1, criteria in the Release Candidate section"
+current_phase: "RC preparation: M5 cross-host stability (iOS AOT crash) and sample capture parity are the open blockers."
+latest_release: "v0.4.0-beta.3 (2026-10-24); next: v1.0.0-rc.1, criteria in the Release Candidate section"
 flutter_pin: "3.47.0 (4cf24164269); material_ui 1.0.0; cupertino_ui 1.0.0 — see AGENTS.md"
 open_work_outside_controls: "docs/ai/BACKLOG.md (control-level gaps, host-level gaps; the 3.44->3.47 re-port table is down to subsystem-blocked rows)"
 status:
@@ -26,7 +26,7 @@ status:
   scroll_sliver_list_grid_pipeline: done
   desktop_widget_host_app_flow: done
   material_library_rewrite: done
-  cupertino_library_port: in_progress
+  cupertino_library_port: done
   browser_android_ios_sample_hosts: in_progress
   docs_alignment_and_tracking: done
 milestones:
@@ -35,7 +35,7 @@ milestones:
   - { id: M3, title: "Port-first widget set expansion", status: done }
   - { id: M4, title: "Material library rewrite", status: done }
   - { id: M5, title: "Cross-host sample parity and stability", status: in_progress }
-  - { id: M6, title: "Cupertino library port", status: in_progress }
+  - { id: M6, title: "Cupertino library port", status: done }
   - { id: RC, title: "v1.0.0-rc.1 API freeze (criteria: Release Candidate section)", status: planned }
 ```
 
@@ -67,8 +67,8 @@ remains from those passes is tracked as rows in `docs/ai/DIVERGENCES.md`, qualif
 
 ### M5. Cross-Host Sample Parity and Stability
 
-Status: `in_progress` (runs in parallel with M6; blockers are local toolchain/environment alignment —
-Android API 36 SDK platform, iOS workload/Xcode version).
+Status: `in_progress` (the Android, iOS and Browser hosts build as of 2026-10-27; open: the iOS AOT
+crash in `docs/ai/BACKLOG.md` > Host-level gaps).
 
 Exit criteria:
 
@@ -78,24 +78,9 @@ Exit criteria:
 
 ### M6. Cupertino Library Port
 
-Status: `in_progress` (opened 2026-08-16). Work list and per-file status: `docs/CUPERTINO_TODO.md`.
-
-Order of work: foundation first (`colors`/`theme`/`text_theme`, `localizations`, `route`,
-`page_scaffold`, `app`), then controls smallest-first, then the "partial ports to tighten" table.
-`docs/CUPERTINO_TODO.md` is now empty: what remains for M6 is the sample/adaptive exit criteria
-below.
-`Plumix.Cupertino` may depend only on `Plumix`; anything Cupertino that currently lives in
-`Plumix.Material` moves down, never the other way (`docs/ai/INVARIANTS.md` > Package Boundaries).
-
-Exit criteria:
-
-- Every file in `cupertino_ui/lib/src/` (except the *Not listed* section of `docs/CUPERTINO_TODO.md`)
-  has a strict C# port with a `// Dart parity source: cupertino_ui/lib/src/<file>.dart` marker and no
-  `(reference)`/`(adapted)` qualifier.
-- Every Material `.Adaptive` factory composes the Cupertino widget the way Flutter does.
-- `CupertinoApp` runs the sample gallery's Cupertino tab through the framework host on desktop.
-- Focused tests per control (`src/Plumix.Tests/Cupertino<Control>Tests.cs`) and mirrored demos in
-  both samples.
+`done` (2026-10-27): every `cupertino_ui/lib/src/` file is a strict port, every Material `.Adaptive`
+factory composes its Cupertino widget as Flutter does, and `SampleCupertinoTabTests` drives the gallery's
+Cupertino tab and `CupertinoApp` shell.
 
 ### Release Candidate (`v1.0.0-rc.1`)
 
@@ -104,15 +89,15 @@ until `1.0.0`, and any `Breaking:` entry means a new RC.
 
 Blockers (all must close):
 
-- M5 and M6 are `done`. M6 needs only an audit of its exit criteria (`.Adaptive` factories, the
-  `CupertinoApp` tab); M5 needs the Android and iOS hosts building and the iOS AOT
-  `ExecutionEngineException` (`docs/ai/BACKLOG.md` > Host-level gaps) fixed.
+- M5 is `done` (M6 closed on 2026-10-27). The Android, iOS and Browser hosts build as of 2026-10-27;
+  what remains for M5 is the iOS AOT `ExecutionEngineException` (`docs/ai/BACKLOG.md` > Host-level gaps).
 - Every sample route in `SampleScreenCaptureTests` matches the Dart capture, or its residual
   difference is a `docs/ai/DIVERGENCES.md` row.
-- No qualified marker in `docs/ai/PORT_MAP.md`.
+- No qualified marker in `docs/ai/PORT_MAP.md` (met 2026-10-27).
 - Control-level gaps (`docs/ai/BACKLOG.md`) that change an existing signature, type or default are
-  closed: `overlayColor` typed as `WidgetStateProperty<Color?>`, `AnimationController`'s double-dispose
-  and missing-duration errors. Gaps that only add API may land in a later minor.
+  closed (met 2026-10-27: state-property slots on `IWidgetStateProperty`, `AnimationController` errors,
+  `PipelineManifold`, `Route.BuildPage`, core `Brightness`, `Timer`). Gaps that only add API may land
+  in a later minor.
 
 Release gates (on the commit that gets the tag):
 

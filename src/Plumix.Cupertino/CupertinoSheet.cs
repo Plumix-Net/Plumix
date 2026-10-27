@@ -87,8 +87,8 @@ public sealed class CupertinoSheetTransition : StatefulWidget
         [
             new AnnotatedRegion<SystemUiOverlayStyle>(
                 value: new SystemUiOverlayStyle(
-                    statusBarBrightness: PlatformBrightness.Dark,
-                    statusBarIconBrightness: PlatformBrightness.Light),
+                    statusBarBrightness: Brightness.Dark,
+                    statusBarIconBrightness: Brightness.Light),
                 child: new SizedBox(
                     width: double.PositiveInfinity,
                     height: MediaQuery.SizeOf(context).Height * DefaultTopGap)),
@@ -129,7 +129,7 @@ public sealed class CupertinoSheetTransition : StatefulWidget
         Widget paintedChild = child;
         if (secondaryAnimation.Status != AnimationStatus.Dismissed)
         {
-            bool dark = CupertinoTheme.BrightnessOf(context) == PlatformBrightness.Dark;
+            bool dark = CupertinoTheme.BrightnessOf(context) == Brightness.Dark;
             paintedChild = new Stack(
                 fit: StackFit.Expand,
                 children:

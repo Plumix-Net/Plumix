@@ -301,11 +301,11 @@ public sealed class FormState : State<Form>
             context: new ErrorDescription("while sending semantics announcement")));
     }
 
-    // Dart's `Future<void>.delayed(duration)`, on the timer seam the test clock drives.
+    // Dart's `Future<void>.delayed(duration)`, which completes from a `Timer`.
     private static Task Delayed(TimeSpan duration)
     {
         var completer = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-        GestureTimer.Start(duration, completer.SetResult);
+        _ = new Timer(duration, completer.SetResult);
         return completer.Task;
     }
 }

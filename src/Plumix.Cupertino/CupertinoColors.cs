@@ -574,23 +574,23 @@ public class CupertinoDynamicColor : Color, IDiagnosticable
     /// </remarks>
     public CupertinoDynamicColor ResolveFrom(BuildContext context)
     {
-        PlatformBrightness brightness = IsPlatformBrightnessDependent
-            ? CupertinoTheme.MaybeBrightnessOf(context) ?? PlatformBrightness.Light
-            : PlatformBrightness.Light;
+        Brightness brightness = IsPlatformBrightnessDependent
+            ? CupertinoTheme.MaybeBrightnessOf(context) ?? Brightness.Light
+            : Brightness.Light;
         CupertinoUserInterfaceLevelData level = IsInterfaceElevationDependent
             ? CupertinoUserInterfaceLevel.MaybeOf(context) ?? CupertinoUserInterfaceLevelData.Base
             : CupertinoUserInterfaceLevelData.Base;
         bool highContrast = IsHighContrastDependent && (MediaQuery.MaybeHighContrastOf(context) ?? false);
         Color resolved = (brightness, level, highContrast) switch
         {
-            (PlatformBrightness.Light, CupertinoUserInterfaceLevelData.Base, false) => Color,
-            (PlatformBrightness.Light, CupertinoUserInterfaceLevelData.Base, true) => HighContrastColor,
-            (PlatformBrightness.Light, CupertinoUserInterfaceLevelData.Elevated, false) => ElevatedColor,
-            (PlatformBrightness.Light, CupertinoUserInterfaceLevelData.Elevated, true) =>
+            (Brightness.Light, CupertinoUserInterfaceLevelData.Base, false) => Color,
+            (Brightness.Light, CupertinoUserInterfaceLevelData.Base, true) => HighContrastColor,
+            (Brightness.Light, CupertinoUserInterfaceLevelData.Elevated, false) => ElevatedColor,
+            (Brightness.Light, CupertinoUserInterfaceLevelData.Elevated, true) =>
                 HighContrastElevatedColor,
-            (PlatformBrightness.Dark, CupertinoUserInterfaceLevelData.Base, false) => DarkColor,
-            (PlatformBrightness.Dark, CupertinoUserInterfaceLevelData.Base, true) => DarkHighContrastColor,
-            (PlatformBrightness.Dark, CupertinoUserInterfaceLevelData.Elevated, false) => DarkElevatedColor,
+            (Brightness.Dark, CupertinoUserInterfaceLevelData.Base, false) => DarkColor,
+            (Brightness.Dark, CupertinoUserInterfaceLevelData.Base, true) => DarkHighContrastColor,
+            (Brightness.Dark, CupertinoUserInterfaceLevelData.Elevated, false) => DarkElevatedColor,
             _ => DarkHighContrastElevatedColor,
         };
 

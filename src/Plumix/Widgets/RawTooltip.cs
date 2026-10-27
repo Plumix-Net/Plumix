@@ -205,7 +205,7 @@ public sealed class RawTooltipState : State<RawTooltip>
     private readonly HashSet<int> _triggerPointers = [];
     private AnimationController? _controller;
     private CurvedAnimation? _overlayAnimation;
-    private AnimationController? _timer;
+    private Timer? _timer;
     private AnimationStatus _animationStatus = AnimationStatus.Dismissed;
 
     private RawTooltip CurrentWidget => (RawTooltip)StateWidget;
@@ -522,38 +522,13 @@ public sealed class RawTooltipState : State<RawTooltip>
     private void ScheduleTimer(TimeSpan delay, Action callback)
     {
         CancelTimer();
-        if (delay <= TimeSpan.Zero)
-        {
-            callback();
-            return;
-        }
-
-        var timer = new AnimationController(duration: delay, vsync: this);
-        Action? completed = null;
-        completed = () =>
-        {
-            timer.Completed -= completed;
-            timer.Dispose();
-            if (ReferenceEquals(_timer, timer))
-            {
-                _timer = null;
-            }
-
-            if (Mounted)
-            {
-                callback();
-            }
-        };
-        timer.Completed += completed;
-        _timer = timer;
-        timer.Forward(from: 0);
+        _timer = new Timer(delay, callback);
     }
 
     private void CancelTimer()
     {
-        AnimationController? timer = _timer;
+        _timer?.Cancel();
         _timer = null;
-        timer?.Dispose();
     }
 
     /// <summary>

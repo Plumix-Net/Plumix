@@ -51,7 +51,7 @@ public sealed class CupertinoPageScaffoldTests : IDisposable
                 backgroundColor: dynamicColor,
                 child: new CaptureBuildContextWidget(
                     context => inheritedColor = CupertinoPageScaffoldBackgroundColor.MaybeOf(context))),
-            platformBrightness: PlatformBrightness.Dark));
+            platformBrightness: Brightness.Dark));
 
         var decoratedBox = Assert.Single(harness.FindWidgets<DecoratedBox>());
         var decoration = Assert.IsType<BoxDecoration>(decoratedBox.Decoration);
@@ -65,7 +65,7 @@ public sealed class CupertinoPageScaffoldTests : IDisposable
     {
         using var harness = new WidgetRenderHarness(BuildRoot(
             new CupertinoPageScaffold(child: new SizedBox()),
-            platformBrightness: PlatformBrightness.Dark));
+            platformBrightness: Brightness.Dark));
 
         var decoratedBox = Assert.Single(harness.FindWidgets<DecoratedBox>());
         var decoration = Assert.IsType<BoxDecoration>(decoratedBox.Decoration);
@@ -213,7 +213,7 @@ public sealed class CupertinoPageScaffoldTests : IDisposable
         Thickness padding = default,
         Thickness viewInsets = default,
         double textScaleFactor = 1.0,
-        PlatformBrightness platformBrightness = PlatformBrightness.Light)
+        Brightness platformBrightness = Brightness.Light)
     {
         return new Directionality(
             TextDirection.Ltr,

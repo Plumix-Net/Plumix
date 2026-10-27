@@ -15,7 +15,7 @@ namespace Plumix;
 /// Dart gets both from its isolate; <see cref="SchedulerBinding"/> and the other bindings only use
 /// them. See <c>docs/ai/DIVERGENCES.md</c>.
 /// </remarks>
-public static class EventLoop
+public static partial class EventLoop
 {
     private static readonly Queue<Action> _microtasks = [];
 

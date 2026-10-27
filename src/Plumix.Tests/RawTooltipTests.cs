@@ -111,6 +111,7 @@ public sealed class RawTooltipTests
             void HandleFeedback(FeedbackType _) => feedback++;
             Feedback.FeedbackTriggered += HandleFeedback;
             var key = new LabeledGlobalKey<RawTooltipState>("raw-tap");
+            using var timers = new FakeGestureTimers();
             using var harness = new WidgetRenderHarness(
                 new Align(
                     alignment: Alignment.TopLeft,
@@ -145,6 +146,10 @@ public sealed class RawTooltipTests
 
             double clock = AnimationPump.CurrentSeconds;
             AnimationPump.Prime();
+            timers.Elapse(TimeSpan.FromMilliseconds(199));
+            harness.Pump(new Size(160, 80));
+            Assert.NotNull(FindParagraph(harness.RenderView, "Tap overlay"));
+            timers.Elapse(TimeSpan.FromMilliseconds(1));
             SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(clock + 0.25));
             SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(clock + 0.40));
             harness.Pump(new Size(160, 80));

@@ -221,7 +221,7 @@ public sealed class CupertinoExpansionTileTests : IDisposable
             alignment: Alignment.TopCenter,
             child: content));
         return new MediaQuery(
-            data: new MediaQueryData(PlatformBrightness: PlatformBrightness.Light),
+            data: new MediaQueryData(PlatformBrightness: Brightness.Light),
             child: new Localizations(
                 locale: new Locale("en", "US"),
                 delegates:
@@ -240,7 +240,7 @@ public sealed class CupertinoExpansionTileTests : IDisposable
     {
         Widget content = constrainWidth ? new SizedBox(width: 320.0, child: child) : child;
         return new MediaQuery(
-            data: new MediaQueryData(PlatformBrightness: PlatformBrightness.Light),
+            data: new MediaQueryData(PlatformBrightness: Brightness.Light),
             child: new Localizations(
                 locale: new Locale("en", "US"),
                 delegates:

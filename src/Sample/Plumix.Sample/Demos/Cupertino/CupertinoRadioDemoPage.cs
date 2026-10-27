@@ -27,7 +27,7 @@ internal sealed class CupertinoRadioDemoPageState : State
     public override Widget Build(BuildContext context)
     {
         return new CupertinoTheme(
-            new CupertinoThemeData(brightness: _dark ? PlatformBrightness.Dark : PlatformBrightness.Light),
+            new CupertinoThemeData(brightness: _dark ? Brightness.Dark : Brightness.Light),
             new Container(
                 color: _dark ? new Color(0xFF1C1C1E) : CupertinoColors.White,
                 padding: new Thickness(12.0),

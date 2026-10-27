@@ -135,7 +135,7 @@ public sealed class ExpansionTile : StatefulWidget
     {
         private ExpansibleController? _controller;
         private bool _ownsController;
-        private CancellationTokenSource? _announcementCancellation;
+        private Timer? _timer;
 
         private ExpansionTile CurrentWidget => (ExpansionTile)StateWidget;
 
@@ -163,9 +163,8 @@ public sealed class ExpansionTile : StatefulWidget
 
         public override void Dispose()
         {
-            _announcementCancellation?.Cancel();
-            _announcementCancellation?.Dispose();
-            _announcementCancellation = null;
+            _timer?.Cancel();
+            _timer = null;
             DetachController();
 
             base.Dispose();
@@ -421,11 +420,14 @@ public sealed class ExpansionTile : StatefulWidget
             {
                 // This is a workaround for VoiceOver interrupting semantic announcements on iOS.
                 // https://github.com/flutter/flutter/issues/122101.
-                _announcementCancellation?.Cancel();
-                _announcementCancellation?.Dispose();
-                _announcementCancellation = new CancellationTokenSource();
-                CancellationToken cancellationToken = _announcementCancellation.Token;
-                EventLoop.RunAsync(() => SendDelayedAnnouncement(view, stateHint, direction, cancellationToken));
+                _timer?.Cancel();
+                _timer = new Timer(TimeSpan.FromSeconds(1), () =>
+                {
+                    Task delayed = SemanticsService.SendAnnouncement(view, stateHint, direction);
+                    EventLoop.RunAsync(() => ReportAnnouncementError(delayed));
+                    _timer?.Cancel();
+                    _timer = null;
+                });
                 return;
             }
 
@@ -433,24 +435,6 @@ public sealed class ExpansionTile : StatefulWidget
             // announcement effect instead.
             Task announcement = SemanticsService.SendAnnouncement(view, stateHint, direction);
             EventLoop.RunAsync(() => ReportAnnouncementError(announcement));
-        }
-
-        private static async Task SendDelayedAnnouncement(
-            FlutterView view,
-            string stateHint,
-            TextDirection direction,
-            CancellationToken cancellationToken)
-        {
-            try
-            {
-                await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken);
-            }
-            catch (OperationCanceledException)
-            {
-                return;
-            }
-
-            await ReportAnnouncementError(SemanticsService.SendAnnouncement(view, stateHint, direction));
         }
 
         // Dart's `.catchError` on the announcement future.

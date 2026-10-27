@@ -311,13 +311,13 @@ public sealed class CupertinoSliderTests : IDisposable
 
         using var dark = new CupertinoThemeTestHarness(Wrap(
             new CupertinoSlider(0.5, _ => { }),
-            brightness: PlatformBrightness.Dark));
+            brightness: Brightness.Dark));
         dark.Pump(ViewSize);
         ColorMatchers.AssertSameColorAs(CupertinoColors.SystemBlue.DarkColor, Render(dark).ActiveColor);
 
         using var overridden = new CupertinoThemeTestHarness(Wrap(
             new CupertinoSlider(0.5, _ => { }, activeColor: CupertinoColors.ActiveGreen),
-            brightness: PlatformBrightness.Dark));
+            brightness: Brightness.Dark));
         overridden.Pump(ViewSize);
         ColorMatchers.AssertSameColorAs(CupertinoColors.SystemGreen.DarkColor, Render(overridden).ActiveColor);
     }
@@ -335,26 +335,26 @@ public sealed class CupertinoSliderTests : IDisposable
             highContrastElevatedColor: new Color(0x00000007),
             darkHighContrastElevatedColor: new Color(0x00000008));
 
-        (PlatformBrightness Brightness, CupertinoUserInterfaceLevelData Level, bool HighContrast, Color Expected)[]
+        (Brightness Brightness, CupertinoUserInterfaceLevelData Level, bool HighContrast, Color Expected)[]
             cases =
             [
-                (PlatformBrightness.Light, CupertinoUserInterfaceLevelData.Base, false, activeColor.Color),
-                (PlatformBrightness.Dark, CupertinoUserInterfaceLevelData.Base, false, activeColor.DarkColor),
-                (PlatformBrightness.Dark, CupertinoUserInterfaceLevelData.Elevated, false,
+                (Brightness.Light, CupertinoUserInterfaceLevelData.Base, false, activeColor.Color),
+                (Brightness.Dark, CupertinoUserInterfaceLevelData.Base, false, activeColor.DarkColor),
+                (Brightness.Dark, CupertinoUserInterfaceLevelData.Elevated, false,
                     activeColor.DarkElevatedColor),
-                (PlatformBrightness.Dark, CupertinoUserInterfaceLevelData.Base, true,
+                (Brightness.Dark, CupertinoUserInterfaceLevelData.Base, true,
                     activeColor.DarkHighContrastColor),
-                (PlatformBrightness.Dark, CupertinoUserInterfaceLevelData.Elevated, true,
+                (Brightness.Dark, CupertinoUserInterfaceLevelData.Elevated, true,
                     activeColor.DarkHighContrastElevatedColor),
-                (PlatformBrightness.Light, CupertinoUserInterfaceLevelData.Base, true,
+                (Brightness.Light, CupertinoUserInterfaceLevelData.Base, true,
                     activeColor.HighContrastColor),
-                (PlatformBrightness.Light, CupertinoUserInterfaceLevelData.Elevated, false,
+                (Brightness.Light, CupertinoUserInterfaceLevelData.Elevated, false,
                     activeColor.ElevatedColor),
-                (PlatformBrightness.Light, CupertinoUserInterfaceLevelData.Elevated, true,
+                (Brightness.Light, CupertinoUserInterfaceLevelData.Elevated, true,
                     activeColor.HighContrastElevatedColor),
             ];
 
-        foreach ((PlatformBrightness brightness, CupertinoUserInterfaceLevelData level, bool highContrast,
+        foreach ((Brightness brightness, CupertinoUserInterfaceLevelData level, bool highContrast,
                      Color expected) in cases)
         {
             using var harness = new CupertinoThemeTestHarness(Wrap(
@@ -377,7 +377,7 @@ public sealed class CupertinoSliderTests : IDisposable
 
         using var dark = new CupertinoThemeTestHarness(Wrap(
             new CupertinoSlider(0.0, _ => { }),
-            brightness: PlatformBrightness.Dark));
+            brightness: Brightness.Dark));
         dark.Pump(ViewSize);
         ColorMatchers.AssertSameColorAs(CupertinoColors.SystemFill.DarkColor, Render(dark).TrackColor);
     }
@@ -549,7 +549,7 @@ public sealed class CupertinoSliderTests : IDisposable
 
     private static Widget Wrap(
         Widget child,
-        PlatformBrightness brightness = PlatformBrightness.Light,
+        Brightness brightness = Brightness.Light,
         CupertinoUserInterfaceLevelData level = CupertinoUserInterfaceLevelData.Base,
         bool highContrast = false,
         TextDirection direction = TextDirection.Ltr)

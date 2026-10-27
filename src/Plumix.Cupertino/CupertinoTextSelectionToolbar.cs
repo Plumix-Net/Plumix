@@ -97,7 +97,7 @@ public sealed class CupertinoTextSelectionToolbar : StatelessWidget
         return new CupertinoTextSelectionToolbarShape(
             anchorAbove: anchorAbove,
             anchorBelow: anchorBelow,
-            shadowColor: CupertinoTheme.BrightnessOf(context) == PlatformBrightness.Light
+            shadowColor: CupertinoTheme.BrightnessOf(context) == Brightness.Light
                 ? Color.FromARGB(0x33, 0x00, 0x00, 0x00)
                 : null,
             child: new ColoredBox(ToolbarBackgroundColor.ResolveFrom(context), child: child));

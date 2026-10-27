@@ -43,7 +43,7 @@ internal sealed class CupertinoScrollbarDemoPageState : State
     public override Widget Build(BuildContext context)
     {
         return new CupertinoTheme(
-            new CupertinoThemeData(brightness: _dark ? PlatformBrightness.Dark : PlatformBrightness.Light),
+            new CupertinoThemeData(brightness: _dark ? Brightness.Dark : Brightness.Light),
             new Directionality(
                 _rightToLeft ? TextDirection.Rtl : TextDirection.Ltr,
                 new Container(

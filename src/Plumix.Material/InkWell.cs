@@ -205,7 +205,7 @@ public class InkResponse : StatelessWidget
         Color? focusColor = null,
         Color? hoverColor = null,
         Color? highlightColor = null,
-        WidgetStateProperty<Color?>? overlayColor = null,
+        IWidgetStateProperty<Color?>? overlayColor = null,
         Color? splashColor = null,
         InteractiveInkFeatureFactory? splashFactory = null,
         bool enableFeedback = true,
@@ -327,7 +327,7 @@ public class InkResponse : StatelessWidget
     public Color? HighlightColor { get; }
 
     /// <summary>Defines the ink response focus, hover, and splash colors.</summary>
-    public WidgetStateProperty<Color?>? OverlayColor { get; }
+    public IWidgetStateProperty<Color?>? OverlayColor { get; }
 
     /// <summary>The splash color of the ink response.</summary>
     public Color? SplashColor { get; }
@@ -447,7 +447,7 @@ internal sealed class InkResponseStateWidget : StatefulWidget
         Color? focusColor = null,
         Color? hoverColor = null,
         Color? highlightColor = null,
-        WidgetStateProperty<Color?>? overlayColor = null,
+        IWidgetStateProperty<Color?>? overlayColor = null,
         Color? splashColor = null,
         InteractiveInkFeatureFactory? splashFactory = null,
         bool enableFeedback = true,
@@ -523,7 +523,7 @@ internal sealed class InkResponseStateWidget : StatefulWidget
     public Color? FocusColor { get; }
     public Color? HoverColor { get; }
     public Color? HighlightColor { get; }
-    public WidgetStateProperty<Color?>? OverlayColor { get; }
+    public IWidgetStateProperty<Color?>? OverlayColor { get; }
     public Color? SplashColor { get; }
     public InteractiveInkFeatureFactory? SplashFactory { get; }
     public bool EnableFeedback { get; }
@@ -589,7 +589,7 @@ internal sealed class InkResponseState
     private readonly Dictionary<InkHighlightType, InkHighlight?> _highlights = [];
     private Dictionary<Type, FlutterAction>? _actionMap;
     private readonly ObserverList<IParentInkResponseState> _activeChildren = new();
-    private GestureTimer? _activationTimer;
+    private Timer? _activationTimer;
     private bool _hasFocus;
 
     // Dart's `MaterialStatesController? internalStatesController`.
@@ -651,7 +651,7 @@ internal sealed class InkResponseState
 
         // Delay the call to `updateHighlight` to simulate a pressed delay
         // and give WidgetStatesController listeners a chance to react.
-        _activationTimer = GestureTimer.Start(ActivationDuration, () =>
+        _activationTimer = new Timer(ActivationDuration, () =>
         {
             UpdateHighlight(InkHighlightType.Pressed, value: false);
         });
@@ -1310,7 +1310,7 @@ public class InkWell : InkResponse
         Color? focusColor = null,
         Color? hoverColor = null,
         Color? highlightColor = null,
-        WidgetStateProperty<Color?>? overlayColor = null,
+        IWidgetStateProperty<Color?>? overlayColor = null,
         Color? splashColor = null,
         InteractiveInkFeatureFactory? splashFactory = null,
         double? radius = null,

@@ -9,13 +9,13 @@ namespace Plumix.Material;
 // Dart parity source: material_ui/lib/src/switch_theme.dart
 
 public sealed partial record SwitchThemeData(
-    WidgetStateProperty<Color?>? ThumbColor = null,
-    WidgetStateProperty<Color?>? TrackColor = null,
-    WidgetStateProperty<Color?>? TrackOutlineColor = null,
+    IWidgetStateProperty<Color?>? ThumbColor = null,
+    IWidgetStateProperty<Color?>? TrackColor = null,
+    IWidgetStateProperty<Color?>? TrackOutlineColor = null,
     WidgetStateProperty<double?>? TrackOutlineWidth = null,
     MaterialTapTargetSize? MaterialTapTargetSize = null,
-    WidgetStateProperty<MouseCursor?>? MouseCursor = null,
-    WidgetStateProperty<Color?>? OverlayColor = null,
+    IWidgetStateProperty<MouseCursor?>? MouseCursor = null,
+    IWidgetStateProperty<Color?>? OverlayColor = null,
     double? SplashRadius = null,
     WidgetStateProperty<Icon?>? ThumbIcon = null,
     Thickness? Padding = null);

@@ -931,8 +931,8 @@ internal class DraggableGestureRecognizer : GestureRecognizer
     {
         if (_trackers.TryGetValue(pointer, out DragTracker? tracker))
         {
-            tracker.DelayCancellation.Cancel();
-            tracker.DelayCancellation.Dispose();
+            tracker.DelayTimer?.Cancel();
+            tracker.DelayTimer = null;
         }
 
         if (_trackers.ContainsKey(pointer))
@@ -952,22 +952,7 @@ internal class DraggableGestureRecognizer : GestureRecognizer
             return;
         }
 
-        CancellationToken token = tracker.DelayCancellation.Token;
-        _ = Task.Run(async () =>
-        {
-            try
-            {
-                await Task.Delay(delay, token).ConfigureAwait(false);
-            }
-            catch (TaskCanceledException)
-            {
-                return;
-            }
-
-            // Dart's `Timer` callback runs on the isolate, so the timer hands the work back to the
-            // framework thread instead of touching the drag state from the pool.
-            EventLoop.ScheduleMicrotask(() => HandleDelayPassed(pointer, tracker));
-        });
+        tracker.DelayTimer = new Timer(delay, () => HandleDelayPassed(pointer, tracker));
     }
 
     private void HandleDelayPassed(int pointer, DragTracker tracker)
@@ -1038,7 +1023,7 @@ internal class DraggableGestureRecognizer : GestureRecognizer
 
         public IDragAvatar? Avatar { get; set; }
 
-        public CancellationTokenSource DelayCancellation { get; } = new();
+        public Timer? DelayTimer { get; set; }
 
         public bool DelayPassed { get; set; }
 

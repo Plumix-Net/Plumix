@@ -486,7 +486,7 @@ public sealed class ApplicationWidgetsTests : IDisposable
         ScrollBehavior? scrollBehavior = null;
         var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new MediaQuery(
-            data: new MediaQueryData(PlatformBrightness: PlatformBrightness.Dark),
+            data: new MediaQueryData(PlatformBrightness: Brightness.Dark),
             child: new MaterialApp(
                 theme: lightTheme,
                 darkTheme: darkTheme,
@@ -536,7 +536,7 @@ public sealed class ApplicationWidgetsTests : IDisposable
         var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new MediaQuery(
             data: new MediaQueryData(
-                PlatformBrightness: PlatformBrightness.Dark,
+                PlatformBrightness: Brightness.Dark,
                 HighContrast: true),
             child: new MaterialApp(
                 theme: lightTheme,

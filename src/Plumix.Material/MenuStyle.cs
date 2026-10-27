@@ -17,9 +17,9 @@ namespace Plumix.Material;
 public class MenuStyle : IDiagnosticable
 {
     public MenuStyle(
-        WidgetStateProperty<Color?>? backgroundColor = null,
-        WidgetStateProperty<Color?>? shadowColor = null,
-        WidgetStateProperty<Color?>? surfaceTintColor = null,
+        IWidgetStateProperty<Color?>? backgroundColor = null,
+        IWidgetStateProperty<Color?>? shadowColor = null,
+        IWidgetStateProperty<Color?>? surfaceTintColor = null,
         WidgetStateProperty<double?>? elevation = null,
         WidgetStateProperty<EdgeInsetsGeometry?>? padding = null,
         WidgetStateProperty<Size?>? minimumSize = null,
@@ -27,7 +27,7 @@ public class MenuStyle : IDiagnosticable
         WidgetStateProperty<Size?>? maximumSize = null,
         WidgetStateProperty<BorderSide?>? side = null,
         WidgetStateProperty<OutlinedBorder?>? shape = null,
-        WidgetStateProperty<MouseCursor?>? mouseCursor = null,
+        IWidgetStateProperty<MouseCursor?>? mouseCursor = null,
         VisualDensity? visualDensity = null,
         AlignmentGeometry? alignment = null)
     {
@@ -47,13 +47,13 @@ public class MenuStyle : IDiagnosticable
     }
 
     /// <summary>The menu's background fill color.</summary>
-    public virtual WidgetStateProperty<Color?>? BackgroundColor { get; }
+    public virtual IWidgetStateProperty<Color?>? BackgroundColor { get; }
 
     /// <summary>The shadow color of the menu's <see cref="Material"/>.</summary>
-    public virtual WidgetStateProperty<Color?>? ShadowColor { get; }
+    public virtual IWidgetStateProperty<Color?>? ShadowColor { get; }
 
     /// <summary>The surface tint color of the menu's <see cref="Material"/>.</summary>
-    public virtual WidgetStateProperty<Color?>? SurfaceTintColor { get; }
+    public virtual IWidgetStateProperty<Color?>? SurfaceTintColor { get; }
 
     /// <summary>The elevation of the menu's <see cref="Material"/>.</summary>
     public virtual WidgetStateProperty<double?>? Elevation { get; }
@@ -77,7 +77,7 @@ public class MenuStyle : IDiagnosticable
     public virtual WidgetStateProperty<OutlinedBorder?>? Shape { get; }
 
     /// <summary>The cursor for a mouse pointer hovering over this menu's ink well.</summary>
-    public virtual WidgetStateProperty<MouseCursor?>? MouseCursor { get; }
+    public virtual IWidgetStateProperty<MouseCursor?>? MouseCursor { get; }
 
     /// <summary>Defines how compact the menu's layout will be.</summary>
     public virtual VisualDensity? VisualDensity { get; }
@@ -87,9 +87,9 @@ public class MenuStyle : IDiagnosticable
 
     /// <summary>Returns a copy of this style with the given fields replaced by the new values.</summary>
     public MenuStyle CopyWith(
-        WidgetStateProperty<Color?>? backgroundColor = null,
-        WidgetStateProperty<Color?>? shadowColor = null,
-        WidgetStateProperty<Color?>? surfaceTintColor = null,
+        IWidgetStateProperty<Color?>? backgroundColor = null,
+        IWidgetStateProperty<Color?>? shadowColor = null,
+        IWidgetStateProperty<Color?>? surfaceTintColor = null,
         WidgetStateProperty<double?>? elevation = null,
         WidgetStateProperty<EdgeInsetsGeometry?>? padding = null,
         WidgetStateProperty<Size?>? minimumSize = null,
@@ -97,7 +97,7 @@ public class MenuStyle : IDiagnosticable
         WidgetStateProperty<Size?>? maximumSize = null,
         WidgetStateProperty<BorderSide?>? side = null,
         WidgetStateProperty<OutlinedBorder?>? shape = null,
-        WidgetStateProperty<MouseCursor?>? mouseCursor = null,
+        IWidgetStateProperty<MouseCursor?>? mouseCursor = null,
         VisualDensity? visualDensity = null,
         AlignmentGeometry? alignment = null)
     {
@@ -204,15 +204,15 @@ public class MenuStyle : IDiagnosticable
     {
         ArgumentNullException.ThrowIfNull(properties);
         object nullDefault = DiagnosticsDefaults.NullValue;
-        properties.Add(new DiagnosticsProperty<WidgetStateProperty<Color?>?>(
+        properties.Add(new DiagnosticsProperty<IWidgetStateProperty<Color?>?>(
             "backgroundColor",
             BackgroundColor,
             defaultValue: nullDefault));
-        properties.Add(new DiagnosticsProperty<WidgetStateProperty<Color?>?>(
+        properties.Add(new DiagnosticsProperty<IWidgetStateProperty<Color?>?>(
             "shadowColor",
             ShadowColor,
             defaultValue: nullDefault));
-        properties.Add(new DiagnosticsProperty<WidgetStateProperty<Color?>?>(
+        properties.Add(new DiagnosticsProperty<IWidgetStateProperty<Color?>?>(
             "surfaceTintColor",
             SurfaceTintColor,
             defaultValue: nullDefault));
@@ -244,7 +244,7 @@ public class MenuStyle : IDiagnosticable
             "shape",
             Shape,
             defaultValue: nullDefault));
-        properties.Add(new DiagnosticsProperty<WidgetStateProperty<MouseCursor?>?>(
+        properties.Add(new DiagnosticsProperty<IWidgetStateProperty<MouseCursor?>?>(
             "mouseCursor",
             MouseCursor,
             defaultValue: nullDefault));

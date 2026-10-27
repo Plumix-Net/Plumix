@@ -9,10 +9,10 @@ namespace Plumix.Material;
 // Dart parity source: material_ui/lib/src/checkbox_theme.dart
 
 public sealed partial record CheckboxThemeData(
-    WidgetStateProperty<MouseCursor?>? MouseCursor = null,
-    WidgetStateProperty<Color?>? FillColor = null,
-    WidgetStateProperty<Color?>? CheckColor = null,
-    WidgetStateProperty<Color?>? OverlayColor = null,
+    IWidgetStateProperty<MouseCursor?>? MouseCursor = null,
+    IWidgetStateProperty<Color?>? FillColor = null,
+    IWidgetStateProperty<Color?>? CheckColor = null,
+    IWidgetStateProperty<Color?>? OverlayColor = null,
     double? SplashRadius = null,
     MaterialTapTargetSize? MaterialTapTargetSize = null,
     VisualDensity? VisualDensity = null,
@@ -20,10 +20,10 @@ public sealed partial record CheckboxThemeData(
     WidgetStateBorderSide? Side = null)
 {
     public CheckboxThemeData CopyWith(
-        WidgetStateProperty<MouseCursor?>? mouseCursor = null,
-        WidgetStateProperty<Color?>? fillColor = null,
-        WidgetStateProperty<Color?>? checkColor = null,
-        WidgetStateProperty<Color?>? overlayColor = null,
+        IWidgetStateProperty<MouseCursor?>? mouseCursor = null,
+        IWidgetStateProperty<Color?>? fillColor = null,
+        IWidgetStateProperty<Color?>? checkColor = null,
+        IWidgetStateProperty<Color?>? overlayColor = null,
         double? splashRadius = null,
         MaterialTapTargetSize? materialTapTargetSize = null,
         VisualDensity? visualDensity = null,

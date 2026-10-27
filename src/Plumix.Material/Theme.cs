@@ -64,7 +64,7 @@ public sealed class Theme : StatelessWidget
     public static Brightness BrightnessOf(BuildContext context)
     {
         InheritedMaterialTheme? inheritedTheme = context.DependOnInheritedWidgetOfExactType<InheritedMaterialTheme>();
-        return inheritedTheme?.Theme.Data.Brightness ?? ToBrightness(MediaQuery.PlatformBrightnessOf(context));
+        return inheritedTheme?.Theme.Data.Brightness ?? MediaQuery.PlatformBrightnessOf(context);
     }
 
     /// <summary>
@@ -74,15 +74,8 @@ public sealed class Theme : StatelessWidget
     public static Brightness? MaybeBrightnessOf(BuildContext context)
     {
         InheritedMaterialTheme? inheritedTheme = context.DependOnInheritedWidgetOfExactType<InheritedMaterialTheme>();
-        PlatformBrightness? platformBrightness = MediaQuery.MaybePlatformBrightnessOf(context);
-        return inheritedTheme?.Theme.Data.Brightness
-               ?? (platformBrightness is null ? null : ToBrightness(platformBrightness.Value));
+        return inheritedTheme?.Theme.Data.Brightness ?? MediaQuery.MaybePlatformBrightnessOf(context);
     }
-
-    // Dart has one `Brightness`; Plumix splits the platform value out as `PlatformBrightness`, so
-    // the `MediaQuery` fallback has to be mapped back onto the Material enum.
-    private static Brightness ToBrightness(PlatformBrightness brightness) =>
-        brightness == PlatformBrightness.Dark ? Brightness.Dark : Brightness.Light;
 
     // Dart's `Theme._wrapsWidgetThemes`: the inherited themes in the widgets library cannot infer
     // their values from a Material `Theme`, so the subtree is wrapped in the widget-library themes

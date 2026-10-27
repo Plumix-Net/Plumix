@@ -1,4 +1,3 @@
-using Avalonia.Threading;
 using Plumix.Foundation;
 using Plumix.Widgets;
 
@@ -93,7 +92,7 @@ public sealed class ScaffoldMessengerState : State<ScaffoldMessenger>
     private MaterialBannerEntry? _currentMaterialBanner;
     private AnimationController? _snackBarController;
     private AnimationController? _materialBannerAnimation;
-    private CancellationTokenSource? _snackBarTimer;
+    private Timer? _snackBarTimer;
     private bool _accessibleNavigation;
     private bool _disposed;
 
@@ -391,9 +390,17 @@ public sealed class ScaffoldMessengerState : State<ScaffoldMessenger>
                 if (_snackBarController!.Status == AnimationStatus.Completed && _snackBarTimer is null)
                 {
                     SnackBar snackBar = _snackBars.First!.Value.Presented;
-                    var cancellation = new CancellationTokenSource();
-                    _snackBarTimer = cancellation;
-                    EventLoop.RunAsync(() => RunSnackBarTimer(snackBar, cancellation.Token));
+                    _snackBarTimer = new Timer(snackBar.Duration, () =>
+                    {
+                        DebugAssertions.Assert(_snackBarController!.Status.IsForwardOrCompleted());
+                        // Look up MediaQuery again in case the setting changed.
+                        if (snackBar.Persist)
+                        {
+                            return;
+                        }
+
+                        HideCurrentSnackBar(SnackBarClosedReason.Timeout);
+                    });
                 }
             }
         }
@@ -452,38 +459,9 @@ public sealed class ScaffoldMessengerState : State<ScaffoldMessenger>
         }
     }
 
-    private async Task RunSnackBarTimer(SnackBar snackBar, CancellationToken cancellationToken)
-    {
-        try
-        {
-            await Task.Delay(snackBar.Duration, cancellationToken);
-        }
-        catch (OperationCanceledException)
-        {
-            return;
-        }
-
-        Dispatcher.UIThread.Post(() =>
-        {
-            if (cancellationToken.IsCancellationRequested || _disposed)
-            {
-                return;
-            }
-
-            DebugAssertions.Assert(_snackBarController!.Status.IsForwardOrCompleted());
-            if (snackBar.Persist)
-            {
-                return;
-            }
-
-            HideCurrentSnackBar(SnackBarClosedReason.Timeout);
-        });
-    }
-
     private void CancelSnackBarTimer()
     {
         _snackBarTimer?.Cancel();
-        _snackBarTimer?.Dispose();
         _snackBarTimer = null;
     }
 

@@ -112,8 +112,7 @@ public sealed class FrameworkDartTesterFrameTests
         tester.PumpAndSettle();
         int frames = 0;
         tester.View.RenderRequested += (_, _) => frames++;
-        using GestureTimer timer = GestureTimer.Start(
-            TimeSpan.FromMilliseconds(10), SchedulerBinding.Instance.ScheduleFrame);
+        _ = new Timer(TimeSpan.FromMilliseconds(10), SchedulerBinding.Instance.ScheduleFrame);
 
         tester.Pump(TimeSpan.FromMilliseconds(10));
 
