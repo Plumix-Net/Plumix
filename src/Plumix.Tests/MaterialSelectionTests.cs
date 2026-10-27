@@ -128,6 +128,27 @@ public sealed class MaterialSelectionTests
         Assert.True(editable.ShowCursor.Value);
     }
 
+    // `_SelectableTextState.build`: an absent (or inheriting) style merges onto the ambient
+    // DefaultTextStyle, and the EditableText gets `widget.strutStyle ?? const StrutStyle()`, which
+    // inherits from that style without forcing its height.
+    [Fact]
+    public void SelectableText_MergesTheDefaultTextStyle_AndAnUnforcedStrut()
+    {
+        const string text = "Cursor, selection, and mouse cursor inherit from the core selection style.";
+        using var harness = new WidgetRenderHarness(Root(
+            new DefaultTextStyle(
+                style: new TextStyle(FontSize: 14, Height: 1.43, LetterSpacing: 0.25),
+                child: new SelectableText(text)),
+            ThemeData.Light));
+
+        harness.Pump(new Size(320, 180));
+        RenderEditable editable = FindEditables(harness.RenderView).Single();
+        Assert.Equal(14, editable.Text!.Style!.FontSize);
+        Assert.Equal(1.43, editable.Text.Style.Height);
+        Assert.Equal(0.25, editable.Text.Style.LetterSpacing);
+        Assert.NotEqual(true, editable.StrutStyle?.ForceStrutHeight);
+    }
+
     [Fact]
     public void SelectableText_SelectionBoxStyles_PassToEditableTextUnresolved()
     {

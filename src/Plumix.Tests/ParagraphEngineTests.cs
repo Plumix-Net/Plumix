@@ -526,6 +526,192 @@ public sealed class ParagraphEngineTests
         return RasterBackend.PixelAt(image, x, y);
     }
 
+    // C#-only: the expected numbers are flutter_tester's (FlutterTest font, dart:ui ParagraphBuilder with
+    // `TextStyle(fontSize: 14, height: 1.43, leadingDistribution: even).getParagraphStyle()` and its
+    // `getTextStyle()` pushed), the M3 bodyMedium a `Text.rich` of `WidgetSpan`s lays out with.
+    private static ParagraphBuilder BodyMediumBuilder(double letterSpacing = 0.0)
+    {
+        var builder = new ParagraphBuilder(new ParagraphStyle(
+            FontSize: 14,
+            Height: 1.43,
+            TextHeightBehavior: new TextHeightBehavior(LeadingDistribution: TextLeadingDistribution.Even)));
+        builder.PushStyle(new ParagraphTextStyle(
+            FontSize: 14,
+            Height: 1.43,
+            LeadingDistribution: TextLeadingDistribution.Even,
+            LetterSpacing: letterSpacing));
+        return builder;
+    }
+
+    // A line holding only placeholders and a hard break sizes from the paragraph style's empty metrics
+    // (height applied proportionally: 15.015 / 5.005) and the placeholders, not from the newline's run:
+    // 22 px lines where the newline's even-leading metrics would give 23.
+    [Fact]
+    public void PlaceholdersSeparatedByHardBreaks_LineHeightsSkipTheNewlineRun()
+    {
+        ParagraphBuilder builder = BodyMediumBuilder();
+        builder.AddPlaceholder(99.75, 20, PlaceholderAlignment.Bottom);
+        builder.AddText("\n");
+        builder.AddPlaceholder(99.75, 20, PlaceholderAlignment.Bottom);
+        builder.AddText("\n");
+        builder.AddPlaceholder(99.75, 20, PlaceholderAlignment.Bottom);
+        using Paragraph paragraph = builder.Build();
+        paragraph.Layout(new ParagraphConstraints(744));
+
+        Assert.Equal(66.0, paragraph.Height, 6);
+        Assert.Equal(16.5, paragraph.AlphabeticBaseline, 3);
+        Assert.Equal(
+            [0.495, 22.495, 44.495],
+            paragraph.GetBoxesForPlaceholders().Select(box => Math.Round(box.Top, 3)));
+        IReadOnlyList<LineMetrics> lines = paragraph.ComputeLineMetrics();
+        Assert.Equal(3, lines.Count);
+        // LineMetrics report every run of the line (TextLine::fMaxRunMetrics), the newline's included.
+        Assert.Equal(16.5, lines[0].Ascent, 3);
+        Assert.Equal(6.51, lines[0].Descent, 3);
+        Assert.Equal(23.0, lines[0].Height, 6);
+        Assert.Equal(16.995, lines[0].Baseline, 3);
+        Assert.Equal(3.5, lines[2].Descent, 3);
+        Assert.Equal(20.0, lines[2].Height, 6);
+        Assert.Equal(60.995, lines[2].Baseline, 3);
+    }
+
+    [Fact]
+    public void PlaceholderOnlyLine_StartsFromTheParagraphStylesEmptyMetrics()
+    {
+        ParagraphBuilder builder = BodyMediumBuilder();
+        builder.AddPlaceholder(99.75, 20, PlaceholderAlignment.Bottom);
+        using Paragraph single = builder.Build();
+        single.Layout(new ParagraphConstraints(744));
+
+        Assert.Equal(22.0, single.Height, 6);
+        LineMetrics line = single.ComputeLineMetrics()[0];
+        Assert.Equal(16.5, line.Ascent, 3);
+        Assert.Equal(3.5, line.Descent, 3);
+        Assert.Equal(16.995, line.Baseline, 3);
+
+        // The paragraph style (20 px, height 2) rather than the pushed text style sets the empty metrics.
+        var mixed = new ParagraphBuilder(new ParagraphStyle(FontSize: 20, Height: 2));
+        mixed.PushStyle(new ParagraphTextStyle(
+            FontSize: 14,
+            Height: 1.43,
+            LeadingDistribution: TextLeadingDistribution.Even));
+        mixed.AddPlaceholder(99.75, 20, PlaceholderAlignment.Bottom);
+        using Paragraph paragraph = mixed.Build();
+        paragraph.Layout(new ParagraphConstraints(744));
+
+        Assert.Equal(40.0, paragraph.Height, 6);
+        Assert.Equal(30.0, paragraph.ComputeLineMetrics()[0].Baseline, 3);
+        Assert.Equal(13.5, paragraph.GetBoxesForPlaceholders()[0].Top, 3);
+    }
+
+    // TextWrapper keeps `fEndLine` for the line after a trailing hard break, so it repeats the previous
+    // line's metrics instead of taking the newline's style.
+    [Fact]
+    public void LineAfterTrailingHardBreak_RepeatsThePreviousLinesMetrics()
+    {
+        ParagraphBuilder builder = BodyMediumBuilder();
+        builder.AddPlaceholder(99.75, 20, PlaceholderAlignment.Bottom);
+        builder.AddText("\n");
+        using Paragraph paragraph = builder.Build();
+        paragraph.Layout(new ParagraphConstraints(744));
+
+        Assert.Equal(44.0, paragraph.Height, 6);
+        LineMetrics trailing = paragraph.ComputeLineMetrics()[1];
+        Assert.Equal(16.5, trailing.Ascent, 3);
+        Assert.Equal(5.005, trailing.Descent, 3);
+        Assert.Equal(22.0, trailing.Height, 6);
+        Assert.Equal(38.995, trailing.Baseline, 3);
+    }
+
+    [Fact]
+    public void HardBreakInALargerStyle_DoesNotGrowTheLineItEnds()
+    {
+        ParagraphBuilder builder = BodyMediumBuilder();
+        builder.AddText("X");
+        builder.PushStyle(new ParagraphTextStyle(FontSize: 30));
+        builder.AddText("\n");
+        builder.Pop();
+        builder.AddText("Y");
+        using Paragraph paragraph = builder.Build();
+        paragraph.Layout(new ParagraphConstraints(744));
+
+        Assert.Equal(40.0, paragraph.Height, 6);
+        LineMetrics first = paragraph.ComputeLineMetrics()[0];
+        Assert.Equal(28.95, first.Ascent, 3);
+        Assert.Equal(13.95, first.Descent, 3);
+        Assert.Equal(43.0, first.Height, 6);
+        Assert.Equal(13.49, first.Baseline, 3);
+    }
+
+    // `TextLine`'s half-letter-spacing shift comes from the first non-placeholder cluster, here the
+    // newline; the last line holds only a placeholder and is not shifted.
+    [Fact]
+    public void LetterSpacedPlaceholderLines_ShiftByTheNewlinesHalfSpacing()
+    {
+        ParagraphBuilder builder = BodyMediumBuilder(letterSpacing: 0.25);
+        builder.AddPlaceholder(99.75, 20, PlaceholderAlignment.Bottom);
+        builder.AddText("\n");
+        builder.AddPlaceholder(99.75, 20, PlaceholderAlignment.Bottom);
+        using Paragraph paragraph = builder.Build();
+        paragraph.Layout(new ParagraphConstraints(744));
+
+        Assert.Equal([0.125, 0.0], paragraph.GetBoxesForPlaceholders().Select(box => box.Left));
+    }
+
+    // FlutterTest has no Thai, Lao or Khmer glyphs: every code point shapes to a one-em `.notdef`, the
+    // Khmer coeng and vowel signs included, and letter spacing applies per glyph (52 × 14.25).
+    [Fact]
+    public void ComplexScriptLine_KeepsEveryGlyphAdvanceAndSpacing()
+    {
+        ParagraphBuilder builder = BodyMediumBuilder(letterSpacing: 0.25);
+        builder.AddText(
+            "ภาษาไทยภาษาไทย · "
+            + "ພາສາລາວ · "
+            + "ភាសាខ្មែរ · "
+            + "中文测试 · 日本語の文章");
+        using Paragraph paragraph = builder.Build();
+        paragraph.Layout(new ParagraphConstraints(800));
+
+        Assert.Equal(741.0, paragraph.MaxIntrinsicWidth, 6);
+        Assert.Equal(20.0, paragraph.Height, 6);
+    }
+
+    // HarfBuzz with FlutterTest: a mark composes when the font maps the composition (Ç, Å), the default,
+    // Arabic and Hebrew shapers zero other non-spacing marks unless no base precedes them, the Indic,
+    // Thai and Khmer shapers keep them, spacing and enclosing marks are full glyphs, ZWJ is a hidden
+    // glyph, and SARA AM splits in two. Widths at 10 px without and with 1 px letter spacing.
+    [Theory]
+    [InlineData("q́", 10.0, 12.0)]
+    [InlineData("Ç", 10.0, 11.0)]
+    [InlineData("Å", 10.0, 11.0)]
+    [InlineData("Ḉ", 10.0, 12.0)]
+    [InlineData("́", 10.0, 11.0)]
+    [InlineData("́́", 20.0, 22.0)]
+    [InlineData(" ́", 10.0, 12.0)]
+    [InlineData("שָ", 10.0, 12.0)]
+    [InlineData("يَّ", 10.0, 10.0)]
+    [InlineData("क्ष", 30.0, 33.0)]
+    [InlineData("ก́", 20.0, 22.0)]
+    [InlineData("ខ្", 20.0, 22.0)]
+    [InlineData("ำ", 20.0, 22.0)]
+    [InlineData("a⃝", 20.0, 22.0)]
+    [InlineData("aः", 20.0, 22.0)]
+    [InlineData("a‍b", 20.0, 23.0)]
+    [InlineData("឴", 0.0, 1.0)]
+    public void CombiningMarks_ShapeLikeHarfBuzzWithFlutterTest(string text, double width, double spacedWidth)
+    {
+        foreach ((double letterSpacing, double expected) in new[] { (0.0, width), (1.0, spacedWidth) })
+        {
+            var builder = new ParagraphBuilder(new ParagraphStyle());
+            builder.PushStyle(new ParagraphTextStyle(FontSize: 10, LetterSpacing: letterSpacing));
+            builder.AddText(text);
+            using Paragraph paragraph = builder.Build();
+            paragraph.Layout(new ParagraphConstraints(2000));
+
+            Assert.Equal(expected, paragraph.MaxIntrinsicWidth, 6);
+        }
+    }
+
     private static Paragraph Build(string text, ParagraphStyle style)
     {
         var builder = new ParagraphBuilder(style);

@@ -248,7 +248,7 @@ internal sealed class SelectableTextState : State<SelectableText>, ITextSelectio
     {
         var theme = Theme.Of(context);
         DefaultSelectionStyle selectionStyle = DefaultSelectionStyle.Of(context);
-        var defaultStyle = DefaultTextStyle.Of(context).Style;
+        DefaultTextStyle defaultTextStyle = DefaultTextStyle.Of(context);
         // Dart's `_SelectableTextState.build` platform switch: iOS/macOS resolve against the ambient
         // `CupertinoTheme`, every other platform against the color scheme. `TextSelectionTheme` is
         // not read here — it arrives as the `DefaultSelectionStyle` the theme widgets insert.
@@ -261,9 +261,16 @@ internal sealed class SelectableTextState : State<SelectableText>, ITextSelectio
         Color selectionColor = Current.SelectionColor
                                ?? selectionStyle.SelectionColor
                                ?? ApplyOpacity(primaryColor, 0.40);
-        var style = Current.Style;
-        double fontSize = style?.FontSize ?? defaultStyle.FontSize ?? 14.0;
-        double height = style?.Height ?? defaultStyle.Height ?? 1.0;
+        // An inheriting (or absent) style merges onto the ambient `DefaultTextStyle`.
+        TextStyle? style = Current.Style;
+        if (style is null || style.Inherit)
+        {
+            style = defaultTextStyle.Style.Merge(style);
+        }
+
+        double fontSize = style.FontSize ?? 14.0;
+        double height = style.Height ?? 1.0;
+        int? maxLines = Current.MaxLines ?? defaultTextStyle.MaxLines;
 
         Widget result = new EditableText(
             controller: _controller,
@@ -271,17 +278,18 @@ internal sealed class SelectableTextState : State<SelectableText>, ITextSelectio
             onSelectionHandleTapped: HandleSelectionHandleTapped,
             autofocus: Current.Autofocus,
             enabled: Current.EnableInteractiveSelection,
-            multiline: Current.MaxLines != 1,
+            multiline: maxLines != 1,
+            maxLines: maxLines,
             fontSize: fontSize,
-            textColor: style?.Color ?? defaultStyle.Color ?? Colors.Black,
+            textColor: style.Color ?? Colors.Black,
             backgroundColor: Colors.Transparent,
             focusedBackgroundColor: Colors.Transparent,
             padding: new Thickness(0),
             style: style,
-            strutStyle: Current.StrutStyle,
+            strutStyle: Current.StrutStyle ?? new StrutStyle(),
             readOnly: true,
             showCursor: Current.ShowCursor,
-            textAlign: Current.TextAlign ?? TextAlign.Start,
+            textAlign: Current.TextAlign ?? defaultTextStyle.TextAlign ?? TextAlign.Start,
             textDirection: Current.TextDirection,
             enableInteractiveSelection: Current.EnableInteractiveSelection,
             selectionControls: Current.SelectionControls ?? PlatformSelectionControls(theme.Platform),

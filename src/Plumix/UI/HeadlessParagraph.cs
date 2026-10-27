@@ -111,21 +111,17 @@ internal sealed class HeadlessParagraph : Paragraph
             int firstCodePoint = UnicodeText.CodePointAt(text, index);
             bool hardBreak = UnicodeText.IsHardBreak(firstCodePoint);
             double width = 0.0;
+            ShapedGlyph[] glyphs = [];
             if (!hardBreak)
             {
-                int cursor = index;
-                while (cursor < index + length)
+                glyphs = ShapeGlyphs(text, index, index + length, style.FontSize);
+                // SkParagraph's `Run::addLetterSpacesEvenly` spaces every glyph of a cluster.
+                double letterSpacing = LetterSpacingOf(firstCodePoint, style);
+                foreach (ShapedGlyph glyph in glyphs)
                 {
-                    int codePoint = UnicodeText.CodePointAt(text, cursor);
-                    if (!Rune.IsValid(codePoint) || !UnicodeText.IsZeroWidth(new Rune(codePoint)))
-                    {
-                        width += style.FontSize;
-                    }
-
-                    cursor += UnicodeText.CodePointLength(text, cursor);
+                    width += glyph.Advance + letterSpacing;
                 }
 
-                width += LetterSpacingOf(firstCodePoint, style);
                 if (firstCodePoint == ' ')
                 {
                     width += style.WordSpacing;
@@ -134,6 +130,7 @@ internal sealed class HeadlessParagraph : Paragraph
 
             _clusters.Add(new Cluster(index, index + length, width, style)
             {
+                Glyphs = glyphs,
                 HardBreak = hardBreak,
                 HangingSpace = !hardBreak && UnicodeText.IsHangingSpace(firstCodePoint),
                 FirstCodePoint = firstCodePoint,
@@ -461,6 +458,133 @@ internal sealed class HeadlessParagraph : Paragraph
         _ => false,
     };
 
+    /// The glyphs HarfBuzz shapes the grapheme cluster `[start, end)` into with `FlutterTest`, whose
+    /// glyphs (`.notdef` included) are all one em wide. A non-spacing mark composes into the preceding
+    /// glyph when the font maps the canonical composition (`e` + U+0301 is `é`); otherwise it is a
+    /// glyph of its own, which the default, Arabic and Hebrew shapers zero (`zero_mark_widths_by_gdef`
+    /// on the classes `hb_synthesize_glyph_classes` derives) unless no base precedes it, while the
+    /// Indic, Khmer, Myanmar, Thai, Hangul and USE shapers keep its advance. Spacing marks, enclosing
+    /// marks and unmapped code points are full-width glyphs; default ignorables are hidden (zero
+    /// width), and the Thai shaper splits SARA AM into NIKHAHIT + SARA AA.
+    private static ShapedGlyph[] ShapeGlyphs(string text, int start, int end, double fontSize)
+    {
+        var glyphs = new List<ShapedGlyph>(1);
+        bool composing = true;
+        int cursor = start;
+        while (cursor < end)
+        {
+            int codePoint = UnicodeText.CodePointAt(text, cursor);
+            if (codePoint is 0x0E33 or 0x0EB3)
+            {
+                glyphs.Add(new ShapedGlyph(codePoint == 0x0E33 ? 0x0E4D : 0x0ECD, fontSize));
+                glyphs.Add(new ShapedGlyph(codePoint == 0x0E33 ? 0x0E32 : 0x0EB2, fontSize));
+                composing = false;
+            }
+            else if (!Rune.IsValid(codePoint))
+            {
+                glyphs.Add(new ShapedGlyph(codePoint, fontSize));
+                composing = false;
+            }
+            else if (IsHiddenDefaultIgnorable(new Rune(codePoint)))
+            {
+                glyphs.Add(new ShapedGlyph(codePoint, 0.0));
+            }
+            else if (Rune.GetUnicodeCategory(new Rune(codePoint)) == UnicodeCategory.NonSpacingMark
+                     && BaseBefore(text, cursor) is { } baseCodePoint)
+            {
+                if (composing && glyphs.Count == 1 && Compose(glyphs[0].CodePoint, codePoint) is { } composed)
+                {
+                    glyphs[0] = glyphs[0] with { CodePoint = composed };
+                }
+                else
+                {
+                    bool zeroed = !IsComplexShaped(codePoint) && !IsComplexShaped(baseCodePoint);
+                    glyphs.Add(new ShapedGlyph(codePoint, zeroed ? 0.0 : fontSize));
+                    composing = false;
+                }
+            }
+            else
+            {
+                glyphs.Add(new ShapedGlyph(codePoint, fontSize));
+            }
+
+            cursor += UnicodeText.CodePointLength(text, cursor);
+        }
+
+        return [.. glyphs];
+    }
+
+    /// Format and control characters (tab aside), and the non-spacing default ignorables (variation
+    /// selectors, the combining grapheme joiner, Khmer's inherent vowels, Mongolian's free variation
+    /// selectors), which HarfBuzz hides behind a zero-width glyph.
+    private static bool IsHiddenDefaultIgnorable(Rune rune)
+    {
+        int value = rune.Value;
+        return Rune.GetUnicodeCategory(rune) switch
+        {
+            UnicodeCategory.Format => true,
+            UnicodeCategory.Control => value != '\t',
+            _ => value is 0x034F or 0x17B4 or 0x17B5 or (>= 0x180B and <= 0x180F) or (>= 0xFE00 and <= 0xFE0F)
+                or (>= 0xE0100 and <= 0xE01EF),
+        };
+    }
+
+    /// The code point the marks before `index` attach to, or null when only marks precede them, so
+    /// the first of them shapes as a base.
+    private static int? BaseBefore(string text, int index)
+    {
+        int cursor = index;
+        while (cursor > 0)
+        {
+            cursor -= cursor > 1 && char.IsSurrogatePair(text[cursor - 2], text[cursor - 1]) ? 2 : 1;
+            int codePoint = UnicodeText.CodePointAt(text, cursor);
+            if (!Rune.IsValid(codePoint)
+                || Rune.GetUnicodeCategory(new Rune(codePoint)) != UnicodeCategory.NonSpacingMark)
+            {
+                return codePoint;
+            }
+        }
+
+        return null;
+    }
+
+    /// The canonical composition of `first` and `mark` when `FlutterTest` maps it.
+    private static int? Compose(int first, int mark)
+    {
+        if (!Rune.IsValid(first))
+        {
+            return null;
+        }
+
+        string composed = string.Concat(char.ConvertFromUtf32(first), char.ConvertFromUtf32(mark))
+            .Normalize(NormalizationForm.FormC);
+        int codePoint = UnicodeText.CodePointAt(composed, 0);
+        bool single = UnicodeText.CodePointLength(composed, 0) == composed.Length;
+        return single && ShapeOf(codePoint) != GlyphShape.NotDef ? codePoint : null;
+    }
+
+    /// Scripts HarfBuzz shapes with its Indic, Khmer, Myanmar, Thai, Hangul or Universal Shaping
+    /// Engine shapers (`hb_ot_shaper_categorize` for a font without GSUB/GPOS), none of which zero
+    /// mark advances for a font without mark classes.
+    private static bool IsComplexShaped(int codePoint) => codePoint switch
+    {
+        >= 0x0900 and <= 0x0DFF => true, // Devanagari .. Sinhala
+        >= 0x0E00 and <= 0x0EFF => true, // Thai, Lao
+        >= 0x0F00 and <= 0x109F => true, // Tibetan, Myanmar
+        >= 0x1100 and <= 0x11FF => true, // Hangul Jamo
+        >= 0x1700 and <= 0x17FF => true, // Tagalog, Hanunoo, Buhid, Tagbanwa, Khmer
+        >= 0x1900 and <= 0x1AAF => true, // Limbu, Tai Le, New Tai Lue, Khmer Symbols, Buginese, Tai Tham
+        >= 0x1B00 and <= 0x1C4F => true, // Balinese, Sundanese, Batak, Lepcha
+        >= 0x3130 and <= 0x318F => true, // Hangul Compatibility Jamo
+        >= 0xA800 and <= 0xA82F => true, // Syloti Nagri
+        >= 0xA880 and <= 0xA97F => true, // Saurashtra, Devanagari Ext, Kayah Li, Rejang, Hangul Jamo Ext-A
+        >= 0xA980 and <= 0xAAFF => true, // Javanese, Myanmar Ext-B, Cham, Myanmar Ext-A, Tai Viet, Meetei Ext
+        >= 0xABC0 and <= 0xABFF => true, // Meetei Mayek
+        >= 0xAC00 and <= 0xD7FF => true, // Hangul Syllables, Hangul Jamo Extended-B
+        >= 0x11000 and <= 0x11FFF => true, // Brahmi and the other supplementary Brahmic scripts
+        _ => false,
+    };
+
     /// The word length TextWrapper::lookAhead measures from `start`: it stops at whitespace and
     /// leaves out the cluster a soft break follows, such as the last cluster of the text.
     private double LookAheadWordWidth(int start)
@@ -566,65 +690,85 @@ internal sealed class HeadlessParagraph : Paragraph
         _longestLine = 0.0;
         _maxLineRight = double.NegativeInfinity;
         _minLineLeft = double.PositiveInfinity;
+        var previous = new LineTextMetrics();
+        double previousAscent = 0.0;
+        double previousDescent = 0.0;
         for (int lineIndex = 0; lineIndex < _lines.Count; lineIndex++)
         {
             Line line = _lines[lineIndex];
             bool trimAscent = lineIndex == 0 && !behavior.ApplyHeightToFirstAscent;
             bool trimDescent = lineIndex == _lines.Count - 1 && !behavior.ApplyHeightToLastDescent;
+            // `metrics` sizes the line the way TextWrapper's stretches accumulate it; `reported` is the
+            // `TextLine::fMaxRunMetrics` LineMetrics reports, which counts every run of the line.
             var metrics = new LineTextMetrics();
             var reported = new LineTextMetrics();
             for (int index = line.FirstCluster; index < line.EndCluster; index++)
             {
                 Cluster cluster = _clusters[index];
-                if (cluster.Placeholder is null)
+                if (cluster.Placeholder is not null)
                 {
-                    AddStyle(cluster.Style);
+                    continue;
+                }
+
+                Accumulate(ref reported, cluster.Style);
+                // `TextStretch::extend` ignores a hard break's run ("as the Flutter does"); only
+                // `TextStretch::startFrom` takes the run of the cluster a line starts with.
+                if (!cluster.HardBreak || index == line.FirstCluster)
+                {
+                    Accumulate(ref metrics, cluster.Style);
                 }
             }
 
             if (line.EllipsisStyle is { } ellipsisStyle)
             {
-                AddStyle(ellipsisStyle);
+                Accumulate(ref metrics, ellipsisStyle);
+                Accumulate(ref reported, ellipsisStyle);
             }
 
-            if (!metrics.HasText)
+            double ascent;
+            double descent;
+            if (!metrics.HasText && line.FirstCluster == _clusters.Count && lineIndex > 0)
             {
+                // TextWrapper keeps `fEndLine` for the line after a trailing hard break: it repeats the
+                // last line's final metrics and reports that line's metrics before the strut.
+                reported = previous;
+                ascent = previousAscent;
+                descent = trimDescent ? previous.UnscaledDescent : previousDescent;
+            }
+            else
+            {
+                if (!metrics.HasText)
+                {
+                    // A line of placeholders only starts from `ParagraphImpl::computeEmptyMetrics`: the
+                    // paragraph's text style (the last pushed one for an empty paragraph).
+                    AccumulateEmpty(ref metrics, Text.Length == 0 ? _content.EmptyStyle : _content.DefaultStyle);
+                }
+
                 for (int index = line.FirstCluster; index < line.EndCluster; index++)
                 {
-                    AddStyle(_clusters[index].Style);
-                }
-            }
+                    Cluster cluster = _clusters[index];
+                    if (cluster.Placeholder is not { } placeholder)
+                    {
+                        continue;
+                    }
 
-            if (!metrics.HasText)
-            {
-                ResolvedTextStyle emptyStyle = line.Start > 0
-                    ? _content.StyleAt(line.Start - 1)
-                    : Text.Length == 0 ? _content.EmptyStyle : _content.DefaultStyle;
-                // SkParagraph's `computeEmptyMetrics` distributes an empty line's height override by the
-                // strut's half-leading flag, never by the text style's own `leadingDistribution`.
-                AddStyle(emptyStyle with { LeadingDistribution = _content.EmptyLineLeadingDistribution });
-            }
-
-            double ascent = metrics.Ascent;
-            double descent = metrics.Descent;
-            for (int index = line.FirstCluster; index < line.EndCluster; index++)
-            {
-                Cluster cluster = _clusters[index];
-                if (cluster.Placeholder is not { } placeholder)
-                {
-                    continue;
+                    // SkParagraph's `Run::updateMetrics` aligns a placeholder against its own run's font
+                    // metrics, which carry no height multiplier.
+                    double fontSize = cluster.Style.FontSize;
+                    (double placeholderAscent, double placeholderDescent) =
+                        PlaceholderMetrics(placeholder, fontSize * AscentRatio, fontSize * DescentRatio);
+                    cluster.PlaceholderAscent = placeholderAscent;
+                    metrics.Ascent = Math.Max(metrics.Ascent, placeholderAscent);
+                    metrics.Descent = Math.Max(metrics.Descent, placeholderDescent);
+                    metrics.UnscaledAscent = Math.Max(metrics.UnscaledAscent, placeholderAscent);
+                    metrics.UnscaledDescent = Math.Max(metrics.UnscaledDescent, placeholderDescent);
+                    reported.Ascent = Math.Max(reported.Ascent, placeholderAscent);
+                    reported.Descent = Math.Max(reported.Descent, placeholderDescent);
                 }
 
-                // SkParagraph's `Run::updateMetrics` aligns a placeholder against its own run's font metrics,
-                // which carry no height multiplier.
-                double fontSize = cluster.Style.FontSize;
-                (double placeholderAscent, double placeholderDescent) =
-                    PlaceholderMetrics(placeholder, fontSize * AscentRatio, fontSize * DescentRatio);
-                cluster.PlaceholderAscent = placeholderAscent;
-                ascent = Math.Max(ascent, placeholderAscent);
-                descent = Math.Max(descent, placeholderDescent);
-                reported.Ascent = Math.Max(reported.Ascent, placeholderAscent);
-                reported.Descent = Math.Max(reported.Descent, placeholderDescent);
+                previous = metrics;
+                ascent = trimAscent ? metrics.UnscaledAscent : metrics.Ascent;
+                descent = trimDescent ? metrics.UnscaledDescent : metrics.Descent;
             }
 
             if (_strutEnabled)
@@ -633,11 +777,11 @@ internal sealed class HeadlessParagraph : Paragraph
                 descent = _forceStrutHeight ? _strutDescent : Math.Max(descent, _strutDescent);
             }
 
+            previousAscent = ascent;
+            previousDescent = descent;
             line.Top = top;
             line.Ascent = ascent;
             line.Descent = descent;
-            line.UnscaledAscent = metrics.UnscaledAscent;
-            line.UnscaledDescent = metrics.UnscaledDescent;
             line.Baseline = top + ascent;
             line.ReportedAscent = reported.Ascent;
             line.ReportedDescent = reported.Descent;
@@ -649,31 +793,32 @@ internal sealed class HeadlessParagraph : Paragraph
             top += Math.Round(ascent + descent, MidpointRounding.AwayFromZero);
             PositionLine(line, lineIndex == _lines.Count - 1);
             _longestLine = Math.Max(_longestLine, line.ContentWidth);
-
-            void AddStyle(ResolvedTextStyle style)
-            {
-                Accumulate(ref metrics, style, trimAscent, trimDescent);
-                Accumulate(ref reported, style, false, false);
-            }
         }
 
         _height = top;
     }
 
-    private void Accumulate(ref LineTextMetrics metrics, ResolvedTextStyle style, bool trimAscent, bool trimDescent)
+    private void Accumulate(ref LineTextMetrics metrics, ResolvedTextStyle style)
     {
         double fontSize = style.FontSize;
         (double ascent, double descent) = VerticalMetrics(fontSize, style.Height, style.LeadingDistribution);
-        if (trimAscent)
-        {
-            ascent = fontSize * AscentRatio;
-        }
+        AddMetrics(ref metrics, fontSize, ascent, descent);
+    }
 
-        if (trimDescent)
-        {
-            descent = fontSize * DescentRatio;
-        }
+    /// `ParagraphImpl::computeEmptyMetrics`: the style's font with its height override distributed by the
+    /// strut's half-leading flag, never by the text style's own `leadingDistribution`.
+    private void AccumulateEmpty(ref LineTextMetrics metrics, ResolvedTextStyle style)
+    {
+        double fontSize = style.FontSize;
+        (double ascent, double descent) = VerticalMetrics(
+            fontSize,
+            style.Height,
+            _content.EmptyLineLeadingDistribution);
+        AddMetrics(ref metrics, fontSize, ascent, descent);
+    }
 
+    private static void AddMetrics(ref LineTextMetrics metrics, double fontSize, double ascent, double descent)
+    {
         metrics.Ascent = metrics.HasText ? Math.Max(metrics.Ascent, ascent) : ascent;
         metrics.Descent = metrics.HasText ? Math.Max(metrics.Descent, descent) : descent;
         metrics.UnscaledAscent = Math.Max(metrics.UnscaledAscent, fontSize * AscentRatio);
@@ -762,11 +907,21 @@ internal sealed class HeadlessParagraph : Paragraph
         List<Placed> visual = Reorder(sequence);
         bool ltr = _baseLevel == 0;
         TextAlign align = _content.Style.TextAlign ?? TextAlign.Start;
-        // SkParagraph starts a letter-spaced line half a spacing in; `TextLine::format` replaces that shift
-        // with the alignment shift only when the line is narrower than the paragraph (`delta > 0`).
-        double halfSpacing = visual.Count > 0 && visual[0].Cluster is { } first
-            ? LetterSpacingOf(first.FirstCodePoint, first.Style) / 2.0
-            : 0.0;
+        // SkParagraph starts a letter-spaced line half a spacing in (the `TextLine` constructor takes it
+        // from the line's first cluster, in text order, that is neither a placeholder nor cursive, its hard
+        // break included); `TextLine::format` replaces that shift with the alignment shift only when the
+        // line is narrower than the paragraph (`delta > 0`).
+        double halfSpacing = 0.0;
+        for (int index = line.FirstCluster; index < line.EndCluster; index++)
+        {
+            Cluster cluster = _clusters[index];
+            if (cluster.Placeholder is null && !IsCursiveScript(cluster.FirstCodePoint))
+            {
+                halfSpacing = cluster.Style.LetterSpacing / 2.0;
+                break;
+            }
+        }
+
         double x0 = halfSpacing;
         double extraPerSpace = 0.0;
         if (double.IsFinite(_width))
@@ -1470,15 +1625,32 @@ internal sealed class HeadlessParagraph : Paragraph
         string ellipsis = _content.Style.Ellipsis ?? string.Empty;
         foreach (Placed item in run.Items)
         {
-            (string text, int start, int end) = item.Cluster is { } cluster
-                ? (_content.Text, cluster.Start, cluster.End)
-                : (ellipsis, 0, ellipsis.Length);
             double x = offsetX + item.X;
-            int cursor = start;
-            while (cursor < end)
+            if (item.Cluster is { } cluster)
             {
-                int codePoint = UnicodeText.CodePointAt(text, cursor);
-                cursor += UnicodeText.CodePointLength(text, cursor);
+                double letterSpacing = LetterSpacingOf(cluster.FirstCodePoint, style);
+                foreach (ShapedGlyph glyph in cluster.Glyphs)
+                {
+                    // Zero-width glyphs paint nothing apart: hidden ignorables are blank, and a zeroed
+                    // mark's `.notdef` frame lands on its base.
+                    if (glyph.Advance > 0.0
+                        && (!Rune.IsValid(glyph.CodePoint) || !Rune.IsWhiteSpace(new Rune(glyph.CodePoint))))
+                    {
+                        glyphs.Add(new FlutterTestGlyphDraw.Glyph(
+                            glyph.CodePoint, x, baseline, style.FontSize, color, fakeBold, fakeItalic));
+                    }
+
+                    x += glyph.Advance + letterSpacing;
+                }
+
+                continue;
+            }
+
+            int cursor = 0;
+            while (cursor < ellipsis.Length)
+            {
+                int codePoint = UnicodeText.CodePointAt(ellipsis, cursor);
+                cursor += UnicodeText.CodePointLength(ellipsis, cursor);
                 if (Rune.IsValid(codePoint) && UnicodeText.IsZeroWidth(new Rune(codePoint)))
                 {
                     continue;
@@ -1606,6 +1778,9 @@ internal sealed class HeadlessParagraph : Paragraph
 
         public ParagraphPlaceholder? Placeholder { get; init; }
 
+        /// The shaped glyphs, in logical order (none for placeholders and hard breaks).
+        public ShapedGlyph[] Glyphs { get; init; } = [];
+
         public bool HardBreak { get; init; }
 
         public bool HangingSpace { get; init; }
@@ -1646,10 +1821,6 @@ internal sealed class HeadlessParagraph : Paragraph
 
         public double Descent { get; set; }
 
-        public double UnscaledAscent { get; set; }
-
-        public double UnscaledDescent { get; set; }
-
         public double Baseline { get; set; }
 
         public double ReportedAscent { get; set; }
@@ -1667,6 +1838,8 @@ internal sealed class HeadlessParagraph : Paragraph
 
         public List<Placed> Visual { get; set; } = [];
     }
+
+    private readonly record struct ShapedGlyph(int CodePoint, double Advance);
 
     private sealed class Placed
     {
