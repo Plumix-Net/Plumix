@@ -1192,6 +1192,8 @@ public sealed class RawChip : StatefulWidget
                 ShadowColor = Colors.Transparent,
                 LabelStyle = theme.TextTheme.LabelLarge.CopyWith(
                     color: enabled ? theme.ColorScheme.OnSurfaceVariant : theme.ColorScheme.OnSurface),
+                // _ChipDefaultsM3.deleteIconColor.
+                DeleteIconColor = enabled ? theme.ColorScheme.OnSurfaceVariant : theme.ColorScheme.OnSurface,
                 Side = new BorderSide(enabled
                     ? theme.ColorScheme.OutlineVariant
                     : WithOpacity(theme.ColorScheme.OnSurface, 0.12)),

@@ -106,6 +106,7 @@ public sealed class Badge : StatelessWidget
             ? LargeSize ?? badgeTheme.LargeSize ?? 16.0
             : SmallSize ?? badgeTheme.SmallSize ?? 6.0;
 
+        var effectiveDecoration = new ShapeDecoration(Color: backgroundColor, Shape: new StadiumBorder());
         Widget badge;
         if (hasLabel)
         {
@@ -113,28 +114,22 @@ public sealed class Badge : StatelessWidget
                 color: textColor);
             badge = new DefaultTextStyle(
                 style: style,
-                child: new ClipRRect(
-                    borderRadius: BorderRadius.Circular(10_000),
-                    child: new BadgeHorizontalStadium(
-                        minSize: widthOffset,
-                        child: new Container(
-                            alignment: Plumix.Rendering.Alignment.Center,
-                            padding: Padding ?? badgeTheme.Padding ?? new Thickness(4, 0),
-                            decoration: new BoxDecoration(
-                                Color: backgroundColor,
-                                BorderRadius: BorderRadius.Circular(10_000)),
-                            child: Label))));
+                child: new BadgeHorizontalStadium(
+                    minSize: widthOffset,
+                    child: new Container(
+                        clipBehavior: Clip.AntiAlias,
+                        decoration: effectiveDecoration,
+                        padding: Padding ?? badgeTheme.Padding ?? new Thickness(4, 0),
+                        alignment: Plumix.Rendering.Alignment.Center,
+                        child: Label)));
         }
         else
         {
-            badge = new ClipRRect(
-                borderRadius: BorderRadius.Circular(10_000),
-                child: new Container(
-                    width: widthOffset,
-                    height: widthOffset,
-                    decoration: new BoxDecoration(
-                        Color: backgroundColor,
-                        BorderRadius: BorderRadius.Circular(10_000))));
+            badge = new Container(
+                width: widthOffset,
+                height: widthOffset,
+                clipBehavior: Clip.AntiAlias,
+                decoration: effectiveDecoration);
         }
 
         if (Child is null)
