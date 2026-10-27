@@ -1449,11 +1449,9 @@ public sealed class MaterialBottomNavigationBarTests
         Thickness viewPadding = default,
         Thickness viewInsets = default)
     {
-        Widget themedContent = new Theme(data: theme, child: child);
-        if (localizations is not null)
-        {
-            themedContent = new MaterialLocalizationsScope(localizations: localizations, child: themedContent);
-        }
+        Widget themedContent = MaterialLocalizationsTesting.Localized(
+            new Theme(data: theme, child: child),
+            localizations);
 
         return new MediaQuery(
             data: new MediaQueryData(

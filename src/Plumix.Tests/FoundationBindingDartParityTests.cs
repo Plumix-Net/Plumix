@@ -12,8 +12,8 @@ namespace Plumix.Tests;
 [Collection(SchedulerTestCollection.Name)]
 public sealed class FoundationBindingDartParityTests : IDisposable
 {
-    private readonly Action<Action> _previousTimerRun = PlatformDispatcher.Instance.TimerRun;
-    private readonly List<Action> _timers = [];
+    // The warm-up frame reassembleApplication waits for is two Timer.run turns on this fake clock.
+    private readonly FakeGestureTimers _timers = new();
     private readonly List<IReadOnlyDictionary<string, object?>> _stateChanges = [];
     // The test assembly pins the process default to Android, as flutter_test does.
     private readonly TargetPlatform? _previousDefaultPlatform = PlatformDefaults.DebugDefaultTargetPlatform;
@@ -21,14 +21,13 @@ public sealed class FoundationBindingDartParityTests : IDisposable
     public FoundationBindingDartParityTests()
     {
         SchedulerBinding.ResetForTests();
-        PlatformDispatcher.Instance.TimerRun = _timers.Add;
         BindingBase.EventPosted += OnEvent;
     }
 
     public void Dispose()
     {
         BindingBase.EventPosted -= OnEvent;
-        PlatformDispatcher.Instance.TimerRun = _previousTimerRun;
+        _timers.Dispose();
         PlatformDefaults.DebugDefaultTargetPlatform = _previousDefaultPlatform;
         FoundationDebug.DebugBrightnessOverride = null;
         FoundationDebug.ConnectedVmServiceUri = null;
@@ -173,13 +172,7 @@ public sealed class FoundationBindingDartParityTests : IDisposable
     {
         for (int turn = 0; turn < 10 && !pending.IsCompleted; turn++)
         {
-            while (_timers.Count > 0)
-            {
-                Action timer = _timers[0];
-                _timers.RemoveAt(0);
-                timer();
-            }
-
+            _timers.RunDueTimers();
             EventLoop.FlushMicrotasks();
         }
 

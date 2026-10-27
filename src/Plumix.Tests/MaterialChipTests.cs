@@ -947,9 +947,7 @@ public sealed class MaterialChipTests : IDisposable
                 new Theme(
                     theme,
                     new Align(alignment: Alignment.Center, child: child))));
-        return localizations is null
-            ? result
-            : new MaterialLocalizationsScope(localizations, result);
+        return MaterialLocalizationsTesting.Localized(result, localizations);
     }
 
     private static string IconText(IconData icon) => char.ConvertFromUtf32(icon.CodePoint);

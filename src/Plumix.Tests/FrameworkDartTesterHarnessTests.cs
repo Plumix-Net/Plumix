@@ -6,6 +6,7 @@ using Plumix.Rendering;
 using Plumix.UI;
 using Plumix.Widgets;
 using Xunit;
+using Xunit.Sdk;
 using static Plumix.Tests.SemanticsMatchers;
 using MaterialWidget = Plumix.Material.Material;
 using TextDirection = Plumix.UI.TextDirection;
@@ -365,6 +366,75 @@ public sealed class FrameworkDartTesterHarnessTests : IDisposable
 
         PaintAssert.Paints(Find.ByType<ColoredBox>(), PaintPattern.Paints.Rect(color: new Color(0xFF00FF00)));
         Assert.Equal(1, tester.RecordPaint(Find.ByType<ColoredBox>()).CountCalls("drawRect"));
+    }
+
+    [Fact]
+    public void Timers_APendingTimerFailsTheTestAfterTheTreeIsDisposed()
+    {
+        // AutomatedTestWidgetsFlutterBinding._verifyInvariants.
+        var tester = new FrameworkDartTester();
+        bool fired = false;
+        _ = new Timer(TimeSpan.FromSeconds(1), () => fired = true);
+
+        XunitException failure = Assert.Throws<XunitException>(tester.Dispose);
+        Assert.StartsWith("A Timer is still pending even after the widget tree was disposed.", failure.Message);
+        Assert.Contains("duration: 00:00:01, periodic: False", failure.Message);
+        Assert.Contains(nameof(Timers_APendingTimerFailsTheTestAfterTheTreeIsDisposed), failure.Message);
+        Assert.False(fired);
+        Assert.Equal(0, EventLoop.PendingFakeTimerCount);
+    }
+
+    [Fact]
+    public void Timers_ScheduledTasksRunOnAPumpThatElapsesTime()
+    {
+        // SchedulerBinding.scheduleTask services its queue from a Timer.run turn of the fake clock.
+        using var tester = new FrameworkDartTester();
+        bool ran = false;
+        _ = SchedulerBinding.Instance.ScheduleTask(() => ran = true, Priority.Animation);
+
+        tester.Pump();
+        Assert.False(ran);
+        tester.Pump(TimeSpan.Zero);
+        Assert.True(ran);
+    }
+
+    [Fact]
+    public void Frames_AWarmUpFrameRunsAtOnceAndAllowFirstFrameLeavesFramesToTheTest()
+    {
+        // AutomatedTestWidgetsFlutterBinding.scheduleWarmUpFrame and allowFirstFrame.
+        using var tester = new FrameworkDartTester();
+        int builds = 0;
+        tester.PumpWidget(new Builder(_ =>
+        {
+            builds += 1;
+            return new SizedBox();
+        }));
+        Assert.Equal(1, builds);
+
+        tester.Owner.Reassemble(tester.Root);
+        SchedulerBinding.Instance.ScheduleWarmUpFrame();
+        Assert.Equal(2, builds);
+        Assert.False(SchedulerBinding.Instance.Locked);
+
+        RendererBinding.Instance.ResetFirstFrameSent();
+        RendererBinding.Instance.DeferFirstFrame();
+        RendererBinding.Instance.AllowFirstFrame();
+        Assert.False(SchedulerBinding.Instance.HasScheduledFrame);
+        Assert.Equal(0, EventLoop.PendingFakeTimerCount);
+    }
+
+    [Fact]
+    public void Shadows_AreDisabledDuringATestAndRestoredAfterIt()
+    {
+        // AutomatedTestWidgetsFlutterBinding.disableShadows.
+        bool before = RenderingDebug.DisableShadows;
+        using (new FrameworkDartTester())
+        {
+            Assert.True(RenderingDebug.DisableShadows);
+            RenderingDebug.DisableShadows = false;
+        }
+
+        Assert.Equal(before, RenderingDebug.DisableShadows);
     }
 
     // Calls `SemanticsService.sendAnnouncement` whatever its C# shape (a view or a view id first).

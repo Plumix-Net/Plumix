@@ -140,9 +140,9 @@ public sealed class MaterialActionButtonsTests
         using var harness = new WidgetRenderHarness(
             new Theme(
                 ThemeData.Light,
-                new MaterialLocalizationsScope(
-                    new TestMaterialLocalizations(),
-                    new Row(children:
+                MaterialLocalizationsTesting.Localized(
+                    localizations: new TestMaterialLocalizations(),
+                    child: new Row(children:
                     [
                         new DrawerButton(onPressed: () => drawerPressed++),
                         new EndDrawerButton(onPressed: () => endDrawerPressed++),
@@ -212,9 +212,9 @@ public sealed class MaterialActionButtonsTests
         using var harness = new WidgetRenderHarness(
             new Theme(
                 ThemeData.Light,
-                new MaterialLocalizationsScope(
-                    new TestMaterialLocalizations(),
-                    new Row(children:
+                MaterialLocalizationsTesting.Localized(
+                    localizations: new TestMaterialLocalizations(),
+                    child: new Row(children:
                     [
                         new BackButton(onPressed: () => backPressed++),
                         new CloseButton(onPressed: () => closePressed++),

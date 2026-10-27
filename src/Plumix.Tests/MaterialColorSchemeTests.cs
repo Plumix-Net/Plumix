@@ -326,9 +326,9 @@ public sealed class MaterialColorSchemeTests
 
         ThemeData? localized = null;
         var root = new TestRootElement(
-            new MaterialLocalizationsScope(
-                new TestMaterialLocalizations(ScriptCategory.Dense),
-                new Theme(
+            MaterialLocalizationsTesting.Localized(
+                localizations: new TestMaterialLocalizations(ScriptCategory.Dense),
+                child: new Theme(
                     raw,
                     new Builder(context =>
                     {

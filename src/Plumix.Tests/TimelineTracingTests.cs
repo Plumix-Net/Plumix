@@ -406,21 +406,15 @@ public sealed class TimelineTracingTests : IDisposable
     public void Scheduler_ScheduledTaskRunsInATimedBlockThatStepsItsFlow()
     {
         SchedulerBinding.ResetForTests();
-        List<Action> turns = [];
-        Action<Action> previousTimerRun = PlatformDispatcher.Instance.TimerRun;
-        PlatformDispatcher.Instance.TimerRun = turns.Add;
+        // Scheduled tasks and warm-up frames are Timer.run turns on a fake clock the test drives.
+        var turns = new FakeGestureTimers();
         try
         {
             using var recorder = new TimelineRecorder();
             Developer.Flow flow = Developer.Flow.Begin();
             SchedulerBinding.Instance.ScheduleTask(() => 1, Priority.Animation, debugLabel: "labelled", flow: flow);
             SchedulerBinding.Instance.ScheduleTask(() => 2, Priority.Animation);
-            while (turns.Count > 0)
-            {
-                Action turn = turns[0];
-                turns.RemoveAt(0);
-                turn();
-            }
+            turns.RunDueTimers();
 
             List<TimelineRecorder.Event> events = recorder.Take();
             Assert.Equal(
@@ -433,7 +427,7 @@ public sealed class TimelineTracingTests : IDisposable
         }
         finally
         {
-            PlatformDispatcher.Instance.TimerRun = previousTimerRun;
+            turns.Dispose();
             SchedulerBinding.ResetForTests();
         }
     }
@@ -442,9 +436,8 @@ public sealed class TimelineTracingTests : IDisposable
     public void Scheduler_WarmUpFrameAndEventLockAreTimelineTasksThatEndWithTheFrame()
     {
         SchedulerBinding.ResetForTests();
-        List<Action> turns = [];
-        Action<Action> previousTimerRun = PlatformDispatcher.Instance.TimerRun;
-        PlatformDispatcher.Instance.TimerRun = turns.Add;
+        // Scheduled tasks and warm-up frames are Timer.run turns on a fake clock the test drives.
+        var turns = new FakeGestureTimers();
         try
         {
             using var recorder = new TimelineRecorder();
@@ -453,8 +446,8 @@ public sealed class TimelineTracingTests : IDisposable
                 ["Warm-up frame", "Lock events"],
                 recorder.Take().Where(e => e.Kind == TimelineEventSource.AsyncBeginId).Select(e => e.Name));
 
-            turns[0]();
-            turns[1]();
+            Assert.True(turns.RunNextTimer());
+            Assert.True(turns.RunNextTimer());
 
             List<string> ended = [.. recorder.Take()
                 .Where(e => e.Kind == TimelineEventSource.AsyncEndId)
@@ -464,7 +457,7 @@ public sealed class TimelineTracingTests : IDisposable
         }
         finally
         {
-            PlatformDispatcher.Instance.TimerRun = previousTimerRun;
+            turns.Dispose();
             SchedulerBinding.ResetForTests();
         }
     }
@@ -534,9 +527,8 @@ public sealed class TimelineTracingTests : IDisposable
     {
         using var tester = new FrameworkDartTester();
         tester.PumpWidget(new TracingTestRoot());
-        List<Action> turns = [];
-        Action<Action> previousTimerRun = PlatformDispatcher.Instance.TimerRun;
-        PlatformDispatcher.Instance.TimerRun = turns.Add;
+        // Scheduled tasks and warm-up frames are Timer.run turns on a fake clock the test drives.
+        var turns = new FakeGestureTimers();
         try
         {
             using var recorder = new TimelineRecorder();
@@ -545,12 +537,7 @@ public sealed class TimelineTracingTests : IDisposable
 
             // Run the warm-up frame PerformReassemble schedules here, instead of letting the
             // platform timer run it during a later test.
-            while (turns.Count > 0)
-            {
-                Action turn = turns[0];
-                turns.RemoveAt(0);
-                turn();
-            }
+            turns.RunDueTimers();
 
             EventLoop.FlushMicrotasks();
             Assert.False(SchedulerBinding.Instance.Locked);
@@ -562,7 +549,7 @@ public sealed class TimelineTracingTests : IDisposable
         }
         finally
         {
-            PlatformDispatcher.Instance.TimerRun = previousTimerRun;
+            turns.Dispose();
         }
     }
 

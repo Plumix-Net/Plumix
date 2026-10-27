@@ -269,11 +269,9 @@ public sealed class MaterialExpandIconTests : IDisposable
         ThemeData? theme = null,
         TextDirection direction = TextDirection.Ltr)
     {
-        return new Directionality(
+        return MaterialLocalizationsTesting.Localized(new Directionality(
             direction,
-            new MaterialLocalizationsScope(
-                DefaultMaterialLocalizations.Instance,
-                new Theme(theme ?? ThemeData.Light, MaterialHost.Transparent(child))));
+            new Theme(theme ?? ThemeData.Light, MaterialHost.Transparent(child))));
     }
 
     private static List<T> FindDescendants<T>(RenderObject? root) where T : RenderObject

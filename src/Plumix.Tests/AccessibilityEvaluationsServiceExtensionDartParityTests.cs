@@ -238,19 +238,17 @@ public sealed class AccessibilityEvaluationsServiceExtensionDartParityTests : ID
     }
 
     [NonReleaseFact]
-    public async Task WrapsTheFeatureFlagErrorIntoAnExtensionErrorResponse()
+    public void WrapsTheFeatureFlagErrorIntoAnExtensionErrorResponse()
     {
         PumpTestWidget();
         Features.IsAccessibilityEvaluationsEnabled = false;
         FlutterExceptionHandler? previous = FlutterError.OnError;
-        Action<Action> previousTimerRun = PlatformDispatcher.Instance.TimerRun;
-        // The wrapper waits one outer event-loop turn; run that timer at once.
-        PlatformDispatcher.Instance.TimerRun = static callback => callback();
         var reported = new List<FlutterErrorDetails>();
         FlutterError.OnError = reported.Add;
         try
         {
-            ServiceExtensionResponse response = await BindingBase.InvokeServiceExtensionAsync(
+            // The wrapper waits one outer event-loop turn, which the fake loop runs.
+            ServiceExtensionResponse response = FakeGestureTimers.InvokeServiceExtension(
                 "ext.flutter.accessibilityEvaluations",
                 new Dictionary<string, string> { ["type"] = "LabeledTapTargetEvaluation" });
 
@@ -262,7 +260,6 @@ public sealed class AccessibilityEvaluationsServiceExtensionDartParityTests : ID
         finally
         {
             FlutterError.OnError = previous;
-            PlatformDispatcher.Instance.TimerRun = previousTimerRun;
         }
     }
 }

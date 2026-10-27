@@ -1206,8 +1206,7 @@ public sealed class MaterialBottomSheetTests : IDisposable
             TextDirection.Ltr,
             new MediaQuery(
                 media,
-                new MaterialLocalizationsScope(
-                    DefaultMaterialLocalizations.Instance,
+                MaterialLocalizationsTesting.Localized(
                     new Theme(
                         ThemeData.Light,
                         new Navigator(new BuilderPageRoute(_ => new CaptureContext(
@@ -1235,8 +1234,7 @@ public sealed class MaterialBottomSheetTests : IDisposable
             TextDirection.Ltr,
             new MediaQuery(
                 new MediaQueryData(Size: new Size(500, 400), Padding: new Thickness(50)),
-                new MaterialLocalizationsScope(
-                    DefaultMaterialLocalizations.Instance,
+                MaterialLocalizationsTesting.Localized(
                     new Theme(
                         ThemeData.Light,
                         new Navigator(new BuilderPageRoute(_ => new CaptureContext(
@@ -1277,7 +1275,7 @@ public sealed class MaterialBottomSheetTests : IDisposable
         TextDirection.Ltr,
         new MediaQuery(
             new MediaQueryData(Size: new Size(800, 600)),
-            new MaterialLocalizationsScope(DefaultMaterialLocalizations.Instance, new Theme(theme, child))));
+            MaterialLocalizationsTesting.Localized(new Theme(theme, child))));
 
     private static void PumpAnimation()
     {

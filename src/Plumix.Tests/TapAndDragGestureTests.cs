@@ -1,4 +1,5 @@
 using Avalonia;
+using Plumix.Foundation;
 using Plumix.Gestures;
 using Plumix.Rendering;
 using Plumix.UI;
@@ -429,6 +430,37 @@ internal sealed class FakeGestureTimers : IDisposable
 
     /// <summary>The number of active timers on the fake clock: <c>FakeAsync.pendingTimers.length</c>.</summary>
     public int PendingTimerCount => EventLoop.PendingFakeTimerCount;
+
+    /// <summary>The active timers on the fake clock, in firing order: <c>FakeAsync.pendingTimers</c>.</summary>
+    public IReadOnlyList<Timer> PendingTimers => EventLoop.PendingFakeTimers;
+
+    /// <summary>
+    /// Runs one turn of the event loop: fires the earliest pending timer (a <c>Timer.run</c> turn, say)
+    /// and drains the microtasks around it. Returns <see langword="false"/> when none is pending.
+    /// </summary>
+    public bool RunNextTimer() => EventLoop.RunNextFakeTimer();
+
+    /// <summary>
+    /// Runs the event-loop turns that are due now (<c>FakeAsync.elapse(Duration.zero)</c>), including
+    /// the zero-duration ones they queue.
+    /// </summary>
+    public void RunDueTimers() => Elapse(TimeSpan.Zero);
+
+    /// <summary>
+    /// Delivers a VM service-extension request on the fake event loop and returns the response: the
+    /// handler's wait for the outer event loop is one <c>Timer.run</c> turn, which this runs.
+    /// </summary>
+    /// <remarks>For an extension that also waits for a frame, invoke it and pump instead.</remarks>
+    public static ServiceExtensionResponse InvokeServiceExtension(
+        string method,
+        IReadOnlyDictionary<string, string>? parameters = null)
+    {
+        using var timers = new FakeGestureTimers();
+        Task<ServiceExtensionResponse> response = BindingBase.InvokeServiceExtensionAsync(method, parameters);
+        timers.RunDueTimers();
+        Assert.True(response.IsCompleted, $"{method} is still waiting after its event-loop turn.");
+        return response.Result;
+    }
 
     public void Dispose()
     {

@@ -332,10 +332,19 @@ public abstract class MaterialLocalizations
 
     public abstract string KeyboardKeySpace { get; }
 
+    /// <summary>
+    /// The <see cref="MaterialLocalizations"/> from the closest <see cref="Localizations"/> instance
+    /// that encloses <paramref name="context"/>.
+    /// </summary>
+    /// <remarks>
+    /// Dart's <c>MaterialLocalizations.of</c>, which asserts that a <c>MaterialApp</c> (or a
+    /// <see cref="Localizations"/> widget with a <see cref="MaterialLocalizations"/> delegate) is an
+    /// ancestor. Plumix still falls back to <see cref="DefaultMaterialLocalizations"/> until every test
+    /// harness provides one (<c>docs/ai/BACKLOG.md</c>).
+    /// </remarks>
     public static MaterialLocalizations Of(BuildContext context)
     {
-        return Localizations.MaybeOf<MaterialLocalizations>(context)
-               ?? MaterialLocalizationsScope.Of(context);
+        return Localizations.MaybeOf<MaterialLocalizations>(context) ?? DefaultMaterialLocalizations.Instance;
     }
 
     /// Dart's `DateTime.weekday`: Monday is 1, Sunday is 7.
@@ -863,28 +872,4 @@ public sealed class DefaultMaterialLocalizationsDelegate : LocalizationsDelegate
 
     /// <inheritdoc />
     public override string ToString() => "DefaultMaterialLocalizations.delegate(en_US)";
-}
-
-public sealed class MaterialLocalizationsScope : InheritedWidget
-{
-    public MaterialLocalizationsScope(
-        MaterialLocalizations localizations,
-        Widget child,
-        Key? key = null) : base(child, key)
-    {
-        Localizations = localizations ?? throw new ArgumentNullException(nameof(localizations));
-    }
-
-    public MaterialLocalizations Localizations { get; }
-
-    public override bool UpdateShouldNotify(InheritedWidget oldWidget)
-    {
-        return !ReferenceEquals(((MaterialLocalizationsScope)oldWidget).Localizations, Localizations);
-    }
-
-    public static MaterialLocalizations Of(BuildContext context)
-    {
-        return context.DependOnInheritedWidgetOfExactType<MaterialLocalizationsScope>()?.Localizations
-               ?? DefaultMaterialLocalizations.Instance;
-    }
 }

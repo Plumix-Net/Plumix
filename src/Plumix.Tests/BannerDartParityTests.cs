@@ -83,6 +83,7 @@ public sealed class BannerDartParityTests
         try
         {
             using var tester = new FrameworkDartTester();
+            RenderingDebug.DisableShadows = false; // Dart sets debugDisableShadows in the test body.
             tester.PumpWidget(new Directionality(
                 textDirection: TextDirection.Ltr,
                 child: new Banner(message: "Hello", location: BannerLocation.TopEnd)));
@@ -107,6 +108,7 @@ public sealed class BannerDartParityTests
         try
         {
             using var tester = new FrameworkDartTester();
+            RenderingDebug.DisableShadows = false; // Dart sets debugDisableShadows in the test body.
             tester.PumpWidget(new Directionality(
                 textDirection: TextDirection.Ltr,
                 child: new CheckedModeBanner(child: new Placeholder())));

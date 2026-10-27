@@ -765,6 +765,13 @@ public sealed class SchedulerBinding
         _hasScheduledFrame = true;
     }
 
+    /// <summary>
+    /// flutter_test's <c>AutomatedTestWidgetsFlutterBinding.scheduleWarmUpFrame</c> override: a test
+    /// harness that pumps its own frames runs the warm-up frame synchronously here, so it does not
+    /// schedule timers the test might never get around to running.
+    /// </summary>
+    internal Action? ScheduleWarmUpFrameOverrideForTests { get; set; }
+
     /// <summary>Schedule a frame to run as soon as possible, rather than waiting for the engine to
     /// request a frame in response to a system "Vsync" signal.</summary>
     /// <remarks>Dart's <c>SchedulerBinding.scheduleWarmUpFrame</c>.</remarks>
@@ -772,6 +779,12 @@ public sealed class SchedulerBinding
     {
         if (_warmUpFrame || SchedulerPhase != SchedulerPhase.Idle)
         {
+            return;
+        }
+
+        if (ScheduleWarmUpFrameOverrideForTests is { } warmUpFrameOverride)
+        {
+            warmUpFrameOverride();
             return;
         }
 
@@ -1233,7 +1246,7 @@ public sealed class SchedulerBinding
         }
 
         _hasRequestedAnEventLoopCallback = true;
-        PlatformDispatcher.Instance.TimerRun(RunTasks);
+        Timer.Run(RunTasks);
     }
 
     private void RunTasks()
