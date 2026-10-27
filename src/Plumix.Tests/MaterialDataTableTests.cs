@@ -595,11 +595,8 @@ public sealed class MaterialDataTableTests : IDisposable
                 onSelectChanged: _ => { }),
         ]);
 
-    private static Widget Wrap(Widget child, ThemeData? theme = null) => new Directionality(
-        TextDirection.Ltr,
-        new MaterialLocalizationsScope(
-            DefaultMaterialLocalizations.Instance,
-            new Theme(theme ?? ThemeData.Light, child)));
+    private static Widget Wrap(Widget child, ThemeData? theme = null) => MaterialLocalizationsTesting.Localized(
+        new Directionality(TextDirection.Ltr, new Theme(theme ?? ThemeData.Light, child)));
 
     private static RenderParagraph? FindParagraph(RenderObject? root, string text) =>
         FindDescendants<RenderParagraph>(root).FirstOrDefault(paragraph => paragraph.PlainText == text);

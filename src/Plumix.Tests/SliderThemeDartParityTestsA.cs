@@ -202,6 +202,7 @@ public sealed class SliderThemeDartParityTestsA : IDisposable
             }
 
             using var tester = new FrameworkDartTester();
+            RenderingDebug.DisableShadows = false; // Dart sets debugDisableShadows in the test body.
             tester.PumpWidget(BuildApp());
 
             RenderObject material = MaterialOf(tester.ElementOfType<Slider>());
@@ -365,6 +366,7 @@ public sealed class SliderThemeDartParityTestsA : IDisposable
             }
 
             using var tester = new FrameworkDartTester();
+            RenderingDebug.DisableShadows = false; // Dart sets debugDisableShadows in the test body.
             tester.PumpWidget(BuildApp());
 
             RenderObject material = MaterialOf(tester.ElementOfType<Slider>());
@@ -1322,6 +1324,7 @@ public sealed class SliderThemeDartParityTestsA : IDisposable
         try
         {
             using var tester = new FrameworkDartTester();
+            RenderingDebug.DisableShadows = false; // Dart sets debugDisableShadows in the test body.
             // Pump a slider with just a thumb.
             tester.PumpWidget(BuildApp(
                 new ThemeData().SliderTheme.CopyWith(
@@ -1418,6 +1421,7 @@ public sealed class SliderThemeDartParityTestsA : IDisposable
             }
 
             using var tester = new FrameworkDartTester();
+            RenderingDebug.DisableShadows = false; // Dart sets debugDisableShadows in the test body.
             tester.PumpWidget(BuildLocalApp("1"));
 
             RenderObject valueIndicatorBox = tester.ElementOfType<Overlay>().FindRenderObject()!;

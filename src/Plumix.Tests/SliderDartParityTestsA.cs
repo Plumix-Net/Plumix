@@ -550,6 +550,7 @@ public sealed class SliderDartParityTestsA : IDisposable
         try
         {
             using FrameworkDartTester tester = CreateTester();
+            RenderingDebug.DisableShadows = false; // Dart sets debugDisableShadows in the test body.
             var sliderKey = new UniqueKey();
             double value = 0.0;
 
