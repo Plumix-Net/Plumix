@@ -286,14 +286,6 @@ internal sealed class ClipGeometryEngineLayer : EngineLayer
     }
 }
 
-/// <summary>Plumix-only: the handle <see cref="SceneBuilder.PushSnapshot"/> returns.</summary>
-internal sealed class SnapshotEngineLayer : EngineLayer
-{
-    internal SnapshotEngineLayer(NativeEngineLayer nativeLayer) : base(nativeLayer)
-    {
-    }
-}
-
 /// <summary>
 /// An exception thrown by <see cref="Scene.ToImageSync"/> when the scene cannot be rasterized.
 /// </summary>
@@ -628,19 +620,6 @@ public class SceneBuilder
         DebugCheckCanBeUsedAsOldLayer(oldLayer, "pushClipGeometry");
         var layer = new ClipGeometryEngineLayer(
             PushNativeLayer(new ClipGeometryFlowLayer(geometry, geometryOffset, clipBehavior)));
-        DebugPushLayer(layer);
-        return layer;
-    }
-
-    /// <summary>
-    /// Plumix-only: pushes the raster snapshot of a <see cref="Rendering.SnapshotOffsetLayer"/>, which
-    /// draws its children once into <paramref name="cache"/> and the cached image from then on.
-    /// </summary>
-    internal SnapshotEngineLayer PushSnapshot(SnapshotRasterCache cache, Point offset, SnapshotEngineLayer? oldLayer)
-    {
-        ArgumentNullException.ThrowIfNull(cache);
-        DebugCheckCanBeUsedAsOldLayer(oldLayer, "pushSnapshot");
-        var layer = new SnapshotEngineLayer(PushNativeLayer(new SnapshotFlowLayer(cache, offset)));
         DebugPushLayer(layer);
         return layer;
     }

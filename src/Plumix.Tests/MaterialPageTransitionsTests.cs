@@ -305,37 +305,6 @@ public sealed class MaterialPageTransitionsTests : IDisposable
         root.UnmountRoot();
     }
 
-    [Fact]
-    public void SnapshotController_ControlsRetainedSnapshotRenderLayerState()
-    {
-        var controller = new SnapshotController();
-        using var harness = new RenderHarness(
-            new SnapshotWidget(
-                controller,
-                mode: SnapshotMode.Permissive,
-                autoresize: true,
-                pixelRatio: 2.0,
-                child: new SizedBox(
-                    width: 40.0,
-                    height: 30.0,
-                    child: new ColoredBox(Colors.Red))));
-
-        harness.Pump(new Size(40.0, 30.0));
-        RenderSnapshotWidget render = Assert.Single(FindRenderObjects<RenderSnapshotWidget>(harness.RenderView));
-        var layer = Assert.IsType<SnapshotOffsetLayer>(render.EnsureCompositedLayer());
-        Assert.False(layer.AllowSnapshotting);
-        Assert.Equal(new Size(40.0, 30.0), layer.Size);
-
-        controller.AllowSnapshotting = true;
-        harness.Pump(new Size(40.0, 30.0));
-        Assert.True(layer.AllowSnapshotting);
-        int version = layer.ClearVersion;
-
-        controller.Clear();
-        harness.Pump(new Size(40.0, 30.0));
-        Assert.True(layer.ClearVersion > version);
-    }
-
     private static TestRootElement MountNavigator(Route initialRoute)
     {
         var theme = ThemeData.Light with
