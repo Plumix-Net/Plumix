@@ -34,7 +34,7 @@ public sealed class FocusDiagnosticsDartParityTests : IDisposable
     }
 
     // FocusNode group: 'implements debugFillProperties'
-    [Fact]
+    [DebugOnlyFact]
     public void FocusNodeImplementsDebugFillProperties()
     {
         using var focusNode = new FocusNode(debugLabel: "Label");
@@ -51,7 +51,7 @@ public sealed class FocusDiagnosticsDartParityTests : IDisposable
     }
 
     // FocusScopeNode group: 'implements debugFillProperties'
-    [Fact]
+    [DebugOnlyFact]
     public void FocusScopeNodeImplementsDebugFillProperties()
     {
         using var scope = new FocusScopeNode(debugLabel: "Scope Label");
@@ -68,7 +68,7 @@ public sealed class FocusDiagnosticsDartParityTests : IDisposable
     }
 
     // FocusNode.toStringShort labels the focus state after the debug label.
-    [Fact]
+    [DebugOnlyFact]
     public void ToStringShortDescribesIdentityLabelAndFocusState()
     {
         using var tester = new FrameworkDartTester();
