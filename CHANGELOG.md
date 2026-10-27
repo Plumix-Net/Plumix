@@ -8,6 +8,29 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased]
+- Breaking: `RenderParagraph` drops flat style accessors, `PlainText` and the string ctor; only `Text` (paragraph.dart).
+- Breaking: `SelectableRegion` drops the C#-only `onTap`/`mouseCursor` options (selectable_region.dart).
+- Breaking: `ReorderableList` takes Dart's param order, `EdgeInsetsGeometry?` padding, asserts (reorderable_list.dart).
+- Breaking: `scrollController`, bool `StartItemDragReorder` and `Delayed` removed (reorderable_list.dart).
+- Breaking: `ReorderableListView` validates through Dart's asserts; no anchor range guard (reorderable_list.dart).
+- Breaking: `EditableText` matches Dart's constructor: required args, defaults, no C#-only members (editable_text.dart).
+- Breaking: `EditableText` drops its `Container`/`Focus` wrappers; cursor radius/offset nullable (editable_text.dart).
+- Breaking: `TextField.OnKeyEvent` removed; the field sets its node's `canRequestFocus` (text_field.dart).
+- `CupertinoTextField` is its field's `AutofillClient`; the placeholder is the autofill `hintText` (text_field.dart).
+- Search page closes on Escape through its own `FocusNode.onKeyEvent` (search.dart).
+- Breaking: `MaterialLocalizations.Of` throws without a delegate, no default fallback (material_localizations.dart).
+- Material widgets assert `debugCheckHasMaterialLocalizations` at all 40 Dart call sites (material_ui/lib/src).
+- `Theme.Of` falls back to englishLike typography without `MaterialLocalizations` (theme.dart).
+- Breaking: `RenderSliverMultiBoxAdaptor` takes a required get-only `ChildManager` (sliver_multi_box_adaptor.dart).
+- `GetRectOfSemanticsNodeInViewCoordinates` asserts like Dart; stale semantics actions dropped (rendering/binding.dart).
+- Focus: `debugFocusChanges` and `_focusDebug` logging at every call site, tree dump on change (focus_manager.dart).
+- `BindingBase.CheckInstance`/`DebugBindingType`, `WidgetsBinding.DebugCheckZone` (foundation/binding.dart).
+- `RunApp`/`RunWidget` assert `DebugCheckZone`; first frame sets the default `UserTag` (widgets/binding.dart).
+- `UserTag` and `DeveloperService.GetCurrentTag` (dart:developer profiler.dart).
+- `PlatformDispatcher.OnPlatformConfigurationChanged`, before each specific callback (ui/platform_dispatcher.dart).
+- Image codecs complete `GetNextFrame` on a later event-loop turn; tests turn it via `RunAsync` (multi_frame_codec.cc).
+- Breaking: `IPreferredSizeWidget.PreferredSize` is `PreferredSizeValue`, no `PreferredAppBarSize` (preferred_size.dart).
+- Sample: `ImageDemoPage` decodes its raw image like the Dart sample; captures reset caches per route; `/image` matches.
 - Text: an empty line's leading follows the strut's half-leading flag, not the style's (SkParagraph `computeEmptyMetrics`).
 - Headless paragraphs: hard-break and placeholder-only line metrics and the half-spacing shift follow SkParagraph `TextWrapper`.
 - Headless paragraphs shape FlutterTest marks like HarfBuzz (per-glyph spacing, composition, mark widths per shaper).

@@ -93,8 +93,8 @@ Blockers (all must close):
 
 - M5 and M6 are `done` (met 2026-10-27).
 - Every sample route in `SampleScreenCaptureTests` matches the Dart capture, or its residual
-  difference is a `docs/ai/DIVERGENCES.md` row. (met 2026-10-27: 162 of 164 within Skia AA noise; `/image` and
-  `/desktop-text-selection-toolbar` are `DIVERGENCES.md` rows).
+  difference is a `docs/ai/DIVERGENCES.md` row. (met 2026-10-27: 163 of 164 within Skia AA noise;
+  `/desktop-text-selection-toolbar` is a `DIVERGENCES.md` row).
 - No qualified marker in `docs/ai/PORT_MAP.md` (met 2026-10-27).
 - Control-level gaps (`docs/ai/BACKLOG.md`) that change an existing signature, type or default are
   closed (met 2026-10-27: state-property slots on `IWidgetStateProperty`, `AnimationController` errors,
@@ -118,8 +118,8 @@ Known limitations (listed in the RC release notes, not blockers):
   the rest of `SystemChrome.*`, accessibility features and semantics focus on desktop/Android,
   `GestureSettings`, text spacing overrides, windowing-owner gaps, the iOS system context menu.
 - The upstream re-port row (platform-view hit-test), blocked on platform views.
-- Additive control-level gaps (debug checks, service extensions, binding remainder, `SnapshotPainter`,
-  `ImageCache` structure, thumb shadows via Avalonia, `SystemNavigator.pop`, missing parameters).
+- Additive control-level gaps (service extensions, missing `EditableText` parameters, the Avalonia
+  FORWARD_DEL report).
 - Every row of `docs/ai/DIVERGENCES.md`.
 
 ## Backlog Candidates (After M5–M6)
