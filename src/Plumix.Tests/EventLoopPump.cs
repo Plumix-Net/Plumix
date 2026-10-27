@@ -1,5 +1,6 @@
 // C#-only test infrastructure; no Dart parity source. Flutter's own tests get the same effect from
-// `flutter_test`'s fake async zone, which runs the isolate's microtasks whenever the test pumps.
+// `flutter_test`'s fake async zone, which runs the isolate's microtasks whenever the test pumps, and
+// from `runAsync`, which lets the real event loop run the tasks the engine posts.
 
 namespace Plumix.Tests;
 
@@ -8,8 +9,9 @@ namespace Plumix.Tests;
 /// </summary>
 /// <remarks>
 /// Framework continuations resume as <see cref="EventLoop.ScheduleMicrotask"/> microtasks on the
-/// framework thread (<see cref="EventLoop.EnterFrameworkThread"/>), so a test that blocks on a task
-/// without turning the loop would wait forever. These helpers do the turning.
+/// framework thread (<see cref="EventLoop.EnterFrameworkThread"/>), and engine work such as an image
+/// decode completes in a task posted to the loop (<see cref="EventLoop.PostTask"/>), so a test that
+/// blocks on a task without turning the loop would wait forever. These helpers do the turning.
 /// </remarks>
 internal static class EventLoopPump
 {
@@ -41,6 +43,7 @@ internal static class EventLoopPump
         var elapsed = System.Diagnostics.Stopwatch.StartNew();
         while (true)
         {
+            EventLoop.RunPendingTasks();
             EventLoop.FlushMicrotasks();
             if (predicate())
             {
@@ -63,6 +66,7 @@ internal static class EventLoopPump
     public static async Task Turn()
     {
         await Task.Delay(1);
+        EventLoop.RunPendingTasks();
         EventLoop.FlushMicrotasks();
     }
 
@@ -78,6 +82,7 @@ internal static class EventLoopPump
         var elapsed = System.Diagnostics.Stopwatch.StartNew();
         while (true)
         {
+            EventLoop.RunPendingTasks();
             EventLoop.FlushMicrotasks();
             if (predicate())
             {

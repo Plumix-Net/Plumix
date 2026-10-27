@@ -100,7 +100,7 @@ public sealed class Tab : StatelessWidget, IPreferredSizeWidget
 
     public double? Height { get; }
 
-    public Size PreferredSize
+    public PreferredSizeValue PreferredSize
     {
         get
         {
@@ -1431,7 +1431,7 @@ public sealed class TabBar : StatefulWidget, IPreferredSizeWidget
     /// <summary>Whether this bar is a primary (true) or secondary (false) Material 3 tab bar.</summary>
     internal bool IsPrimary { get; }
 
-    public Size PreferredSize
+    public PreferredSizeValue PreferredSize
     {
         get
         {

@@ -95,17 +95,18 @@ internal sealed class RenderAppBarTitleBox : RenderAligningShiftedBox
 }
 
 /// <summary>
-/// Ports Flutter's private <c>_PreferredAppBarSize</c>. Avalonia's <see cref="Size"/> is a sealed value
-/// type, so the toolbar/bottom metadata Dart keeps on its <c>Size</c> subclass rides on this record
-/// instead; <see cref="AppBar.PreferredHeightFor(BuildContext, PreferredAppBarSize)"/> is the overload
-/// that can still substitute <c>AppBarThemeData.ToolbarHeight</c>.
+/// Ports Flutter's private <c>_PreferredAppBarSize</c>: the app bar's preferred size, which remembers
+/// whether the widget set its own toolbar height so <see cref="AppBar.PreferredHeightFor"/> can
+/// substitute the theme's.
 /// </summary>
-public sealed record PreferredAppBarSize(double? ToolbarHeight, double? BottomHeight)
+internal sealed class PreferredAppBarSize(double? toolbarHeight, double? bottomHeight)
+    : PreferredSizeValue(
+        double.PositiveInfinity,
+        (toolbarHeight ?? MaterialConstants.ToolbarHeight) + (bottomHeight ?? 0.0))
 {
-    public double Height => (ToolbarHeight ?? MaterialConstants.ToolbarHeight) + (BottomHeight ?? 0.0);
+    public double? ToolbarHeight { get; } = toolbarHeight;
 
-    /// <summary>Dart's <c>Size.fromHeight</c>: an unbounded width with the computed height.</summary>
-    public Size ToSize() => new(double.PositiveInfinity, Height);
+    public double? BottomHeight { get; } = bottomHeight;
 }
 
 /// <summary>Ports Flutter's private <c>_AppBarDefaultsM2</c>/<c>_AppBarDefaultsM3</c>.</summary>
@@ -237,7 +238,7 @@ public sealed class AppBar : StatefulWidget, IPreferredSizeWidget
         ClipBehavior = clipBehavior;
         ActionsPadding = actionsPadding;
         AnimateColor = animateColor;
-        PreferredAppBarSize = new PreferredAppBarSize(toolbarHeight, bottom?.PreferredSize.Height);
+        PreferredSize = new PreferredAppBarSize(toolbarHeight, bottom?.PreferredSize.Height);
     }
 
     public Widget? Leading { get; }
@@ -306,30 +307,24 @@ public sealed class AppBar : StatefulWidget, IPreferredSizeWidget
 
     public bool AnimateColor { get; }
 
-    /// <summary>The toolbar/bottom metadata Dart keeps on its <c>_PreferredAppBarSize</c>.</summary>
-    public PreferredAppBarSize PreferredAppBarSize { get; }
-
-    public Size PreferredSize => PreferredAppBarSize.ToSize();
+    /// <summary>
+    /// A size whose height is the sum of <see cref="ToolbarHeight"/> and the bottom widget's preferred
+    /// height.
+    /// </summary>
+    public PreferredSizeValue PreferredSize { get; }
 
     /// <summary>
-    /// Ports Dart's <c>AppBar.preferredHeightFor</c> for a plain <see cref="Size"/>, which carries no
-    /// toolbar-height metadata and therefore always reports its own height.
+    /// Used by <see cref="Scaffold"/> to compute its app bar's overall height: the same
+    /// <c>preferredSize.Height</c>, unless <paramref name="preferredSize"/> is an app bar's whose
+    /// <see cref="ToolbarHeight"/> was null, where <c>AppBarTheme.Of(context).ToolbarHeight</c> plus the
+    /// bottom widget's height is returned instead.
     /// </summary>
-    public static double PreferredHeightFor(BuildContext context, Size preferredSize)
+    public static double PreferredHeightFor(BuildContext context, PreferredSizeValue preferredSize)
     {
-        return preferredSize.Height;
-    }
-
-    /// <summary>
-    /// Ports Dart's <c>AppBar.preferredHeightFor</c>: when the widget did not set a toolbar height, the
-    /// ambient <see cref="AppBarThemeData.ToolbarHeight"/> substitutes for it.
-    /// </summary>
-    public static double PreferredHeightFor(BuildContext context, PreferredAppBarSize preferredSize)
-    {
-        if (preferredSize.ToolbarHeight is null)
+        if (preferredSize is PreferredAppBarSize { ToolbarHeight: null } appBarSize)
         {
             return (AppBarTheme.Of(context).ToolbarHeight ?? MaterialConstants.ToolbarHeight)
-                   + (preferredSize.BottomHeight ?? 0.0);
+                   + (appBarSize.BottomHeight ?? 0.0);
         }
 
         return preferredSize.Height;

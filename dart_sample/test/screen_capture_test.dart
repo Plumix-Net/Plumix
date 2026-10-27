@@ -23,6 +23,9 @@ void main() {
       tester.view.physicalSize = const Size(800, 600);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.reset);
+      // Every route starts from an empty image cache, whatever order the runner picks.
+      imageCache.clear();
+      imageCache.clearLiveImages();
       final List<String> errors = <String>[];
       final FlutterExceptionHandler? previousOnError = FlutterError.onError;
       FlutterError.onError = (FlutterErrorDetails details) => errors.add(
@@ -39,7 +42,7 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(seconds: 1));
       await tester.pump(const Duration(seconds: 1));
-      // Image decoding only completes on the real event loop (C# decodes synchronously).
+      // Image decoding only completes on the real event loop.
       await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 200)));
       await tester.pump();
 

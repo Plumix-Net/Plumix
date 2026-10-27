@@ -90,6 +90,28 @@ public abstract class Codec : IDisposable
     public abstract int RepetitionCount { get; }
     public abstract Task<FrameInfo> GetNextFrame();
     public abstract void Dispose();
+
+    /// <summary>
+    /// Completes a decoded frame the way the engine does: on a later turn of the event loop, where
+    /// the engine posts the result of its off-thread decode to the UI task runner
+    /// (<c>multi_frame_codec.cc</c>, <c>single_frame_codec.cc</c>).
+    /// </summary>
+    private protected static Task<FrameInfo> CompleteOnLaterTurn(Task<FrameInfo> decoded)
+    {
+        var completer = new TaskCompletionSource<FrameInfo>();
+        EventLoop.PostTask(() =>
+        {
+            if (decoded.IsCompletedSuccessfully)
+            {
+                completer.SetResult(decoded.Result);
+            }
+            else
+            {
+                completer.SetException(decoded.Exception!.InnerExceptions);
+            }
+        });
+        return completer.Task;
+    }
 }
 
 /// <summary>Engine image decode entry points over the platform's bitmap backend.</summary>
@@ -181,14 +203,23 @@ public static class ImageDecoding
     private sealed class BitmapCodec(Bitmap image) : Codec
     {
         private Bitmap? _image = image;
+        private bool _decoded;
         public override int FrameCount => 1;
         public override int RepetitionCount => 0;
 
         public override Task<FrameInfo> GetNextFrame()
         {
             Bitmap source = _image ?? throw new ObjectDisposedException(nameof(Codec));
-            return Task.FromResult(new FrameInfo(TimeSpan.Zero,
+            Task<FrameInfo> frame = Task.FromResult(new FrameInfo(TimeSpan.Zero,
                 source.CreateScaledBitmap(source.PixelSize, BitmapInterpolationMode.HighQuality)));
+            // SingleFrameCodec decodes on the first call only; later calls answer from its cached image.
+            if (_decoded)
+            {
+                return frame;
+            }
+
+            _decoded = true;
+            return CompleteOnLaterTurn(frame);
         }
 
         public override void Dispose()

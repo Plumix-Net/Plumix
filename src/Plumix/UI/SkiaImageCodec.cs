@@ -28,7 +28,9 @@ internal sealed class SkiaImageCodec : Codec
     public override int FrameCount { get; }
     public override int RepetitionCount { get; }
 
-    public override Task<FrameInfo> GetNextFrame()
+    public override Task<FrameInfo> GetNextFrame() => CompleteOnLaterTurn(DecodeNextFrame());
+
+    private Task<FrameInfo> DecodeNextFrame()
     {
         SKCodec codec = _codec ?? throw new ObjectDisposedException(nameof(Codec));
         var info = new SKImageInfo(codec.Info.Width, codec.Info.Height, SKColorType.Rgba8888, SKAlphaType.Premul);

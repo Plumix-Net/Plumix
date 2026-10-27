@@ -2,6 +2,7 @@ using System.Reflection;
 using Avalonia;
 using Avalonia.Media.Imaging;
 using Plumix.Foundation;
+using Plumix.Painting;
 using Plumix.Rendering;
 using Plumix.UI;
 using Plumix.Widgets;
@@ -63,6 +64,9 @@ public sealed class SampleScreenCaptureTests : IDisposable
     {
         using (var tester = new FrameworkDartTester(fakeGestureTimers: true))
         {
+            // Every route starts from an empty image cache, whatever order the runner picks.
+            PaintingBinding.Instance.ImageCache.Clear();
+            PaintingBinding.Instance.ImageCache.ClearLiveImages();
             FlutterError.OnError = details => errors.Add(
                 $"{details.Library}: {details.ExceptionAsString().Split('\n')[0]}");
             tester.PumpWidget(new CounterApp());
@@ -75,7 +79,8 @@ public sealed class SampleScreenCaptureTests : IDisposable
             tester.Pump();
             tester.Pump(TimeSpan.FromSeconds(1));
             tester.Pump(TimeSpan.FromSeconds(1));
-            // Dart waits on the real event loop here for image decoding, then pumps once more.
+            // Image decoding only completes on the real event loop.
+            tester.RunAsync();
             tester.Pump();
 
             File.WriteAllLines(

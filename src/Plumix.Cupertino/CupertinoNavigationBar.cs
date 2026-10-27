@@ -433,7 +433,7 @@ public sealed class CupertinoNavigationBar : StatefulWidget, IObstructingPreferr
 
     public IPreferredSizeWidget? Bottom { get; }
 
-    public Size PreferredSize
+    public PreferredSizeValue PreferredSize
     {
         get
         {

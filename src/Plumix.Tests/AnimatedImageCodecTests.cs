@@ -20,17 +20,17 @@ public sealed class AnimatedImageCodecTests
         Codec codec = await ImageDecoding.InstantiateImageCodec(File.ReadAllBytes(Fixture(name)));
         Assert.True(codec.FrameCount > 1);
         Assert.Equal(1, codec.RepetitionCount);
-        FrameInfo first = await codec.GetNextFrame();
+        FrameInfo first = await EventLoopPump.WaitFor(codec.GetNextFrame());
         Assert.True(first.Duration > TimeSpan.Zero);
         byte[] expected = RasterBackend.ReadPixels(first.Image);
         for (int index = 1; index < codec.FrameCount; index++)
         {
-            FrameInfo frame = await codec.GetNextFrame();
+            FrameInfo frame = await EventLoopPump.WaitFor(codec.GetNextFrame());
             Assert.Equal(first.Image.PixelSize, frame.Image.PixelSize);
             frame.Image.Dispose();
         }
 
-        FrameInfo wrapped = await codec.GetNextFrame();
+        FrameInfo wrapped = await EventLoopPump.WaitFor(codec.GetNextFrame());
         codec.Dispose();
         Assert.Equal(expected, RasterBackend.ReadPixels(wrapped.Image));
         Assert.Equal(expected, RasterBackend.ReadPixels(first.Image));
@@ -54,7 +54,7 @@ public sealed class AnimatedImageCodecTests
             for (int index = 0; index < count; index++)
             {
                 actual?.Image.Dispose();
-                actual = await codec.GetNextFrame();
+                actual = await EventLoopPump.WaitFor(codec.GetNextFrame());
             }
 
             using var expected = new Bitmap(Fixture(golden));
@@ -73,10 +73,10 @@ public sealed class AnimatedImageCodecTests
         using Codec codec = await ImageDecoding.InstantiateImageCodec(
             File.ReadAllBytes(Fixture("alpha_animated.apng")));
         Assert.Equal(2, codec.FrameCount);
-        FrameInfo first = await codec.GetNextFrame();
+        FrameInfo first = await EventLoopPump.WaitFor(codec.GetNextFrame());
         Assert.Equal((51, 0, 0, 51), AsInts(RasterBackend.PixelAt(first.Image, 0, 0)));
         first.Image.Dispose();
-        FrameInfo second = await codec.GetNextFrame();
+        FrameInfo second = await EventLoopPump.WaitFor(codec.GetNextFrame());
         Assert.Equal((153, 0, 0, 153), AsInts(RasterBackend.PixelAt(second.Image, 0, 0)));
         second.Image.Dispose();
     }
@@ -88,7 +88,7 @@ public sealed class AnimatedImageCodecTests
             File.ReadAllBytes(Fixture("dispose_op_background.apng")));
         for (int index = 0; index < 4; index++)
         {
-            FrameInfo frame = await codec.GetNextFrame();
+            FrameInfo frame = await EventLoopPump.WaitFor(codec.GetNextFrame());
             using Bitmap image = frame.Image;
             if (index == 0) Assert.Equal((255, 0, 0, 255), AsInts(RasterBackend.PixelAt(image, 0, 0)));
             if (index == 2)
@@ -111,7 +111,7 @@ public sealed class AnimatedImageCodecTests
     public async Task InvalidAnimatedFrameBoundsFailWithoutNativeCrash(string name)
     {
         using Codec codec = await ImageDecoding.InstantiateImageCodec(File.ReadAllBytes(Fixture(name)));
-        await Assert.ThrowsAsync<InvalidOperationException>(() => codec.GetNextFrame());
+        await Assert.ThrowsAsync<InvalidOperationException>(() => EventLoopPump.WaitFor(codec.GetNextFrame()));
     }
 
     [Fact]
@@ -127,7 +127,7 @@ public sealed class AnimatedImageCodecTests
         if (Foundation.Constants.KDebugMode) Assert.True(buffer.DebugDisposed);
         for (int index = 0; index < codec.FrameCount + 1; index++)
         {
-            FrameInfo frame = await codec.GetNextFrame();
+            FrameInfo frame = await EventLoopPump.WaitFor(codec.GetNextFrame());
             Assert.Equal(new PixelSize(24, 16), frame.Image.PixelSize);
             frame.Image.Dispose();
         }

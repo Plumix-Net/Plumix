@@ -184,7 +184,7 @@ public sealed class PaintingBindingTests : IDisposable
 #pragma warning disable CS0618 // Exercise Dart's retained deprecated entry point.
         using Codec codec = await binding.InstantiateImageCodecFromBuffer(buffer, width, height, upscale);
 #pragma warning restore CS0618
-        FrameInfo frame = await codec.GetNextFrame();
+        FrameInfo frame = await EventLoopPump.WaitFor(codec.GetNextFrame());
         using Bitmap image = frame.Image;
         Assert.Equal(new PixelSize(expectedWidth, expectedHeight), image.PixelSize);
         Assert.Equal(TimeSpan.Zero, frame.Duration);
@@ -206,8 +206,8 @@ public sealed class PaintingBindingTests : IDisposable
             calls++;
             return new TargetImageSize(15, 10);
         });
-        FrameInfo first = await codec.GetNextFrame();
-        FrameInfo second = await codec.GetNextFrame();
+        FrameInfo first = await EventLoopPump.WaitFor(codec.GetNextFrame());
+        FrameInfo second = await EventLoopPump.WaitFor(codec.GetNextFrame());
         codec.Dispose();
         Assert.Equal(1, calls);
         Assert.Equal(RasterBackend.ReadPixels(first.Image), RasterBackend.ReadPixels(second.Image));
@@ -225,7 +225,7 @@ public sealed class PaintingBindingTests : IDisposable
         Array.Clear(bytes);
         Assert.Equal(bytes.Length, buffer.Length);
         using Codec codec = await PaintingBinding.Instance.InstantiateImageCodecWithSize(buffer);
-        FrameInfo frame = await codec.GetNextFrame();
+        FrameInfo frame = await EventLoopPump.WaitFor(codec.GetNextFrame());
         frame.Image.Dispose();
 
         ImmutableBuffer failed = await ImmutableBuffer.FromUint8List(PngBytes(6, 4));

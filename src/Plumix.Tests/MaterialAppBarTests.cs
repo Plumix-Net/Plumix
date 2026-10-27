@@ -39,9 +39,6 @@ public sealed class MaterialAppBarTests
             94.0,
             new AppBar(toolbarHeight: 64, bottom: new PreferredSize(new Size(0, 30), new SizedBox()))
                 .PreferredSize.Height);
-
-        Assert.Null(new AppBar().PreferredAppBarSize.ToolbarHeight);
-        Assert.Equal(64.0, new AppBar(toolbarHeight: 64).PreferredAppBarSize.ToolbarHeight);
     }
 
     [Fact]
@@ -52,18 +49,23 @@ public sealed class MaterialAppBarTests
         BuildContext context = CaptureContext(new AppBarThemeData(ToolbarHeight: 96));
 
         var themed = new AppBar(title: new Text("Title"));
-        Assert.Equal(96.0, AppBar.PreferredHeightFor(context, themed.PreferredAppBarSize));
+        Assert.Equal(96.0, AppBar.PreferredHeightFor(context, themed.PreferredSize));
         Assert.Equal(56.0, themed.PreferredSize.Height);
 
         var explicitHeight = new AppBar(title: new Text("Title"), toolbarHeight: 64);
-        Assert.Equal(64.0, AppBar.PreferredHeightFor(context, explicitHeight.PreferredAppBarSize));
+        Assert.Equal(64.0, AppBar.PreferredHeightFor(context, explicitHeight.PreferredSize));
         Assert.Equal(64.0, explicitHeight.PreferredSize.Height);
 
         var withBottom = new AppBar(bottom: new PreferredSize(new Size(0, 30), new SizedBox()));
-        Assert.Equal(126.0, AppBar.PreferredHeightFor(context, withBottom.PreferredAppBarSize));
+        Assert.Equal(126.0, AppBar.PreferredHeightFor(context, withBottom.PreferredSize));
 
-        // A plain Size carries no metadata, so it always reports its own height.
-        Assert.Equal(56.0, AppBar.PreferredHeightFor(context, themed.PreferredSize));
+        // The app bar's preferred size keeps its metadata through a `PreferredSize` wrapper; a plain size
+        // carries none, so it always reports its own height.
+        var wrapped = new PreferredSize(themed.PreferredSize, themed);
+        Assert.Equal(96.0, AppBar.PreferredHeightFor(context, ((IPreferredSizeWidget)wrapped).PreferredSize));
+        Assert.Equal(56.0, AppBar.PreferredHeightFor(context, new Size(double.PositiveInfinity, 56.0)));
+        Assert.Equal(new Size(double.PositiveInfinity, 56.0), (Size)themed.PreferredSize);
+        Assert.Equal(PreferredSizeValue.FromHeight(56.0), themed.PreferredSize);
     }
 
     [Fact]
