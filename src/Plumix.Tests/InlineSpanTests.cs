@@ -276,23 +276,6 @@ public sealed class InlineSpanTests
     }
 
     [Fact]
-    public void RenderParagraph_ProjectsTheRootStyleThroughTheLegacyAccessors()
-    {
-        var paragraph = new RenderParagraph(new TextSpan(
-            text: "abc",
-            style: new TextStyle(FontSize: 18, Color: Colors.Red, FontWeight: FontWeight.Bold)));
-
-        Assert.Equal(18, paragraph.FontSize);
-        Assert.Equal(FontWeight.Bold, paragraph.FontWeight);
-        Assert.Equal(Colors.Red, Assert.IsType<SolidColorBrush>(paragraph.Foreground).Color);
-
-        paragraph.FontSize = 24;
-        Assert.Equal(24, paragraph.FontSize);
-        Assert.Equal("abc", paragraph.PlainText);
-        Assert.Equal(FontWeight.Bold, paragraph.FontWeight);
-    }
-
-    [Fact]
     public void Text_RichNestsTheSuppliedSpanUnderTheResolvedStyle()
     {
         using var harness = new SpanHarness(new Directionality(

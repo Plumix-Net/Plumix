@@ -95,8 +95,6 @@ public sealed class SelectableRegion : StatefulWidget
         SelectableRegionContextMenuBuilder? contextMenuBuilder = null,
         TextMagnifierConfiguration? magnifierConfiguration = null,
         Action<SelectedContent?>? onSelectionChanged = null,
-        MouseCursor? mouseCursor = null,
-        Action? onTap = null,
         Key? key = null) : base(key)
     {
         Child = child ?? throw new ArgumentNullException(nameof(child));
@@ -105,8 +103,6 @@ public sealed class SelectableRegion : StatefulWidget
         ContextMenuBuilder = contextMenuBuilder;
         MagnifierConfiguration = magnifierConfiguration ?? TextMagnifierConfiguration.Disabled;
         OnSelectionChanged = onSelectionChanged;
-        MouseCursor = mouseCursor;
-        OnTap = onTap;
     }
 
     public Widget Child { get; }
@@ -115,8 +111,6 @@ public sealed class SelectableRegion : StatefulWidget
     public SelectableRegionContextMenuBuilder? ContextMenuBuilder { get; }
     public TextMagnifierConfiguration MagnifierConfiguration { get; }
     public Action<SelectedContent?>? OnSelectionChanged { get; }
-    public MouseCursor? MouseCursor { get; }
-    public Action? OnTap { get; }
 
     /// Returns the [ContextMenuButtonItem]s representing the buttons in this
     /// platform's default selection menu.
@@ -1188,7 +1182,6 @@ public sealed class SelectableRegionState
 
         FinalizeSelectableRegionStatus();
         UpdateSelectedContentIfNeeded();
-        Current.OnTap?.Invoke();
     }
 
     private void HandleMouseDragStart(TapDragStartDetails details)
@@ -1693,7 +1686,7 @@ public sealed class SelectableRegionState
         result = new CompositedTransformTarget(link: _toolbarLayerLink, child: result);
 
         // The handles share this group id, so dragging one is not a tap outside the region.
-        result = new TapRegion(
+        return new TapRegion(
             groupId: typeof(SelectableRegion),
             onTapOutside: _ =>
             {
@@ -1703,8 +1696,5 @@ public sealed class SelectableRegionState
                 }
             },
             child: result);
-
-        // Retain the explicit C# extension, without changing the cursor in empty space by default.
-        return Current.MouseCursor is { } cursor ? new MouseRegion(cursor: cursor, child: result) : result;
     }
 }

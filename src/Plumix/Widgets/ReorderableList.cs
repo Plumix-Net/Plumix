@@ -42,34 +42,26 @@ public sealed class ReorderableList : StatefulWidget
         ItemExtentBuilder? itemExtentBuilder = null,
         Widget? prototypeItem = null,
         ReorderItemProxyDecorator? proxyDecorator = null,
-        Thickness? padding = null,
+        EdgeInsetsGeometry? padding = null,
         Axis scrollDirection = Axis.Vertical,
         bool reverse = false,
         ScrollController? controller = null,
         bool? primary = null,
         ScrollPhysics? physics = null,
         bool shrinkWrap = false,
+        double anchor = 0.0,
         double? cacheExtent = null,
         ScrollCacheExtent? scrollCacheExtent = null,
-        double? autoScrollerVelocityScalar = null,
-        ReorderDragBoundaryProvider? dragBoundaryProvider = null,
-        Key? key = null,
-        double anchor = 0.0,
         DragStartBehavior dragStartBehavior = DragStartBehavior.Start,
         ScrollViewKeyboardDismissBehavior? keyboardDismissBehavior = null,
         string? restorationId = null,
-        Clip clipBehavior = Clip.HardEdge) : base(key)
+        Clip clipBehavior = Clip.HardEdge,
+        double? autoScrollerVelocityScalar = null,
+        ReorderDragBoundaryProvider? dragBoundaryProvider = null,
+        Key? key = null) : base(key)
     {
-        ValidateArguments(
-            itemCount,
-            onReorder,
-            onReorderItem,
-            itemExtent,
-            itemExtentBuilder,
-            prototypeItem,
-            cacheExtent,
-            autoScrollerVelocityScalar);
-        ItemBuilder = itemBuilder ?? throw new ArgumentNullException(nameof(itemBuilder));
+        DebugAssertArguments(itemCount, onReorder, onReorderItem, itemExtent, itemExtentBuilder, prototypeItem);
+        ItemBuilder = itemBuilder;
         ItemCount = itemCount;
         OnReorder = onReorder;
         OnReorderItem = onReorderItem;
@@ -79,22 +71,22 @@ public sealed class ReorderableList : StatefulWidget
         ItemExtentBuilder = itemExtentBuilder;
         PrototypeItem = prototypeItem;
         ProxyDecorator = proxyDecorator;
-        Padding = padding ?? default;
+        Padding = padding;
         ScrollDirection = scrollDirection;
         Reverse = reverse;
         Controller = controller;
         Primary = primary;
         Physics = physics;
         ShrinkWrap = shrinkWrap;
+        Anchor = anchor;
         CacheExtent = cacheExtent;
         ScrollCacheExtent = scrollCacheExtent;
-        AutoScrollerVelocityScalar = autoScrollerVelocityScalar;
-        DragBoundaryProvider = dragBoundaryProvider;
-        Anchor = anchor;
         DragStartBehavior = dragStartBehavior;
         KeyboardDismissBehavior = keyboardDismissBehavior;
         RestorationId = restorationId;
         ClipBehavior = clipBehavior;
+        AutoScrollerVelocityScalar = autoScrollerVelocityScalar;
+        DragBoundaryProvider = dragBoundaryProvider;
     }
 
     public IndexedWidgetBuilder ItemBuilder { get; }
@@ -118,7 +110,7 @@ public sealed class ReorderableList : StatefulWidget
 
     public ReorderItemProxyDecorator? ProxyDecorator { get; }
 
-    public Thickness Padding { get; }
+    public EdgeInsetsGeometry? Padding { get; }
 
     public Axis ScrollDirection { get; }
 
@@ -160,53 +152,48 @@ public sealed class ReorderableList : StatefulWidget
 
     public static ReorderableListState Of(BuildContext context)
     {
-        return MaybeOf(context)
-               ?? throw new InvalidOperationException("No ReorderableList ancestor was found.");
+        ReorderableListState? result = context.FindAncestorStateOfType<ReorderableListState>();
+        if (result is null)
+        {
+            throw new FlutterError(
+            [
+                new ErrorSummary(
+                    "ReorderableList.of() called with a context that does not contain a ReorderableList."),
+                new ErrorDescription(
+                    "No ReorderableList ancestor could be found starting from the context that was passed "
+                    + "to ReorderableList.of()."),
+                new ErrorHint(
+                    "This can happen when the context provided is from the same StatefulWidget that "
+                    + "built the ReorderableList. Please see the ReorderableList documentation for examples "
+                    + "of how to refer to an ReorderableListState object:\n"
+                    + "  https://api.flutter.dev/flutter/widgets/ReorderableListState-class.html"),
+                context.DescribeElement("The context used was"),
+            ]);
+        }
+
+        return result;
     }
 
-    internal static void ValidateArguments(
+    // The constructor asserts shared by ReorderableList, SliverReorderableList and the Material
+    // ReorderableListView.
+    internal static void DebugAssertArguments(
         int itemCount,
         ReorderCallback? onReorder,
         ReorderCallback? onReorderItem,
         double? itemExtent,
         ItemExtentBuilder? itemExtentBuilder,
-        Widget? prototypeItem,
-        double? cacheExtent,
-        double? autoScrollerVelocityScalar)
+        Widget? prototypeItem)
     {
-        if (itemCount < 0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(itemCount));
-        }
-
-        if ((onReorder is null) == (onReorderItem is null))
-        {
-            throw new ArgumentException("Exactly one of onReorder and onReorderItem must be provided.");
-        }
-
-        int extentOptions = (itemExtent.HasValue ? 1 : 0)
-                            + (itemExtentBuilder is not null ? 1 : 0)
-                            + (prototypeItem is not null ? 1 : 0);
-        if (extentOptions > 1)
-        {
-            throw new ArgumentException("Only one of itemExtent, itemExtentBuilder, and prototypeItem may be set.");
-        }
-
-        if (itemExtent.HasValue && (!double.IsFinite(itemExtent.Value) || itemExtent.Value <= 0))
-        {
-            throw new ArgumentOutOfRangeException(nameof(itemExtent));
-        }
-
-        if (cacheExtent.HasValue && (!double.IsFinite(cacheExtent.Value) || cacheExtent.Value < 0))
-        {
-            throw new ArgumentOutOfRangeException(nameof(cacheExtent));
-        }
-
-        if (autoScrollerVelocityScalar.HasValue
-            && (!double.IsFinite(autoScrollerVelocityScalar.Value) || autoScrollerVelocityScalar.Value <= 0))
-        {
-            throw new ArgumentOutOfRangeException(nameof(autoScrollerVelocityScalar));
-        }
+        DebugAssertions.Assert(itemCount >= 0);
+        DebugAssertions.Assert(
+            (itemExtent is null && prototypeItem is null)
+            || (itemExtent is null && itemExtentBuilder is null)
+            || (prototypeItem is null && itemExtentBuilder is null),
+            "You can only pass one of itemExtent, prototypeItem and itemExtentBuilder.");
+        DebugAssertions.Assert(
+            (onReorderItem is not null && onReorder is null) || (onReorderItem is null && onReorder is not null),
+            "The onReorder callback is obsolete and is replaced by onReorderItem. "
+            + "Remove the onReorder callback when both callbacks are provided.");
     }
 }
 
@@ -217,22 +204,17 @@ public sealed class ReorderableListState : State<ReorderableList>
 
     private ReorderableList CurrentWidget => (ReorderableList)StateWidget;
 
-    public void CancelReorder()
-    {
-        _sliverKey.CurrentState?.CancelReorder();
-    }
-
-    public void StartItemDragReorder(int index, PointerDownEvent @event, bool delayed = false)
-    {
-        _sliverKey.CurrentState?.StartItemDragReorder(index, @event, delayed);
-    }
-
     public void StartItemDragReorder(
         int index,
         PointerDownEvent @event,
         MultiDragGestureRecognizer recognizer)
     {
-        _sliverKey.CurrentState?.StartItemDragReorder(index, @event, recognizer);
+        _sliverKey.CurrentState!.StartItemDragReorder(index, @event, recognizer);
+    }
+
+    public void CancelReorder()
+    {
+        _sliverKey.CurrentState!.CancelReorder();
     }
 
     public override Widget Build(BuildContext context)
@@ -256,7 +238,7 @@ public sealed class ReorderableListState : State<ReorderableList>
             dragBoundaryProvider: widget.DragBoundaryProvider,
             key: _sliverKey);
 
-        sliver = new SliverPadding(widget.Padding, sliver);
+        sliver = new SliverPadding(widget.Padding ?? EdgeInsets.Zero, sliver);
 
         return new CustomScrollView(
             slivers: [sliver],
@@ -290,21 +272,13 @@ public sealed class SliverReorderableList : StatefulWidget
         ItemExtentBuilder? itemExtentBuilder = null,
         Widget? prototypeItem = null,
         ReorderItemProxyDecorator? proxyDecorator = null,
-        double? autoScrollerVelocityScalar = null,
         ReorderDragBoundaryProvider? dragBoundaryProvider = null,
-        ScrollController? scrollController = null,
+        double? autoScrollerVelocityScalar = null,
         Key? key = null) : base(key)
     {
-        ReorderableList.ValidateArguments(
-            itemCount,
-            onReorder,
-            onReorderItem,
-            itemExtent,
-            itemExtentBuilder,
-            prototypeItem,
-            cacheExtent: 0,
-            autoScrollerVelocityScalar);
-        ItemBuilder = itemBuilder ?? throw new ArgumentNullException(nameof(itemBuilder));
+        ReorderableList.DebugAssertArguments(
+            itemCount, onReorder, onReorderItem, itemExtent, itemExtentBuilder, prototypeItem);
+        ItemBuilder = itemBuilder;
         ItemCount = itemCount;
         FindChildIndexCallback = findChildIndexCallback;
         OnReorder = onReorder;
@@ -315,10 +289,12 @@ public sealed class SliverReorderableList : StatefulWidget
         ItemExtentBuilder = itemExtentBuilder;
         PrototypeItem = prototypeItem;
         ProxyDecorator = proxyDecorator;
-        AutoScrollerVelocityScalar = autoScrollerVelocityScalar ?? 50.0;
         DragBoundaryProvider = dragBoundaryProvider;
-        ScrollController = scrollController;
+        AutoScrollerVelocityScalar = autoScrollerVelocityScalar ?? DefaultAutoScrollVelocityScalar;
     }
+
+    // An eyeballed value for a smooth scrolling experience.
+    private const double DefaultAutoScrollVelocityScalar = 50;
 
     public IndexedWidgetBuilder ItemBuilder { get; }
 
@@ -347,8 +323,6 @@ public sealed class SliverReorderableList : StatefulWidget
 
     public ReorderDragBoundaryProvider? DragBoundaryProvider { get; }
 
-    internal ScrollController? ScrollController { get; }
-
     public override State CreateState() => new SliverReorderableListState();
 
     public static SliverReorderableListState? MaybeOf(BuildContext context)
@@ -358,8 +332,27 @@ public sealed class SliverReorderableList : StatefulWidget
 
     public static SliverReorderableListState Of(BuildContext context)
     {
-        return MaybeOf(context)
-               ?? throw new InvalidOperationException("No SliverReorderableList ancestor was found.");
+        SliverReorderableListState? result = context.FindAncestorStateOfType<SliverReorderableListState>();
+        if (result is null)
+        {
+            throw new FlutterError(
+            [
+                new ErrorSummary(
+                    "SliverReorderableList.of() called with a context that does not contain a "
+                    + "SliverReorderableList."),
+                new ErrorDescription(
+                    "No SliverReorderableList ancestor could be found starting from the context that was "
+                    + "passed to SliverReorderableList.of()."),
+                new ErrorHint(
+                    "This can happen when the context provided is from the same StatefulWidget that "
+                    + "built the SliverReorderableList. Please see the SliverReorderableList documentation "
+                    + "for examples of how to refer to an SliverReorderableList object:\n"
+                    + "  https://api.flutter.dev/flutter/widgets/SliverReorderableListState-class.html"),
+                context.DescribeElement("The context used was"),
+            ]);
+        }
+
+        return result;
     }
 }
 
@@ -453,26 +446,12 @@ public sealed class SliverReorderableListState : State<SliverReorderableList>
         SetState(ResetDrag);
     }
 
-    // Published convenience overload; listeners use the Dart-shaped recognizer overload below.
-    public void StartItemDragReorder(int index, PointerDownEvent @event, bool delayed = false)
-    {
-        MultiDragGestureRecognizer recognizer = delayed
-            ? new DelayedMultiDragGestureRecognizer()
-            : new ImmediateMultiDragGestureRecognizer();
-        recognizer.GestureSettings = MediaQuery.MaybeGestureSettingsOf(Context);
-        StartItemDragReorder(index, @event, recognizer);
-    }
-
     public void StartItemDragReorder(
         int index,
         PointerDownEvent @event,
         MultiDragGestureRecognizer recognizer)
     {
-        if (index < 0 || index >= CurrentWidget.ItemCount)
-        {
-            throw new ArgumentOutOfRangeException(nameof(index));
-        }
-
+        DebugAssertions.Assert(0 <= index && index < CurrentWidget.ItemCount);
         SetState(() =>
         {
             if (_dragInfo is not null)
@@ -486,16 +465,18 @@ public sealed class SliverReorderableListState : State<SliverReorderableList>
                 _recognizerPointer = null;
             }
 
-            if (!_items.ContainsKey(index))
+            if (_items.ContainsKey(index))
             {
-                throw new InvalidOperationException("Attempting to start a drag on a non-visible item.");
+                _dragIndex = index;
+                _recognizer = recognizer;
+                recognizer.OnStart = BeginDrag;
+                recognizer.AddPointer(@event);
+                _recognizerPointer = @event.Pointer;
             }
-
-            _dragIndex = index;
-            _recognizer = recognizer;
-            recognizer.OnStart = BeginDrag;
-            recognizer.AddPointer(@event);
-            _recognizerPointer = @event.Pointer;
+            else
+            {
+                throw new InvalidOperationException("Attempting to start a drag on a non-visible item");
+            }
         });
     }
 
@@ -531,17 +512,13 @@ public sealed class SliverReorderableListState : State<SliverReorderableList>
         }
 
         Widget child = CurrentWidget.ItemBuilder(context, index);
-        if (child.Key is null)
-        {
-            throw new InvalidOperationException("All ReorderableList items must have a key.");
-        }
-
+        DebugAssertions.Assert(child.Key is not null, "All list items must have a key");
         OverlayState overlay = Overlay.Of(context);
         return new ReorderableItem(
             index: index,
             child: WrapWithSemantics(context, child, index),
             capturedThemes: InheritedTheme.Capture(context, overlay.Context),
-            key: new ReorderableItemKey(child.Key, index, this));
+            key: new ReorderableItemKey(child.Key!, index, this));
     }
 
     private Widget WrapWithSemantics(BuildContext context, Widget child, int index)
@@ -1053,11 +1030,6 @@ public class ReorderableDragStartListener : StatelessWidget
         bool enabled = true,
         Key? key = null) : base(key)
     {
-        if (index < 0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(index));
-        }
-
         Child = child;
         Index = index;
         Enabled = enabled;
@@ -1069,11 +1041,8 @@ public class ReorderableDragStartListener : StatelessWidget
 
     public bool Enabled { get; }
 
-    protected virtual bool Delayed => false;
-
-    protected virtual MultiDragGestureRecognizer CreateRecognizer() => Delayed
-        ? new DelayedMultiDragGestureRecognizer(debugOwner: this)
-        : new ImmediateMultiDragGestureRecognizer(debugOwner: this);
+    protected virtual MultiDragGestureRecognizer CreateRecognizer() =>
+        new ImmediateMultiDragGestureRecognizer(debugOwner: this);
 
     public override Widget Build(BuildContext context)
     {
@@ -1105,8 +1074,6 @@ public sealed class ReorderableDelayedDragStartListener : ReorderableDragStartLi
         Key? key = null) : base(child, index, enabled, key)
     {
     }
-
-    protected override bool Delayed => true;
 
     protected override MultiDragGestureRecognizer CreateRecognizer() =>
         new DelayedMultiDragGestureRecognizer(debugOwner: this);

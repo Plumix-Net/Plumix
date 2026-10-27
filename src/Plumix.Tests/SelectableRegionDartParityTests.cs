@@ -53,7 +53,6 @@ public sealed class SelectableRegionDartParityTests : IDisposable
             Assert.Same(expected, ((EditableText)element.Widget).SelectionControls);
         }
         Assert.Same(TextMagnifier.AdaptiveMagnifierConfiguration, region.MagnifierConfiguration);
-        Assert.Null(region.MouseCursor);
     }
 
     [Fact]

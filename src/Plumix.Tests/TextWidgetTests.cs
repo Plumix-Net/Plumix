@@ -231,9 +231,8 @@ public sealed class TextWidgetTests
     [Fact]
     public void RenderParagraph_UnboundedLayout_DoesNotClampWidthToArbitraryConstant()
     {
-        var paragraph = new RenderParagraph(new string('W', 400))
+        var paragraph = new RenderParagraph(new TextSpan(new string('W', 400), style: new TextStyle(FontSize: 14)))
         {
-            FontSize = 14,
             SoftWrap = true
         };
 
@@ -251,10 +250,7 @@ public sealed class TextWidgetTests
     [Fact]
     public void RenderParagraph_ReportsARealTextBaseline()
     {
-        var paragraph = new RenderParagraph("Baseline")
-        {
-            FontSize = 20
-        };
+        var paragraph = new RenderParagraph(new TextSpan("Baseline", style: new TextStyle(FontSize: 20)));
 
         paragraph.Layout(new BoxConstraints(MaxWidth: 200, MaxHeight: 100));
 
