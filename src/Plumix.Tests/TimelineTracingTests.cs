@@ -310,7 +310,8 @@ public sealed class TimelineTracingTests : IDisposable
             events.Where(e => e.Name == "ImageCache.evict").Select(e => e.Arguments["type"]));
         TimelineRecorder.Event check = events.Single(e => e.Name == "checkCacheSize"
                                                           && e.Kind == TimelineEventSource.AsyncEndId);
-        Assert.Equal("1", check.Arguments["endCacheSize"]);
+        Assert.Equal("1", check.Arguments["endSize"]);
+        Assert.Equal("[]", check.Arguments["evictedKeys"]);
         // Setting the same maximum again is a no-op, so only one setMaximumSize task starts.
         Assert.Single(events, e => e.Name == "ImageCache.setMaximumSize"
                                    && e.Kind == TimelineEventSource.AsyncBeginId);
@@ -840,7 +841,12 @@ internal sealed class TimelineRecorder : EventListener
         using JsonDocument document = JsonDocument.Parse(json);
         foreach (JsonProperty property in document.RootElement.EnumerateObject())
         {
-            result[property.Name] = property.Value.ValueKind == JsonValueKind.Null ? null : property.Value.GetString();
+            result[property.Name] = property.Value.ValueKind switch
+            {
+                JsonValueKind.Null => null,
+                JsonValueKind.String => property.Value.GetString(),
+                _ => property.Value.GetRawText(),
+            };
         }
 
         return result;

@@ -436,19 +436,23 @@ internal sealed class MagnifierFlowLayer(
             (FocalPointOffset.X * toTarget.M11) + (FocalPointOffset.Y * toTarget.M21),
             (FocalPointOffset.X * toTarget.M12) + (FocalPointOffset.Y * toTarget.M22));
         BorderRadius borderRadius = ResolveBorderRadius(lensRect);
+        double opacity = Math.Clamp(Decoration.Opacity, 0.0, 1.0);
         using (context.Canvas.PushTransform(toBase))
-        using (context.Canvas.PushOpacity(Math.Clamp(Decoration.Opacity, 0.0, 1.0)))
+        using (context.Canvas.PushOpacity(opacity))
+        using (SceneRasterizer.PushRoundedRectClip(context.Canvas, lensRect, borderRadius))
         {
-            using (SceneRasterizer.PushRoundedRectClip(context.Canvas, lensRect, borderRadius))
+            DrawMagnifiedBackdrop(context.Canvas, state.MagnifierBackdrop, lensRect, focalPointOffset);
+            using (context.Canvas.PushTransform(toTarget))
             {
-                DrawMagnifiedBackdrop(context.Canvas, state.MagnifierBackdrop, lensRect, focalPointOffset);
-                using (context.Canvas.PushTransform(toTarget))
-                {
-                    PaintChildren(context);
-                }
+                PaintChildren(context);
             }
+        }
 
-            DrawDecoration(context.Canvas, lensRect, borderRadius);
+        // RawMagnifier.build's younger sibling has its own Opacity, so the decoration fades
+        // separately from the magnified image.
+        using (context.Canvas.PushOpacity(opacity))
+        {
+            DrawDecoration(context.Canvas);
         }
     }
 
@@ -513,175 +517,40 @@ internal sealed class MagnifierFlowLayer(
         }
     }
 
-    private void DrawDecoration(DrawingContext context, Rect lensRect, BorderRadius borderRadius)
+    /// <summary>
+    /// RawMagnifier.build's decoration sibling, in the layer's local coordinates:
+    /// <c>ClipPath(clipBehavior, clipper: _NegativeClip(shape))</c> over a <c>DecoratedBox</c> of
+    /// <c>ShapeDecoration(shape, shadows)</c> the size of the lens, drawn through the strict
+    /// decoration painter (mask-filtered shadows, then the shape's border).
+    /// </summary>
+    private void DrawDecoration(DrawingContext context)
     {
-        BoxShadows shadows = Decoration.Shadows.ToAvalonia();
-        BorderSide side = Decoration.Shape is OutlinedBorder outlined ? outlined.Side : BorderSide.None;
-        IPen? pen = side is { Style: BorderStyle.Solid, Width: > 0 }
-            ? new Pen(new SolidColorBrush(side.Color), side.Width)
-            : null;
+        Rect rect = LensRect;
+        var recorder = new PictureRecorder();
+        var canvas = new Canvas(recorder);
+        var paintingContext = new CanvasPaintingContext(canvas);
+        var decoration = new ShapeDecoration(Shape: Decoration.Shape, Shadows: Decoration.Shadows);
+        using BoxPainter painter = decoration.CreateBoxPainter();
+        var configuration = new ImageConfiguration(Size: rect.Size, TextDirection: TextDirection.Ltr);
 
-        if (shadows.Count == 0 && pen == null)
+        void PaintDecoration() => painter.Paint(paintingContext, rect.Position, configuration);
+
+        if (ClipBehavior == Clip.None)
         {
-            return;
+            PaintDecoration();
+        }
+        else
+        {
+            // _NegativeClip.getClip: everything except the inside of the shape.
+            var clip = new Path { FillType = PathFillType.EvenOdd };
+            clip.AddRect(ShapeDecorationPainter.LargestRect);
+            clip.AddPath(Decoration.Shape.GetInnerPath(rect, TextDirection.Ltr));
+            paintingContext.ClipPathAndPaint(clip, ClipBehavior, rect, PaintDecoration);
         }
 
-        DrawingContext.PushedState? clip = null;
-        try
-        {
-            if (ClipBehavior != Clip.None)
-            {
-                double inset = pen?.Thickness ?? 0.0;
-                var outer = lensRect.Inflate(Math.Max(lensRect.Width, lensRect.Height));
-                var geometry = new CombinedGeometry(
-                    GeometryCombineMode.Exclude,
-                    new RectangleGeometry(outer),
-                    new RectangleGeometry(
-                        new Rect(
-                            lensRect.X + inset,
-                            lensRect.Y + inset,
-                            Math.Max(0, lensRect.Width - (inset * 2)),
-                            Math.Max(0, lensRect.Height - (inset * 2))),
-                        Math.Max(0, LargestRadiusX(borderRadius) - inset),
-                        Math.Max(0, LargestRadiusY(borderRadius) - inset)));
-                clip = context.PushGeometryClip(geometry);
-            }
-
-            if (shadows.Count > 0)
-            {
-                context.DrawRectangle(Brushes.Transparent, null, ToRoundedRect(lensRect, borderRadius), shadows);
-            }
-
-            if (pen != null)
-            {
-                // RoundedRectangleBorder.paint: the side is the ring between the lens and its
-                // deflation by the stroke width (BorderSide.strokeAlignInside).
-                var outerPath = new Path();
-                outerPath.AddRRect(ToRRect(lensRect, borderRadius));
-                var innerPath = new Path();
-                innerPath.AddRRect(ToRRect(lensRect, borderRadius).Deflate(side.Width));
-                context.DrawGeometry(
-                    pen.Brush,
-                    null,
-                    new CombinedGeometry(
-                        GeometryCombineMode.Exclude,
-                        outerPath.ToGeometry(),
-                        innerPath.ToGeometry()));
-            }
-        }
-        finally
-        {
-            clip?.Dispose();
-        }
-    }
-
-    private static RRect ToRRect(Rect rect, BorderRadius borderRadius) => RRect.FromRectAndCorners(
-        rect,
-        topLeft: borderRadius.TopLeftRadius,
-        topRight: borderRadius.TopRightRadius,
-        bottomRight: borderRadius.BottomRightRadius,
-        bottomLeft: borderRadius.BottomLeftRadius);
-
-    private static RoundedRect ToRoundedRect(Rect rect, BorderRadius borderRadius)
-    {
-        return new RoundedRect(
-            rect,
-            new Vector(borderRadius.TopLeftRadius.X, borderRadius.TopLeftRadius.Y),
-            new Vector(borderRadius.TopRightRadius.X, borderRadius.TopRightRadius.Y),
-            new Vector(borderRadius.BottomRightRadius.X, borderRadius.BottomRightRadius.Y),
-            new Vector(borderRadius.BottomLeftRadius.X, borderRadius.BottomLeftRadius.Y));
-    }
-
-    private static double LargestRadiusX(BorderRadius borderRadius)
-    {
-        return Math.Max(
-            Math.Max(borderRadius.TopLeftRadius.X, borderRadius.TopRightRadius.X),
-            Math.Max(borderRadius.BottomRightRadius.X, borderRadius.BottomLeftRadius.X));
-    }
-
-    private static double LargestRadiusY(BorderRadius borderRadius)
-    {
-        return Math.Max(
-            Math.Max(borderRadius.TopLeftRadius.Y, borderRadius.TopRightRadius.Y),
-            Math.Max(borderRadius.BottomRightRadius.Y, borderRadius.BottomLeftRadius.Y));
-    }
-}
-
-/// <summary>
-/// The raster snapshot a <see cref="Rendering.SnapshotOffsetLayer"/> keeps between frames: its children
-/// rasterized once at <see cref="PixelRatio"/>, redrawn from the image until the layer clears it.
-/// </summary>
-internal sealed class SnapshotRasterCache
-{
-    /// <summary>The cached image, null until the first rasterization (and after <see cref="Clear"/>).</summary>
-    public RenderTargetBitmap? Image { get; set; }
-
-    /// <summary>The logical size the children are drawn into.</summary>
-    public Size Size { get; set; }
-
-    /// <summary>The number of image pixels per logical pixel.</summary>
-    public double PixelRatio { get; set; } = 1.0;
-
-    /// <summary>Whether a failed rasterization falls back to drawing the children directly.</summary>
-    public bool Permissive { get; set; }
-
-    public void Clear()
-    {
-        Image?.Dispose();
-        Image = null;
-    }
-}
-
-/// <summary>Plumix-only: draws its children from a <see cref="SnapshotRasterCache"/>.</summary>
-internal sealed class SnapshotFlowLayer(SnapshotRasterCache cache, Point offset) : ContainerFlowLayer
-{
-    public SnapshotRasterCache Cache { get; } = cache;
-
-    public Point Offset { get; } = offset;
-
-    public override void Paint(FlowPaintContext context)
-    {
-        try
-        {
-            Cache.Image ??= RasterizeChildren(context);
-        }
-        catch when (Cache.Permissive)
-        {
-            Cache.Clear();
-            PaintChildrenTransformed(context, Matrix.CreateTranslation(Offset.X, Offset.Y));
-            return;
-        }
-
-        RenderTargetBitmap snapshot = Cache.Image;
-        var source = new Rect(0.0, 0.0, snapshot.PixelSize.Width, snapshot.PixelSize.Height);
-        var destination = new Rect(Offset, Cache.Size);
-        using (context.Canvas.PushRenderOptions(new RenderOptions
-               {
-                   BitmapInterpolationMode = BitmapInterpolationMode.MediumQuality,
-               }))
-        {
-            context.Canvas.DrawImage(snapshot, source, destination);
-        }
-    }
-
-    private RenderTargetBitmap RasterizeChildren(FlowPaintContext context)
-    {
-        int width = Math.Max(1, (int)Math.Ceiling(Cache.Size.Width * Cache.PixelRatio));
-        int height = Math.Max(1, (int)Math.Ceiling(Cache.Size.Height * Cache.PixelRatio));
-        var bitmap = new RenderTargetBitmap(
-            new PixelSize(width, height),
-            new Vector(96.0 * Cache.PixelRatio, 96.0 * Cache.PixelRatio));
-        try
-        {
-            using DrawingContext drawingContext = bitmap.CreateDrawingContext();
-            PaintChildren(context.WithCanvas(drawingContext, Matrix.Identity));
-            return bitmap;
-        }
-        catch
-        {
-            bitmap.Dispose();
-            throw;
-        }
+        Picture picture = recorder.EndRecording();
+        picture.Playback(context, default);
+        picture.Dispose();
     }
 }
 

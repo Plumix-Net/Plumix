@@ -437,6 +437,17 @@ public sealed class TimelineEventSource : EventSource
                 {
                     writer.WriteNull(key);
                 }
+                else if (value is IEnumerable<string> strings)
+                {
+                    // json.encode writes a list as an array.
+                    writer.WriteStartArray(key);
+                    foreach (string item in strings)
+                    {
+                        writer.WriteStringValue(item);
+                    }
+
+                    writer.WriteEndArray();
+                }
                 else
                 {
                     writer.WriteString(key, Convert.ToString(value, CultureInfo.InvariantCulture));

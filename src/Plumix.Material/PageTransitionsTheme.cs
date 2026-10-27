@@ -350,11 +350,7 @@ public sealed class ZoomPageTransitionsBuilder : PageTransitionsBuilder
                             new ConstantAnimation<double>(scale),
                             filterQuality: FilterQuality.Medium,
                             child: transitionChild)));
-                return new SnapshotGate(
-                    animation,
-                    allowSnapshotting,
-                    MediaQuery.Of(context).DevicePixelRatio,
-                    content);
+                return new SnapshotGate(animation, allowSnapshotting, content);
             },
             child);
     }
@@ -381,11 +377,7 @@ public sealed class ZoomPageTransitionsBuilder : PageTransitionsBuilder
                         new ConstantAnimation<double>(scale),
                         filterQuality: FilterQuality.Medium,
                         child: transitionChild));
-                return new SnapshotGate(
-                    animation,
-                    allowSnapshotting,
-                    MediaQuery.Of(context).DevicePixelRatio,
-                    content);
+                return new SnapshotGate(animation, allowSnapshotting, content);
             },
             child);
     }
@@ -420,20 +412,16 @@ public sealed class ZoomPageTransitionsBuilder : PageTransitionsBuilder
         public SnapshotGate(
             Animation<double> animation,
             bool allowSnapshotting,
-            double pixelRatio,
             Widget? child)
         {
             Animation = animation;
             AllowSnapshotting = allowSnapshotting;
-            PixelRatio = pixelRatio;
             Child = child;
         }
 
         public Animation<double> Animation { get; }
 
         public bool AllowSnapshotting { get; }
-
-        public double PixelRatio { get; }
 
         public Widget? Child { get; }
 
@@ -472,7 +460,6 @@ public sealed class ZoomPageTransitionsBuilder : PageTransitionsBuilder
                     _controller,
                     mode: SnapshotMode.Permissive,
                     autoresize: true,
-                    pixelRatio: CurrentWidget.PixelRatio,
                     child: CurrentWidget.Child);
             }
 

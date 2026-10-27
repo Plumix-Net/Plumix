@@ -211,7 +211,9 @@ public abstract class ImageProvider<T> : ImageProvider where T : notnull
         ImageCache? cache = null,
         ImageConfiguration? configuration = null)
     {
-        var key = await ObtainKey(configuration ?? ImageConfiguration.Empty).ConfigureAwait(false);
+        // Dart's `await obtainKey(...)` resumes on the isolate: the cache is only used on the
+        // framework thread, so the continuation stays on the caller's context.
+        var key = await ObtainKey(configuration ?? ImageConfiguration.Empty);
         return (cache ?? ImageCache.Shared).Evict(key);
     }
 
@@ -221,7 +223,7 @@ public abstract class ImageProvider<T> : ImageProvider where T : notnull
     {
         try
         {
-            var key = await ObtainKey(configuration).ConfigureAwait(false);
+            var key = await ObtainKey(configuration);
             return ImageCache.Shared.StatusForKey(key);
         }
         catch (Exception exception)

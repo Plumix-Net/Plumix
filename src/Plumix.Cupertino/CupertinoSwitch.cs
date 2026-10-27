@@ -428,7 +428,13 @@ internal sealed class CupertinoSwitchPainter : ToggleablePainter
     private const double ThumbDiameter = 28.0;
     private const double DefaultIconSize = 16.0;
     private static readonly Color ThumbBorderColor = new Color(0x0A000000);
-    private static readonly IReadOnlyList<BoxShadow> ThumbShadows = CupertinoThumbPainter.SwitchThumb().Shadows;
+
+    // switch.dart `_kSwitchBoxShadows`.
+    private static readonly IReadOnlyList<BoxShadow> SwitchBoxShadows =
+    [
+        new BoxShadow(color: new Color(0x26000000), offset: new Point(0, 3), blurRadius: 8.0),
+        new BoxShadow(color: new Color(0x0F000000), offset: new Point(0, 3), blurRadius: 1.0),
+    ];
 
     private readonly AnimationController _positionController;
     private BoxPainter? _thumbPainter;
@@ -703,18 +709,6 @@ internal sealed class CupertinoSwitchPainter : ToggleablePainter
         ImageProvider? image,
         ImageErrorListener? imageError)
     {
-        double radius = thumbBounds.Height / 2.0;
-        context.Canvas.DrawRectangle(
-            Brushes.Transparent,
-            null,
-            thumbBounds,
-            BorderRadius.Circular(radius),
-            ThumbShadows.ToAvalonia());
-        context.Canvas.DrawRRect(
-            RRect.FromRectAndRadius(thumbBounds.Inflate(0.5), radius + 0.5),
-            new SolidColorBrush(ThumbBorderColor),
-            null);
-
         try
         {
             _isPainting = true;
@@ -734,7 +728,9 @@ internal sealed class CupertinoSwitchPainter : ToggleablePainter
                 _thumbPainter = decoration.CreateBoxPainter(HandleDecorationChanged);
             }
 
-            _thumbPainter.Paint(
+            BoxPainter thumbPainter = _thumbPainter;
+            PaintCupertinoThumbShadowAndBorder(context.Canvas, thumbBounds.Position, thumbBounds.Size);
+            thumbPainter.Paint(
                 context,
                 thumbBounds.Position,
                 _imageConfiguration.CopyWith(size: thumbBounds.Size));
@@ -743,6 +739,22 @@ internal sealed class CupertinoSwitchPainter : ToggleablePainter
         {
             _isPainting = false;
         }
+    }
+
+    private static void PaintCupertinoThumbShadowAndBorder(Canvas canvas, Point thumbPaintOffset, Size thumbSize)
+    {
+        RRect thumbBounds = RRect.FromLTRBR(
+            thumbPaintOffset.X,
+            thumbPaintOffset.Y,
+            thumbPaintOffset.X + thumbSize.Width,
+            thumbPaintOffset.Y + thumbSize.Height,
+            Radius.Circular(thumbSize.Height / 2.0));
+        foreach (BoxShadow shadow in SwitchBoxShadows)
+        {
+            canvas.DrawRRect(thumbBounds.Shift(shadow.Offset), shadow.ToPaint());
+        }
+
+        canvas.DrawRRect(thumbBounds.Inflate(0.5), new Paint { Color = ThumbBorderColor });
     }
 
     private void PaintIcon(PaintingContext context, Rect thumbBounds, Icon icon, double currentValue)
