@@ -111,7 +111,8 @@ public sealed class Theme : StatelessWidget
 
     private static ThemeData Localize(ThemeData data, BuildContext context)
     {
-        ScriptCategory category = MaterialLocalizations.Of(context).ScriptCategory;
+        MaterialLocalizations? localizations = Localizations.MaybeOf<MaterialLocalizations>(context);
+        ScriptCategory category = localizations?.ScriptCategory ?? ScriptCategory.EnglishLike;
         return ThemeData.Localize(data, data.Typography.GeometryThemeFor(category));
     }
 }

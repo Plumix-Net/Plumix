@@ -63,6 +63,7 @@ public sealed class Drawer : StatelessWidget
 
     public override Widget Build(BuildContext context)
     {
+        DebugAssertions.Assert(MaterialDebug.DebugCheckHasMaterialLocalizations(context));
         var theme = Theme.Of(context);
         var drawerTheme = DrawerTheme.Of(context);
         bool useMaterial3 = theme.UseMaterial3;

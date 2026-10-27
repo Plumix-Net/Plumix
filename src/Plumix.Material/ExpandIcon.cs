@@ -81,6 +81,7 @@ public sealed class ExpandIcon : StatefulWidget
 
         public override Widget Build(BuildContext context)
         {
+            DebugAssertions.Assert(MaterialDebug.DebugCheckHasMaterialLocalizations(context));
             var localizations = MaterialLocalizations.Of(context);
             string onTapHint = CurrentWidget.IsExpanded
                 ? localizations.ExpandedIconTapHint

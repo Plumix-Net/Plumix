@@ -337,14 +337,14 @@ public abstract class MaterialLocalizations
     /// that encloses <paramref name="context"/>.
     /// </summary>
     /// <remarks>
-    /// Dart's <c>MaterialLocalizations.of</c>, which asserts that a <c>MaterialApp</c> (or a
-    /// <see cref="Localizations"/> widget with a <see cref="MaterialLocalizations"/> delegate) is an
-    /// ancestor. Plumix still falls back to <see cref="DefaultMaterialLocalizations"/> until every test
-    /// harness provides one (<c>docs/ai/BACKLOG.md</c>).
+    /// If no <see cref="MaterialLocalizations"/> are available in <paramref name="context"/>, this
+    /// method throws: a <c>MaterialApp</c> (or a <see cref="Localizations"/> widget with a
+    /// <see cref="MaterialLocalizations"/> delegate) must be an ancestor.
     /// </remarks>
     public static MaterialLocalizations Of(BuildContext context)
     {
-        return Localizations.MaybeOf<MaterialLocalizations>(context) ?? DefaultMaterialLocalizations.Instance;
+        DebugAssertions.Assert(MaterialDebug.DebugCheckHasMaterialLocalizations(context));
+        return Localizations.Of<MaterialLocalizations>(context);
     }
 
     /// Dart's `DateTime.weekday`: Monday is 1, Sunday is 7.

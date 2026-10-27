@@ -497,6 +497,7 @@ public sealed class RefreshIndicatorState : State<RefreshIndicator>
 
     public override Widget Build(BuildContext context)
     {
+        DebugAssertions.Assert(MaterialDebug.DebugCheckHasMaterialLocalizations(context));
         var notificationChild = new NotificationListener<ScrollNotification>(
             onNotification: HandleScrollNotification,
             child: new NotificationListener<OverscrollIndicatorNotification>(

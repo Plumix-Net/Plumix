@@ -655,6 +655,7 @@ internal sealed class BottomNavigationBarState : State<BottomNavigationBar>
 
     public override Widget Build(BuildContext context)
     {
+        DebugAssertions.Assert(MaterialDebug.DebugCheckHasMaterialLocalizations(context));
         var bottomTheme = BottomNavigationBarTheme.Of(context);
         BottomNavigationBarType type = EffectiveType(bottomTheme);
         BottomNavigationBarLandscapeLayout layout = Widget.LandscapeLayout

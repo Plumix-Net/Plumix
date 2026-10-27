@@ -1103,7 +1103,7 @@ public sealed class MaterialSearchTests : IDisposable
             protected override void PerformRebuild()
             {
                 base.PerformRebuild();
-                _child = UpdateChild(_child, Widget, Slot);
+                _child = UpdateChild(_child, MaterialLocalizationsTesting.Localized(Widget), Slot);
             }
 
             public override void Update(Widget newWidget)

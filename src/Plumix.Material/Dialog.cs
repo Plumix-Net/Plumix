@@ -318,6 +318,7 @@ public sealed class SimpleDialog : StatelessWidget
 
     public override Widget Build(BuildContext context)
     {
+        DebugAssertions.Assert(MaterialDebug.DebugCheckHasMaterialLocalizations(context));
         var theme = Theme.Of(context);
         var dialogTheme = DialogTheme.Of(context);
         var defaults = Dialog.ResolveDefaults(theme);
@@ -541,6 +542,7 @@ public class AlertDialog : StatelessWidget
 
     public override Widget Build(BuildContext context)
     {
+        DebugAssertions.Assert(MaterialDebug.DebugCheckHasMaterialLocalizations(context));
         var theme = Theme.Of(context);
         var dialogTheme = DialogTheme.Of(context);
         var defaults = Dialog.ResolveDefaults(theme);

@@ -823,7 +823,7 @@ public sealed class MaterialAutocompleteTests : IDisposable
                 data,
                 new Localizations(
                     locale: new Locale("en"),
-                    delegates: [DefaultWidgetsLocalizations.Delegate],
+                    delegates: [DefaultMaterialLocalizations.Delegate, DefaultWidgetsLocalizations.Delegate],
                     child: new Theme(
                         ThemeData.Light,
                         new SizedBox(

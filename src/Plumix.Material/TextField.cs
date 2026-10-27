@@ -422,6 +422,7 @@ public sealed class TextField : StatefulWidget
 
         public override Widget Build(BuildContext context)
         {
+            DebugAssertions.Assert(MaterialDebug.DebugCheckHasMaterialLocalizations(context));
             EnsureController();
             var theme = Theme.Of(context);
             DefaultSelectionStyle selectionStyle = DefaultSelectionStyle.Of(context);

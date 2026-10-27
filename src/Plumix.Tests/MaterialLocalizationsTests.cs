@@ -1,3 +1,4 @@
+using Plumix.Foundation;
 using Plumix.Material;
 using Plumix.UI;
 using Plumix.Widgets;
@@ -8,8 +9,51 @@ using Xunit;
 
 namespace Plumix.Tests;
 
+[Collection(SchedulerTestCollection.Name)]
 public sealed class MaterialLocalizationsTests
 {
+    [Fact]
+    public void MaterialLocalizationsOf_Throws()
+    {
+        // localizations_test.dart 'MaterialLocalizations.of throws': no DefaultMaterialLocalizations fallback.
+        using var tester = new FrameworkDartTester();
+        var noLocalizationsAvailable = new LabeledGlobalKey<State>(null);
+        var localizationsAvailable = new LabeledGlobalKey<State>(null);
+        tester.PumpWidget(new Container(
+            key: noLocalizationsAvailable,
+            child: new MaterialApp(home: new Container(key: localizationsAvailable))));
+
+        Exception error = Assert.ThrowsAny<Exception>(
+            () => MaterialLocalizations.Of(noLocalizationsAvailable.CurrentContext!));
+        if (Constants.KDebugMode)
+        {
+            FlutterError flutterError = Assert.IsType<FlutterError>(error);
+            Assert.StartsWith("No MaterialLocalizations found.", flutterError.Diagnostics[0].ToString());
+        }
+
+        Assert.IsAssignableFrom<MaterialLocalizations>(
+            MaterialLocalizations.Of(localizationsAvailable.CurrentContext!));
+        Assert.Null(tester.TakeException());
+    }
+
+    [Fact]
+    public void ThemeOf_WithoutMaterialLocalizations_LocalizesAsEnglishLike()
+    {
+        // theme.dart: `Theme.of` reads the localizations nullably and falls back to englishLike.
+        using var tester = new FrameworkDartTester();
+        ThemeData? resolved = null;
+        tester.PumpWidget(new Theme(ThemeData.Light, new Builder(context =>
+        {
+            resolved = Theme.Of(context);
+            return new SizedBox();
+        })));
+
+        Assert.Null(tester.TakeException());
+        Assert.Equal(
+            ThemeData.Light.Typography.GeometryThemeFor(ScriptCategory.EnglishLike).BodyMedium!.FontSize,
+            resolved!.TextTheme.BodyMedium!.FontSize);
+    }
+
     [Fact]
     public void MaterialLocalizations_DeclaresEveryResourceAbstract()
     {

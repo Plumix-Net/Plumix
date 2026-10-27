@@ -332,6 +332,7 @@ internal sealed class DropdownMenuPanelState<T> : State<DropdownMenuPanel<T>>
 
     public override Widget Build(BuildContext context)
     {
+        DebugAssertions.Assert(MaterialDebug.DebugCheckHasMaterialLocalizations(context));
         var widget = CurrentWidget;
         DropdownRoute<T> route = widget.Route;
         var children = new List<Widget>(route.Items.Count);
@@ -1126,6 +1127,7 @@ internal sealed class DropdownButtonState<T> : State<DropdownButton<T>>
 
     public override Widget Build(BuildContext context)
     {
+        DebugAssertions.Assert(MaterialDebug.DebugCheckHasMaterialLocalizations(context));
         var widget = CurrentWidget;
         var theme = Theme.Of(context);
         TextStyle textStyle = widget.Style ?? theme.TextTheme.TitleMedium;

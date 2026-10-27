@@ -414,6 +414,7 @@ public sealed class AppBar : StatefulWidget, IPreferredSizeWidget
 
         public override Widget Build(BuildContext context)
         {
+            DebugAssertions.Assert(MaterialDebug.DebugCheckHasMaterialLocalizations(context));
             AppBar widget = CurrentWidget;
             var theme = Theme.Of(context);
             IconButtonThemeData iconButtonTheme = IconButtonTheme.Of(context);

@@ -259,14 +259,16 @@ public sealed class CupertinoTextSelectionControlsTests : IDisposable
         ThemeData theme = ThemeData.Light with { Platform = platform };
         using var textFieldHarness = new WidgetRenderHarness(new MediaQuery(
             new MediaQueryData(),
-            new Theme(theme, new Directionality(TextDirection.Ltr, new TextField()))));
+            MaterialLocalizationsTesting.Localized(
+                new Theme(theme, new Directionality(TextDirection.Ltr, new TextField())))));
         textFieldHarness.Pump(new Size(320.0, 120.0));
         TextSelectionControls? textFieldControls =
             Assert.Single(textFieldHarness.FindWidgets<EditableText>()).SelectionControls;
 
         using var selectableHarness = new WidgetRenderHarness(new MediaQuery(
             new MediaQueryData(),
-            new Theme(theme, new Directionality(TextDirection.Ltr, new SelectableText("Select me")))));
+            MaterialLocalizationsTesting.Localized(
+                new Theme(theme, new Directionality(TextDirection.Ltr, new SelectableText("Select me"))))));
         selectableHarness.Pump(new Size(320.0, 120.0));
         TextSelectionControls? selectableControls =
             Assert.Single(selectableHarness.FindWidgets<EditableText>()).SelectionControls;

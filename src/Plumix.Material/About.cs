@@ -81,6 +81,7 @@ public sealed class AboutListTile : StatelessWidget
 
     public override Widget Build(BuildContext context)
     {
+        DebugAssertions.Assert(MaterialDebug.DebugCheckHasMaterialLocalizations(context));
         return new ListTile(
             leading: Icon,
             title: Child ?? new Text(MaterialLocalizations.Of(context).AboutListTileTitle(
@@ -200,6 +201,7 @@ public class AboutDialog : StatelessWidget
 
     public override Widget Build(BuildContext context)
     {
+        DebugAssertions.Assert(MaterialDebug.DebugCheckHasMaterialLocalizations(context));
         return new AlertDialog(
             content: BuildContent(context),
             actions:
@@ -760,6 +762,7 @@ internal sealed class PackageLicensePageState : State<PackageLicensePage>
 
     public override Widget Build(BuildContext context)
     {
+        DebugAssertions.Assert(MaterialDebug.DebugCheckHasMaterialLocalizations(context));
         var localizations = MaterialLocalizations.Of(context);
         var theme = Theme.Of(context);
         string title = CurrentWidget.PackageName;

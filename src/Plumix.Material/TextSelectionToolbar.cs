@@ -221,6 +221,7 @@ internal sealed class TextSelectionToolbarOverflowable : StatefulWidget
 
         public override Widget Build(BuildContext context)
         {
+            DebugAssertions.Assert(MaterialDebug.DebugCheckHasMaterialLocalizations(context));
             MaterialLocalizations localizations = MaterialLocalizations.Of(context);
             TextDirection textDirection = Directionality.Of(context);
             string navigationTooltip = _overflowOpen

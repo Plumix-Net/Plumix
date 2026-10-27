@@ -801,6 +801,7 @@ public sealed class RawChip : StatefulWidget
 
         public override Widget Build(BuildContext context)
         {
+            DebugAssertions.Assert(MaterialDebug.DebugCheckHasMaterialLocalizations(context));
             var widget = CurrentWidget;
             var theme = Theme.Of(context);
             var chipTheme = ChipTheme.Of(context);

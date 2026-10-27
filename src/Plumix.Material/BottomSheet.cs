@@ -603,6 +603,7 @@ internal sealed class ModalBottomSheetWidgetState<T> : State<ModalBottomSheetWid
 
     public override Widget Build(BuildContext context)
     {
+        DebugAssertions.Assert(MaterialDebug.DebugCheckHasMaterialLocalizations(context));
         var widget = CurrentWidget;
         var route = widget.Route;
         string routeLabel = GetRouteLabel(MaterialLocalizations.Of(context));
@@ -880,6 +881,7 @@ public static class MaterialBottomSheets
         AnimationController? transitionAnimationController = null,
         AnimationStyle? sheetAnimationStyle = null)
     {
+        DebugAssertions.Assert(MaterialDebug.DebugCheckHasMaterialLocalizations(context));
         var route = new ModalBottomSheetRoute<T>(
             context,
             builder,
