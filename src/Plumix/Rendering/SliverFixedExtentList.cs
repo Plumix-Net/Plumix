@@ -25,7 +25,7 @@ public abstract class RenderSliverFixedExtentBoxAdaptor : RenderSliverMultiBoxAd
 
     private SliverLayoutDimensions? _currentLayoutDimensions;
 
-    protected RenderSliverFixedExtentBoxAdaptor(IRenderSliverBoxChildManager? childManager = null)
+    protected RenderSliverFixedExtentBoxAdaptor(IRenderSliverBoxChildManager childManager)
         : base(childManager)
     {
     }
@@ -56,7 +56,7 @@ public abstract class RenderSliverFixedExtentBoxAdaptor : RenderSliverMultiBoxAd
         double offset = 0;
         for (int i = 0; i < index; i += 1)
         {
-            int? childCount = ChildManager?.EstimatedChildCount;
+            int? childCount = ChildManager.EstimatedChildCount;
             if (childCount is not null && i > childCount.Value - 1)
             {
                 break;
@@ -121,7 +121,7 @@ public abstract class RenderSliverFixedExtentBoxAdaptor : RenderSliverMultiBoxAd
     /// <summary>The scroll extent of the whole child list, when the child count is known.</summary>
     public virtual double ComputeMaxScrollOffset(SliverConstraints constraints, double itemExtent)
     {
-        int childCount = ChildManager?.ChildCount ?? 0;
+        int childCount = ChildManager.ChildCount;
         ItemExtentBuilder? builder = ItemExtentBuilder;
         if (builder is null)
         {
@@ -159,12 +159,12 @@ public abstract class RenderSliverFixedExtentBoxAdaptor : RenderSliverMultiBoxAd
         double leadingScrollOffset,
         double trailingScrollOffset)
     {
-        return ChildManager?.EstimateMaxScrollOffset(
+        return ChildManager.EstimateMaxScrollOffset(
             constraints,
             firstIndex: firstIndex,
             lastIndex: lastIndex,
             leadingScrollOffset: leadingScrollOffset,
-            trailingScrollOffset: trailingScrollOffset) ?? double.PositiveInfinity;
+            trailingScrollOffset: trailingScrollOffset);
     }
 
     /// <inheritdoc />
@@ -218,13 +218,7 @@ public abstract class RenderSliverFixedExtentBoxAdaptor : RenderSliverMultiBoxAd
     protected override void PerformLayout()
     {
         SliverConstraints constraints = Constraints;
-        IRenderSliverBoxChildManager? childManager = ChildManager;
-        if (childManager is null)
-        {
-            Geometry = SliverGeometry.Zero;
-            return;
-        }
-
+        IRenderSliverBoxChildManager childManager = ChildManager;
         childManager.DidStartLayout();
         childManager.SetDidUnderflow(false);
         SetLayoutDimensions(constraints);
@@ -356,7 +350,7 @@ public abstract class RenderSliverFixedExtentBoxAdaptor : RenderSliverMultiBoxAd
         // We may have started the layout while scrolled to the end, which would not expose a new child.
         if (Math.Abs(estimatedMaxScrollOffset - trailingScrollOffset) < Constants.PrecisionErrorTolerance)
         {
-            ChildManager?.SetDidUnderflow(true);
+            ChildManager.SetDidUnderflow(true);
         }
 
         return new SliverGeometry(
@@ -422,7 +416,7 @@ public abstract class RenderSliverFixedExtentBoxAdaptor : RenderSliverMultiBoxAd
         int index = 0;
         while (position < scrollOffset)
         {
-            int? childCount = ChildManager?.EstimatedChildCount;
+            int? childCount = ChildManager.EstimatedChildCount;
             if (childCount is not null && index > childCount.Value - 1)
             {
                 break;
@@ -450,7 +444,7 @@ public class RenderSliverFixedExtentList : RenderSliverFixedExtentBoxAdaptor
 {
     private double _itemExtent;
 
-    public RenderSliverFixedExtentList(double itemExtent, IRenderSliverBoxChildManager? childManager = null)
+    public RenderSliverFixedExtentList(IRenderSliverBoxChildManager childManager, double itemExtent)
         : base(childManager)
     {
         _itemExtent = itemExtent;
@@ -489,8 +483,8 @@ public class RenderSliverVariedExtentList : RenderSliverFixedExtentBoxAdaptor
     private ItemExtentBuilder _itemExtentBuilder;
 
     public RenderSliverVariedExtentList(
-        ItemExtentBuilder itemExtentBuilder,
-        IRenderSliverBoxChildManager? childManager = null)
+        IRenderSliverBoxChildManager childManager,
+        ItemExtentBuilder itemExtentBuilder)
         : base(childManager)
     {
         _itemExtentBuilder = itemExtentBuilder ?? throw new ArgumentNullException(nameof(itemExtentBuilder));

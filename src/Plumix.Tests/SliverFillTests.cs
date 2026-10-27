@@ -47,7 +47,8 @@ public sealed class SliverFillTests
             childDelegate,
             viewportFraction: 0.5,
             allowImplicitScrolling: false);
-        var renderObject = Assert.IsType<RenderSliverFillViewport>(initialRenderWidget.CreateRenderObject(null!));
+        var renderObject = Assert.IsType<RenderSliverFillViewport>(
+            initialRenderWidget.CreateRenderObject(initialRenderWidget.CreateElement()));
         var updatedRenderWidget = new SliverFillViewportRenderObjectWidget(
             childDelegate,
             viewportFraction: 0.75,

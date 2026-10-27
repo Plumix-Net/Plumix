@@ -90,6 +90,8 @@ public sealed class ModalBarrierTests
             // Only platforms that support dismissing the barrier expose it to semantics.
             Assert.Equal(!semanticsSupported, exclude.Excluding);
             Assert.Equal(semanticsSupported ? "Close overlay" : null, semantics.Properties.Label);
+            // Dart's `textDirection: semanticsDismissible && semanticsLabel != null ? ... : null`.
+            Assert.Equal(semanticsSupported ? TextDirection.Rtl : null, semantics.Properties.TextDirection);
 
             gesture.OnTap!();
             gesture.OnSecondaryTap!();

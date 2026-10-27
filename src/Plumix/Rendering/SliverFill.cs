@@ -13,9 +13,9 @@ public class RenderSliverFillViewport : RenderSliverFixedExtentBoxAdaptor
     private bool _allowImplicitScrolling;
 
     public RenderSliverFillViewport(
+        IRenderSliverBoxChildManager childManager,
         double viewportFraction = 1.0,
-        bool allowImplicitScrolling = true,
-        IRenderSliverBoxChildManager? childManager = null)
+        bool allowImplicitScrolling = true)
         : base(childManager)
     {
         _viewportFraction = ValidateViewportFraction(viewportFraction);

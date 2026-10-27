@@ -1031,10 +1031,10 @@ public partial class PlumixHost : Control, ICustomHitTest
     /// <paramref name="viewId"/>, in logical pixels, or <c>null</c> when either is unknown.
     /// </summary>
     /// <remarks>
-    /// Flutter's <c>RendererBinding.getRectOfSemanticsNodeInViewCoordinates</c>. Flutter asserts on
-    /// each of the three lookups and returns <c>null</c> in release; Plumix returns <c>null</c>
-    /// throughout, because a host is asked this in response to a platform action that may already be
-    /// stale.
+    /// C#-only convenience over this host's own pipeline owner, with the root-transform undo of
+    /// <see cref="RendererBinding.GetRectOfSemanticsNodeInViewCoordinates"/>. It is a query rather
+    /// than the semantics-action path, so another view or an unknown node answers <c>null</c> where
+    /// the binding's lookup asserts.
     /// </remarks>
     public Rect? GetRectOfSemanticsNodeInViewCoordinates(int viewId, int nodeId)
     {
@@ -1065,7 +1065,9 @@ public partial class PlumixHost : Control, ICustomHitTest
 
     private bool PerformSemanticsActionCore(int nodeId, SemanticsActions action, object? arguments)
     {
-        if (action == SemanticsActions.None)
+        // Like AccessibilityBridge.DispatchAction, an action for a node the framework no longer
+        // holds never reaches the action listeners, which may look the node up.
+        if (action == SemanticsActions.None || !RendererBinding.Instance.HasSemanticsNode(_view.ViewId, nodeId))
         {
             return false;
         }

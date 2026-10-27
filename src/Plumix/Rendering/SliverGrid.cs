@@ -486,8 +486,7 @@ public class SliverGridParentData : SliverMultiBoxAdaptorParentData
 
 /// <summary>A sliver that places multiple box children in a two dimensional arrangement.</summary>
 /// <remarks>
-/// Flutter's <c>RenderSliverGrid</c>. The child manager is optional here and assigned by the
-/// element after construction (see <see cref="RenderSliverMultiBoxAdaptor.ChildManager"/>).
+/// Flutter's <c>RenderSliverGrid</c>.
 /// </remarks>
 public class RenderSliverGrid : RenderSliverMultiBoxAdaptor
 {
@@ -495,7 +494,7 @@ public class RenderSliverGrid : RenderSliverMultiBoxAdaptor
 
     /// <summary>Creates a sliver that contains multiple box children whose size and position are
     /// determined by a delegate.</summary>
-    public RenderSliverGrid(SliverGridDelegate gridDelegate, IRenderSliverBoxChildManager? childManager = null)
+    public RenderSliverGrid(IRenderSliverBoxChildManager childManager, SliverGridDelegate gridDelegate)
         : base(childManager)
     {
         _gridDelegate = gridDelegate;
@@ -541,13 +540,7 @@ public class RenderSliverGrid : RenderSliverMultiBoxAdaptor
     protected override void PerformLayout()
     {
         SliverConstraints constraints = Constraints;
-        IRenderSliverBoxChildManager? childManager = ChildManager;
-        if (childManager is null)
-        {
-            Geometry = SliverGeometry.Zero;
-            return;
-        }
-
+        IRenderSliverBoxChildManager childManager = ChildManager;
         childManager.DidStartLayout();
         childManager.SetDidUnderflow(false);
 
