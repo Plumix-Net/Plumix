@@ -8,6 +8,12 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased]
+- Breaking: a Dart-shaped `EdgeInsets` replaces Avalonia `Thickness` in every signature (edge_insets.dart).
+- Breaking: `EdgeInsetsGeometry.Resolve` returns `EdgeInsets`; `RRect` edge helpers move to it (edge_insets.dart).
+- Breaking: scroll-view, chip, app-bar, card, FAB, nav and `StyleFrom` paddings are `EdgeInsetsGeometry` (material_ui).
+- Breaking: `FlutterView` padding, insets and gesture insets are `ViewPadding` (ui/platform_dispatcher.dart).
+- Breaking: `TextSelectionToolbarTextButton.GetPadding(index, total)` is directional (text_selection_toolbar_text_button.dart).
+- Insets deflate rects without clamping at zero, like Dart's `deflateRect` (edge_insets.dart).
 - Breaking: `RenderParagraph` drops flat style accessors, `PlainText` and the string ctor; only `Text` (paragraph.dart).
 - Breaking: `SelectableRegion` drops the C#-only `onTap`/`mouseCursor` options (selectable_region.dart).
 - Breaking: `ReorderableList` takes Dart's param order, `EdgeInsetsGeometry?` padding, asserts (reorderable_list.dart).

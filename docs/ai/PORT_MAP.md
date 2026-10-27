@@ -14,9 +14,9 @@ A C# file whose marker carries a qualifier such as `(reference)`, `(approximate)
 or `(baseline subset)` is shown with that text — the port is not a strict 1:1 port and is a
 candidate for a tightening pass (see the *Ports with a qualified marker* section).
 
-Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
-`material_ui` package used for validation: version 1.0.0 at `/Users/egorozh/Plumix/Plumix/material-ui-src`
-`cupertino_ui` package used for validation: version 1.0.0 at `/Users/egorozh/Plumix/Plumix/cupertino-ui-src`
+Flutter checkout used for validation: `/Users/egorozh/Plumix-rc-wt/edge-insets/flutter-src`
+`material_ui` package used for validation: version 1.0.0 at `/Users/egorozh/Plumix-rc-wt/edge-insets/material-ui-src`
+`cupertino_ui` package used for validation: version 1.0.0 at `/Users/egorozh/Plumix-rc-wt/edge-insets/cupertino-ui-src`
 
 ## Index
 
@@ -79,6 +79,7 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `engine/src/flutter/lib/ui/geometry.dart` | `src/Plumix/Rendering/Decoration.cs`<br>`src/Plumix/UI/DartGeometry.cs`<br>`src/Plumix/UI/Geometry.cs`<br>`src/Plumix/UI/RRect.cs`<br>`src/Plumix/UI/RSTransform.cs`<br>`src/Plumix/UI/RSuperellipse.cs`<br>`src/Plumix/UI/RoundRectGeometry.cs`<br>`src/Plumix/UI/SuperellipseGeometry.cs` | `src/Plumix.Tests/AlignmentGeometryTests.cs`<br>`src/Plumix.Tests/BoxDecorationDartParityTests.cs`<br>`src/Plumix.Tests/DecorationImageDartParityTests.cs`<br>`src/Plumix.Tests/ImageProviderDecorationTests.cs`<br>`src/Plumix.Tests/InputDecorationDartParityTests.cs`<br>`src/Plumix.Tests/MaterialScaffoldGeometryTests.cs`<br>`src/Plumix.Tests/RSuperellipseGeometryTests.cs`<br>`src/Plumix.Tests/ShapeDecorationDartParityTests.cs`<br>`src/Plumix.Tests/SliverGeometryTests.cs`<br>`src/Plumix.Tests/UiGeometryDartParityTests.cs` | — |
 | `engine/src/flutter/lib/ui/key.dart` | `src/Plumix/UI/Key.cs` | `src/Plumix.Tests/FocusOnKeyDartParityTests.cs`<br>`src/Plumix.Tests/GlobalKeysDuplicatedDartParityTests.cs`<br>`src/Plumix.Tests/GlobalKeysMovingDartParityTests.cs`<br>`src/Plumix.Tests/HardwareKeyboardDartParityTests.cs`<br>`src/Plumix.Tests/HardwareKeyboardTests.cs`<br>`src/Plumix.Tests/HostKeyEventMessageTests.cs`<br>`src/Plumix.Tests/KeyDartParityTests.cs`<br>`src/Plumix.Tests/KeyParityTests.cs`<br>`src/Plumix.Tests/KeyboardListenerTests.cs`<br>`src/Plumix.Tests/KeyboardMapsTests.cs`<br>`src/Plumix.Tests/LayoutBuilderAndGlobalKeysDartParityTests.cs`<br>`src/Plumix.Tests/RawKeyEventDataAppleAndroidDartParityTests.cs`<br>`src/Plumix.Tests/RawKeyEventDataDesktopWebDartParityTests.cs`<br>`src/Plumix.Tests/RawKeyboardDartParityTests.cs` | `dart_sample/lib/demos/general/keyboard_listener_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/KeyboardListenerDemoPage.cs` |
 | `engine/src/flutter/lib/ui/painting.dart` | `src/Plumix/UI/GradientShader.cs`<br>`src/Plumix/UI/Path.cs`<br>`src/Plumix/UI/PathMetrics.cs`<br>`src/Plumix/UI/ShadowDraw.cs`<br>`src/Plumix/UI/ShadowTessellator.cs` | `src/Plumix.Tests/GradientShaderTests.cs`<br>`src/Plumix.Tests/PathDartParityTests.cs` | — |
+| `engine/src/flutter/lib/ui/platform_dispatcher.dart` | `src/Plumix/UI/ViewPadding.cs` | — | — |
 | `engine/src/flutter/lib/ui/window.dart` | `src/Plumix/UI/AccessibilityFeatures.cs`<br>`src/Plumix/UI/Brightness.cs` | `src/Plumix.Tests/AccessibilityFeaturesDartParityTests.cs` | — |
 | `material_ui/about.dart` | `src/Plumix.Material/About.cs` | `src/Plumix.Tests/MaterialAboutTests.cs` | `dart_sample/lib/demos/material/about_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Material/AboutDemoPage.cs` |
 | `material_ui/action_buttons.dart` | `src/Plumix.Material/ActionButtons.cs` | `src/Plumix.Tests/MaterialActionButtonsTests.cs` | `dart_sample/lib/demos/material/action_buttons_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Material/ActionButtonsDemoPage.cs` |
@@ -644,6 +645,8 @@ Either C#-only infrastructure (fine — say so in a header comment) or an undocu
 - `src/Plumix/DesktopPlatformPlugin.cs`
 - `src/Plumix/Developer/DeveloperService.cs`
 - `src/Plumix/Developer/Timeline.cs`
+- `src/Plumix/Developer/UserTag.cs`
+- `src/Plumix/EventLoop.Tasks.cs`
 - `src/Plumix/EventLoop.Timers.cs`
 - `src/Plumix/EventLoop.cs`
 - `src/Plumix/FlutterExtensions.cs`
@@ -738,9 +741,9 @@ Either C#-only infrastructure (fine — say so in a header comment) or an undocu
 
 ## Summary
 
-- Flutter files mapped: 601
-- C# files carrying a marker: 809
-- C# files without a marker: 105
+- Flutter files mapped: 602
+- C# files carrying a marker: 810
+- C# files without a marker: 107
 - Markers not resolvable in the pinned checkout: 0
 - C# files with a qualified (non-strict) marker: 0
 
