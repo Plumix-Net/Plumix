@@ -26,7 +26,7 @@ internal sealed class DecoratedBoxDemoPageState : State
     private double _fade = 0.5;
     private bool _invert;
     private bool _outerProbe;
-    private readonly MemoryImage _image = new(ImageDemoPageState.SampleBytes);
+    private readonly MemoryImage _image = new(Convert.FromBase64String(ImageDemoPageState.DemoSamplePng));
 
     public override Widget Build(BuildContext context)
     {

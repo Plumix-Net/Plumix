@@ -254,18 +254,6 @@ public sealed class Scaffold : StatefulWidget
         return context.FindAncestorStateOfType<ScaffoldState>()?.HasDrawer ?? false;
     }
 
-    /// <summary>
-    /// Ports the height computation `_ScaffoldState.build` performs for the app-bar slot: the widget's
-    /// own preferred height, with `AppBarThemeData.ToolbarHeight` substituted when the app bar left its
-    /// toolbar height unset.
-    /// </summary>
-    internal static double PreferredAppBarHeight(BuildContext context, IPreferredSizeWidget appBar)
-    {
-        return appBar is Plumix.Material.AppBar bar
-            ? Plumix.Material.AppBar.PreferredHeightFor(context, bar.PreferredAppBarSize)
-            : Plumix.Material.AppBar.PreferredHeightFor(context, appBar.PreferredSize);
-    }
-
     internal static ScaffoldGeometryNotifier? GeometryNotifierMaybeOf(BuildContext context)
     {
         return context.DependOnInheritedWidgetOfExactType<ScaffoldScope>()?.GeometryNotifier;
@@ -1040,7 +1028,7 @@ public sealed class ScaffoldState : RestorationState<Scaffold>, WidgetsBindingOb
 
         if (CurrentWidget.AppBar is { } appBar)
         {
-            _appBarMaxHeight = Scaffold.PreferredAppBarHeight(context, appBar)
+            _appBarMaxHeight = Plumix.Material.AppBar.PreferredHeightFor(context, appBar.PreferredSize)
                                + (CurrentWidget.Primary ? mediaQuery.Padding.Top : 0.0);
             DebugAssertions.Assert(_appBarMaxHeight.Value >= 0.0 && double.IsFinite(_appBarMaxHeight.Value));
 

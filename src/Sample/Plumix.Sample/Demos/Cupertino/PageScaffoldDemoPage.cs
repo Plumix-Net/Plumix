@@ -136,7 +136,7 @@ internal sealed class CupertinoPageScaffoldDemoPageState : State
 
         public bool Opaque { get; }
 
-        public Size PreferredSize => new(double.PositiveInfinity, 52.0);
+        public PreferredSizeValue PreferredSize => new(double.PositiveInfinity, 52.0);
 
         public bool ShouldFullyObstruct(BuildContext context) => Opaque;
 

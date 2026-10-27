@@ -89,6 +89,8 @@ public sealed class AnimatedImageProviderTests : IDisposable
             {
                 SchedulerBinding.PumpFrameForTests(TimeSpan.FromMilliseconds(index * 350));
                 EventLoop.FlushMicrotasks();
+                // The emitted frame asks the codec for the next one, which completes on a later turn.
+                EventLoop.RunPendingTasks();
             }
 
             Assert.Equal(3, colors.Count);
@@ -132,11 +134,16 @@ public sealed class AnimatedImageProviderTests : IDisposable
             tester.Pump(TimeSpan.FromSeconds(2));
             Assert.Equal(pausedFrame, frameNumber);
             tester.PumpWidget(Build(false));
+            // Every frame request completes on the real event loop (`tester.runAsync` in Dart).
+            tester.RunAsync();
             tester.Pump(TimeSpan.FromSeconds(2));
+            tester.RunAsync();
             tester.Pump();
             // With the cache disabled, a dependency change can resolve a new stream. Its first
             // frame is numbered zero again; verify that subsequent frames actually keep playing.
+            tester.RunAsync();
             tester.Pump(TimeSpan.FromMilliseconds(350));
+            tester.RunAsync();
             tester.Pump();
             Assert.True(frameNumber > pausedFrame);
             Assert.Null(tester.TakeException());

@@ -208,6 +208,13 @@ internal sealed partial class FrameworkDartTester : IDisposable
     }
 
     /// <summary>
+    /// flutter_test's <c>WidgetTester.runAsync</c> around a wait for the engine: lets the real event
+    /// loop run the tasks the engine posted (image decodes complete there), which the fake clock of
+    /// <see cref="Pump"/> never runs.
+    /// </summary>
+    public void RunAsync() => EventLoop.RunPendingTasks();
+
+    /// <summary>
     /// flutter_test's <c>AutomatedTestWidgetsFlutterBinding.scheduleWarmUpFrame</c>: the begin and
     /// draw halves of the frame run synchronously, with the microtasks drained after each.
     /// </summary>

@@ -121,12 +121,12 @@ internal sealed class ApngImageCodec : Codec
         ObjectDisposedException.ThrowIf(_disposed, this);
         try
         {
-            return Task.FromResult(DecodeFrame());
+            return CompleteOnLaterTurn(Task.FromResult(DecodeFrame()));
         }
         catch (Exception exception) when (exception is not OutOfMemoryException)
         {
-            return Task.FromException<FrameInfo>(new InvalidOperationException("Codec failed to decode APNG frame.",
-                exception));
+            return CompleteOnLaterTurn(Task.FromException<FrameInfo>(
+                new InvalidOperationException("Codec failed to decode APNG frame.", exception)));
         }
     }
 

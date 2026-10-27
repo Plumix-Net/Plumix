@@ -248,7 +248,7 @@ public sealed class CupertinoPageScaffoldTests : IDisposable
             _captureTextScale = captureTextScale;
         }
 
-        public Size PreferredSize => new(double.PositiveInfinity, 44.0);
+        public PreferredSizeValue PreferredSize => new(double.PositiveInfinity, 44.0);
 
         public bool ShouldFullyObstruct(BuildContext context) => _fullyObstructs;
 
@@ -261,7 +261,7 @@ public sealed class CupertinoPageScaffoldTests : IDisposable
 
     private sealed class NonWidgetNavigationBar : IObstructingPreferredSizeWidget
     {
-        public Size PreferredSize => new(100.0, 44.0);
+        public PreferredSizeValue PreferredSize => new(100.0, 44.0);
 
         public bool ShouldFullyObstruct(BuildContext context) => true;
     }

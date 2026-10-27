@@ -1,6 +1,7 @@
 using System;
 using Avalonia;
 using Avalonia.Media;
+using Avalonia.Media.Imaging;
 using Plumix.Foundation;
 using Plumix.Painting;
 using Plumix.Rendering;
@@ -17,22 +18,20 @@ public sealed class ImageDemoPage : StatefulWidget
 
 internal sealed class ImageDemoPageState : State
 {
-    private const string SamplePng =
+    /// <summary>The 48x48 sample PNG the image demos paint.</summary>
+    internal const string DemoSamplePng =
         "iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAIAAADYYG7QAAAA+0lEQVR42u3ZwQ3CMAwFUK/CRizAmcUYgXFQz4z" +
         "ADXJClUoT/x9/N0KRfOvBT5Gi2L/2XF5DlU1QFuh6vh0JKu09lQFyUmiWSSkEyxIoEMsyNR6TJWuaJsvX1E3Wo3" +
         "k/7ntFm0yh6TGRoKbGaXKBojScCQZBGo+pAYo9HuKQxgaFXK7O6zZBE/THIP9DHa5Zm4ybN0QaHhT12keCTnapa" +
         "MrXJFDphJYQRGicJhhEU5ws7LUP0VRM8PhxJGhrCtT8NGEjbLhma8K2DjUIXoNGAX1NUhCz2+tAZPohAnXlQ5ka" +
         "b4KWpsEyRjWFTGF1lK6cWkEJTvK59vPnC14fYcoDfci8GWgAAAAASUVORK5CYII=";
 
-    internal static readonly byte[] SampleBytes = Convert.FromBase64String(SamplePng);
-    private static readonly MemoryImage SampleProvider = new(SampleBytes);
+    private readonly byte[] _sampleBytes = Convert.FromBase64String(DemoSamplePng);
     // Two original 1x1 GIF frames (red/blue), 350 ms each, infinite repetition.
-    private static readonly byte[] AnimatedBytes = Convert.FromBase64String(
+    private readonly byte[] _animatedBytes = Convert.FromBase64String(
         "R0lGODlhAQABAIAAAP88PChk/yH/C05FVFNDQVBFMi4wAwEAAAAh+QQEIwAAACwAAAAAAQABAAACAkQB" +
         "ACH5BAQjAAAALAAAAAABAAEAAAICTAEAOw==");
-    private ImageStream? _rawStream;
-    private ImageStreamListener? _rawListener;
-    private ImageInfo? _rawInfo;
+    private Bitmap? _rawImage;
     private bool _cover;
     private bool _rtl;
     private bool _dimmed;
@@ -41,31 +40,17 @@ internal sealed class ImageDemoPageState : State
     private bool _animationPaused;
     private int _decodeGeneration;
     private int _fadeGeneration;
-    private byte[] _fadeTargetBytes = (byte[])SampleBytes.Clone();
+    private byte[] _fadeTargetBytes;
 
-    public override void DidChangeDependencies()
+    public ImageDemoPageState()
     {
-        if (_rawStream is not null)
-        {
-            return;
-        }
+        _fadeTargetBytes = (byte[])_sampleBytes.Clone();
+    }
 
-        _rawStream = SampleProvider.Resolve(ImageConfigurationUtils.CreateLocalImageConfiguration(Context));
-        _rawListener = new ImageStreamListener((info, _) =>
-        {
-            if (!Mounted)
-            {
-                info.Dispose();
-                return;
-            }
-
-            SetState(() =>
-            {
-                _rawInfo?.Dispose();
-                _rawInfo = info;
-            });
-        });
-        _rawStream.AddListener(_rawListener);
+    public override void InitState()
+    {
+        base.InitState();
+        DecodeRawImage();
     }
 
     public override Widget Build(BuildContext context)
@@ -95,7 +80,7 @@ internal sealed class ImageDemoPageState : State
                         ControlButton("restart fade", () =>
                         {
                             _fadeGeneration++;
-                            _fadeTargetBytes = (byte[])SampleBytes.Clone();
+                            _fadeTargetBytes = (byte[])_sampleBytes.Clone();
                         }),
                         ControlButton(_animationPaused ? "animation: paused" : "animation: playing",
                             () => _animationPaused = !_animationPaused),
@@ -113,11 +98,11 @@ internal sealed class ImageDemoPageState : State
                                     Probe("Animated GIF", new TickerMode(
                                         enabled: !_animationPaused,
                                         child: Plumix.Widgets.Image.Memory(
-                                            AnimatedBytes, width: 96, height: 96, fit: BoxFit.Fill))),
+                                            _animatedBytes, width: 96, height: 96, fit: BoxFit.Fill))),
                                     Probe("Animated resize: 24px", new TickerMode(
                                         enabled: !_animationPaused,
                                         child: Plumix.Widgets.Image.Memory(
-                                            AnimatedBytes, width: 96, height: 96, fit: BoxFit.Fill,
+                                            _animatedBytes, width: 96, height: 96, fit: BoxFit.Fill,
                                             cacheWidth: 24))),
                                 ]),
                             new Row(
@@ -127,7 +112,7 @@ internal sealed class ImageDemoPageState : State
                                     Probe(
                                         "Image.memory",
                                         Plumix.Widgets.Image.Memory(
-                                            SampleBytes,
+                                            _sampleBytes,
                                             width: 96,
                                             height: 96,
                                             fit: fit,
@@ -141,11 +126,9 @@ internal sealed class ImageDemoPageState : State
                                     Probe(
                                         "RawImage",
                                         new RawImage(
-                                            image: _rawInfo?.Image,
-                                            debugImageLabel: _rawInfo?.DebugLabel,
+                                            image: _rawImage,
                                             width: 96,
                                             height: 96,
-                                            scale: _rawInfo?.Scale ?? 1.0,
                                             fit: fit,
                                             alignment: AlignmentDirectional.CenterStart,
                                             matchTextDirection: true,
@@ -159,7 +142,7 @@ internal sealed class ImageDemoPageState : State
                                         "FadeInImage",
                                         new FadeInImage(
                                             key: new ValueKey<int>(_fadeGeneration),
-                                            placeholder: SampleProvider,
+                                            placeholder: new MemoryImage(_sampleBytes),
                                             image: new MemoryImage(_fadeTargetBytes),
                                             width: 96,
                                             height: 96,
@@ -174,7 +157,9 @@ internal sealed class ImageDemoPageState : State
                                                 Color: new Color(0xFF800080),
                                                 Size: 64,
                                                 Opacity: opacity),
-                                            new ImageIcon(SampleProvider, semanticLabel: "Image icon sample"))),
+                                            new ImageIcon(
+                                                new MemoryImage(_sampleBytes),
+                                                semanticLabel: "Image icon sample"))),
                                 ]),
                             new Row(
                                 mainAxisAlignment: MainAxisAlignment.SpaceAround,
@@ -192,12 +177,12 @@ internal sealed class ImageDemoPageState : State
                                                     0.0, 0.0, 0.0, 1.0, 0.0,
                                                 ]),
                                                 Plumix.Widgets.Image.Memory(
-                                                    SampleBytes,
+                                                    _sampleBytes,
                                                     width: 96,
                                                     height: 96,
                                                     fit: fit))
                                             : Plumix.Widgets.Image.Memory(
-                                                SampleBytes,
+                                                _sampleBytes,
                                                 width: 96,
                                                 height: 96,
                                                 fit: fit)),
@@ -209,7 +194,7 @@ internal sealed class ImageDemoPageState : State
                                                 sigmaY: 3.0,
                                                 tileMode: Plumix.Rendering.TileMode.Decal),
                                             Plumix.Widgets.Image.Memory(
-                                                SampleBytes,
+                                                _sampleBytes,
                                                 width: 96,
                                                 height: 96,
                                                 fit: fit),
@@ -240,13 +225,13 @@ internal sealed class ImageDemoPageState : State
                                                     ],
                                                 },
                                                 child: Plumix.Widgets.Image.Memory(
-                                                    SampleBytes,
+                                                    _sampleBytes,
                                                     width: 96,
                                                     height: 96,
                                                     fit: fit),
                                                 blendMode: BlendMode.Modulate)
                                             : Plumix.Widgets.Image.Memory(
-                                                SampleBytes,
+                                                _sampleBytes,
                                                 width: 96,
                                                 height: 96,
                                                 fit: fit)),
@@ -260,7 +245,7 @@ internal sealed class ImageDemoPageState : State
                                                     children:
                                                     [
                                                         Plumix.Widgets.Image.Memory(
-                                                            SampleBytes,
+                                                            _sampleBytes,
                                                             width: 96,
                                                             height: 96,
                                                             fit: BoxFit.Cover),
@@ -294,9 +279,9 @@ internal sealed class ImageDemoPageState : State
                         ControlButton("evict asset", () => PaintingBinding.Instance.Evict("sample.png")),
                     ]),
                 new Text(
-                    _rawInfo is null
+                    _rawImage is null
                         ? "Raw image: decoding..."
-                        : $"Raw image: {_rawInfo.Image.Size.Width:0} × {_rawInfo.Image.Size.Height:0} px; "
+                        : $"Raw image: {_rawImage.PixelSize.Width} × {_rawImage.PixelSize.Height} px; "
                           + $"cache: {ImageCache.Shared.CurrentSize}; live: {ImageCache.Shared.LiveImageCount}",
                     style: new TextStyle(FontSize: 12, Color: MaterialColors.BlueGrey)),
             ]);
@@ -305,13 +290,7 @@ internal sealed class ImageDemoPageState : State
 
     public override void Dispose()
     {
-        if (_rawStream is not null && _rawListener is not null)
-        {
-            _rawStream.RemoveListener(_rawListener);
-        }
-
-        _rawInfo?.Dispose();
-
+        _rawImage?.Dispose();
         base.Dispose();
     }
 
@@ -321,10 +300,11 @@ internal sealed class ImageDemoPageState : State
         bool small = _smallDecode;
         EventLoop.RunAsync(async () =>
         {
-            var buffer = await Plumix.UI.ImmutableBuffer.FromUint8List(SampleBytes);
-            using var codec = await PaintingBinding.Instance.InstantiateImageCodecWithSize(
+            var buffer = await Plumix.UI.ImmutableBuffer.FromUint8List(_sampleBytes);
+            var codec = await PaintingBinding.Instance.InstantiateImageCodecWithSize(
                 buffer, (_, _) => new Plumix.UI.TargetImageSize(width: small ? 24 : null));
             var frame = await codec.GetNextFrame();
+            codec.Dispose();
             if (!Mounted || generation != _decodeGeneration)
             {
                 frame.Image.Dispose();
@@ -333,8 +313,8 @@ internal sealed class ImageDemoPageState : State
 
             SetState(() =>
             {
-                _rawInfo?.Dispose();
-                _rawInfo = new ImageInfo(frame.Image);
+                _rawImage?.Dispose();
+                _rawImage = frame.Image;
             });
         });
     }

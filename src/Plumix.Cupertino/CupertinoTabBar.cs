@@ -105,7 +105,7 @@ public sealed class CupertinoTabBar : StatelessWidget, IPreferredSizeWidget
 
     public Border? Border { get; }
 
-    public Size PreferredSize => new(double.PositiveInfinity, Height);
+    public PreferredSizeValue PreferredSize => new(double.PositiveInfinity, Height);
 
     public bool Opaque(BuildContext context)
     {
