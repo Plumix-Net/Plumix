@@ -8,6 +8,8 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased]
+- Android: a text field node carries "label, hint" as hint text, not a nameless EditText (BaseRoleConfigurator.java).
+- Host keeps the shown frame when a scene only re-adds retained layers: an idle iOS caret no longer redraws at 60 Hz.
 - Breaking: a Dart-shaped `EdgeInsets` replaces Avalonia `Thickness` in every signature (edge_insets.dart).
 - Breaking: `EdgeInsetsGeometry.Resolve` returns `EdgeInsets`; `RRect` edge helpers move to it (edge_insets.dart).
 - Breaking: scroll-view, chip, app-bar, card, FAB, nav and `StyleFrom` paddings are `EdgeInsetsGeometry` (material_ui).

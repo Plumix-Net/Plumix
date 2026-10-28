@@ -105,6 +105,59 @@ internal class ContainerFlowLayer : FlowLayer
     }
 
     internal override bool ContainsMagnifier => _layers.Any(static layer => layer.ContainsMagnifier);
+
+    /// <summary>
+    /// Whether <paramref name="next"/> paints exactly what <paramref name="previous"/> paints because it only
+    /// re-adds the previous tree's retained layers: a frame in which nothing repainted re-pushes just the root
+    /// transform around the layers <c>addRetained</c> handed back.
+    /// </summary>
+    /// <remarks>
+    /// Conservative: plain containers, transforms and pictures (a picture layer has no engine layer to retain,
+    /// so it re-adds its unchanged picture) are compared by value, every other layer must be the same retained
+    /// object.
+    /// </remarks>
+    internal static bool PaintsSameAs(FlowLayer next, FlowLayer previous)
+    {
+        if (ReferenceEquals(next, previous))
+        {
+            return true;
+        }
+
+        if (next is DisplayListFlowLayer nextPicture && previous is DisplayListFlowLayer previousPicture)
+        {
+            return ReferenceEquals(nextPicture.Picture, previousPicture.Picture)
+                && nextPicture.Offset == previousPicture.Offset;
+        }
+
+        if (next is TransformFlowLayer nextTransform && previous is TransformFlowLayer previousTransform)
+        {
+            if (nextTransform.Transform != previousTransform.Transform)
+            {
+                return false;
+            }
+        }
+        else if (next.GetType() != typeof(ContainerFlowLayer) || previous.GetType() != typeof(ContainerFlowLayer))
+        {
+            return false;
+        }
+
+        IReadOnlyList<FlowLayer> nextLayers = ((ContainerFlowLayer)next).Layers;
+        IReadOnlyList<FlowLayer> previousLayers = ((ContainerFlowLayer)previous).Layers;
+        if (nextLayers.Count != previousLayers.Count)
+        {
+            return false;
+        }
+
+        for (int i = 0; i < nextLayers.Count; i++)
+        {
+            if (!PaintsSameAs(nextLayers[i], previousLayers[i]))
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
 }
 
 /// <summary>

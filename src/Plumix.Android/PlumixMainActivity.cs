@@ -59,6 +59,7 @@ public class PlumixMainActivity : AvaloniaMainActivity
         base.OnCreate(savedInstanceState);
         // AccessibilityBridge's feature flags, which FlutterView creates with the bridge.
         _accessibilityFeatures = new AndroidAccessibilityFeatures(this, Delegate);
+        InstallTextFieldHints();
 
         if (OperatingSystem.IsAndroidVersionAtLeast(34) && Window?.DecorView is { } decorView)
         {
@@ -77,6 +78,8 @@ public class PlumixMainActivity : AvaloniaMainActivity
     {
         base.OnResume();
         Delegate.OnResume();
+        // Avalonia sets the content view with the first content, which may come after OnCreate.
+        InstallTextFieldHints();
     }
 
     protected override void OnPause()
@@ -237,6 +240,14 @@ public class PlumixMainActivity : AvaloniaMainActivity
 
     /// <summary>Reports the soft keyboard's visibility (the window's IME insets) on every layout.</summary>
     [SupportedOSPlatform("android34.0")]
+    private void InstallTextFieldHints()
+    {
+        if (FindViewById<ViewGroup>(global::Android.Resource.Id.Content)?.GetChildAt(0) is AvaloniaView view)
+        {
+            AndroidTextFieldHints.Install(view);
+        }
+    }
+
     private sealed class ImeVisibilityListener(PlumixMainActivity activity, View decorView)
         : Java.Lang.Object, ViewTreeObserver.IOnGlobalLayoutListener
     {

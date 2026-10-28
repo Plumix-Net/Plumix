@@ -563,6 +563,50 @@ public sealed class SceneBuilderTests
         return recorder.EndRecording();
     }
 
+    // C#-only: the host keeps the frame it shows when the next scene only re-adds the retained layers and
+    // pictures it already draws (FlutterHost.HandleViewRenderRequested).
+    [Fact]
+    public void ASceneThatOnlyReAddsRetainedLayersPaintsTheSameAsThePreviousOne()
+    {
+        var root = new TransformLayer(Matrix4.Diagonal3Values(3.0, 3.0, 1.0));
+        var looseLayer = new PictureLayer(new Rect(0, 0, 20, 20))
+        {
+            Picture = DrawRectPicture(new Rect(0, 0, 20, 20)),
+        };
+        var boundary = new OffsetLayer(new Point(0, 20));
+        var nestedLayer = new PictureLayer(new Rect(0, 0, 10, 10))
+        {
+            Picture = DrawRectPicture(new Rect(0, 0, 10, 10)),
+        };
+        boundary.Append(nestedLayer);
+        root.Append(looseLayer);
+        root.Append(boundary);
+
+        ContainerFlowLayer Build()
+        {
+            using Scene scene = root.BuildScene(new SceneBuilder());
+            return scene.TakeLayerTree()!;
+        }
+
+        ContainerFlowLayer first = Build();
+        ContainerFlowLayer unchanged = Build();
+        Assert.NotSame(first, unchanged);
+        Assert.True(ContainerFlowLayer.PaintsSameAs(unchanged, first));
+
+        nestedLayer.Picture = DrawRectPicture(new Rect(0, 0, 10, 10), 0xFFFF0000);
+        ContainerFlowLayer repainted = Build();
+        Assert.False(ContainerFlowLayer.PaintsSameAs(repainted, unchanged));
+
+        boundary.Offset = new Point(0, 30);
+        ContainerFlowLayer moved = Build();
+        Assert.False(ContainerFlowLayer.PaintsSameAs(moved, repainted));
+
+        root.Transform = Matrix4.Diagonal3Values(2.0, 2.0, 1.0);
+        ContainerFlowLayer rescaled = Build();
+        Assert.False(ContainerFlowLayer.PaintsSameAs(rescaled, moved));
+        Assert.True(ContainerFlowLayer.PaintsSameAs(Build(), rescaled));
+    }
+
     internal static Picture DrawRectPicture(Rect rect, uint argb = 0xFF000000)
     {
         var recorder = new PictureRecorder();

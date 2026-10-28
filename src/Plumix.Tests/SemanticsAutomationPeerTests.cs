@@ -26,6 +26,7 @@ public sealed class SemanticsAutomationPeerTests : IDisposable
         SchedulerBinding.PumpFrameForTests();
         AccessibilityBridge.ResetForTests();
         PlatformDispatcher.Instance.UpdateSemanticsEnabled(false);
+        SemanticsNodeAutomationPeer.FillsAndroidNodeInfo = OperatingSystem.IsAndroid();
     }
 
     private PlumixHostAutomationPeer Show(Widget widget)
@@ -267,6 +268,37 @@ public sealed class SemanticsAutomationPeerTests : IDisposable
         value.SetValue("Grace");
 
         Assert.Equal("Grace", text);
+    }
+
+    // Avalonia's Android ValueNodeInfoProvider puts the value in the node text, so the label must reach
+    // the node another way: BaseRoleConfigurator.configureLabelAndValue's getTextFieldHint.
+    [Fact]
+    public void AndroidTextFieldCarriesLabelAndHintInHelpText()
+    {
+        SemanticsNodeAutomationPeer.FillsAndroidNodeInfo = true;
+        PlumixHostAutomationPeer host = Show(new Column(children:
+        [
+            new Semantics(
+                container: true,
+                label: "URL",
+                hint: "https://",
+                textField: true,
+                value: "",
+                onSetText: _ => { },
+                child: Leaf()),
+            new Semantics(container: true, label: "Port", textField: true, onSetText: _ => { }, child: Leaf()),
+            new Semantics(container: true, label: "Go", hint: "Starts", button: true, onTap: () => { }, child: Leaf()),
+        ]));
+
+        SemanticsNodeAutomationPeer url = Find(host, "URL");
+        Assert.Equal("android.widget.EditText", url.GetClassName());
+        Assert.Equal("URL, https://", url.GetHelpText());
+        Assert.Equal("Port", Find(host, "Port").GetHelpText());
+        Assert.Equal("Starts", Find(host, "Go").GetHelpText());
+
+        SemanticsNodeAutomationPeer.FillsAndroidNodeInfo = false;
+        Assert.Equal("https://", url.GetHelpText());
+        Assert.Equal("FlutterSemanticsNode", url.GetClassName());
     }
 
     [Fact]

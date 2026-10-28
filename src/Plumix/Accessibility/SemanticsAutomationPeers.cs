@@ -340,6 +340,9 @@ internal abstract class SemanticsNodeAutomationPeer : AutomationPeer
 
     public SemanticsPeerShape Shape { get; }
 
+    /// <summary>Whether the peers fill Avalonia's Android node info (widget classes, text field hints).</summary>
+    internal static bool FillsAndroidNodeInfo { get; set; } = OperatingSystem.IsAndroid();
+
     public static SemanticsNodeAutomationPeer Create(
         PlumixHostAutomationPeer host,
         AccessibilityNode node,
@@ -450,7 +453,7 @@ internal abstract class SemanticsNodeAutomationPeer : AutomationPeer
     // how TalkBack describes a node's role; the engine's Android bridge names the same classes.
     protected override string GetClassNameCore()
     {
-        if (!OperatingSystem.IsAndroid())
+        if (!FillsAndroidNodeInfo)
         {
             return "FlutterSemanticsNode";
         }
@@ -486,7 +489,19 @@ internal abstract class SemanticsNodeAutomationPeer : AutomationPeer
         return label.Length == 0 ? tooltip : label + "\n" + tooltip;
     }
 
-    protected override string? GetHelpTextCore() => Node.Hint.Length == 0 ? null : Node.Hint;
+    // Avalonia's Android value provider makes a text field's value the node text, which hides the name,
+    // so there the help text (the content description) carries the engine's text field hint, "label,
+    // hint"; Plumix.Android's AndroidTextFieldHints moves it to the node's hint text, as the engine does.
+    protected override string? GetHelpTextCore()
+    {
+        if (FillsAndroidNodeInfo && (Shape & SemanticsPeerShape.Value) != 0)
+        {
+            string hint = string.Join(", ", new[] { Node.Label, Node.Hint }.Where(word => word.Length > 0));
+            return hint.Length == 0 ? null : hint;
+        }
+
+        return Node.Hint.Length == 0 ? null : Node.Hint;
+    }
 
     // The web bridge's heading rule: an explicit level, else level 2 for a header.
     protected override int GetHeadingLevelCore()

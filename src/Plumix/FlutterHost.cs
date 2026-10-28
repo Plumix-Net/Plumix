@@ -1881,15 +1881,33 @@ public partial class PlumixHost : Control, ICustomHitTest
             ? renderView.Configuration.DevicePixelRatio
             : _view.DevicePixelRatio;
         Size physical = physicalSize ?? new Size(Bounds.Width * devicePixelRatio, Bounds.Height * devicePixelRatio);
-        _layerTree = layerTree;
-        _layerTreeTransform = devicePixelRatio > 0.0
+        Matrix transform = devicePixelRatio > 0.0
             ? Matrix.CreateScale(1.0 / devicePixelRatio, 1.0 / devicePixelRatio)
             : Matrix.Identity;
-        _layerTreeTargetSize = devicePixelRatio > 0.0
+        Size targetSize = devicePixelRatio > 0.0
             ? new Size(physical.Width / devicePixelRatio, physical.Height / devicePixelRatio)
             : Bounds.Size;
-        _pendingFrameTimings = FrameTimingsRecorder.ForRender();
+        // A frame that repainted nothing (a ticker between the iOS caret's key frames) re-adds the shown tree's
+        // retained layers. The engine redraws it cheaply; Avalonia would record and composite the whole scene
+        // again, so the shown frame stays and only the frame's timings are reported.
+        bool unchanged = _layerTree is { } shown
+            && transform == _layerTreeTransform
+            && targetSize == _layerTreeTargetSize
+            && ContainerFlowLayer.PaintsSameAs(layerTree, shown);
+        _layerTree = layerTree;
+        _layerTreeTransform = transform;
+        _layerTreeTargetSize = targetSize;
+        FrameTimingsRecorder timings = FrameTimingsRecorder.ForRender();
         OnViewRendered(physical);
+        if (unchanged)
+        {
+            _compositor.UiTime.SetLapTime(timings.BuildDuration);
+            timings.RecordRasterStart();
+            FrameTimingsReporter.OnFrameRasterized(timings.RecordRasterEnd());
+            return;
+        }
+
+        _pendingFrameTimings = timings;
 
         // The scheduler is process-wide and a frame can be pumped from any thread, while an Avalonia
         // control may only be touched from the thread that created it.
