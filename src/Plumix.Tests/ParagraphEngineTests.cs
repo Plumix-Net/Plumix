@@ -444,17 +444,18 @@ public sealed class ParagraphEngineTests
 
     // C#-only: flutter_tester pixels (FlutterTest, captured with `matchesGoldenFile`). SkParagraph's
     // OneLineShaper emboldens a regular typeface for w600+ requests, so the 40 px glyph at x = 10.3 bleeds
-    // into column 9 only when bold.
+    // into column 9 only when bold. flutter_tester and macOS Skia paint that edge pixel 207; Linux Skia's
+    // anti-aliasing paints it 188, so the bleed is asserted, not the exact coverage.
     [Fact]
     public void Paint_SemiboldAndHeavier_FakeBoldsTheGlyph()
     {
         Assert.Equal(255, PaintedPixel("X", new ParagraphTextStyle(FontSize: 40), new Point(10.3, 0.3), 9, 20).R);
-        Assert.Equal(207, PaintedPixel(
+        Assert.InRange(PaintedPixel(
             "X",
             new ParagraphTextStyle(FontSize: 40, FontWeight: FontWeight.SemiBold),
             new Point(10.3, 0.3),
             9,
-            20).R);
+            20).R, (byte)160, (byte)230);
     }
 
     // C#-only: flutter_tester pixels. TextLine::paintBackground fills the run's CSS-height clip, which a
