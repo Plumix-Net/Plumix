@@ -40,13 +40,26 @@ jobs:
       # way Flutter's debug-only test suite would. The build-mode contract itself is covered by the
       # BuildModeGates test, which asserts the profile and release halves when built for those modes.
       - name: Test (Debug)
-        run: dotnet test src/Plumix.Tests/Plumix.Tests.csproj -c Debug --logger "console;verbosity=normal"
+        run: |
+          dotnet test src/Plumix.Tests/Plumix.Tests.csproj -c Debug --logger "console;verbosity=normal" \
+            --logger trx --results-directory TestResults
 
       - name: Test (build-mode gates, Profile)
-        run: dotnet test src/Plumix.Tests/Plumix.Tests.csproj -c Profile --filter BuildModeGates
+        run: |
+          dotnet test src/Plumix.Tests/Plumix.Tests.csproj -c Profile --filter BuildModeGates \
+            --logger trx --results-directory TestResults
 
       - name: Test (build-mode gates, Release)
-        run: dotnet test src/Plumix.Tests/Plumix.Tests.csproj -c Release --filter BuildModeGates
+        run: |
+          dotnet test src/Plumix.Tests/Plumix.Tests.csproj -c Release --filter BuildModeGates \
+            --logger trx --results-directory TestResults
+
+      # dotnet test reports a failure where it happens, thousands of lines above its summary, which
+      # names no test. This repeats every failed test with its message and stack at the end of the
+      # log, as an annotation on the run page and in the step summary.
+      - name: Failed tests
+        if: failure()
+        run: python3 scripts/report_failed_tests.py TestResults
 
       - name: Line length (new/edited lines)
         if: github.event_name == 'pull_request'
@@ -78,7 +91,11 @@ jobs:
         run: |
           echo "Running against Avalonia $AVALONIA_LATEST"
           dotnet test src/Plumix.Tests/Plumix.Tests.csproj -c Debug \
-            -p:AvaloniaTestVersion="$AVALONIA_LATEST"
+            -p:AvaloniaTestVersion="$AVALONIA_LATEST" --logger trx --results-directory TestResults
+
+      - name: Failed tests
+        if: failure()
+        run: python3 scripts/report_failed_tests.py TestResults
 
   # ─── Pack & Publish (tags only) ────────────────────────────────────────────
   publish:
