@@ -1430,7 +1430,7 @@ internal sealed class HeadlessParagraph : Paragraph
         }
 
         // Skia operations batch into one custom draw; shader-painted glyphs are Avalonia geometry.
-        var steps = new List<object>();
+        var steps = new List<PaintStep>();
         Rect? bounds = null;
         void Include(Rect rect) => bounds = bounds is { } current ? current.Union(rect) : rect;
         void AddOperation(FlutterTestGlyphDraw.Operation operation)
@@ -1488,8 +1488,10 @@ internal sealed class HeadlessParagraph : Paragraph
                 {
                     foreach (FlutterTestGlyphDraw.Glyph glyph in GlyphsOf(run, offset.X, baseline))
                     {
-                        steps.Add((FlutterTestGlyph(ShapeOf(glyph.CodePoint), glyph.X, glyph.FontSize,
-                            glyph.Baseline, glyph.FontSize), (IBrush)shader));
+                        steps.Add(new ShaderGlyphStep(
+                            FlutterTestGlyph(ShapeOf(glyph.CodePoint), glyph.X, glyph.FontSize,
+                                glyph.Baseline, glyph.FontSize),
+                            shader));
                     }
                 }
                 else
@@ -1531,27 +1533,28 @@ internal sealed class HeadlessParagraph : Paragraph
         }
 
         Rect inflated = drawBounds.Inflate(1.0);
-        var draws = steps
-            .Select(step => step is List<FlutterTestGlyphDraw.Operation> batch
-                ? new FlutterTestGlyphDraw(batch, inflated)
-                : step)
-            .ToList();
+        Action<DrawingContext> ToDraw(PaintStep step) => step switch
+        {
+            List<FlutterTestGlyphDraw.Operation> batch => CustomDraw(new FlutterTestGlyphDraw(batch, inflated)),
+            ShaderGlyphStep(Geometry shape, IBrush brush) => context => context.DrawGeometry(brush, null, shape),
+        };
+
+        List<Action<DrawingContext>> draws = steps.Select(ToDraw).ToList();
         return context =>
         {
-            foreach (object draw in draws)
+            foreach (Action<DrawingContext> draw in draws)
             {
-                if (draw is FlutterTestGlyphDraw custom)
-                {
-                    context.Custom(custom);
-                }
-                else
-                {
-                    (Geometry shape, IBrush brush) = ((Geometry, IBrush))draw;
-                    context.DrawGeometry(brush, null, shape);
-                }
+                draw(context);
             }
         };
     }
+
+    private static Action<DrawingContext> CustomDraw(FlutterTestGlyphDraw draw) => context => context.Custom(draw);
+
+    // One paint step: a batch of Skia operations, or a shader-painted glyph drawn as Avalonia geometry.
+    private union PaintStep(List<FlutterTestGlyphDraw.Operation>, ShaderGlyphStep);
+
+    private sealed record ShaderGlyphStep(Geometry Shape, IBrush Brush);
 
     /// <summary>
     /// SkParagraph's `TextLine::iterateThroughSingleRunByStyles` pieces of a line: consecutive visual items of

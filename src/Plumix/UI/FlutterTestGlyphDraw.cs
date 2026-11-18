@@ -34,16 +34,16 @@ internal sealed class FlutterTestGlyphDraw(IReadOnlyList<FlutterTestGlyphDraw.Op
         bool FakeItalic = false);
 
     /// <summary>One paint step of a paragraph line.</summary>
-    internal abstract record Operation;
+    internal union Operation(BackgroundOperation, GlyphsOperation, DecorationOperation);
 
     /// <summary>`TextLine::paintBackground`: the run's clip rectangle filled with the background paint.</summary>
-    internal sealed record BackgroundOperation(Rect Rect, Color Color) : Operation;
+    internal sealed record BackgroundOperation(Rect Rect, Color Color);
 
     /// <summary>
     /// Glyph runs (`TextBlobRecord::paint`), or a text shadow (`paintShadow`) when <see cref="Shadow"/> is set:
     /// the same glyphs offset, recolored and blurred with a normal blur mask filter of the shadow's sigma.
     /// </summary>
-    internal sealed record GlyphsOperation(IReadOnlyList<Glyph> Glyphs, TextShadowDraw? Shadow = null) : Operation;
+    internal sealed record GlyphsOperation(IReadOnlyList<Glyph> Glyphs, TextShadowDraw? Shadow = null);
 
     /// <summary>A text shadow's offset, color and blur sigma.</summary>
     internal readonly record struct TextShadowDraw(Point Offset, Color Color, double BlurSigma);
@@ -61,7 +61,7 @@ internal sealed class FlutterTestGlyphDraw(IReadOnlyList<FlutterTestGlyphDraw.Op
         TextDecoration Decoration,
         TextDecorationStyle Style,
         double ThicknessMultiplier,
-        Color Color) : Operation;
+        Color Color);
 
     private static readonly Lazy<SKTypeface?> Typeface = new(LoadTypeface);
 
@@ -129,6 +129,10 @@ internal sealed class FlutterTestGlyphDraw(IReadOnlyList<FlutterTestGlyphDraw.Op
                                 glyph.FontSize));
                     }
 
+                    break;
+                // Shadows and decorations need Skia's blur and path effects.
+                case GlyphsOperation:
+                case DecorationOperation:
                     break;
             }
         }
