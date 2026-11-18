@@ -157,19 +157,10 @@ public class PlumixMainActivity : AvaloniaMainActivity
     private static List<Locale> ReadLocales(Configuration configuration)
     {
         List<Locale> locales = [];
-        if (OperatingSystem.IsAndroidVersionAtLeast(24))
+        LocaleList localeList = configuration.Locales;
+        for (int index = 0; index < localeList.Size(); index++)
         {
-            LocaleList localeList = configuration.Locales;
-            for (int index = 0; index < localeList.Size(); index++)
-            {
-                AddLocale(locales, localeList.Get(index));
-            }
-        }
-        else
-        {
-#pragma warning disable CA1422 // Configuration.locale is the API 23 source of the locale.
-            AddLocale(locales, configuration.Locale);
-#pragma warning restore CA1422
+            AddLocale(locales, localeList.Get(index));
         }
 
         return locales;

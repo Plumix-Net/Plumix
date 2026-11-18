@@ -49,7 +49,7 @@ Docs PRs are welcome. Keep `dart_sample` (real Flutter) and `src/Sample/Plumix.S
 
 ## Getting started
 
-Requirements: **.NET SDK 10** (projects target `net10.0`); Avalonia workloads for browser/mobile targets if you build those hosts.
+Requirements: **.NET SDK 11** (projects target `net11.0`); Avalonia workloads for browser/mobile targets if you build those hosts.
 
 ```bash
 git clone https://github.com/Plumix-Net/Plumix.git

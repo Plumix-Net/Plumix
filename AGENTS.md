@@ -7,7 +7,7 @@ normative may live only there.
 
 ## Project Snapshot
 
-- Platform: .NET 10
+- Platform: .NET 11
 - UI stack: Avalonia
 - Purpose: Flutter-like widget/rendering layer implemented in C#
 - Main library: `src/Plumix`
@@ -76,8 +76,9 @@ normative may live only there.
 
 ## Environment Requirements
 
-- .NET SDK 10 preview (projects target `net10.0` and platform-specific TFMs).
-- Avalonia tooling/workloads for browser/mobile targets where applicable.
+- .NET SDK 11 (projects target `net11.0` and platform-specific TFMs).
+- Avalonia tooling/workloads for browser/mobile targets where applicable; Android builds need JDK 17+
+  (`JavaSdkDirectory` selects it), iOS builds need Xcode 27.2.
 - Python 3 for `scripts/generate_port_map.py` and `scripts/generate_keyboard_keys.py`.
 
 ## Agent Tooling

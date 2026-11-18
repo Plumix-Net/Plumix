@@ -8,6 +8,9 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased]
+- Breaking: all packages target .NET 11 (`net11.0`, `net11.0-android`); consumers need the .NET 11 SDK.
+- Breaking: minimum Android is API 24 and the iOS sample's minimum is 15.0, as the .NET 11 workloads require.
+- iOS sample declares a `UIApplicationSceneManifest`, which apps built with the iOS 27 SDK must have.
 - Android: a text field node carries "label, hint" as hint text, not a nameless EditText (BaseRoleConfigurator.java).
 - Host keeps the shown frame when a scene only re-adds retained layers: an idle iOS caret no longer redraws at 60 Hz.
 - Breaking: a Dart-shaped `EdgeInsets` replaces Avalonia `Thickness` in every signature (edge_insets.dart).

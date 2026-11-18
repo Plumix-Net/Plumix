@@ -134,7 +134,7 @@ internal static class AndroidPlatformPlugin
         return ToFrameworkLocale(supported[0]);
     }
 
-    // The configuration's locale list; Android 6 has a single locale.
+    // The configuration's locale list.
     private static List<JavaLocale> ReadPreferredLocales(Configuration? configuration)
     {
         List<JavaLocale> locales = [];
@@ -143,25 +143,13 @@ internal static class AndroidPlatformPlugin
             return locales;
         }
 
-        if (OperatingSystem.IsAndroidVersionAtLeast(24))
+        LocaleList localeList = configuration.Locales;
+        for (int index = 0; index < localeList.Size(); index++)
         {
-            LocaleList localeList = configuration.Locales;
-            for (int index = 0; index < localeList.Size(); index++)
-            {
-                if (localeList.Get(index) is { } locale)
-                {
-                    locales.Add(locale);
-                }
-            }
-        }
-        else
-        {
-#pragma warning disable CA1422 // Configuration.locale is the API 23 source of the locale.
-            if (configuration.Locale is { } locale)
+            if (localeList.Get(index) is { } locale)
             {
                 locales.Add(locale);
             }
-#pragma warning restore CA1422
         }
 
         return locales;

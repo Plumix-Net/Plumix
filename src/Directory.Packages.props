@@ -34,7 +34,7 @@
     <PackageVersion Include="Plumix.Bloc" Version="0.3.0-alpha.3" />
     <PackageVersion Include="MaterialTheming" Version="2.2.2" />
     <!-- F# projects: with CPM the F# SDK disables the implicit FSharp.Core reference -->
-    <PackageVersion Include="FSharp.Core" Version="10.0.103" />
+    <PackageVersion Include="FSharp.Core" Version="11.0.101" />
     <PackageVersion Include="Elmish" Version="5.0.2" />
     <PackageVersion Include="Xamarin.AndroidX.Core.SplashScreen" Version="1.2.0.2" />
     <!-- Tests -->
