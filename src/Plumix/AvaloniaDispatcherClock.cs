@@ -12,12 +12,15 @@ using Avalonia.Threading;
 // not yet due and arms it again, so every timer busy-spins the main looper for that skew before it
 // fires. A 16 ms frame timer then never lets the looper go idle, and Avalonia's render pass, which it
 // moves to Input priority after a second without idle time, never runs again.
+//
+// Avalonia 12.1.6 has the upstream fix (AvaloniaUI/Avalonia#22496): `Dispatcher.Now` is the
+// implementation's clock plus `_clockOffset`, and due times are converted back when they are armed.
+// The two clocks still read differently there, on purpose, so nothing may be re-pointed.
 
 namespace Plumix;
 
 /// <summary>
-/// Makes Avalonia's UI-thread dispatcher read its timers' time from its platform implementation's
-/// clock, the one the platform arms them on.
+/// Makes sure Avalonia's UI-thread dispatcher arms its timers on its platform implementation's clock.
 /// </summary>
 internal static class AvaloniaDispatcherClock
 {
@@ -36,14 +39,20 @@ internal static class AvaloniaDispatcherClock
     }
 
     /// <summary>
-    /// Re-points <paramref name="dispatcher"/>'s clock at its platform implementation's; returns whether
-    /// it did. On an Avalonia without the defect the two are already the same clock, and one whose
-    /// private members changed is left as it is.
+    /// Re-points <paramref name="dispatcher"/>'s clock at its platform implementation's where Avalonia
+    /// has the defect; returns whether its timers are now armed on the implementation's clock. An
+    /// Avalonia with the fix is left as it is, and so is one whose private members are unknown, which
+    /// returns <see langword="false"/>.
     /// </summary>
     [DynamicDependency(DynamicallyAccessedMemberTypes.NonPublicFields, typeof(Dispatcher))]
     internal static bool Synchronize(Dispatcher dispatcher)
     {
         const BindingFlags Instance = BindingFlags.Instance | BindingFlags.NonPublic;
+        if (typeof(Dispatcher).GetField("_clockOffset", Instance)?.FieldType == typeof(long))
+        {
+            return true;
+        }
+
         FieldInfo? timeProviderField = typeof(Dispatcher).GetField("_timeProvider", Instance);
         FieldInfo? implField = typeof(Dispatcher).GetField("_impl", Instance);
         if (timeProviderField?.FieldType != typeof(Func<long>)
