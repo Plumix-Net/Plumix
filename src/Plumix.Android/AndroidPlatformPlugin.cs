@@ -3,13 +3,14 @@ using Android.Content;
 using Android.Content.Res;
 using Android.OS;
 using Android.Views;
+using AndroidX.Core.View;
 using Plumix.UI;
 using JavaLocale = Java.Util.Locale;
 using Locale = Plumix.Widgets.Locale;
 
 // C#-only host infrastructure parity sources:
 // flutter/engine/src/flutter/shell/platform/android/io/flutter/plugin/platform/PlatformPlugin.java
-// (playSystemSound, vibrateHapticFeedback) and
+// (playSystemSound, vibrateHapticFeedback, setSystemChromeSystemUIOverlayStyle) and
 // flutter/engine/src/flutter/shell/platform/android/io/flutter/plugin/localization/LocalizationPlugin.java
 // (resolveNativeLocale) with FlutterJNI.computePlatformResolvedLocale's conversions.
 
@@ -57,6 +58,76 @@ internal static class AndroidPlatformPlugin
             view.PerformHapticFeedback(feedback);
         }
     }
+
+    /// <summary>
+    /// <c>PlatformPlugin.setSystemChromeSystemUIOverlayStyle</c>: the window draws its own system bar
+    /// backgrounds in the style's colours, icon brightness and contrast enforcement (each only when set).
+    /// </summary>
+    /// <remarks>
+    /// Flutter clears <c>FLAG_TRANSLUCENT_STATUS</c>/<c>FLAG_TRANSLUCENT_NAVIGATION</c> below API 30 only,
+    /// because nothing else sets them; Avalonia's insets manager adds both for an edge-to-edge window below
+    /// API 35, and those translucent bars draw a grey scrim over a transparent style, so they are cleared on
+    /// every version that still honours them (the edge-to-edge layout comes from the decor-fits flag).
+    /// </remarks>
+    public static void SetSystemUIOverlayStyle(Activity activity, SystemUiOverlayStyle style)
+    {
+        if (activity.Window is not { } window || window.DecorView is not { } view)
+        {
+            return;
+        }
+
+        var controller = new WindowInsetsControllerCompat(window, view);
+        bool api35 = OperatingSystem.IsAndroidVersionAtLeast(35);
+        if (!api35)
+        {
+            window.AddFlags(WindowManagerFlags.DrawsSystemBarBackgrounds);
+            window.ClearFlags(WindowManagerFlags.TranslucentStatus | WindowManagerFlags.TranslucentNavigation);
+        }
+
+        if (style.StatusBarIconBrightness is { } statusIcons)
+        {
+            controller.AppearanceLightStatusBars = statusIcons == Brightness.Dark;
+        }
+
+        if (style.StatusBarColor is { } statusBarColor && !api35)
+        {
+            window.SetStatusBarColor(ToAndroidColor(statusBarColor));
+        }
+
+        if (style.SystemStatusBarContrastEnforced is { } statusContrast && OperatingSystem.IsAndroidVersionAtLeast(29))
+        {
+            window.StatusBarContrastEnforced = statusContrast;
+        }
+
+        if (OperatingSystem.IsAndroidVersionAtLeast(26))
+        {
+            if (style.SystemNavigationBarIconBrightness is { } navigationIcons)
+            {
+                controller.AppearanceLightNavigationBars = navigationIcons == Brightness.Dark;
+            }
+
+            if (style.SystemNavigationBarColor is { } navigationBarColor && !api35)
+            {
+                window.SetNavigationBarColor(ToAndroidColor(navigationBarColor));
+            }
+        }
+
+        if (style.SystemNavigationBarDividerColor is { } dividerColor
+            && OperatingSystem.IsAndroidVersionAtLeast(28)
+            && !api35)
+        {
+            window.NavigationBarDividerColor = ToAndroidColor(dividerColor);
+        }
+
+        if (style.SystemNavigationBarContrastEnforced is { } navigationContrast
+            && OperatingSystem.IsAndroidVersionAtLeast(29))
+        {
+            window.NavigationBarContrastEnforced = navigationContrast;
+        }
+    }
+
+    private static global::Android.Graphics.Color ToAndroidColor(Color color) =>
+        new(unchecked((int)color.ToARGB32()));
 
     /// <summary>
     /// <c>LocalizationPlugin.resolveNativeLocale</c>: the supported locale that best matches the

@@ -58,6 +58,19 @@ public partial class PlumixHost
     public static Action<string?>? HapticFeedbackHandler { get; set; }
 
     /// <summary>
+    /// The platform's answer to <c>SystemChrome.setSystemUIOverlayStyle</c>; null where the platform host
+    /// installs none.
+    /// </summary>
+    /// <remarks>
+    /// The engine's <c>PlatformPlugin.setSystemChromeSystemUIOverlayStyle</c>: the Android embedder
+    /// (<see cref="AndroidActivityDelegate.SetSystemUIOverlayStyle"/> installs it) styles the Activity's
+    /// window itself. It runs after the host has handed Avalonia's insets manager the edge-to-edge
+    /// preference, so it has the last word on the window flags. Without a handler, the host only sets
+    /// the insets manager's bar colour and theme.
+    /// </remarks>
+    public static Action<SystemUiOverlayStyle>? SystemUiOverlayStyleHandler { get; set; }
+
+    /// <summary>
     /// Reports the accessibility features an embedder reads from its platform, and sends the combined
     /// bit set through <see cref="PlatformDispatcher.UpdateAccessibilityFeatures"/>.
     /// </summary>
@@ -85,6 +98,7 @@ public partial class PlumixHost
         SystemNavigatorPopHandler = null;
         SystemSoundHandler = null;
         HapticFeedbackHandler = null;
+        SystemUiOverlayStyleHandler = null;
         s_pendingKeyPopRoutes = 0;
         s_platformAccessibilityFeatures = 0;
         s_platformAccessibilityFeaturesMask = 0;

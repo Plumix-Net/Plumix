@@ -90,6 +90,12 @@ public sealed class AndroidActivityDelegate
     public Action<string?>? VibrateHapticFeedback { get; set; }
 
     /// <summary>
+    /// The Activity's answer to <c>SystemChrome.setSystemUIOverlayStyle</c>:
+    /// <c>PlatformPlugin.setSystemChromeSystemUIOverlayStyle</c>, which styles the window's system bars.
+    /// </summary>
+    public Action<SystemUiOverlayStyle>? SetSystemUIOverlayStyle { get; set; }
+
+    /// <summary>
     /// The Activity's locale resolution, which <see cref="PlatformDispatcher.ComputePlatformResolvedLocale"/>
     /// asks: <c>LocalizationPlugin.resolveNativeLocale</c> over the configuration's locale list.
     /// </summary>
@@ -114,6 +120,7 @@ public sealed class AndroidActivityDelegate
         PlumixHost.SystemNavigatorPopHandler = HandleSystemNavigatorPop;
         PlumixHost.SystemSoundHandler = HandleSystemSound;
         PlumixHost.HapticFeedbackHandler = HandleHapticFeedback;
+        PlumixHost.SystemUiOverlayStyleHandler = HandleSystemUiOverlayStyle;
         PlatformDispatcher.Instance.PlatformLocaleResolver = HandleResolveLocale;
         if (PlumixHost.ReportedFrameworkHandlesBack is { } frameworkHandlesBack)
         {
@@ -152,6 +159,11 @@ public sealed class AndroidActivityDelegate
         if (ReferenceEquals(PlumixHost.HapticFeedbackHandler?.Target, this))
         {
             PlumixHost.HapticFeedbackHandler = null;
+        }
+
+        if (ReferenceEquals(PlumixHost.SystemUiOverlayStyleHandler?.Target, this))
+        {
+            PlumixHost.SystemUiOverlayStyleHandler = null;
         }
 
         if (ReferenceEquals(PlatformDispatcher.Instance.PlatformLocaleResolver?.Target, this))
@@ -316,6 +328,8 @@ public sealed class AndroidActivityDelegate
     private void HandleSystemSound(SystemSoundType type) => PlaySystemSound?.Invoke(type);
 
     private void HandleHapticFeedback(string? type) => VibrateHapticFeedback?.Invoke(type);
+
+    private void HandleSystemUiOverlayStyle(SystemUiOverlayStyle style) => SetSystemUIOverlayStyle?.Invoke(style);
 
     private Locale? HandleResolveLocale(IReadOnlyList<Locale> supportedLocales) =>
         ResolveLocale?.Invoke(supportedLocales);

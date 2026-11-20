@@ -70,6 +70,40 @@ public sealed class PlumixHostPlatformPluginTests : IDisposable
     }
 
     [Fact]
+    public void SetSystemUIOverlayStyle_ReachesTheInstalledHandlerWithTheDecodedStyle()
+    {
+        var styles = new List<SystemUiOverlayStyle>();
+        PlumixHost.SystemUiOverlayStyleHandler = styles.Add;
+        var host = new TestPlumixHost();
+        host.AttachPlatformChannelHandler();
+        try
+        {
+            var style = new SystemUiOverlayStyle(
+                statusBarColor: new Color(0x00000000),
+                systemNavigationBarColor: new Color(0x00000000),
+                statusBarIconBrightness: Brightness.Dark,
+                systemNavigationBarContrastEnforced: false);
+            SystemChannels.Platform
+                .InvokeMethod<object>("SystemChrome.setSystemUIOverlayStyle", style.ToMap())
+                .GetAwaiter()
+                .GetResult();
+
+            Assert.Equal([style], styles);
+        }
+        finally
+        {
+            host.DetachPlatformChannelHandler();
+        }
+    }
+
+    // Flutter paints its own focus highlights; the theme's focus-visible adorner would frame the view.
+    [Fact]
+    public void Host_HasNoThemeFocusAdorner()
+    {
+        Assert.Null(new TestPlumixHost().FocusAdorner);
+    }
+
+    [Fact]
     public void SystemNavigatorPop_ReachesTheInstalledHandlerWithAnimated()
     {
         var pops = new List<bool>();
@@ -195,6 +229,7 @@ public sealed class PlumixHostPlatformPluginTests : IDisposable
         var sounds = new List<SystemSoundType>();
         var haptics = new List<string?>();
         var resolver = new Locale("fr", "CA");
+        var styles = new List<SystemUiOverlayStyle>();
         int pops = 0;
         AndroidActivityDelegate activity = new(
             new AndroidRestorationChannel(true, new PlatformBinaryMessenger()),
@@ -204,6 +239,7 @@ public sealed class PlumixHostPlatformPluginTests : IDisposable
             VibrateHapticFeedback = haptics.Add,
             ResolveLocale = _ => resolver,
             PopSystemNavigator = () => pops++,
+            SetSystemUIOverlayStyle = styles.Add,
         };
         activity.OnCreate(null);
         var host = new TestPlumixHost();
@@ -217,11 +253,13 @@ public sealed class PlumixHostPlatformPluginTests : IDisposable
             Assert.Equal([SystemSoundType.Click], sounds);
             Assert.Equal(["HapticFeedbackType.lightImpact"], haptics);
             Assert.Equal(1, pops);
+            Assert.Same(PlumixHost.SystemUiOverlayStyleHandler?.Target, activity);
             Assert.Same(resolver, PlatformDispatcher.Instance.ComputePlatformResolvedLocale([new Locale("fr")]));
 
             activity.OnDestroy();
             Assert.Null(PlumixHost.SystemSoundHandler);
             Assert.Null(PlumixHost.HapticFeedbackHandler);
+            Assert.Null(PlumixHost.SystemUiOverlayStyleHandler);
             Assert.Null(PlumixHost.SystemNavigatorPopHandler);
             Assert.Null(PlatformDispatcher.Instance.ComputePlatformResolvedLocale([new Locale("fr")]));
         }

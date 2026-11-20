@@ -49,6 +49,50 @@ public sealed class SceneRasterizerTests
     }
 
     [Fact]
+    public void ClipRRectLayer_ScalesOversizedRadiiUniformly()
+    {
+        // BorderRadius.circular(100) on a 40x8 rect is a stadium (SkRRect scales both radii to 4), not an
+        // ellipse with radii (20, 4): the pixel at (2, 1) lies inside the first and outside the second.
+        var root = new OffsetLayer();
+        var clip = new ClipRRectLayer
+        {
+            ClipRRect = RRect.FromRectAndRadius(new Rect(0, 0, 40, 8), Radius.Circular(100)),
+        };
+        clip.Append(new PictureLayer(default) { Picture = SceneBuilderTests.DrawPaintPicture(Red) });
+        root.Append(clip);
+
+        Bitmap image = ToImage(root, 40, 8);
+
+        Assert.InRange(RasterBackend.PixelAt(image, 2, 1).A, 200, 255);
+        Assert.Equal(0xFF, RasterBackend.PixelAt(image, 20, 0).A);
+        Assert.Equal(0, RasterBackend.PixelAt(image, 0, 0).A);
+    }
+
+    [Fact]
+    public void ImageFilterLayer_MatrixFilterDrawsChildrenAtDeviceResolution()
+    {
+        // A 1.5 px wide rect stretched 2x horizontally under a 4x device transform covers device pixels
+        // 0..12 with a hard edge. Resampling a 1 px-per-logical-pixel raster would smear the edge over
+        // device pixels 8..12 (what blurred text under the stretch overscroll).
+        var root = new TransformLayer(Matrix4.Diagonal3Values(4.0, 4.0, 1.0));
+        var filter = new ImageFilterLayer(
+            new ImageFilter.Matrix(Matrix4.Diagonal3Values(2.0, 1.0, 1.0).Storage, FilterQuality.Medium))
+        {
+            FilterBounds = new Rect(0, 0, 10, 2),
+        };
+        filter.Append(new PictureLayer(default)
+        {
+            Picture = SceneBuilderTests.DrawRectPicture(new Rect(0, 0, 1.5, 2), Red),
+        });
+        root.Append(filter);
+
+        Bitmap image = ToImage(root, 40, 8);
+
+        Assert.Equal(((byte)0xFF, (byte)0, (byte)0, (byte)0xFF), RasterBackend.PixelAt(image, 11, 4));
+        Assert.Equal(0, RasterBackend.PixelAt(image, 12, 4).A);
+    }
+
+    [Fact]
     public void OpacityLayer_MultipliesItsAlpha()
     {
         var root = new OffsetLayer();

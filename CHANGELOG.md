@@ -8,6 +8,10 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased]
+- Android: `setSystemUIOverlayStyle` styles the window, so bars are transparent below API 35 (PlatformPlugin.java).
+- Host has no theme focus adorner: Fluent's focus-visible frame no longer outlines the whole view on Android 14.
+- `ImageFilter.matrix` layers draw children through the matrix: stretch overscroll no longer blurs text (layer.dart).
+- Rounded clips scale oversized radii uniformly like SkRRect: `circular(100)` on a thin bar is a stadium (rrect).
 
 ## v1.0.0-preview.2 — 2026-11-20
 - Paragraph glyphs paint with grayscale anti-aliasing like SkParagraph, never LCD subpixel text (SkParagraph TextStyle).

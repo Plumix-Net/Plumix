@@ -353,6 +353,18 @@ internal sealed class ImageFilterFlowLayer(ImageFilter filter, Point offset, Rec
 
     public override void Paint(FlowPaintContext context)
     {
+        if (Filter is ImageFilter.Matrix matrix)
+        {
+            // A matrix filter only moves pixels, so the children are drawn through the matrix at device
+            // resolution instead of through the CPU backend, which samples a 1 px-per-logical-pixel raster:
+            // the stretch overscroll (Transform with a filter quality) would otherwise blur all text by the
+            // device pixel ratio. Vectors stay sharp where Skia resamples the layer (DIVERGENCES.md).
+            IReadOnlyList<double> m = matrix.Values;
+            var transform = new Matrix(m[0], m[1], m[3], m[4], m[5], m[7], m[12], m[13], m[15]);
+            PaintChildrenTransformed(context, transform * Matrix.CreateTranslation(Offset.X, Offset.Y));
+            return;
+        }
+
         if (Bounds is not { } bounds)
         {
             PaintChildrenTransformed(context, Matrix.CreateTranslation(Offset.X, Offset.Y));
@@ -1095,12 +1107,19 @@ internal static class SceneRasterizer
         Rect rect,
         BorderRadius borderRadius)
     {
-        double maxX = Math.Max(0.0, rect.Width / 2.0);
-        double maxY = Math.Max(0.0, rect.Height / 2.0);
-        Radius topLeft = Layer.ClampRadius(borderRadius.TopLeftRadius, maxX, maxY);
-        Radius topRight = Layer.ClampRadius(borderRadius.TopRightRadius, maxX, maxY);
-        Radius bottomRight = Layer.ClampRadius(borderRadius.BottomRightRadius, maxX, maxY);
-        Radius bottomLeft = Layer.ClampRadius(borderRadius.BottomLeftRadius, maxX, maxY);
+        // SkRRect::setRectRadii: oversized radii shrink by one factor for every corner, keeping each corner's
+        // aspect ratio — BorderRadius.circular(100) on an 8 px tall bar is a stadium, not a lens-shaped ellipse
+        // that clamping X to half the width and Y to half the height would give.
+        RRect scaled = new RRect(
+            rect,
+            ClipRadius(borderRadius.TopLeftRadius),
+            ClipRadius(borderRadius.TopRightRadius),
+            ClipRadius(borderRadius.BottomRightRadius),
+            ClipRadius(borderRadius.BottomLeftRadius)).ScaleRadii();
+        Radius topLeft = scaled.TopLeft;
+        Radius topRight = scaled.TopRight;
+        Radius bottomRight = scaled.BottomRight;
+        Radius bottomLeft = scaled.BottomLeft;
         if (Capturing)
         {
             double fallbackX = Math.Max(
@@ -1119,4 +1138,9 @@ internal static class SceneRasterizer
             new Vector(bottomRight.X, bottomRight.Y),
             new Vector(bottomLeft.X, bottomLeft.Y)));
     }
+
+    private static Radius ClipRadius(Radius radius) =>
+        radius.X > 0.0 && radius.Y > 0.0 && double.IsFinite(radius.X) && double.IsFinite(radius.Y)
+            ? radius
+            : Radius.Zero;
 }

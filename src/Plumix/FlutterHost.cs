@@ -218,6 +218,9 @@ public partial class PlumixHost : Control, ICustomHitTest
 
         ClipToBounds = true;
         Focusable = true;
+        // The framework paints its own focus highlights; the theme's focus-visible adorner (Fluent: 2 dp
+        // black + 1 dp white) would frame the whole view, as it did on Android 14 after startup.
+        FocusAdorner = null;
     }
 
     internal RenderBox? RootChild => _root.Child;
@@ -1652,16 +1655,29 @@ public partial class PlumixHost : Control, ICustomHitTest
 
     private void ApplySystemUiOverlayStyle()
     {
-        if (_insetsManager == null)
+        var style = _currentSystemUiOverlayStyle;
+        if (_insetsManager != null)
         {
-            return;
+            ApplyInsetsManagerSystemUiOverlayStyle(_insetsManager, style);
         }
 
-        var style = _currentSystemUiOverlayStyle;
-        bool shouldDisplayEdgeToEdge = ShouldDisplayEdgeToEdge(style);
-        if (_insetsManager.DisplayEdgeToEdgePreference != shouldDisplayEdgeToEdge)
+        // The platform's own answer runs last, over whatever the insets manager did to the window.
+        if (SystemUiOverlayStyleHandler is { } setSystemUiOverlayStyle)
         {
-            _insetsManager.DisplayEdgeToEdgePreference = shouldDisplayEdgeToEdge;
+            setSystemUiOverlayStyle(style);
+        }
+        else if (_insetsManager != null)
+        {
+            TryApplyAndroidSystemBarColors(_insetsManager, style.StatusBarColor, style.SystemNavigationBarColor);
+        }
+    }
+
+    private void ApplyInsetsManagerSystemUiOverlayStyle(IInsetsManager insetsManager, SystemUiOverlayStyle style)
+    {
+        bool shouldDisplayEdgeToEdge = ShouldDisplayEdgeToEdge(style);
+        if (insetsManager.DisplayEdgeToEdgePreference != shouldDisplayEdgeToEdge)
+        {
+            insetsManager.DisplayEdgeToEdgePreference = shouldDisplayEdgeToEdge;
         }
 
         var fallbackSystemBarColor = style.StatusBarColor ?? style.SystemNavigationBarColor;
@@ -1672,7 +1688,7 @@ public partial class PlumixHost : Control, ICustomHitTest
                 TopLevel.SetSystemBarColor(_attachedTopLevel, new SolidColorBrush(fallbackSystemBarColor!));
             }
 
-            _insetsManager.SystemBarColor = fallbackSystemBarColor!;
+            insetsManager.SystemBarColor = fallbackSystemBarColor!;
         }
 
         var iconBrightness = style.StatusBarIconBrightness ?? style.SystemNavigationBarIconBrightness;
@@ -1681,10 +1697,8 @@ public partial class PlumixHost : Control, ICustomHitTest
             var systemBarTheme = iconBrightness.Value == Brightness.Dark
                 ? SystemBarTheme.Light
                 : SystemBarTheme.Dark;
-            TrySetInsetsManagerSystemBarTheme(_insetsManager, systemBarTheme);
+            TrySetInsetsManagerSystemBarTheme(insetsManager, systemBarTheme);
         }
-
-        TryApplyAndroidSystemBarColors(_insetsManager, style.StatusBarColor, style.SystemNavigationBarColor);
     }
 
     private static bool ShouldDisplayEdgeToEdge(SystemUiOverlayStyle style)

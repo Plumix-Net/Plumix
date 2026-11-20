@@ -45,9 +45,10 @@ public class PlumixMainActivity : AvaloniaMainActivity
         // PlatformPlugin.popSystemNavigator never reaches an OnBackPressedDispatcher. Going through
         // Avalonia's dispatcher here would hand the press back to the framework.
         Delegate.PopSystemNavigator = Finish;
-        // PlatformPlugin's sound and haptics over the decor view, LocalizationPlugin's locale resolution.
+        // PlatformPlugin's sound, haptics and system bar style over the window, LocalizationPlugin's locale resolution.
         Delegate.PlaySystemSound = type => AndroidPlatformPlugin.PlaySystemSound(this, type);
         Delegate.VibrateHapticFeedback = type => AndroidPlatformPlugin.VibrateHapticFeedback(this, type);
+        Delegate.SetSystemUIOverlayStyle = style => AndroidPlatformPlugin.SetSystemUIOverlayStyle(this, style);
         Delegate.ResolveLocale = supported => AndroidPlatformPlugin.ResolveNativeLocale(this, supported);
         if (OperatingSystem.IsAndroidVersionAtLeast(34))
         {
