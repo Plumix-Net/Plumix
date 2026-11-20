@@ -8,6 +8,8 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased]
+
+## v1.0.0-preview.2 — 2026-11-20
 - Paragraph glyphs paint with grayscale anti-aliasing like SkParagraph, never LCD subpixel text (SkParagraph TextStyle).
 - Host: the dispatcher clock workaround recognizes the upstream fix in Avalonia 12.1.6 and leaves it alone.
 - Breaking: all packages target .NET 11 (`net11.0`, `net11.0-android`); consumers need the .NET 11 SDK.
@@ -15,6 +17,8 @@ Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 - iOS sample declares a `UIApplicationSceneManifest`, which apps built with the iOS 27 SDK must have.
 - Android: a text field node carries "label, hint" as hint text, not a nameless EditText (BaseRoleConfigurator.java).
 - Host keeps the shown frame when a scene only re-adds retained layers: an idle iOS caret no longer redraws at 60 Hz.
+
+## v1.0.0-preview.1 — 2026-10-28
 - Breaking: a Dart-shaped `EdgeInsets` replaces Avalonia `Thickness` in every signature (edge_insets.dart).
 - Breaking: `EdgeInsetsGeometry.Resolve` returns `EdgeInsets`; `RRect` edge helpers move to it (edge_insets.dart).
 - Breaking: scroll-view, chip, app-bar, card, FAB, nav and `StyleFrom` paddings are `EdgeInsetsGeometry` (material_ui).
@@ -93,6 +97,8 @@ Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 - Hosts report the OS's ordered preferred languages: Android, iOS, macOS, Windows, Linux (C#-only).
 - Android reports `ViewConfiguration` touch slop as the view's `GestureSettings` (gesture_settings.dart).
 - Browser host ports the web engine's typography observer: text scale and text spacing overrides (C#-only).
+
+## v0.4.0-beta.4 — 2026-10-25
 - Hosts point Avalonia's dispatcher at its platform clock; Android timers busy-spun and stalled rendering (C#-only).
 - `MediaQuery.textScaler` follows the system font size (`PlatformDispatcher.TextScaleFactor`, platform_dispatcher.dart).
 - Automation peers report a selected node without a tap action; tappable selectable nodes stay invocable (C#-only).
