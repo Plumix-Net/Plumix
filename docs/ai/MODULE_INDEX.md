@@ -143,7 +143,7 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
 - Material scrollbars enter through `src/Plumix.Material/Scrollbar.cs` + `ScrollbarTheme.cs`; the painter, the `RawScrollbarState` interaction API and its thumb/track recognizers live in core `Widgets/Scrollbar.cs`, with adaptive defaults in `src/Plumix.Cupertino/CupertinoScrollbar.cs` and focused coverage in `MaterialScrollbarTests.cs`.
 - Windowing (experimental, gated by `Foundation/Features.cs`) enters through core `Widgets/Windowing.cs` (controllers,
   owner) + `WindowingWidgets.cs` (window widgets, `WindowScope`, `WindowRegistry`/`WindowManager`) +
-  `WindowPositioner.cs` and `Widgets/RawDialog.cs` (`showRawDialog`); the desktop owner is `src/Plumix/AvaloniaWindowing.cs`,
+  `WindowPositioner.cs` and `Widgets/RawDialog.cs` (`showRawDialog`); the desktop owner is `src/Plumix.Avalonia/AvaloniaWindowing.cs`,
   with coverage in `WindowingTests.cs` and `WindowPositionerTests.cs`.
 - Reorderable lists enter through core `Widgets/ReorderableList.cs` and Material `ReorderableListView.cs`; inherited
   and explicit proxy bounds come from core `Widgets/DragBoundary.cs`. Gesture-arena drag ownership, keyed sliver
@@ -242,14 +242,14 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
 
 - Goal: frame scheduling, pipeline wiring, Avalonia host integration.
 - Read First:
-  - `src/Plumix/FlutterHost.cs` (engine embedder: reports metrics/brightness/focus to `PlatformDispatcher`, rasterizes
+  - `src/Plumix.Avalonia/FlutterHost.cs` (engine embedder: reports metrics/brightness/focus to `PlatformDispatcher`, rasterizes
     the scene `FlutterView.Render` hands it; never lays out or paints), `src/Plumix/UI/FrameTimingsRecorder.cs`
     (engine-side `FrameTiming` recording and batching), `src/Plumix/HotReload.cs` (.NET deltas →
     `BindingBase.ReassembleApplication`)
-  - `src/Plumix/AndroidActivityDelegate.cs` (Activity lifecycle/restoration/back forwarding) over
+  - `src/Plumix.Avalonia/AndroidActivityDelegate.cs` (Activity lifecycle/restoration/back forwarding) over
     `src/Plumix/AndroidLifecycleChannel.cs` and `src/Plumix/AndroidRestorationChannel.cs`;
     `src/Plumix.Android/PlumixMainActivity.cs` is its Android Activity
-  - `src/Plumix/WidgetHost.cs`
+  - `src/Plumix.Avalonia/WidgetHost.cs`
   - `src/Plumix/Widgets/AppLifecycleListener.cs`
   - `src/Plumix/UI/AppLifecycle.cs`
   - `src/Plumix/Widgets/StatusTransitionWidget.cs`
@@ -655,7 +655,7 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
 - Read First:
   - `src/Plumix/Accessibility/AccessibilityBridge.cs` (tree mirror, events, actions, `flutter/accessibility`)
   - `src/Plumix/Accessibility/AccessibilityNode.cs` (desktop role ladder, states, bounds)
-  - `src/Plumix/Accessibility/SemanticsAutomationPeers.cs` (Avalonia peers: Windows, macOS, Linux, Android)
+  - `src/Plumix.Avalonia/Accessibility/SemanticsAutomationPeers.cs` (Avalonia peers: Windows, macOS, Linux, Android)
   - `src/Plumix/Accessibility/IOSAccessibility.cs` + `src/Sample/Plumix.iOS/IOSAccessibilityBridge.cs`
   - `src/Plumix/Accessibility/WebSemantics.cs` + `src/Sample/Plumix.Browser/BrowserAccessibilityBridge.cs`,
     `wwwroot/plumix-semantics.js`

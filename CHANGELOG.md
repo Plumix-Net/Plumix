@@ -8,6 +8,25 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased]
+- Breaking: Avalonia host moves to the new `Plumix.Avalonia` package; reference it for `PlumixApplication`/`PlumixHost`.
+- Breaking: `PlumixExtensions.Run(widget, lifetime)` is `PlumixApplication.Run`; `RunApp`/`RunWidget` stay in core.
+- Breaking: `Offset`, `Size`, `Rect` are framework structs with Dart members and `Dx`/`Dy` (geometry.dart).
+- Breaking: `Rect` keeps four edges; `Contains` excludes right/bottom; `Intersect`/`Deflate` unclamped (geometry.dart).
+- Breaking: `DartGeometry` and geometry extension helpers removed; factories are members, `Offset & Size` builds a Rect.
+- Breaking: geometry and `Radius` `==` follow Dart (NaN unequal to itself); `Equals`/`GetHashCode` stay reflexive.
+- Breaking: `FontWeight`/`FontStyle` are dart:ui types; `Medium`/`SemiBold`-style names are `W500`/`W600` (text.dart).
+- Breaking: font families are strings in text/strut/paragraph styles, `ThemeData`, `TextTheme` (text_style.dart).
+- `FontLoader` and `PlatformFonts.LoadFontFromList` register font bytes under a family at run time (font_loader.dart).
+- Breaking: `Icon` finds its font via `fontPackage`; `IconFontRegistry`, `Icon.ResolveFontFamily` removed (icon.dart).
+- `PlatformAssetBundle` resolves `packages/<assembly>/<path>` keys; `AssetBundle.LoadBytesAsync` reads bytes.
+- Breaking: `RasterImage` (dart:ui `Image`) replaces `IImage`/`Bitmap` in image, canvas and layer APIs (painting.dart).
+- Breaking: image `ColorBlendMode` and `ColorFilter.Mode` take `BlendMode`; `ColorFilter.Mode.FlutterBlendMode` removed.
+- Breaking: `Shader` replaces `IBrush` in `Gradient.CreateShader`, `Paint.Shader`, `ShaderCallback` and shader masks.
+- Breaking: `Canvas` brush/pen/geometry overloads, `ClipGeometryLayer`, `PushClipGeometry`, `ToPen` are internal.
+- Breaking: `NotchedShape.GetOuterPath` returns `Path` (notched_shapes.dart); `GradientTransform` gives `Matrix4`.
+- Breaking: `paintZigZag` takes a `Paint`; `Color`/`EdgeInsets` lose Avalonia conversions (see `AvaloniaInterop`).
+- Breaking: `EngineTexture.Paint` and `Picture.Playback(DrawingContext)` are internal; only hosts add texture kinds.
+- Public API of `Plumix`, `Plumix.Material`, `Plumix.Cupertino` names no Avalonia type (`PublicApiAvaloniaFreeTests`).
 
 ## v1.0.0-preview.4 — 2026-11-20
 - Predictive back pops the route: the user gesture stops only when its settle animation ends (routes.dart).

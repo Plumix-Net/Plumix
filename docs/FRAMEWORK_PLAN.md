@@ -100,6 +100,10 @@ Blockers (all must close):
   closed (met 2026-10-27: state-property slots on `IWidgetStateProperty`, `AnimationController` errors,
   `PipelineManifold`, `Route.BuildPage`, core `Brightness`, `Timer`). Gaps that only add API may land
   in a later minor.
+- The public API of `Plumix`, `Plumix.Material` and `Plumix.Cupertino` names no Avalonia type, so a
+  native host can come later without breaking it (met 2026-11-21: framework `Offset`/`Size`/`Rect`,
+  `FontWeight`/`FontLoader`, `RasterImage`, `Shader`, host package `Plumix.Avalonia`;
+  `PublicApiAvaloniaFreeTests`; migration notes in `docs/MIGRATION.md`).
 
 Release gates (on the commit that gets the tag):
 

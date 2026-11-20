@@ -15,12 +15,16 @@ Allowed dependency direction (mirrors Flutter's `widgets <- cupertino <- materia
 - `Plumix` (core) depends on no other Plumix package.
 - `Plumix.Cupertino` depends only on `Plumix`.
 - `Plumix.Material` depends on `Plumix` and `Plumix.Cupertino` (adaptive controls).
+- `Plumix.Avalonia` (the Avalonia host) depends only on `Plumix`; `Plumix.Android` depends on `Plumix.Avalonia`.
 - `Plumix.Sample` and platform hosts may depend on any of the above.
 - Never introduce a reverse edge (core referencing Material, Cupertino referencing Material). If core needs a Material concept, port the underlying primitive into `Plumix` instead.
 
 ## Public API and Versioning
 
 `Plumix`, `Plumix.Material`, and `Plumix.Cupertino` are published NuGet packages; their public API is a contract.
+
+- No public or protected member of those three packages names a type from an `Avalonia*` assembly
+  (`PublicApiAvaloniaFreeTests`). Backend types stay `internal`; host-facing API goes in `Plumix.Avalonia`.
 
 - Versioning follows SemVer: breaking public API/behavior changes require a major bump; new API is minor; fixes are patch.
 - Breaking changes must be called out explicitly in `CHANGELOG.md` (a `Breaking:` prefix on the entry) — never shipped silently inside a parity pass.

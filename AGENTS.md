@@ -19,6 +19,7 @@ normative may live only there.
 - Build a Flutter-like framework in C# where `Widget`/`Element`/`RenderObject` concepts stay close to Flutter.
 - Keep render object behavior and APIs close enough to Flutter to simplify rewriting controls from Dart to C#.
 - Reuse Avalonia mainly as platform infrastructure: windowing/app host, lifecycle, input plumbing, and drawing backend abstractions.
+- Keep Avalonia types out of the public API of `Plumix`, `Plumix.Material` and `Plumix.Cupertino`; host integration goes in `Plumix.Avalonia`.
 - Keep layout/paint logic in the new framework, not in Avalonia control implementations (except thin host adapters).
 
 ## Expected End State (Definition of Done)
@@ -31,7 +32,10 @@ normative may live only there.
 
 ## Repository Map
 
-- `src/Plumix`: core framework (`Foundation`, `Widgets`, `Rendering`, `UI`, scheduler/ticker pipeline).
+- `src/Plumix`: core framework (`Foundation`, `Widgets`, `Rendering`, `UI`, scheduler/ticker pipeline). Its public API
+  names no Avalonia type (`PublicApiAvaloniaFreeTests`); Avalonia stays an internal backend.
+- `src/Plumix.Avalonia`: the Avalonia host package (`PlumixHost`, `PlumixApplication`, windowing, automation peers,
+  `Plumix.Hosting.AvaloniaInterop` conversions); types keep the `Plumix` namespace.
 - `src/Sample/Plumix.Sample`: shared sample app/widgets.
 - `dart_sample`: reference sample app on real Flutter (Dart), kept in lockstep with `src/Sample/Plumix.Sample`.
 - `src/Sample/Plumix.Desktop`: desktop entry point.

@@ -14,9 +14,9 @@ A C# file whose marker carries a qualifier such as `(reference)`, `(approximate)
 or `(baseline subset)` is shown with that text — the port is not a strict 1:1 port and is a
 candidate for a tightening pass (see the *Ports with a qualified marker* section).
 
-Flutter checkout used for validation: `/Users/egorozh/Plumix-rc-wt/edge-insets/flutter-src`
-`material_ui` package used for validation: version 1.0.0 at `/Users/egorozh/Plumix-rc-wt/edge-insets/material-ui-src`
-`cupertino_ui` package used for validation: version 1.0.0 at `/Users/egorozh/Plumix-rc-wt/edge-insets/cupertino-ui-src`
+Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
+`material_ui` package used for validation: version 1.0.0 at `/Users/egorozh/Plumix/Plumix/material-ui-src`
+`cupertino_ui` package used for validation: version 1.0.0 at `/Users/egorozh/Plumix/Plumix/cupertino-ui-src`
 
 ## Index
 
@@ -76,10 +76,11 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix-rc-wt/edge-insets/f
 | `cupertino_ui/thumb_painter.dart` | `src/Plumix.Cupertino/CupertinoThumbPainter.cs` | — | — |
 | `engine/src/flutter/lib/ui/channel_buffers.dart` | `src/Plumix/UI/ChannelBuffers.cs` | `src/Plumix.Tests/ChannelBuffersDartParityTests.cs` | — |
 | `engine/src/flutter/lib/ui/compositing.dart` | `src/Plumix/UI/Compositing.cs` | `src/Plumix.Tests/CompositingLayerTests.cs` | `dart_sample/lib/demos/general/scene_compositing_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/SceneCompositingDemoPage.cs` |
-| `engine/src/flutter/lib/ui/geometry.dart` | `src/Plumix/Rendering/Decoration.cs`<br>`src/Plumix/UI/DartGeometry.cs`<br>`src/Plumix/UI/Geometry.cs`<br>`src/Plumix/UI/RRect.cs`<br>`src/Plumix/UI/RSTransform.cs`<br>`src/Plumix/UI/RSuperellipse.cs`<br>`src/Plumix/UI/RoundRectGeometry.cs`<br>`src/Plumix/UI/SuperellipseGeometry.cs` | `src/Plumix.Tests/AlignmentGeometryTests.cs`<br>`src/Plumix.Tests/BoxDecorationDartParityTests.cs`<br>`src/Plumix.Tests/DecorationImageDartParityTests.cs`<br>`src/Plumix.Tests/ImageProviderDecorationTests.cs`<br>`src/Plumix.Tests/InputDecorationDartParityTests.cs`<br>`src/Plumix.Tests/MaterialScaffoldGeometryTests.cs`<br>`src/Plumix.Tests/RSuperellipseGeometryTests.cs`<br>`src/Plumix.Tests/ShapeDecorationDartParityTests.cs`<br>`src/Plumix.Tests/SliverGeometryTests.cs`<br>`src/Plumix.Tests/UiGeometryDartParityTests.cs` | — |
+| `engine/src/flutter/lib/ui/geometry.dart` | `src/Plumix/Rendering/Decoration.cs`<br>`src/Plumix/UI/Geometry.cs`<br>`src/Plumix/UI/RRect.cs`<br>`src/Plumix/UI/RSTransform.cs`<br>`src/Plumix/UI/RSuperellipse.cs`<br>`src/Plumix/UI/RoundRectGeometry.cs`<br>`src/Plumix/UI/SuperellipseGeometry.cs` | `src/Plumix.Tests/AlignmentGeometryTests.cs`<br>`src/Plumix.Tests/BoxDecorationDartParityTests.cs`<br>`src/Plumix.Tests/DecorationImageDartParityTests.cs`<br>`src/Plumix.Tests/ImageProviderDecorationTests.cs`<br>`src/Plumix.Tests/InputDecorationDartParityTests.cs`<br>`src/Plumix.Tests/MaterialScaffoldGeometryTests.cs`<br>`src/Plumix.Tests/RSuperellipseGeometryTests.cs`<br>`src/Plumix.Tests/ShapeDecorationDartParityTests.cs`<br>`src/Plumix.Tests/SliverGeometryTests.cs`<br>`src/Plumix.Tests/UiGeometryDartParityTests.cs` | — |
 | `engine/src/flutter/lib/ui/key.dart` | `src/Plumix/UI/Key.cs` | `src/Plumix.Tests/FocusOnKeyDartParityTests.cs`<br>`src/Plumix.Tests/GlobalKeysDuplicatedDartParityTests.cs`<br>`src/Plumix.Tests/GlobalKeysMovingDartParityTests.cs`<br>`src/Plumix.Tests/HardwareKeyboardDartParityTests.cs`<br>`src/Plumix.Tests/HardwareKeyboardTests.cs`<br>`src/Plumix.Tests/HostKeyEventMessageTests.cs`<br>`src/Plumix.Tests/KeyDartParityTests.cs`<br>`src/Plumix.Tests/KeyParityTests.cs`<br>`src/Plumix.Tests/KeyboardListenerTests.cs`<br>`src/Plumix.Tests/KeyboardMapsTests.cs`<br>`src/Plumix.Tests/LayoutBuilderAndGlobalKeysDartParityTests.cs`<br>`src/Plumix.Tests/RawKeyEventDataAppleAndroidDartParityTests.cs`<br>`src/Plumix.Tests/RawKeyEventDataDesktopWebDartParityTests.cs`<br>`src/Plumix.Tests/RawKeyboardDartParityTests.cs` | `dart_sample/lib/demos/general/keyboard_listener_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/KeyboardListenerDemoPage.cs` |
-| `engine/src/flutter/lib/ui/painting.dart` | `src/Plumix/UI/GradientShader.cs`<br>`src/Plumix/UI/Path.cs`<br>`src/Plumix/UI/PathMetrics.cs`<br>`src/Plumix/UI/ShadowDraw.cs`<br>`src/Plumix/UI/ShadowTessellator.cs` | `src/Plumix.Tests/GradientShaderTests.cs`<br>`src/Plumix.Tests/PathDartParityTests.cs` | — |
+| `engine/src/flutter/lib/ui/painting.dart` | `src/Plumix/UI/GradientShader.cs`<br>`src/Plumix/UI/Path.cs`<br>`src/Plumix/UI/PathMetrics.cs`<br>`src/Plumix/UI/RasterImage.cs`<br>`src/Plumix/UI/Shader.cs`<br>`src/Plumix/UI/ShadowDraw.cs`<br>`src/Plumix/UI/ShadowTessellator.cs` | `src/Plumix.Tests/FragmentShaderBackendTests.cs`<br>`src/Plumix.Tests/GradientShaderTests.cs`<br>`src/Plumix.Tests/PathDartParityTests.cs` | — |
 | `engine/src/flutter/lib/ui/platform_dispatcher.dart` | `src/Plumix/UI/ViewPadding.cs` | — | — |
+| `engine/src/flutter/lib/ui/text.dart` | `src/Plumix/UI/FontWeight.cs` | — | — |
 | `engine/src/flutter/lib/ui/window.dart` | `src/Plumix/UI/AccessibilityFeatures.cs`<br>`src/Plumix/UI/Brightness.cs` | `src/Plumix.Tests/AccessibilityFeaturesDartParityTests.cs` | — |
 | `material_ui/about.dart` | `src/Plumix.Material/About.cs` | `src/Plumix.Tests/MaterialAboutTests.cs` | `dart_sample/lib/demos/material/about_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Material/AboutDemoPage.cs` |
 | `material_ui/action_buttons.dart` | `src/Plumix.Material/ActionButtons.cs` | `src/Plumix.Tests/MaterialActionButtonsTests.cs` | `dart_sample/lib/demos/material/action_buttons_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Material/ActionButtonsDemoPage.cs` |
@@ -424,6 +425,7 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix-rc-wt/edge-insets/f
 | `services/binding.dart` | `src/Plumix/UI/BinaryMessenger.cs`<br>`src/Plumix/Widgets/AppLifecycleListener.cs` | `src/Plumix.Tests/AppLifecycleListenerTests.cs` | — |
 | `services/browser_context_menu.dart` | `src/Plumix/UI/BrowserContextMenu.cs` | — | — |
 | `services/clipboard.dart` | `src/Plumix/UI/Clipboard.cs` | `src/Plumix.Tests/ClipboardTests.cs`<br>`src/Plumix.Tests/PlumixHostClipboardTests.cs` | — |
+| `services/font_loader.dart` | `src/Plumix/UI/FontLoader.cs` | `src/Plumix.Tests/FontLoaderTests.cs` | — |
 | `services/haptic_feedback.dart` | `src/Plumix/UI/HapticFeedback.cs` | — | — |
 | `services/hardware_keyboard.dart` | `src/Plumix/UI/HardwareKeyboard.cs`<br>`src/Plumix/UI/KeyEventManager.cs` | `src/Plumix.Tests/HardwareKeyboardDartParityTests.cs`<br>`src/Plumix.Tests/HardwareKeyboardTests.cs` | — |
 | `services/keyboard_key.g.dart` | `src/Plumix/UI/KeyboardKey.cs` | — | — |
@@ -479,7 +481,7 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix-rc-wt/edge-insets/f
 | `widgets/automatic_keep_alive.dart` | `src/Plumix/Widgets/AutomaticKeepAliveClient.cs`<br>`src/Plumix/Widgets/Scroll.cs` | `src/Plumix.Tests/CupertinoScrollbarTests.cs`<br>`src/Plumix.Tests/DraggableScrollableSheetTests.cs`<br>`src/Plumix.Tests/EditableTextScrollingDartParityTests.cs`<br>`src/Plumix.Tests/ListWheelScrollViewTests.cs`<br>`src/Plumix.Tests/MaterialScrollbarTests.cs`<br>`src/Plumix.Tests/NestedScrollViewTests.cs`<br>`src/Plumix.Tests/ScrollActivityTests.cs`<br>`src/Plumix.Tests/ScrollBehaviorParityTests.cs`<br>`src/Plumix.Tests/ScrollDelegateTests.cs`<br>`src/Plumix.Tests/ScrollInfrastructureTests.cs`<br>`src/Plumix.Tests/ScrollMetricsTests.cs`<br>`src/Plumix.Tests/ScrollNotificationObserverTests.cs`<br>`src/Plumix.Tests/ScrollPhysicsTests.cs`<br>`src/Plumix.Tests/ScrollPipelineTests.cs`<br>`src/Plumix.Tests/ScrollSemanticsDartParityTests.cs`<br>`src/Plumix.Tests/ScrollSemanticsTests.cs`<br>`src/Plumix.Tests/ScrollViewTests.cs`<br>`src/Plumix.Tests/ScrollableDartParityTests.cs`<br>`src/Plumix.Tests/ScrollableEnsureVisibleDartParityTests.cs`<br>`src/Plumix.Tests/ScrollableMiscDartParityTests.cs`<br>`src/Plumix.Tests/ScrollableSelectionDartParityTests.cs`<br>`src/Plumix.Tests/ScrollableSelectionTests.cs`<br>`src/Plumix.Tests/ScrollableTests.cs`<br>`src/Plumix.Tests/SingleChildScrollViewTests.cs`<br>`src/Plumix.Tests/TwoDimensionalScrollViewTests.cs`<br>`src/Plumix.Tests/TwoDimensionalScrollableDartParityTests.cs` | `dart_sample/lib/demos/cupertino/cupertino_scrollbar_demo_page.dart`<br>`dart_sample/lib/demos/general/draggable_scrollable_sheet_demo_page.dart`<br>`dart_sample/lib/demos/general/list_wheel_scroll_view_demo_page.dart`<br>`dart_sample/lib/demos/general/nested_scroll_view_demo_page.dart`<br>`dart_sample/lib/demos/general/scroll_physics_demo_page.dart`<br>`dart_sample/lib/demos/general/scrollbar_demo_page.dart`<br>`dart_sample/lib/demos/general/two_dimensional_scroll_view_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Cupertino/CupertinoScrollbarDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/DraggableScrollableSheetDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/ListWheelScrollViewDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/NestedScrollViewDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/ScrollPhysicsDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/ScrollbarDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/TwoDimensionalScrollViewDemoPage.cs` |
 | `widgets/banner.dart` | `src/Plumix/Widgets/Banner.cs` | `src/Plumix.Tests/BannerDartParityTests.cs`<br>`src/Plumix.Tests/MaterialBannerTests.cs` | `dart_sample/lib/demos/material/banner_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Material/BannerDemoPage.cs` |
 | `widgets/basic.dart` | `src/Plumix/Rendering/ColoredBox.cs`<br>`src/Plumix/Widgets/BackdropFilter.cs`<br>`src/Plumix/Widgets/Baseline.cs`<br>`src/Plumix/Widgets/Basic.cs`<br>`src/Plumix/Widgets/Builder.cs`<br>`src/Plumix/Widgets/Clip.cs`<br>`src/Plumix/Widgets/ColoredBox.cs`<br>`src/Plumix/Widgets/CompositedTransform.cs`<br>`src/Plumix/Widgets/ConstraintsTransformBox.cs`<br>`src/Plumix/Widgets/CustomMultiChildLayout.cs`<br>`src/Plumix/Widgets/CustomPaint.cs`<br>`src/Plumix/Widgets/CustomSingleChildLayout.cs`<br>`src/Plumix/Widgets/Directionality.cs`<br>`src/Plumix/Widgets/Flow.cs`<br>`src/Plumix/Widgets/Image.cs`<br>`src/Plumix/Widgets/Intrinsic.cs`<br>`src/Plumix/Widgets/KeyedSubtree.cs`<br>`src/Plumix/Widgets/ListBody.cs`<br>`src/Plumix/Widgets/Listener.cs`<br>`src/Plumix/Widgets/MetaData.cs`<br>`src/Plumix/Widgets/MouseRegion.cs`<br>`src/Plumix/Widgets/PhysicalModel.cs`<br>`src/Plumix/Widgets/RepaintBoundary.cs`<br>`src/Plumix/Widgets/RichText.cs`<br>`src/Plumix/Widgets/Semantics.cs`<br>`src/Plumix/Widgets/ShaderMask.cs`<br>`src/Plumix/Widgets/StatefulBuilder.cs`<br>`src/Plumix/Widgets/UbiquitousInherited.cs` | `src/Plumix.Tests/AnimatedImageCodecTests.cs`<br>`src/Plumix.Tests/AnimatedImageProviderTests.cs`<br>`src/Plumix.Tests/AppLifecycleListenerTests.cs`<br>`src/Plumix.Tests/AsyncBuilderTests.cs`<br>`src/Plumix.Tests/BaselineTests.cs`<br>`src/Plumix.Tests/BasicTypesTests.cs`<br>`src/Plumix.Tests/BasicWidgetProxyTests.cs`<br>`src/Plumix.Tests/BasicWidgetsParityTests.cs`<br>`src/Plumix.Tests/BuilderWidgetsTests.cs`<br>`src/Plumix.Tests/ClipWidgetsTests.cs`<br>`src/Plumix.Tests/ClipboardTests.cs`<br>`src/Plumix.Tests/ColoredBoxTests.cs`<br>`src/Plumix.Tests/CompositedTransformTests.cs`<br>`src/Plumix.Tests/CustomMultiChildLayoutTests.cs`<br>`src/Plumix.Tests/DecorationImageDartParityTests.cs`<br>`src/Plumix.Tests/DirectionalityTests.cs`<br>`src/Plumix.Tests/ErrorWidgetBuilderDartParityTests.cs`<br>`src/Plumix.Tests/FlowRepaintBoundaryTests.cs`<br>`src/Plumix.Tests/FlutterHostSemanticsTests.cs`<br>`src/Plumix.Tests/ImageByteDataTests.cs`<br>`src/Plumix.Tests/ImageCacheDartParityTests.cs`<br>`src/Plumix.Tests/ImageProviderDecorationTests.cs`<br>`src/Plumix.Tests/ImageWidgetTests.cs`<br>`src/Plumix.Tests/IntrinsicQueryParityTests.cs`<br>`src/Plumix.Tests/IntrinsicWidgetsTests.cs`<br>`src/Plumix.Tests/KeyboardListenerTests.cs`<br>`src/Plumix.Tests/LayoutBuilderAndGlobalKeysDartParityTests.cs`<br>`src/Plumix.Tests/LayoutBuilderTests.cs`<br>`src/Plumix.Tests/MetaDataIndexedSemanticsTests.cs`<br>`src/Plumix.Tests/MouseRegionTests.cs`<br>`src/Plumix.Tests/MultiFrameImageStreamCompleterTests.cs`<br>`src/Plumix.Tests/PlumixHostClipboardTests.cs`<br>`src/Plumix.Tests/ProxyBoxClipParityTests.cs`<br>`src/Plumix.Tests/ProxyBoxSemanticsParityTests.cs`<br>`src/Plumix.Tests/RenderObjectSemanticsDiagnosticsTests.cs`<br>`src/Plumix.Tests/RenderParagraphSemanticsDartParityTests.cs`<br>`src/Plumix.Tests/ReparentStateWithLayoutBuilderDartParityTests.cs`<br>`src/Plumix.Tests/SceneBuilderTests.cs`<br>`src/Plumix.Tests/ScrollSemanticsDartParityTests.cs`<br>`src/Plumix.Tests/ScrollSemanticsTests.cs`<br>`src/Plumix.Tests/SelectionListenerTests.cs`<br>`src/Plumix.Tests/SemanticsAccessibilityFocusBlockTests.cs`<br>`src/Plumix.Tests/SemanticsAnnotationHistoryTests.cs`<br>`src/Plumix.Tests/SemanticsAutomationPeerTests.cs`<br>`src/Plumix.Tests/SemanticsCustomActionTests.cs`<br>`src/Plumix.Tests/SemanticsDataTests.cs`<br>`src/Plumix.Tests/SemanticsDirtyPipelineTests.cs`<br>`src/Plumix.Tests/SemanticsEmptyStringTests.cs`<br>`src/Plumix.Tests/SemanticsNodeDiagnosticsTests.cs`<br>`src/Plumix.Tests/SemanticsPropertiesTests.cs`<br>`src/Plumix.Tests/SemanticsRoleChecksDartParityTests.cs`<br>`src/Plumix.Tests/SemanticsServiceDartParityTests.cs`<br>`src/Plumix.Tests/SemanticsTraversalTests.cs`<br>`src/Plumix.Tests/SemanticsTreeTests.cs`<br>`src/Plumix.Tests/SliverEnsureSemanticsTests.cs`<br>`src/Plumix.Tests/StatefulBuilderLookupBoundaryTests.cs`<br>`src/Plumix.Tests/TextFieldSemanticsDartParityTests.cs`<br>`src/Plumix.Tests/WebSemanticsTests.cs` | `dart_sample/lib/demos/general/async_builder_demo_page.dart`<br>`dart_sample/lib/demos/general/baseline_demo_page.dart`<br>`dart_sample/lib/demos/general/composited_transform_demo_page.dart`<br>`dart_sample/lib/demos/general/custom_multi_child_layout_demo_page.dart`<br>`dart_sample/lib/demos/general/flow_demo_page.dart`<br>`dart_sample/lib/demos/general/image_demo_page.dart`<br>`dart_sample/lib/demos/general/intrinsic_widgets_demo_page.dart`<br>`dart_sample/lib/demos/general/keyboard_listener_demo_page.dart`<br>`dart_sample/lib/demos/general/layout_builder_demo_page.dart`<br>`dart_sample/lib/demos/general/mouse_region_demo_page.dart`<br>`dart_sample/lib/demos/general/overflow_box_demo_page.dart`<br>`dart_sample/lib/demos/general/overflow_indicator_demo_page.dart`<br>`dart_sample/lib/demos/general/rich_text_demo_page.dart`<br>`dart_sample/lib/demos/general/stateful_builder_lookup_boundary_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/AsyncBuilderDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/BaselineDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/CompositedTransformDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/CustomMultiChildLayoutDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/FlowDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/ImageDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/IntrinsicWidgetsDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/KeyboardListenerDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/LayoutBuilderDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/MouseRegionDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/RichTextDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/StatefulBuilderLookupBoundaryDemoPage.cs` |
-| `widgets/binding.dart` | `src/Plumix/Widgets/AppLifecycleListener.cs`<br>`src/Plumix/Widgets/RootWidget.cs`<br>`src/Plumix/Widgets/WidgetsBinding.ServiceExtensions.cs`<br>`src/Plumix/Widgets/WidgetsBinding.Windowing.cs`<br>`src/Plumix/Widgets/WidgetsBindingBootstrap.cs` | `src/Plumix.Tests/AppLifecycleListenerTests.cs`<br>`src/Plumix.Tests/RootWidgetTests.cs`<br>`src/Plumix.Tests/WidgetsBindingBootstrapTests.cs` | — |
+| `widgets/binding.dart` | `src/Plumix/FlutterExtensions.cs`<br>`src/Plumix/Widgets/AppLifecycleListener.cs`<br>`src/Plumix/Widgets/RootWidget.cs`<br>`src/Plumix/Widgets/WidgetsBinding.ServiceExtensions.cs`<br>`src/Plumix/Widgets/WidgetsBinding.Windowing.cs`<br>`src/Plumix/Widgets/WidgetsBindingBootstrap.cs` | `src/Plumix.Tests/AppLifecycleListenerTests.cs`<br>`src/Plumix.Tests/RootWidgetTests.cs`<br>`src/Plumix.Tests/WidgetsBindingBootstrapTests.cs` | — |
 | `widgets/bottom_navigation_bar_item.dart` | `src/Plumix/Widgets/BottomNavigationBarItem.cs` | — | — |
 | `widgets/color_filter.dart` | `src/Plumix/Rendering/Filter.RenderBox.cs`<br>`src/Plumix/Widgets/ColorFiltered.cs` | — | — |
 | `widgets/constants.dart` | `src/Plumix/Widgets/Constants.cs` | — | — |
@@ -634,24 +636,17 @@ Either C#-only infrastructure (fine — say so in a header comment) or an undocu
 - `src/Plumix/Accessibility/AccessibilityBridge.cs`
 - `src/Plumix/Accessibility/AccessibilityNode.cs`
 - `src/Plumix/Accessibility/IOSAccessibility.cs`
-- `src/Plumix/Accessibility/SemanticsAutomationPeers.cs`
 - `src/Plumix/Accessibility/WebSemantics.cs`
-- `src/Plumix/AndroidActivityDelegate.cs`
 - `src/Plumix/AndroidLifecycleChannel.cs`
 - `src/Plumix/AndroidRestorationChannel.cs`
 - `src/Plumix/AvaloniaDispatcherClock.cs`
-- `src/Plumix/AvaloniaWindowing.cs`
 - `src/Plumix/DesktopLocales.cs`
-- `src/Plumix/DesktopPlatformPlugin.cs`
 - `src/Plumix/Developer/DeveloperService.cs`
 - `src/Plumix/Developer/Timeline.cs`
 - `src/Plumix/Developer/UserTag.cs`
 - `src/Plumix/EventLoop.Tasks.cs`
 - `src/Plumix/EventLoop.Timers.cs`
 - `src/Plumix/EventLoop.cs`
-- `src/Plumix/FlutterExtensions.cs`
-- `src/Plumix/FlutterHost.PlatformPlugin.cs`
-- `src/Plumix/FlutterHost.cs`
 - `src/Plumix/Foundation/DartRandom.cs`
 - `src/Plumix/Foundation/DartStopwatch.cs`
 - `src/Plumix/Foundation/Intl/DartDateTime.cs`
@@ -675,8 +670,6 @@ Either C#-only infrastructure (fine — say so in a header comment) or an undocu
 - `src/Plumix/IOSRestorationPlugin.cs`
 - `src/Plumix/Painting/ColorUtilities.cs`
 - `src/Plumix/PipelineOwner.Headless.cs`
-- `src/Plumix/PlumixApplication.cs`
-- `src/Plumix/PlumixOptions.cs`
 - `src/Plumix/RenderAnimatedBox.cs`
 - `src/Plumix/RenderButton.cs`
 - `src/Plumix/Rendering/CanvasPaintingContext.cs`
@@ -689,6 +682,8 @@ Either C#-only infrastructure (fine — say so in a header comment) or an undocu
 - `src/Plumix/TrackpadPanZoomSynthesizer.cs`
 - `src/Plumix/UI/ApngImageCodec.cs`
 - `src/Plumix/UI/AppLifecycle.cs`
+- `src/Plumix/UI/AvaloniaConversions.cs`
+- `src/Plumix/UI/AvaloniaFonts.cs`
 - `src/Plumix/UI/AvaloniaParagraph.cs`
 - `src/Plumix/UI/BrowserDetection.cs`
 - `src/Plumix/UI/Canvas.Draw.cs`
@@ -730,7 +725,6 @@ Either C#-only infrastructure (fine — say so in a header comment) or an undocu
 - `src/Plumix/UI/VariableFont.cs`
 - `src/Plumix/UI/ViewConstraints.cs`
 - `src/Plumix/UI/ViewFocus.cs`
-- `src/Plumix/WidgetHost.cs`
 - `src/Plumix/Widgets/FlutterView.cs`
 - `src/Plumix/Widgets/TextClipboard.cs`
 - `src/Plumix.Cupertino/GlobalUsings.cs`
@@ -741,9 +735,9 @@ Either C#-only infrastructure (fine — say so in a header comment) or an undocu
 
 ## Summary
 
-- Flutter files mapped: 602
-- C# files carrying a marker: 810
-- C# files without a marker: 107
+- Flutter files mapped: 604
+- C# files carrying a marker: 814
+- C# files without a marker: 99
 - Markers not resolvable in the pinned checkout: 0
 - C# files with a qualified (non-strict) marker: 0
 

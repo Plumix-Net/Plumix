@@ -131,6 +131,8 @@ jobs:
           mkdir -p "$NUGET_OUTPUT"
           dotnet pack src/Plumix/Plumix.csproj -c Release -p:Version="$PKG_VERSION" \
             --output "$NUGET_OUTPUT"
+          dotnet pack src/Plumix.Avalonia/Plumix.Avalonia.csproj -c Release \
+            -p:Version="$PKG_VERSION" --output "$NUGET_OUTPUT"
           dotnet pack src/Plumix.Material/Plumix.Material.csproj -c Release \
             -p:Version="$PKG_VERSION" --output "$NUGET_OUTPUT"
           dotnet pack src/Plumix.Cupertino/Plumix.Cupertino.csproj -c Release \
@@ -158,6 +160,7 @@ jobs:
           set -euo pipefail
           package_ids=(
             "Plumix"
+            "Plumix.Avalonia"
             "Plumix.Material"
             "Plumix.Cupertino"
             "Plumix.FSharp"
