@@ -159,14 +159,14 @@ public sealed class CupertinoMenuAnchorTests : IDisposable
         enabled.Pump(ViewSize);
         Assert.Equal(
             Color.FromARGB(245, 0, 0, 0),
-            Assert.IsType<SolidColorBrush>(FindParagraph(enabled.RenderView, "Enabled").Foreground).Color);
+            Assert.IsType<SolidColorBrush>(FindParagraph(enabled.RenderView, "Enabled").Foreground).Color.ToPlumix());
 
         using var disabled = new CupertinoThemeTestHarness(Wrap(new CupertinoMenuItem(
             child: new Text("Disabled"))));
         disabled.Pump(ViewSize);
         Assert.Equal(
             CupertinoColors.SystemGrey.Color,
-            Assert.IsType<SolidColorBrush>(FindParagraph(disabled.RenderView, "Disabled").Foreground).Color);
+            Assert.IsType<SolidColorBrush>(FindParagraph(disabled.RenderView, "Disabled").Foreground).Color.ToPlumix());
 
         using var destructive = new CupertinoThemeTestHarness(Wrap(new CupertinoMenuItem(
             child: new Text("Delete"),
@@ -175,7 +175,7 @@ public sealed class CupertinoMenuAnchorTests : IDisposable
         destructive.Pump(ViewSize);
         Assert.Equal(
             CupertinoColors.SystemRed.Color,
-            Assert.IsType<SolidColorBrush>(FindParagraph(destructive.RenderView, "Delete").Foreground).Color);
+            Assert.IsType<SolidColorBrush>(FindParagraph(destructive.RenderView, "Delete").Foreground).Color.ToPlumix());
 
         using var dark = new CupertinoThemeTestHarness(Wrap(
             new CupertinoMenuItem(child: new Text("Dark"), onPressed: static () => { }),
@@ -183,7 +183,7 @@ public sealed class CupertinoMenuAnchorTests : IDisposable
         dark.Pump(ViewSize);
         Assert.Equal(
             Color.FromARGB(245, 255, 255, 255),
-            Assert.IsType<SolidColorBrush>(FindParagraph(dark.RenderView, "Dark").Foreground).Color);
+            Assert.IsType<SolidColorBrush>(FindParagraph(dark.RenderView, "Dark").Foreground).Color.ToPlumix());
     }
 
     [Fact]

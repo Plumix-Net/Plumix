@@ -258,7 +258,7 @@ public sealed class MaterialExpansionPanelTests : IDisposable
             box => box.AsBoxDecoration.Color == background);
         var iconGlyph = FindParagraphByText(harness.RenderView, char.ConvertFromUtf32(Icons.ExpandMore.CodePoint));
         Assert.NotNull(iconGlyph);
-        Assert.Equal(icon, Assert.IsType<SolidColorBrush>(iconGlyph!.Foreground).Color);
+        Assert.Equal(icon, Assert.IsType<SolidColorBrush>(iconGlyph!.Foreground).Color.ToPlumix());
         Assert.Contains(
             FindDescendants<RenderConstrainedBox>(harness.RenderView),
             box => Math.Abs(box.AdditionalConstraints.MinHeight - 22) < 0.001

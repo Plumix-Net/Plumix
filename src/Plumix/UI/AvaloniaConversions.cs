@@ -63,4 +63,25 @@ internal static class AvaloniaConversions
     {
         public FontStyle ToPlumix() => style == global::Avalonia.Media.FontStyle.Normal ? FontStyle.Normal : FontStyle.Italic;
     }
+
+    extension(Color color)
+    {
+        /// <summary>The backend's 8-bit sRGB value, quantised like <see cref="Color.ToARGB32"/>.</summary>
+        public global::Avalonia.Media.Color ToAvalonia() => global::Avalonia.Media.Color.FromUInt32(color.ToARGB32());
+    }
+
+    extension(global::Avalonia.Media.Color color)
+    {
+        public Color ToPlumix() => new(color.ToUInt32());
+    }
+
+    extension(Rendering.EdgeInsets insets)
+    {
+        public global::Avalonia.Thickness ToAvalonia() => new(insets.Left, insets.Top, insets.Right, insets.Bottom);
+    }
+
+    extension(global::Avalonia.Thickness thickness)
+    {
+        public Rendering.EdgeInsets ToPlumix() => new(thickness.Left, thickness.Top, thickness.Right, thickness.Bottom);
+    }
 }

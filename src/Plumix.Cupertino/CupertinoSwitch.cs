@@ -592,21 +592,21 @@ internal sealed class CupertinoSwitchPainter : ToggleablePainter
         double thumbY = trackY - ((thumbSize.Height / 2.0) - TrackRadius);
         var thumbBounds = Rect.FromLTWH(thumbX, thumbY, thumbSize.Width, thumbSize.Height);
 
-        context.Canvas.DrawRRect(trackRRect, new SolidColorBrush(trackColor), null);
+        context.Canvas.DrawRRect(trackRRect, new SolidColorBrush(trackColor.ToAvalonia()), null);
         if (outlineColor != null)
         {
             Rect outlineRect = trackRect.Deflate(1.0);
             context.Canvas.DrawRRect(
                 RRect.FromRectAndRadius(outlineRect, TrackRadius),
                 null,
-                new Pen(new SolidColorBrush(outlineColor!), outlineWidth ?? 2.0));
+                new Pen(new SolidColorBrush(outlineColor.ToAvalonia()!), outlineWidth ?? 2.0));
         }
         if (IsFocused)
         {
             context.Canvas.DrawRRect(
                 RRect.FromRectAndRadius(trackRect.Inflate(1.75), TrackRadius + 1.75),
                 null,
-                new Pen(new SolidColorBrush(FocusColor), 3.5));
+                new Pen(new SolidColorBrush(FocusColor.ToAvalonia()), 3.5));
         }
 
         context.PushClipRRect(
@@ -692,12 +692,12 @@ internal sealed class CupertinoSwitchPainter : ToggleablePainter
         Color onColor = WithOpacity(_onLabelColor, onOpacity);
         Color offColor = WithOpacity(_offLabelColor, offOpacity);
         context.Canvas.DrawRectangle(
-            new SolidColorBrush(onColor),
+            new SolidColorBrush(onColor.ToAvalonia()),
             null,
             Rect.FromLTWH(onCenter.Dx - 0.5, onCenter.Dy - 5.0, 1.0, 10.0));
         context.Canvas.DrawCircle(
             Brushes.Transparent,
-            new Pen(new SolidColorBrush(offColor), 1.0),
+            new Pen(new SolidColorBrush(offColor.ToAvalonia()), 1.0),
             offCenter,
             5.0);
     }

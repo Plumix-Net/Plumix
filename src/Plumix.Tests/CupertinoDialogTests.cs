@@ -399,7 +399,7 @@ public sealed class CupertinoDialogTests : IDisposable
     }
 
     private static Color ParagraphColor(RenderParagraph paragraph) =>
-        (Color)((Avalonia.Media.ISolidColorBrush)paragraph.Foreground).Color;
+        ((Avalonia.Media.ISolidColorBrush)paragraph.Foreground).Color.ToPlumix();
 
     private static Offset CenterOf(RenderBox box)
     {

@@ -243,7 +243,7 @@ public sealed class MaterialSliverAppBarTests
             .Single(value => value.PlainText == "RTL title");
         Assert.Equal(
             Color.FromARGB(128, Colors.Purple.Red, Colors.Purple.Green, Colors.Purple.Blue),
-            Assert.IsType<SolidColorBrush>(paragraph.Foreground).Color);
+            Assert.IsType<SolidColorBrush>(paragraph.Foreground).Color.ToPlumix());
 
         ThemeData material2 = material3 with { UseMaterial3 = false };
         using var m2 = new WidgetRenderHarness(Wrap(
@@ -262,7 +262,7 @@ public sealed class MaterialSliverAppBarTests
             .Single(value => value.PlainText == "M2 title");
         Assert.Equal(
             Color.FromARGB(128, Colors.Green.Red, Colors.Green.Green, Colors.Green.Blue),
-            Assert.IsType<SolidColorBrush>(m2Paragraph.Foreground).Color);
+            Assert.IsType<SolidColorBrush>(m2Paragraph.Foreground).Color.ToPlumix());
     }
 
     [Fact]

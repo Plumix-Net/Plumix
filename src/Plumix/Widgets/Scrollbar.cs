@@ -327,16 +327,16 @@ public sealed class ScrollbarPainter : CustomPainter, IListenable
 
         ScrollbarGeometry value = geometry.Value;
         double opacity = Math.Clamp(_fadeoutOpacityAnimation.Value, 0, 1);
-        var trackBrush = new SolidColorBrush(ApplyOpacity(TrackColor, opacity));
+        var trackBrush = new SolidColorBrush(ApplyOpacity(TrackColor, opacity).ToAvalonia());
         context.Canvas.DrawRectangle(trackBrush, null, value.TrackRect, TrackRadius?.X ?? 0, TrackRadius?.Y ?? 0);
 
         Color borderColor = ApplyOpacity(TrackBorderColor, opacity);
-        var pen = new Pen(new SolidColorBrush(borderColor), 1);
+        var pen = new Pen(new SolidColorBrush(borderColor.ToAvalonia()), 1);
         (Offset start, Offset end) = TrackBorderLine(value);
         context.Canvas.DrawLine(pen, start, end);
 
         Color thumbColor = ApplyOpacity(Color, opacity);
-        var thumbBrush = new SolidColorBrush(thumbColor);
+        var thumbBrush = new SolidColorBrush(thumbColor.ToAvalonia());
         if (Radius is { } radius)
         {
             context.Canvas.DrawRectangle(thumbBrush, null, value.ThumbRect, radius.X, radius.Y);

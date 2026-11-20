@@ -174,7 +174,7 @@ public sealed class Path
         return result;
     }
 
-    public Path Transform(Matrix matrix) => TransformNative(new SKMatrix(
+    internal Path Transform(Matrix matrix) => TransformNative(new SKMatrix(
         Narrow(matrix.M11), Narrow(matrix.M21), Narrow(matrix.M31),
         Narrow(matrix.M12), Narrow(matrix.M22), Narrow(matrix.M32), 0, 0, 1));
     public Path Transform(IReadOnlyList<double> matrix4) => TransformNative(ToNativeMatrix(matrix4));

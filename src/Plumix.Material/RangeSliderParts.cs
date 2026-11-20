@@ -350,8 +350,8 @@ public class RectangularRangeSliderTrackShape : BaseRangeSliderTrackShape
         var inactiveTrackColorTween = new ColorTween(
             begin: sliderTheme.DisabledInactiveTrackColor,
             end: sliderTheme.InactiveTrackColor);
-        var activePaint = new SolidColorBrush(activeTrackColorTween.Transform(enableAnimation!.Value)!);
-        var inactivePaint = new SolidColorBrush(inactiveTrackColorTween.Transform(enableAnimation.Value)!);
+        var activePaint = new SolidColorBrush(activeTrackColorTween.Transform(enableAnimation!.Value)!.ToAvalonia());
+        var inactivePaint = new SolidColorBrush(inactiveTrackColorTween.Transform(enableAnimation.Value)!.ToAvalonia());
 
         (Offset leftThumbOffset, Offset rightThumbOffset) = textDirection switch
         {
@@ -484,8 +484,8 @@ public class RoundedRectRangeSliderTrackShape : BaseRangeSliderTrackShape
         var inactiveTrackColorTween = new ColorTween(
             begin: sliderTheme.DisabledInactiveTrackColor,
             end: sliderTheme.InactiveTrackColor);
-        var activePaint = new SolidColorBrush(activeTrackColorTween.Transform(enableAnimation.Value)!);
-        var inactivePaint = new SolidColorBrush(inactiveTrackColorTween.Transform(enableAnimation.Value)!);
+        var activePaint = new SolidColorBrush(activeTrackColorTween.Transform(enableAnimation.Value)!.ToAvalonia());
+        var inactivePaint = new SolidColorBrush(inactiveTrackColorTween.Transform(enableAnimation.Value)!.ToAvalonia());
 
         (Offset leftThumbOffset, Offset rightThumbOffset) = textDirection switch
         {
@@ -607,7 +607,7 @@ public class RoundRangeSliderTickMarkShape : RangeSliderTickMarkShape
         Color? end = isBetweenThumbs
             ? sliderTheme.ActiveTickMarkColor
             : sliderTheme.InactiveTickMarkColor;
-        var paint = new SolidColorBrush(new ColorTween(begin: begin, end: end).Transform(enableAnimation.Value)!);
+        var paint = new SolidColorBrush(new ColorTween(begin: begin, end: end).Transform(enableAnimation.Value)!.ToAvalonia());
 
         // The tick marks are tiny circles that are the same height as the track.
         double tickMarkRadius =
@@ -698,7 +698,7 @@ public class RoundRangeSliderThumbShape : RangeSliderThumbShape
         // the other thumb.
         if (isOnTop ?? false)
         {
-            var strokePaint = new Pen(new SolidColorBrush(sliderTheme.OverlappingShapeStrokeColor!), 1.0);
+            var strokePaint = new Pen(new SolidColorBrush(sliderTheme.OverlappingShapeStrokeColor!.ToAvalonia()), 1.0);
             canvas.DrawCircle(null, strokePaint, center, radius);
         }
 
@@ -728,7 +728,7 @@ public class RoundRangeSliderThumbShape : RangeSliderThumbShape
             canvas.DrawShadow(shadowPath, Colors.Black, evaluatedElevation, true);
         }
 
-        canvas.DrawCircle(new SolidColorBrush(color), null, center, radius);
+        canvas.DrawCircle(new SolidColorBrush(color.ToAvalonia()), null, center, radius);
     }
 }
 
@@ -876,7 +876,7 @@ file static class RangeSliderPartsDebug
             canvas.DrawPath(
                 path,
                 null,
-                new Pen(new SolidColorBrush(Colors.Black), elevation * 2.0));
+                new Pen(new SolidColorBrush(Colors.Black.ToAvalonia()), elevation * 2.0));
         }
     }
 }
@@ -964,8 +964,8 @@ public class GappedRangeSliderTrackShape : BaseRangeSliderTrackShape
             begin: sliderTheme.DisabledInactiveTrackColor,
             end: sliderTheme.InactiveTrackColor);
 
-        var activePaint = new SolidColorBrush(activeTrackColorTween.Transform(enableAnimation.Value)!);
-        var inactivePaint = new SolidColorBrush(inactiveTrackColorTween.Transform(enableAnimation.Value)!);
+        var activePaint = new SolidColorBrush(activeTrackColorTween.Transform(enableAnimation.Value)!.ToAvalonia());
+        var inactivePaint = new SolidColorBrush(inactiveTrackColorTween.Transform(enableAnimation.Value)!.ToAvalonia());
 
         Rect trackRect = GetPreferredRect(
             parentBox: parentBox,
@@ -1132,7 +1132,7 @@ public class HandleRangeSliderThumbShape : RangeSliderThumbShape
             Rect.FromCenter(center: center, width: thumbSize.Width, height: thumbSize.Height),
             Radius.Circular(thumbSize.ShortestSide / 2));
 
-        canvas.DrawRRect(rrect, new SolidColorBrush(color), null);
+        canvas.DrawRRect(rrect, new SolidColorBrush(color.ToAvalonia()), null);
     }
 }
 

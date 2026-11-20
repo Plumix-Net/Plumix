@@ -987,7 +987,7 @@ public sealed class MaterialChipTests : IDisposable
 
     private static Color ForegroundColor(RenderParagraph paragraph)
     {
-        return (Color)Assert.IsType<SolidColorBrush>(paragraph.Foreground).Color;
+        return Assert.IsType<SolidColorBrush>(paragraph.Foreground).Color.ToPlumix();
     }
 
     private static Color WithOpacity(Color color, double opacity)

@@ -152,7 +152,7 @@ public sealed class Paint
     public FilterQuality FilterQuality { get; set; } = FilterQuality.None;
 
     /// The shader to use when stroking or filling a shape. When null, <see cref="Color"/> is used.
-    public IBrush? Shader { get; set; }
+    public Shader? Shader { get; set; }
 
     /// A color filter to apply when a shape is drawn or when a layer is composited.
     public ColorFilter? ColorFilter { get; set; }

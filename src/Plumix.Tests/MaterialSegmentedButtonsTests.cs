@@ -47,9 +47,9 @@ public sealed class MaterialSegmentedButtonsTests
         enabled.Pump(new Size(320, 120));
 
         Assert.Equal(Colors.DarkGreen,
-            Assert.IsType<SolidColorBrush>(FindParagraph(enabled.RenderView, "One")!.Foreground).Color);
+            Assert.IsType<SolidColorBrush>(FindParagraph(enabled.RenderView, "One")!.Foreground).Color.ToPlumix());
         Assert.Equal(NavigationSurfaceUtilities.WithOpacity(Colors.DarkSlateBlue, 0.87),
-            Assert.IsType<SolidColorBrush>(FindParagraph(enabled.RenderView, "Two")!.Foreground).Color);
+            Assert.IsType<SolidColorBrush>(FindParagraph(enabled.RenderView, "Two")!.Foreground).Color.ToPlumix());
         Assert.Contains(MaterialSurfaceProbe.FindAll(enabled.RenderView),
             box => box.Color == NavigationSurfaceUtilities.WithOpacity(Colors.DarkGreen, 0.12));
         Assert.Contains(FindDescendants<RenderConstrainedBox>(enabled.RenderView),
@@ -63,7 +63,7 @@ public sealed class MaterialSegmentedButtonsTests
                 isSelected: [true])));
         disabled.Pump(new Size(320, 120));
         Assert.Equal(NavigationSurfaceUtilities.WithOpacity(Colors.DarkSlateBlue, 0.38),
-            Assert.IsType<SolidColorBrush>(FindParagraph(disabled.RenderView, "Disabled")!.Foreground).Color);
+            Assert.IsType<SolidColorBrush>(FindParagraph(disabled.RenderView, "Disabled")!.Foreground).Color.ToPlumix());
     }
 
     [Fact]
@@ -91,9 +91,9 @@ public sealed class MaterialSegmentedButtonsTests
         Tap(harness.RenderView, new Offset(24, 24), 201);
         Assert.Equal(0, pressed);
         Assert.Equal(Colors.Purple,
-            Assert.IsType<SolidColorBrush>(FindParagraph(harness.RenderView, "One")!.Foreground).Color);
+            Assert.IsType<SolidColorBrush>(FindParagraph(harness.RenderView, "One")!.Foreground).Color.ToPlumix());
         Assert.Equal(Colors.Gold,
-            Assert.IsType<SolidColorBrush>(FindParagraph(harness.RenderView, "Two")!.Foreground).Color);
+            Assert.IsType<SolidColorBrush>(FindParagraph(harness.RenderView, "Two")!.Foreground).Color.ToPlumix());
         Assert.Contains(MaterialSurfaceProbe.FindAll(harness.RenderView),
             box => box.Color == Colors.DarkGreen);
 
@@ -280,9 +280,9 @@ public sealed class MaterialSegmentedButtonsTests
         Assert.Contains(MaterialSurfaceProbe.FindAll(harness.RenderView),
             box => box.Color == Colors.DarkGreen);
         Assert.Equal(Colors.Gold,
-            Assert.IsType<SolidColorBrush>(FindParagraph(harness.RenderView, "One")!.Foreground).Color);
+            Assert.IsType<SolidColorBrush>(FindParagraph(harness.RenderView, "One")!.Foreground).Color.ToPlumix());
         Assert.Equal(NavigationSurfaceUtilities.WithOpacity(Colors.DarkSlateBlue, 0.38),
-            Assert.IsType<SolidColorBrush>(FindParagraph(harness.RenderView, "Two")!.Foreground).Color);
+            Assert.IsType<SolidColorBrush>(FindParagraph(harness.RenderView, "Two")!.Foreground).Color.ToPlumix());
         Assert.NotNull(FindParagraphByCodePoint(harness.RenderView, Icons.Check.CodePoint));
         Assert.Empty(harness.FindWidgets<Tooltip>());
         Assert.Contains(FindDescendants<RenderConstrainedBox>(harness.RenderView),
@@ -370,9 +370,9 @@ public sealed class MaterialSegmentedButtonsTests
         harness.Pump(new Size(360, 220));
 
         Assert.Equal(Colors.Gold,
-            Assert.IsType<SolidColorBrush>(FindParagraph(harness.RenderView, "One")!.Foreground).Color);
+            Assert.IsType<SolidColorBrush>(FindParagraph(harness.RenderView, "One")!.Foreground).Color.ToPlumix());
         Assert.Equal(Colors.Purple,
-            Assert.IsType<SolidColorBrush>(FindParagraph(harness.RenderView, "Two")!.Foreground).Color);
+            Assert.IsType<SolidColorBrush>(FindParagraph(harness.RenderView, "Two")!.Foreground).Color.ToPlumix());
         Assert.NotNull(FindParagraph(harness.RenderView, "theme-check"));
         Assert.Single(harness.FindWidgets<Tooltip>());
         Assert.Contains(FindDescendants<RenderConstrainedBox>(harness.RenderView),

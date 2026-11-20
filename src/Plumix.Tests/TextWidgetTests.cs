@@ -294,7 +294,7 @@ public sealed class TextWidgetTests
         Assert.Equal(FontStyle.Normal, paragraph.FontStyle);
         Assert.Equal(1.4, paragraph.Height);
         Assert.Equal(0.4, paragraph.LetterSpacing);
-        Assert.Equal(style1.Color, (Color)Assert.IsType<SolidColorBrush>(paragraph.Foreground).Color);
+        Assert.Equal(style1.Color, Assert.IsType<SolidColorBrush>(paragraph.Foreground).Color.ToPlumix());
         Assert.Equal(TextAlign.Center, paragraph.TextAlign);
         Assert.False(paragraph.SoftWrap);
         Assert.Equal(TextOverflow.Ellipsis, paragraph.Overflow);
@@ -333,7 +333,7 @@ public sealed class TextWidgetTests
         Assert.Equal(FontStyle.Italic, updated.FontStyle);
         Assert.Equal(1.6, updated.Height);
         Assert.Equal(0, updated.LetterSpacing);
-        Assert.Equal(Colors.Blue, Assert.IsType<SolidColorBrush>(updated.Foreground).Color);
+        Assert.Equal(Colors.Blue, Assert.IsType<SolidColorBrush>(updated.Foreground).Color.ToPlumix());
         Assert.Equal(TextAlign.Right, updated.TextAlign);
         Assert.True(updated.SoftWrap);
         Assert.Equal(TextOverflow.Fade, updated.Overflow);
@@ -376,7 +376,7 @@ public sealed class TextWidgetTests
         Assert.Equal(TextStyle.Fallback.FontSize, paragraph.FontSize);
         Assert.Equal(TextStyle.Fallback.FontWeight, paragraph.FontWeight);
         Assert.Equal(TextStyle.Fallback.FontStyle, paragraph.FontStyle);
-        Assert.Equal(TextStyle.Fallback.Color, (Color)Assert.IsType<SolidColorBrush>(paragraph.Foreground).Color);
+        Assert.Equal(TextStyle.Fallback.Color, Assert.IsType<SolidColorBrush>(paragraph.Foreground).Color.ToPlumix());
 
         // The same theme reaches the text once a `Material` is in between.
         var materialRoot = new TestRootElement(
@@ -394,7 +394,7 @@ public sealed class TextWidgetTests
         Assert.NotNull(materialParagraph);
         Assert.Equal(17, materialParagraph!.FontSize);
         Assert.Equal(FontWeight.W600, materialParagraph.FontWeight);
-        Assert.Equal(themedStyle.Color, (Color)Assert.IsType<SolidColorBrush>(materialParagraph.Foreground).Color);
+        Assert.Equal(themedStyle.Color, Assert.IsType<SolidColorBrush>(materialParagraph.Foreground).Color.ToPlumix());
     }
 
     [Fact]
@@ -460,7 +460,7 @@ public sealed class TextWidgetTests
         Assert.NotNull(paragraph);
         Assert.Equal(char.ConvertFromUtf32(0xe047), paragraph!.PlainText);
         Assert.Equal(28, paragraph.FontSize);
-        Assert.Equal(Colors.DarkOrange, (Color)Assert.IsType<SolidColorBrush>(paragraph.Foreground).Color);
+        Assert.Equal(Colors.DarkOrange, Assert.IsType<SolidColorBrush>(paragraph.Foreground).Color.ToPlumix());
         Assert.Equal("MaterialIcons", paragraph.FontFamily);
     }
 
@@ -485,7 +485,7 @@ public sealed class TextWidgetTests
         var paragraph = FindDescendant<RenderParagraph>(root.ChildElement!.RenderObject);
         Assert.NotNull(paragraph);
         Assert.Equal(32, paragraph!.FontSize);
-        Assert.Equal(Colors.MediumPurple, (Color)Assert.IsType<SolidColorBrush>(paragraph.Foreground).Color);
+        Assert.Equal(Colors.MediumPurple, Assert.IsType<SolidColorBrush>(paragraph.Foreground).Color.ToPlumix());
     }
 
     [Fact]
@@ -509,7 +509,7 @@ public sealed class TextWidgetTests
         Assert.NotNull(paragraph);
         Assert.Equal(
             Color.FromARGB(128, explicitColor.Red, explicitColor.Green, explicitColor.Blue),
-            Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color);
+            Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color.ToPlumix());
     }
 
     [Fact]

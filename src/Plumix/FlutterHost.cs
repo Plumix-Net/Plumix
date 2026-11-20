@@ -984,7 +984,7 @@ public partial class PlumixHost : Control, ICustomHitTest
     protected MediaQueryData GetMediaQueryData()
     {
         // Avalonia boundary: the platform safe area arrives as a Thickness.
-        EdgeInsets viewPadding = _insetsManager?.SafeAreaPadding ?? default(Thickness);
+        EdgeInsets viewPadding = (_insetsManager?.SafeAreaPadding ?? default(Thickness)).ToPlumix();
         // Avalonia assigns Bounds after ArrangeOverride returns; metrics published during that
         // callback must use its finalSize, including the first layout and subsequent resizes.
         var size = _lastArrangedSize;
@@ -1685,10 +1685,10 @@ public partial class PlumixHost : Control, ICustomHitTest
         {
             if (_attachedTopLevel != null)
             {
-                TopLevel.SetSystemBarColor(_attachedTopLevel, new SolidColorBrush(fallbackSystemBarColor!));
+                TopLevel.SetSystemBarColor(_attachedTopLevel, new SolidColorBrush(fallbackSystemBarColor.ToAvalonia()!));
             }
 
-            insetsManager.SystemBarColor = fallbackSystemBarColor!;
+            insetsManager.SystemBarColor = fallbackSystemBarColor.ToAvalonia()!;
         }
 
         var iconBrightness = style.StatusBarIconBrightness ?? style.SystemNavigationBarIconBrightness;

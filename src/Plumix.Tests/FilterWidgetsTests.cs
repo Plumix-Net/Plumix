@@ -247,8 +247,8 @@ public sealed class FilterWidgetsTests
     [Fact]
     public void ShaderMask_ExposesFlutterDefaultsAndUpdatesExistingRenderObject()
     {
-        ShaderCallback initialCallback = _ => Brushes.Red;
-        ShaderCallback updatedCallback = _ => Brushes.Blue;
+        ShaderCallback initialCallback = _ => Plumix.UI.Shader.FromBrush(Brushes.Red);
+        ShaderCallback updatedCallback = _ => Plumix.UI.Shader.FromBrush(Brushes.Blue);
         var widget = new ShaderMask(initialCallback);
 
         Assert.Same(initialCallback, widget.ShaderCallback);
@@ -383,7 +383,7 @@ public sealed class FilterWidgetsTests
             bounds =>
             {
                 callbackBounds = bounds;
-                return Brushes.Red;
+                return Plumix.UI.Shader.FromBrush(Brushes.Red);
             },
             child: child);
         var padding = new RenderPadding(EdgeInsets.FromLTRB(7.0, 5.0, 0.0, 0.0))
@@ -400,11 +400,11 @@ public sealed class FilterWidgetsTests
         var layer = Assert.IsType<ShaderMaskLayer>(Assert.Single(pipeline.RootLayer.Children));
         Assert.Equal(Rect.FromLTWH(7.0, 5.0, 20.0, 10.0), layer.MaskRect);
         Assert.Equal(BlendMode.Modulate, layer.BlendMode);
-        Assert.Same(Brushes.Red, layer.Shader);
+        Assert.Same(Brushes.Red, layer.Shader!.Brush);
         Assert.IsType<PictureLayer>(Assert.Single(layer.Children));
         Assert.Equal(1, child.PaintCount);
 
-        renderObject.ShaderCallback = _ => Brushes.Blue;
+        renderObject.ShaderCallback = _ => Plumix.UI.Shader.FromBrush(Brushes.Blue);
         renderObject.BlendMode = BlendMode.Screen;
         pipeline.FlushCompositingBits();
         pipeline.FlushPaint();
@@ -412,7 +412,7 @@ public sealed class FilterWidgetsTests
 
         Assert.Same(layer, Assert.Single(pipeline.RootLayer.Children));
         Assert.Equal(BlendMode.Screen, layer.BlendMode);
-        Assert.Same(Brushes.Blue, layer.Shader);
+        Assert.Same(Brushes.Blue, layer.Shader!.Brush);
         Assert.Equal(2, child.PaintCount);
     }
 

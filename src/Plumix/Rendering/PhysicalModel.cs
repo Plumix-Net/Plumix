@@ -221,7 +221,7 @@ public class RenderPhysicalModel : RenderPhysicalModelBase<RRect>
                     context.Canvas.DrawRRect(
                         offsetRRect,
                         brush: null,
-                        pen: new Pen(new SolidColorBrush(ShadowColor), Elevation * 2.0));
+                        pen: new Pen(new SolidColorBrush(ShadowColor.ToAvalonia()), Elevation * 2.0));
                 }
 
                 paintShadows = false;
@@ -237,7 +237,7 @@ public class RenderPhysicalModel : RenderPhysicalModelBase<RRect>
         bool usesSaveLayer = ClipBehavior == Clip.AntiAliasWithSaveLayer;
         if (!usesSaveLayer)
         {
-            canvas.DrawRRect(offsetRRect, new SolidColorBrush(Color), pen: null);
+            canvas.DrawRRect(offsetRRect, new SolidColorBrush(Color.ToAvalonia()), pen: null);
         }
 
         Layer = context.PushClipRRect(
@@ -253,7 +253,7 @@ public class RenderPhysicalModel : RenderPhysicalModelBase<RRect>
                     // (https://github.com/flutter/flutter/issues/18057#issue-328003931)
                     // using saveLayer, we have to call drawPaint instead of drawPath as
                     // anti-aliased drawPath will always have such artifacts.
-                    clippedContext.Canvas.DrawPaint(new SolidColorBrush(Color));
+                    clippedContext.Canvas.DrawPaint(new SolidColorBrush(Color.ToAvalonia()));
                 }
 
                 base.Paint(clippedContext, clippedOffset);
@@ -347,7 +347,7 @@ public class RenderPhysicalShape : RenderPhysicalModelBase<Path>
                     context.Canvas.DrawPath(
                         offsetPath,
                         brush: null,
-                        pen: new Pen(new SolidColorBrush(ShadowColor), Elevation * 2.0));
+                        pen: new Pen(new SolidColorBrush(ShadowColor.ToAvalonia()), Elevation * 2.0));
                 }
 
                 paintShadows = false;
@@ -363,7 +363,7 @@ public class RenderPhysicalShape : RenderPhysicalModelBase<Path>
         bool usesSaveLayer = ClipBehavior == Clip.AntiAliasWithSaveLayer;
         if (!usesSaveLayer)
         {
-            canvas.DrawPath(offsetPath, new SolidColorBrush(Color), pen: null);
+            canvas.DrawPath(offsetPath, new SolidColorBrush(Color.ToAvalonia()), pen: null);
         }
 
         Layer = context.PushClipPath(
@@ -379,7 +379,7 @@ public class RenderPhysicalShape : RenderPhysicalModelBase<Path>
                     // (https://github.com/flutter/flutter/issues/18057#issue-328003931)
                     // using saveLayer, we have to call drawPaint instead of drawPath as
                     // anti-aliased drawPath will always have such artifacts.
-                    clippedContext.Canvas.DrawPaint(new SolidColorBrush(Color));
+                    clippedContext.Canvas.DrawPaint(new SolidColorBrush(Color.ToAvalonia()));
                 }
 
                 base.Paint(clippedContext, clippedOffset);

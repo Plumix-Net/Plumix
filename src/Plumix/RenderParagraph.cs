@@ -603,7 +603,7 @@ public sealed partial class RenderParagraph : RenderBox,
         if (Constants.KDebugMode && RenderingDebug.RepaintTextRainbowEnabled)
         {
             context.Canvas.DrawRectangle(
-                new SolidColorBrush(RenderingDebug.CurrentRepaintColor.ToColor()),
+                new SolidColorBrush(RenderingDebug.CurrentRepaintColor.ToColor().ToAvalonia()),
                 null,
                 (offset & Size));
         }
@@ -1024,8 +1024,8 @@ public sealed partial class RenderParagraph : RenderBox,
                 EndPoint = new RelativePoint(To.Dx / width, To.Dy / height, RelativeUnit.Relative),
                 GradientStops = new GradientStops
                 {
-                    new GradientStop(new Color(0xFFFFFFFF), 0),
-                    new GradientStop(new Color(0x00FFFFFF), 1),
+                    new GradientStop(new Color(0xFFFFFFFF).ToAvalonia(), 0),
+                    new GradientStop(new Color(0x00FFFFFF).ToAvalonia(), 1),
                 },
             };
         }

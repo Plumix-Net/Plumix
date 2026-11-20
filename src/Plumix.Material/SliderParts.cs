@@ -194,8 +194,8 @@ public class RectangularSliderTrackShape : BaseSliderTrackShape
         var inactiveTrackColorTween = new ColorTween(
             begin: sliderTheme.DisabledInactiveTrackColor,
             end: sliderTheme.InactiveTrackColor);
-        var activePaint = new SolidColorBrush(activeTrackColorTween.Transform(enableAnimation.Value)!);
-        var inactivePaint = new SolidColorBrush(inactiveTrackColorTween.Transform(enableAnimation.Value)!);
+        var activePaint = new SolidColorBrush(activeTrackColorTween.Transform(enableAnimation.Value)!.ToAvalonia());
+        var inactivePaint = new SolidColorBrush(inactiveTrackColorTween.Transform(enableAnimation.Value)!.ToAvalonia());
         (IBrush leftTrackPaint, IBrush rightTrackPaint) = textDirection switch
         {
             TextDirection.Ltr => (activePaint, inactivePaint),
@@ -243,7 +243,7 @@ public class RectangularSliderTrackShape : BaseSliderTrackShape
                 begin: sliderTheme.DisabledSecondaryActiveTrackColor,
                 end: sliderTheme.SecondaryActiveTrackColor);
             var secondaryTrackPaint =
-                new SolidColorBrush(secondaryTrackColorTween.Transform(enableAnimation.Value)!);
+                new SolidColorBrush(secondaryTrackColorTween.Transform(enableAnimation.Value)!.ToAvalonia());
             Rect secondaryTrackSegment = textDirection switch
             {
                 TextDirection.Rtl => Rect.FromLTRB(
@@ -346,8 +346,8 @@ public class RoundedRectSliderTrackShape : BaseSliderTrackShape
         var inactiveTrackColorTween = new ColorTween(
             begin: sliderTheme.DisabledInactiveTrackColor,
             end: sliderTheme.InactiveTrackColor);
-        var activePaint = new SolidColorBrush(activeTrackColorTween.Transform(enableAnimation.Value)!);
-        var inactivePaint = new SolidColorBrush(inactiveTrackColorTween.Transform(enableAnimation.Value)!);
+        var activePaint = new SolidColorBrush(activeTrackColorTween.Transform(enableAnimation.Value)!.ToAvalonia());
+        var inactivePaint = new SolidColorBrush(inactiveTrackColorTween.Transform(enableAnimation.Value)!.ToAvalonia());
         (IBrush leftTrackPaint, IBrush rightTrackPaint) = textDirection switch
         {
             TextDirection.Ltr => (activePaint, inactivePaint),
@@ -406,7 +406,7 @@ public class RoundedRectSliderTrackShape : BaseSliderTrackShape
                 begin: sliderTheme.DisabledSecondaryActiveTrackColor,
                 end: sliderTheme.SecondaryActiveTrackColor);
             var secondaryTrackPaint =
-                new SolidColorBrush(secondaryTrackColorTween.Transform(enableAnimation.Value)!);
+                new SolidColorBrush(secondaryTrackColorTween.Transform(enableAnimation.Value)!.ToAvalonia());
             if (isLTR)
             {
                 context.Canvas.DrawRRect(
@@ -502,7 +502,7 @@ public class RoundSliderTickMarkShape : SliderTickMarkShape
                 sliderTheme.DisabledActiveTickMarkColor,
                 sliderTheme.ActiveTickMarkColor),
         };
-        var paint = new SolidColorBrush(new ColorTween(begin: begin, end: end).Transform(enableAnimation.Value)!);
+        var paint = new SolidColorBrush(new ColorTween(begin: begin, end: end).Transform(enableAnimation.Value)!.ToAvalonia());
 
         // The tick marks are tiny circles that are the same height as the track.
         double tickMarkRadius =
@@ -630,7 +630,7 @@ public class RoundSliderThumbShape : SliderComponentShape
             canvas.DrawShadow(path, Colors.Black, evaluatedElevation, true);
         }
 
-        canvas.DrawCircle(new SolidColorBrush(color), null, center, radius);
+        canvas.DrawCircle(new SolidColorBrush(color.ToAvalonia()), null, center, radius);
     }
 }
 
@@ -804,7 +804,7 @@ internal sealed class DropSliderValueIndicatorPathPainter
             rectangleWidth,
             MinRectHeight);
 
-        var fillPaint = new SolidColorBrush(backgroundPaintColor);
+        var fillPaint = new SolidColorBrush(backgroundPaintColor.ToAvalonia());
 
         canvas.Save();
         canvas.Translate(center.Dx, center.Dy - BottomTipYOffset);
@@ -822,7 +822,7 @@ internal sealed class DropSliderValueIndicatorPathPainter
 
         if (strokePaintColor != null)
         {
-            var strokePaint = new Pen(new SolidColorBrush(strokePaintColor), 1.0);
+            var strokePaint = new Pen(new SolidColorBrush(strokePaintColor.ToAvalonia()), 1.0);
             canvas.DrawPath(trianglePath, null, strokePaint);
         }
 
@@ -885,7 +885,7 @@ public class HandleThumbShape : SliderComponentShape
         RRect rrect = RRect.FromRectAndRadius(
             Rect.FromCenter(center, thumbSize.Width, thumbSize.Height),
             Radius.Circular(Math.Min(Math.Abs(thumbSize.Width), Math.Abs(thumbSize.Height)) / 2));
-        canvas.DrawRRect(rrect, new SolidColorBrush(color), null);
+        canvas.DrawRRect(rrect, new SolidColorBrush(color.ToAvalonia()), null);
     }
 }
 
@@ -973,8 +973,8 @@ public class GappedSliderTrackShape : BaseSliderTrackShape
         var inactiveTrackColorTween = new ColorTween(
             begin: sliderTheme.DisabledInactiveTrackColor,
             end: sliderTheme.InactiveTrackColor);
-        var activePaint = new SolidColorBrush(activeTrackColorTween.Transform(enableAnimation.Value)!);
-        var inactivePaint = new SolidColorBrush(inactiveTrackColorTween.Transform(enableAnimation.Value)!);
+        var activePaint = new SolidColorBrush(activeTrackColorTween.Transform(enableAnimation.Value)!.ToAvalonia());
+        var inactivePaint = new SolidColorBrush(inactiveTrackColorTween.Transform(enableAnimation.Value)!.ToAvalonia());
         IBrush leftTrackPaint;
         IBrush rightTrackPaint;
         switch (textDirection)
@@ -1057,7 +1057,7 @@ public class GappedSliderTrackShape : BaseSliderTrackShape
                 begin: sliderTheme.DisabledSecondaryActiveTrackColor,
                 end: sliderTheme.SecondaryActiveTrackColor);
             var secondaryTrackPaint =
-                new SolidColorBrush(secondaryTrackColorTween.Transform(enableAnimation.Value)!);
+                new SolidColorBrush(secondaryTrackColorTween.Transform(enableAnimation.Value)!.ToAvalonia());
             if (isLTR)
             {
                 context.Canvas.DrawRRect(
@@ -1281,7 +1281,7 @@ internal sealed class RoundedRectSliderValueIndicatorPathPainter
             rectangleWidth,
             PreferredHeight);
 
-        var fillPaint = new SolidColorBrush(backgroundPaintColor);
+        var fillPaint = new SolidColorBrush(backgroundPaintColor.ToAvalonia());
 
         canvas.Save();
         // Prepare the canvas for the base of the tooltip, which is relative to the
@@ -1292,7 +1292,7 @@ internal sealed class RoundedRectSliderValueIndicatorPathPainter
         RRect rrect = RRect.FromRectAndRadius(upperRect, Radius.Circular(upperRect.Height / 2));
         if (strokePaintColor != null)
         {
-            var strokePaint = new Pen(new SolidColorBrush(strokePaintColor), 1.0);
+            var strokePaint = new Pen(new SolidColorBrush(strokePaintColor.ToAvalonia()), 1.0);
             canvas.DrawRRect(rrect, null, strokePaint);
         }
 
@@ -1319,7 +1319,7 @@ file static class SliderPartsDebug
             canvas.DrawPath(
                 path,
                 null,
-                new Pen(new SolidColorBrush(Colors.Black), elevation * 2.0));
+                new Pen(new SolidColorBrush(Colors.Black.ToAvalonia()), elevation * 2.0));
         }
     }
 }

@@ -738,7 +738,7 @@ internal sealed class AvaloniaParagraph : Paragraph
                     // the recorded picture survives paragraph relayout/disposal.
                     var retained = new GlyphRun(glyphs.GlyphTypeface, glyphs.FontRenderingEmSize,
                         glyphs.Characters, glyphs.GlyphInfos.ToArray(), glyphs.BaselineOrigin, glyphs.BiDiLevel);
-                    var brush = new SolidColorBrush(style.Color);
+                    var brush = new SolidColorBrush(style.Color.ToAvalonia());
                     canvas.AddDrawCommand(context =>
                     {
                         using DrawingContext.PushedState edging = context.PushTextOptions(GlyphTextOptions);
@@ -850,7 +850,7 @@ internal sealed class ParagraphTextSource : ITextSource
             typeface,
             style.FontSize,
             ResolveDecorations(style),
-            style.Foreground is { } foreground ? PaintBrush(foreground) : new SolidColorBrush(style.Color),
+            style.Foreground is { } foreground ? PaintBrush(foreground) : new SolidColorBrush(style.Color.ToAvalonia()),
             style.Background is { } background ? PaintBrush(background) : null,
             cultureInfo: style.Locale is string locale ? CultureInfo.GetCultureInfo(locale) : null,
             fontFeatures: ResolveFontFeatures(style.FontFeatures));
@@ -862,7 +862,7 @@ internal sealed class ParagraphTextSource : ITextSource
         AvaloniaFonts.Resolve(style.FontFamily, style.FontFamilyFallback);
 
     // A `Paint` reaches Avalonia as its shader, or else as a solid brush of its color.
-    private static IBrush PaintBrush(Paint paint) => paint.Shader ?? new SolidColorBrush(paint.Color);
+    private static IBrush PaintBrush(Paint paint) => paint.Shader?.Brush ?? new SolidColorBrush(paint.Color.ToAvalonia());
 
     private static FontFeatureCollection? ResolveFontFeatures(IReadOnlyList<FontFeature>? features)
     {

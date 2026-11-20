@@ -64,7 +64,7 @@ public sealed class MaterialCircleAvatarTests : IDisposable
         var paragraph = Assert.Single(FindDescendants<RenderParagraph>(harness.RenderView));
         Assert.Equal("AB", paragraph.PlainText);
         Assert.Equal(18, paragraph.FontSize);
-        Assert.Equal(Colors.MidnightBlue, Assert.IsType<SolidColorBrush>(paragraph.Foreground).Color);
+        Assert.Equal(Colors.MidnightBlue, Assert.IsType<SolidColorBrush>(paragraph.Foreground).Color.ToPlumix());
     }
 
     [Fact]
@@ -165,7 +165,7 @@ public sealed class MaterialCircleAvatarTests : IDisposable
             box => box.AsBoxDecoration.Color == Colors.Navy);
         var defaultParagraph = FindDescendants<RenderParagraph>(defaultHarness.RenderView)
             .Single(value => value.PlainText == "default");
-        Assert.Equal(Colors.White, Assert.IsType<SolidColorBrush>(defaultParagraph.Foreground).Color);
+        Assert.Equal(Colors.White, Assert.IsType<SolidColorBrush>(defaultParagraph.Foreground).Color.ToPlumix());
 
         using var explicitHarness = new WidgetRenderHarness(BuildRoot(
             theme,
@@ -173,7 +173,7 @@ public sealed class MaterialCircleAvatarTests : IDisposable
         explicitHarness.Pump(new Size(100, 100));
         var paragraph = FindDescendants<RenderParagraph>(explicitHarness.RenderView)
             .Single(value => value.PlainText == "explicit");
-        Assert.Equal(Colors.Gold, Assert.IsType<SolidColorBrush>(paragraph.Foreground).Color);
+        Assert.Equal(Colors.Gold, Assert.IsType<SolidColorBrush>(paragraph.Foreground).Color.ToPlumix());
 
         using var lightBackgroundHarness = new WidgetRenderHarness(BuildRoot(
             theme,
@@ -181,7 +181,7 @@ public sealed class MaterialCircleAvatarTests : IDisposable
         lightBackgroundHarness.Pump(new Size(100, 100));
         var lightParagraph = FindDescendants<RenderParagraph>(lightBackgroundHarness.RenderView)
             .Single(value => value.PlainText == "light");
-        Assert.Equal(Colors.Navy, Assert.IsType<SolidColorBrush>(lightParagraph.Foreground).Color);
+        Assert.Equal(Colors.Navy, Assert.IsType<SolidColorBrush>(lightParagraph.Foreground).Color.ToPlumix());
 
         using var foregroundHarness = new WidgetRenderHarness(BuildRoot(
             theme,

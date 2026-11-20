@@ -68,11 +68,11 @@ public sealed class CupertinoThumbPainter
 
         context.Canvas.DrawRRect(
             RRect.FromRectAndRadius(rect.Inflate(0.5), radius + 0.5),
-            new SolidColorBrush(ThumbBorderColor),
+            new SolidColorBrush(ThumbBorderColor.ToAvalonia()),
             null);
         context.Canvas.DrawRRect(
             RRect.FromRectAndRadius(rect, radius),
-            new SolidColorBrush(Color),
+            new SolidColorBrush(Color.ToAvalonia()),
             null);
     }
 }

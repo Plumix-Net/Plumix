@@ -129,7 +129,7 @@ public class RoundSliderOverlayShape : SliderComponentShape
         var radiusTween = new DoubleTween(begin: 0.0, end: OverlayRadius);
 
         canvas.DrawCircle(
-            new SolidColorBrush(sliderTheme.OverlayColor!),
+            new SolidColorBrush(sliderTheme.OverlayColor!.ToAvalonia()),
             null,
             center,
             radiusTween.Transform(activationAnimation.Value));
@@ -385,7 +385,7 @@ internal sealed class RectangularSliderValueIndicatorPathPainter
         trianglePath.LineTo(-_triangleHeight, -_triangleHeight);
         trianglePath.LineTo(_triangleHeight, -_triangleHeight);
         trianglePath.Close();
-        var fillPaint = new SolidColorBrush(backgroundPaintColor);
+        var fillPaint = new SolidColorBrush(backgroundPaintColor.ToAvalonia());
         RRect upperRRect = RRect.FromRectAndRadius(upperRect, Radius.Circular(_upperRectRadius));
         trianglePath.AddRRect(upperRRect);
 
@@ -396,7 +396,7 @@ internal sealed class RectangularSliderValueIndicatorPathPainter
         canvas.Scale(scale, scale);
         if (strokePaintColor != null)
         {
-            var strokePaint = new Pen(new SolidColorBrush(strokePaintColor), 1.0);
+            var strokePaint = new Pen(new SolidColorBrush(strokePaintColor.ToAvalonia()), 1.0);
             canvas.DrawPath(trianglePath, null, strokePaint);
         }
 
@@ -816,7 +816,7 @@ internal sealed class PaddleSliderValueIndicatorPathPainter
             Offset leftCenter = _topLobeCenter - new Offset(leftWidthNeeded, 0.0) + neckStretch;
             Offset rightCenter = _topLobeCenter + new Offset(rightWidthNeeded, 0.0) + neckStretch;
             var valueRect = Rect.FromLTRB(leftCenter.Dx - _topLobeRadius, leftCenter.Dy - _topLobeRadius, rightCenter.Dx + _topLobeRadius, rightCenter.Dy + _topLobeRadius);
-            var outlinePaint = new Pen(new SolidColorBrush(new Color(0xffff0000)), 1.0);
+            var outlinePaint = new Pen(new SolidColorBrush(new Color(0xffff0000).ToAvalonia()), 1.0);
             canvas.DrawRectangle(null, outlinePaint, valueRect);
         }
 
@@ -837,11 +837,11 @@ internal sealed class PaddleSliderValueIndicatorPathPainter
 
         if (strokePaintColor != null)
         {
-            var strokePaint = new Pen(new SolidColorBrush(strokePaintColor), 1.0);
+            var strokePaint = new Pen(new SolidColorBrush(strokePaintColor.ToAvalonia()), 1.0);
             canvas.DrawPath(path, null, strokePaint);
         }
 
-        canvas.DrawPath(path, new SolidColorBrush(paint.Color), null);
+        canvas.DrawPath(path, new SolidColorBrush(paint.Color.ToAvalonia()), null);
 
         // Draw the label.
         canvas.Save();

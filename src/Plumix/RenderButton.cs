@@ -134,8 +134,8 @@ public sealed class RenderButton : RenderBox
     public override void Paint(PaintingContext ctx, Offset offset)
     {
         var background = OnPressed == null
-            ? new SolidColorBrush(Background, 0.45)
-            : new SolidColorBrush(Background);
+            ? new SolidColorBrush(Background.ToAvalonia(), 0.45)
+            : new SolidColorBrush(Background.ToAvalonia());
 
         var rect = offset & Size;
         ctx.Canvas.DrawRectangle(background, null, rect, 10, 10);

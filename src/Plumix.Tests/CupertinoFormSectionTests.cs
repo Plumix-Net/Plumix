@@ -61,7 +61,7 @@ public sealed class CupertinoFormSectionTests
         Assert.Equal(13.0, baseHeader.FontSize);
         Assert.Equal(
             CupertinoColors.SecondaryLabel.Color,
-            Assert.IsType<SolidColorBrush>(baseHeader.Foreground).Color);
+            Assert.IsType<SolidColorBrush>(baseHeader.Foreground).Color.ToPlumix());
         Assert.NotNull(FindParagraph(baseHarness.RenderView, "Footer"));
 
         using var insetHarness = new CupertinoThemeTestHarness(Wrap(CupertinoFormSection.InsetGrouped(
@@ -124,7 +124,7 @@ public sealed class CupertinoFormSectionTests
         RenderParagraph header = Assert.IsType<RenderParagraph>(FindParagraph(harness.RenderView, "Header"));
         Assert.Equal(
             CupertinoColors.SecondaryLabel.DarkColor,
-            Assert.IsType<SolidColorBrush>(header.Foreground).Color);
+            Assert.IsType<SolidColorBrush>(header.Foreground).Color.ToPlumix());
     }
 
     [Fact]

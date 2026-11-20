@@ -415,7 +415,7 @@ internal sealed class CupertinoCheckboxPainter : ToggleablePainter
     // White stroke used to paint the check and dash.
     private IPen CreateStrokePen()
     {
-        return new Pen(new SolidColorBrush(_checkColor), 2.0, lineCap: PenLineCap.Round);
+        return new Pen(new SolidColorBrush(_checkColor.ToAvalonia()), 2.0, lineCap: PenLineCap.Round);
     }
 
     // Draw a gradient from the top to the bottom of the checkbox.
@@ -425,7 +425,7 @@ internal sealed class CupertinoCheckboxPainter : ToggleablePainter
             colors: [topColor, bottomColor],
             begin: Alignment.TopCenter,
             end: Alignment.BottomCenter);
-        DrawShape(context, outer, fillGradient.CreateShader(outer), pen: null);
+        DrawShape(context, outer, fillGradient.CreateShader(outer).Brush, pen: null);
     }
 
     private void DrawBox(
@@ -451,11 +451,11 @@ internal sealed class CupertinoCheckboxPainter : ToggleablePainter
         }
         else if (strokeWidth is null)
         {
-            DrawShape(context, outer, new SolidColorBrush(paintColor), pen: null);
+            DrawShape(context, outer, new SolidColorBrush(paintColor.ToAvalonia()), pen: null);
         }
         else
         {
-            DrawShape(context, outer, brush: null, new Pen(new SolidColorBrush(paintColor), strokeWidth.Value));
+            DrawShape(context, outer, brush: null, new Pen(new SolidColorBrush(paintColor.ToAvalonia()), strokeWidth.Value));
         }
 
         DrawSide(context, outer, side);
@@ -489,14 +489,14 @@ internal sealed class CupertinoCheckboxPainter : ToggleablePainter
             context.Canvas.DrawOval(
                 outer.Deflate(side.Width / 2.0),
                 brush: null,
-                new Pen(new SolidColorBrush(side.Color), side.Width));
+                new Pen(new SolidColorBrush(side.Color.ToAvalonia()), side.Width));
             return;
         }
 
         Plumix.UI.RRect outerRRect = Plumix.UI.RRect.FromRectAndCorners(
             outer,
             ShapeBorderGeometry.ResolveRadius(_shape));
-        context.Canvas.DrawDRRect(outerRRect, outerRRect.Deflate(side.Width), new SolidColorBrush(side.Color));
+        context.Canvas.DrawDRRect(outerRRect, outerRRect.Deflate(side.Width), new SolidColorBrush(side.Color.ToAvalonia()));
     }
 
     private void DrawCheck(PaintingContext context, Offset origin, IPen pen)
@@ -550,7 +550,7 @@ internal sealed class CupertinoCheckboxPainter : ToggleablePainter
             Color pressedColor = _brightness == Plumix.UI.Brightness.Light
                 ? WithOpacity(CupertinoColors.Black, KPressedOverlayOpacity)
                 : WithOpacity(CupertinoColors.White, KPressedOverlayOpacity);
-            DrawShape(context, outer, new SolidColorBrush(pressedColor), pen: null);
+            DrawShape(context, outer, new SolidColorBrush(pressedColor.ToAvalonia()), pen: null);
         }
 
         if (IsFocused)

@@ -724,7 +724,7 @@ internal sealed class RenderSelectToggleButton : RenderShiftedBox
         double half = side.Width / 2.0;
         var rect = offset + new Offset(half, half) & new Size(Math.Max(0.0, Size.Width - side.Width), Math.Max(0.0, Size.Height - side.Width));
         context.Canvas.DrawRectangle(
-            new SolidColorBrush(Colors.Transparent),
+            new SolidColorBrush(Colors.Transparent.ToAvalonia()),
             PenFor(side),
             rect,
             NormalizeRadius(BorderRadius));
@@ -943,7 +943,7 @@ internal sealed class RenderSelectToggleButton : RenderShiftedBox
 
     private static Pen PenFor(BorderSide side)
     {
-        return new Pen(new SolidColorBrush(side.Color), side.Width);
+        return new Pen(new SolidColorBrush(side.Color.ToAvalonia()), side.Width);
     }
 
     private enum Corner

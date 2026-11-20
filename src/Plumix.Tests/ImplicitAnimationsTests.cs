@@ -872,7 +872,7 @@ public sealed class ImplicitAnimationsTests : IDisposable
         owner.PumpFrame();
         var finished = RequireRenderObject<RenderParagraph>(root.ChildElement);
         Assert.Equal(18, finished.FontSize, precision: 6);
-        Assert.Equal(Colors.Green, Assert.IsType<SolidColorBrush>(finished.Foreground).Color);
+        Assert.Equal(Colors.Green, Assert.IsType<SolidColorBrush>(finished.Foreground).Color.ToPlumix());
         Assert.Equal(1, completed);
 
         root.UnmountRoot();

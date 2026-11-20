@@ -24,9 +24,9 @@ public sealed class GradientShaderTests
     public void Linear_TilesOutsideTheShaderRectangleInAbsoluteCoordinates(TileMode mode)
     {
         var gradient = new LinearGradient(colors: [Colors.Red, Colors.Blue], tileMode: mode);
-        IBrush shader = gradient.CreateShader(Rect.FromLTWH(20, 10, 40, 40));
+        IBrush shader = gradient.CreateShader(Rect.FromLTWH(20, 10, 40, 40)).Brush;
         using RenderTargetBitmap image = Render(canvas => canvas.DrawRect(
-            Rect.FromLTWH(0, 0, 100, 60), new Paint { Shader = shader }));
+            Rect.FromLTWH(0, 0, 100, 60), new Paint { Shader = Plumix.UI.Shader.FromBrush(shader) }));
 
         AssertPixel(image, 40, 30, 124, 0, 131, 255);
         switch (mode)
@@ -179,10 +179,10 @@ public sealed class GradientShaderTests
         matrix.Storage[3] = 0.01;
         var gradient = new LinearGradient(colors: [Colors.Red, Colors.Blue],
             transform: new PerspectiveTransform(matrix));
-        IBrush shader = gradient.CreateShader(Rect.FromLTWH(0, 0, 100, 100));
+        IBrush shader = gradient.CreateShader(Rect.FromLTWH(0, 0, 100, 100)).Brush;
         matrix.Storage[3] = 0.5;
         using RenderTargetBitmap actual = Render(canvas => canvas.DrawRect(Rect.FromLTWH(0, 0, 100, 100),
-            new Paint { Shader = shader }), 100, 100);
+            new Paint { Shader = Plumix.UI.Shader.FromBrush(shader) }), 100, 100);
         using SKShader expected = SKShader.CreateLinearGradient(new SKPoint(0, 50), new SKPoint(100, 50),
             [SKColors.Red, SKColors.Blue], [0.0f, 1.0f], SKShaderTileMode.Clamp,
             new SKMatrix(1, 0, 0, 0, 1, 0, 0.01f, 0, 1));
@@ -193,7 +193,7 @@ public sealed class GradientShaderTests
     public void ShaderMask_AndBlurredPaintUseTheSameDecalShader()
     {
         IBrush shader = new LinearGradient(colors: [Colors.Red, Colors.Blue], tileMode: TileMode.Decal)
-            .CreateShader(Rect.FromLTWH(20, 0, 40, 60));
+            .CreateShader(Rect.FromLTWH(20, 0, 40, 60)).Brush;
         using var masked = new RenderTargetBitmap(new PixelSize(100, 60));
         using (DrawingContext context = masked.CreateDrawingContext())
         using (FilterLayerRasterizer.DrawShaderMasked(context,
@@ -206,7 +206,7 @@ public sealed class GradientShaderTests
         Assert.Equal(0, RasterBackend.PixelAt(masked, 10, 30).A);
         using RenderTargetBitmap blurred = Render(canvas => canvas.DrawRect(Rect.FromLTWH(0, 0, 100, 60), new Paint
         {
-            Shader = shader,
+            Shader = Plumix.UI.Shader.FromBrush(shader),
             MaskFilter = MaskFilter.Blur(BlurStyle.Normal, 2.0),
         }));
         AssertPixel(blurred, 40, 30, 124, 0, 131, 255);
@@ -217,8 +217,8 @@ public sealed class GradientShaderTests
     public void PathStroke_PreservesRecordingClipOpacityAndDevicePixelHairlines()
     {
         IBrush shader = new LinearGradient(colors: [Colors.Red, Colors.Blue])
-            .CreateShader(Rect.FromLTWH(0, 0, 100, 60));
-        var paint = new Paint { Shader = shader };
+            .CreateShader(Rect.FromLTWH(0, 0, 100, 60)).Brush;
+        var paint = new Paint { Shader = Plumix.UI.Shader.FromBrush(shader) };
         var recorder = new PictureRecorder();
         var canvas = new Canvas(recorder);
         canvas.ClipRect(Rect.FromLTWH(0, 0, 100, 40));
@@ -444,7 +444,6 @@ public sealed class GradientShaderTests
 
     private sealed record PerspectiveTransform(Matrix4 Matrix) : GradientTransform
     {
-        public override Matrix? Transform(Rect bounds, TextDirection? textDirection = null) => null;
-        public override Matrix4? Transform4(Rect bounds, TextDirection? textDirection = null) => Matrix;
+        public override Matrix4? Transform(Rect bounds, TextDirection? textDirection = null) => Matrix;
     }
 }

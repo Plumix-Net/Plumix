@@ -38,14 +38,14 @@ internal sealed class DebugOverflowIndicator : IDisposable
         SpreadMethod = GradientSpreadMethod.Repeat,
         GradientStops = new GradientStops
         {
-            new GradientStop(Black, 0.25),
-            new GradientStop(Yellow, 0.25),
-            new GradientStop(Yellow, 0.75),
-            new GradientStop(Black, 0.75),
+            new GradientStop(Black.ToAvalonia(), 0.25),
+            new GradientStop(Yellow.ToAvalonia(), 0.25),
+            new GradientStop(Yellow.ToAvalonia(), 0.75),
+            new GradientStop(Black.ToAvalonia(), 0.75),
         },
     }.ToImmutable();
 
-    private static readonly IBrush LabelBackgroundPaint = new SolidColorBrush(new Color(0xFFFFFFFF)).ToImmutable();
+    private static readonly IBrush LabelBackgroundPaint = new SolidColorBrush(new Color(0xFFFFFFFF).ToAvalonia()).ToImmutable();
 
     // One label painter per `_OverflowSide`; the labels are in English.
     private readonly TextPainter[] _indicatorLabel =

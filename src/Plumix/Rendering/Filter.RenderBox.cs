@@ -2,6 +2,7 @@ using System.Diagnostics;
 using Avalonia;
 using Avalonia.Media;
 using Plumix.Foundation;
+using Plumix.UI;
 
 namespace Plumix.Rendering;
 
@@ -15,7 +16,7 @@ namespace Plumix.Rendering;
 /// Dart's <c>typedef ShaderCallback = Shader Function(Rect bounds)</c>. The published return type
 /// carries backend brushes and the native shader descriptions returned by <c>Gradient.CreateShader</c>.
 /// </remarks>
-public delegate IBrush ShaderCallback(Rect bounds);
+public delegate Shader ShaderCallback(Rect bounds);
 
 public sealed class RenderColorFilter : RenderProxyBox
 {

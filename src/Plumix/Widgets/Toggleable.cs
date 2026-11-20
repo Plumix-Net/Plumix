@@ -550,7 +550,7 @@ public abstract class ToggleablePainter : CustomPainter
         }
 
         context.Canvas.DrawCircle(
-            new SolidColorBrush(color),
+            new SolidColorBrush(color.ToAvalonia()),
             null,
             new Offset(origin.Dx + offset.Dx, origin.Dy + offset.Dy),
             reactionRadius);

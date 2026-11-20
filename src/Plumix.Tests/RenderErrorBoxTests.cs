@@ -136,7 +136,7 @@ public sealed class RenderErrorBoxTests
                     .GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
                     .Select(field => field.GetValue(closure)).ToArray();
                 Assert.Equal(Rect.FromLTWH(7, 11, 800, 600), Assert.Single(captured.OfType<Rect>()));
-                Assert.Equal(color, Assert.Single(captured.OfType<SolidColorBrush>()).Color);
+                Assert.Equal(color, Assert.Single(captured.OfType<SolidColorBrush>()).Color.ToPlumix());
             }
         }
         finally

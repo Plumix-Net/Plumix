@@ -561,7 +561,7 @@ internal sealed class RenderCupertinoSlider : RenderBox, IMouseTrackerAnnotation
             // visual difference.
             context.Canvas.DrawRRect(
                 RRect.FromLTRBXY(trackLeft, trackTop, trackActive, trackBottom, 1.0, 1.0),
-                new SolidColorBrush(rightColor),
+                new SolidColorBrush(rightColor.ToAvalonia()),
                 null);
         }
 
@@ -569,7 +569,7 @@ internal sealed class RenderCupertinoSlider : RenderBox, IMouseTrackerAnnotation
         {
             context.Canvas.DrawRRect(
                 RRect.FromLTRBXY(trackActive, trackTop, trackRight, trackBottom, 1.0, 1.0),
-                new SolidColorBrush(leftColor),
+                new SolidColorBrush(leftColor.ToAvalonia()),
                 null);
         }
 

@@ -115,13 +115,13 @@ internal sealed class FlutterTestGlyphDraw(IReadOnlyList<FlutterTestGlyphDraw.Op
             switch (operation)
             {
                 case BackgroundOperation background:
-                    context.FillRectangle(new ImmutableSolidColorBrush(background.Color), background.Rect.ToAvalonia());
+                    context.FillRectangle(new ImmutableSolidColorBrush(background.Color.ToAvalonia()), background.Rect.ToAvalonia());
                     break;
                 case GlyphsOperation { Shadow: null } run:
                     foreach (Glyph glyph in run.Glyphs)
                     {
                         context.FillRectangle(
-                            new ImmutableSolidColorBrush(glyph.Color),
+                            new ImmutableSolidColorBrush(glyph.Color.ToAvalonia()),
                             Rect.FromLTWH(
                                 glyph.X,
                                 glyph.Baseline - (glyph.FontSize * 0.75),

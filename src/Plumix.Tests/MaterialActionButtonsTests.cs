@@ -289,7 +289,7 @@ public sealed class MaterialActionButtonsTests
 
         var icon = FindParagraph(harness.RenderView, char.ConvertFromUtf32(Icons.ArrowBack.CodePoint));
         Assert.NotNull(icon);
-        Assert.Equal(Colors.Purple, Assert.IsType<SolidColorBrush>(icon!.Foreground).Color);
+        Assert.Equal(Colors.Purple, Assert.IsType<SolidColorBrush>(icon!.Foreground).Color.ToPlumix());
     }
 
     [Fact]
@@ -320,7 +320,7 @@ public sealed class MaterialActionButtonsTests
         Assert.Equal(4, icons.Count);
         Assert.All(
             icons,
-            icon => Assert.Equal(expected, Assert.IsType<SolidColorBrush>(icon.Foreground).Color));
+            icon => Assert.Equal(expected, Assert.IsType<SolidColorBrush>(icon.Foreground).Color.ToPlumix()));
     }
 
     [Fact]
@@ -350,7 +350,7 @@ public sealed class MaterialActionButtonsTests
         Assert.Equal(4, icons.Count);
         Assert.All(
             icons,
-            icon => Assert.Equal(expected, Assert.IsType<SolidColorBrush>(icon.Foreground).Color));
+            icon => Assert.Equal(expected, Assert.IsType<SolidColorBrush>(icon.Foreground).Color.ToPlumix()));
     }
 
     [Fact]

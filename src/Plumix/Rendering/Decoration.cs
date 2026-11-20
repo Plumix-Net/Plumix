@@ -699,11 +699,11 @@ public readonly record struct BorderSide : IDiagnosticable
     }
 
     /// Creates a stroke [IPen] that describes this border side, or null when nothing is painted.
-    public IPen? ToPen()
+    internal IPen? ToPen()
     {
         return Style switch
         {
-            BorderStyle.Solid => new Pen(new SolidColorBrush(Color), Width),
+            BorderStyle.Solid => new Pen(new SolidColorBrush(Color.ToAvalonia()), Width),
             _ => null,
         };
     }

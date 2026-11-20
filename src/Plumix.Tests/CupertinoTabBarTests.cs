@@ -300,7 +300,7 @@ public sealed class CupertinoTabBarTests : IDisposable
 
     private static Color Foreground(RenderParagraph paragraph)
     {
-        return (Color)Assert.IsType<SolidColorBrush>(paragraph.Foreground).Color;
+        return Assert.IsType<SolidColorBrush>(paragraph.Foreground).Color.ToPlumix();
     }
 
     private static RenderParagraph? FindParagraph(RenderObject? root, string text)

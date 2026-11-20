@@ -120,7 +120,7 @@ public sealed class MaterialPopupMenuTests : IDisposable
         var checkedText = FindParagraph(checkedHarness.RenderView, "Checked item");
         Assert.NotNull(checkedText);
         Assert.Equal(24, checkedText!.FontSize);
-        Assert.Equal(Colors.Red, Assert.IsType<SolidColorBrush>(checkedText.Foreground).Color);
+        Assert.Equal(Colors.Red, Assert.IsType<SolidColorBrush>(checkedText.Foreground).Color.ToPlumix());
         Assert.NotNull(FindParagraph(checkedHarness.RenderView, char.ConvertFromUtf32(Icons.Done.CodePoint)));
         Assert.NotNull(FindSemantics(checkedSemantics, node =>
             node.Role == SemanticsRole.MenuItemCheckbox
@@ -138,7 +138,7 @@ public sealed class MaterialPopupMenuTests : IDisposable
         var uncheckedText = FindParagraph(uncheckedHarness.RenderView, "Unchecked item");
         Assert.NotNull(uncheckedText);
         Assert.Equal(20, uncheckedText!.FontSize);
-        Assert.Equal(Colors.Orange, Assert.IsType<SolidColorBrush>(uncheckedText.Foreground).Color);
+        Assert.Equal(Colors.Orange, Assert.IsType<SolidColorBrush>(uncheckedText.Foreground).Color.ToPlumix());
         Assert.Null(FindParagraph(uncheckedHarness.RenderView, char.ConvertFromUtf32(Icons.Done.CodePoint)));
         Assert.NotNull(FindSemantics(uncheckedSemantics, node =>
             node.Role == SemanticsRole.MenuItemCheckbox
@@ -169,7 +169,7 @@ public sealed class MaterialPopupMenuTests : IDisposable
             FindParagraph(m3.RenderView, "M3 item")!.FontSize);
         Assert.Equal(
             ThemeData.Light.ColorScheme.OnSurface,
-            Assert.IsType<SolidColorBrush>(FindParagraph(m3.RenderView, "M3 item")!.Foreground).Color);
+            Assert.IsType<SolidColorBrush>(FindParagraph(m3.RenderView, "M3 item")!.Foreground).Color.ToPlumix());
         Assert.NotNull(FindSemantics(m3Semantics, node =>
             node.Flags.HasFlag(SemanticsFlags.IsButton)
             && node.Flags.HasFlag(SemanticsFlags.IsEnabled)));
@@ -186,7 +186,7 @@ public sealed class MaterialPopupMenuTests : IDisposable
             FindParagraph(m2.RenderView, "M2 disabled")!.FontSize);
         Assert.Equal(
             ThemeData.Light.DisabledColor,
-            Assert.IsType<SolidColorBrush>(FindParagraph(m2.RenderView, "M2 disabled")!.Foreground).Color);
+            Assert.IsType<SolidColorBrush>(FindParagraph(m2.RenderView, "M2 disabled")!.Foreground).Color.ToPlumix());
         Assert.NotNull(FindSemantics(m2Semantics, node => node.Flags.HasFlag(SemanticsFlags.IsButton)));
         Assert.Null(FindSemantics(m2Semantics, node => node.Actions.HasFlag(SemanticsActions.Tap)));
     }

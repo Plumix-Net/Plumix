@@ -61,7 +61,7 @@ public sealed class MaterialButtonsTests
 
         var paragraph = FindDescendant<RenderParagraph>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(paragraph);
-        Assert.Equal(Colors.DarkCyan, Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color);
+        Assert.Equal(Colors.DarkCyan, Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color.ToPlumix());
     }
 
     [Fact]
@@ -88,7 +88,7 @@ public sealed class MaterialButtonsTests
 
         var paragraph = FindDescendant<RenderParagraph>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(paragraph);
-        Assert.Equal(Colors.DarkCyan, Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color);
+        Assert.Equal(Colors.DarkCyan, Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color.ToPlumix());
     }
 
     [Theory]
@@ -117,7 +117,7 @@ public sealed class MaterialButtonsTests
         Assert.NotNull(paragraph);
         Assert.Equal(
             ApplyOpacity(theme.ColorScheme.OnSurface, 0.38),
-            Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color);
+            Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color.ToPlumix());
     }
 
     [Fact]
@@ -354,7 +354,7 @@ public sealed class MaterialButtonsTests
         Assert.NotNull(decorated);
         Assert.Equal(colorScheme.Primary, decorated!.Color);
         Assert.NotNull(paragraph);
-        Assert.Equal(colorScheme.OnPrimary, Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color);
+        Assert.Equal(colorScheme.OnPrimary, Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color.ToPlumix());
     }
 
     [Fact]
@@ -436,7 +436,7 @@ public sealed class MaterialButtonsTests
         Assert.NotNull(paragraph);
         Assert.Equal(
             colorScheme.OnSecondaryContainer,
-            Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color);
+            Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color.ToPlumix());
     }
 
     [Fact]
@@ -827,7 +827,7 @@ public sealed class MaterialButtonsTests
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.25));
         owner.PumpFrame();
         paragraph = FindDescendant<RenderParagraph>(RequireRenderObject<RenderObject>(root.ChildElement));
-        Assert.Equal(Colors.White, Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color);
+        Assert.Equal(Colors.White, Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color.ToPlumix());
         Assert.Equal(Colors.White, capturedIconTheme!.Color);
         root.UnmountRoot();
     }
@@ -2278,7 +2278,7 @@ public sealed class MaterialButtonsTests
 
         var paragraph = FindDescendant<RenderParagraph>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(paragraph);
-        Assert.Equal(Colors.DarkCyan, Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color);
+        Assert.Equal(Colors.DarkCyan, Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color.ToPlumix());
     }
 
     [Fact]
@@ -2312,7 +2312,7 @@ public sealed class MaterialButtonsTests
         Assert.NotNull(decorated);
         Assert.Equal(theme.ColorScheme.SurfaceContainerLow, decorated!.Color);
         Assert.NotNull(paragraph);
-        Assert.Equal(theme.ColorScheme.Primary, Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color);
+        Assert.Equal(theme.ColorScheme.Primary, Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color.ToPlumix());
         Assert.Equal(Colors.DarkGreen, decorated.ShadowColor);
         Assert.True(decorated.HasShadow);
     }
@@ -2348,7 +2348,7 @@ public sealed class MaterialButtonsTests
         Assert.NotNull(decorated);
         Assert.Equal(theme.ColorScheme.Primary, decorated!.Color);
         Assert.NotNull(paragraph);
-        Assert.Equal(theme.ColorScheme.OnPrimary, Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color);
+        Assert.Equal(theme.ColorScheme.OnPrimary, Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color.ToPlumix());
     }
 
     [Fact]
@@ -2782,7 +2782,7 @@ public sealed class MaterialButtonsTests
         Assert.NotNull(paragraph);
         Assert.Equal(
             theme.ColorScheme.Primary,
-            Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color);
+            Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color.ToPlumix());
 
         focusNode.RequestFocus();
         owner.PumpFrame();
@@ -2886,7 +2886,7 @@ public sealed class MaterialButtonsTests
         Assert.NotNull(paragraph);
         Assert.Equal(
             theme.ColorScheme.Primary,
-            Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color);
+            Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color.ToPlumix());
     }
 
     [Fact]
@@ -2915,7 +2915,7 @@ public sealed class MaterialButtonsTests
         Assert.NotNull(paragraph);
         Assert.Equal(
             theme.ColorScheme.Primary,
-            Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color);
+            Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color.ToPlumix());
     }
 
     [Fact]
@@ -3001,7 +3001,7 @@ public sealed class MaterialButtonsTests
         Assert.NotNull(paragraph);
         Assert.Equal(
             theme.ColorScheme.OnPrimary,
-            Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color);
+            Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color.ToPlumix());
     }
 
     [Fact]
@@ -3035,7 +3035,7 @@ public sealed class MaterialButtonsTests
         Assert.NotNull(paragraph);
         Assert.Equal(
             theme.ColorScheme.OnSecondaryContainer,
-            Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color);
+            Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color.ToPlumix());
     }
 
     [Fact]
@@ -3067,7 +3067,7 @@ public sealed class MaterialButtonsTests
         Assert.NotNull(paragraph);
         Assert.Equal(
             ApplyOpacity(theme.ColorScheme.OnSurface, 0.38),
-            Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color);
+            Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color.ToPlumix());
     }
 
     [Fact]
@@ -3116,7 +3116,7 @@ public sealed class MaterialButtonsTests
 
         var paragraph = FindDescendant<RenderParagraph>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(paragraph);
-        Assert.Equal(Colors.ForestGreen, Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color);
+        Assert.Equal(Colors.ForestGreen, Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color.ToPlumix());
     }
 
     [Fact]
@@ -3367,7 +3367,7 @@ public sealed class MaterialButtonsTests
 
         var paragraph = FindDescendant<RenderParagraph>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(paragraph);
-        Assert.Equal(Colors.DarkCyan, Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color);
+        Assert.Equal(Colors.DarkCyan, Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color.ToPlumix());
     }
 
     [Fact]
@@ -3395,7 +3395,7 @@ public sealed class MaterialButtonsTests
 
         var paragraph = FindDescendant<RenderParagraph>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(paragraph);
-        Assert.Equal(Colors.ForestGreen, Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color);
+        Assert.Equal(Colors.ForestGreen, Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color.ToPlumix());
     }
 
     [Fact]
@@ -3482,7 +3482,7 @@ public sealed class MaterialButtonsTests
 
         var paragraph = FindDescendant<RenderParagraph>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(paragraph);
-        Assert.Equal(Colors.ForestGreen, Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color);
+        Assert.Equal(Colors.ForestGreen, Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color.ToPlumix());
     }
 
     [Fact]
@@ -3514,7 +3514,7 @@ public sealed class MaterialButtonsTests
 
         var paragraph = FindDescendant<RenderParagraph>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(paragraph);
-        Assert.Equal(Colors.OrangeRed, Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color);
+        Assert.Equal(Colors.OrangeRed, Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color.ToPlumix());
     }
 
     [Fact]
@@ -3544,7 +3544,7 @@ public sealed class MaterialButtonsTests
 
         var paragraph = FindDescendant<RenderParagraph>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(paragraph);
-        Assert.Equal(Colors.OrangeRed, Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color);
+        Assert.Equal(Colors.OrangeRed, Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color.ToPlumix());
     }
 
     [Fact]
@@ -3667,7 +3667,7 @@ public sealed class MaterialButtonsTests
         var decorated = MaterialSurfaceProbe.Find(renderRoot);
 
         Assert.NotNull(paragraph);
-        Assert.Equal(Colors.Crimson, Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color);
+        Assert.Equal(Colors.Crimson, Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color.ToPlumix());
         Assert.NotNull(decorated);
         Assert.Equal(Colors.LightGoldenrodYellow, decorated!.Color);
     }
@@ -3764,7 +3764,7 @@ public sealed class MaterialButtonsTests
 
         var paragraph = FindDescendant<RenderParagraph>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(paragraph);
-        Assert.Equal(Colors.DarkCyan, Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color);
+        Assert.Equal(Colors.DarkCyan, Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color.ToPlumix());
         Assert.Equal(18, paragraph.FontSize);
         Assert.Equal(FontWeight.Bold, paragraph.FontWeight);
     }
@@ -3993,7 +3993,7 @@ public sealed class MaterialButtonsTests
         Assert.NotNull(decorated);
         Assert.NotNull(paragraph);
         Assert.Equal(Colors.SaddleBrown, decorated!.Color);
-        Assert.Equal(Colors.SlateGray, Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color);
+        Assert.Equal(Colors.SlateGray, Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color.ToPlumix());
     }
 
     [Fact]
@@ -4021,7 +4021,7 @@ public sealed class MaterialButtonsTests
         Assert.NotNull(paragraph);
         Assert.Equal(
             ApplyOpacity(theme.ColorScheme.OnSurface, 0.38),
-            Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color);
+            Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color.ToPlumix());
     }
 
     [Fact]
@@ -4074,7 +4074,7 @@ public sealed class MaterialButtonsTests
 
         var paragraph = FindDescendant<RenderParagraph>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(paragraph);
-        Assert.Equal(theme.ColorScheme.Primary, Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color);
+        Assert.Equal(theme.ColorScheme.Primary, Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color.ToPlumix());
     }
 
     [Fact]
@@ -4129,7 +4129,7 @@ public sealed class MaterialButtonsTests
 
         var paragraph = FindDescendant<RenderParagraph>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(paragraph);
-        Assert.Equal(theme.ColorScheme.Primary, Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color);
+        Assert.Equal(theme.ColorScheme.Primary, Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color.ToPlumix());
     }
 
     [Fact]
@@ -4158,7 +4158,7 @@ public sealed class MaterialButtonsTests
 
         var paragraph = FindDescendant<RenderParagraph>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(paragraph);
-        Assert.Equal(theme.ColorScheme.Primary, Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color);
+        Assert.Equal(theme.ColorScheme.Primary, Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color.ToPlumix());
     }
 
     [Fact]
@@ -4189,7 +4189,7 @@ public sealed class MaterialButtonsTests
         Assert.NotNull(paragraph);
         Assert.Equal(
             theme.ColorScheme.Primary,
-            Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color);
+            Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color.ToPlumix());
     }
 
     [Fact]
@@ -4219,7 +4219,7 @@ public sealed class MaterialButtonsTests
         Assert.NotNull(paragraph);
         Assert.Equal(
             theme.ColorScheme.OnPrimary,
-            Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color);
+            Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color.ToPlumix());
     }
 
     [Fact]
@@ -4537,7 +4537,7 @@ public sealed class MaterialButtonsTests
         Assert.NotNull(paragraph);
         Assert.Equal(
             ApplyOpacity(theme.ColorScheme.OnSurface, 0.38),
-            Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color);
+            Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color.ToPlumix());
     }
 
     [DebugOnlyFact]

@@ -221,10 +221,10 @@ public sealed class MaterialSnackBarTests : IDisposable
             box.Color == ThemeData.Light.ColorScheme.InverseSurface);
         Assert.Equal(
             ThemeData.Light.ColorScheme.OnInverseSurface,
-            Assert.IsType<SolidColorBrush>(FindParagraph(material3.RenderView, "Message")!.Foreground).Color);
+            Assert.IsType<SolidColorBrush>(FindParagraph(material3.RenderView, "Message")!.Foreground).Color.ToPlumix());
         Assert.Equal(
             ThemeData.Light.ColorScheme.InversePrimary,
-            Assert.IsType<SolidColorBrush>(FindParagraph(material3.RenderView, "UNDO")!.Foreground).Color);
+            Assert.IsType<SolidColorBrush>(FindParagraph(material3.RenderView, "UNDO")!.Foreground).Color.ToPlumix());
 
         var material2Dark = ThemeData.Dark with { UseMaterial3 = false };
         using var material2 = Show(material2Dark, Bar(action: Action()));
@@ -233,7 +233,7 @@ public sealed class MaterialSnackBarTests : IDisposable
         // M2 dark inverts to a light theme, so the action takes `colorScheme.primary`.
         Assert.Equal(
             material2Dark.ColorScheme.Primary,
-            Assert.IsType<SolidColorBrush>(FindParagraph(material2.RenderView, "UNDO")!.Foreground).Color);
+            Assert.IsType<SolidColorBrush>(FindParagraph(material2.RenderView, "UNDO")!.Foreground).Color.ToPlumix());
     }
 
     [Fact]
@@ -242,7 +242,7 @@ public sealed class MaterialSnackBarTests : IDisposable
         using var harness = Show(ThemeData.Dark, Bar(action: Action()));
         Assert.Equal(
             ThemeData.Dark.ColorScheme.InversePrimary,
-            Assert.IsType<SolidColorBrush>(FindParagraph(harness.RenderView, "UNDO")!.Foreground).Color);
+            Assert.IsType<SolidColorBrush>(FindParagraph(harness.RenderView, "UNDO")!.Foreground).Color.ToPlumix());
     }
 
     [Fact]
@@ -290,10 +290,10 @@ public sealed class MaterialSnackBarTests : IDisposable
             box.Color == Colors.Purple);
         RenderParagraph content = FindParagraph(fromTheme.RenderView, "Message")!;
         Assert.Equal(18, content.FontSize);
-        Assert.Equal(Colors.Orange, Assert.IsType<SolidColorBrush>(content.Foreground).Color);
+        Assert.Equal(Colors.Orange, Assert.IsType<SolidColorBrush>(content.Foreground).Color.ToPlumix());
         Assert.Equal(
             Colors.Gold,
-            Assert.IsType<SolidColorBrush>(FindParagraph(fromTheme.RenderView, "UNDO")!.Foreground).Color);
+            Assert.IsType<SolidColorBrush>(FindParagraph(fromTheme.RenderView, "UNDO")!.Foreground).Color.ToPlumix());
         Assert.Contains(FindWidgets<MaterialWidget>(fromTheme), material => material.Elevation == 0);
 
         using var widgetWins = Show(themed, Bar(backgroundColor: Colors.Green, elevation: 12));
@@ -405,7 +405,7 @@ public sealed class MaterialSnackBarTests : IDisposable
 
         Assert.Equal(
             Colors.Green,
-            Assert.IsType<SolidColorBrush>(FindParagraph(harness.RenderView, "UNDO")!.Foreground).Color);
+            Assert.IsType<SolidColorBrush>(FindParagraph(harness.RenderView, "UNDO")!.Foreground).Color.ToPlumix());
 
         double now = AnimationPump.CurrentSeconds;
         Tap(harness.RenderView, new Offset(100, 30), 901);
@@ -422,7 +422,7 @@ public sealed class MaterialSnackBarTests : IDisposable
         Assert.Equal(1, calls);
         Assert.Equal(
             Colors.Red,
-            Assert.IsType<SolidColorBrush>(FindParagraph(harness.RenderView, "UNDO")!.Foreground).Color);
+            Assert.IsType<SolidColorBrush>(FindParagraph(harness.RenderView, "UNDO")!.Foreground).Color.ToPlumix());
     }
 
     [Fact]
@@ -443,7 +443,7 @@ public sealed class MaterialSnackBarTests : IDisposable
         harness.Pump(new Size(200, 60));
         Assert.Equal(
             Colors.Green,
-            Assert.IsType<SolidColorBrush>(FindParagraph(harness.RenderView, "UNDO")!.Foreground).Color);
+            Assert.IsType<SolidColorBrush>(FindParagraph(harness.RenderView, "UNDO")!.Foreground).Color.ToPlumix());
 
         double now = AnimationPump.CurrentSeconds;
         Tap(harness.RenderView, new Offset(100, 30), 903);
@@ -453,7 +453,7 @@ public sealed class MaterialSnackBarTests : IDisposable
         harness.Pump(new Size(200, 60));
         Assert.Equal(
             Colors.Red,
-            Assert.IsType<SolidColorBrush>(FindParagraph(harness.RenderView, "UNDO")!.Foreground).Color);
+            Assert.IsType<SolidColorBrush>(FindParagraph(harness.RenderView, "UNDO")!.Foreground).Color.ToPlumix());
     }
 
     [DebugOnlyFact]

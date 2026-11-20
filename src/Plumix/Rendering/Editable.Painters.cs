@@ -206,7 +206,7 @@ internal sealed class TextHighlightPainter : RenderEditablePainter
             return;
         }
 
-        var highlightBrush = new SolidColorBrush(highlightColor);
+        var highlightBrush = new SolidColorBrush(highlightColor.ToAvalonia());
         TextPainter textPainter = renderEditable.TextPainter;
         IEnumerable<TextBox> boxes = textPainter.GetBoxesForSelection(
                 new TextSelection(highlightedRange.Start, highlightedRange.End),
@@ -391,7 +391,7 @@ internal sealed class CaretPainter : RenderEditablePainter
             }
 
             Radius? radius = CursorRadius;
-            var caretBrush = new SolidColorBrush(caretColor);
+            var caretBrush = new SolidColorBrush(caretColor.ToAvalonia());
             if (radius is null)
             {
                 canvas.DrawRectangle(caretBrush, null, integralRect);
@@ -440,7 +440,7 @@ internal sealed class CaretPainter : RenderEditablePainter
 
         canvas.DrawRRect(
             RRect.FromRectAndRadius(floatingRect, KFloatingCursorRadius),
-            new SolidColorBrush(floatingColor),
+            new SolidColorBrush(floatingColor.ToAvalonia()),
             null);
     }
 

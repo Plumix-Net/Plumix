@@ -111,7 +111,7 @@ public sealed class MaterialGridTileTests
         Assert.Equal(14, title!.FontSize);
         Assert.Equal(
             ThemeData.Dark.TextTheme.TitleMedium.Color,
-            (Color)Assert.IsType<SolidColorBrush>(title.Foreground).Color);
+            Assert.IsType<SolidColorBrush>(title.Foreground).Color.ToPlumix());
         Assert.False(title.SoftWrap);
         Assert.Equal(TextOverflow.Ellipsis, title.Overflow);
     }
@@ -153,10 +153,10 @@ public sealed class MaterialGridTileTests
         Assert.Equal(14, subtitle!.FontSize);
         Assert.Equal(
             ThemeData.Dark.TextTheme.TitleMedium.Color,
-            (Color)Assert.IsType<SolidColorBrush>(title.Foreground).Color);
+            Assert.IsType<SolidColorBrush>(title.Foreground).Color.ToPlumix());
         Assert.Equal(
             ThemeData.Dark.TextTheme.BodySmall.Color,
-            (Color)Assert.IsType<SolidColorBrush>(subtitle.Foreground).Color);
+            Assert.IsType<SolidColorBrush>(subtitle.Foreground).Color.ToPlumix());
         Assert.False(title.SoftWrap);
         Assert.False(subtitle.SoftWrap);
         Assert.Equal(TextOverflow.Ellipsis, title.Overflow);
@@ -167,7 +167,7 @@ public sealed class MaterialGridTileTests
             .ToList();
         Assert.Equal(2, iconParagraphs.Count);
         Assert.All(iconParagraphs, paragraph =>
-            Assert.Equal(Colors.White, Assert.IsType<SolidColorBrush>(paragraph.Foreground).Color));
+            Assert.Equal(Colors.White, Assert.IsType<SolidColorBrush>(paragraph.Foreground).Color.ToPlumix()));
     }
 
     [Fact]

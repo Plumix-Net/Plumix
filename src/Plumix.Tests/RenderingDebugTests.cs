@@ -637,7 +637,7 @@ public sealed class RenderingDebugTests : IDisposable
             () => PaintUtilities.BuildZigZagPath(length: 10.0, zigs: 0, width: 4.0));
         Assert.Throws<ArgumentOutOfRangeException>(() => PaintUtilities.PaintZigZag(
             new PaintingContext(new ContainerLayer()),
-            new Pen(Brushes.Red),
+            new Paint { Color = Colors.Red, Style = PaintingStyle.Stroke },
             new Offset(0.0, 0.0),
             new Offset(10.0, 0.0),
             zigs: 0,
@@ -666,7 +666,7 @@ public sealed class RenderingDebugTests : IDisposable
 
         PaintUtilities.PaintZigZag(
             context,
-            new Pen(Brushes.Red),
+            new Paint { Color = Colors.Red, Style = PaintingStyle.Stroke },
             new Offset(5.0, 5.0),
             new Offset(5.0, 25.0),
             zigs: 2,

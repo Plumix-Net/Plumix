@@ -123,7 +123,7 @@ internal sealed class UnderlinePainter : BoxPainter
             Rect rounded = _decoration.IndicatorRectFor(rect, textDirection);
             context.Canvas.DrawRRect(
                 Plumix.UI.RRect.FromRectAndCorners(rounded, borderRadius),
-                new SolidColorBrush(_decoration.BorderSide.Color),
+                new SolidColorBrush(_decoration.BorderSide.Color.ToAvalonia()),
                 pen: null);
             return;
         }
@@ -140,7 +140,7 @@ internal sealed class UnderlinePainter : BoxPainter
         double y = strip.Bottom - (width / 2.0);
         context.Canvas.DrawLine(
             new Pen(
-                new SolidColorBrush(_decoration.BorderSide.Color),
+                new SolidColorBrush(_decoration.BorderSide.Color.ToAvalonia()),
                 width,
                 lineCap: PenLineCap.Square),
             new Offset(strip.Left + (width / 2.0), y),

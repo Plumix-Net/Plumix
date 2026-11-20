@@ -121,7 +121,7 @@ public sealed record RoundedRectangleBorder : OutlinedBorder
         RRect borderRect = resolved.ToRRect(rect);
         RRect inner = borderRect.Deflate(Side.StrokeInset);
         RRect outer = borderRect.Inflate(Side.StrokeOutset);
-        context.Canvas.DrawDRRect(outer, inner, new SolidColorBrush(Side.Color));
+        context.Canvas.DrawDRRect(outer, inner, new SolidColorBrush(Side.Color.ToAvalonia()));
     }
 
     public override string ToString()

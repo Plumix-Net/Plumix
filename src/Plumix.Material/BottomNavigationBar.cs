@@ -1107,7 +1107,7 @@ internal sealed class BottomNavigationBarRadialPainter : CustomPainter
     {
         foreach (BottomNavigationBarCircle circle in Circles)
         {
-            var brush = new SolidColorBrush(circle.Color);
+            var brush = new SolidColorBrush(circle.Color.ToAvalonia());
             var rect = Rect.FromLTWH(0.0, 0.0, size.Width, size.Height);
             double leftFraction = TextDirection switch
             {

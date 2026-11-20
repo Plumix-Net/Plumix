@@ -343,7 +343,7 @@ public class RenderConstrainedBox : RenderProxyBox
             if (Child == null || Child.Size.Width <= 0.0 || Child.Size.Height <= 0.0)
             {
                 context.Canvas.DrawRectangle(
-                    new SolidColorBrush(new Color(0x90909090)),
+                    new SolidColorBrush(new Color(0x90909090).ToAvalonia()),
                     null,
                     (offset & Size));
             }

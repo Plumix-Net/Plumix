@@ -1426,7 +1426,7 @@ internal sealed class TimeDialPainter : CustomPainter
             TimePickerConstants.DialMinRadius);
         var center = new Offset(size.Width / 2, size.Height / 2);
         Offset centerPoint = center;
-        canvas.DrawCircle(new SolidColorBrush(BackgroundColor), null, centerPoint, dialRadius);
+        canvas.DrawCircle(new SolidColorBrush(BackgroundColor.ToAvalonia()), null, centerPoint, dialRadius);
 
         Offset GetOffsetForTheta(double theta, double radius) => new(
             center.Dx + (radius * Math.Cos(theta)),
@@ -1464,7 +1464,7 @@ internal sealed class TimeDialPainter : CustomPainter
 
         PaintInnerOuterLabels(PrimaryLabels);
 
-        var selectorPaint = new SolidColorBrush(HandColor);
+        var selectorPaint = new SolidColorBrush(HandColor.ToAvalonia());
         Offset focusedPoint = GetOffsetForTheta(Theta, handleRadius);
         canvas.DrawCircle(selectorPaint, null, centerPoint, CenterRadius);
         canvas.DrawCircle(selectorPaint, null, focusedPoint, DotRadius);
@@ -1477,7 +1477,7 @@ internal sealed class TimeDialPainter : CustomPainter
         double labelThetaIncrement = -TimePickerConstants.TwoPi / PrimaryLabels.Count;
         if (DartModulo(Theta, labelThetaIncrement) > 0.1 && DartModulo(Theta, labelThetaIncrement) < 0.45)
         {
-            canvas.DrawCircle(new SolidColorBrush(DotColor), null, focusedPoint, 2);
+            canvas.DrawCircle(new SolidColorBrush(DotColor.ToAvalonia()), null, focusedPoint, 2);
         }
 
         Rect focusedRect = Rect.FromLTWH(

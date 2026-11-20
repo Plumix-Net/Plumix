@@ -84,7 +84,7 @@ public abstract class ClipContext
     /// Flutter has no counterpart because every Dart clip goes through <c>Path</c>; Plumix keeps this
     /// door open for render objects that receive a backend geometry (ovals, decoration outlines).
     /// </remarks>
-    public void ClipGeometryAndPaint(
+    internal void ClipGeometryAndPaint(
         Avalonia.Media.Geometry geometry,
         Offset geometryOffset,
         Clip clipBehavior,

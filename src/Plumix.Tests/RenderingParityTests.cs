@@ -425,7 +425,7 @@ public sealed class RenderingParityTests
         public override void Paint(PaintingContext ctx, Offset offset)
         {
             ctx.Canvas.DrawRectangle(
-                new SolidColorBrush(new Color(0xFFC8E6C9)),
+                new SolidColorBrush(new Color(0xFFC8E6C9).ToAvalonia()),
                 null,
                 (offset & Size));
         }

@@ -171,7 +171,7 @@ public abstract record BoxBorder : ShapeBorder
         BorderSide side,
         BorderRadius borderRadius)
     {
-        var brush = new SolidColorBrush(side.Color);
+        var brush = new SolidColorBrush(side.Color.ToAvalonia());
         double width = side.Width;
         if (width == 0.0)
         {
@@ -235,7 +235,7 @@ public abstract record BoxBorder : ShapeBorder
                 throw new ArgumentOutOfRangeException(nameof(shape));
         }
 
-        var brush = new SolidColorBrush(color);
+        var brush = new SolidColorBrush(color.ToAvalonia());
         RRect inner = EdgeInsets.FromLTRB(left.StrokeInset, top.StrokeInset, right.StrokeInset, bottom.StrokeInset)
             .DeflateRRect(borderRect);
         RRect outer = EdgeInsets.FromLTRB(left.StrokeOutset, top.StrokeOutset, right.StrokeOutset, bottom.StrokeOutset)

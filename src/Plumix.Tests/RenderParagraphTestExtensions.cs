@@ -29,7 +29,7 @@ internal static class RenderParagraphTestExtensions
 
         public double FontSize => paragraph.RootStyle.FontSize ?? TextDefaults.DefaultFontSize;
 
-        public IBrush Foreground => new SolidColorBrush(paragraph.RootStyle.Color ?? new Color(0xFF000000));
+        public IBrush Foreground => new SolidColorBrush((paragraph.RootStyle.Color ?? new Color(0xFF000000)).ToAvalonia());
 
         public double? Height => paragraph.RootStyle.Height;
 

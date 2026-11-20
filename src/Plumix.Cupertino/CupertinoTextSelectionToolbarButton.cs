@@ -204,7 +204,7 @@ public sealed class CupertinoTextSelectionToolbarButton : StatefulWidget
 
         public override void Paint(PaintingContext context, Size size)
         {
-            var pen = new Pen(new SolidColorBrush(_color), 1.0)
+            var pen = new Pen(new SolidColorBrush(_color.ToAvalonia()), 1.0)
             {
                 LineCap = PenLineCap.Round,
                 LineJoin = PenLineJoin.Round,

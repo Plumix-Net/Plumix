@@ -37,7 +37,7 @@ internal sealed class GradientShader : ImmutableGradientBrush, INativeShader
         double startAngle = 0.0,
         double endAngle = 0.0)
         : base([.. colors.Select((color, index) => new ImmutableGradientStop(
-            index < stops.Count ? stops[index] : 0.0, color))],
+            index < stops.Count ? stops[index] : 0.0, color.ToAvalonia()))],
             1.0, null, null, GradientSpreadMethod.Pad)
     {
         if (colors.Count != stops.Count)

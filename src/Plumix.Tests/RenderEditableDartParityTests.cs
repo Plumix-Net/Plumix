@@ -2084,7 +2084,7 @@ public sealed class RenderEditableDartParityTests
         public override void Paint(Canvas canvas, Size size, RenderEditable renderEditable)
         {
             PaintCount += 1;
-            canvas.DrawRectangle(new SolidColorBrush(Color), null, Rect.FromLTWH(1, 1, 0, 0));
+            canvas.DrawRectangle(new SolidColorBrush(Color.ToAvalonia()), null, Rect.FromLTWH(1, 1, 0, 0));
         }
 
         public override bool ShouldRepaint(RenderEditablePainter? oldDelegate) => Repaint;

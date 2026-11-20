@@ -80,7 +80,7 @@ public sealed class ProxyBoxClipParityTests
     public void RenderShaderMask_ReusesItsLayer()
     {
         TestLayerReuse<ShaderMaskLayer>(new RenderShaderMask(
-            shaderCallback: _ => Brushes.Black,
+            shaderCallback: _ => Plumix.UI.Shader.FromBrush(Brushes.Black),
             child: new SizedRenderBox(new Size(1.0, 1.0))));
     }
 
@@ -398,7 +398,7 @@ public sealed class ProxyBoxClipParityTests
     public void RenderShaderMaskAndPhysicalModel_StampTheirDebugCreatorOnTheLayer()
     {
         var mask = new RenderShaderMask(
-            shaderCallback: _ => Brushes.Black,
+            shaderCallback: _ => Plumix.UI.Shader.FromBrush(Brushes.Black),
             child: new SizedRenderBox(new Size(1.0, 1.0)))
         {
             DebugCreator = "mask",

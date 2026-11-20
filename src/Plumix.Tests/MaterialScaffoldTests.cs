@@ -2157,7 +2157,7 @@ public sealed class MaterialScaffoldTests
 
         var paragraph = FindDescendant<RenderParagraph>(appBarBackground);
         Assert.NotNull(paragraph);
-        Assert.Equal(Colors.Bisque, Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color);
+        Assert.Equal(Colors.Bisque, Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color.ToPlumix());
     }
 
     [Fact]
@@ -2188,7 +2188,7 @@ public sealed class MaterialScaffoldTests
 
         var paragraph = FindDescendant<RenderParagraph>(appBarBackground);
         Assert.NotNull(paragraph);
-        Assert.Equal(Colors.Bisque, Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color);
+        Assert.Equal(Colors.Bisque, Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color.ToPlumix());
     }
 
     [Fact]
@@ -2220,7 +2220,7 @@ public sealed class MaterialScaffoldTests
 
         var paragraph = FindDescendant<RenderParagraph>(appBarBackground);
         Assert.NotNull(paragraph);
-        Assert.Equal(Colors.Bisque, Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color);
+        Assert.Equal(Colors.Bisque, Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color.ToPlumix());
     }
 
     [Fact]
@@ -2319,7 +2319,7 @@ public sealed class MaterialScaffoldTests
         RenderObject appBarBackground = RequireRenderObject(root.ChildElement);
         var paragraph = FindParagraphByText(appBarBackground, "Demo");
         Assert.NotNull(paragraph);
-        Assert.Equal(Colors.Goldenrod, Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color);
+        Assert.Equal(Colors.Goldenrod, Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color.ToPlumix());
     }
 
     [Fact]
@@ -2345,7 +2345,7 @@ public sealed class MaterialScaffoldTests
         RenderObject appBarBackground = RequireRenderObject(root.ChildElement);
         var paragraph = FindParagraphByText(appBarBackground, "Demo");
         Assert.NotNull(paragraph);
-        Assert.Equal(Colors.CadetBlue, Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color);
+        Assert.Equal(Colors.CadetBlue, Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color.ToPlumix());
     }
 
     [Fact]
@@ -3552,7 +3552,7 @@ public sealed class MaterialScaffoldTests
         Assert.NotNull(titleParagraph);
         Assert.Equal(29, titleParagraph!.FontSize);
         Assert.Equal(FontWeight.Bold, titleParagraph.FontWeight);
-        Assert.Equal(Colors.Bisque, Assert.IsType<SolidColorBrush>(titleParagraph.Foreground).Color);
+        Assert.Equal(Colors.Bisque, Assert.IsType<SolidColorBrush>(titleParagraph.Foreground).Color.ToPlumix());
     }
 
     [Fact]
@@ -3582,7 +3582,7 @@ public sealed class MaterialScaffoldTests
         Assert.NotNull(titleParagraph);
         Assert.Equal(26, titleParagraph!.FontSize);
         Assert.Equal(FontWeight.Bold, titleParagraph.FontWeight);
-        Assert.Equal(Colors.Crimson, Assert.IsType<SolidColorBrush>(titleParagraph.Foreground).Color);
+        Assert.Equal(Colors.Crimson, Assert.IsType<SolidColorBrush>(titleParagraph.Foreground).Color.ToPlumix());
     }
 
     [Fact]
@@ -3617,7 +3617,7 @@ public sealed class MaterialScaffoldTests
         Assert.NotNull(titleParagraph);
         Assert.Equal(18, titleParagraph!.FontSize);
         Assert.Equal(FontWeight.Normal, titleParagraph.FontWeight);
-        Assert.Equal(Colors.LimeGreen, Assert.IsType<SolidColorBrush>(titleParagraph.Foreground).Color);
+        Assert.Equal(Colors.LimeGreen, Assert.IsType<SolidColorBrush>(titleParagraph.Foreground).Color.ToPlumix());
     }
 
     [Fact]
@@ -3652,7 +3652,7 @@ public sealed class MaterialScaffoldTests
         Assert.NotNull(actionParagraph);
         Assert.Equal(17, actionParagraph!.FontSize);
         Assert.Equal(FontWeight.Bold, actionParagraph.FontWeight);
-        Assert.Equal(Colors.Goldenrod, Assert.IsType<SolidColorBrush>(actionParagraph.Foreground).Color);
+        Assert.Equal(Colors.Goldenrod, Assert.IsType<SolidColorBrush>(actionParagraph.Foreground).Color.ToPlumix());
     }
 
     [Fact]
@@ -3691,7 +3691,7 @@ public sealed class MaterialScaffoldTests
         Assert.NotNull(actionParagraph);
         Assert.Equal(15, actionParagraph!.FontSize);
         Assert.Equal(FontWeight.Normal, actionParagraph.FontWeight);
-        Assert.Equal(Colors.CadetBlue, Assert.IsType<SolidColorBrush>(actionParagraph.Foreground).Color);
+        Assert.Equal(Colors.CadetBlue, Assert.IsType<SolidColorBrush>(actionParagraph.Foreground).Color.ToPlumix());
     }
 
     [Fact]

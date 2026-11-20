@@ -54,7 +54,7 @@ public sealed class RenderColoredBox : RenderProxyBoxWithHitTestBehavior
         if (Size.Width > 0.0 && Size.Height > 0.0)
         {
             context.Canvas.DrawRectangle(
-                new SolidColorBrush(Color),
+                new SolidColorBrush(Color.ToAvalonia()),
                 null,
                 (offset & Size),
                 isAntiAlias: IsAntiAlias);

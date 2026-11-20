@@ -110,8 +110,8 @@ public sealed class CupertinoFormRowTests
             : CupertinoColors.Label.DarkColor;
         RenderParagraph prefix = Assert.IsType<RenderParagraph>(FindParagraph(harness.RenderView, "Prefix"));
         RenderParagraph helper = Assert.IsType<RenderParagraph>(FindParagraph(harness.RenderView, "Helper"));
-        Assert.Equal(expected, Assert.IsType<SolidColorBrush>(prefix.Foreground).Color);
-        Assert.Equal(expected, Assert.IsType<SolidColorBrush>(helper.Foreground).Color);
+        Assert.Equal(expected, Assert.IsType<SolidColorBrush>(prefix.Foreground).Color.ToPlumix());
+        Assert.Equal(expected, Assert.IsType<SolidColorBrush>(helper.Foreground).Color.ToPlumix());
     }
 
     [Fact]

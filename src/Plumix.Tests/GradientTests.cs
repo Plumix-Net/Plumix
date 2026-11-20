@@ -488,7 +488,7 @@ public sealed class GradientTests
             colors: [Colors.Red, Colors.Blue],
             tileMode: TileMode.Repeated);
 
-        var brush = Assert.IsType<GradientShader>(gradient.CreateShader(Rect.FromLTWH(0, 0, 100, 50)));
+        var brush = Assert.IsType<GradientShader>(gradient.CreateShader(Rect.FromLTWH(0, 0, 100, 50)).Brush);
 
         Assert.Equal(new Offset(0, 0), brush.Start);
         Assert.Equal(new Offset(100, 50), brush.End);
@@ -507,7 +507,7 @@ public sealed class GradientTests
             colors: [Colors.Red, Colors.Blue],
             focal: Alignment.TopLeft);
 
-        var brush = Assert.IsType<GradientShader>(gradient.CreateShader(Rect.FromLTWH(0, 0, 100, 40)));
+        var brush = Assert.IsType<GradientShader>(gradient.CreateShader(Rect.FromLTWH(0, 0, 100, 40)).Brush);
 
         Assert.Equal(new Offset(50, 20), brush.End);
         Assert.Equal(new Offset(0, 0), brush.Start);
@@ -524,7 +524,7 @@ public sealed class GradientTests
             startAngle: Math.PI / 2,
             endAngle: Math.PI);
 
-        var brush = Assert.IsType<GradientShader>(gradient.CreateShader(Rect.FromLTWH(0, 0, 60, 60)));
+        var brush = Assert.IsType<GradientShader>(gradient.CreateShader(Rect.FromLTWH(0, 0, 60, 60)).Brush);
 
         Assert.Equal(Math.PI / 2, brush.StartAngle);
         Assert.Equal(Math.PI, brush.EndAngle);
@@ -540,7 +540,7 @@ public sealed class GradientTests
             colors: [Colors.Red, Colors.Blue],
             transform: new GradientRotation(Math.PI / 2));
 
-        var brush = Assert.IsType<GradientShader>(gradient.CreateShader(Rect.FromLTWH(10, 20, 40, 40)));
+        var brush = Assert.IsType<GradientShader>(gradient.CreateShader(Rect.FromLTWH(10, 20, 40, 40)).Brush);
 
         // The local shader matrix maps the absolute top-left onto the absolute top-right.
         SkiaSharp.SKPoint rotated = brush.LocalMatrix.MapPoint(new SkiaSharp.SKPoint(10, 20));
@@ -681,8 +681,8 @@ public sealed class GradientTests
         Assert.Equal(0.0, sweep.StartAngle);
         Assert.Equal(Math.PI * 2.0, sweep.EndAngle);
         Assert.Throws<ArgumentNullException>(() => sweep.CreateShader(Rect.FromLTWH(0, 0, 100, 100)));
-        var ltr = Assert.IsType<GradientShader>(sweep.CreateShader(Rect.FromLTWH(10, 20, 100, 50), TextDirection.Ltr));
-        var rtl = Assert.IsType<GradientShader>(sweep.CreateShader(Rect.FromLTWH(10, 20, 100, 50), TextDirection.Rtl));
+        var ltr = Assert.IsType<GradientShader>(sweep.CreateShader(Rect.FromLTWH(10, 20, 100, 50), TextDirection.Ltr).Brush);
+        var rtl = Assert.IsType<GradientShader>(sweep.CreateShader(Rect.FromLTWH(10, 20, 100, 50), TextDirection.Rtl).Brush);
         Assert.Equal(new Offset(10, 20), ltr.End);
         Assert.Equal(new Offset(110, 20), rtl.End);
         var smaller = new RadialGradient(colors: [Colors.Red, Colors.Blue], radius: 0.1);

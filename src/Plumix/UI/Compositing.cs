@@ -587,7 +587,7 @@ public class SceneBuilder
     /// <summary>Pushes a shader mask operation onto the operation stack.</summary>
     /// <remarks>Dart's <c>pushShaderMask</c>; the shader is an Avalonia brush (docs/ai/DIVERGENCES.md).</remarks>
     public virtual ShaderMaskEngineLayer PushShaderMask(
-        IBrush shader,
+        Shader shader,
         Rect maskRect,
         BlendMode blendMode,
         ShaderMaskEngineLayer? oldLayer = null,
@@ -596,7 +596,7 @@ public class SceneBuilder
         ArgumentNullException.ThrowIfNull(shader);
         DebugCheckCanBeUsedAsOldLayer(oldLayer, "pushShaderMask");
         var layer = new ShaderMaskEngineLayer(
-            PushNativeLayer(new ShaderMaskFlowLayer(shader, maskRect, blendMode, filterQuality)));
+            PushNativeLayer(new ShaderMaskFlowLayer(shader.Brush, maskRect, blendMode, filterQuality)));
         DebugPushLayer(layer);
         return layer;
     }

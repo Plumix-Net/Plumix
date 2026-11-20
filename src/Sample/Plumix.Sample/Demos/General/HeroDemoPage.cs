@@ -160,7 +160,7 @@ internal sealed class HeroDemoPageState : State
             height: height,
             child: new DecoratedBox(
                 decoration: new BoxDecoration(
-                    Color: (Color)Avalonia.Media.Color.Parse(colorHex),
+                    Color: CssColors.ParseHex(colorHex),
                     BorderRadius: BorderRadius.Circular(14)),
                 child: new Center(
                     child: new Text(label, style: new TextStyle(FontSize: fontSize, Color: MaterialColors.White)))));
@@ -173,7 +173,7 @@ internal sealed class HeroDemoPageState : State
             child: new CounterTapButton(
                 label: label,
                 onTap: onTap,
-                background: (Color)Avalonia.Media.Color.Parse(colorHex),
+                background: CssColors.ParseHex(colorHex),
                 foreground: MaterialColors.Black,
                 fontSize: 12,
                 padding: EdgeInsets.Symmetric(horizontal: 10, vertical: 8)));

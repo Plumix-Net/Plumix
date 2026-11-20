@@ -17,5 +17,5 @@ internal sealed class SolidColorNativeShader(Color color) : INativeShader
 {
     public SKShader? CreateNativeShader() => SKShader.CreateColor(new SKColor(color.WithAlpha(255).ToARGB32()));
 
-    public IBrush Snapshot() => new SolidColorBrush(color);
+    public IBrush Snapshot() => new SolidColorBrush(color.ToAvalonia());
 }

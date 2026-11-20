@@ -53,7 +53,7 @@ public sealed class MaterialBadgeTests
         Assert.NotNull(paragraph);
         Assert.Equal(9, paragraph!.FontSize);
         Assert.Equal(FontWeight.Bold, paragraph.FontWeight);
-        Assert.Equal(Colors.LightBlue, Assert.IsType<SolidColorBrush>(paragraph.Foreground).Color);
+        Assert.Equal(Colors.LightBlue, Assert.IsType<SolidColorBrush>(paragraph.Foreground).Color.ToPlumix());
         Assert.Contains(decorations, box => box.AsBoxDecoration.Color == Colors.Crimson);
     }
 
@@ -90,7 +90,7 @@ public sealed class MaterialBadgeTests
         Assert.Equal(22, positioner!.WidthOffset);
         Assert.Equal(Alignment.BottomRight, positioner.Alignment);
         Assert.Equal(new Offset(2, 11), positioner.Offset);
-        Assert.Equal(Colors.Gold, Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color);
+        Assert.Equal(Colors.Gold, Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color.ToPlumix());
         Assert.Contains(
             FindDescendants<RenderDecoratedBox>(harness.RenderView),
             box => box.AsBoxDecoration.Color == Colors.Purple);

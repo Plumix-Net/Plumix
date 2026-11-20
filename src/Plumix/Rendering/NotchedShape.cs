@@ -1,5 +1,5 @@
-using Avalonia;
-using Avalonia.Media;
+using Plumix.UI;
+using Path = Plumix.UI.Path;
 
 namespace Plumix.Rendering;
 
@@ -7,7 +7,7 @@ namespace Plumix.Rendering;
 
 public abstract class NotchedShape
 {
-    public abstract Geometry GetOuterPath(Rect host, Rect? guest);
+    public abstract Path GetOuterPath(Rect host, Rect? guest);
 }
 
 public sealed class CircularNotchedRectangle : NotchedShape
@@ -19,11 +19,11 @@ public sealed class CircularNotchedRectangle : NotchedShape
 
     public bool Inverted { get; }
 
-    public override Geometry GetOuterPath(Rect host, Rect? guest)
+    public override Path GetOuterPath(Rect host, Rect? guest)
     {
         if (!guest.HasValue || !host.Overlaps(guest.Value))
         {
-            return new RectangleGeometry(host.ToAvalonia());
+            return RectPath(host);
         }
 
         var guestRect = guest.Value;
@@ -38,7 +38,7 @@ public sealed class CircularNotchedRectangle : NotchedShape
         double denominator = a * a + b * b;
         if (denominator <= 0)
         {
-            return new RectangleGeometry(host.ToAvalonia());
+            return RectPath(host);
         }
 
         double p2xA = ((a * radius * radius) - n2) / denominator;
@@ -60,41 +60,38 @@ public sealed class CircularNotchedRectangle : NotchedShape
             new Offset(-(a - s1), b) + center,
         };
 
-        var geometry = new StreamGeometry();
-        using var path = geometry.Open();
-        path.BeginFigure(host.TopLeft.ToAvalonia(), isFilled: true);
+        var path = new Path();
+        path.MoveTo(host.Left, host.Top);
         if (!Inverted)
         {
-            path.LineTo(points[0].ToAvalonia());
-            path.QuadraticBezierTo(points[1].ToAvalonia(), points[2].ToAvalonia());
-            path.ArcTo(
-                points[3].ToAvalonia(),
-                new Size(radius, radius).ToAvalonia(),
-                rotationAngle: 0,
-                isLargeArc: false,
-                sweepDirection: SweepDirection.CounterClockwise);
-            path.QuadraticBezierTo(points[4].ToAvalonia(), points[5].ToAvalonia());
-            path.LineTo(host.TopRight.ToAvalonia());
-            path.LineTo(host.BottomRight.ToAvalonia());
-            path.LineTo(host.BottomLeft.ToAvalonia());
+            path.LineTo(points[0].Dx, points[0].Dy);
+            path.QuadraticBezierTo(points[1].Dx, points[1].Dy, points[2].Dx, points[2].Dy);
+            path.ArcToPoint(points[3], radius: Radius.Circular(radius), clockwise: false);
+            path.QuadraticBezierTo(points[4].Dx, points[4].Dy, points[5].Dx, points[5].Dy);
+            path.LineTo(host.Right, host.Top);
+            path.LineTo(host.Right, host.Bottom);
+            path.LineTo(host.Left, host.Bottom);
         }
         else
         {
-            path.LineTo(host.TopRight.ToAvalonia());
-            path.LineTo(host.BottomRight.ToAvalonia());
-            path.LineTo(points[5].ToAvalonia());
-            path.QuadraticBezierTo(points[4].ToAvalonia(), points[3].ToAvalonia());
-            path.ArcTo(
-                points[2].ToAvalonia(),
-                new Size(radius, radius).ToAvalonia(),
-                rotationAngle: 0,
-                isLargeArc: false,
-                sweepDirection: SweepDirection.CounterClockwise);
-            path.QuadraticBezierTo(points[1].ToAvalonia(), points[0].ToAvalonia());
-            path.LineTo(host.BottomLeft.ToAvalonia());
+            path.LineTo(host.Right, host.Top);
+            path.LineTo(host.Right, host.Bottom);
+            path.LineTo(points[5].Dx, points[5].Dy);
+            path.QuadraticBezierTo(points[4].Dx, points[4].Dy, points[3].Dx, points[3].Dy);
+            path.ArcToPoint(points[2], radius: Radius.Circular(radius), clockwise: false);
+            path.QuadraticBezierTo(points[1].Dx, points[1].Dy, points[0].Dx, points[0].Dy);
+            path.LineTo(host.Left, host.Bottom);
         }
-        path.EndFigure(isClosed: true);
-        return geometry;
+
+        path.Close();
+        return path;
+    }
+
+    private static Path RectPath(Rect rect)
+    {
+        var path = new Path();
+        path.AddRect(rect);
+        return path;
     }
 }
 
@@ -110,23 +107,15 @@ public sealed class AutomaticNotchedShape : NotchedShape
 
     public ShapeBorder? Guest { get; }
 
-    public override Geometry GetOuterPath(Rect host, Rect? guest)
+    public override Path GetOuterPath(Rect host, Rect? guest)
     {
-        var hostGeometry = BuildShapeGeometry(Host, host);
-        if (Guest is null || !guest.HasValue)
+        Path hostPath = Host.GetOuterPath(host);
+        if (Guest is null || guest is null)
         {
-            return hostGeometry;
+            return hostPath;
         }
 
-        var guestGeometry = BuildShapeGeometry(Guest, guest.Value);
-        return new CombinedGeometry(
-            GeometryCombineMode.Exclude,
-            hostGeometry,
-            guestGeometry);
-    }
-
-    private static Geometry BuildShapeGeometry(ShapeBorder shape, Rect rect)
-    {
-        return shape.GetOuterPath(rect).ToGeometry();
+        Path guestPath = Guest.GetOuterPath(guest.Value);
+        return Path.Combine(PathOperation.Difference, hostPath, guestPath);
     }
 }

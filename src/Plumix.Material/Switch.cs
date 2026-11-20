@@ -1666,7 +1666,7 @@ internal sealed class SwitchPainter : ToggleablePainter
             _trackHeight);
         context.Canvas.DrawRRect(
             RRect.FromRectAndRadius(trackRect, trackRadius),
-            new SolidColorBrush(trackColor),
+            new SolidColorBrush(trackColor.ToAvalonia()),
             null);
         if (trackOutlineColor != null)
         {
@@ -1678,7 +1678,7 @@ internal sealed class SwitchPainter : ToggleablePainter
             context.Canvas.DrawRRect(
                 RRect.FromRectAndRadius(outlineRect, trackRadius),
                 null,
-                new Pen(new SolidColorBrush(trackOutlineColor!), trackOutlineWidth ?? 2.0));
+                new Pen(new SolidColorBrush(trackOutlineColor.ToAvalonia()!), trackOutlineWidth ?? 2.0));
         }
 
         if (_isCupertino)
@@ -1690,7 +1690,7 @@ internal sealed class SwitchPainter : ToggleablePainter
                         .Inflate(SwitchConfigCupertino.FocusTrackOutline / 2.0),
                     null,
                     new Pen(
-                        new SolidColorBrush(FocusColor),
+                        new SolidColorBrush(FocusColor.ToAvalonia()),
                         SwitchConfigCupertino.FocusTrackOutline));
             }
 

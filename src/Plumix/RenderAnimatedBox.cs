@@ -11,7 +11,7 @@ static class MathEx
     public static bool Near(double a, double b, double eps = 0.005) => Math.Abs(a - b) <= eps;
 }
 
-public sealed class RenderAnimatedBox : RenderBox, IDisposable
+internal sealed class RenderAnimatedBox : RenderBox, IDisposable
 {
     private readonly AnimationController _controller;
 
@@ -54,7 +54,7 @@ public sealed class RenderAnimatedBox : RenderBox, IDisposable
 
         _currentW = nextW;
         _currentH = nextH;
-        Brush.Color = nextC;
+        Brush.Color = nextC.ToAvalonia();
 
         if (affectsLayout) MarkNeedsLayout();
         else MarkNeedsPaint();

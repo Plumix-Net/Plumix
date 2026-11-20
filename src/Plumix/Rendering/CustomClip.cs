@@ -237,10 +237,10 @@ public abstract class RenderCustomClip<T> : RenderProxyBox
                     SpreadMethod = GradientSpreadMethod.Repeat,
                     GradientStops =
                     [
-                        new GradientStop(new Color(0x00000000), 0.25),
-                        new GradientStop(new Color(0xFFFF00FF), 0.25),
-                        new GradientStop(new Color(0xFFFF00FF), 0.75),
-                        new GradientStop(new Color(0x00000000), 0.75),
+                        new GradientStop(new Color(0x00000000).ToAvalonia(), 0.25),
+                        new GradientStop(new Color(0xFFFF00FF).ToAvalonia(), 0.25),
+                        new GradientStop(new Color(0xFFFF00FF).ToAvalonia(), 0.75),
+                        new GradientStop(new Color(0x00000000).ToAvalonia(), 0.75),
                     ],
                 },
                 2.0);

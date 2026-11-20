@@ -22,7 +22,7 @@ internal sealed class PlaceholderPainter : CustomPainter
 
     public override void Paint(PaintingContext context, Size size)
     {
-        var pen = new Pen(new SolidColorBrush(Color), StrokeWidth);
+        var pen = new Pen(new SolidColorBrush(Color.ToAvalonia()), StrokeWidth);
         var rect = Offset.Zero & size;
         context.Canvas.DrawRectangle(Brushes.Transparent, pen, rect);
         context.Canvas.DrawLine(pen, rect.TopRight, rect.BottomLeft);

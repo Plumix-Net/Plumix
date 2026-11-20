@@ -259,7 +259,7 @@ public sealed class MaterialBannerTests
         Assert.Equal(Colors.Purple, decoration.Color);
         Assert.True(decoration.HasShadow);
         Assert.Equal(Colors.Orange,
-            Assert.IsType<SolidColorBrush>(FindParagraph(themed.RenderView, "Content")!.Foreground).Color);
+            Assert.IsType<SolidColorBrush>(FindParagraph(themed.RenderView, "Content")!.Foreground).Color.ToPlumix());
         Assert.Equal(18, FindParagraph(themed.RenderView, "Content")!.FontSize);
         Assert.Contains(FindDescendants<RenderPadding>(themed.RenderView), value => value.Padding == EdgeInsets.All(7));
         Assert.Contains(FindDescendants<RenderPadding>(themed.RenderView), value => value.Padding == EdgeInsets.All(5));

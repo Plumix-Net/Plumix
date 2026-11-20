@@ -1361,9 +1361,9 @@ internal sealed class RenderCupertinoSlidingSegmentedControl<T> : RenderBox,
 
         context.Canvas.DrawRSuperellipse(
             shape.Inflate(0.5),
-            new SolidColorBrush(new Color(0x0A000000)),
+            new SolidColorBrush(new Color(0x0A000000).ToAvalonia()),
             null);
-        context.Canvas.DrawRSuperellipse(shape, new SolidColorBrush(ThumbColor), null);
+        context.Canvas.DrawRSuperellipse(shape, new SolidColorBrush(ThumbColor.ToAvalonia()), null);
     }
 
     private void HandleThumbAnimationTick()

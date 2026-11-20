@@ -643,7 +643,7 @@ public sealed class CupertinoActionSheetTests : IDisposable
     }
 
     private static Color ParagraphColor(RenderParagraph paragraph) =>
-        (Color)((ISolidColorBrush)paragraph.Foreground).Color;
+        ((ISolidColorBrush)paragraph.Foreground).Color.ToPlumix();
 
     private static RenderParagraph Paragraph(CupertinoThemeTestHarness harness, string text) =>
         Descendants<RenderParagraph>(harness.RenderView).First(paragraph => paragraph.PlainText == text);

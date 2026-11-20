@@ -655,7 +655,7 @@ public sealed class TransitionsTests : IDisposable
         Assert.Equal(14, paragraph.FontSize);
         Assert.Equal(FontWeight.W600, paragraph.FontWeight);
         Assert.Equal(0.5, paragraph.LetterSpacing);
-        Assert.Equal(Colors.DarkBlue, Assert.IsType<SolidColorBrush>(paragraph.Foreground).Color);
+        Assert.Equal(Colors.DarkBlue, Assert.IsType<SolidColorBrush>(paragraph.Foreground).Color.ToPlumix());
         Assert.Equal(TextAlign.Center, paragraph.TextAlign);
         Assert.False(paragraph.SoftWrap);
         Assert.Equal(TextOverflow.Ellipsis, paragraph.Overflow);
@@ -674,7 +674,7 @@ public sealed class TransitionsTests : IDisposable
         Assert.Equal(22, paragraph.FontSize);
         Assert.Equal(FontWeight.Bold, paragraph.FontWeight);
         Assert.Equal(1.5, paragraph.LetterSpacing);
-        Assert.Equal(Colors.DarkRed, Assert.IsType<SolidColorBrush>(paragraph.Foreground).Color);
+        Assert.Equal(Colors.DarkRed, Assert.IsType<SolidColorBrush>(paragraph.Foreground).Color.ToPlumix());
         Assert.Equal(TextAlign.End, paragraph.TextAlign);
         Assert.True(paragraph.SoftWrap);
         Assert.Equal(TextOverflow.Fade, paragraph.Overflow);

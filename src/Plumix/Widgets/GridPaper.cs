@@ -29,7 +29,7 @@ internal sealed class GridPaperPainter : CustomPainter
     {
         double allDivisions = Divisions * Subdivisions;
         double step = Interval / allDivisions;
-        var brush = new SolidColorBrush(Color);
+        var brush = new SolidColorBrush(Color.ToAvalonia());
 
         for (double x = 0.0; x <= size.Width; x += step)
         {

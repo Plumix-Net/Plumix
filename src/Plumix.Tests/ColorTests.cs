@@ -395,8 +395,8 @@ public sealed class ColorTests
     [Fact]
     public void BackendConversion_QuantizesToTheEightBitValue()
     {
-        Avalonia.Media.Color backend = Color.From(alpha: 0.5, red: 1, green: 0, blue: 0);
+        Avalonia.Media.Color backend = Color.From(alpha: 0.5, red: 1, green: 0, blue: 0).ToAvalonia();
         Assert.Equal(0x80FF0000u, backend.ToUInt32());
-        Assert.Equal(new Color(0x80FF0000), (Color)backend);
+        Assert.Equal(new Color(0x80FF0000), backend.ToPlumix());
     }
 }

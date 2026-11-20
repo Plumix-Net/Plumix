@@ -89,7 +89,7 @@ internal sealed class IntrinsicWidgetsDemoPageState : State
         return new Container(
             width: 70.0,
             height: height,
-            color: (Color)Avalonia.Media.Color.Parse(colorHex),
+            color: CssColors.ParseHex(colorHex),
             child: new Center(child: new Text(label, style: new TextStyle(FontSize: 13.0, Color: Colors.White))));
     }
 }

@@ -1318,7 +1318,7 @@ public sealed class SliderDartParityTestsB : IDisposable
         {
             Canvas canvas = context.Canvas;
             var paint = new Avalonia.Media.SolidColorBrush(
-                sliderTheme.ValueIndicatorColor ?? MaterialColors.Purple);
+                (sliderTheme.ValueIndicatorColor ?? MaterialColors.Purple).ToAvalonia());
 
             canvas.DrawCircle(paint, null, center, CircleDiameter / 2);
             labelPainter.Paint(canvas, center);

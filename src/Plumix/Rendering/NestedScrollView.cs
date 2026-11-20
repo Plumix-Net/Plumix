@@ -338,7 +338,7 @@ public class RenderSliverOverlapInjector : RenderSliver
             return;
         }
 
-        var pen = new Pen(new SolidColorBrush(new Color(0xFFCC9933)), 3.0);
+        var paint = new Paint { Color = new Color(0xFFCC9933), StrokeWidth = 3.0, Style = PaintingStyle.Stroke };
         SliverConstraints constraints = Constraints;
         Offset start;
         Offset end;
@@ -361,7 +361,7 @@ public class RenderSliverOverlapInjector : RenderSliver
         for (int index = -2; index <= 2; index += 1)
         {
             var shift = new Offset(delta.Dx * index, delta.Dy * index);
-            PaintUtilities.PaintZigZag(context, pen, start - shift, end - shift, 10, 10.0);
+            PaintUtilities.PaintZigZag(context, paint, start - shift, end - shift, 10, 10.0);
         }
     }
 

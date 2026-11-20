@@ -297,13 +297,13 @@ public class PaintingContext : ClipContext
         {
             if (RenderingDebug.RepaintRainbowEnabled)
             {
-                var pen = new Pen(new SolidColorBrush(RenderingDebug.CurrentRepaintColor.ToColor()), 6.0);
+                var pen = new Pen(new SolidColorBrush(RenderingDebug.CurrentRepaintColor.ToColor().ToAvalonia()), 6.0);
                 Canvas.DrawGeometry(null, pen, new RectangleGeometry(DeflateRect(EstimatedBounds, 3.0).ToAvalonia()));
             }
 
             if (RenderingDebug.PaintLayerBordersEnabled)
             {
-                var pen = new Pen(new SolidColorBrush(new Color(0xFFFF9800)), 1.0);
+                var pen = new Pen(new SolidColorBrush(new Color(0xFFFF9800).ToAvalonia()), 1.0);
                 Canvas.DrawGeometry(null, pen, new RectangleGeometry(EstimatedBounds.ToAvalonia()));
             }
         }
@@ -487,7 +487,7 @@ public class PaintingContext : ClipContext
     /// decoration outlines) arrive as an Avalonia <c>Geometry</c> that cannot be shifted, so the offset
     /// travels alongside it. Everything else matches <see cref="PushClipPath"/>.
     /// </remarks>
-    public ClipGeometryLayer? PushClipGeometry(
+    internal ClipGeometryLayer? PushClipGeometry(
         bool needsCompositing,
         Offset offset,
         Rect bounds,

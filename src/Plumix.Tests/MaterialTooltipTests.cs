@@ -317,7 +317,7 @@ public sealed class MaterialTooltipTests
             var paragraph = FindParagraph(harness.RenderView, "Desktop tip");
             Assert.NotNull(paragraph);
             Assert.Equal(12, paragraph!.FontSize);
-            Assert.Equal(Colors.White, Assert.IsType<SolidColorBrush>(paragraph.Foreground).Color);
+            Assert.Equal(Colors.White, Assert.IsType<SolidColorBrush>(paragraph.Foreground).Color.ToPlumix());
             Assert.Contains(
                 FindDescendants<RenderConstrainedBox>(harness.RenderView),
                 box => box.AdditionalConstraints.MinHeight == 24);
@@ -366,7 +366,7 @@ public sealed class MaterialTooltipTests
             var paragraph = FindParagraph(harness.RenderView, "Override tip");
             Assert.NotNull(paragraph);
             Assert.Equal(13, paragraph!.FontSize);
-            Assert.Equal(Colors.LimeGreen, Assert.IsType<SolidColorBrush>(paragraph.Foreground).Color);
+            Assert.Equal(Colors.LimeGreen, Assert.IsType<SolidColorBrush>(paragraph.Foreground).Color.ToPlumix());
             Assert.Contains(
                 FindDescendants<RenderConstrainedBox>(harness.RenderView),
                 box => box.AdditionalConstraints.MinHeight == 34);

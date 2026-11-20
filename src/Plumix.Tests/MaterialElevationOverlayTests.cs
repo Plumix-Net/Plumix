@@ -56,7 +56,7 @@ public sealed class MaterialElevationOverlayTests : IDisposable
             new Color(0xFF44CCFF),
             elevation);
 
-        ColorMatchers.AssertSameColorAs((Color)Avalonia.Media.Color.Parse(expected), result);
+        ColorMatchers.AssertSameColorAs(Avalonia.Media.Color.Parse(expected).ToPlumix(), result);
     }
 
     [Fact]

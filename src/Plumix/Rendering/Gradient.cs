@@ -15,20 +15,13 @@ public abstract record GradientTransform
     /// <summary>
     /// Returns the transform for the given bounds, or <see langword="null"/> for the identity transform.
     /// </summary>
-    public virtual Matrix? Transform(Rect bounds, TextDirection? textDirection = null) => null;
-
-    /// <summary>
-    /// The full shader matrix. Override this to supply perspective; the default preserves existing
-    /// affine transforms implemented through <see cref="Transform"/>.
-    /// </summary>
-    public virtual Matrix4? Transform4(Rect bounds, TextDirection? textDirection = null) =>
-        Transform(bounds, textDirection) is { } matrix ? Matrix4.FromAvaloniaMatrix(matrix) : null;
+    public abstract Matrix4? Transform(Rect bounds, TextDirection? textDirection = null);
 }
 
 /// <summary>A clockwise rotation of a gradient around its center point, in radians.</summary>
 public sealed record GradientRotation(double Radians) : GradientTransform
 {
-    public override Matrix? Transform(Rect bounds, TextDirection? textDirection = null)
+    public override Matrix4? Transform(Rect bounds, TextDirection? textDirection = null)
     {
         double sinRadians = Math.Sin(Radians);
         double oneMinusCosRadians = 1 - Math.Cos(Radians);
@@ -36,9 +29,10 @@ public sealed record GradientRotation(double Radians) : GradientTransform
         double originX = (sinRadians * center.Dy) + (oneMinusCosRadians * center.Dx);
         double originY = (-sinRadians * center.Dx) + (oneMinusCosRadians * center.Dy);
 
-        // Dart composes `Matrix4.identity()..translate(originX, originY)..rotateZ(radians)`, which for a
-        // column vector applies the rotation first; Avalonia's row-vector matrices reverse the order.
-        return Matrix.CreateRotation(Radians) * Matrix.CreateTranslation(originX, originY);
+        Matrix4 matrix = Matrix4.Identity();
+        matrix.TranslateByDouble(originX, originY, 0, 1);
+        matrix.RotateZ(Radians);
+        return matrix;
     }
 
     public override string ToString() => $"GradientRotation(radians: {DartFormat.Fixed(Radians)})";
@@ -94,7 +88,12 @@ public abstract record Gradient
     /// The IBrush return type is retained for compatibility. Native shader descriptions are interpreted
     /// by Plumix's drawing pipeline; they are not standalone Avalonia gradient brushes.
     /// </remarks>
-    public abstract IBrush CreateShader(Rect rect, TextDirection? textDirection = null);
+    /// <summary>Creates a shader that paints this gradient within <paramref name="rect"/>.</summary>
+    public Shader CreateShader(Rect rect, TextDirection? textDirection = null) =>
+        Shader.FromBrush(CreateBrush(rect, textDirection));
+
+    /// <summary>The backend description of <see cref="CreateShader"/>.</summary>
+    internal abstract IBrush CreateBrush(Rect rect, TextDirection? textDirection = null);
 
     /// <summary>Returns a new gradient with its colors' alpha scaled by the given factor.</summary>
     public abstract Gradient Scale(double factor);
@@ -150,7 +149,7 @@ public abstract record Gradient
     /// <summary>Resolves <see cref="Transform"/> against the bounds the gradient is painted into.</summary>
     protected Matrix4? ResolveTransform(Rect bounds, TextDirection? textDirection)
     {
-        return Transform?.Transform4(bounds, textDirection);
+        return Transform?.Transform(bounds, textDirection);
     }
 
     /// dart:ui `Gradient._validateColorStops`, which the framework can only trip on unequal lengths.
@@ -312,7 +311,7 @@ public sealed record LinearGradient : Gradient
     /// <summary>How this gradient should tile the plane beyond the region before/after its ends.</summary>
     public TileMode TileMode { get; }
 
-    public override IBrush CreateShader(Rect rect, TextDirection? textDirection = null)
+    internal override IBrush CreateBrush(Rect rect, TextDirection? textDirection = null)
     {
         return GradientShader.Linear(
             Begin.Resolve(textDirection).WithinRect(rect),
@@ -445,7 +444,7 @@ public sealed record RadialGradient : Gradient
     /// <summary>The radius of the focal point, as a fraction of the shortest side of the paint box.</summary>
     public double FocalRadius { get; }
 
-    public override IBrush CreateShader(Rect rect, TextDirection? textDirection = null)
+    internal override IBrush CreateBrush(Rect rect, TextDirection? textDirection = null)
     {
         double shortestSide = Math.Min(Math.Abs(rect.Width), Math.Abs(rect.Height));
         return GradientShader.Radial(
@@ -600,7 +599,7 @@ public sealed record SweepGradient : Gradient
     /// <summary>How this gradient should tile the plane outside its sweep.</summary>
     public TileMode TileMode { get; }
 
-    public override IBrush CreateShader(Rect rect, TextDirection? textDirection = null)
+    internal override IBrush CreateBrush(Rect rect, TextDirection? textDirection = null)
     {
         return GradientShader.Sweep(
             Center.Resolve(textDirection).WithinRect(rect),

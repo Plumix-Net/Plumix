@@ -4,6 +4,7 @@ using Plumix.Foundation;
 using Plumix.Rendering;
 using Plumix.UI;
 using Plumix.Widgets;
+using Path = Plumix.UI.Path;
 
 namespace Plumix.Material;
 
@@ -366,57 +367,24 @@ internal sealed class RenderBottomAppBarSurface : RenderProxyBox
             return true;
         }
 
-        try
-        {
-            return Shape.GetOuterPath(host, guest).FillContains(position.ToAvalonia());
-        }
-        catch (InvalidOperationException)
-        {
-            // Host-less tests do not install Avalonia's platform geometry implementation.
-            if (!guest.HasValue || !host.Overlaps(guest.Value))
-            {
-                return true;
-            }
-
-            if (Shape is AutomaticNotchedShape automaticShape)
-            {
-                return automaticShape.Guest is null || !guest.Value.Contains(position);
-            }
-
-            if (Shape is CircularNotchedRectangle)
-            {
-                Rect guestRect = guest.Value;
-                double radiusX = guestRect.Width / 2.0;
-                double radiusY = guestRect.Height / 2.0;
-                if (radiusX <= 0.0 || radiusY <= 0.0)
-                {
-                    return true;
-                }
-
-                double normalizedX = (position.Dx - guestRect.Center.Dx) / radiusX;
-                double normalizedY = (position.Dy - guestRect.Center.Dy) / radiusY;
-                return (normalizedX * normalizedX) + (normalizedY * normalizedY) > 1.0;
-            }
-
-            return true;
-        }
+        return Shape.GetOuterPath(host, guest).Contains(position);
     }
 
     public override void Paint(PaintingContext context, Offset offset)
     {
         if (Size.Width <= 0 || Size.Height <= 0) return;
         var host = Offset.Zero & Size;
-        var geometry = Shape?.GetOuterPath(host, ResolveGuestRect()) ?? new RectangleGeometry(host.ToAvalonia());
+        Path path = Shape?.GetOuterPath(host, ResolveGuestRect()) ?? RectPath(host);
         if (Elevation > 0.0 && ShadowColor.Alpha > 0)
         {
             context.Canvas.DrawShadow(
-                geometry,
+                path,
                 ShadowColor,
                 Elevation,
                 transparentOccluder: Color.Alpha != byte.MaxValue,
                 geometryOffset: offset);
         }
-        context.Canvas.DrawGeometry(new SolidColorBrush(Color), null, geometry, geometryOffset: offset);
+        context.Canvas.DrawPath(path.Shift(offset), new Paint { Color = Color });
 
         if (Child is null) return;
         if (ClipBehavior == Clip.None)
@@ -425,14 +393,21 @@ internal sealed class RenderBottomAppBarSurface : RenderProxyBox
             return;
         }
 
-        Layer = context.PushClipGeometry(
+        Layer = context.PushClipPath(
             NeedsCompositing,
             offset,
             host,
-            geometry,
+            path,
             (clipped, clippedOffset) => clipped.PaintChild(Child, clippedOffset),
             ClipBehavior,
-            Layer as ClipGeometryLayer);
+            Layer as ClipPathLayer);
+    }
+
+    private static Path RectPath(Rect rect)
+    {
+        var path = new Path();
+        path.AddRect(rect);
+        return path;
     }
 
     private Rect? ResolveGuestRect()

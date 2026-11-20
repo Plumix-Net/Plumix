@@ -89,7 +89,7 @@ internal sealed class FittedBoxDemoPageState : State
             child: new CounterTapButton(
                 label: label,
                 onTap: onTap,
-                background: (Color)Avalonia.Media.Color.Parse(colorHex),
+                background: CssColors.ParseHex(colorHex),
                 foreground: Colors.Black,
                 fontSize: 12,
                 padding: EdgeInsets.Symmetric(horizontal: 10, vertical: 8)));

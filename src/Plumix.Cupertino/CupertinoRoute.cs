@@ -820,7 +820,7 @@ internal sealed record CupertinoEdgeShadowDecoration : Decoration
                 Color color = LerpColor(colors[bandColorIndex], colors[bandColorIndex + 1], localT);
                 double x = start + (shadowDirection * dx);
                 context.Canvas.DrawRectangle(
-                    new SolidColorBrush(color),
+                    new SolidColorBrush(color.ToAvalonia()),
                     null,
                     Rect.FromLTWH(x - 1.0, offset.Dy, 1.0, shadowHeight));
             }

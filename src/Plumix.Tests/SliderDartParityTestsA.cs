@@ -1483,7 +1483,7 @@ public sealed class SliderDartParityTestsA : IDisposable
             Size sizeWithOverflow)
         {
             log.Add(center);
-            var thumbPaint = new Avalonia.Media.SolidColorBrush(MaterialColors.Red);
+            var thumbPaint = new Avalonia.Media.SolidColorBrush(MaterialColors.Red.ToAvalonia());
             context.Canvas.DrawCircle(thumbPaint, null, center, 5.0);
         }
     }

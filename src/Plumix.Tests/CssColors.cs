@@ -9,163 +9,163 @@ namespace Plumix.Tests;
 
 internal static class CssColors
 {
-    public static Color AliceBlue { get; } = (Color)Avalonia.Media.Colors.AliceBlue;
+    public static Color AliceBlue { get; } = Avalonia.Media.Colors.AliceBlue.ToPlumix();
 
-    public static Color Aqua { get; } = (Color)Avalonia.Media.Colors.Aqua;
+    public static Color Aqua { get; } = Avalonia.Media.Colors.Aqua.ToPlumix();
 
-    public static Color Aquamarine { get; } = (Color)Avalonia.Media.Colors.Aquamarine;
+    public static Color Aquamarine { get; } = Avalonia.Media.Colors.Aquamarine.ToPlumix();
 
-    public static Color Beige { get; } = (Color)Avalonia.Media.Colors.Beige;
+    public static Color Beige { get; } = Avalonia.Media.Colors.Beige.ToPlumix();
 
-    public static Color Bisque { get; } = (Color)Avalonia.Media.Colors.Bisque;
+    public static Color Bisque { get; } = Avalonia.Media.Colors.Bisque.ToPlumix();
 
-    public static Color Black { get; } = (Color)Avalonia.Media.Colors.Black;
+    public static Color Black { get; } = Avalonia.Media.Colors.Black.ToPlumix();
 
-    public static Color Blue { get; } = (Color)Avalonia.Media.Colors.Blue;
+    public static Color Blue { get; } = Avalonia.Media.Colors.Blue.ToPlumix();
 
-    public static Color Brown { get; } = (Color)Avalonia.Media.Colors.Brown;
+    public static Color Brown { get; } = Avalonia.Media.Colors.Brown.ToPlumix();
 
-    public static Color CadetBlue { get; } = (Color)Avalonia.Media.Colors.CadetBlue;
+    public static Color CadetBlue { get; } = Avalonia.Media.Colors.CadetBlue.ToPlumix();
 
-    public static Color Coral { get; } = (Color)Avalonia.Media.Colors.Coral;
+    public static Color Coral { get; } = Avalonia.Media.Colors.Coral.ToPlumix();
 
-    public static Color CornflowerBlue { get; } = (Color)Avalonia.Media.Colors.CornflowerBlue;
+    public static Color CornflowerBlue { get; } = Avalonia.Media.Colors.CornflowerBlue.ToPlumix();
 
-    public static Color Crimson { get; } = (Color)Avalonia.Media.Colors.Crimson;
+    public static Color Crimson { get; } = Avalonia.Media.Colors.Crimson.ToPlumix();
 
-    public static Color Cyan { get; } = (Color)Avalonia.Media.Colors.Cyan;
+    public static Color Cyan { get; } = Avalonia.Media.Colors.Cyan.ToPlumix();
 
-    public static Color DarkBlue { get; } = (Color)Avalonia.Media.Colors.DarkBlue;
+    public static Color DarkBlue { get; } = Avalonia.Media.Colors.DarkBlue.ToPlumix();
 
-    public static Color DarkCyan { get; } = (Color)Avalonia.Media.Colors.DarkCyan;
+    public static Color DarkCyan { get; } = Avalonia.Media.Colors.DarkCyan.ToPlumix();
 
-    public static Color DarkGoldenrod { get; } = (Color)Avalonia.Media.Colors.DarkGoldenrod;
+    public static Color DarkGoldenrod { get; } = Avalonia.Media.Colors.DarkGoldenrod.ToPlumix();
 
-    public static Color DarkGray { get; } = (Color)Avalonia.Media.Colors.DarkGray;
+    public static Color DarkGray { get; } = Avalonia.Media.Colors.DarkGray.ToPlumix();
 
-    public static Color DarkGreen { get; } = (Color)Avalonia.Media.Colors.DarkGreen;
+    public static Color DarkGreen { get; } = Avalonia.Media.Colors.DarkGreen.ToPlumix();
 
-    public static Color DarkMagenta { get; } = (Color)Avalonia.Media.Colors.DarkMagenta;
+    public static Color DarkMagenta { get; } = Avalonia.Media.Colors.DarkMagenta.ToPlumix();
 
-    public static Color DarkOliveGreen { get; } = (Color)Avalonia.Media.Colors.DarkOliveGreen;
+    public static Color DarkOliveGreen { get; } = Avalonia.Media.Colors.DarkOliveGreen.ToPlumix();
 
-    public static Color DarkOrange { get; } = (Color)Avalonia.Media.Colors.DarkOrange;
+    public static Color DarkOrange { get; } = Avalonia.Media.Colors.DarkOrange.ToPlumix();
 
-    public static Color DarkRed { get; } = (Color)Avalonia.Media.Colors.DarkRed;
+    public static Color DarkRed { get; } = Avalonia.Media.Colors.DarkRed.ToPlumix();
 
-    public static Color DarkSlateBlue { get; } = (Color)Avalonia.Media.Colors.DarkSlateBlue;
+    public static Color DarkSlateBlue { get; } = Avalonia.Media.Colors.DarkSlateBlue.ToPlumix();
 
-    public static Color DarkSlateGray { get; } = (Color)Avalonia.Media.Colors.DarkSlateGray;
+    public static Color DarkSlateGray { get; } = Avalonia.Media.Colors.DarkSlateGray.ToPlumix();
 
-    public static Color DeepPink { get; } = (Color)Avalonia.Media.Colors.DeepPink;
+    public static Color DeepPink { get; } = Avalonia.Media.Colors.DeepPink.ToPlumix();
 
-    public static Color DeepSkyBlue { get; } = (Color)Avalonia.Media.Colors.DeepSkyBlue;
+    public static Color DeepSkyBlue { get; } = Avalonia.Media.Colors.DeepSkyBlue.ToPlumix();
 
-    public static Color DimGray { get; } = (Color)Avalonia.Media.Colors.DimGray;
+    public static Color DimGray { get; } = Avalonia.Media.Colors.DimGray.ToPlumix();
 
-    public static Color DodgerBlue { get; } = (Color)Avalonia.Media.Colors.DodgerBlue;
+    public static Color DodgerBlue { get; } = Avalonia.Media.Colors.DodgerBlue.ToPlumix();
 
-    public static Color ForestGreen { get; } = (Color)Avalonia.Media.Colors.ForestGreen;
+    public static Color ForestGreen { get; } = Avalonia.Media.Colors.ForestGreen.ToPlumix();
 
-    public static Color Fuchsia { get; } = (Color)Avalonia.Media.Colors.Fuchsia;
+    public static Color Fuchsia { get; } = Avalonia.Media.Colors.Fuchsia.ToPlumix();
 
-    public static Color Gainsboro { get; } = (Color)Avalonia.Media.Colors.Gainsboro;
+    public static Color Gainsboro { get; } = Avalonia.Media.Colors.Gainsboro.ToPlumix();
 
-    public static Color Gold { get; } = (Color)Avalonia.Media.Colors.Gold;
+    public static Color Gold { get; } = Avalonia.Media.Colors.Gold.ToPlumix();
 
-    public static Color Goldenrod { get; } = (Color)Avalonia.Media.Colors.Goldenrod;
+    public static Color Goldenrod { get; } = Avalonia.Media.Colors.Goldenrod.ToPlumix();
 
-    public static Color Gray { get; } = (Color)Avalonia.Media.Colors.Gray;
+    public static Color Gray { get; } = Avalonia.Media.Colors.Gray.ToPlumix();
 
-    public static Color Green { get; } = (Color)Avalonia.Media.Colors.Green;
+    public static Color Green { get; } = Avalonia.Media.Colors.Green.ToPlumix();
 
-    public static Color Honeydew { get; } = (Color)Avalonia.Media.Colors.Honeydew;
+    public static Color Honeydew { get; } = Avalonia.Media.Colors.Honeydew.ToPlumix();
 
-    public static Color HotPink { get; } = (Color)Avalonia.Media.Colors.HotPink;
+    public static Color HotPink { get; } = Avalonia.Media.Colors.HotPink.ToPlumix();
 
-    public static Color IndianRed { get; } = (Color)Avalonia.Media.Colors.IndianRed;
+    public static Color IndianRed { get; } = Avalonia.Media.Colors.IndianRed.ToPlumix();
 
-    public static Color Indigo { get; } = (Color)Avalonia.Media.Colors.Indigo;
+    public static Color Indigo { get; } = Avalonia.Media.Colors.Indigo.ToPlumix();
 
-    public static Color Ivory { get; } = (Color)Avalonia.Media.Colors.Ivory;
+    public static Color Ivory { get; } = Avalonia.Media.Colors.Ivory.ToPlumix();
 
-    public static Color LightBlue { get; } = (Color)Avalonia.Media.Colors.LightBlue;
+    public static Color LightBlue { get; } = Avalonia.Media.Colors.LightBlue.ToPlumix();
 
-    public static Color LightCyan { get; } = (Color)Avalonia.Media.Colors.LightCyan;
+    public static Color LightCyan { get; } = Avalonia.Media.Colors.LightCyan.ToPlumix();
 
-    public static Color LightGoldenrodYellow { get; } = (Color)Avalonia.Media.Colors.LightGoldenrodYellow;
+    public static Color LightGoldenrodYellow { get; } = Avalonia.Media.Colors.LightGoldenrodYellow.ToPlumix();
 
-    public static Color LightGray { get; } = (Color)Avalonia.Media.Colors.LightGray;
+    public static Color LightGray { get; } = Avalonia.Media.Colors.LightGray.ToPlumix();
 
-    public static Color LightGreen { get; } = (Color)Avalonia.Media.Colors.LightGreen;
+    public static Color LightGreen { get; } = Avalonia.Media.Colors.LightGreen.ToPlumix();
 
-    public static Color Lime { get; } = (Color)Avalonia.Media.Colors.Lime;
+    public static Color Lime { get; } = Avalonia.Media.Colors.Lime.ToPlumix();
 
-    public static Color LimeGreen { get; } = (Color)Avalonia.Media.Colors.LimeGreen;
+    public static Color LimeGreen { get; } = Avalonia.Media.Colors.LimeGreen.ToPlumix();
 
-    public static Color Magenta { get; } = (Color)Avalonia.Media.Colors.Magenta;
+    public static Color Magenta { get; } = Avalonia.Media.Colors.Magenta.ToPlumix();
 
-    public static Color Maroon { get; } = (Color)Avalonia.Media.Colors.Maroon;
+    public static Color Maroon { get; } = Avalonia.Media.Colors.Maroon.ToPlumix();
 
-    public static Color MediumAquamarine { get; } = (Color)Avalonia.Media.Colors.MediumAquamarine;
+    public static Color MediumAquamarine { get; } = Avalonia.Media.Colors.MediumAquamarine.ToPlumix();
 
-    public static Color MediumBlue { get; } = (Color)Avalonia.Media.Colors.MediumBlue;
+    public static Color MediumBlue { get; } = Avalonia.Media.Colors.MediumBlue.ToPlumix();
 
-    public static Color MediumPurple { get; } = (Color)Avalonia.Media.Colors.MediumPurple;
+    public static Color MediumPurple { get; } = Avalonia.Media.Colors.MediumPurple.ToPlumix();
 
-    public static Color MediumSeaGreen { get; } = (Color)Avalonia.Media.Colors.MediumSeaGreen;
+    public static Color MediumSeaGreen { get; } = Avalonia.Media.Colors.MediumSeaGreen.ToPlumix();
 
-    public static Color MediumSlateBlue { get; } = (Color)Avalonia.Media.Colors.MediumSlateBlue;
+    public static Color MediumSlateBlue { get; } = Avalonia.Media.Colors.MediumSlateBlue.ToPlumix();
 
-    public static Color MediumVioletRed { get; } = (Color)Avalonia.Media.Colors.MediumVioletRed;
+    public static Color MediumVioletRed { get; } = Avalonia.Media.Colors.MediumVioletRed.ToPlumix();
 
-    public static Color MidnightBlue { get; } = (Color)Avalonia.Media.Colors.MidnightBlue;
+    public static Color MidnightBlue { get; } = Avalonia.Media.Colors.MidnightBlue.ToPlumix();
 
-    public static Color MistyRose { get; } = (Color)Avalonia.Media.Colors.MistyRose;
+    public static Color MistyRose { get; } = Avalonia.Media.Colors.MistyRose.ToPlumix();
 
-    public static Color Moccasin { get; } = (Color)Avalonia.Media.Colors.Moccasin;
+    public static Color Moccasin { get; } = Avalonia.Media.Colors.Moccasin.ToPlumix();
 
-    public static Color Navy { get; } = (Color)Avalonia.Media.Colors.Navy;
+    public static Color Navy { get; } = Avalonia.Media.Colors.Navy.ToPlumix();
 
-    public static Color Olive { get; } = (Color)Avalonia.Media.Colors.Olive;
+    public static Color Olive { get; } = Avalonia.Media.Colors.Olive.ToPlumix();
 
-    public static Color Orange { get; } = (Color)Avalonia.Media.Colors.Orange;
+    public static Color Orange { get; } = Avalonia.Media.Colors.Orange.ToPlumix();
 
-    public static Color OrangeRed { get; } = (Color)Avalonia.Media.Colors.OrangeRed;
+    public static Color OrangeRed { get; } = Avalonia.Media.Colors.OrangeRed.ToPlumix();
 
-    public static Color Pink { get; } = (Color)Avalonia.Media.Colors.Pink;
+    public static Color Pink { get; } = Avalonia.Media.Colors.Pink.ToPlumix();
 
-    public static Color PowderBlue { get; } = (Color)Avalonia.Media.Colors.PowderBlue;
+    public static Color PowderBlue { get; } = Avalonia.Media.Colors.PowderBlue.ToPlumix();
 
-    public static Color Purple { get; } = (Color)Avalonia.Media.Colors.Purple;
+    public static Color Purple { get; } = Avalonia.Media.Colors.Purple.ToPlumix();
 
-    public static Color Red { get; } = (Color)Avalonia.Media.Colors.Red;
+    public static Color Red { get; } = Avalonia.Media.Colors.Red.ToPlumix();
 
-    public static Color SaddleBrown { get; } = (Color)Avalonia.Media.Colors.SaddleBrown;
+    public static Color SaddleBrown { get; } = Avalonia.Media.Colors.SaddleBrown.ToPlumix();
 
-    public static Color SeaGreen { get; } = (Color)Avalonia.Media.Colors.SeaGreen;
+    public static Color SeaGreen { get; } = Avalonia.Media.Colors.SeaGreen.ToPlumix();
 
-    public static Color Silver { get; } = (Color)Avalonia.Media.Colors.Silver;
+    public static Color Silver { get; } = Avalonia.Media.Colors.Silver.ToPlumix();
 
-    public static Color SkyBlue { get; } = (Color)Avalonia.Media.Colors.SkyBlue;
+    public static Color SkyBlue { get; } = Avalonia.Media.Colors.SkyBlue.ToPlumix();
 
-    public static Color SlateBlue { get; } = (Color)Avalonia.Media.Colors.SlateBlue;
+    public static Color SlateBlue { get; } = Avalonia.Media.Colors.SlateBlue.ToPlumix();
 
-    public static Color SlateGray { get; } = (Color)Avalonia.Media.Colors.SlateGray;
+    public static Color SlateGray { get; } = Avalonia.Media.Colors.SlateGray.ToPlumix();
 
-    public static Color SteelBlue { get; } = (Color)Avalonia.Media.Colors.SteelBlue;
+    public static Color SteelBlue { get; } = Avalonia.Media.Colors.SteelBlue.ToPlumix();
 
-    public static Color Teal { get; } = (Color)Avalonia.Media.Colors.Teal;
+    public static Color Teal { get; } = Avalonia.Media.Colors.Teal.ToPlumix();
 
-    public static Color Transparent { get; } = (Color)Avalonia.Media.Colors.Transparent;
+    public static Color Transparent { get; } = Avalonia.Media.Colors.Transparent.ToPlumix();
 
-    public static Color Wheat { get; } = (Color)Avalonia.Media.Colors.Wheat;
+    public static Color Wheat { get; } = Avalonia.Media.Colors.Wheat.ToPlumix();
 
-    public static Color White { get; } = (Color)Avalonia.Media.Colors.White;
+    public static Color White { get; } = Avalonia.Media.Colors.White.ToPlumix();
 
-    public static Color WhiteSmoke { get; } = (Color)Avalonia.Media.Colors.WhiteSmoke;
+    public static Color WhiteSmoke { get; } = Avalonia.Media.Colors.WhiteSmoke.ToPlumix();
 
-    public static Color Yellow { get; } = (Color)Avalonia.Media.Colors.Yellow;
+    public static Color Yellow { get; } = Avalonia.Media.Colors.Yellow.ToPlumix();
 
-    public static Color YellowGreen { get; } = (Color)Avalonia.Media.Colors.YellowGreen;
+    public static Color YellowGreen { get; } = Avalonia.Media.Colors.YellowGreen.ToPlumix();
 }

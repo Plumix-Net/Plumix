@@ -95,7 +95,7 @@ public class RenderErrorBox : RenderBox
         try
         {
             ctx.Canvas.DrawRectangle(
-                new SolidColorBrush(BackgroundColor),
+                new SolidColorBrush(BackgroundColor.ToAvalonia()),
                 null,
                 (offset & Size));
             if (_paragraph is not null)

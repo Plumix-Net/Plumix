@@ -121,7 +121,7 @@ public sealed class MaterialDesktopTextSelectionToolbarTests : IDisposable
         Assert.Equal(FontWeight.Normal, paragraph.FontWeight);
         Assert.Equal(TextOverflow.Ellipsis, paragraph.Overflow);
         // Colors.black87 (0xDD000000) on a light color scheme, whatever its onSurface.
-        Assert.Equal(Plumix.Material.Colors.Black87, Assert.IsType<SolidColorBrush>(paragraph.Foreground).Color);
+        Assert.Equal(Plumix.Material.Colors.Black87, Assert.IsType<SolidColorBrush>(paragraph.Foreground).Color.ToPlumix());
 
         SemanticsNode actionNode = Assert.IsType<SemanticsNode>(FindSemantics(
             semantics,
@@ -148,7 +148,7 @@ public sealed class MaterialDesktopTextSelectionToolbarTests : IDisposable
         RenderParagraph paragraph = Assert.Single(FindDescendants<RenderParagraph>(harness.RenderView), value =>
             value.PlainText == "Paste");
 
-        Assert.Equal(Colors.White, Assert.IsType<SolidColorBrush>(paragraph.Foreground).Color);
+        Assert.Equal(Colors.White, Assert.IsType<SolidColorBrush>(paragraph.Foreground).Color.ToPlumix());
         Assert.Null(FindSemantics(semantics, node => node.Actions.HasFlag(SemanticsActions.Tap)));
     }
 
@@ -167,7 +167,7 @@ public sealed class MaterialDesktopTextSelectionToolbarTests : IDisposable
             value.PlainText == "Custom");
 
         // TODO(hansmuller) in Dart: the color follows the brightness only, not onSurface.
-        Assert.Equal(Plumix.Material.Colors.Black87, Assert.IsType<SolidColorBrush>(paragraph.Foreground).Color);
+        Assert.Equal(Plumix.Material.Colors.Black87, Assert.IsType<SolidColorBrush>(paragraph.Foreground).Color.ToPlumix());
     }
 
     [Fact]
@@ -235,7 +235,7 @@ public sealed class MaterialDesktopTextSelectionToolbarTests : IDisposable
             && box.AdditionalConstraints.MinHeight == 48);
         RenderParagraph paragraph = Assert.Single(FindDescendants<RenderParagraph>(harness.RenderView), value =>
             value.PlainText == "Copy");
-        Assert.Equal(Colors.Black, Assert.IsType<SolidColorBrush>(paragraph.Foreground).Color);
+        Assert.Equal(Colors.Black, Assert.IsType<SolidColorBrush>(paragraph.Foreground).Color.ToPlumix());
         Assert.Equal(FontWeight.Normal, paragraph.FontWeight);
     }
 
@@ -590,7 +590,7 @@ public sealed class MaterialDesktopTextSelectionToolbarTests : IDisposable
             value => value.PlainText == "DELETE");
         Assert.Equal(
             new Color(0xFF2196F3),
-            Assert.IsType<SolidColorBrush>(delete.Foreground).Color);
+            Assert.IsType<SolidColorBrush>(delete.Foreground).Color.ToPlumix());
         Assert.Contains(FindDescendants<RenderColoredBox>(harness.RenderView), value =>
             value.Color == new Color(0xFF9E9E9E));
     }

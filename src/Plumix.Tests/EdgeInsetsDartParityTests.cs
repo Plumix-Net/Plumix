@@ -248,10 +248,10 @@ public sealed class EdgeInsetsDartParityTests
     [Fact]
     public void Thickness_ConvertsImplicitlyAndBack()
     {
-        EdgeInsets insets = new Thickness(1, 2, 3, 4);
+        EdgeInsets insets = new Thickness(1, 2, 3, 4).ToPlumix();
 
         Assert.Equal(EdgeInsets.FromLTRB(1, 2, 3, 4), insets);
-        Assert.Equal(new Thickness(1, 2, 3, 4), insets.ToThickness());
+        Assert.Equal(new Thickness(1, 2, 3, 4), insets.ToAvalonia());
     }
 
     [Fact]

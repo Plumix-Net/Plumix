@@ -157,7 +157,7 @@ public sealed class MaterialRadioExpansionTileTests : IDisposable
 
         var title = FindParagraphByText(harness.RenderView, "Leading selected radio");
         Assert.NotNull(title);
-        Assert.Equal(selectedColor, Assert.IsType<SolidColorBrush>(title!.Foreground).Color);
+        Assert.Equal(selectedColor, Assert.IsType<SolidColorBrush>(title!.Foreground).Color.ToPlumix());
 
         string secondaryGlyph = char.ConvertFromUtf32(Icons.InfoOutline.CodePoint);
         var tile = Assert.IsType<RenderListTile>(FindDescendant<RenderListTile>(harness.RenderView));
@@ -429,7 +429,7 @@ public sealed class MaterialRadioExpansionTileTests : IDisposable
             box => DecorationColor(box) == collapsedBackground);
         var icon = FindParagraphByText(harness.RenderView, char.ConvertFromUtf32(Icons.ExpandMore.CodePoint));
         Assert.NotNull(icon);
-        Assert.Equal(collapsedIcon, Assert.IsType<SolidColorBrush>(icon!.Foreground).Color);
+        Assert.Equal(collapsedIcon, Assert.IsType<SolidColorBrush>(icon!.Foreground).Color.ToPlumix());
     }
 
     [Fact]
@@ -812,7 +812,7 @@ public sealed class MaterialRadioExpansionTileTests : IDisposable
     private static Color ParagraphColor(RenderObject? root, string text)
     {
         RenderParagraph paragraph = Assert.IsType<RenderParagraph>(FindParagraphByText(root, text));
-        return (Color)Assert.IsType<SolidColorBrush>(paragraph.Foreground).Color;
+        return Assert.IsType<SolidColorBrush>(paragraph.Foreground).Color.ToPlumix();
     }
 
     private static Color? DecorationColor(RenderDecoratedBox box)

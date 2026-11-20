@@ -1489,7 +1489,7 @@ internal sealed class HeadlessParagraph : Paragraph
                         steps.Add(new ShaderGlyphStep(
                             FlutterTestGlyph(ShapeOf(glyph.CodePoint), glyph.X, glyph.FontSize,
                                 glyph.Baseline, glyph.FontSize),
-                            shader));
+                            shader.Brush));
                     }
                 }
                 else

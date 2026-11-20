@@ -88,7 +88,7 @@ internal static class ShaderDrawing
             path.LineTo(end.Dx, end.Dy);
             var paint = new Paint
             {
-                Shader = (IBrush)shader,
+                Shader = Plumix.UI.Shader.FromBrush((IBrush)shader),
                 Style = PaintingStyle.Stroke,
                 StrokeWidth = pen.Thickness,
                 StrokeCap = pen.LineCap switch

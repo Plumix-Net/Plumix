@@ -57,9 +57,9 @@ public sealed class MaterialNavigationSurfacesTests
             box => box.AsBoxDecoration.Color == Colors.DarkGreen
                    && box.AsBoxDecoration.BorderRadius?.Resolve(null).Radius == 9999);
         Assert.Equal(colors.OnSurface,
-            Assert.IsType<SolidColorBrush>(FindParagraph(harness.RenderView, "Two")!.Foreground).Color);
+            Assert.IsType<SolidColorBrush>(FindParagraph(harness.RenderView, "Two")!.Foreground).Color.ToPlumix());
         Assert.Equal(Colors.CadetBlue,
-            Assert.IsType<SolidColorBrush>(FindParagraph(harness.RenderView, "One")!.Foreground).Color);
+            Assert.IsType<SolidColorBrush>(FindParagraph(harness.RenderView, "One")!.Foreground).Color.ToPlumix());
         Assert.NotNull(FindParagraph(harness.RenderView, "selected-two"));
         Assert.Null(FindParagraph(harness.RenderView, "plain-two"));
     }
@@ -373,9 +373,9 @@ public sealed class MaterialNavigationSurfacesTests
         Assert.Contains(InkFeatureProbe.Decorations(harness.RenderView),
             ink => (ink.Decoration as BoxDecoration)?.Color == Colors.Yellow);
         Assert.Equal(Colors.CadetBlue,
-            Assert.IsType<SolidColorBrush>(FindParagraph(harness.RenderView, "Home")!.Foreground).Color);
+            Assert.IsType<SolidColorBrush>(FindParagraph(harness.RenderView, "Home")!.Foreground).Color.ToPlumix());
         Assert.Equal(Colors.Gold,
-            Assert.IsType<SolidColorBrush>(FindParagraph(harness.RenderView, "Explore")!.Foreground).Color);
+            Assert.IsType<SolidColorBrush>(FindParagraph(harness.RenderView, "Explore")!.Foreground).Color.ToPlumix());
         Assert.NotNull(FindParagraph(harness.RenderView, "selected-explore"));
         Assert.Null(FindParagraph(harness.RenderView, "plain-explore"));
         Assert.Contains(FindDescendants<RenderConstrainedBox>(harness.RenderView),
@@ -494,7 +494,7 @@ public sealed class MaterialNavigationSurfacesTests
         Assert.Contains(InkFeatureProbe.Decorations(harness.RenderView),
             ink => (ink.Decoration as BoxDecoration)?.Color == Colors.Yellow);
         Assert.Equal(Colors.CadetBlue,
-            Assert.IsType<SolidColorBrush>(FindParagraph(harness.RenderView, "Home")!.Foreground).Color);
+            Assert.IsType<SolidColorBrush>(FindParagraph(harness.RenderView, "Home")!.Foreground).Color.ToPlumix());
         Assert.Contains(FindDescendants<RenderConstrainedBox>(harness.RenderView),
             box => box.AdditionalConstraints.MinHeight == 60
                    && box.AdditionalConstraints.MaxHeight == 60);
@@ -584,7 +584,7 @@ public sealed class MaterialNavigationSurfacesTests
         Color disabledColor = NavigationSurfaceUtilities.WithOpacity(colors.OnSurfaceVariant, 0.38);
         Assert.Equal(disabledColor,
             Assert.IsType<SolidColorBrush>(
-                FindParagraph(harness.RenderView, "Disabled")!.Foreground).Color);
+                FindParagraph(harness.RenderView, "Disabled")!.Foreground).Color.ToPlumix());
     }
 
     [Fact]
@@ -752,17 +752,17 @@ public sealed class MaterialNavigationSurfacesTests
         Assert.Contains(FindDescendants<RenderDecoratedBox>(harness.RenderView),
             box => box.AsBoxDecoration.Color == colors.Surface);
         Assert.Equal(colors.Primary,
-            Assert.IsType<SolidColorBrush>(FindParagraph(harness.RenderView, "Rail one")!.Foreground).Color);
+            Assert.IsType<SolidColorBrush>(FindParagraph(harness.RenderView, "Rail one")!.Foreground).Color.ToPlumix());
         Assert.Equal(unselectedLabelColor,
-            Assert.IsType<SolidColorBrush>(FindParagraph(harness.RenderView, "Rail two")!.Foreground).Color);
+            Assert.IsType<SolidColorBrush>(FindParagraph(harness.RenderView, "Rail two")!.Foreground).Color.ToPlumix());
         Assert.Equal(colors.Primary,
             Assert.IsType<SolidColorBrush>(
-                FindParagraph(harness.RenderView, char.ConvertFromUtf32(Icons.Menu.CodePoint))!.Foreground).Color);
+                FindParagraph(harness.RenderView, char.ConvertFromUtf32(Icons.Menu.CodePoint))!.Foreground).Color.ToPlumix());
         Assert.Equal(unselectedIconColor,
             Assert.IsType<SolidColorBrush>(
                 FindParagraph(
                     harness.RenderView,
-                    char.ConvertFromUtf32(Icons.InfoOutline.CodePoint))!.Foreground).Color);
+                    char.ConvertFromUtf32(Icons.InfoOutline.CodePoint))!.Foreground).Color.ToPlumix());
     }
 
     [Fact]

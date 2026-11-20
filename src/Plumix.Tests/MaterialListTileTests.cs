@@ -117,11 +117,11 @@ public sealed class MaterialListTileTests
 
         var titleParagraph = FindParagraphByText(renderRoot, "Selected");
         Assert.NotNull(titleParagraph);
-        Assert.Equal(Colors.Coral, Assert.IsType<SolidColorBrush>(titleParagraph!.Foreground).Color);
+        Assert.Equal(Colors.Coral, Assert.IsType<SolidColorBrush>(titleParagraph!.Foreground).Color.ToPlumix());
 
         var iconParagraph = FindParagraphByText(renderRoot, char.ConvertFromUtf32(Icons.StarOutline.CodePoint));
         Assert.NotNull(iconParagraph);
-        Assert.Equal(Colors.Coral, Assert.IsType<SolidColorBrush>(iconParagraph!.Foreground).Color);
+        Assert.Equal(Colors.Coral, Assert.IsType<SolidColorBrush>(iconParagraph!.Foreground).Color.ToPlumix());
     }
 
     [Fact]
@@ -169,11 +169,11 @@ public sealed class MaterialListTileTests
 
         var titleParagraph = FindParagraphByText(renderRoot, "Themed tile");
         Assert.NotNull(titleParagraph);
-        Assert.Equal(themedText, Assert.IsType<SolidColorBrush>(titleParagraph!.Foreground).Color);
+        Assert.Equal(themedText, Assert.IsType<SolidColorBrush>(titleParagraph!.Foreground).Color.ToPlumix());
 
         var iconParagraph = FindParagraphByText(renderRoot, char.ConvertFromUtf32(Icons.InfoOutline.CodePoint));
         Assert.NotNull(iconParagraph);
-        Assert.Equal(themedIcon, Assert.IsType<SolidColorBrush>(iconParagraph!.Foreground).Color);
+        Assert.Equal(themedIcon, Assert.IsType<SolidColorBrush>(iconParagraph!.Foreground).Color.ToPlumix());
 
         var ink = InkFeatureProbe.Decorations(renderRoot).FirstOrDefault();
         var decoration = Assert.IsType<ShapeDecoration>(ink!.Decoration);
@@ -281,10 +281,10 @@ public sealed class MaterialListTileTests
         harness.Pump(new Size(400, 200));
 
         var title = Assert.IsType<RenderParagraph>(FindParagraphByText(harness.RenderView, "State colors"));
-        Assert.Equal(disabledSelected, Assert.IsType<SolidColorBrush>(title.Foreground).Color);
+        Assert.Equal(disabledSelected, Assert.IsType<SolidColorBrush>(title.Foreground).Color.ToPlumix());
         string glyph = char.ConvertFromUtf32(Icons.StarOutline.CodePoint);
         var icon = Assert.IsType<RenderParagraph>(FindParagraphByText(harness.RenderView, glyph));
-        Assert.Equal(disabledSelected, Assert.IsType<SolidColorBrush>(icon.Foreground).Color);
+        Assert.Equal(disabledSelected, Assert.IsType<SolidColorBrush>(icon.Foreground).Color.ToPlumix());
     }
 
     [Fact]
@@ -594,7 +594,7 @@ public sealed class MaterialListTileTests
     private static void AssertParagraphColor(RenderObject? root, string text, Color expectedColor)
     {
         var paragraph = Assert.IsType<RenderParagraph>(FindParagraphByText(root, text));
-        Assert.Equal(expectedColor, Assert.IsType<SolidColorBrush>(paragraph.Foreground).Color);
+        Assert.Equal(expectedColor, Assert.IsType<SolidColorBrush>(paragraph.Foreground).Color.ToPlumix());
     }
 
     private static RenderDecoratedBox? FindTileSurface(RenderObject? root, double expectedHeight)

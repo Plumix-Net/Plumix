@@ -30,8 +30,6 @@ public enum ColorSpace
 /// and <c>CupertinoDynamicColor</c> derive from it, so any <see cref="Color"/> slot can hold them.
 /// Every member Dart's implementers override is virtual. Equality follows Dart's <c>==</c>: two
 /// colors are equal only when they have the same runtime type.
-/// C#-only: the colour converts implicitly to <see cref="Avalonia.Media.Color"/> (the drawing
-/// backend's 8-bit sRGB value, quantised like <see cref="ToARGB32"/>) and explicitly back.
 /// </remarks>
 public class Color : IEquatable<Color>
 {
@@ -380,16 +378,6 @@ public class Color : IEquatable<Color>
         ColorSpace.ExtendedSRGB => "ColorSpace.extendedSRGB",
         _ => "ColorSpace.displayP3",
     };
-
-    /// <summary>C#-only: the drawing backend's 8-bit sRGB value of this color.</summary>
-    public static implicit operator Avalonia.Media.Color(Color color)
-    {
-        ArgumentNullException.ThrowIfNull(color);
-        return Avalonia.Media.Color.FromUInt32(color.ToARGB32());
-    }
-
-    /// <summary>C#-only: an sRGB color from the drawing backend's 8-bit value.</summary>
-    public static explicit operator Color(Avalonia.Media.Color color) => new(color.ToUInt32());
 
     // Dart's `_ColorTransform`.
     private interface IColorTransform

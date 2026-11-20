@@ -208,7 +208,7 @@ internal sealed class CupertinoActivityIndicatorPainter : CustomPainter
                 ActiveColor.Blue);
             context.Canvas.Save();
             context.Canvas.Rotate(i * TwoPi / tickCount);
-            context.Canvas.DrawRRect(TickFundamentalShape, new SolidColorBrush(tickColor), pen: null);
+            context.Canvas.DrawRRect(TickFundamentalShape, new SolidColorBrush(tickColor.ToAvalonia()), pen: null);
             context.Canvas.Restore();
         }
 
@@ -295,8 +295,8 @@ internal sealed class CupertinoLinearActivityIndicatorPainter : CustomPainter
     {
         Progress = progress;
         Color = color;
-        BackgroundPaint = new SolidColorBrush(CupertinoColors.SystemFill);
-        ProgressPaint = new SolidColorBrush(color ?? CupertinoColors.ActiveBlue);
+        BackgroundPaint = new SolidColorBrush(CupertinoColors.SystemFill.ToAvalonia());
+        ProgressPaint = new SolidColorBrush((color ?? CupertinoColors.ActiveBlue).ToAvalonia());
     }
 
     public double Progress { get; }

@@ -10,7 +10,7 @@ namespace Plumix.UI;
 public partial class Canvas
 {
     // Dart parity source: dart:ui Canvas.drawRect / Canvas.drawRRect.
-    public virtual void DrawRectangle(
+    internal virtual void DrawRectangle(
         IBrush? brush,
         IPen? pen,
         Rect rect,
@@ -37,7 +37,7 @@ public partial class Canvas
     }
 
     // Dart parity source: dart:ui Canvas.drawRRect (corner radii given as a BorderRadius).
-    public virtual void DrawRectangle(
+    internal virtual void DrawRectangle(
         IBrush? brush,
         IPen? pen,
         Rect rect,
@@ -95,7 +95,7 @@ public partial class Canvas
     // Dart parity source: dart:ui Canvas.drawPaint.
     /// <summary>Fills the canvas's current clip with the given brush. Avalonia exposes no clip-bounds
     /// query, so the fill is a rectangle large enough to cover any practical clip.</summary>
-    public virtual void DrawPaint(IBrush brush)
+    internal virtual void DrawPaint(IBrush brush)
     {
         DebugRecordCall(new CanvasCall("drawPaint", Brush: brush));
         AddDrawCommand(context => ShaderDrawing.DrawRectangle(context, brush, null, DrawPaintBounds));
@@ -106,8 +106,8 @@ public partial class Canvas
     public virtual void DrawPaint(Paint paint)
     {
         ArgumentNullException.ThrowIfNull(paint);
-        IBrush brush = paint.Shader is INativeShader nativeShader
-            ? nativeShader.Snapshot() : paint.Shader ?? new SolidColorBrush(paint.Color);
+        IBrush brush = paint.Shader?.Brush is INativeShader nativeShader
+            ? nativeShader.Snapshot() : paint.Shader?.Brush ?? new SolidColorBrush(paint.Color.ToAvalonia());
         DebugRecordCall(new CanvasCall("drawPaint", Brush: brush));
         if (brush is INativeShader shader)
         {
@@ -123,7 +123,7 @@ public partial class Canvas
     private static readonly Rect DrawPaintBounds = Rect.FromLTWH(-1.0e9, -1.0e9, 2.0e9, 2.0e9);
 
     // Dart parity source: dart:ui Canvas.drawRRect.
-    public virtual void DrawRRect(RRect rrect, IBrush? brush, IPen? pen)
+    internal virtual void DrawRRect(RRect rrect, IBrush? brush, IPen? pen)
     {
         DebugRecordCall(new CanvasCall("drawRRect", RRect: rrect, Brush: brush, Pen: pen));
         var path = new Path();
@@ -247,8 +247,8 @@ public partial class Canvas
         Func<Path>? nativePathSource = null,
         bool nativeSolid = false)
     {
-        IBrush brush = paint.Shader is INativeShader nativeShader
-            ? nativeShader.Snapshot() : paint.Shader ?? new SolidColorBrush(paint.Color);
+        IBrush brush = paint.Shader?.Brush is INativeShader nativeShader
+            ? nativeShader.Snapshot() : paint.Shader?.Brush ?? new SolidColorBrush(paint.Color.ToAvalonia());
         bool stroke = paint.Style == PaintingStyle.Stroke;
         IPen? pen = stroke ? CreatePen(paint, brush) : null;
         IBrush? fill = stroke ? null : brush;
@@ -382,7 +382,7 @@ public partial class Canvas
         miterLimit: paint.StrokeMiterLimit);
 
     // Dart parity source: dart:ui Canvas.drawRSuperellipse.
-    public virtual void DrawRSuperellipse(RSuperellipse rsuperellipse, IBrush? brush, IPen? pen)
+    internal virtual void DrawRSuperellipse(RSuperellipse rsuperellipse, IBrush? brush, IPen? pen)
     {
         var path = new Path();
         path.AddRSuperellipse(rsuperellipse);
@@ -449,7 +449,7 @@ public partial class Canvas
                 {
                     Color layerColor = Color.FromARGB(layerAlpha, color.Red, color.Green, color.Blue);
                     ShaderDrawing.DrawGeometry(context, null,
-                        new Pen(new SolidColorBrush(layerColor), radius * 2.0), geometry);
+                        new Pen(new SolidColorBrush(layerColor.ToAvalonia()), radius * 2.0), geometry);
                 }
             }
         }
@@ -461,7 +461,7 @@ public partial class Canvas
     }
 
     // Dart parity source: dart:ui Canvas.drawDRRect (the ring between two rounded rectangles).
-    public virtual void DrawDRRect(RRect outer, RRect inner, IBrush brush)
+    internal virtual void DrawDRRect(RRect outer, RRect inner, IBrush brush)
     {
         if (TryAddNativeSolidDraw(CreateDRRectPath(outer, inner), brush, null))
         {
@@ -483,7 +483,7 @@ public partial class Canvas
     }
 
     // Dart parity source: dart:ui Canvas.drawOval.
-    public virtual void DrawOval(Rect oval, IBrush? brush, IPen? pen)
+    internal virtual void DrawOval(Rect oval, IBrush? brush, IPen? pen)
     {
         DebugRecordCall(new CanvasCall("drawOval", Rect: oval, Brush: brush, Pen: pen));
         AddDrawCommand(context =>
@@ -491,7 +491,7 @@ public partial class Canvas
     }
 
     // Dart parity source: dart:ui Canvas.drawPath.
-    public virtual void DrawPath(Path path, IBrush? brush, IPen? pen)
+    internal virtual void DrawPath(Path path, IBrush? brush, IPen? pen)
     {
         ArgumentNullException.ThrowIfNull(path);
         DebugRecordCall(new CanvasCall("drawPath", Brush: brush, Pen: pen, Path: path));
@@ -551,13 +551,13 @@ public partial class Canvas
 
         static Color SolidColor(ISolidColorBrush value)
         {
-            var color = (Color)value.Color;
+            var color = value.Color.ToPlumix();
             return value.Opacity >= 1.0 ? color : color.WithAlpha((int)Math.Round(color.Alpha * value.Opacity));
         }
     }
 
     // Dart parity source: dart:ui Canvas.drawCircle.
-    public virtual void DrawCircle(IBrush? brush, IPen? pen, Offset center, double radius)
+    internal virtual void DrawCircle(IBrush? brush, IPen? pen, Offset center, double radius)
     {
         DebugRecordCall(new CanvasCall("drawCircle", Brush: brush, Pen: pen, Center: center, Radius: radius));
         double clampedRadius = Math.Max(0, radius);
@@ -585,7 +585,7 @@ public partial class Canvas
     }
 
     // Dart parity source: dart:ui Canvas.drawArc.
-    public virtual void DrawArc(IPen pen, Rect rect, double startAngleRadians, double sweepAngleRadians)
+    internal virtual void DrawArc(IPen pen, Rect rect, double startAngleRadians, double sweepAngleRadians)
     {
         DebugRecordCall(new CanvasCall("drawArc", Rect: rect, Pen: pen));
         if (rect.Width <= 0 || rect.Height <= 0)
@@ -622,7 +622,7 @@ public partial class Canvas
     }
 
     // Dart parity source: dart:ui Canvas.drawLine.
-    public virtual void DrawLine(IPen pen, Offset startPoint, Offset endPoint)
+    internal virtual void DrawLine(IPen pen, Offset startPoint, Offset endPoint)
     {
         DebugRecordCall(new CanvasCall("drawLine", Pen: pen, Offset: startPoint, EndOffset: endPoint));
         if (pen is { Thickness: 0.0, DashStyle: null, Brush: ISolidColorBrush solid })
@@ -631,7 +631,7 @@ public partial class Canvas
             var hairline = new HairlineDraw(
                 startPoint,
                 endPoint,
-                (Color)solid.Color,
+                solid.Color.ToPlumix(),
                 isAntiAlias: true,
                 pen.LineCap switch
                 {
@@ -659,7 +659,7 @@ public partial class Canvas
         {
             DebugRecordCall(new CanvasCall(
                 "drawLine",
-                Pen: CreatePen(paint, new SolidColorBrush(paint.Color)),
+                Pen: CreatePen(paint, new SolidColorBrush(paint.Color.ToAvalonia())),
                 Offset: startPoint,
                 EndOffset: endPoint,
                 BlendMode: paint.BlendMode) { RecordedColor = paint.Color });
@@ -679,7 +679,7 @@ public partial class Canvas
     }
 
     // Dart parity source: dart:ui Canvas.drawPath over a closed polygon contour.
-    public virtual void DrawPolygon(IBrush? brush, IPen? pen, IReadOnlyList<Offset> points)
+    internal virtual void DrawPolygon(IBrush? brush, IPen? pen, IReadOnlyList<Offset> points)
     {
         ArgumentNullException.ThrowIfNull(points);
         if (points.Count < 3)
@@ -706,7 +706,7 @@ public partial class Canvas
     }
 
     /// <summary>Plumix-only: draws an Avalonia geometry the caller already built.</summary>
-    public virtual void DrawGeometry(
+    internal virtual void DrawGeometry(
         IBrush? brush,
         IPen? pen,
         Geometry geometry,
@@ -735,7 +735,7 @@ public partial class Canvas
     /// Plumix-only: Avalonia does not expose a geometry's native path, so any other geometry gets an
     /// offset, stroked approximation (see <c>docs/ai/DIVERGENCES.md</c>); pass a <see cref="Path"/> instead.
     /// </remarks>
-    public virtual void DrawShadow(
+    internal virtual void DrawShadow(
         Geometry geometry,
         Color color,
         double elevation,
@@ -846,7 +846,7 @@ public partial class Canvas
                     (int)Math.Round(color.Alpha * 0.12 * (1.0 - (fraction * 0.75))),
                     1,
                     byte.MaxValue);
-                var shadowBrush = new SolidColorBrush(Color.FromARGB(alpha, color.Red, color.Green, color.Blue));
+                var shadowBrush = new SolidColorBrush(Color.FromARGB(alpha, color.Red, color.Green, color.Blue).ToAvalonia());
                 var shadowPen = new Pen(shadowBrush, step * 2.0);
                 ShaderDrawing.DrawGeometry(context, transparentOccluder ? shadowBrush : null, shadowPen, geometry);
             }

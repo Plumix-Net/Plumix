@@ -150,7 +150,7 @@ internal sealed class AnimatedIconPainter : CustomPainter
         {
             double opacity = AnimatedIconInterpolation.Interpolate(path.Opacities, clampedProgress);
             byte alpha = (byte)Math.Clamp((int)Math.Round(Color.Alpha * opacity), 0, 255);
-            var brush = new SolidColorBrush(Color.FromARGB(alpha, Color.Red, Color.Green, Color.Blue));
+            var brush = new SolidColorBrush(Color.FromARGB(alpha, Color.Red, Color.Green, Color.Blue).ToAvalonia());
             context.Canvas.DrawGeometry(brush, null, path.BuildGeometry(clampedProgress));
         }
 

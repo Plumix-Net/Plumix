@@ -217,7 +217,7 @@ internal sealed class OffstageDemoPageState : State
             child: new CounterTapButton(
                 label: label,
                 onTap: onTap,
-                background: (Color)Avalonia.Media.Color.Parse(colorHex),
+                background: CssColors.ParseHex(colorHex),
                 foreground: Colors.Black,
                 fontSize: 12,
                 padding: EdgeInsets.Symmetric(horizontal: 10, vertical: 8)));
@@ -228,7 +228,7 @@ internal sealed class OffstageDemoPageState : State
         return new Container(
             width: 34,
             height: 34,
-            color: (Color)Avalonia.Media.Color.Parse(colorHex),
+            color: CssColors.ParseHex(colorHex),
             child: new Center(
                 child: new Text(label, style: new TextStyle(FontSize: 12, Color: Colors.White))));
     }

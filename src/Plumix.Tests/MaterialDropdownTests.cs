@@ -916,7 +916,7 @@ public sealed class MaterialDropdownTests : IDisposable
             box => box.Color == themeBackground);
         Assert.Equal(
             Colors.CadetBlue,
-            Assert.IsType<SolidColorBrush>(FindParagraph(themed.RenderView, "File")!.Foreground).Color);
+            Assert.IsType<SolidColorBrush>(FindParagraph(themed.RenderView, "File")!.Foreground).Color.ToPlumix());
 
         var itemController = new MenuController();
         Widget themedItem = new MenuButtonTheme(
@@ -932,7 +932,7 @@ public sealed class MaterialDropdownTests : IDisposable
         item.Pump(new Size(500, 180));
         Assert.Equal(
             Colors.ForestGreen,
-            Assert.IsType<SolidColorBrush>(FindParagraph(item.RenderView, "Run")!.Foreground).Color);
+            Assert.IsType<SolidColorBrush>(FindParagraph(item.RenderView, "Run")!.Foreground).Color.ToPlumix());
 
         Widget localBar = new MenuBarTheme(
             new MenuBarThemeData(new MenuStyle(backgroundColor: WidgetStateProperty<Color?>.All(localBackground))),
@@ -950,7 +950,7 @@ public sealed class MaterialDropdownTests : IDisposable
             box => box.Color == localBackground);
         Assert.Equal(
             Colors.MediumVioletRed,
-            Assert.IsType<SolidColorBrush>(FindParagraph(local.RenderView, "Edit")!.Foreground).Color);
+            Assert.IsType<SolidColorBrush>(FindParagraph(local.RenderView, "Edit")!.Foreground).Color.ToPlumix());
 
         Widget widgetBar = new MenuBar(
             [new SubmenuButton(
@@ -965,7 +965,7 @@ public sealed class MaterialDropdownTests : IDisposable
             box => box.Color == widgetBackground);
         Assert.Equal(
             Colors.OrangeRed,
-            Assert.IsType<SolidColorBrush>(FindParagraph(widget.RenderView, "View")!.Foreground).Color);
+            Assert.IsType<SolidColorBrush>(FindParagraph(widget.RenderView, "View")!.Foreground).Color.ToPlumix());
     }
 
     [Fact]

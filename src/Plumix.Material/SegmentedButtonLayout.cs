@@ -484,7 +484,7 @@ internal sealed class RenderSegmentedButton : RenderBox,
             }
 
             var data = (SegmentedButtonParentData)children[index].parentData!;
-            var pen = new Pen(new SolidColorBrush(side.Color), side.Width);
+            var pen = new Pen(new SolidColorBrush(side.Color.ToAvalonia()), side.Width);
             if (Direction == Axis.Horizontal)
             {
                 double x = TextDirection == TextDirection.Ltr

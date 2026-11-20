@@ -209,22 +209,8 @@ internal sealed class ImageDemoPageState : State
                                         "ShaderMask",
                                         _filtersEnabled
                                             ? new ShaderMask(
-                                                shaderCallback: _ => new LinearGradientBrush
-                                                {
-                                                    StartPoint = new RelativePoint(
-                                                        0.0,
-                                                        0.0,
-                                                        RelativeUnit.Relative),
-                                                    EndPoint = new RelativePoint(
-                                                        1.0,
-                                                        1.0,
-                                                        RelativeUnit.Relative),
-                                                    GradientStops =
-                                                    [
-                                                        new GradientStop(MaterialColors.Yellow, 0.0),
-                                                        new GradientStop(Colors.Purple, 1.0),
-                                                    ],
-                                                },
+                                                shaderCallback: bounds => new LinearGradient(
+                                                    [MaterialColors.Yellow, Colors.Purple]).CreateShader(bounds),
                                                 child: Plumix.Widgets.Image.Memory(
                                                     _sampleBytes,
                                                     width: 96,

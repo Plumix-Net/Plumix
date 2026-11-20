@@ -130,7 +130,7 @@ internal sealed class FlexDemoPageState : State
         return new Container(
             width: width,
             height: height,
-            color: (Color)Avalonia.Media.Color.Parse(colorHex),
+            color: CssColors.ParseHex(colorHex),
             child: new Center(child: new Text(label, style: new TextStyle(FontSize: 12, Color: Colors.White))));
     }
 
@@ -141,7 +141,7 @@ internal sealed class FlexDemoPageState : State
             child: new CounterTapButton(
                 label: label,
                 onTap: onTap,
-                background: (Color)Avalonia.Media.Color.Parse(colorHex),
+                background: CssColors.ParseHex(colorHex),
                 foreground: Colors.Black,
                 fontSize: 12,
                 padding: EdgeInsets.Symmetric(horizontal: 10, vertical: 8)));

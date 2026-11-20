@@ -154,7 +154,7 @@ internal readonly record struct CanvasCall(
     private static Color? SolidColor(IBrush? brush) => brush switch
     {
         ISolidColorBrush solid when brush is not Avalonia.AvaloniaObject owner || owner.CheckAccess() =>
-            (Color)solid.Color,
+            solid.Color.ToPlumix(),
         _ => null,
     };
 
@@ -764,7 +764,7 @@ public partial class Canvas
     /// Dart clips through <c>Path</c> only; Plumix models a few shapes (notched app bars, decoration
     /// outlines) as backend geometry, which cannot be shifted, so the offset is applied around it.
     /// </remarks>
-    public virtual void ClipGeometry(Geometry geometry, bool doAntiAlias = true, Offset geometryOffset = default)
+    internal virtual void ClipGeometry(Geometry geometry, bool doAntiAlias = true, Offset geometryOffset = default)
     {
         ArgumentNullException.ThrowIfNull(geometry);
         Rect geometryBounds = geometry.Bounds.ToPlumix();

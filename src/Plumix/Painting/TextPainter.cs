@@ -872,7 +872,7 @@ public sealed class TextPainter : IDisposable
 
     private void DebugPaintCharacterLayoutBoxes(Canvas canvas, Offset offset)
     {
-        var pen = new Pen(new SolidColorBrush(new Color(0xFF00FFFF)), 1.0);
+        var pen = new Pen(new SolidColorBrush(new Color(0xFF00FFFF).ToAvalonia()), 1.0);
         IReadOnlyList<TextBox> textBoxes = GetBoxesForSelection(new TextSelection(0, PlainText.Length));
         foreach (TextBox textBox in textBoxes)
         {

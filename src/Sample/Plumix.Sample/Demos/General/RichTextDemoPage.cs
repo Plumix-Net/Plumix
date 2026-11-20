@@ -341,7 +341,7 @@ public sealed class RichTextDemoPageState : State
     private static InlineSpan BuildBadge(PlaceholderAlignment alignment, string color)
     {
         return new WidgetSpan(
-            new Container(width: 18, height: 18, color: (Color)Avalonia.Media.Color.Parse(color)),
+            new Container(width: 18, height: 18, color: CssColors.ParseHex(color)),
             alignment);
     }
 }

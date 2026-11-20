@@ -274,7 +274,7 @@ public sealed record LinearBorder : OutlinedBorder
 
     private static void DrawEdge(PaintingContext context, Rect rect, Color color)
     {
-        var brush = new SolidColorBrush(color);
+        var brush = new SolidColorBrush(color.ToAvalonia());
         if (rect.Width == 0.0)
         {
             context.Canvas.DrawLine(new Pen(brush, 0.0), rect.TopLeft, new Offset(rect.Left, rect.Bottom));

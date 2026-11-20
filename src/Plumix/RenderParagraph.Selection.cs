@@ -1591,7 +1591,7 @@ internal sealed partial class SelectableFragment : ChangeNotifier, ISelectable, 
         }
 
         var selection = new TextSelection(start.Offset, end.Offset);
-        var brush = new SolidColorBrush(color);
+        var brush = new SolidColorBrush(color.ToAvalonia());
         foreach (TextBox box in _paragraph.GetBoxesForSelection(selection))
         {
             Rect rect = box.ToRect();

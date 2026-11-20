@@ -1271,14 +1271,14 @@ public sealed class Matrix4
     /// so the 3x3 is the transpose of the (x, y, w) sub-matrix. Skia's `SkM44::asM33` drops the same
     /// row and column, which is why a perspective transform survives the conversion.
     /// </remarks>
-    public Matrix ToAvaloniaMatrix() =>
+    internal Matrix ToAvaloniaMatrix() =>
         new(
             _storage[0], _storage[1], _storage[3],
             _storage[4], _storage[5], _storage[7],
             _storage[12], _storage[13], _storage[15]);
 
     /// <summary>The 4x4 matrix that agrees with the given Avalonia 3x3 on the z = 0 plane.</summary>
-    public static Matrix4 FromAvaloniaMatrix(Matrix matrix) =>
+    internal static Matrix4 FromAvaloniaMatrix(Matrix matrix) =>
         new(
             matrix.M11, matrix.M12, 0.0, matrix.M13,
             matrix.M21, matrix.M22, 0.0, matrix.M23,

@@ -766,7 +766,7 @@ internal sealed class RenderChip : RenderBox, ISlottedRenderObjectContainer
         if (_avatar is not null)
         {
             avatarRect = ParentDataOf(_avatar).offset + offset & _avatar.Size;
-            var scrim = new SolidColorBrush(Color.FromARGB(0x60, 0x19, 0x19, 0x19));
+            var scrim = new SolidColorBrush(Color.FromARGB(0x60, 0x19, 0x19, 0x19).ToAvalonia());
             if (_avatarBorder is CircleBorder)
             {
                 context.Canvas.DrawCircle(
@@ -808,7 +808,7 @@ internal sealed class RenderChip : RenderBox, ISlottedRenderObjectContainer
             _checkmarkColor.Red,
             _checkmarkColor.Green,
             _checkmarkColor.Blue);
-        var pen = new Pen(new SolidColorBrush(color), 2.0 * avatarRect.Height / 24.0);
+        var pen = new Pen(new SolidColorBrush(color.ToAvalonia()), 2.0 * avatarRect.Height / 24.0);
         if (progress < 0.5)
         {
             context.Canvas.DrawLine(pen, start, Lerp(start, middle, progress * 2.0));

@@ -198,7 +198,7 @@ internal sealed class DragTargetDemoContentState : State
                 return new Container(
                     width: 190,
                     height: 96,
-                    color: (Color)Avalonia.Media.Color.Parse(colorHex),
+                    color: CssColors.ParseHex(colorHex),
                     alignment: Alignment.Center,
                     child: new Text(label, style: new TextStyle(FontSize: 14, Color: Colors.Black)));
             });
@@ -214,7 +214,7 @@ internal sealed class DragTargetDemoContentState : State
             child: new Container(
                 width: 96,
                 height: 64,
-                color: (Color)Avalonia.Media.Color.Parse(colorHex),
+                color: CssColors.ParseHex(colorHex),
                 alignment: Alignment.Center,
                 child: new Text(label, style: new TextStyle(FontSize: 14, Color: Colors.White))));
     }

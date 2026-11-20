@@ -77,6 +77,12 @@ internal sealed class RuntimeFragmentShader(RuntimeFragmentProgram program)
     : ImmutableGradientBrush([], 1.0, null, null, GradientSpreadMethod.Pad), INativeShader, IDisposable
 {
     private float[]? _values = new float[program.FloatCount];
+    private Shader? _shader;
+
+    // A fragment shader is a dart:ui Shader; the public type wraps this brush once, so the same
+    // shader object comes back every time.
+    public static implicit operator Shader(RuntimeFragmentShader shader) =>
+        shader._shader ??= Shader.FromBrush(shader);
 
     internal bool DebugDisposed => _values is null;
 

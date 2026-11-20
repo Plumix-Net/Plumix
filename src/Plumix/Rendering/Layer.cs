@@ -2129,11 +2129,11 @@ public sealed class BackdropFilterLayer : ContainerLayer
 /// <remarks>Flutter's <c>ShaderMaskLayer</c>.</remarks>
 public sealed class ShaderMaskLayer : ContainerLayer
 {
-    private IBrush? _shader;
+    private Shader? _shader;
     private Rect? _maskRect;
     private BlendMode? _blendMode;
 
-    public ShaderMaskLayer(IBrush? shader = null, Rect? maskRect = null, BlendMode? blendMode = null)
+    public ShaderMaskLayer(Shader? shader = null, Rect? maskRect = null, BlendMode? blendMode = null)
     {
         _shader = shader;
         _maskRect = maskRect;
@@ -2141,12 +2141,12 @@ public sealed class ShaderMaskLayer : ContainerLayer
     }
 
     /// <summary>The shader to apply to the children.</summary>
-    public IBrush? Shader
+    public Shader? Shader
     {
         get => _shader;
         set
         {
-            if (EqualityComparer<IBrush?>.Default.Equals(value, _shader))
+            if (ReferenceEquals(value, _shader))
             {
                 return;
             }
@@ -2206,7 +2206,7 @@ public sealed class ShaderMaskLayer : ContainerLayer
     public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
     {
         base.DebugFillProperties(properties);
-        properties.Add(new DiagnosticsProperty<IBrush>("shader", Shader));
+        properties.Add(new DiagnosticsProperty<Shader>("shader", Shader));
         properties.Add(new DiagnosticsProperty<Rect?>("maskRect", MaskRect));
         properties.Add(new DiagnosticsProperty<BlendMode?>("blendMode", BlendMode));
     }
@@ -2579,7 +2579,7 @@ public sealed class ClipPathLayer : ContainerLayer
 /// Dart has no counterpart: every clip layer there takes a <c>Path</c>. See
 /// <c>PaintingContext.PushClipGeometry</c>.
 /// </remarks>
-public sealed class ClipGeometryLayer : ContainerLayer
+internal sealed class ClipGeometryLayer : ContainerLayer
 {
     private Geometry _geometry = new RectangleGeometry();
     private Clip _clipBehavior = Clip.AntiAlias;

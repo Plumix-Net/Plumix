@@ -1164,7 +1164,7 @@ public sealed class MaterialBottomNavigationBarTests
     }
 
     private static Color LabelColor(MountedScope scope, string text) =>
-        (Color)Assert.IsType<SolidColorBrush>(LabelParagraph(scope, text).Foreground).Color;
+        Assert.IsType<SolidColorBrush>(LabelParagraph(scope, text).Foreground).Color.ToPlumix();
 
     /// <summary>The uniform scale of the `Transform` that Dart's `_Label` puts around its `Text`.</summary>
     private static double LabelScale(MountedScope scope, string text)

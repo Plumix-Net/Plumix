@@ -1,6 +1,7 @@
 ﻿using Avalonia;
 using Avalonia.Media;
 using Plumix.Rendering;
+using Plumix.UI;
 
 namespace Plumix.Painting;
 
@@ -26,7 +27,7 @@ public static class PaintUtilities
     /// </remarks>
     public static void PaintZigZag(
         PaintingContext context,
-        IPen pen,
+        Paint paint,
         Offset start,
         Offset end,
         int zigs,
@@ -41,8 +42,7 @@ public static class PaintUtilities
         context.Canvas.Rotate(Math.Atan2(delta.Dx, delta.Dy));
         context.Canvas.DrawPath(
             BuildZigZagPath(Math.Sqrt((delta.Dx * delta.Dx) + (delta.Dy * delta.Dy)), zigs, width),
-            brush: null,
-            pen: pen);
+            paint);
         context.Canvas.Restore();
     }
 

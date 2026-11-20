@@ -190,11 +190,6 @@ public readonly record struct EdgeInsetsGeometry
             end: LerpDouble(from.End, to.End, t));
     }
 
-    public static implicit operator EdgeInsetsGeometry(Thickness value)
-    {
-        return FromLTRB(value.Left, value.Top, value.Right, value.Bottom);
-    }
-
     public static implicit operator EdgeInsetsGeometry(EdgeInsets value)
     {
         return FromLTRB(value.Left, value.Top, value.Right, value.Bottom);
@@ -246,9 +241,7 @@ public readonly record struct EdgeInsetsGeometry
 /// </summary>
 /// <remarks>
 /// Dart's <c>EdgeInsets</c>. Dart's <c>operator ~/</c> is <see cref="TruncatingDivide"/>, since C#
-/// cannot declare it. Avalonia's <see cref="Thickness"/> converts implicitly to this type, so host code
-/// can pass it where the framework takes insets; <see cref="ToThickness"/> converts back at the
-/// Avalonia boundary.
+/// cannot declare it.
 /// </remarks>
 public readonly record struct EdgeInsets(double Left, double Top, double Right, double Bottom)
 {
@@ -545,15 +538,6 @@ public readonly record struct EdgeInsets(double Left, double Top, double Right, 
 
     /// <summary>Dart's <c>EdgeInsetsGeometry.toString</c>.</summary>
     public override string ToString() => ((EdgeInsetsGeometry)this).ToString();
-
-    /// <summary>Converts Avalonia insets to framework insets.</summary>
-    public static implicit operator EdgeInsets(Thickness value)
-    {
-        return new EdgeInsets(value.Left, value.Top, value.Right, value.Bottom);
-    }
-
-    /// <summary>Converts these insets to Avalonia's <see cref="Thickness"/>, for host code.</summary>
-    public Thickness ToThickness() => new(Left, Top, Right, Bottom);
 
     // dart:ui `lerpDouble`.
     private static double LerpDouble(double a, double b, double t) => (a * (1.0 - t)) + (b * t);
