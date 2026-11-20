@@ -1,0 +1,42 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net11.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+        <!-- The host types keep the `Plumix` namespace, so applications keep their usings. -->
+        <RootNamespace>Plumix</RootNamespace>
+    </PropertyGroup>
+
+    <PropertyGroup>
+        <IsPackable>true</IsPackable>
+        <PackageId>Plumix.Avalonia</PackageId>
+        <Description>Avalonia host for Plumix — a Flutter-inspired UI framework for .NET. Provides PlumixApplication, the PlumixHost control that shows a widget tree in an Avalonia window, view, browser canvas or Android activity, and conversions between Plumix and Avalonia value types.</Description>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Avalonia" />
+        <PackageReference Include="Avalonia.Skia" />
+        <PackageReference Include="SkiaSharp" />
+        <ProjectReference Include="..\Plumix\Plumix.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <None Include="..\..\README.md" Pack="true" PackagePath="\" />
+        <None Include="..\..\LICENSE" Pack="true" PackagePath="\" />
+        <None Include="..\..\icon.png" Pack="true" PackagePath="\" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <InternalsVisibleTo Include="Plumix.Tests" />
+        <InternalsVisibleTo Include="Plumix.iOS" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <Compile Update="FlutterHost.PlatformPlugin.cs">
+            <DependentUpon>FlutterHost.cs</DependentUpon>
+        </Compile>
+    </ItemGroup>
+
+</Project>

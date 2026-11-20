@@ -214,7 +214,7 @@ public sealed class WidgetsBindingBootstrapTests : IDisposable
     {
         // Avalonia.Android's lifetime; Avalonia's reference assemblies forbid implementing it in code.
         IActivityApplicationLifetime lifetime = DispatchProxy.Create<IActivityApplicationLifetime, PropertyBag>();
-        PlumixExtensions.Run(new StatefulProbe("android"), lifetime);
+        PlumixApplication.Run(new StatefulProbe("android"), lifetime);
         DrainTurns();
         StatefulProbeState state = Assert.IsType<StatefulProbeState>(StatefulProbe.CurrentState);
 

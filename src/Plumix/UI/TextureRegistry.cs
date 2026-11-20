@@ -14,7 +14,7 @@ namespace Plumix.UI;
 /// <remarks>The engine's <c>flutter::Texture</c>.</remarks>
 public abstract class EngineTexture
 {
-    protected EngineTexture(long id)
+    private protected EngineTexture(long id)
     {
         Id = id;
     }
@@ -27,7 +27,7 @@ public abstract class EngineTexture
     /// texture keeps painting the frame it last painted.
     /// </summary>
     /// <remarks>The engine's <c>Texture::Paint</c>.</remarks>
-    public abstract void Paint(DrawingContext context, Rect bounds, bool freeze, FilterQuality filterQuality);
+    internal abstract void Paint(DrawingContext context, Rect bounds, bool freeze, FilterQuality filterQuality);
 
     /// <summary>Called when the producer has a new frame: <c>Texture::MarkNewFrameAvailable</c>.</summary>
     public abstract void MarkNewFrameAvailable();
@@ -58,7 +58,7 @@ public sealed class ImageTexture : EngineTexture
     }
 
     /// <inheritdoc />
-    public override void Paint(DrawingContext context, Rect bounds, bool freeze, FilterQuality filterQuality)
+    internal override void Paint(DrawingContext context, Rect bounds, bool freeze, FilterQuality filterQuality)
     {
         ArgumentNullException.ThrowIfNull(context);
         if (!freeze)

@@ -22,6 +22,7 @@
 
     <ItemGroup>
         <ProjectReference Include="..\..\Plumix.FSharp\Plumix.FSharp.fsproj" />
+        <ProjectReference Include="..\..\Plumix.Avalonia\Plumix.Avalonia.csproj" />
         <ProjectReference Include="..\..\Plumix.Elmish\Plumix.Elmish.fsproj" />
     </ItemGroup>
 </Project>

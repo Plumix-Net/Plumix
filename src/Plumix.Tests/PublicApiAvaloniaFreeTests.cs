@@ -3,96 +3,26 @@ using Xunit;
 
 // C#-only infrastructure: no Dart parity source.
 //
-// Ratchet for docs/product avalonia-free-api: no public or protected member of the widget packages
-// may mention a type from an `Avalonia*` assembly. Hosting lives in `Plumix.Avalonia`, which is
-// exempt. The budget below may only shrink; growing it is a review failure, not a test fix.
+// No public or protected member of the widget packages may mention a type from an `Avalonia*`
+// assembly: hosting lives in `Plumix.Avalonia`, which is exempt, so the widget API can outlive the
+// Avalonia host (docs/product avalonia-free-api).
 
 namespace Plumix.Tests;
 
 public sealed class PublicApiAvaloniaFreeTests
 {
-    // Avalonia type name -> number of public API members that may still mention it, per package.
-    private static readonly Dictionary<string, Dictionary<string, int>> Budget = new()
-    {
-        ["Plumix"] = new()
-        {
-            ["Application"] = 1,
-            ["AutomationPeer"] = 1,
-            ["Control"] = 1,
-            ["DrawingContext"] = 4,
-            ["FocusChangedEventArgs"] = 2,
-            ["IApplicationLifetime"] = 1,
-            ["IAvaloniaListItemValidator`1"] = 2,
-            ["IAvaloniaObjectDebug"] = 3,
-            ["ICustomHitTest"] = 2,
-            ["IDataContextProvider"] = 3,
-            ["IDataTemplateHost"] = 3,
-            ["IGlobalDataTemplates"] = 1,
-            ["IGlobalStyles"] = 1,
-            ["IInputElement"] = 2,
-            ["ILogical"] = 4,
-            ["INamed"] = 2,
-            ["IOptionalFeatureProvider"] = 1,
-            ["IResourceHost"] = 3,
-            ["IResourceNode"] = 3,
-            ["ISetInheritanceParent"] = 2,
-            ["ISetLogicalParent"] = 2,
-            ["ISetterValue"] = 2,
-            ["IStyleHost"] = 3,
-            ["IThemeVariantHost"] = 3,
-            ["IThemeVariantRoot"] = 1,
-            ["IVisualBrushInitialize"] = 2,
-            ["KeyEventArgs"] = 2,
-            ["Point"] = 1,
-            ["PointerCaptureLostEventArgs"] = 1,
-            ["PointerEventArgs"] = 3,
-            ["PointerPressedEventArgs"] = 1,
-            ["PointerReleasedEventArgs"] = 1,
-            ["PointerWheelEventArgs"] = 1,
-            ["Size"] = 1,
-            ["TextInputEventArgs"] = 1,
-            ["Visual"] = 2,
-            ["VisualTreeAttachmentEventArgs"] = 2,
-        },
-        ["Plumix.Material"] = new(),
-        ["Plumix.Cupertino"] = new(),
-    };
-
     public static TheoryData<string> Packages => new() { "Plumix", "Plumix.Material", "Plumix.Cupertino" };
 
     [Theory]
     [MemberData(nameof(Packages))]
-    public void PublicApi_MentionsNoAvaloniaTypeBeyondBudget(string package)
-    {
-        Assembly assembly = Load(package);
-        Dictionary<string, List<string>> leaks = Collect(assembly);
-        Dictionary<string, int> budget = Budget[package];
-
-        List<string> failures = [];
-        foreach ((string type, List<string> members) in leaks.OrderBy(pair => pair.Key, StringComparer.Ordinal))
-        {
-            int allowed = budget.GetValueOrDefault(type);
-            if (members.Count > allowed)
-            {
-                failures.Add($"{type}: {members.Count} members (budget {allowed}):\n    "
-                             + string.Join("\n    ", members.Order(StringComparer.Ordinal).Take(40)));
-            }
-        }
-
-        Assert.True(failures.Count == 0,
-            $"{package} public API mentions Avalonia types:\n" + string.Join("\n", failures));
-    }
-
-    [Theory]
-    [MemberData(nameof(Packages))]
-    public void Budget_IsTight(string package)
+    public void PublicApi_MentionsNoAvaloniaType(string package)
     {
         Dictionary<string, List<string>> leaks = Collect(Load(package));
-        List<string> slack = Budget[package]
-            .Where(pair => leaks.GetValueOrDefault(pair.Key)?.Count is not { } count || count < pair.Value)
-            .Select(pair => $"{pair.Key}: budget {pair.Value}, actual {leaks.GetValueOrDefault(pair.Key)?.Count ?? 0}")
-            .ToList();
-        Assert.True(slack.Count == 0, $"Lower the {package} budget:\n" + string.Join("\n", slack));
+
+        Assert.True(leaks.Count == 0,
+            $"{package} public API mentions Avalonia types:\n" + string.Join("\n", leaks
+                .OrderBy(pair => pair.Key, StringComparer.Ordinal)
+                .Select(pair => $"{pair.Key}:\n    " + string.Join("\n    ", pair.Value.Order(StringComparer.Ordinal)))));
     }
 
     private static Assembly Load(string package) => package switch

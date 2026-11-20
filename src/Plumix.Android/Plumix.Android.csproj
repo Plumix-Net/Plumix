@@ -16,6 +16,7 @@
     <ItemGroup>
         <PackageReference Include="Avalonia.Android" />
         <ProjectReference Include="..\Plumix\Plumix.csproj" />
+        <ProjectReference Include="..\Plumix.Avalonia\Plumix.Avalonia.csproj" />
     </ItemGroup>
 
     <ItemGroup>

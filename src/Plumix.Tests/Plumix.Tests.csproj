@@ -25,6 +25,7 @@
     <AvaloniaResource Include="Fixtures/Fonts/*.ttf" />
     <EmbeddedResource Include="Fixtures/Shaders/*.sksl" />
     <ProjectReference Include="../Plumix/Plumix.csproj" />
+    <ProjectReference Include="../Plumix.Avalonia/Plumix.Avalonia.csproj" />
     <ProjectReference Include="../Plumix.Cupertino/Plumix.Cupertino.csproj" />
     <ProjectReference Include="../Plumix.Material/Plumix.Material.csproj" />
     <ProjectReference Include="..\Sample\Plumix.Sample\Plumix.Sample.csproj" />

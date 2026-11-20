@@ -3,6 +3,7 @@
     "path": "Plumix.sln",
     "projects": [
       "Plumix\\Plumix.csproj",
+      "Plumix.Avalonia\\Plumix.Avalonia.csproj",
       "Plumix.Cupertino\\Plumix.Cupertino.csproj",
       "Plumix.Material\\Plumix.Material.csproj",
       "Plumix.FSharp\\Plumix.FSharp.fsproj",

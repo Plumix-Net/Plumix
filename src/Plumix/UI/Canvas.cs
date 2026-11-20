@@ -277,7 +277,7 @@ public sealed class Picture
         Task.FromResult(ToImageSync(width, height));
 
     /// <summary>Replays the recorded operations, translated by <paramref name="offset"/>.</summary>
-    public void Playback(DrawingContext context, Offset offset)
+    internal void Playback(DrawingContext context, Offset offset)
     {
         Playback(context, offset, PaintRasterizer.RasterScale);
     }

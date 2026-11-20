@@ -39,6 +39,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ai", "ai", "{55D8FD4B-7A91-
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Plumix.Material", "Plumix.Material\Plumix.Material.csproj", "{43264679-E820-44D5-8F7B-9E70ACF5F191}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Plumix.Avalonia", "Plumix.Avalonia\Plumix.Avalonia.csproj", "{6960C4D1-67E4-47C5-B038-80549605820B}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Plumix.Cupertino", "Plumix.Cupertino\Plumix.Cupertino.csproj", "{DB33F73F-2C6A-431A-9895-3ED80F803C7B}"
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Plumix.FSharpSample", "Sample\Plumix.FSharpSample\Plumix.FSharpSample.fsproj", "{A4BA1E58-9E5A-42A7-A6A7-AF9BCDB06F86}"
@@ -153,6 +155,18 @@ Global
 		{43264679-E820-44D5-8F7B-9E70ACF5F191}.Release|x64.Build.0 = Release|Any CPU
 		{43264679-E820-44D5-8F7B-9E70ACF5F191}.Release|x86.ActiveCfg = Release|Any CPU
 		{43264679-E820-44D5-8F7B-9E70ACF5F191}.Release|x86.Build.0 = Release|Any CPU
+		{6960C4D1-67E4-47C5-B038-80549605820B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6960C4D1-67E4-47C5-B038-80549605820B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6960C4D1-67E4-47C5-B038-80549605820B}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{6960C4D1-67E4-47C5-B038-80549605820B}.Debug|x64.Build.0 = Debug|Any CPU
+		{6960C4D1-67E4-47C5-B038-80549605820B}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{6960C4D1-67E4-47C5-B038-80549605820B}.Debug|x86.Build.0 = Debug|Any CPU
+		{6960C4D1-67E4-47C5-B038-80549605820B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6960C4D1-67E4-47C5-B038-80549605820B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6960C4D1-67E4-47C5-B038-80549605820B}.Release|x64.ActiveCfg = Release|Any CPU
+		{6960C4D1-67E4-47C5-B038-80549605820B}.Release|x64.Build.0 = Release|Any CPU
+		{6960C4D1-67E4-47C5-B038-80549605820B}.Release|x86.ActiveCfg = Release|Any CPU
+		{6960C4D1-67E4-47C5-B038-80549605820B}.Release|x86.Build.0 = Release|Any CPU
 		{DB33F73F-2C6A-431A-9895-3ED80F803C7B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{DB33F73F-2C6A-431A-9895-3ED80F803C7B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DB33F73F-2C6A-431A-9895-3ED80F803C7B}.Debug|x64.ActiveCfg = Debug|Any CPU

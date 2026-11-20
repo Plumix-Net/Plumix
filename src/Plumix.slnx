@@ -28,6 +28,7 @@
     <File Path="../docs/ai/TEST_MATRIX.md" />
   </Folder>
   <Project Path="Plumix.Android/Plumix.Android.csproj" />
+  <Project Path="Plumix.Avalonia/Plumix.Avalonia.csproj" />
   <Project Path="Plumix.Cupertino/Plumix.Cupertino.csproj" />
   <Project Path="Plumix.Elmish/Plumix.Elmish.fsproj" />
   <Project Path="Plumix.FSharp/Plumix.FSharp.fsproj" />

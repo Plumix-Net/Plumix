@@ -31,6 +31,14 @@ namespace Plumix;
 /// on every Flutter platform.
 /// </para>
 /// </remarks>
+// The core's windowing API finds the desktop owner through this hook, installed when the host
+// assembly loads.
+internal static class AvaloniaWindowingRegistration
+{
+    [System.Runtime.CompilerServices.ModuleInitializer]
+    internal static void Register() => Windowing.DesktopOwnerFactory ??= () => new AvaloniaWindowingOwner();
+}
+
 public sealed class AvaloniaWindowingOwner : WindowingOwner
 {
     /// <summary>Creates the owner. Throws <see cref="NotSupportedException"/> unless windowing is enabled.</summary>

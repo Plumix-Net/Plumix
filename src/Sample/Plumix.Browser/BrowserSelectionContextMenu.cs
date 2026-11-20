@@ -60,7 +60,7 @@ internal static partial class BrowserSelectionContextMenu
         }
 
         PlatformSelectionContextMenuResult? result =
-            PlatformSelectableRegionContextMenu.HandleMouseDown(view, new Point(x, y), button);
+            PlatformSelectableRegionContextMenu.HandleMouseDown(view, new Offset(x, y), button);
         if (result is null)
         {
             return null;

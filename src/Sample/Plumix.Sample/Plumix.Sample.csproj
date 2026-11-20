@@ -24,6 +24,7 @@
 
     <ItemGroup>
         <ProjectReference Include="..\..\Plumix\Plumix.csproj" />
+        <ProjectReference Include="..\..\Plumix.Avalonia\Plumix.Avalonia.csproj" />
         <ProjectReference Include="..\..\Plumix.Material\Plumix.Material.csproj" />
     </ItemGroup>
 </Project>

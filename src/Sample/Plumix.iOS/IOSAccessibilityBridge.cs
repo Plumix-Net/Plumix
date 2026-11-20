@@ -8,6 +8,7 @@ using ObjCRuntime;
 using Plumix.Accessibility;
 using Plumix.UI;
 using UIKit;
+using Rect = Plumix.UI.Rect;
 
 // C#-only infrastructure: the UIKit half of the iOS accessibility bridge, the engine's
 // engine/src/flutter/shell/platform/darwin/ios/framework/Source/accessibility_bridge.mm and
@@ -104,10 +105,10 @@ internal sealed class IOSAccessibilityBridge : IDisposable
         Rect bounds = node.GetBoundsInView();
         if (TopLevel.GetTopLevel(_host) is { } topLevel && _host.TranslatePoint(default, topLevel) is { } origin)
         {
-            bounds = bounds.Translate(new Vector(origin.X, origin.Y));
+            bounds = bounds.Shift(new Offset(origin.X, origin.Y));
         }
 
-        var frame = new CGRect(bounds.X, bounds.Y, bounds.Width, bounds.Height);
+        var frame = new CGRect(bounds.Left, bounds.Top, bounds.Width, bounds.Height);
         return UIAccessibility.ConvertFrameToScreenCoordinates(frame, _view);
     }
 

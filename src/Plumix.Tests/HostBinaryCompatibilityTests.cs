@@ -25,13 +25,15 @@ namespace Plumix.Tests;
 public sealed class HostBinaryCompatibilityTests
 {
     private static readonly string[] HostAssemblyPrefixes = ["Avalonia", "SkiaSharp", "HarfBuzzSharp"];
-    private static readonly string[] FrameworkAssemblies = ["Plumix", "Plumix.Material", "Plumix.Cupertino"];
+    private static readonly string[] FrameworkAssemblies =
+        ["Plumix", "Plumix.Material", "Plumix.Cupertino", "Plumix.Avalonia"];
 
     public static TheoryData<string> ShippedAssemblies() =>
     [
         typeof(Plumix.Widgets.Widget).Assembly.GetName().Name!,
         typeof(MaterialApp).Assembly.GetName().Name!,
         typeof(Plumix.Cupertino.CupertinoApp).Assembly.GetName().Name!,
+        typeof(PlumixHost).Assembly.GetName().Name!,
     ];
 
     [Theory]

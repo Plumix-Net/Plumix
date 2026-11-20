@@ -66,17 +66,21 @@ public static class Windowing
     /// </summary>
     /// <remarks>
     /// Flutter's desktop owners drive the engine's native windows through FFI. Plumix's engine role is
-    /// played by Avalonia, so one owner, <see cref="AvaloniaWindowingOwner"/>, serves the three platforms.
+    /// played by the host, which installs <see cref="DesktopOwnerFactory"/> (the Avalonia host's owner
+    /// serves the three platforms).
     /// </remarks>
     internal static WindowingOwner? CreateDefaultOwner()
     {
         if (OperatingSystem.IsWindows() || OperatingSystem.IsLinux() || OperatingSystem.IsMacOS())
         {
-            return new AvaloniaWindowingOwner();
+            return DesktopOwnerFactory?.Invoke();
         }
 
         return null;
     }
+
+    /// <summary>Creates the desktop host's windowing owner; set by the host package when it loads.</summary>
+    internal static Func<WindowingOwner>? DesktopOwnerFactory { get; set; }
 
     internal static void DebugAssertSatisfies(BoxConstraints? constraints, Size size)
     {

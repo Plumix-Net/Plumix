@@ -32,6 +32,7 @@
 
     <ItemGroup>
         <InternalsVisibleTo Include="Plumix.Tests" />
+        <InternalsVisibleTo Include="Plumix.Avalonia" />
         <InternalsVisibleTo Include="Plumix.Material" />
         <InternalsVisibleTo Include="Plumix.Cupertino" />
         <InternalsVisibleTo Include="Plumix.iOS" />

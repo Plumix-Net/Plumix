@@ -263,6 +263,6 @@ public class PlumixMainActivity : AvaloniaMainActivity
         private static PredictiveBackEvent ToFrameworkEvent(BackEvent backEvent) => new(
             progress: backEvent.Progress,
             swipeEdge: backEvent.SwipeEdge == BackEventEdge.Right ? SwipeEdge.Right : SwipeEdge.Left,
-            touchOffset: new Point(backEvent.TouchX, backEvent.TouchY));
+            touchOffset: new Offset(backEvent.TouchX, backEvent.TouchY));
     }
 }
