@@ -704,8 +704,8 @@ public class SearchAnchor : StatefulWidget
 
             var searchBarBox = (RenderBox)context.FindRenderObject()!;
             RenderObject? navigatorBox = Navigator!.Context.FindRenderObject();
-            Point boxLocation = searchBarBox.LocalToGlobal(default, ancestor: navigatorBox);
-            return new Rect(boxLocation, searchBarBox.Size);
+            Offset boxLocation = searchBarBox.LocalToGlobal(default, ancestor: navigatorBox);
+            return DartGeometry.RectFromOffsetAndSize(boxLocation, searchBarBox.Size);
         }
 
         private void UpdateViewConfig(BuildContext context)
@@ -756,8 +756,8 @@ public class SearchAnchor : StatefulWidget
             }
 
             _rectTween.End = _showFullScreenView
-                ? new Rect(default(Point), screenSize)
-                : new Rect(new Point(dx, dy), new Size(viewWidth, viewHeight));
+                ? DartGeometry.RectFromOffsetAndSize(default(Offset), screenSize)
+                : DartGeometry.RectFromOffsetAndSize(new Offset(dx, dy), new Size(viewWidth, viewHeight));
         }
 
         private static double LerpDouble(double a, double b, double t)
@@ -927,7 +927,7 @@ internal sealed class SearchViewContent : StatefulWidget
                 _screenSize = updatedScreenSize;
                 if (Current.ShowFullScreenView)
                 {
-                    _viewRect = new Rect(default(Point), updatedScreenSize);
+                    _viewRect = DartGeometry.RectFromOffsetAndSize(default(Offset), updatedScreenSize);
                 }
             }
 
@@ -1076,7 +1076,7 @@ internal sealed class SearchViewContent : StatefulWidget
             return new Align(
                 alignment: Alignment.TopLeft,
                 child: new Widgets.Transform(
-                    Matrix4.TranslationValues(_viewRect.X, _viewRect.Y, 0.0),
+                    Matrix4.TranslationValues(_viewRect.Left, _viewRect.Top, 0.0),
                     child: new ConstrainedBox(
                         new BoxConstraints(
                             MinWidth: Math.Min(effectiveConstraints.MinWidth, _viewRect.Width),

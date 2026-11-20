@@ -487,12 +487,12 @@ public sealed class MaterialTooltipTests
         Assert.NotNull(received);
         Assert.Equal(10, received!.VerticalOffset);
         Assert.True(received.PreferBelow);
-        Assert.Equal(new Point(100, 90), received.Target);
+        Assert.Equal(new Offset(100, 90), received.Target);
         RenderCustomSingleChildLayoutBox layout =
             Assert.Single(FindDescendants<RenderCustomSingleChildLayoutBox>(harness.RenderView));
         Assert.Equal(
             60,
-            Assert.IsType<BoxParentData>(layout.Child!.parentData).offset.Y,
+            Assert.IsType<BoxParentData>(layout.Child!.parentData).offset.Dy,
             precision: 3);
     }
 
@@ -536,10 +536,10 @@ public sealed class MaterialTooltipTests
     }
 
     private static PointerEnterEvent PointerEnter(int pointer) => new(
-        pointer, PointerDeviceKind.Mouse, new Point(5, 5), PointerButtons.None, DateTime.UtcNow);
+        pointer, PointerDeviceKind.Mouse, new Offset(5, 5), PointerButtons.None, DateTime.UtcNow);
 
     private static PointerExitEvent PointerExit(int pointer) => new(
-        pointer, PointerDeviceKind.Mouse, new Point(100, 5), PointerButtons.None, DateTime.UtcNow);
+        pointer, PointerDeviceKind.Mouse, new Offset(100, 5), PointerButtons.None, DateTime.UtcNow);
 
     private static RenderMouseRegion? FindTooltipListener(RenderObject? root)
     {

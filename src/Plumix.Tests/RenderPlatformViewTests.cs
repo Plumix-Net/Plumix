@@ -95,8 +95,8 @@ public sealed class RenderPlatformViewTests : IDisposable
         _harness.PumpFrame(RenderingHarness.Phase.FlushSemantics);
 
         _harness.Send(new PointerAddedEvent(kind: kind, position: default));
-        _harness.Send(new PointerHoverEvent(kind: kind, position: new Point(10, 10)));
-        _harness.Send(new PointerRemovedEvent(kind: kind, position: new Point(10, 10)));
+        _harness.Send(new PointerHoverEvent(kind: kind, position: new Offset(10, 10)));
+        _harness.Send(new PointerRemovedEvent(kind: kind, position: new Offset(10, 10)));
 
         Assert.NotEmpty(fakePlatformViewController.DispatchedPointerEvents);
         Assert.IsType<PointerHoverEvent>(fakePlatformViewController.DispatchedPointerEvents[0]);
@@ -123,21 +123,21 @@ public sealed class RenderPlatformViewTests : IDisposable
         _harness.Layout(box);
 
         var opaque = new BoxHitTestResult();
-        Assert.True(box.HitTest(opaque, new Point(10, 10)));
+        Assert.True(box.HitTest(opaque, new Offset(10, 10)));
         Assert.Single(opaque.Path);
 
         box.HitTestBehavior = PlatformViewHitTestBehavior.Translucent;
         var translucent = new BoxHitTestResult();
-        Assert.False(box.HitTest(translucent, new Point(10, 10)));
+        Assert.False(box.HitTest(translucent, new Offset(10, 10)));
         Assert.Single(translucent.Path);
 
         box.HitTestBehavior = PlatformViewHitTestBehavior.Transparent;
         var transparent = new BoxHitTestResult();
-        Assert.False(box.HitTest(transparent, new Point(10, 10)));
+        Assert.False(box.HitTest(transparent, new Offset(10, 10)));
         Assert.Empty(transparent.Path);
 
         box.HitTestBehavior = PlatformViewHitTestBehavior.Opaque;
-        Assert.False(box.HitTest(new BoxHitTestResult(), new Point(800, 10)));
+        Assert.False(box.HitTest(new BoxHitTestResult(), new Offset(800, 10)));
     }
 
     [Fact]
@@ -155,7 +155,7 @@ public sealed class RenderPlatformViewTests : IDisposable
         Assert.True(box.ValidForMouseTracker);
         var layer = Assert.IsType<PlatformViewLayer>(((ContainerLayer)box.DebugLayer!).FirstChild);
         Assert.Equal(7, layer.ViewId);
-        Assert.Equal(new Rect(0, 0, 800, 600), layer.Rect);
+        Assert.Equal(DartGeometry.RectFromLTWH(0, 0, 800, 600), layer.Rect);
     }
 
     [Fact]
@@ -177,18 +177,18 @@ public sealed class RenderPlatformViewTests : IDisposable
         viewController.PointTransformer = offset => platformViewRenderBox.GlobalToLocal(offset);
 
         _harness.Send(new PointerAddedEvent(pointer: 1, position: default));
-        _harness.Send(new PointerDownEvent(pointer: 1, position: new Point(10, 10)));
-        _harness.Send(new PointerRemovedEvent(pointer: 1, position: new Point(10, 10)));
+        _harness.Send(new PointerDownEvent(pointer: 1, position: new Offset(10, 10)));
+        _harness.Send(new PointerRemovedEvent(pointer: 1, position: new Offset(10, 10)));
         EventLoop.FlushMicrotasks();
 
         _harness.Send(new PointerAddedEvent(pointer: 2, position: default));
-        _harness.Send(new PointerDownEvent(pointer: 2, position: new Point(20, 10)));
-        _harness.Send(new PointerCancelEvent(pointer: 2, position: new Point(20, 10)));
+        _harness.Send(new PointerDownEvent(pointer: 2, position: new Offset(20, 10)));
+        _harness.Send(new PointerCancelEvent(pointer: 2, position: new Offset(20, 10)));
         EventLoop.FlushMicrotasks();
 
         _harness.Send(new PointerAddedEvent(pointer: 1, position: default));
-        _harness.Send(new PointerMoveEvent(pointer: 1, position: new Point(10, 10)));
-        _harness.Send(new PointerRemovedEvent(pointer: 1, position: new Point(10, 10)));
+        _harness.Send(new PointerMoveEvent(pointer: 1, position: new Offset(10, 10)));
+        _harness.Send(new PointerRemovedEvent(pointer: 1, position: new Offset(10, 10)));
         EventLoop.FlushMicrotasks();
     }
 
@@ -349,7 +349,7 @@ public sealed class RenderPlatformViewTests : IDisposable
         Assert.True(renderBox.DebugNeedsLayout);
         Assert.Equal(0, _rejections);
 
-        GestureBinding.Instance.PointerRouter.Route(new PointerDownEvent(position: new Point(10, 10)));
+        GestureBinding.Instance.PointerRouter.Route(new PointerDownEvent(position: new Offset(10, 10)));
 
         Assert.Equal(0, _rejections);
 
@@ -366,7 +366,7 @@ public sealed class RenderPlatformViewTests : IDisposable
 
         Assert.Equal(0, _rejections);
 
-        GestureBinding.Instance.PointerRouter.Route(new PointerDownEvent(position: new Point(10, 10)));
+        GestureBinding.Instance.PointerRouter.Route(new PointerDownEvent(position: new Offset(10, 10)));
 
         Assert.Equal(0, _rejections);
 
@@ -374,7 +374,7 @@ public sealed class RenderPlatformViewTests : IDisposable
         _harness.PumpFrame(RenderingHarness.Phase.FlushSemantics);
         Assert.False(renderBox.DebugNeedsLayout);
 
-        GestureBinding.Instance.PointerRouter.Route(new PointerDownEvent(position: new Point(10, 10)));
+        GestureBinding.Instance.PointerRouter.Route(new PointerDownEvent(position: new Offset(10, 10)));
 
         Assert.Equal(1, _rejections);
     }

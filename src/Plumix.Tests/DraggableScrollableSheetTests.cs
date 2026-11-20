@@ -64,7 +64,7 @@ public sealed class DraggableScrollableSheetTests
     {
         using var harness = new SheetHarness(initialChildSize: 0.25, maxChildSize: 0.6);
 
-        Assert.Equal(new Rect(0, 450, ScreenWidth, 150), harness.SheetRect());
+        Assert.Equal(DartGeometry.RectFromLTWH(0, 450, ScreenWidth, 150), harness.SheetRect());
     }
 
     [Fact]
@@ -85,13 +85,13 @@ public sealed class DraggableScrollableSheetTests
     public void Drag_MovesTheSheetByTheDraggedPixelsForAnyMaxChildSize(double maxChildSize)
     {
         using var harness = new SheetHarness(initialChildSize: 0.25, maxChildSize: maxChildSize);
-        Assert.Equal(new Rect(0, 450, ScreenWidth, 150), harness.SheetRect());
+        Assert.Equal(DartGeometry.RectFromLTWH(0, 450, ScreenWidth, 150), harness.SheetRect());
 
         harness.Drag(-125);
 
         // The sheet grows by exactly the dragged pixels, regardless of how maxChildSize scales the
         // extent's available pixels.
-        Assert.Equal(new Rect(0, 325, ScreenWidth, 275), harness.SheetRect());
+        Assert.Equal(DartGeometry.RectFromLTWH(0, 325, ScreenWidth, 275), harness.SheetRect());
     }
 
     [Fact]
@@ -1141,7 +1141,7 @@ public sealed class DraggableScrollableSheetTests
         {
             RenderBox content = SheetBox().Child
                                 ?? throw new InvalidOperationException("The sheet has no content.");
-            return new Rect(content.LocalToGlobal(default), content.Size);
+            return DartGeometry.RectFromOffsetAndSize(content.LocalToGlobal(default), content.Size);
         }
 
         /// <summary>The height of the sheet's own fractionally sized box.</summary>

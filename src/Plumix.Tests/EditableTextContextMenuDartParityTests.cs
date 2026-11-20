@@ -115,24 +115,24 @@ public sealed class EditableTextContextMenuDartParityTests : IDisposable
     private static RenderEditable FindRenderEditable(FrameworkDartTester tester) =>
         tester.State<EditableText.EditableTextState>().RenderEditableObject;
 
-    private static Point TextOffsetToPosition(FrameworkDartTester tester, int offset)
+    private static Offset TextOffsetToPosition(FrameworkDartTester tester, int offset)
     {
         RenderEditable editable = FindRenderEditable(tester);
         IReadOnlyList<TextSelectionPoint> endpoints =
             editable.GetEndpointsForSelection(TextSelection.Collapsed(offset));
         Assert.Single(endpoints);
-        Point global = editable.LocalToGlobal(endpoints[0].Point);
-        return new Point(global.X, global.Y - 2.0);
+        Offset global = editable.LocalToGlobal(endpoints[0].Point);
+        return new Offset(global.Dx, global.Dy - 2.0);
     }
 
-    private static void TapAt(FrameworkDartTester tester, Point location)
+    private static void TapAt(FrameworkDartTester tester, Offset location)
     {
         TestGesture gesture = tester.StartGesture(location, PointerDeviceKind.Touch);
         gesture.Up();
     }
 
     // flutter_test's `longPressAt`: down, wait out the long-press timeout, up.
-    private static void LongPressAt(FrameworkDartTester tester, Point location)
+    private static void LongPressAt(FrameworkDartTester tester, Offset location)
     {
         TestGesture gesture = tester.StartGesture(location, PointerDeviceKind.Touch);
         tester.Pump(TimeSpan.FromSeconds(1));
@@ -163,11 +163,11 @@ public sealed class EditableTextContextMenuDartParityTests : IDisposable
         tester.Pump();
         tester.Pump(TimeSpan.FromMilliseconds(200));
         RenderEditable renderEditable = FindRenderEditable(tester);
-        Point endpoint = renderEditable.LocalToGlobal(
+        Offset endpoint = renderEditable.LocalToGlobal(
             renderEditable.GetEndpointsForSelection(controller.Selection)[0].Point);
         // Tapping on the part of the handle's GestureDetector where it overlaps with the text itself
         // does not show the menu, so add a small vertical offset to tap below the text.
-        TapAt(tester, endpoint + new Vector(1.0, 13.0));
+        TapAt(tester, endpoint + new Offset(1.0, 13.0));
         tester.Pump();
         tester.Pump(TimeSpan.FromMilliseconds(200));
 
@@ -604,13 +604,13 @@ public sealed class EditableTextContextMenuDartParityTests : IDisposable
         Assert.Equal(10.0, endGlyphHeight);
 
         IReadOnlyList<TextSelectionPoint> points = renderEditable.GetEndpointsForSelection(controller.Selection);
-        Point origin = renderEditable.LocalToGlobal(default);
+        Offset origin = renderEditable.LocalToGlobal(default);
         TextSelectionToolbarAnchors anchors = state.ContextMenuAnchors;
-        double centerX = origin.X + (points[0].Point.X + points[^1].Point.X) / 2;
-        Assert.Equal(centerX, anchors.PrimaryAnchor.X, 6);
-        Assert.Equal(origin.Y + points[0].Point.Y - startGlyphHeight, anchors.PrimaryAnchor.Y, 6);
-        Assert.Equal(centerX, anchors.SecondaryAnchor!.Value.X, 6);
-        Assert.Equal(origin.Y + points[^1].Point.Y, anchors.SecondaryAnchor!.Value.Y, 6);
+        double centerX = origin.Dx + (points[0].Point.Dx + points[^1].Point.Dx) / 2;
+        Assert.Equal(centerX, anchors.PrimaryAnchor.Dx, 6);
+        Assert.Equal(origin.Dy + points[0].Point.Dy - startGlyphHeight, anchors.PrimaryAnchor.Dy, 6);
+        Assert.Equal(centerX, anchors.SecondaryAnchor!.Value.Dx, 6);
+        Assert.Equal(origin.Dy + points[^1].Point.Dy, anchors.SecondaryAnchor!.Value.Dy, 6);
 
         // A collapsed selection falls back to the preferred line height.
         controller.Selection = TextSelection.Collapsed(3);
@@ -623,7 +623,7 @@ public sealed class EditableTextContextMenuDartParityTests : IDisposable
         PlatformDefaults.DebugTargetPlatformOverride = TargetPlatform.MacOS;
         var controller = new TextEditingController("alpha beta");
         using FrameworkDartTester tester = PumpMaterial(TargetPlatform.MacOS, controller);
-        Point location = TextOffsetToPosition(tester, 2);
+        Offset location = TextOffsetToPosition(tester, 2);
 
         TestGesture gesture = tester.StartGesture(location, PointerDeviceKind.Mouse, PointerButtons.Secondary);
         gesture.Up();

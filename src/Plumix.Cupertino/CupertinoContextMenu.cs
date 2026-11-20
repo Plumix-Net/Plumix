@@ -348,8 +348,8 @@ public sealed class CupertinoContextMenu : StatefulWidget
             }
 
             return new Positioned(
-                left: rect.X,
-                top: rect.Y,
+                left: rect.Left,
+                top: rect.Top,
                 width: rect.Width,
                 height: rect.Height,
                 child: preview);
@@ -472,8 +472,8 @@ public sealed class CupertinoContextMenu : StatefulWidget
         private const double SheetScaleThreshold = 0.9;
         private AnimationController _sheetController = null!;
         private AnimationController _moveController = null!;
-        private Point _dragOffset;
-        private Point _returnBegin;
+        private Offset _dragOffset;
+        private Offset _returnBegin;
         private double _lastScale = 1.0;
 
         private ContextMenuRouteBody Current => (ContextMenuRouteBody)StateWidget;
@@ -521,8 +521,8 @@ public sealed class CupertinoContextMenu : StatefulWidget
             Orientation orientation = MediaQuery.WidthOf(context) > MediaQuery.HeightOf(context)
                 ? Orientation.Landscape
                 : Orientation.Portrait;
-            Point translatedOffset = TranslateDragOffset(_dragOffset);
-            Point effectiveOffset = _moveController.Status.IsAnimating()
+            Offset translatedOffset = TranslateDragOffset(_dragOffset);
+            Offset effectiveOffset = _moveController.Status.IsAnimating()
                 ? LerpPoint(_returnBegin, default, Curves.ElasticIn.Transform(_moveController.Value))
                 : translatedOffset;
             double routeValue = Math.Clamp(Current.Animation.Value, 0.0, 1.0);
@@ -572,13 +572,13 @@ public sealed class CupertinoContextMenu : StatefulWidget
 
         private void HandlePanUpdate(DragUpdateDetails details)
         {
-            Point delta = details.Delta;
+            Offset delta = details.Delta;
             SetState(() =>
             {
                 _dragOffset += delta;
                 _lastScale = Math.Max(
                     MinScale,
-                    (MediaQuery.HeightOf(Context) - Math.Abs(_dragOffset.Y)) / MediaQuery.HeightOf(Context));
+                    (MediaQuery.HeightOf(Context) - Math.Abs(_dragOffset.Dy)) / MediaQuery.HeightOf(Context));
             });
 
             if (_lastScale <= SheetScaleThreshold)
@@ -593,7 +593,7 @@ public sealed class CupertinoContextMenu : StatefulWidget
 
         private void HandlePanEnd(DragEndDetails details)
         {
-            double verticalVelocity = details.Velocity.PixelsPerSecond.Y;
+            double verticalVelocity = details.Velocity.PixelsPerSecond.Dy;
             if (Math.Abs(verticalVelocity) >= GestureConstants.MinFlingVelocity)
             {
                 if (verticalVelocity > 0.0)
@@ -633,13 +633,13 @@ public sealed class CupertinoContextMenu : StatefulWidget
             }
         }
 
-        private static Point TranslateDragOffset(Point dragOffset)
+        private static Offset TranslateDragOffset(Offset dragOffset)
         {
-            double endX = 20.0 * dragOffset.X / 400.0;
-            double endY = dragOffset.Y >= 0.0
-                ? dragOffset.Y
-                : 20.0 * dragOffset.Y / 400.0;
-            return new Point(Math.Clamp(endX, -20.0, 20.0), endY);
+            double endX = 20.0 * dragOffset.Dx / 400.0;
+            double endY = dragOffset.Dy >= 0.0
+                ? dragOffset.Dy
+                : 20.0 * dragOffset.Dy / 400.0;
+            return new Offset(Math.Clamp(endX, -20.0, 20.0), endY);
         }
     }
 
@@ -762,9 +762,9 @@ public sealed class CupertinoContextMenu : StatefulWidget
                 ContextMenuChild.MenuSheet,
                 new BoxConstraints(MaxHeight: availableHeightForMenu));
 
-            (Point finalChild, Point finalMenu) = GetFinalPositions(size, childSize, menuSize);
-            Point beginChild = new(PreviousChildRect.X, PreviousChildRect.Y);
-            Point beginMenu = GetInitialMenuPosition(menuSize);
+            (Offset finalChild, Offset finalMenu) = GetFinalPositions(size, childSize, menuSize);
+            Offset beginChild = new(PreviousChildRect.Left, PreviousChildRect.Top);
+            Offset beginMenu = GetInitialMenuPosition(menuSize);
             double progress = Curves.EaseOutBack.Transform(AnimationValue);
             PositionChild(ContextMenuChild.Child, LerpPoint(beginChild, finalChild, progress));
             PositionChild(ContextMenuChild.MenuSheet, LerpPoint(beginMenu, finalMenu, progress));
@@ -780,21 +780,21 @@ public sealed class CupertinoContextMenu : StatefulWidget
                    || old.AnimationValue != AnimationValue;
         }
 
-        private (Point Child, Point Menu) GetFinalPositions(Size size, Size childSize, Size menuSize)
+        private (Offset Child, Offset Menu) GetFinalPositions(Size size, Size childSize, Size menuSize)
         {
             bool menuBeforeChild = Orientation == Orientation.Landscape
                                    && ContextMenuLocation == ContextMenuLocation.Right;
             double totalWidth;
             double totalHeight;
-            Point secondOffset;
+            Offset secondOffset;
             double initialLeft;
             double initialTop;
             if (Orientation == Orientation.Portrait)
             {
                 totalWidth = childSize.Width + Padding;
                 totalHeight = childSize.Height + menuSize.Height + Padding;
-                initialLeft = TargetRect.Center.X - (childSize.Width / 2.0);
-                initialTop = TargetRect.Center.Y - childSize.Height;
+                initialLeft = TargetRect.Center.Dx - (childSize.Width / 2.0);
+                initialTop = TargetRect.Center.Dy - childSize.Height;
                 double menuX = ContextMenuLocation switch
                 {
                     ContextMenuLocation.Center => (childSize.Width - menuSize.Width) / 2.0,
@@ -802,7 +802,7 @@ public sealed class CupertinoContextMenu : StatefulWidget
                     ContextMenuLocation.Right => childSize.Width - menuSize.Width,
                     _ => 0.0,
                 };
-                secondOffset = new Point(menuX, childSize.Height + Padding);
+                secondOffset = new Offset(menuX, childSize.Height + Padding);
             }
             else
             {
@@ -811,38 +811,38 @@ public sealed class CupertinoContextMenu : StatefulWidget
                 initialLeft = (size.Width - totalWidth) / 2.0;
                 initialTop = (size.Height - totalHeight) / 2.0;
                 double secondX = (menuBeforeChild ? menuSize.Width : childSize.Width) + Padding;
-                secondOffset = new Point(secondX, 0.0);
+                secondOffset = new Offset(secondX, 0.0);
             }
 
             double maxLeft = Math.Max(Padding, size.Width - totalWidth);
             double maxTop = Math.Max(Padding, size.Height - totalHeight);
-            Point first = new(
+            Offset first = new(
                 Math.Clamp(initialLeft, Padding, maxLeft),
                 Math.Clamp(initialTop, Padding, maxTop));
-            Point second = first + secondOffset;
+            Offset second = first + secondOffset;
             return menuBeforeChild ? (second, first) : (first, second);
         }
 
-        private Point GetInitialMenuPosition(Size menuSize)
+        private Offset GetInitialMenuPosition(Size menuSize)
         {
             return (Orientation, ContextMenuLocation) switch
             {
-                (Orientation.Portrait, ContextMenuLocation.Center) => new Point(
-                    TargetRect.Center.X - (menuSize.Width / 2.0),
+                (Orientation.Portrait, ContextMenuLocation.Center) => new Offset(
+                    TargetRect.Center.Dx - (menuSize.Width / 2.0),
                     TargetRect.Bottom),
-                (Orientation.Portrait, ContextMenuLocation.Right) => new Point(
+                (Orientation.Portrait, ContextMenuLocation.Right) => new Offset(
                     TargetRect.Right - menuSize.Width,
                     TargetRect.Bottom),
-                (Orientation.Portrait, ContextMenuLocation.Left) => new Point(
+                (Orientation.Portrait, ContextMenuLocation.Left) => new Offset(
                     TargetRect.Left,
                     TargetRect.Bottom),
-                (Orientation.Landscape, ContextMenuLocation.Center) => new Point(
-                    TargetRect.Center.X - (menuSize.Width / 2.0),
+                (Orientation.Landscape, ContextMenuLocation.Center) => new Offset(
+                    TargetRect.Center.Dx - (menuSize.Width / 2.0),
                     TargetRect.Top),
-                (Orientation.Landscape, ContextMenuLocation.Right) => new Point(
+                (Orientation.Landscape, ContextMenuLocation.Right) => new Offset(
                     TargetRect.Right - menuSize.Width,
                     TargetRect.Top),
-                _ => new Point(TargetRect.Left, TargetRect.Top),
+                _ => new Offset(TargetRect.Left, TargetRect.Top),
             };
         }
     }
@@ -864,13 +864,13 @@ public sealed class CupertinoContextMenu : StatefulWidget
     {
         double center = screenWidth / 2.0;
         bool centerDividesChild = childRect.Left < center && childRect.Right > center;
-        double distanceFromCenter = Math.Abs(center - childRect.Center.X);
+        double distanceFromCenter = Math.Abs(center - childRect.Center.Dx);
         if (centerDividesChild && distanceFromCenter <= childRect.Width / 4.0)
         {
             return ContextMenuLocation.Center;
         }
 
-        return childRect.Center.X > center ? ContextMenuLocation.Right : ContextMenuLocation.Left;
+        return childRect.Center.Dx > center ? ContextMenuLocation.Right : ContextMenuLocation.Left;
     }
 
     private static double GetScaleFactor(BuildContext context, Rect childRect)
@@ -882,10 +882,10 @@ public sealed class CupertinoContextMenu : StatefulWidget
             return 1.02;
         }
 
-        double left = 2.0 * (childRect.Center.X - padding.Left) / childRect.Width;
-        double top = 2.0 * (childRect.Center.Y - padding.Top) / childRect.Height;
-        double right = 2.0 * (size.Width - padding.Right - childRect.Center.X) / childRect.Width;
-        double bottom = 2.0 * (size.Height - padding.Bottom - childRect.Center.Y) / childRect.Height;
+        double left = 2.0 * (childRect.Center.Dx - padding.Left) / childRect.Width;
+        double top = 2.0 * (childRect.Center.Dy - padding.Top) / childRect.Height;
+        double right = 2.0 * (size.Width - padding.Right - childRect.Center.Dx) / childRect.Width;
+        double bottom = 2.0 * (size.Height - padding.Bottom - childRect.Center.Dy) / childRect.Height;
         return Math.Clamp(Math.Min(Math.Min(left, right), Math.Min(top, bottom)), 1.02, 1.15);
     }
 
@@ -893,9 +893,9 @@ public sealed class CupertinoContextMenu : StatefulWidget
     {
         double width = rect.Width * scale;
         double height = rect.Height * scale;
-        return new Rect(
-            rect.Center.X - (width / 2.0),
-            rect.Center.Y - (height / 2.0),
+        return DartGeometry.RectFromLTWH(
+            rect.Center.Dx - (width / 2.0),
+            rect.Center.Dy - (height / 2.0),
             width,
             height);
     }
@@ -914,8 +914,8 @@ public sealed class CupertinoContextMenu : StatefulWidget
 
     private static double Lerp(double begin, double end, double t) => begin + ((end - begin) * t);
 
-    private static Point LerpPoint(Point begin, Point end, double t)
+    private static Offset LerpPoint(Offset begin, Offset end, double t)
     {
-        return new Point(Lerp(begin.X, end.X, t), Lerp(begin.Y, end.Y, t));
+        return new Offset(Lerp(begin.Dx, end.Dx, t), Lerp(begin.Dy, end.Dy, t));
     }
 }

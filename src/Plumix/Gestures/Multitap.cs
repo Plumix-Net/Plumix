@@ -24,7 +24,7 @@ internal sealed class CountdownZoned
 /// </summary>
 internal class TapTracker
 {
-    private readonly Point _initialGlobalPosition;
+    private readonly Offset _initialGlobalPosition;
     private readonly CountdownZoned _doubleTapMinTimeCountdown;
     private bool _isTrackingPointer;
 
@@ -592,8 +592,8 @@ public sealed class SerialTapDownDetails : IPositionedGestureDetails
 {
     public SerialTapDownDetails(
         PointerDeviceKind kind,
-        Point globalPosition = default,
-        Point? localPosition = null,
+        Offset globalPosition = default,
+        Offset? localPosition = null,
         PointerButtons buttons = PointerButtons.None,
         int count = 1)
     {
@@ -609,9 +609,9 @@ public sealed class SerialTapDownDetails : IPositionedGestureDetails
         Count = count;
     }
 
-    public Point GlobalPosition { get; }
+    public Offset GlobalPosition { get; }
 
-    public Point LocalPosition { get; }
+    public Offset LocalPosition { get; }
 
     /// <summary>The kind of the device that initiated the event.</summary>
     public PointerDeviceKind Kind { get; }
@@ -644,8 +644,8 @@ public sealed class SerialTapCancelDetails
 public sealed class SerialTapUpDetails : IPositionedGestureDetails
 {
     public SerialTapUpDetails(
-        Point globalPosition = default,
-        Point? localPosition = null,
+        Offset globalPosition = default,
+        Offset? localPosition = null,
         PointerDeviceKind? kind = null,
         int count = 1)
     {
@@ -660,9 +660,9 @@ public sealed class SerialTapUpDetails : IPositionedGestureDetails
         Count = count;
     }
 
-    public Point GlobalPosition { get; }
+    public Offset GlobalPosition { get; }
 
-    public Point LocalPosition { get; }
+    public Offset LocalPosition { get; }
 
     /// <summary>The kind of the device that initiated the event.</summary>
     public PointerDeviceKind? Kind { get; }

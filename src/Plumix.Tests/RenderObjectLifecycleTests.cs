@@ -276,7 +276,7 @@ public sealed class RenderObjectLifecycleTests
             Size = Constraints.Smallest;
         }
 
-        public override void Paint(PaintingContext ctx, Avalonia.Point offset)
+        public override void Paint(PaintingContext ctx, Offset offset)
         {
         }
     }

@@ -142,7 +142,7 @@ public sealed class ProxyBoxParityTests
         Assert.Equal(new Size(20.0, 38.0), baseline.GetDryLayout(BoxConstraints.Unbounded));
 
         LayoutRoot(baseline, new Size(100, 100));
-        Assert.Equal(new Point(0.0, 18.0), ((BoxParentData)child.parentData!).offset);
+        Assert.Equal(new Offset(0.0, 18.0), ((BoxParentData)child.parentData!).offset);
     }
 
     [Fact]
@@ -173,7 +173,7 @@ public sealed class ProxyBoxParityTests
         var opacity = new RenderOpacity(opacity: 0.0, child: child);
         LayoutRoot(opacity, new Size(10, 10));
 
-        opacity.Paint(new PaintingContext(new ContainerLayer()), new Point(0, 0));
+        opacity.Paint(new PaintingContext(new ContainerLayer()), new Offset(0, 0));
 
         Assert.Equal(0, child.PaintCount);
     }
@@ -194,7 +194,7 @@ public sealed class ProxyBoxParityTests
         Assert.False(animated.IsRepaintBoundary);
         Assert.False(animated.PaintsChild(child));
 
-        animated.Paint(new PaintingContext(new ContainerLayer()), new Point(0, 0));
+        animated.Paint(new PaintingContext(new ContainerLayer()), new Offset(0, 0));
         Assert.Equal(0, child.PaintCount);
 
         Assert.False(animated.NeedsCompositing);
@@ -228,13 +228,13 @@ public sealed class ProxyBoxParityTests
 
         // With no clipper Dart never rejects, and with one it rejects on the bounding box only —
         // the corner pixel is inside that box.
-        Assert.True(clip.HitTest(new BoxHitTestResult(), new Point(0.5, 0.5)));
+        Assert.True(clip.HitTest(new BoxHitTestResult(), new Offset(0.5, 0.5)));
 
-        clip.Paint(new PaintingContext(new ContainerLayer()), new Point(0, 0));
+        clip.Paint(new PaintingContext(new ContainerLayer()), new Offset(0, 0));
         Assert.Null(clip.DebugLayer);
 
         clip.ClipBehavior = Clip.None;
-        clip.Paint(new PaintingContext(new ContainerLayer()), new Point(0, 0));
+        clip.Paint(new PaintingContext(new ContainerLayer()), new Offset(0, 0));
         Assert.Null(clip.DebugLayer);
     }
 
@@ -334,7 +334,7 @@ public sealed class ProxyBoxParityTests
         LayoutRoot(decorated, new Size(30, 30));
 
         var result = new BoxHitTestResult();
-        Assert.True(decorated.HitTest(result, new Point(10, 10)));
+        Assert.True(decorated.HitTest(result, new Offset(10, 10)));
         Assert.Contains(result.Path, entry => ReferenceEquals(entry.Target, decorated));
     }
 
@@ -344,13 +344,13 @@ public sealed class ProxyBoxParityTests
         var child = new PaintCountingBox(new Size(1, 1));
         var fitted = new RenderFittedBox(child: child);
         LayoutRoot(fitted, new Size(1, 1));
-        fitted.Paint(new PaintingContext(new ContainerLayer()), new Point(0, 0));
+        fitted.Paint(new PaintingContext(new ContainerLayer()), new Offset(0, 0));
         Assert.Equal(1, child.PaintCount);
 
         var emptyChild = new PaintCountingBox(new Size(0, 0));
         var emptyFitted = new RenderFittedBox(child: emptyChild);
         LayoutRoot(emptyFitted, new Size(0, 0));
-        emptyFitted.Paint(new PaintingContext(new ContainerLayer()), new Point(0, 0));
+        emptyFitted.Paint(new PaintingContext(new ContainerLayer()), new Offset(0, 0));
         Assert.Equal(0, emptyChild.PaintCount);
     }
 
@@ -368,7 +368,7 @@ public sealed class ProxyBoxParityTests
         // Dart's `_defaultClip` builds `RRect.fromRectXY(rect, width / 2, height / 2)` for a circle,
         // so a non-square box clips to an ellipse rather than a stadium.
         Rect? approximateClip = physical.InvokeDescribeApproximatePaintClip(null);
-        Assert.Equal(new Rect(0, 0, 40, 24), approximateClip);
+        Assert.Equal(DartGeometry.RectFromLTWH(0, 0, 40, 24), approximateClip);
 
         physical.Shape = BoxShape.Rectangle;
         Assert.True(physical.DebugNeedsPaint);
@@ -399,7 +399,7 @@ public sealed class ProxyBoxParityTests
         var transform = Matrix4.Identity();
         proxy.ApplyPaintTransform(child, transform);
         Assert.Equal(Matrix4.Identity().Storage, transform.Storage);
-        Assert.Equal(new Point(4, 7), MatrixUtils.TransformPoint(child.GetTransformTo(proxy), new Point(4, 7)));
+        Assert.Equal(new Offset(4, 7), MatrixUtils.TransformPoint(child.GetTransformTo(proxy), new Offset(4, 7)));
     }
 
     [Fact]
@@ -411,12 +411,12 @@ public sealed class ProxyBoxParityTests
         LayoutRoot(proxy, new Size(100, 100));
 
         var result = new BoxHitTestResult();
-        Assert.True(proxy.HitTest(result, new Point(4, 7)));
+        Assert.True(proxy.HitTest(result, new Offset(4, 7)));
 
         BoxHitTestEntry childEntry = result.Path
             .OfType<BoxHitTestEntry>()
             .First(entry => ReferenceEquals(entry.Target, child));
-        Assert.Equal(new Point(4, 7), childEntry.LocalPosition);
+        Assert.Equal(new Offset(4, 7), childEntry.LocalPosition);
         Assert.Equal(Matrix4.Identity().Storage, childEntry.Transform!.Storage);
     }
 
@@ -469,18 +469,18 @@ public sealed class ProxyBoxParityTests
         // Dart's `RenderCustomSingleChildLayoutBox extends RenderShiftedBox`: unlike a proxy, it does
         // position its child, so the child keeps a `BoxParentData` and the hit test pushes its offset.
         var child = new HitTestBox(new Size(20, 10));
-        var box = new RenderCustomSingleChildLayoutBox(new OffsetLayoutDelegate(new Point(30, 15)), child);
+        var box = new RenderCustomSingleChildLayoutBox(new OffsetLayoutDelegate(new Offset(30, 15)), child);
         LayoutRoot(box, new Size(100, 60));
 
         var childParentData = Assert.IsType<BoxParentData>(child.parentData);
-        Assert.Equal(new Point(30, 15), childParentData.offset);
+        Assert.Equal(new Offset(30, 15), childParentData.offset);
 
         var result = new BoxHitTestResult();
-        Assert.True(box.HitTest(result, new Point(35, 20)));
+        Assert.True(box.HitTest(result, new Offset(35, 20)));
         BoxHitTestEntry childEntry = result.Path
             .OfType<BoxHitTestEntry>()
             .First(entry => ReferenceEquals(entry.Target, child));
-        Assert.Equal(new Point(5, 5), childEntry.LocalPosition);
+        Assert.Equal(new Offset(5, 5), childEntry.LocalPosition);
     }
 
     [Fact]
@@ -488,7 +488,7 @@ public sealed class ProxyBoxParityTests
     {
         // Dart takes every intrinsic dimension and the dry layout from `_getSize`, not from the child.
         var child = new BaselineBox(new Size(20, 10), baseline: 6.0);
-        var box = new RenderCustomSingleChildLayoutBox(new OffsetLayoutDelegate(new Point(30, 15)), child);
+        var box = new RenderCustomSingleChildLayoutBox(new OffsetLayoutDelegate(new Offset(30, 15)), child);
 
         var constraints = new BoxConstraints(MaxWidth: 100.0, MaxHeight: 60.0);
         Assert.Equal(new Size(80, 40), box.GetDryLayout(constraints));
@@ -513,7 +513,7 @@ public sealed class ProxyBoxParityTests
         box.Layout(BoxConstraints.Tight(new Size(40, 20)));
 
         var childParentData = Assert.IsType<BoxParentData>(child.parentData);
-        Assert.Equal(new Point(30, 10), childParentData.offset);
+        Assert.Equal(new Offset(30, 10), childParentData.offset);
         Assert.False(box.IsOverflowing);
     }
 
@@ -652,7 +652,7 @@ public sealed class ProxyBoxParityTests
 
         protected override void PerformLayout() => Size = Constraints.Constrain(_desiredSize);
 
-        public override void Paint(PaintingContext context, Point offset)
+        public override void Paint(PaintingContext context, Offset offset)
         {
         }
     }
@@ -671,7 +671,7 @@ public sealed class ProxyBoxParityTests
 
         protected override void PerformLayout() => Size = _desiredSize;
 
-        public override void Paint(PaintingContext context, Point offset)
+        public override void Paint(PaintingContext context, Offset offset)
         {
         }
     }
@@ -679,9 +679,9 @@ public sealed class ProxyBoxParityTests
     /// <summary>A delegate that reports a fixed size and a fixed child position.</summary>
     private sealed class OffsetLayoutDelegate : SingleChildLayoutDelegate
     {
-        private readonly Point _position;
+        private readonly Offset _position;
 
-        public OffsetLayoutDelegate(Point position)
+        public OffsetLayoutDelegate(Offset position)
         {
             _position = position;
         }
@@ -690,7 +690,7 @@ public sealed class ProxyBoxParityTests
 
         public override BoxConstraints GetConstraintsForChild(BoxConstraints constraints) => constraints.Loosen();
 
-        public override Point GetPositionForChild(Size size, Size childSize) => _position;
+        public override Offset GetPositionForChild(Size size, Size childSize) => _position;
 
         public override bool ShouldRelayout(SingleChildLayoutDelegate oldDelegate) => false;
     }
@@ -710,7 +710,7 @@ public sealed class ProxyBoxParityTests
 
         protected override void PerformLayout() => Size = Constraints.Constrain(_desiredSize);
 
-        public override void Paint(PaintingContext context, Point offset) => PaintCount++;
+        public override void Paint(PaintingContext context, Offset offset) => PaintCount++;
     }
 
     private sealed class HitTestBox : RenderBox
@@ -726,9 +726,9 @@ public sealed class ProxyBoxParityTests
 
         protected override void PerformLayout() => Size = Constraints.Constrain(_desiredSize);
 
-        protected override bool HitTestSelf(Point position) => true;
+        protected override bool HitTestSelf(Offset position) => true;
 
-        public override void Paint(PaintingContext context, Point offset)
+        public override void Paint(PaintingContext context, Offset offset)
         {
         }
     }
@@ -752,7 +752,7 @@ public sealed class ProxyBoxParityTests
 
         protected override void PerformLayout() => Size = Constraints.Constrain(_desiredSize);
 
-        public override void Paint(PaintingContext context, Point offset)
+        public override void Paint(PaintingContext context, Offset offset)
         {
         }
     }
@@ -781,7 +781,7 @@ public sealed class ProxyBoxParityTests
         protected override void PerformLayout() =>
             Size = Constraints.Constrain(new Size(_intrinsicHeight * 2.0, _intrinsicHeight));
 
-        public override void Paint(PaintingContext context, Point offset)
+        public override void Paint(PaintingContext context, Offset offset)
         {
         }
     }

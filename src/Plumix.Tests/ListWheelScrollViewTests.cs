@@ -225,7 +225,7 @@ public sealed class ListWheelScrollViewTests
             harness.Pump(Screen);
             RenderBox child = Assert.Single(Children(Viewport(harness)));
             Assert.Equal(width, child.Size.Width);
-            Assert.Equal(400.0, child.GetPaintOffsetToRoot().X + (child.Size.Width / 2), precision: 6);
+            Assert.Equal(400.0, child.GetPaintOffsetToRoot().Dx + (child.Size.Width / 2), precision: 6);
         }
     }
 
@@ -339,14 +339,14 @@ public sealed class ListWheelScrollViewTests
 
         // The wheel is centered on item 0 with the last looped item just above it.
         RenderBox item0 = ChildAt(harness, 0);
-        AssertOffset(new Point(200.0, 250.0), item0.GetPaintOffsetToRoot());
+        AssertOffset(new Offset(200.0, 250.0), item0.GetPaintOffsetToRoot());
         RenderBox item9 = ChildAt(harness, -1);
-        Assert.InRange(item9.GetPaintOffsetToRoot().X, 200.0 - 15.0, 200.0 + 15.0);
-        Assert.InRange(item9.GetPaintOffsetToRoot().Y, 150.0 - 15.0, 150.0 + 15.0);
+        Assert.InRange(item9.GetPaintOffsetToRoot().Dx, 200.0 - 15.0, 200.0 + 15.0);
+        Assert.InRange(item9.GetPaintOffsetToRoot().Dy, 150.0 - 15.0, 150.0 + 15.0);
 
         controller.JumpTo(1000.0);
         harness.Pump(Screen);
-        AssertOffset(new Point(200.0, 250.0), ChildAt(harness, 10).GetPaintOffsetToRoot());
+        AssertOffset(new Offset(200.0, 250.0), ChildAt(harness, 10).GetPaintOffsetToRoot());
         controller.Dispose();
     }
 
@@ -363,11 +363,11 @@ public sealed class ListWheelScrollViewTests
 
         controller.JumpTo(-100000.0);
         harness.Pump(Screen);
-        AssertOffset(new Point(200.0, 250.0), ChildAt(harness, -1000).GetPaintOffsetToRoot());
+        AssertOffset(new Offset(200.0, 250.0), ChildAt(harness, -1000).GetPaintOffsetToRoot());
 
         controller.JumpTo(100000.0);
         harness.Pump(Screen);
-        AssertOffset(new Point(200.0, 250.0), ChildAt(harness, 1000).GetPaintOffsetToRoot());
+        AssertOffset(new Offset(200.0, 250.0), ChildAt(harness, 1000).GetPaintOffsetToRoot());
         controller.Dispose();
     }
 
@@ -384,11 +384,11 @@ public sealed class ListWheelScrollViewTests
         harness.Pump(Screen);
         Assert.Equal([-13, -12, -11, -10, -9, -8, -7], PaintedIndices(harness));
 
-        Fling(harness, new Point(400, 300), new Vector(0, 1000), 1000);
+        Fling(harness, new Offset(400, 300), new Offset(0, 1000), 1000);
         Settle(harness);
         Assert.Equal(-15, controller.SelectedItem);
 
-        Fling(harness, new Point(400, 300), new Vector(0, -1000), 1000);
+        Fling(harness, new Offset(400, 300), new Offset(0, -1000), 1000);
         Settle(harness);
         Assert.Equal(-5, controller.SelectedItem);
         controller.Dispose();
@@ -408,7 +408,7 @@ public sealed class ListWheelScrollViewTests
         Assert.Equal([0, 1], LaidOutIndices(harness));
         Assert.Equal(0, controller.SelectedItem);
 
-        Fling(harness, new Point(400, 300), new Vector(0, 40000), 8000);
+        Fling(harness, new Offset(400, 300), new Offset(0, 40000), 8000);
         Settle(harness);
         Assert.Equal(0, controller.SelectedItem);
         controller.Dispose();
@@ -664,24 +664,24 @@ public sealed class ListWheelScrollViewTests
             children: Enumerable.Range(0, 10).Select(_ => (Widget)new ColoredBox(Colors.Red)).ToArray()));
         harness.Pump(Screen);
 
-        var gesture = new Gesture(harness, new Point(10.0, 10.0));
-        gesture.MoveBy(new Vector(0.0, -49.0));
+        var gesture = new Gesture(harness, new Offset(10.0, 10.0));
+        gesture.MoveBy(new Offset(0.0, -49.0));
         harness.Pump(Screen);
         Assert.Empty(selectedItems);
 
-        gesture.MoveBy(new Vector(0.0, -1.0));
+        gesture.MoveBy(new Offset(0.0, -1.0));
         harness.Pump(Screen);
         Assert.Equal([1], selectedItems);
 
-        gesture.MoveBy(new Vector(0.0, -99.0));
+        gesture.MoveBy(new Offset(0.0, -99.0));
         harness.Pump(Screen);
         Assert.Equal([1], selectedItems);
 
-        gesture.MoveBy(new Vector(0.0, -1.0));
+        gesture.MoveBy(new Offset(0.0, -1.0));
         harness.Pump(Screen);
         Assert.Equal([1, 2], selectedItems);
 
-        gesture.MoveBy(new Vector(0.0, 50.0));
+        gesture.MoveBy(new Offset(0.0, 50.0));
         harness.Pump(Screen);
         Assert.Equal([1, 2, 1], selectedItems);
         gesture.Up();
@@ -698,23 +698,23 @@ public sealed class ListWheelScrollViewTests
             children: Enumerable.Range(0, 10).Select(_ => (Widget)new ColoredBox(Colors.Red)).ToArray()));
         harness.Pump(Screen);
 
-        var gesture = new Gesture(harness, new Point(10.0, 10.0));
-        gesture.MoveBy(new Vector(0.0, -49.0));
+        var gesture = new Gesture(harness, new Offset(10.0, 10.0));
+        gesture.MoveBy(new Offset(0.0, -49.0));
         harness.Pump(Screen);
         Assert.Empty(selectedItems);
-        gesture.MoveBy(new Vector(0.0, -1.0));
+        gesture.MoveBy(new Offset(0.0, -1.0));
         harness.Pump(Screen);
         Assert.Empty(selectedItems);
-        gesture.MoveBy(new Vector(0.0, -99.0));
+        gesture.MoveBy(new Offset(0.0, -99.0));
         harness.Pump(Screen);
         Assert.Empty(selectedItems);
-        gesture.MoveBy(new Vector(0.0, -1.0));
+        gesture.MoveBy(new Offset(0.0, -1.0));
         gesture.Up();
         Settle(harness);
         Assert.Equal([2], selectedItems);
 
-        gesture = new Gesture(harness, new Point(10.0, 10.0));
-        gesture.MoveBy(new Vector(0.0, 100.0));
+        gesture = new Gesture(harness, new Offset(10.0, 10.0));
+        gesture.MoveBy(new Offset(0.0, 100.0));
         harness.Pump(Screen);
         Assert.Equal([2], selectedItems);
         gesture.Up();
@@ -732,13 +732,13 @@ public sealed class ListWheelScrollViewTests
             children: Enumerable.Range(0, 10).Select(_ => (Widget)new ColoredBox(Colors.Red)).ToArray()));
         harness.Pump(Screen);
 
-        var gesture = new Gesture(harness, new Point(10.0, 10.0));
+        var gesture = new Gesture(harness, new Offset(10.0, 10.0));
         // Scroll into overscroll before the start of the list.
-        gesture.MoveBy(new Vector(0.0, 70.0));
+        gesture.MoveBy(new Offset(0.0, 70.0));
         harness.Pump(Screen);
         for (double verticalOffset = 0.0; verticalOffset > -2000.0; verticalOffset -= 10.0)
         {
-            gesture.MoveTo(new Point(0.0, verticalOffset));
+            gesture.MoveTo(new Offset(0.0, verticalOffset));
             harness.Pump(Screen);
         }
 
@@ -759,18 +759,18 @@ public sealed class ListWheelScrollViewTests
             children: Enumerable.Range(0, 100).Select(_ => (Widget)new ColoredBox(Colors.Red)).ToArray()));
         harness.Pump(Screen);
 
-        var gesture = new Gesture(harness, new Point(10.0, 10.0));
-        gesture.MoveBy(new Vector(0.0, -49.0));
+        var gesture = new Gesture(harness, new Offset(10.0, 10.0));
+        gesture.MoveBy(new Offset(0.0, -49.0));
         harness.Pump(Screen);
         Assert.Empty(selectedItems);
         Assert.Equal(10, controller.SelectedItem);
 
-        gesture.MoveBy(new Vector(0.0, -1.0));
+        gesture.MoveBy(new Offset(0.0, -1.0));
         harness.Pump(Screen);
         Assert.Equal([11], selectedItems);
         Assert.Equal(11, controller.SelectedItem);
 
-        gesture.MoveBy(new Vector(0.0, 70.0));
+        gesture.MoveBy(new Offset(0.0, 70.0));
         harness.Pump(Screen);
         Assert.Equal([11, 10], selectedItems);
         Assert.Equal(10, controller.SelectedItem);
@@ -927,8 +927,8 @@ public sealed class ListWheelScrollViewTests
         using var harness = Harness(Wheel(null, 100, itemExtent: 100.0));
         harness.Pump(Screen);
 
-        var gesture = new Gesture(harness, new Point(10.0, 10.0));
-        gesture.MoveBy(new Vector(0.0, -500.0));
+        var gesture = new Gesture(harness, new Offset(10.0, 10.0));
+        gesture.MoveBy(new Offset(0.0, -500.0));
         gesture.Up();
         Settle(harness);
         Assert.Equal(5, ((FixedExtentScrollPosition)Viewport(harness).Offset).ItemIndex);
@@ -1013,13 +1013,13 @@ public sealed class ListWheelScrollViewTests
         harness.Pump(Screen);
         Assert.Equal(2, controller.SelectedItem);
         Assert.Equal(200.0, controller.Offset);
-        AssertOffset(new Point(200.0, 250.0), ChildAt(harness, 2).GetPaintOffsetToRoot());
+        AssertOffset(new Offset(200.0, 250.0), ChildAt(harness, 2).GetPaintOffsetToRoot());
 
         controller.JumpToItem(20);
         harness.Pump(Screen);
         Assert.Equal(20, controller.SelectedItem);
         Assert.Equal(2000.0, controller.Offset);
-        AssertOffset(new Point(200.0, 250.0), ChildAt(harness, 20).GetPaintOffsetToRoot());
+        AssertOffset(new Offset(200.0, 250.0), ChildAt(harness, 20).GetPaintOffsetToRoot());
         controller.Dispose();
 
         controller = new FixedExtentScrollController(initialItem: 25);
@@ -1027,7 +1027,7 @@ public sealed class ListWheelScrollViewTests
         harness.Pump(Screen);
         Assert.Equal(20, controller.SelectedItem);
         Assert.Equal(2000.0, controller.Offset);
-        AssertOffset(new Point(200.0, 250.0), ChildAt(harness, 20).GetPaintOffsetToRoot());
+        AssertOffset(new Offset(200.0, 250.0), ChildAt(harness, 20).GetPaintOffsetToRoot());
         controller.Dispose();
 
         controller = new FixedExtentScrollController(keepScrollOffset: false, initialItem: 10);
@@ -1035,7 +1035,7 @@ public sealed class ListWheelScrollViewTests
         harness.Pump(Screen);
         Assert.Equal(10, controller.SelectedItem);
         Assert.Equal(1000.0, controller.Offset);
-        AssertOffset(new Point(200.0, 250.0), ChildAt(harness, 10).GetPaintOffsetToRoot());
+        AssertOffset(new Offset(200.0, 250.0), ChildAt(harness, 10).GetPaintOffsetToRoot());
         controller.Dispose();
     }
 
@@ -1059,7 +1059,7 @@ public sealed class ListWheelScrollViewTests
                 children: Enumerable.Range(0, 100).Select(_ => (Widget)new ColoredBox(Colors.Red)).ToArray())));
         harness.Pump(Screen);
 
-        Fling(harness, new Point(400, 300), new Vector(0.0, -50.0), 800.0);
+        Fling(harness, new Offset(400, 300), new Offset(0.0, -50.0), 800.0);
         harness.Pump(Screen);
         Assert.Equal(40, controller.SelectedItem);
         Assert.NotEmpty(scrolledPositions);
@@ -1113,7 +1113,7 @@ public sealed class ListWheelScrollViewTests
                             .ToArray()))));
             harness.Pump(Screen);
 
-            Fling(harness, new Point(400, 300), new Vector(0.0, -567.0), 678.0);
+            Fling(harness, new Offset(400, 300), new Offset(0.0, -567.0), 678.0);
             harness.Pump(Screen);
             Assert.Equal(46, controller.SelectedItem);
             // Dart's literal: iOS flings ease in, so `ScrollDragController` damps the first update
@@ -1194,37 +1194,37 @@ public sealed class ListWheelScrollViewTests
         RenderObject target = OuterChild(harness, 5);
         RevealedOffset revealed = viewport.GetOffsetToReveal(target, 0.0);
         Assert.Equal(500.0, revealed.Offset);
-        Assert.Equal(new Rect(0.0, 200.0, 300.0, 100.0), revealed.Rect);
+        Assert.Equal(DartGeometry.RectFromLTWH(0.0, 200.0, 300.0, 100.0), revealed.Rect);
 
         revealed = viewport.GetOffsetToReveal(target, 1.0);
         Assert.Equal(500.0, revealed.Offset);
-        Assert.Equal(new Rect(0.0, 200.0, 300.0, 100.0), revealed.Rect);
+        Assert.Equal(DartGeometry.RectFromLTWH(0.0, 200.0, 300.0, 100.0), revealed.Rect);
 
-        revealed = viewport.GetOffsetToReveal(target, 0.0, rect: new Rect(40.0, 40.0, 10.0, 10.0));
+        revealed = viewport.GetOffsetToReveal(target, 0.0, rect: DartGeometry.RectFromLTWH(40.0, 40.0, 10.0, 10.0));
         Assert.Equal(500.0, revealed.Offset);
-        Assert.Equal(new Rect(40.0, 240.0, 10.0, 10.0), revealed.Rect);
+        Assert.Equal(DartGeometry.RectFromLTWH(40.0, 240.0, 10.0, 10.0), revealed.Rect);
 
-        revealed = viewport.GetOffsetToReveal(target, 1.0, rect: new Rect(40.0, 40.0, 10.0, 10.0));
+        revealed = viewport.GetOffsetToReveal(target, 1.0, rect: DartGeometry.RectFromLTWH(40.0, 40.0, 10.0, 10.0));
         Assert.Equal(500.0, revealed.Offset);
-        Assert.Equal(new Rect(40.0, 240.0, 10.0, 10.0), revealed.Rect);
+        Assert.Equal(DartGeometry.RectFromLTWH(40.0, 240.0, 10.0, 10.0), revealed.Rect);
 
         // Descendant of the viewport, not a direct child.
         target = InnerChild(harness, 5);
         revealed = viewport.GetOffsetToReveal(target, 0.0);
         Assert.Equal(500.0, revealed.Offset);
-        Assert.Equal(new Rect(125.0, 225.0, 50.0, 50.0), revealed.Rect);
+        Assert.Equal(DartGeometry.RectFromLTWH(125.0, 225.0, 50.0, 50.0), revealed.Rect);
 
         revealed = viewport.GetOffsetToReveal(target, 1.0);
         Assert.Equal(500.0, revealed.Offset);
-        Assert.Equal(new Rect(125.0, 225.0, 50.0, 50.0), revealed.Rect);
+        Assert.Equal(DartGeometry.RectFromLTWH(125.0, 225.0, 50.0, 50.0), revealed.Rect);
 
-        revealed = viewport.GetOffsetToReveal(target, 0.0, rect: new Rect(40.0, 40.0, 10.0, 10.0));
+        revealed = viewport.GetOffsetToReveal(target, 0.0, rect: DartGeometry.RectFromLTWH(40.0, 40.0, 10.0, 10.0));
         Assert.Equal(500.0, revealed.Offset);
-        Assert.Equal(new Rect(165.0, 265.0, 10.0, 10.0), revealed.Rect);
+        Assert.Equal(DartGeometry.RectFromLTWH(165.0, 265.0, 10.0, 10.0), revealed.Rect);
 
-        revealed = viewport.GetOffsetToReveal(target, 1.0, rect: new Rect(40.0, 40.0, 10.0, 10.0));
+        revealed = viewport.GetOffsetToReveal(target, 1.0, rect: DartGeometry.RectFromLTWH(40.0, 40.0, 10.0, 10.0));
         Assert.Equal(500.0, revealed.Offset);
-        Assert.Equal(new Rect(165.0, 265.0, 10.0, 10.0), revealed.Rect);
+        Assert.Equal(DartGeometry.RectFromLTWH(165.0, 265.0, 10.0, 10.0), revealed.Rect);
 
         // A horizontal axis request is not an error for a vertical wheel.
         revealed = viewport.GetOffsetToReveal(target, 0.0, axis: Axis.Horizontal);
@@ -1430,8 +1430,8 @@ public sealed class ListWheelScrollViewTests
 
     /// <summary>Flutter's <c>tester.getCenter</c>: the box's center mapped through its full paint
     /// transform, perspective included.</summary>
-    private static Point Center(RenderBox box) =>
-        MatrixUtils.TransformPoint(box.GetTransformTo(null), new Point(box.Size.Width / 2, box.Size.Height / 2));
+    private static Offset Center(RenderBox box) =>
+        MatrixUtils.TransformPoint(box.GetTransformTo(null), new Offset(box.Size.Width / 2, box.Size.Height / 2));
 
     private static List<T> FindLayers<T>(WidgetRenderHarness harness) where T : Layer
     {
@@ -1462,10 +1462,10 @@ public sealed class ListWheelScrollViewTests
         return result;
     }
 
-    private static void AssertOffset(Point expected, Point actual)
+    private static void AssertOffset(Offset expected, Offset actual)
     {
-        Assert.Equal(expected.X, actual.X, 1e-6);
-        Assert.Equal(expected.Y, actual.Y, 1e-6);
+        Assert.Equal(expected.Dx, actual.Dx, 1e-6);
+        Assert.Equal(expected.Dy, actual.Dy, 1e-6);
     }
 
     private static void AssertMatrix(double[] expected, Matrix4 actual)
@@ -1479,7 +1479,7 @@ public sealed class ListWheelScrollViewTests
 
     private static int _pointer = 200;
 
-    private static void Tap(WidgetRenderHarness harness, Point position)
+    private static void Tap(WidgetRenderHarness harness, Offset position)
     {
         int pointer = ++_pointer;
         DateTime now = DateTime.UtcNow;
@@ -1493,18 +1493,18 @@ public sealed class ListWheelScrollViewTests
 
     /// <summary>Flutter's <c>tester.fling</c>: fifty moves spread over <c>|offset| / speed</c>
     /// seconds, then a pointer up.</summary>
-    private static void Fling(WidgetRenderHarness harness, Point start, Vector offset, double speed)
+    private static void Fling(WidgetRenderHarness harness, Offset start, Offset offset, double speed)
     {
         const int moveCount = 50;
         int pointer = ++_pointer;
         DateTime now = DateTime.UtcNow;
-        double stepMilliseconds = 1000.0 * offset.Length / (moveCount * speed);
+        double stepMilliseconds = 1000.0 * offset.DartDistance / (moveCount * speed);
         GestureBinding.Instance.HandlePointerEvent(harness.RenderView, new PointerDownEvent(
             pointer, PointerDeviceKind.Touch, start, PointerButtons.Primary, now));
         double lastPumpMilliseconds = 0.0;
         for (int index = 1; index <= moveCount; index++)
         {
-            Point position = start + (offset * index / moveCount);
+            Offset position = start + (offset * index / moveCount);
             GestureBinding.Instance.HandlePointerEvent(harness.RenderView, new PointerMoveEvent(
                 pointer,
                 PointerDeviceKind.Touch,
@@ -1605,14 +1605,14 @@ public sealed class ListWheelScrollViewTests
     {
         private readonly WidgetRenderHarness _harness;
         private readonly int _pointerId = ++_pointer;
-        private Point _logicalPosition;
+        private Offset _logicalPosition;
         private DateTime _time = DateTime.UtcNow;
 
         /// <summary>
         /// Like Flutter's <c>TestGesture</c>, every event carries the same timestamp, so a step-wise
         /// drag never turns into a fling.
         /// </summary>
-        public Gesture(WidgetRenderHarness harness, Point start)
+        public Gesture(WidgetRenderHarness harness, Offset start)
         {
             _harness = harness;
             _logicalPosition = start;
@@ -1620,9 +1620,9 @@ public sealed class ListWheelScrollViewTests
                 _pointerId, PointerDeviceKind.Touch, start, PointerButtons.Primary, _time));
         }
 
-        public void MoveBy(Vector delta) => MoveTo(_logicalPosition + delta);
+        public void MoveBy(Offset delta) => MoveTo(_logicalPosition + delta);
 
-        public void MoveTo(Point position)
+        public void MoveTo(Offset position)
         {
             _logicalPosition = position;
             GestureBinding.Instance.HandlePointerEvent(_harness.RenderView, new PointerMoveEvent(

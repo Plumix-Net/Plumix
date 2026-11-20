@@ -29,7 +29,7 @@ internal sealed class CupertinoMagnifierDemoPageState : State
 
     private BuildContext? _panelContext;
     private double _magnificationScale = 1.5;
-    private Point _lastGesturePosition;
+    private Offset _lastGesturePosition;
 
     public override Widget Build(BuildContext context)
     {
@@ -95,7 +95,7 @@ internal sealed class CupertinoMagnifierDemoPageState : State
                             left: 16.0,
                             bottom: 16.0,
                             child: new Text(
-                                $"gesture=({_lastGesturePosition.X:0}, {_lastGesturePosition.Y:0}), "
+                                $"gesture=({_lastGesturePosition.Dx:0}, {_lastGesturePosition.Dy:0}), "
                                 + $"scale={_magnificationScale:0.0}",
                                 style: new TextStyle(FontSize: 12.0, Color: new Color(0xFF007AFF)))),
                     ])));
@@ -129,7 +129,7 @@ internal sealed class CupertinoMagnifierDemoPageState : State
                 .ToArray());
     }
 
-    private void ShowMagnifier(Point globalPosition)
+    private void ShowMagnifier(Offset globalPosition)
     {
         UpdateMagnifierInfo(globalPosition);
         if (_controller.OverlayEntry is not null || _panelContext is not { } panelContext)
@@ -142,7 +142,7 @@ internal sealed class CupertinoMagnifierDemoPageState : State
             _ => new CupertinoTextMagnifier(_controller, _magnifierInfo));
     }
 
-    private void UpdateMagnifier(Point globalPosition)
+    private void UpdateMagnifier(Offset globalPosition)
     {
         UpdateMagnifierInfo(globalPosition);
     }
@@ -152,7 +152,7 @@ internal sealed class CupertinoMagnifierDemoPageState : State
         _ = _controller.Hide();
     }
 
-    private void UpdateMagnifierInfo(Point globalPosition)
+    private void UpdateMagnifierInfo(Offset globalPosition)
     {
         Rect lineBounds = CurrentLineBounds(globalPosition);
         SetState(() => _lastGesturePosition = globalPosition);
@@ -164,15 +164,15 @@ internal sealed class CupertinoMagnifierDemoPageState : State
     }
 
     /// <summary>The stripe band the magnifier treats as the "line" the lens must stay level with.</summary>
-    private Rect CurrentLineBounds(Point globalPosition)
+    private Rect CurrentLineBounds(Offset globalPosition)
     {
         Rect? panel = PanelBounds();
         if (panel is not { } bounds)
         {
-            return new Rect(globalPosition.X, globalPosition.Y, 1.0, 1.0);
+            return DartGeometry.RectFromLTWH(globalPosition.Dx, globalPosition.Dy, 1.0, 1.0);
         }
 
-        return new Rect(bounds.Left + 16.0, bounds.Top + 24.0, Math.Max(0.0, bounds.Width - 32.0), 44.0);
+        return DartGeometry.RectFromLTWH(bounds.Left + 16.0, bounds.Top + 24.0, Math.Max(0.0, bounds.Width - 32.0), 44.0);
     }
 
     private Rect? PanelBounds()
@@ -182,6 +182,6 @@ internal sealed class CupertinoMagnifierDemoPageState : State
             return null;
         }
 
-        return new Rect(box.LocalToGlobal(default), box.Size);
+        return DartGeometry.RectFromOffsetAndSize(box.LocalToGlobal(default), box.Size);
     }
 }

@@ -548,8 +548,8 @@ public static class ImagePainting
         double halfHeightDelta = (outputHeight - destinationHeight) / 2.0;
         double dx = halfWidthDelta + ((flipHorizontally ? -alignment.X : alignment.X) * halfWidthDelta);
         double dy = halfHeightDelta + (alignment.Y * halfHeightDelta);
-        var destinationPosition = new Point(rect.Left + dx, rect.Top + dy);
-        var destinationRect = new Rect(
+        var destinationPosition = new Offset(rect.Left + dx, rect.Top + dy);
+        var destinationRect = DartGeometry.RectFromOffsetAndSize(
             destinationPosition,
             new Size(Math.Max(0.0, destinationWidth), Math.Max(0.0, destinationHeight)));
 
@@ -669,7 +669,7 @@ public static class ImagePainting
         {
             Rect sourceRect = alignment.Inscribe(
                 new Size(Math.Max(0.0, sourceWidth), Math.Max(0.0, sourceHeight)),
-                new Rect(0.0, 0.0, Math.Max(0.0, inputWidth), Math.Max(0.0, inputHeight)));
+                DartGeometry.RectFromLTWH(0.0, 0.0, Math.Max(0.0, inputWidth), Math.Max(0.0, inputHeight)));
             if (repeat == ImageRepeat.NoRepeat)
             {
                 canvas.DrawImageRect(image, sourceRect, destinationRect, paint);
@@ -762,15 +762,15 @@ public static class ImagePainting
         {
             for (int j = startY; j <= stopY; ++j)
             {
-                yield return fundamentalRect.Translate(new Vector(i * strideX, j * strideY));
+                yield return fundamentalRect.Shift(new Offset(i * strideX, j * strideY));
             }
         }
     }
 
     private static Rect ScaleRect(Rect rect, double scale) =>
-        new Rect(
-            new Point(rect.Left * scale, rect.Top * scale),
-            new Point(rect.Right * scale, rect.Bottom * scale));
+        DartGeometry.RectFromCorners(
+            new Offset(rect.Left * scale, rect.Top * scale),
+            new Offset(rect.Right * scale, rect.Bottom * scale));
 
     /// <summary>dart:ui <c>Rect.toString</c>.</summary>
     internal static string RectToString(Rect rect) =>

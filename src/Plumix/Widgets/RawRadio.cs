@@ -407,7 +407,7 @@ public sealed class RawRadioState<T> : ToggleableState<RawRadio<T>>, RadioClient
 
     public double FocusFade => ReactionFocusFade.Value;
 
-    public Point? PressPosition => DownPosition;
+    public Offset? PressPosition => DownPosition;
 
     internal new Animation<double> PositionAnimation => base.Position;
 

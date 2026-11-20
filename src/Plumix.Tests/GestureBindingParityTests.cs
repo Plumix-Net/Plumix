@@ -151,8 +151,8 @@ public sealed class GestureBindingParityTests
         {
             Func<HitTestRequest, HitTestResponse> query = Assert.IsType<
                 Func<HitTestRequest, HitTestResponse>>(PlatformDispatcher.Instance.OnHitTest);
-            Assert.True(query(new HitTestRequest(7007, new Point(10, 10))).HasPlatformView);
-            Assert.False(query(new HitTestRequest(7008, new Point(10, 10))).HasPlatformView);
+            Assert.True(query(new HitTestRequest(7007, new Offset(10, 10))).HasPlatformView);
+            Assert.False(query(new HitTestRequest(7008, new Offset(10, 10))).HasPlatformView);
         }
         finally
         {
@@ -178,12 +178,12 @@ public sealed class GestureBindingParityTests
         {
             binding.ResamplingEnabled = true;
             binding.HandlePointerEvent(root, new PointerDownEvent(
-                7, PointerDeviceKind.Touch, new Point(10, 10), PointerButtons.Primary, future));
+                7, PointerDeviceKind.Touch, new Offset(10, 10), PointerButtons.Primary, future));
             Assert.Empty(calls);
 
             binding.ResamplingEnabled = false;
             binding.HandlePointerEvent(root, new PointerUpEvent(
-                7, PointerDeviceKind.Touch, new Point(10, 10), PointerButtons.None,
+                7, PointerDeviceKind.Touch, new Offset(10, 10), PointerButtons.None,
                 future.AddMilliseconds(10)));
             Assert.Equal(["down", "up"], calls);
         }
@@ -205,16 +205,16 @@ public sealed class GestureBindingParityTests
 
         try
         {
-            binding.HandlePointerEvent(root, new PointerHoverEvent(7, PointerDeviceKind.Mouse, new Point(4, 4)));
-            binding.HandlePointerEvent(root, new PointerHoverEvent(7, PointerDeviceKind.Mouse, new Point(6, 5)));
-            binding.HandlePointerEvent(root, new PointerDownEvent(7, PointerDeviceKind.Mouse, new Point(10, 10)));
-            binding.HandlePointerEvent(root, new PointerMoveEvent(7, PointerDeviceKind.Mouse, new Point(13, 14)));
-            binding.HandlePointerEvent(root, new PointerUpEvent(7, PointerDeviceKind.Mouse, new Point(20, 20)));
+            binding.HandlePointerEvent(root, new PointerHoverEvent(7, PointerDeviceKind.Mouse, new Offset(4, 4)));
+            binding.HandlePointerEvent(root, new PointerHoverEvent(7, PointerDeviceKind.Mouse, new Offset(6, 5)));
+            binding.HandlePointerEvent(root, new PointerDownEvent(7, PointerDeviceKind.Mouse, new Offset(10, 10)));
+            binding.HandlePointerEvent(root, new PointerMoveEvent(7, PointerDeviceKind.Mouse, new Offset(13, 14)));
+            binding.HandlePointerEvent(root, new PointerUpEvent(7, PointerDeviceKind.Mouse, new Offset(20, 20)));
 
             // Dart's engine gives hover and move events the distance from the previous event of
             // the pointer; down and up events cannot carry a delta at all.
             Assert.Equal(
-                [default, new Point(2, 1), default, new Point(3, 4), default],
+                [default, new Offset(2, 1), default, new Offset(3, 4), default],
                 received.Select(@event => @event.Delta));
             Assert.All(received, @event => Assert.Null(@event.Original));
         }
@@ -235,10 +235,10 @@ public sealed class GestureBindingParityTests
     }
 
     private static PointerDownEvent Down() =>
-        new(7, PointerDeviceKind.Touch, new Point(10, 10), PointerButtons.Primary, DateTime.UnixEpoch);
+        new(7, PointerDeviceKind.Touch, new Offset(10, 10), PointerButtons.Primary, DateTime.UnixEpoch);
 
     private static PointerUpEvent Up() =>
-        new(7, PointerDeviceKind.Touch, new Point(10, 10), PointerButtons.None, DateTime.UnixEpoch);
+        new(7, PointerDeviceKind.Touch, new Offset(10, 10), PointerButtons.None, DateTime.UnixEpoch);
 
     private sealed class NativeHitTestBox : RenderBox, INativeHitTestTarget
     {
@@ -247,9 +247,9 @@ public sealed class GestureBindingParityTests
             Size = Constraints.Constrain(new Size(80, 80));
         }
 
-        protected override bool HitTestSelf(Point position) => true;
+        protected override bool HitTestSelf(Offset position) => true;
 
-        public override void Paint(PaintingContext context, Point offset)
+        public override void Paint(PaintingContext context, Offset offset)
         {
         }
     }

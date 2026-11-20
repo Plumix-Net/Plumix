@@ -27,7 +27,7 @@ public sealed class RawTooltipTests
         Assert.True(tooltip.EnableFeedback);
         Assert.False(tooltip.IgnorePointer);
         var positionContext = new TooltipPositionContext(
-            new Point(),
+            new Offset(),
             new Size(),
             new Size(),
             VerticalOffset: 0);
@@ -62,8 +62,8 @@ public sealed class RawTooltipTests
         RenderCustomSingleChildLayoutBox layout =
             Assert.Single(FindDescendants<RenderCustomSingleChildLayoutBox>(harness.RenderView));
         var childParentData = Assert.IsType<BoxParentData>(layout.Child!.parentData);
-        Assert.Equal(70, childParentData.offset.X, precision: 3);
-        Assert.Equal(70, childParentData.offset.Y, precision: 3);
+        Assert.Equal(70, childParentData.offset.Dx, precision: 3);
+        Assert.Equal(70, childParentData.offset.Dy, precision: 3);
         Assert.Equal(new Size(200, 100), layout.Size);
     }
 
@@ -81,7 +81,7 @@ public sealed class RawTooltipTests
                     positionDelegate: context =>
                     {
                         received = context;
-                        return new Point(7, 9);
+                        return new Offset(7, 9);
                     },
                     tooltipBuilder: (_, _) => new SizedBox(width: 40, height: 12),
                     child: new SizedBox(width: 30, height: 20))));
@@ -91,13 +91,13 @@ public sealed class RawTooltipTests
         harness.Pump(new Size(180, 90));
 
         Assert.NotNull(received);
-        Assert.Equal(new Point(15, 10), received!.Target);
+        Assert.Equal(new Offset(15, 10), received!.Target);
         Assert.Equal(new Size(30, 20), received.TargetSize);
         Assert.Equal(new Size(40, 12), received.TooltipSize);
         Assert.Equal(new Size(180, 90), received.OverlaySize);
         RenderCustomSingleChildLayoutBox layout =
             Assert.Single(FindDescendants<RenderCustomSingleChildLayoutBox>(harness.RenderView));
-        Assert.Equal(new Point(7, 9), Assert.IsType<BoxParentData>(layout.Child!.parentData).offset);
+        Assert.Equal(new Offset(7, 9), Assert.IsType<BoxParentData>(layout.Child!.parentData).offset);
     }
 
     [Fact]
@@ -129,13 +129,13 @@ public sealed class RawTooltipTests
             harness.Dispatch(new PointerDownEvent(
                 12,
                 PointerDeviceKind.Touch,
-                new Point(10, 10),
+                new Offset(10, 10),
                 PointerButtons.Primary,
                 timestamp));
             harness.Dispatch(new PointerUpEvent(
                 12,
                 PointerDeviceKind.Touch,
-                new Point(10, 10),
+                new Offset(10, 10),
                 PointerButtons.None,
                 timestamp.AddMilliseconds(20)));
             harness.Pump(new Size(160, 80));

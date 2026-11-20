@@ -555,7 +555,7 @@ public sealed class SliderThemeDartParityTestsA : IDisposable
 
             // Test that the default value indicator has the right colors.
             tester.PumpWidget(BuildApp(divisions: 3));
-            Point center = tester.GetCenter(tester.ElementOfType<Slider>());
+            Offset center = tester.GetCenter(tester.ElementOfType<Slider>());
             TestGesture gesture = tester.StartGesture(center, PointerDeviceKind.Touch);
             // Wait for value indicator animation to finish.
             tester.PumpAndSettle();
@@ -882,7 +882,7 @@ public sealed class SliderThemeDartParityTestsA : IDisposable
             material,
             PaintPattern.Paints.Circle(color: sliderTheme.ThumbColor, x: 212.0, y: 300.0, radius: 10.0));
 
-        Point center = tester.GetCenter(tester.ElementOfType<Slider>());
+        Offset center = tester.GetCenter(tester.ElementOfType<Slider>());
         TestGesture gesture = tester.StartGesture(center, PointerDeviceKind.Touch);
         // Wait for overlay animation to finish.
         tester.PumpAndSettle();
@@ -1146,7 +1146,7 @@ public sealed class SliderThemeDartParityTestsA : IDisposable
         using var tester = new FrameworkDartTester();
         tester.PumpWidget(BuildApp(sliderTheme, value: 0.5));
         // Tap center and wait for animation.
-        Point center = tester.GetCenter(tester.ElementOfType<Slider>());
+        Offset center = tester.GetCenter(tester.ElementOfType<Slider>());
         TestGesture gesture = tester.StartGesture(center, PointerDeviceKind.Touch);
         tester.PumpAndSettle();
 
@@ -1154,8 +1154,8 @@ public sealed class SliderThemeDartParityTestsA : IDisposable
         PaintAssert.Paints(
             material,
             PaintPattern.Paints.Circle(
-                x: center.X,
-                y: center.Y,
+                x: center.Dx,
+                y: center.Dy,
                 radius: uniqueOverlayRadius,
                 color: sliderTheme.OverlayColor));
 
@@ -1367,7 +1367,7 @@ public sealed class SliderThemeDartParityTestsA : IDisposable
         RenderObject material = MaterialOf(tester.ElementOfType<Slider>());
 
         // Tap the center of the track and wait for animations to finish.
-        Point center = tester.GetCenter(tester.ElementOfType<Slider>());
+        Offset center = tester.GetCenter(tester.ElementOfType<Slider>());
         TestGesture gesture = tester.StartGesture(center, PointerDeviceKind.Touch);
         tester.PumpAndSettle();
 
@@ -1426,9 +1426,9 @@ public sealed class SliderThemeDartParityTestsA : IDisposable
 
             RenderObject valueIndicatorBox = tester.ElementOfType<Overlay>().FindRenderObject()!;
 
-            void PressAndExpect(Point[] includes, Point[] excludes)
+            void PressAndExpect(Offset[] includes, Offset[] excludes)
             {
-                Point center = tester.GetCenter(tester.ElementOfType<Slider>());
+                Offset center = tester.GetCenter(tester.ElementOfType<Slider>());
                 TestGesture gesture = tester.StartGesture(center, PointerDeviceKind.Touch);
                 // Wait for value indicator animation to finish.
                 tester.PumpAndSettle();
@@ -1442,48 +1442,48 @@ public sealed class SliderThemeDartParityTestsA : IDisposable
             }
 
             PressAndExpect(
-                [new Point(0.0, -40.0), new Point(15.9, -40.0), new Point(-15.9, -40.0)],
-                [new Point(16.1, -40.0), new Point(-16.1, -40.0)]);
+                [new Offset(0.0, -40.0), new Offset(15.9, -40.0), new Offset(-15.9, -40.0)],
+                [new Offset(16.1, -40.0), new Offset(-16.1, -40.0)]);
 
             // Test that it expands with a larger label.
             tester.PumpWidget(BuildLocalApp("1000"));
             PressAndExpect(
-                [new Point(0.0, -40.0), new Point(35.9, -40.0), new Point(-35.9, -40.0)],
-                [new Point(36.1, -40.0), new Point(-36.1, -40.0)]);
+                [new Offset(0.0, -40.0), new Offset(35.9, -40.0), new Offset(-35.9, -40.0)],
+                [new Offset(36.1, -40.0), new Offset(-36.1, -40.0)]);
 
             // Test that it avoids the left edge of the screen.
             tester.PumpWidget(BuildLocalApp("1000000", sliderValue: 0.0));
             PressAndExpect(
-                [new Point(0.0, -40.0), new Point(92.0, -40.0), new Point(-16.0, -40.0)],
-                [new Point(98.1, -40.0), new Point(-20.1, -40.0)]);
+                [new Offset(0.0, -40.0), new Offset(92.0, -40.0), new Offset(-16.0, -40.0)],
+                [new Offset(98.1, -40.0), new Offset(-20.1, -40.0)]);
 
             // Test that it avoids the right edge of the screen.
             tester.PumpWidget(BuildLocalApp("1000000", sliderValue: 1.0));
             PressAndExpect(
-                [new Point(0.0, -40.0), new Point(16.0, -40.0), new Point(-92.0, -40.0)],
-                [new Point(20.1, -40.0), new Point(-98.1, -40.0)]);
+                [new Offset(0.0, -40.0), new Offset(16.0, -40.0), new Offset(-92.0, -40.0)],
+                [new Offset(20.1, -40.0), new Offset(-98.1, -40.0)]);
 
             // Test that the neck stretches when the text scale gets smaller.
             tester.PumpWidget(BuildLocalApp("1000000", sliderValue: 0.0, textScaler: TextScaler.Linear(0.5)));
             PressAndExpect(
-                [new Point(0.0, -49.0), new Point(68.0, -49.0), new Point(-24.0, -49.0)],
+                [new Offset(0.0, -49.0), new Offset(68.0, -49.0), new Offset(-24.0, -49.0)],
                 [
-                    new Point(98.0, -32.0), // inside full size, outside small
-                    new Point(-40.0, -32.0), // inside full size, outside small
-                    new Point(90.1, -49.0),
-                    new Point(-40.1, -49.0),
+                    new Offset(98.0, -32.0), // inside full size, outside small
+                    new Offset(-40.0, -32.0), // inside full size, outside small
+                    new Offset(90.1, -49.0),
+                    new Offset(-40.1, -49.0),
                 ]);
 
             // Test that the neck shrinks when the text scale gets larger.
             tester.PumpWidget(BuildLocalApp("1000000", sliderValue: 0.0, textScaler: TextScaler.Linear(2.5)));
             PressAndExpect(
                 [
-                    new Point(0.0, -38.8),
-                    new Point(92.0, -38.8),
-                    new Point(8.0, -23.0), // Inside large, outside scale=1.0
-                    new Point(-2.0, -23.0), // Inside large, outside scale=1.0
+                    new Offset(0.0, -38.8),
+                    new Offset(92.0, -38.8),
+                    new Offset(8.0, -23.0), // Inside large, outside scale=1.0
+                    new Offset(-2.0, -23.0), // Inside large, outside scale=1.0
                 ],
-                [new Point(98.5, -38.8), new Point(-16.1, -38.8)]);
+                [new Offset(98.5, -38.8), new Offset(-16.1, -38.8)]);
         }
         finally
         {

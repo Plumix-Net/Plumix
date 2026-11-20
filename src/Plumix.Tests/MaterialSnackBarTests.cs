@@ -408,9 +408,9 @@ public sealed class MaterialSnackBarTests : IDisposable
             Assert.IsType<SolidColorBrush>(FindParagraph(harness.RenderView, "UNDO")!.Foreground).Color);
 
         double now = AnimationPump.CurrentSeconds;
-        Tap(harness.RenderView, new Point(100, 30), 901);
+        Tap(harness.RenderView, new Offset(100, 30), 901);
         harness.Pump(new Size(200, 60));
-        Tap(harness.RenderView, new Point(100, 30), 902);
+        Tap(harness.RenderView, new Offset(100, 30), 902);
         harness.Pump(new Size(200, 60));
 
         // The disabled colour arrives through `Material.animationDuration`, so let the default
@@ -446,7 +446,7 @@ public sealed class MaterialSnackBarTests : IDisposable
             Assert.IsType<SolidColorBrush>(FindParagraph(harness.RenderView, "UNDO")!.Foreground).Color);
 
         double now = AnimationPump.CurrentSeconds;
-        Tap(harness.RenderView, new Point(100, 30), 903);
+        Tap(harness.RenderView, new Offset(100, 30), 903);
         harness.Pump(new Size(200, 60));
         AnimationPump.Prime();
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.5));
@@ -529,7 +529,7 @@ public sealed class MaterialSnackBarTests : IDisposable
         harness.Pump(new Size(360, 220));
 
         RenderParagraph label = FindParagraph(harness.RenderView, "UNDO")!;
-        Point center = LocalCenter(label);
+        Offset center = LocalCenter(label);
         Tap(harness.RenderView, center, 910);
         harness.Pump(new Size(360, 220));
         AnimationPump.Advance(0.4);
@@ -883,7 +883,7 @@ public sealed class MaterialSnackBarTests : IDisposable
                     AccessibleNavigation: accessibleNavigation),
                 new Theme(theme, child)));
 
-    private static void Tap(RenderView renderView, Point position, int pointer)
+    private static void Tap(RenderView renderView, Offset position, int pointer)
     {
         GestureBinding binding = GestureBinding.Instance;
         DateTime timestamp = DateTime.UtcNow;
@@ -893,11 +893,11 @@ public sealed class MaterialSnackBarTests : IDisposable
             pointer, PointerDeviceKind.Mouse, position, PointerButtons.None, timestamp.AddMilliseconds(20)));
     }
 
-    private static Point LocalCenter(RenderObject target)
+    private static Offset LocalCenter(RenderObject target)
     {
-        Point offset = target.GetPaintOffsetToRoot();
+        Offset offset = target.GetPaintOffsetToRoot();
         Size size = ((RenderBox)target).Size;
-        return new Point(offset.X + (size.Width / 2), offset.Y + (size.Height / 2));
+        return new Offset(offset.Dx + (size.Width / 2), offset.Dy + (size.Height / 2));
     }
 
     private static RenderParagraph? FindParagraph(RenderObject? root, string text) =>

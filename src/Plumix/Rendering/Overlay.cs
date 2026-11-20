@@ -264,7 +264,7 @@ internal sealed class RenderOverlayTheater : RenderBox,
         base.Dispose();
     }
 
-    public override void Paint(PaintingContext context, Point offset)
+    public override void Paint(PaintingContext context, Offset offset)
     {
         if (_clipBehavior == Clip.None)
         {
@@ -276,13 +276,13 @@ internal sealed class RenderOverlayTheater : RenderBox,
         _clipRectLayer.Layer = context.PushClipRect(
             NeedsCompositing,
             offset,
-            new Rect(new Point(0, 0), Size),
+            DartGeometry.RectFromOffsetAndSize(new Offset(0, 0), Size),
             PaintOnstageChildren,
             _clipBehavior,
             _clipRectLayer.Layer);
     }
 
-    protected override bool HitTestChildren(BoxHitTestResult result, Point position)
+    protected override bool HitTestChildren(BoxHitTestResult result, Offset position)
     {
         foreach (RenderBox child in ChildrenInHitTestOrder())
         {
@@ -305,7 +305,7 @@ internal sealed class RenderOverlayTheater : RenderBox,
     {
         return _clipBehavior == Clip.None
             ? null
-            : new Rect(new Point(), Size);
+            : DartGeometry.RectFromOffsetAndSize(new Offset(), Size);
     }
 
     protected override Rect? DescribeSemanticsClip(RenderObject? child)
@@ -357,12 +357,12 @@ internal sealed class RenderOverlayTheater : RenderBox,
 
     public void Remove(RenderBox child) => _container.Remove(child);
 
-    public void DefaultPaint(PaintingContext context, Point offset)
+    public void DefaultPaint(PaintingContext context, Offset offset)
     {
         _container.DefaultPaint(context, offset);
     }
 
-    public bool DefaultHitTestChildren(BoxHitTestResult result, Point position)
+    public bool DefaultHitTestChildren(BoxHitTestResult result, Offset position)
     {
         return _container.DefaultHitTestChildren(result, position);
     }
@@ -428,7 +428,7 @@ internal sealed class RenderOverlayTheater : RenderBox,
         throw new InvalidOperationException(reason);
     }
 
-    private void PaintOnstageChildren(PaintingContext context, Point offset)
+    private void PaintOnstageChildren(PaintingContext context, Offset offset)
     {
         foreach (RenderBox child in ChildrenInPaintOrder())
         {
@@ -524,16 +524,16 @@ internal sealed class RenderOverlayTheater : RenderBox,
             MaxHeight: childHeight ?? hostSize.Height);
         child.Layout(childConstraints, parentUsesSize: true);
 
-        Point alignedOffset = alignment.AlongOffset(hostSize, child.Size);
+        Offset alignedOffset = alignment.AlongOffset(hostSize, child.Size);
         double x = parentData.Left
                    ?? (parentData.Right.HasValue
                        ? hostSize.Width - parentData.Right.Value - child.Size.Width
-                       : alignedOffset.X);
+                       : alignedOffset.Dx);
         double y = parentData.Top
                    ?? (parentData.Bottom.HasValue
                        ? hostSize.Height - parentData.Bottom.Value - child.Size.Height
-                       : alignedOffset.Y);
-        parentData.offset = new Point(x, y);
+                       : alignedOffset.Dy);
+        parentData.offset = new Offset(x, y);
     }
 
     private static double? ComputeChildExtent(
@@ -550,12 +550,12 @@ internal sealed class RenderOverlayTheater : RenderBox,
         return extent.HasValue ? Math.Max(0.0, extent.Value) : null;
     }
 
-    private bool ChildOverflows(RenderBox child, Point offset)
+    private bool ChildOverflows(RenderBox child, Offset offset)
     {
-        return offset.X < 0.0
-               || offset.Y < 0.0
-               || offset.X + child.Size.Width > Size.Width
-               || offset.Y + child.Size.Height > Size.Height;
+        return offset.Dx < 0.0
+               || offset.Dy < 0.0
+               || offset.Dx + child.Size.Width > Size.Width
+               || offset.Dy + child.Size.Height > Size.Height;
     }
 
     /// <inheritdoc />
@@ -712,7 +712,7 @@ internal sealed class RenderDeferredLayoutBox : RenderProxyBox
     /// at the offset its parent data carries. The mixin is applied after
     /// <c>RenderProxyBoxMixin</c>, so it is this version that wins.
     /// </remarks>
-    public override void Paint(PaintingContext context, Point offset)
+    public override void Paint(PaintingContext context, Offset offset)
     {
         ArgumentNullException.ThrowIfNull(context);
         if (Child is { } child)
@@ -722,7 +722,7 @@ internal sealed class RenderDeferredLayoutBox : RenderProxyBox
     }
 
     /// <remarks>Flutter's <c>_RenderTheaterMixin.hitTestChildren</c>.</remarks>
-    protected override bool HitTestChildren(BoxHitTestResult result, Point position)
+    protected override bool HitTestChildren(BoxHitTestResult result, Offset position)
     {
         if (Child is not { } child)
         {
@@ -747,7 +747,7 @@ internal sealed class RenderDeferredLayoutBox : RenderProxyBox
         double? childBaseline = child.GetDistanceToActualBaseline(baseline);
         return childBaseline is null
             ? null
-            : childBaseline + ((StackParentData)child.parentData!).offset.Y;
+            : childBaseline + ((StackParentData)child.parentData!).offset.Dy;
     }
 
     /// <remarks>
@@ -917,7 +917,7 @@ internal sealed class RenderOverlayPortalLayoutBuilder : RenderProxyBox, IRender
     /// at the offset its parent data carries. The mixin is applied after
     /// <c>RenderProxyBoxMixin</c>, so it is this version that wins.
     /// </remarks>
-    public override void Paint(PaintingContext context, Point offset)
+    public override void Paint(PaintingContext context, Offset offset)
     {
         ArgumentNullException.ThrowIfNull(context);
         if (Child is { } child)
@@ -927,7 +927,7 @@ internal sealed class RenderOverlayPortalLayoutBuilder : RenderProxyBox, IRender
     }
 
     /// <remarks>Flutter's <c>_RenderTheaterMixin.hitTestChildren</c>.</remarks>
-    protected override bool HitTestChildren(BoxHitTestResult result, Point position)
+    protected override bool HitTestChildren(BoxHitTestResult result, Offset position)
     {
         if (Child is not { } child)
         {
@@ -952,7 +952,7 @@ internal sealed class RenderOverlayPortalLayoutBuilder : RenderProxyBox, IRender
         double? childBaseline = child.GetDistanceToActualBaseline(baseline);
         return childBaseline is null
             ? null
-            : childBaseline + ((StackParentData)child.parentData!).offset.Y;
+            : childBaseline + ((StackParentData)child.parentData!).offset.Dy;
     }
 
     protected override void PerformResize()

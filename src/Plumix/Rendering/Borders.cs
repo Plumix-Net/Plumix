@@ -335,20 +335,20 @@ public static class BorderPainting
         var paint = new Paint { StrokeWidth = 0.0 };
         var path = new Path();
 
-        PaintSide(topSide, new Point(rect.Left, rect.Top), new Point(rect.Right, rect.Top),
-            new Point(rect.Right - rightSide.Width, rect.Top + topSide.Width),
-            new Point(rect.Left + leftSide.Width, rect.Top + topSide.Width));
-        PaintSide(rightSide, new Point(rect.Right, rect.Top), new Point(rect.Right, rect.Bottom),
-            new Point(rect.Right - rightSide.Width, rect.Bottom - bottomSide.Width),
-            new Point(rect.Right - rightSide.Width, rect.Top + topSide.Width));
-        PaintSide(bottomSide, new Point(rect.Right, rect.Bottom), new Point(rect.Left, rect.Bottom),
-            new Point(rect.Left + leftSide.Width, rect.Bottom - bottomSide.Width),
-            new Point(rect.Right - rightSide.Width, rect.Bottom - bottomSide.Width));
-        PaintSide(leftSide, new Point(rect.Left, rect.Bottom), new Point(rect.Left, rect.Top),
-            new Point(rect.Left + leftSide.Width, rect.Top + topSide.Width),
-            new Point(rect.Left + leftSide.Width, rect.Bottom - bottomSide.Width));
+        PaintSide(topSide, new Offset(rect.Left, rect.Top), new Offset(rect.Right, rect.Top),
+            new Offset(rect.Right - rightSide.Width, rect.Top + topSide.Width),
+            new Offset(rect.Left + leftSide.Width, rect.Top + topSide.Width));
+        PaintSide(rightSide, new Offset(rect.Right, rect.Top), new Offset(rect.Right, rect.Bottom),
+            new Offset(rect.Right - rightSide.Width, rect.Bottom - bottomSide.Width),
+            new Offset(rect.Right - rightSide.Width, rect.Top + topSide.Width));
+        PaintSide(bottomSide, new Offset(rect.Right, rect.Bottom), new Offset(rect.Left, rect.Bottom),
+            new Offset(rect.Left + leftSide.Width, rect.Bottom - bottomSide.Width),
+            new Offset(rect.Right - rightSide.Width, rect.Bottom - bottomSide.Width));
+        PaintSide(leftSide, new Offset(rect.Left, rect.Bottom), new Offset(rect.Left, rect.Top),
+            new Offset(rect.Left + leftSide.Width, rect.Top + topSide.Width),
+            new Offset(rect.Left + leftSide.Width, rect.Bottom - bottomSide.Width));
 
-        void PaintSide(BorderSide side, Point start, Point end, Point innerEnd, Point innerStart)
+        void PaintSide(BorderSide side, Offset start, Offset end, Offset innerEnd, Offset innerStart)
         {
             if (side.Style != BorderStyle.Solid)
             {
@@ -357,13 +357,13 @@ public static class BorderPainting
 
             paint.Color = side.Color;
             path.Reset();
-            path.MoveTo(start.X, start.Y);
-            path.LineTo(end.X, end.Y);
+            path.MoveTo(start.Dx, start.Dy);
+            path.LineTo(end.Dx, end.Dy);
             paint.Style = side.Width == 0.0 ? PaintingStyle.Stroke : PaintingStyle.Fill;
             if (side.Width != 0.0)
             {
-                path.LineTo(innerEnd.X, innerEnd.Y);
-                path.LineTo(innerStart.X, innerStart.Y);
+                path.LineTo(innerEnd.Dx, innerEnd.Dy);
+                path.LineTo(innerStart.Dx, innerStart.Dy);
             }
 
             canvas.DrawPath(path, paint);

@@ -443,7 +443,7 @@ public sealed class SliverGridTests
         Assert.Empty(FindText(tester, KStates[12]));
         Assert.Empty(FindText(tester, "Nevada"));
 
-        tester.Drag(FindText(tester, "Arkansas").Single(), new Vector(0.0, -200.0));
+        tester.Drag(FindText(tester, "Arkansas").Single(), new Offset(0.0, -200.0));
         tester.Pump();
 
         for (int i = 0; i < 4; ++i)
@@ -458,19 +458,19 @@ public sealed class SliverGridTests
             log.Clear();
         }
 
-        tester.Drag(FindText(tester, "Delaware").Single(), new Vector(0.0, -4000.0));
+        tester.Drag(FindText(tester, "Delaware").Single(), new Offset(0.0, -4000.0));
         tester.Pump();
 
         Assert.Empty(FindText(tester, "Alabama"));
         Assert.Empty(FindText(tester, "Pennsylvania"));
 
-        Assert.Equal(new Point(300.0, 100.0), tester.GetCenter(FindText(tester, "Tennessee").Single()));
+        Assert.Equal(new Offset(300.0, 100.0), tester.GetCenter(FindText(tester, "Tennessee").Single()));
 
         tester.Tap(FindText(tester, "Tennessee").Single());
         Assert.Equal(["Tennessee"], log);
         log.Clear();
 
-        tester.Drag(FindText(tester, "Tennessee").Single(), new Vector(0.0, 200.0));
+        tester.Drag(FindText(tester, "Tennessee").Single(), new Offset(0.0, 200.0));
         tester.Pump();
 
         tester.Tap(FindText(tester, "Tennessee").Single());
@@ -506,12 +506,12 @@ public sealed class SliverGridTests
 
         Assert.Empty(FindText(tester, "Nevada"));
 
-        tester.Drag(FindText(tester, "Arkansas").Single(), new Vector(0.0, -4000.0));
+        tester.Drag(FindText(tester, "Arkansas").Single(), new Offset(0.0, -4000.0));
         tester.Pump();
 
         Assert.Empty(FindText(tester, "Alabama"));
 
-        Assert.Equal(new Point(300.0, 100.0), tester.GetCenter(FindText(tester, "Tennessee").Single()));
+        Assert.Equal(new Offset(300.0, 100.0), tester.GetCenter(FindText(tester, "Tennessee").Single()));
 
         tester.Tap(FindText(tester, "Tennessee").Single());
         Assert.Equal(["Tennessee"], log);
@@ -728,7 +728,7 @@ public sealed class SliverGridTests
 
         Assert.Single(FindText(tester, "0"));
         Assert.Single(FindText(tester, "11"));
-        tester.Drag(tester.ElementOfType<GridView>(), new Vector(0.0, -300.0));
+        tester.Drag(tester.ElementOfType<GridView>(), new Offset(0.0, -300.0));
         tester.Pump(TimeSpan.FromMilliseconds(200));
         Assert.Single(FindText(tester, "13"));
     }
@@ -745,13 +745,13 @@ public sealed class SliverGridTests
 
         tester.PumpWidget(Build(TextDirection.Ltr));
 
-        Assert.Equal(new Point(0, 0), tester.GetTopLeft(FindKey(tester, target).Single()));
-        Assert.Equal(new Point(200.0, 200.0), tester.GetBottomRight(FindKey(tester, target).Single()));
+        Assert.Equal(new Offset(0, 0), tester.GetTopLeft(FindKey(tester, target).Single()));
+        Assert.Equal(new Offset(200.0, 200.0), tester.GetBottomRight(FindKey(tester, target).Single()));
 
         tester.PumpWidget(Build(TextDirection.Rtl));
 
-        Assert.Equal(new Point(600.0, 0.0), tester.GetTopLeft(FindKey(tester, target).Single()));
-        Assert.Equal(new Point(800.0, 200.0), tester.GetBottomRight(FindKey(tester, target).Single()));
+        Assert.Equal(new Offset(600.0, 0.0), tester.GetTopLeft(FindKey(tester, target).Single()));
+        Assert.Equal(new Offset(800.0, 200.0), tester.GetBottomRight(FindKey(tester, target).Single()));
     }
 
     /// <remarks>Regression test for https://github.com/flutter/flutter/issues/27151.</remarks>
@@ -767,13 +767,13 @@ public sealed class SliverGridTests
 
         tester.PumpWidget(Build(TextDirection.Ltr));
 
-        Assert.Equal(new Point(0, 0), tester.GetTopLeft(FindKey(tester, target).Single()));
-        Assert.Equal(new Point(194.0, 194.0), tester.GetBottomRight(FindKey(tester, target).Single()));
+        Assert.Equal(new Offset(0, 0), tester.GetTopLeft(FindKey(tester, target).Single()));
+        Assert.Equal(new Offset(194.0, 194.0), tester.GetBottomRight(FindKey(tester, target).Single()));
 
         tester.PumpWidget(Build(TextDirection.Rtl));
 
-        Assert.Equal(new Point(606.0, 0.0), tester.GetTopLeft(FindKey(tester, target).Single()));
-        Assert.Equal(new Point(800.0, 194.0), tester.GetBottomRight(FindKey(tester, target).Single()));
+        Assert.Equal(new Offset(606.0, 0.0), tester.GetTopLeft(FindKey(tester, target).Single()));
+        Assert.Equal(new Offset(800.0, 194.0), tester.GetBottomRight(FindKey(tester, target).Single()));
     }
 
     [Fact]
@@ -796,13 +796,13 @@ public sealed class SliverGridTests
         Assert.Single(FindKey(tester, new ValueKey<int>(4)));
         Assert.Equal(1, counters[4]);
 
-        tester.Fling(tester.ElementOfType<GridView>(), new Vector(0, -300), 5000);
+        tester.Fling(tester.ElementOfType<GridView>(), new Offset(0, -300), 5000);
         tester.PumpAndSettle();
 
         Assert.Empty(FindKey(tester, new ValueKey<int>(4)));
         Assert.Equal(1, counters[4]);
 
-        tester.Fling(tester.ElementOfType<GridView>(), new Vector(0, 300), 5000);
+        tester.Fling(tester.ElementOfType<GridView>(), new Offset(0, 300), 5000);
         tester.PumpAndSettle();
 
         Assert.Single(FindKey(tester, new ValueKey<int>(4)));
@@ -1005,7 +1005,7 @@ public sealed class SliverGridTests
 
             Assert.Equal(double.PositiveInfinity, controller.Position.MaxScrollExtent);
             Assert.Equal(0.0, controller.Position.Pixels);
-            tester.Fling(tester.ElementOfType<GridView>(), new Vector(0.0, -1300.0), 100.0);
+            tester.Fling(tester.ElementOfType<GridView>(), new Offset(0.0, -1300.0), 100.0);
             tester.PumpAndSettle();
 
             // The actual extent of the children is 472.0. This should be reflected when the builder
@@ -1111,7 +1111,7 @@ public sealed class SliverGridTests
         tester.Pump();
         AssertTexts(tester, found: ["0", "1"], missing: ["2", "3"]);
 
-        tester.Drag(FindText(tester, "1").Single(), new Vector(0.0, -500.0));
+        tester.Drag(FindText(tester, "1").Single(), new Offset(0.0, -500.0));
         tester.Pump();
 
         //  -100..300 = 1
@@ -1119,7 +1119,7 @@ public sealed class SliverGridTests
         //   600..600 = 3
         AssertTexts(tester, found: ["1", "2", "3"], missing: ["0", "4", "5"]);
 
-        tester.Drag(FindText(tester, "1").Single(), new Vector(0.0, 150.0));
+        tester.Drag(FindText(tester, "1").Single(), new Offset(0.0, 150.0));
         tester.Pump();
 
         // Child '0' is now back onscreen, but by less than `padding.top`.
@@ -1150,8 +1150,8 @@ public sealed class SliverGridTests
         AssertTexts(tester, found: ["item 0", "item 1", "item 2"], missing: []);
 
         tester.PumpWidget(BuildFrame(4));
-        TestGesture gesture = tester.StartGesture(new Point(0.0, 300.0), PointerDeviceKind.Touch);
-        gesture.MoveBy(new Vector(0.0, -200.0));
+        TestGesture gesture = tester.StartGesture(new Offset(0.0, 300.0), PointerDeviceKind.Touch);
+        gesture.MoveBy(new Offset(0.0, -200.0));
         tester.PumpAndSettle();
         Assert.Single(FindText(tester, "item 3"));
     }
@@ -1300,7 +1300,7 @@ public sealed class SliverGridTests
                 LayoutExtent: 0.0);
         }
 
-        public override void Paint(PaintingContext context, Point offset)
+        public override void Paint(PaintingContext context, Offset offset)
         {
         }
     }
@@ -1312,7 +1312,7 @@ public sealed class SliverGridTests
 
         public override ClipRectLayer? PushClipRect(
             bool needsCompositing,
-            Point offset,
+            Offset offset,
             Rect clipRect,
             PaintingContextCallback painter,
             Clip clipBehavior = Clip.HardEdge,
@@ -1333,12 +1333,12 @@ public sealed class SliverGridTests
 
         public IReadOnlyList<CanvasCall> Calls => _canvas.DebugCalls;
 
-        public override void PaintChild(RenderObject child, Point offset) => child.Paint(this, offset);
+        public override void PaintChild(RenderObject child, Offset offset) => child.Paint(this, offset);
 
         public override void PushLayer(
             ContainerLayer childLayer,
             PaintingContextCallback painter,
-            Point offset,
+            Offset offset,
             Rect? childPaintBounds = null)
         {
             painter(this, offset);
@@ -1346,13 +1346,13 @@ public sealed class SliverGridTests
 
         public override ClipRectLayer? PushClipRect(
             bool needsCompositing,
-            Point offset,
+            Offset offset,
             Rect clipRect,
             PaintingContextCallback painter,
             Clip clipBehavior = Clip.HardEdge,
             ClipRectLayer? oldLayer = null)
         {
-            Rect shifted = clipRect.Translate(new Vector(offset.X, offset.Y));
+            Rect shifted = clipRect.Shift(new Offset(offset.Dx, offset.Dy));
             ClipRectAndPaint(shifted, clipBehavior, shifted, () => painter(this, offset));
             return null;
         }

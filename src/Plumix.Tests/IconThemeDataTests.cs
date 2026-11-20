@@ -12,7 +12,7 @@ public sealed class IconThemeDataTests
 {
     private static readonly Shadow ProbeShadow = new(
         color: new Color(0xAAAAAAAA),
-        offset: new Point(1.0, 1.0),
+        offset: new Offset(1.0, 1.0),
         blurRadius: 1.0);
 
     [Fact]
@@ -91,7 +91,7 @@ public sealed class IconThemeDataTests
         Assert.Equal(0.625, lerped.Opacity);
         Shadow shadow = Assert.Single(lerped.Shadows!);
         Assert.Equal(new Color(0xAAAAAAAA), shadow.Color);
-        Assert.Equal(new Point(0.75, 0.75), shadow.Offset);
+        Assert.Equal(new Offset(0.75, 0.75), shadow.Offset);
         Assert.Equal(0.75, shadow.BlurRadius);
         Assert.True(lerped.ApplyTextScaling);
     }
@@ -107,7 +107,7 @@ public sealed class IconThemeDataTests
             Weight: 600.0,
             Grade: 25.0,
             OpticalSize: 45.0,
-            Shadows: [new Shadow(color: Colors.White, offset: new Point(1.0, 1.0), blurRadius: 1.0)],
+            Shadows: [new Shadow(color: Colors.White, offset: new Offset(1.0, 1.0), blurRadius: 1.0)],
             ApplyTextScaling: true);
 
         IconThemeData fromNull = IconThemeData.Lerp(null, data, 0.25);

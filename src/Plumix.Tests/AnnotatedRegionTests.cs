@@ -60,29 +60,29 @@ public sealed class AnnotatedRegionTests
         var background = new AnnotatedRegionLayer<string>(
             value: "background",
             size: new Size(40, 40),
-            offset: new Point(0, 0));
+            offset: new Offset(0, 0));
         var foreground = new AnnotatedRegionLayer<string>(
             value: "foreground",
             size: new Size(20, 20),
-            offset: new Point(5, 6));
+            offset: new Offset(5, 6));
         root.Append(background);
         root.Append(foreground);
 
-        Assert.Equal("foreground", root.Find<string>(new Point(8, 10)));
-        Assert.Null(root.Find<object>(new Point(8, 10)));
+        Assert.Equal("foreground", root.Find<string>(new Offset(8, 10)));
+        Assert.Null(root.Find<object>(new Offset(8, 10)));
 
-        AnnotationResult<string> result = root.FindAllAnnotations<string>(new Point(8, 10));
+        AnnotationResult<string> result = root.FindAllAnnotations<string>(new Offset(8, 10));
         Assert.Collection(
             result.Entries,
             entry =>
             {
                 Assert.Equal("foreground", entry.Annotation);
-                Assert.Equal(new Point(3, 4), entry.LocalPosition);
+                Assert.Equal(new Offset(3, 4), entry.LocalPosition);
             },
             entry =>
             {
                 Assert.Equal("background", entry.Annotation);
-                Assert.Equal(new Point(8, 10), entry.LocalPosition);
+                Assert.Equal(new Offset(8, 10), entry.LocalPosition);
             });
         Assert.Equal(
             ["foreground", "background"],
@@ -97,22 +97,22 @@ public sealed class AnnotatedRegionTests
         var outer = new AnnotatedRegionLayer<string>(
             value: "outer",
             size: new Size(20, 20),
-            offset: new Point(5, 5),
+            offset: new Offset(5, 5),
             opaque: true);
         var inner = new AnnotatedRegionLayer<string>(
             value: "inner",
             size: new Size(6, 6),
-            offset: new Point(7, 8));
+            offset: new Offset(7, 8));
         outer.Append(inner);
         root.Append(behind);
         root.Append(outer);
 
-        AnnotationResult<string> inside = root.FindAllAnnotations<string>(new Point(9, 10));
+        AnnotationResult<string> inside = root.FindAllAnnotations<string>(new Offset(9, 10));
         Assert.Equal(["inner", "outer"], inside.Annotations);
-        Assert.Equal(new Point(2, 2), inside.Entries[0].LocalPosition);
-        Assert.Equal(new Point(4, 5), inside.Entries[1].LocalPosition);
+        Assert.Equal(new Offset(2, 2), inside.Entries[0].LocalPosition);
+        Assert.Equal(new Offset(4, 5), inside.Entries[1].LocalPosition);
 
-        AnnotationResult<string> outside = root.FindAllAnnotations<string>(new Point(30, 30));
+        AnnotationResult<string> outside = root.FindAllAnnotations<string>(new Offset(30, 30));
         Assert.Equal(["behind"], outside.Annotations);
     }
 
@@ -129,40 +129,40 @@ public sealed class AnnotatedRegionTests
         root.Append(background);
         root.Append(unrelatedParent);
 
-        Assert.Equal(1, root.Find<int>(new Point(5, 5)));
-        Assert.Equal([1, 1000], root.FindAllAnnotations<int>(new Point(5, 5)).Annotations);
-        Assert.Null(root.Find<string>(new Point(0, 0)));
+        Assert.Equal(1, root.Find<int>(new Offset(5, 5)));
+        Assert.Equal([1, 1000], root.FindAllAnnotations<int>(new Offset(5, 5)).Annotations);
+        Assert.Null(root.Find<string>(new Offset(0, 0)));
     }
 
     [Fact]
     public void LayerFind_TransformsCoordinatesAndRespectsClipLayers()
     {
         var root = new ContainerLayer();
-        var offset = new OffsetLayer { Offset = new Point(10, 20) };
+        var offset = new OffsetLayer { Offset = new Offset(10, 20) };
         var transform = new TransformLayer
         {
             Transform = Matrix4.Diagonal3Values(2, 2, 1.0),
         };
         var clip = new ClipRectLayer
         {
-            ClipRect = new Rect(0, 0, 20, 20),
+            ClipRect = DartGeometry.RectFromLTWH(0, 0, 20, 20),
         };
         var annotation = new AnnotatedRegionLayer<string>(
             value: "transformed",
             size: new Size(5, 5),
-            offset: new Point(2, 3));
+            offset: new Offset(2, 3));
         root.Append(offset);
         offset.Append(transform);
         transform.Append(clip);
         clip.Append(annotation);
 
-        Point scenePosition = new(16, 28);
+        Offset scenePosition = new(16, 28);
         Assert.Equal("transformed", root.Find<string>(scenePosition));
         AnnotationEntry<string> entry = Assert.Single(
             root.FindAllAnnotations<string>(scenePosition).Entries);
-        Assert.Equal(new Point(1, 1), entry.LocalPosition);
+        Assert.Equal(new Offset(1, 1), entry.LocalPosition);
 
-        Assert.Null(root.Find<string>(new Point(52, 62)));
+        Assert.Null(root.Find<string>(new Offset(52, 62)));
     }
 
     [Fact]
@@ -181,8 +181,8 @@ public sealed class AnnotatedRegionTests
         pipeline.FlushPaint();
         pipeline.CompositeFrame();
 
-        Assert.Equal("first", pipeline.RootLayer.Find<string>(new Point(20, 20)));
-        Assert.Null(pipeline.RootLayer.Find<string>(new Point(120, 20)));
+        Assert.Equal("first", pipeline.RootLayer.Find<string>(new Offset(20, 20)));
+        Assert.Null(pipeline.RootLayer.Find<string>(new Offset(120, 20)));
         Assert.IsType<AnnotatedRegionLayer<string>>(Assert.Single(pipeline.RootLayer.Children));
 
         annotated.Value = "second";
@@ -191,7 +191,7 @@ public sealed class AnnotatedRegionTests
         pipeline.FlushPaint();
         pipeline.CompositeFrame();
 
-        Assert.Equal("second", pipeline.RootLayer.Find<string>(new Point(120, 20)));
+        Assert.Equal("second", pipeline.RootLayer.Find<string>(new Offset(120, 20)));
         Assert.IsType<AnnotatedRegionLayer<string>>(Assert.Single(pipeline.RootLayer.Children));
     }
 
@@ -216,12 +216,12 @@ public sealed class AnnotatedRegionTests
             Size = Constraints.Biggest;
         }
 
-        public override void Paint(PaintingContext ctx, Point offset)
+        public override void Paint(PaintingContext ctx, Offset offset)
         {
             ctx.Canvas.DrawRectangle(
                 Avalonia.Media.Brushes.CadetBlue,
                 pen: null,
-                rect: new Rect(offset, Size));
+                rect: DartGeometry.RectFromOffsetAndSize(offset, Size));
         }
     }
 

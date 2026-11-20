@@ -71,7 +71,7 @@ public sealed class RenderDecoratedSliver : RenderProxySliver
         }
     }
 
-    public override void Paint(PaintingContext context, Point offset)
+    public override void Paint(PaintingContext context, Offset offset)
     {
         if (Child == null || !Geometry!.Visible)
         {
@@ -84,7 +84,7 @@ public sealed class RenderDecoratedSliver : RenderProxySliver
             _painter ??= _decoration.CreateBoxPainter(MarkNeedsPaint);
             _painter.Paint(
                 context,
-                offset + paintRect.Position,
+                offset + paintRect.TopLeft,
                 _configuration.CopyWith(size: paintRect.Size));
         }
 

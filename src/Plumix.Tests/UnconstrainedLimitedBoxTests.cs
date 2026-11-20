@@ -28,7 +28,7 @@ public sealed class UnconstrainedLimitedBoxTests
 
         Assert.Equal(new Size(80, 40), unconstrained.Size);
         Assert.Equal(new Size(120, 40), child.Size);
-        Assert.Equal(new Point(-20, 0), ((BoxParentData)child.parentData!).offset);
+        Assert.Equal(new Offset(-20, 0), ((BoxParentData)child.parentData!).offset);
     }
 
     [Fact]
@@ -50,7 +50,7 @@ public sealed class UnconstrainedLimitedBoxTests
 
         Assert.Equal(new Size(80, 80), unconstrained.Size);
         Assert.Equal(new Size(80, 200), child.Size);
-        Assert.Equal(new Point(0, 0), ((BoxParentData)child.parentData!).offset);
+        Assert.Equal(new Offset(0, 0), ((BoxParentData)child.parentData!).offset);
     }
 
     [Fact]
@@ -125,7 +125,7 @@ public sealed class UnconstrainedLimitedBoxTests
 
         renderBox.Layout(BoxConstraints.Tight(new Size(40, 20)));
 
-        Assert.Equal(new Point(0, 5), ((BoxParentData)renderBox.Child!.parentData!).offset);
+        Assert.Equal(new Offset(0, 5), ((BoxParentData)renderBox.Child!.parentData!).offset);
     }
 
     [Fact]
@@ -185,7 +185,7 @@ public sealed class UnconstrainedLimitedBoxTests
             transform.ChildConstraints);
         Assert.Equal(new Size(120, 40), child.Size);
         Assert.Equal(new Size(80, 80), transform.Size);
-        Assert.Equal(new Point(-20, 20), ((BoxParentData)child.parentData!).offset);
+        Assert.Equal(new Offset(-20, 20), ((BoxParentData)child.parentData!).offset);
         Assert.True(transform.IsOverflowing);
     }
 
@@ -215,7 +215,7 @@ public sealed class UnconstrainedLimitedBoxTests
         Assert.Empty(FindLayers<ClipRectLayer>(pipeline.RootLayer));
         Assert.NotEmpty(FindLayers<PictureLayer>(pipeline.RootLayer));
         Assert.Equal(
-            new Rect(0, 0, 80, 40),
+            DartGeometry.RectFromLTWH(0, 0, 80, 40),
             transform.InvokeDescribeApproximatePaintClip(child));
 
         transform.ClipBehavior = Clip.None;
@@ -253,7 +253,7 @@ public sealed class UnconstrainedLimitedBoxTests
             constraintsTransform: ConstraintsTransformBox.Unconstrained,
             child: new FixedSizeRenderBox(new Size(10, 10)));
         physical.Layout(BoxConstraints.Tight(new Size(40, 20)));
-        Assert.Equal(new Point(30, 5), ((BoxParentData)physical.Child!.parentData!).offset);
+        Assert.Equal(new Offset(30, 5), ((BoxParentData)physical.Child!.parentData!).offset);
 
         var directional = new RenderConstraintsTransformBox(
             alignment: AlignmentDirectional.CenterEnd,
@@ -411,11 +411,11 @@ public sealed class UnconstrainedLimitedBoxTests
             Size = Constraints.Constrain(_size);
         }
 
-        public override void Paint(PaintingContext ctx, Point offset)
+        public override void Paint(PaintingContext ctx, Offset offset)
         {
             if (_paints)
             {
-                ctx.Canvas.DrawRectangle(Brushes.Red, pen: null, new Rect(offset, Size));
+                ctx.Canvas.DrawRectangle(Brushes.Red, pen: null, DartGeometry.RectFromOffsetAndSize(offset, Size));
             }
         }
     }

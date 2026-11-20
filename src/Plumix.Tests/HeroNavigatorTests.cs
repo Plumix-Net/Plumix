@@ -29,7 +29,7 @@ public sealed partial class HeroNavigatorTests
                 new Navigator(
                     initialRoute: BuildHeroRoute(
                         routeName: "root-page",
-                        heroOrigin: new Point(20, 160),
+                        heroOrigin: new Offset(20, 160),
                         heroColor: Colors.OrangeRed,
                         onBuild: () => rootBuildCount += 1,
                         captureState: state => navigatorState ??= state)));
@@ -43,7 +43,7 @@ public sealed partial class HeroNavigatorTests
             navigatorState!.Push(
                 BuildHeroRoute(
                     routeName: "details-page",
-                    heroOrigin: new Point(238, 18),
+                    heroOrigin: new Offset(238, 18),
                     heroColor: Colors.SteelBlue,
                     onBuild: () => detailsBuildCount += 1,
                     captureState: _ => { }));
@@ -81,7 +81,7 @@ public sealed partial class HeroNavigatorTests
                 new Navigator(
                     initialRoute: BuildHeroRoute(
                         routeName: "root-page",
-                        heroOrigin: new Point(20, 160),
+                        heroOrigin: new Offset(20, 160),
                         heroColor: Colors.OrangeRed,
                         onBuild: () => { },
                         captureState: state => navigatorState ??= state)));
@@ -92,7 +92,7 @@ public sealed partial class HeroNavigatorTests
             navigatorState!.Push(
                 BuildHeroRoute(
                     routeName: "details-page",
-                    heroOrigin: new Point(238, 18),
+                    heroOrigin: new Offset(238, 18),
                     heroColor: Colors.SteelBlue,
                     onBuild: () => { },
                     captureState: _ => { }));
@@ -133,8 +133,8 @@ public sealed partial class HeroNavigatorTests
             int tweenLerpCalls = 0;
             Rect? capturedBegin = null;
             Rect? capturedEnd = null;
-            var sourceHeroOrigin = new Point(20, 160);
-            var destinationHeroOrigin = new Point(238, 18);
+            var sourceHeroOrigin = new Offset(20, 160);
+            var destinationHeroOrigin = new Offset(238, 18);
 
             using var harness = new WidgetRenderHarness(
                 new Navigator(
@@ -178,12 +178,12 @@ public sealed partial class HeroNavigatorTests
             Assert.Equal(1, destinationCreateRectTweenCalls);
             Assert.NotNull(capturedBegin);
             Assert.NotNull(capturedEnd);
-            Assert.Equal(sourceHeroOrigin.X, capturedBegin!.Value.X);
-            Assert.Equal(sourceHeroOrigin.Y, capturedBegin.Value.Y);
+            Assert.Equal(sourceHeroOrigin.Dx, capturedBegin!.Value.Left);
+            Assert.Equal(sourceHeroOrigin.Dy, capturedBegin.Value.Top);
             Assert.Equal(44, capturedBegin.Value.Width);
             Assert.Equal(44, capturedBegin.Value.Height);
-            Assert.Equal(destinationHeroOrigin.X, capturedEnd!.Value.X);
-            Assert.Equal(destinationHeroOrigin.Y, capturedEnd.Value.Y);
+            Assert.Equal(destinationHeroOrigin.Dx, capturedEnd!.Value.Left);
+            Assert.Equal(destinationHeroOrigin.Dy, capturedEnd.Value.Top);
             Assert.Equal(44, capturedEnd.Value.Width);
             Assert.Equal(44, capturedEnd.Value.Height);
             Assert.True(tweenLerpCalls > 0);
@@ -212,7 +212,7 @@ public sealed partial class HeroNavigatorTests
                 new Navigator(
                     initialRoute: BuildHeroRoute(
                         routeName: "root-page",
-                        heroOrigin: new Point(20, 160),
+                        heroOrigin: new Offset(20, 160),
                         heroColor: Colors.OrangeRed,
                         onBuild: () => { },
                         captureState: state => navigatorState ??= state,
@@ -228,7 +228,7 @@ public sealed partial class HeroNavigatorTests
             navigatorState!.Push(
                 BuildHeroRoute(
                     routeName: "details-page",
-                    heroOrigin: new Point(238, 18),
+                    heroOrigin: new Offset(238, 18),
                     heroColor: Colors.SteelBlue,
                     onBuild: () => { },
                     captureState: _ => { },
@@ -268,7 +268,7 @@ public sealed partial class HeroNavigatorTests
                 new Navigator(
                     initialRoute: BuildHeroRoute(
                         routeName: "root-page",
-                        heroOrigin: new Point(20, 160),
+                        heroOrigin: new Offset(20, 160),
                         heroColor: Colors.OrangeRed,
                         onBuild: () => { },
                         captureState: state => navigatorState ??= state,
@@ -284,7 +284,7 @@ public sealed partial class HeroNavigatorTests
             navigatorState!.Push(
                 BuildHeroRoute(
                     routeName: "details-page",
-                    heroOrigin: new Point(238, 18),
+                    heroOrigin: new Offset(238, 18),
                     heroColor: Colors.SteelBlue,
                     onBuild: () => { },
                     captureState: _ => { }));
@@ -316,7 +316,7 @@ public sealed partial class HeroNavigatorTests
                 new Navigator(
                     initialRoute: BuildHeroRoute(
                         routeName: "root-page",
-                        heroOrigin: new Point(20, 160),
+                        heroOrigin: new Offset(20, 160),
                         heroColor: Colors.OrangeRed,
                         onBuild: () => { },
                         captureState: state => navigatorState ??= state)));
@@ -327,7 +327,7 @@ public sealed partial class HeroNavigatorTests
             navigatorState!.Push(
                 BuildHeroRoute(
                     routeName: "details-page",
-                    heroOrigin: new Point(238, 18),
+                    heroOrigin: new Offset(238, 18),
                     heroColor: Colors.SteelBlue,
                     onBuild: () => { },
                     captureState: _ => { },
@@ -364,7 +364,7 @@ public sealed partial class HeroNavigatorTests
                 new Navigator(
                     initialRoute: BuildHeroRoute(
                         routeName: "root-page",
-                        heroOrigin: new Point(20, 160),
+                        heroOrigin: new Offset(20, 160),
                         heroColor: Colors.OrangeRed,
                         onBuild: () => { },
                         captureState: state => navigatorState ??= state,
@@ -377,7 +377,7 @@ public sealed partial class HeroNavigatorTests
             navigatorState!.Push(
                 BuildHeroRoute(
                     routeName: "details-page",
-                    heroOrigin: new Point(238, 18),
+                    heroOrigin: new Offset(238, 18),
                     heroColor: Colors.SteelBlue,
                     onBuild: () => { },
                     captureState: _ => { },
@@ -413,7 +413,7 @@ public sealed partial class HeroNavigatorTests
                 new Navigator(
                     initialRoute: BuildHeroRoute(
                         routeName: "root-page",
-                        heroOrigin: new Point(20, 160),
+                        heroOrigin: new Offset(20, 160),
                         heroColor: Colors.OrangeRed,
                         onBuild: () => { },
                         captureState: state => navigatorState ??= state)));
@@ -424,7 +424,7 @@ public sealed partial class HeroNavigatorTests
             navigatorState!.Push(
                 BuildHeroRoute(
                     routeName: "details-page",
-                    heroOrigin: new Point(238, 18),
+                    heroOrigin: new Offset(238, 18),
                     heroColor: Colors.SteelBlue,
                     onBuild: () => { },
                     captureState: _ => { }));
@@ -465,7 +465,7 @@ public sealed partial class HeroNavigatorTests
                 new Navigator(
                     initialRoute: BuildHeroRoute(
                         routeName: "root-page",
-                        heroOrigin: new Point(20, 160),
+                        heroOrigin: new Offset(20, 160),
                         heroColor: Colors.OrangeRed,
                         onBuild: () => { },
                         captureState: state => navigatorState ??= state,
@@ -477,7 +477,7 @@ public sealed partial class HeroNavigatorTests
             navigatorState!.Push(
                 BuildHeroRoute(
                     routeName: "details-page",
-                    heroOrigin: new Point(238, 18),
+                    heroOrigin: new Offset(238, 18),
                     heroColor: Colors.SteelBlue,
                     onBuild: () => { },
                     captureState: _ => { },
@@ -519,7 +519,7 @@ public sealed partial class HeroNavigatorTests
                 new Navigator(
                     initialRoute: BuildHeroRoute(
                         routeName: "root-page",
-                        heroOrigin: new Point(20, 160),
+                        heroOrigin: new Offset(20, 160),
                         heroColor: Colors.OrangeRed,
                         onBuild: () => { },
                         captureState: state => navigatorState ??= state,
@@ -538,7 +538,7 @@ public sealed partial class HeroNavigatorTests
             navigatorState!.Push(
                 BuildHeroRoute(
                     routeName: "details-page",
-                    heroOrigin: new Point(238, 18),
+                    heroOrigin: new Offset(238, 18),
                     heroColor: Colors.SteelBlue,
                     onBuild: () => { },
                     captureState: _ => { }));
@@ -578,7 +578,7 @@ public sealed partial class HeroNavigatorTests
                 new Navigator(
                     initialRoute: BuildHeroRoute(
                         routeName: "root-page",
-                        heroOrigin: new Point(20, 160),
+                        heroOrigin: new Offset(20, 160),
                         heroColor: Colors.OrangeRed,
                         onBuild: () => { },
                         captureState: state => navigatorState ??= state,
@@ -598,7 +598,7 @@ public sealed partial class HeroNavigatorTests
             navigatorState!.Push(
                 BuildHeroRoute(
                     routeName: "details-page",
-                    heroOrigin: new Point(238, 18),
+                    heroOrigin: new Offset(238, 18),
                     heroColor: Colors.SteelBlue,
                     onBuild: () => { },
                     captureState: _ => { }));
@@ -642,7 +642,7 @@ public sealed partial class HeroNavigatorTests
                 new Navigator(
                     initialRoute: BuildHeroRoute(
                         routeName: "root-page",
-                        heroOrigin: new Point(20, 160),
+                        heroOrigin: new Offset(20, 160),
                         heroColor: Colors.OrangeRed,
                         onBuild: () => { },
                         captureState: state => navigatorState ??= state)));
@@ -653,7 +653,7 @@ public sealed partial class HeroNavigatorTests
             navigatorState!.Push(
                 BuildHeroRoute(
                     routeName: "details-page",
-                    heroOrigin: new Point(238, 18),
+                    heroOrigin: new Offset(238, 18),
                     heroColor: Colors.SteelBlue,
                     onBuild: () => { },
                     captureState: _ => { }));
@@ -686,7 +686,7 @@ public sealed partial class HeroNavigatorTests
                 new Navigator(
                     initialRoute: BuildHeroRoute(
                         routeName: "root-page",
-                        heroOrigin: new Point(20, 160),
+                        heroOrigin: new Offset(20, 160),
                         heroColor: Colors.OrangeRed,
                         onBuild: () => { },
                         captureState: state => navigatorState ??= state)));
@@ -697,7 +697,7 @@ public sealed partial class HeroNavigatorTests
             navigatorState!.Push(
                 BuildHeroRoute(
                     routeName: "details-page",
-                    heroOrigin: new Point(238, 18),
+                    heroOrigin: new Offset(238, 18),
                     heroColor: Colors.SteelBlue,
                     onBuild: () => { },
                     captureState: _ => { }));
@@ -735,7 +735,7 @@ public sealed partial class HeroNavigatorTests
                 new Navigator(
                     initialRoute: BuildHeroRoute(
                         routeName: "root-page",
-                        heroOrigin: new Point(20, 160),
+                        heroOrigin: new Offset(20, 160),
                         heroColor: Colors.OrangeRed,
                         onBuild: () => { },
                         captureState: state => navigatorState ??= state,
@@ -751,7 +751,7 @@ public sealed partial class HeroNavigatorTests
             navigatorState!.Push(
                 BuildHeroRoute(
                     routeName: "details-page",
-                    heroOrigin: new Point(238, 18),
+                    heroOrigin: new Offset(238, 18),
                     heroColor: Colors.SteelBlue,
                     onBuild: () => { },
                     captureState: _ => { },
@@ -801,7 +801,7 @@ public sealed partial class HeroNavigatorTests
                 new Navigator(
                     initialRoute: BuildHeroRoute(
                         routeName: "root-page",
-                        heroOrigin: new Point(20, 160),
+                        heroOrigin: new Offset(20, 160),
                         heroColor: Colors.OrangeRed,
                         onBuild: () => { },
                         captureState: state => navigatorState ??= state)));
@@ -880,7 +880,7 @@ public sealed partial class HeroNavigatorTests
                 new Navigator(
                     initialRoute: BuildHeroRoute(
                         routeName: "root-page",
-                        heroOrigin: new Point(20, 160),
+                        heroOrigin: new Offset(20, 160),
                         heroColor: Colors.OrangeRed,
                         onBuild: () => { },
                         captureState: state => navigatorState ??= state)));
@@ -890,7 +890,7 @@ public sealed partial class HeroNavigatorTests
             navigatorState!.Push(
                 BuildHeroRoute(
                     routeName: "details-page",
-                    heroOrigin: new Point(238, 18),
+                    heroOrigin: new Offset(238, 18),
                     heroColor: Colors.SteelBlue,
                     onBuild: () => { },
                     captureState: _ => { },
@@ -936,7 +936,7 @@ public sealed partial class HeroNavigatorTests
                 new Navigator(
                     initialRoute: BuildHeroRoute(
                         routeName: "root-page",
-                        heroOrigin: new Point(20, 160),
+                        heroOrigin: new Offset(20, 160),
                         heroColor: Colors.OrangeRed,
                         onBuild: () => { },
                         captureState: state => navigatorState ??= state)),
@@ -947,7 +947,7 @@ public sealed partial class HeroNavigatorTests
             navigatorState!.Push(
                 BuildHeroRoute(
                     routeName: "details-page",
-                    heroOrigin: new Point(238, 18),
+                    heroOrigin: new Offset(238, 18),
                     heroColor: Colors.SteelBlue,
                     onBuild: () => { },
                     captureState: _ => { },
@@ -989,7 +989,7 @@ public sealed partial class HeroNavigatorTests
                 new Navigator(
                     initialRoute: BuildHeroRoute(
                         routeName: "root-page",
-                        heroOrigin: new Point(20, 160),
+                        heroOrigin: new Offset(20, 160),
                         heroColor: Colors.OrangeRed,
                         onBuild: () => { },
                         captureState: state => navigatorState ??= state)),
@@ -1004,7 +1004,7 @@ public sealed partial class HeroNavigatorTests
             navigatorState!.Push(
                 BuildHeroRoute(
                     routeName: "details-page",
-                    heroOrigin: new Point(238, 18),
+                    heroOrigin: new Offset(238, 18),
                     heroColor: Colors.SteelBlue,
                     onBuild: () => { },
                     captureState: _ => { }));
@@ -1019,7 +1019,7 @@ public sealed partial class HeroNavigatorTests
             navigatorState.Push(
                 BuildHeroRoute(
                     routeName: "third-page",
-                    heroOrigin: new Point(60, 60),
+                    heroOrigin: new Offset(60, 60),
                     heroColor: Colors.SeaGreen,
                     onBuild: () => { },
                     captureState: _ => { },
@@ -1057,7 +1057,7 @@ public sealed partial class HeroNavigatorTests
                     new Navigator(
                         initialRoute: BuildHeroRoute(
                             routeName: "root-page",
-                            heroOrigin: new Point(20, 160),
+                            heroOrigin: new Offset(20, 160),
                             heroColor: Colors.OrangeRed,
                             onBuild: () => { },
                             captureState: state => navigatorState ??= state))));
@@ -1067,7 +1067,7 @@ public sealed partial class HeroNavigatorTests
             navigatorState!.Push(
                 BuildHeroRoute(
                     routeName: "details-page",
-                    heroOrigin: new Point(238, 18),
+                    heroOrigin: new Offset(238, 18),
                     heroColor: Colors.SteelBlue,
                     onBuild: () => { },
                     captureState: _ => { }));
@@ -1103,7 +1103,7 @@ public sealed partial class HeroNavigatorTests
                 new Navigator(
                     initialRoute: BuildHeroRoute(
                         routeName: "root-page",
-                        heroOrigin: new Point(20, 160),
+                        heroOrigin: new Offset(20, 160),
                         heroColor: Colors.OrangeRed,
                         onBuild: () => { },
                         captureState: state => navigatorState ??= state)));
@@ -1112,7 +1112,7 @@ public sealed partial class HeroNavigatorTests
             navigatorState!.Push(
                 BuildHeroRoute(
                     routeName: "details-page",
-                    heroOrigin: new Point(238, 18),
+                    heroOrigin: new Offset(238, 18),
                     heroColor: Colors.SteelBlue,
                     onBuild: () => { },
                     captureState: _ => { },
@@ -1147,7 +1147,7 @@ public sealed partial class HeroNavigatorTests
                 new Navigator(
                     initialRoute: BuildHeroRoute(
                         routeName: "root-page",
-                        heroOrigin: new Point(20, 160),
+                        heroOrigin: new Offset(20, 160),
                         heroColor: Colors.OrangeRed,
                         onBuild: () => { },
                         captureState: state => navigatorState ??= state)));
@@ -1159,7 +1159,7 @@ public sealed partial class HeroNavigatorTests
             navigatorState!.Push(
                 BuildHeroRoute(
                     routeName: "details-page",
-                    heroOrigin: new Point(238, 18),
+                    heroOrigin: new Offset(238, 18),
                     heroColor: Colors.SteelBlue,
                     onBuild: () => { },
                     captureState: _ => { }));
@@ -1210,7 +1210,7 @@ public sealed partial class HeroNavigatorTests
 
     private static Route BuildHeroRoute(
         string routeName,
-        Point heroOrigin,
+        Offset heroOrigin,
         Color heroColor,
         Action onBuild,
         Action<NavigatorState> captureState,
@@ -1259,7 +1259,7 @@ public sealed partial class HeroNavigatorTests
 
     private static Widget BuildNestedNavigatorHeroPage(
         string routeLabel,
-        Point heroOrigin,
+        Offset heroOrigin,
         Color heroColor,
         CreateRectTween? createRectTween = null,
         HeroFlightShuttleBuilder? flightShuttleBuilder = null,
@@ -1319,7 +1319,7 @@ public sealed partial class HeroNavigatorTests
 
     private static Widget BuildHeroPage(
         string routeLabel,
-        Point heroOrigin,
+        Offset heroOrigin,
         Color heroColor,
         CreateRectTween? createRectTween = null,
         HeroFlightShuttleBuilder? flightShuttleBuilder = null,
@@ -1356,8 +1356,8 @@ public sealed partial class HeroNavigatorTests
             children:
             [
                 new Positioned(
-                    left: heroOrigin.X,
-                    top: heroOrigin.Y,
+                    left: heroOrigin.Dx,
+                    top: heroOrigin.Dy,
                     child: heroWidget),
                 new Positioned(
                     left: 8,

@@ -8,26 +8,26 @@ namespace Plumix.Gestures;
 
 /// <summary>Details for `GestureLongPressDownCallback`.</summary>
 public readonly record struct LongPressDownDetails(
-    Point GlobalPosition = default,
-    Point LocalPosition = default,
+    Offset GlobalPosition = default,
+    Offset LocalPosition = default,
     PointerDeviceKind? Kind = null) : IPositionedGestureDetails;
 
 /// <summary>Details for `GestureLongPressStartCallback`.</summary>
 public readonly record struct LongPressStartDetails(
-    Point GlobalPosition = default,
-    Point LocalPosition = default) : IPositionedGestureDetails;
+    Offset GlobalPosition = default,
+    Offset LocalPosition = default) : IPositionedGestureDetails;
 
 /// <summary>Details for `GestureLongPressMoveUpdateCallback`.</summary>
 public readonly record struct LongPressMoveUpdateDetails(
-    Point GlobalPosition = default,
-    Point LocalPosition = default,
-    Point OffsetFromOrigin = default,
-    Point LocalOffsetFromOrigin = default) : IPositionedGestureDetails;
+    Offset GlobalPosition = default,
+    Offset LocalPosition = default,
+    Offset OffsetFromOrigin = default,
+    Offset LocalOffsetFromOrigin = default) : IPositionedGestureDetails;
 
 /// <summary>Details for `GestureLongPressEndCallback`.</summary>
 public readonly record struct LongPressEndDetails(
-    Point GlobalPosition = default,
-    Point LocalPosition = default,
+    Offset GlobalPosition = default,
+    Offset LocalPosition = default,
     Velocity Velocity = default) : IPositionedGestureDetails;
 
 /// <summary>

@@ -5,7 +5,7 @@ using Avalonia;
 namespace Plumix.UI;
 
 /// <summary>A platform hit-test query for one logical point in a view.</summary>
-public readonly record struct HitTestRequest(int ViewId, Point Offset);
+public readonly record struct HitTestRequest(int ViewId, Offset Offset);
 
 /// <summary>Whether the framework path at the queried point includes a native platform view.</summary>
 public readonly record struct HitTestResponse(bool HasPlatformView);

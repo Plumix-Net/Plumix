@@ -221,7 +221,7 @@ public sealed class SelectableRegionDartParityTests : IDisposable
         focus.RequestFocus();
         tester.Pump();
         var surface = (RenderBox)tester.ElementOfType<PlatformSelectableRegionContextMenu>().RenderObject!;
-        Point position = surface.LocalToGlobal(new Point(5, 5));
+        Offset position = surface.LocalToGlobal(new Offset(5, 5));
         Assert.Equal(new PlatformSelectionContextMenuResult(true, "hello"),
             PlatformSelectableRegionContextMenu.HandleMouseDown(tester.RenderView, position, 2));
         Assert.Equal("hello", tester.State<SelectableRegionState>().SelectedContent?.PlainText);
@@ -248,15 +248,15 @@ public sealed class SelectableRegionDartParityTests : IDisposable
         tester.PumpWidget(App(new MouseRegion(cursor: SystemMouseCursors.Grab,
             child: new SelectionArea(new Center(new MouseRegion(cursor: SystemMouseCursors.Forbidden,
                 child: new SizedBox(width: 40, height: 40)))))));
-        MouseCursor? CursorAt(Point position)
+        MouseCursor? CursorAt(Offset position)
         {
             var hits = new HitTestResult();
             tester.RenderView.HitTest(hits, position);
             return hits.Path.Select(entry => entry.Target).OfType<RenderMouseRegion>()
                 .Select(region => region.Cursor).First(cursor => cursor != MouseCursor.Defer);
         }
-        Assert.Same(SystemMouseCursors.Grab, CursorAt(new Point(10, 10)));
-        Assert.Same(SystemMouseCursors.Forbidden, CursorAt(new Point(400, 300)));
+        Assert.Same(SystemMouseCursors.Grab, CursorAt(new Offset(10, 10)));
+        Assert.Same(SystemMouseCursors.Forbidden, CursorAt(new Offset(400, 300)));
     }
 
     [Fact]

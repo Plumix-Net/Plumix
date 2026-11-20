@@ -668,7 +668,7 @@ public sealed class EditableTextScrollingDartParityTests : IDisposable
         var controller = new TextEditingController("text");
         controller.Selection = TextSelection.Collapsed(0);
         var focusNode = new FocusNode();
-        Point offset = default;
+        Offset offset = default;
         StateSetter? setOffset = null;
         tester.PumpWidget(Ltr(new StatefulBuilder((context, setState) =>
         {
@@ -683,7 +683,7 @@ public sealed class EditableTextScrollingDartParityTests : IDisposable
         tester.Pump();
         _control.SizeAndTransforms.Clear();
 
-        setOffset!(() => offset = new Point(42, 0));
+        setOffset!(() => offset = new Offset(42, 0));
         tester.Pump();
 
         Assert.Contains(_control.SizeAndTransforms, entry => entry.Transform == Matrix4.TranslationValues(42, 0, 0));
@@ -791,22 +791,22 @@ public sealed class EditableTextScrollingDartParityTests : IDisposable
 
             state.UpdateFloatingCursor(new RawFloatingCursorPoint(
                 FloatingCursorDragState.Start,
-                offset: new Point(20, 20)));
+                offset: new Offset(20, 20)));
             Assert.True(editable.FloatingCursorOn);
             state.UpdateFloatingCursor(new RawFloatingCursorPoint(
                 FloatingCursorDragState.Update,
-                offset: new Point(-250, 20)));
+                offset: new Offset(-250, 20)));
             tester.Pump();
             Assert.Equal(29, controller.Selection.BaseOffset);
 
             // The bounded offset: the start caret's center moved by the drag, less half a line,
             // clamped into the text plus the floating cursor margin.
             double lineHeight = editable.PreferredLineHeight;
-            Point startCenter = editable.GetLocalRectForCaret(new TextPosition(29)).Center;
-            double boundedX = Math.Max(-editable.FloatingCursorAddedMargin.Left, startCenter.X - 270);
-            double boundedY = startCenter.Y - lineHeight / 2;
+            Offset startCenter = editable.GetLocalRectForCaret(new TextPosition(29)).Center;
+            double boundedX = Math.Max(-editable.FloatingCursorAddedMargin.Left, startCenter.Dx - 270);
+            double boundedY = startCenter.Dy - lineHeight / 2;
             int expected = editable
-                .GetPositionForPoint(editable.LocalToGlobal(new Point(boundedX, boundedY + lineHeight / 2)))
+                .GetPositionForPoint(editable.LocalToGlobal(new Offset(boundedX, boundedY + lineHeight / 2)))
                 .Offset;
 
             state.UpdateFloatingCursor(new RawFloatingCursorPoint(FloatingCursorDragState.End));
@@ -847,12 +847,12 @@ public sealed class EditableTextScrollingDartParityTests : IDisposable
         using (tester)
         {
             EditableText.EditableTextState state = State(tester);
-            state.UpdateFloatingCursor(new RawFloatingCursorPoint(FloatingCursorDragState.Start, new Point(20, 20)));
-            state.UpdateFloatingCursor(new RawFloatingCursorPoint(FloatingCursorDragState.Update, new Point(-250, 20)));
+            state.UpdateFloatingCursor(new RawFloatingCursorPoint(FloatingCursorDragState.Start, new Offset(20, 20)));
+            state.UpdateFloatingCursor(new RawFloatingCursorPoint(FloatingCursorDragState.Update, new Offset(-250, 20)));
             state.UpdateFloatingCursor(new RawFloatingCursorPoint(FloatingCursorDragState.End));
-            state.UpdateFloatingCursor(new RawFloatingCursorPoint(FloatingCursorDragState.Start, new Point(20, 20)));
+            state.UpdateFloatingCursor(new RawFloatingCursorPoint(FloatingCursorDragState.Start, new Offset(20, 20)));
             tester.PumpAndSettle();
-            state.UpdateFloatingCursor(new RawFloatingCursorPoint(FloatingCursorDragState.Update, new Point(-250, 20)));
+            state.UpdateFloatingCursor(new RawFloatingCursorPoint(FloatingCursorDragState.Update, new Offset(-250, 20)));
             state.UpdateFloatingCursor(new RawFloatingCursorPoint(FloatingCursorDragState.End));
             tester.PumpAndSettle();
 
@@ -869,8 +869,8 @@ public sealed class EditableTextScrollingDartParityTests : IDisposable
         using (tester)
         {
             EditableText.EditableTextState state = State(tester);
-            state.UpdateFloatingCursor(new RawFloatingCursorPoint(FloatingCursorDragState.Start, new Point(0, 0)));
-            state.UpdateFloatingCursor(new RawFloatingCursorPoint(FloatingCursorDragState.Update, new Point(-56, 0)));
+            state.UpdateFloatingCursor(new RawFloatingCursorPoint(FloatingCursorDragState.Start, new Offset(0, 0)));
+            state.UpdateFloatingCursor(new RawFloatingCursorPoint(FloatingCursorDragState.Update, new Offset(-56, 0)));
             state.UpdateEditingValue(controller.Value.CopyWith(selection: new TextSelection(0, 4)));
             Assert.Equal(SelectionChangedCause.ForcePress, causes[^1]);
 
@@ -889,10 +889,10 @@ public sealed class EditableTextScrollingDartParityTests : IDisposable
         using (tester)
         {
             EditableText.EditableTextState state = State(tester);
-            state.UpdateFloatingCursor(new RawFloatingCursorPoint(FloatingCursorDragState.Start, new Point(0, 0)));
+            state.UpdateFloatingCursor(new RawFloatingCursorPoint(FloatingCursorDragState.Start, new Offset(0, 0)));
             tester.Pump(TimeSpan.FromMilliseconds(150));
             tester.Pump(TimeSpan.FromMilliseconds(500));
-            state.UpdateFloatingCursor(new RawFloatingCursorPoint(FloatingCursorDragState.End, new Point(0, 0)));
+            state.UpdateFloatingCursor(new RawFloatingCursorPoint(FloatingCursorDragState.End, new Offset(0, 0)));
             Assert.True(SchedulerBinding.Instance.TransientCallbackCount > 0);
 
             tester.PumpWidget(new SizedBox());
@@ -974,7 +974,7 @@ public sealed class EditableTextScrollingDartParityTests : IDisposable
         // that `showToolbar` needs.
         RenderEditable editable = State(tester).RenderEditableObject;
         editable.SelectWordsInRange(
-            from: editable.LocalToGlobal(new Point(1, 1)),
+            from: editable.LocalToGlobal(new Offset(1, 1)),
             cause: SelectionChangedCause.LongPress);
         tester.Pump();
         return (tester, controller, outer);

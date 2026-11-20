@@ -20,7 +20,7 @@ namespace Plumix;
 /// </remarks>
 public sealed class HostPointerPacketEncoder
 {
-    private readonly Dictionary<int, Point> _lastPositions = [];
+    private readonly Dictionary<int, Offset> _lastPositions = [];
     private readonly Dictionary<int, int> _pointerIdentifiers = [];
     private static int _nextPointerIdentifier;
 
@@ -53,10 +53,10 @@ public sealed class HostPointerPacketEncoder
             }
         }
 
-        Point delta = default;
+        Offset delta = default;
         if (change is PointerChange.Hover or PointerChange.Move)
         {
-            delta = _lastPositions.TryGetValue(@event.Pointer, out Point previous)
+            delta = _lastPositions.TryGetValue(@event.Pointer, out Offset previous)
                 ? @event.Position - previous
                 : default;
         }
@@ -84,10 +84,10 @@ public sealed class HostPointerPacketEncoder
             signalKind: signal,
             device: @event.Device,
             pointerIdentifier: identifier,
-            physicalX: @event.Position.X * ratio,
-            physicalY: @event.Position.Y * ratio,
-            physicalDeltaX: delta.X * ratio,
-            physicalDeltaY: delta.Y * ratio,
+            physicalX: @event.Position.Dx * ratio,
+            physicalY: @event.Position.Dy * ratio,
+            physicalDeltaX: delta.Dx * ratio,
+            physicalDeltaY: delta.Dy * ratio,
             buttons: @event.Buttons,
             obscured: @event.Obscured,
             synthesized: @event.Synthesized,
@@ -104,12 +104,12 @@ public sealed class HostPointerPacketEncoder
             orientation: @event.Orientation,
             tilt: @event.Tilt,
             platformData: @event.PlatformData,
-            scrollDeltaX: (scroll?.ScrollDelta.X ?? 0.0) * ratio,
-            scrollDeltaY: (scroll?.ScrollDelta.Y ?? 0.0) * ratio,
-            panX: (panZoom?.Pan.X ?? 0.0) * ratio,
-            panY: (panZoom?.Pan.Y ?? 0.0) * ratio,
-            panDeltaX: (panZoom?.PanDelta.X ?? 0.0) * ratio,
-            panDeltaY: (panZoom?.PanDelta.Y ?? 0.0) * ratio,
+            scrollDeltaX: (scroll?.ScrollDelta.Dx ?? 0.0) * ratio,
+            scrollDeltaY: (scroll?.ScrollDelta.Dy ?? 0.0) * ratio,
+            panX: (panZoom?.Pan.Dx ?? 0.0) * ratio,
+            panY: (panZoom?.Pan.Dy ?? 0.0) * ratio,
+            panDeltaX: (panZoom?.PanDelta.Dx ?? 0.0) * ratio,
+            panDeltaY: (panZoom?.PanDelta.Dy ?? 0.0) * ratio,
             scale: @event switch
             {
                 PointerPanZoomUpdateEvent update => update.Scale,

@@ -318,7 +318,7 @@ public sealed class HostTextInputPlugin
         CaretRectChanged?.Invoke();
     }
 
-    private static Rect RectFromJson(IDictionary rect) => new(
+    private static Rect RectFromJson(IDictionary rect) => DartGeometry.RectFromLTWH(
         Convert.ToDouble(rect["x"]),
         Convert.ToDouble(rect["y"]),
         Convert.ToDouble(rect["width"]),
@@ -340,7 +340,7 @@ public sealed class HostTextInputPlugin
     /// bounding box of the transformed corners, with the perspective divide.</summary>
     private Rect RectFromFrameworkTransform(Rect incomingRect)
     {
-        Point[] points =
+        Offset[] points =
         [
             incomingRect.TopLeft,
             incomingRect.BottomLeft,
@@ -352,11 +352,11 @@ public sealed class HostTextInputPlugin
         double minY = double.MaxValue;
         double maxX = -double.MaxValue;
         double maxY = -double.MaxValue;
-        foreach (Point point in points)
+        foreach (Offset point in points)
         {
-            double x = m[0] * point.X + m[4] * point.Y + m[12];
-            double y = m[1] * point.X + m[5] * point.Y + m[13];
-            double w = m[3] * point.X + m[7] * point.Y + m[15];
+            double x = m[0] * point.Dx + m[4] * point.Dy + m[12];
+            double y = m[1] * point.Dx + m[5] * point.Dy + m[13];
+            double w = m[3] * point.Dx + m[7] * point.Dy + m[15];
             if (w == 0.0)
             {
                 return default;
@@ -374,7 +374,7 @@ public sealed class HostTextInputPlugin
             maxY = Math.Max(maxY, y);
         }
 
-        return new Rect(minX, minY, maxX - minX, maxY - minY);
+        return DartGeometry.RectFromLTWH(minX, minY, maxX - minX, maxY - minY);
     }
 
     /// <summary>

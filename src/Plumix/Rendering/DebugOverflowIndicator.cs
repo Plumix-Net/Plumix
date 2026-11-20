@@ -95,19 +95,19 @@ internal sealed class DebugOverflowIndicator : IDisposable
         var regions = new List<OverflowRegionData>();
         if (overflow.Left > 0.0)
         {
-            var markerRect = new Rect(0.0, 0.0, containerRect.Width * IndicatorFraction, containerRect.Height);
+            var markerRect = DartGeometry.RectFromLTWH(0.0, 0.0, containerRect.Width * IndicatorFraction, containerRect.Height);
             regions.Add(new OverflowRegionData(
                 Rect: markerRect,
                 Label: $"LEFT OVERFLOWED BY {FormatPixels(overflow.Left)} PIXELS",
-                LabelOffset: new Point(markerRect.Left, markerRect.Center.Y)
-                             + new Point(IndicatorFontSizePixels + IndicatorLabelPaddingPixels, 0.0),
+                LabelOffset: new Offset(markerRect.Left, markerRect.Center.Dy)
+                             + new Offset(IndicatorFontSizePixels + IndicatorLabelPaddingPixels, 0.0),
                 Rotation: Math.PI / 2.0,
                 Side: OverflowSide.Left));
         }
 
         if (overflow.Right > 0.0)
         {
-            var markerRect = new Rect(
+            var markerRect = DartGeometry.RectFromLTWH(
                 containerRect.Width * (1.0 - IndicatorFraction),
                 0.0,
                 containerRect.Width * IndicatorFraction,
@@ -115,27 +115,27 @@ internal sealed class DebugOverflowIndicator : IDisposable
             regions.Add(new OverflowRegionData(
                 Rect: markerRect,
                 Label: $"RIGHT OVERFLOWED BY {FormatPixels(overflow.Right)} PIXELS",
-                LabelOffset: new Point(markerRect.Right, markerRect.Center.Y)
-                             - new Point(IndicatorFontSizePixels + IndicatorLabelPaddingPixels, 0.0),
+                LabelOffset: new Offset(markerRect.Right, markerRect.Center.Dy)
+                             - new Offset(IndicatorFontSizePixels + IndicatorLabelPaddingPixels, 0.0),
                 Rotation: -Math.PI / 2.0,
                 Side: OverflowSide.Right));
         }
 
         if (overflow.Top > 0.0)
         {
-            var markerRect = new Rect(0.0, 0.0, containerRect.Width, containerRect.Height * IndicatorFraction);
+            var markerRect = DartGeometry.RectFromLTWH(0.0, 0.0, containerRect.Width, containerRect.Height * IndicatorFraction);
             regions.Add(new OverflowRegionData(
                 Rect: markerRect,
                 Label: $"TOP OVERFLOWED BY {FormatPixels(overflow.Top)} PIXELS",
-                LabelOffset: new Point(markerRect.Center.X, markerRect.Top)
-                             + new Point(0.0, IndicatorLabelPaddingPixels),
+                LabelOffset: new Offset(markerRect.Center.Dx, markerRect.Top)
+                             + new Offset(0.0, IndicatorLabelPaddingPixels),
                 Rotation: 0.0,
                 Side: OverflowSide.Top));
         }
 
         if (overflow.Bottom > 0.0)
         {
-            var markerRect = new Rect(
+            var markerRect = DartGeometry.RectFromLTWH(
                 0.0,
                 containerRect.Height * (1.0 - IndicatorFraction),
                 containerRect.Width,
@@ -143,8 +143,8 @@ internal sealed class DebugOverflowIndicator : IDisposable
             regions.Add(new OverflowRegionData(
                 Rect: markerRect,
                 Label: $"BOTTOM OVERFLOWED BY {FormatPixels(overflow.Bottom)} PIXELS",
-                LabelOffset: new Point(markerRect.Center.X, markerRect.Bottom)
-                             - new Point(0.0, IndicatorFontSizePixels + IndicatorLabelPaddingPixels),
+                LabelOffset: new Offset(markerRect.Center.Dx, markerRect.Bottom)
+                             - new Offset(0.0, IndicatorFontSizePixels + IndicatorLabelPaddingPixels),
                 Rotation: 0.0,
                 Side: OverflowSide.Bottom));
         }
@@ -222,7 +222,7 @@ internal sealed class DebugOverflowIndicator : IDisposable
     public void PaintOverflowIndicator(
         RenderObject self,
         PaintingContext context,
-        Point offset,
+        Offset offset,
         Rect containerRect,
         Rect childRect,
         List<DiagnosticsNode>? overflowHints = null)
@@ -237,7 +237,7 @@ internal sealed class DebugOverflowIndicator : IDisposable
         List<OverflowRegionData> overflowRegions = CalculateOverflowRegions(overflow, containerRect);
         foreach (OverflowRegionData region in overflowRegions)
         {
-            context.Canvas.DrawRectangle(IndicatorPaint, null, region.Rect.Translate((Vector)offset));
+            context.Canvas.DrawRectangle(IndicatorPaint, null, region.Rect.Shift((Offset)offset));
             TextPainter label = _indicatorLabel[(int)region.Side];
             var textSpan = label.Text as TextSpan;
             if (textSpan?.Text != region.Label)
@@ -246,11 +246,11 @@ internal sealed class DebugOverflowIndicator : IDisposable
                 label.Layout();
             }
 
-            Point labelOffset = region.LabelOffset + offset;
-            var centerOffset = new Point(-label.Width / 2.0, 0.0);
-            var textBackgroundRect = new Rect(centerOffset, label.Size);
+            Offset labelOffset = region.LabelOffset + offset;
+            var centerOffset = new Offset(-label.Width / 2.0, 0.0);
+            var textBackgroundRect = DartGeometry.RectFromOffsetAndSize(centerOffset, label.Size);
             context.Canvas.Save();
-            context.Canvas.Translate(labelOffset.X, labelOffset.Y);
+            context.Canvas.Translate(labelOffset.Dx, labelOffset.Dy);
             context.Canvas.Rotate(region.Rotation);
             context.Canvas.DrawRectangle(LabelBackgroundPaint, null, textBackgroundRect);
             label.Paint(context.Canvas, centerOffset);
@@ -286,7 +286,7 @@ internal sealed class DebugOverflowIndicator : IDisposable
     private readonly record struct OverflowRegionData(
         Rect Rect,
         string Label,
-        Point LabelOffset,
+        Offset LabelOffset,
         double Rotation,
         OverflowSide Side);
 }

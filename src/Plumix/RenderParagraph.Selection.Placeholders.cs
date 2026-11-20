@@ -50,7 +50,7 @@ internal sealed partial class SelectableFragment
         return originParagraph ?? _paragraph;
     }
 
-    private (RenderParagraph Paragraph, Point LocalPosition)? GetParagraphContainingPosition(Point globalPosition)
+    private (RenderParagraph Paragraph, Offset LocalPosition)? GetParagraphContainingPosition(Offset globalPosition)
     {
         RenderObject? current = _paragraph;
         while (current is not null)
@@ -59,7 +59,7 @@ internal sealed partial class SelectableFragment
             {
                 Matrix4 transform = candidate.GetTransformTo(null);
                 transform.Invert();
-                Point localPosition = MatrixUtils.TransformPoint(transform, globalPosition);
+                Offset localPosition = MatrixUtils.TransformPoint(transform, globalPosition);
                 if (SelectionUtils.RectContains(candidate.PaintBounds, localPosition))
                 {
                     return (candidate, localPosition);
@@ -75,13 +75,13 @@ internal sealed partial class SelectableFragment
     {
         Matrix4 transform = _paragraph.GetTransformTo(targetParagraph);
         Rect bounds = _paragraph.PaintBounds;
-        var centerLeft = new Point(bounds.Left, bounds.Center.Y);
-        Point position = MatrixUtils.TransformPoint(transform, centerLeft);
+        var centerLeft = new Offset(bounds.Left, bounds.Center.Dy);
+        Offset position = MatrixUtils.TransformPoint(transform, centerLeft);
         return targetParagraph.GetPositionForOffset(position);
     }
 
     private SelectionResult? UpdateSelectionStartEdgeAtPlaceholderByMultiSelectableTextBoundary(
-        Point globalPosition,
+        Offset globalPosition,
         bool paragraphContainsPosition,
         TextPosition position,
         TextPosition? existingSelectionStart,
@@ -106,7 +106,7 @@ internal sealed partial class SelectableFragment
 
             Matrix4 originTransform = originParagraph.GetTransformTo(null);
             originTransform.Invert();
-            Point originParagraphLocalPosition = MatrixUtils.TransformPoint(
+            Offset originParagraphLocalPosition = MatrixUtils.TransformPoint(
                 originTransform,
                 globalPosition);
             bool positionWithinOriginParagraph = SelectionUtils.RectContains(
@@ -193,7 +193,7 @@ internal sealed partial class SelectableFragment
             }
             else
             {
-                Point adjustedOffset = SelectionUtils.AdjustDragOffset(
+                Offset adjustedOffset = SelectionUtils.AdjustDragOffset(
                     originParagraph.PaintBounds,
                     originParagraphLocalPosition,
                     _paragraph.TextDirection);
@@ -252,7 +252,7 @@ internal sealed partial class SelectableFragment
 
             if (existingSelectionEnd != null)
             {
-                (RenderParagraph Paragraph, Point LocalPosition)? targetDetails =
+                (RenderParagraph Paragraph, Offset LocalPosition)? targetDetails =
                     GetParagraphContainingPosition(globalPosition);
                 if (targetDetails == null)
                 {
@@ -343,7 +343,7 @@ internal sealed partial class SelectableFragment
     }
 
     private SelectionResult? UpdateSelectionEndEdgeAtPlaceholderByMultiSelectableTextBoundary(
-        Point globalPosition,
+        Offset globalPosition,
         bool paragraphContainsPosition,
         TextPosition position,
         TextPosition? existingSelectionStart,
@@ -368,7 +368,7 @@ internal sealed partial class SelectableFragment
 
             Matrix4 originTransform = originParagraph.GetTransformTo(null);
             originTransform.Invert();
-            Point originParagraphLocalPosition = MatrixUtils.TransformPoint(
+            Offset originParagraphLocalPosition = MatrixUtils.TransformPoint(
                 originTransform,
                 globalPosition);
             bool positionWithinOriginParagraph = SelectionUtils.RectContains(
@@ -455,7 +455,7 @@ internal sealed partial class SelectableFragment
             }
             else
             {
-                Point adjustedOffset = SelectionUtils.AdjustDragOffset(
+                Offset adjustedOffset = SelectionUtils.AdjustDragOffset(
                     originParagraph.PaintBounds,
                     originParagraphLocalPosition,
                     _paragraph.TextDirection);
@@ -514,7 +514,7 @@ internal sealed partial class SelectableFragment
 
             if (existingSelectionStart != null)
             {
-                (RenderParagraph Paragraph, Point LocalPosition)? targetDetails =
+                (RenderParagraph Paragraph, Offset LocalPosition)? targetDetails =
                     GetParagraphContainingPosition(globalPosition);
                 if (targetDetails == null)
                 {

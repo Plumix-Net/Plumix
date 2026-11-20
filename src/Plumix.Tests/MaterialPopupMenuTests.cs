@@ -215,8 +215,8 @@ public sealed class MaterialPopupMenuTests : IDisposable
         var semantics = harness.PumpAndGetSemantics(new Size(500, 360));
 
         var layout = Assert.Single(FindDescendants<RenderPopupMenuPositionLayout>(harness.RenderView));
-        Assert.Equal(40, ((BoxParentData)layout.Child!.parentData!).offset.X, precision: 3);
-        Assert.Equal(30, ((BoxParentData)layout.Child.parentData!).offset.Y, precision: 3);
+        Assert.Equal(40, ((BoxParentData)layout.Child!.parentData!).offset.Dx, precision: 3);
+        Assert.Equal(30, ((BoxParentData)layout.Child.parentData!).offset.Dy, precision: 3);
         Assert.Contains(MaterialSurfaceProbe.FindAll(harness.RenderView), box =>
             box.Color == ThemeData.Light.ColorScheme.SurfaceContainer
             && box.BorderRadius == BorderRadius.Circular(4)
@@ -354,7 +354,7 @@ public sealed class MaterialPopupMenuTests : IDisposable
                         canceledCompletion.TrySetResult();
                     },
                     position: PopupMenuPosition.Under,
-                    offset: new Vector(5, 7),
+                    offset: new Offset(5, 7),
                     child: new SizedBox(width: 80, height: 32, child: new Text("OPEN"))))))));
         var initialSemantics = harness.PumpAndGetSemantics(new Size(500, 360));
         var openAction = FindSemantics(initialSemantics, node => node.Actions.HasFlag(SemanticsActions.Tap));
@@ -630,7 +630,7 @@ public sealed class MaterialPopupMenuTests : IDisposable
             Size: new Size(800, 600),
             DisplayFeatures:
             [
-                new DisplayFeature(new Rect(390, 0, 20, 600), DisplayFeatureType.Hinge),
+                new DisplayFeature(DartGeometry.RectFromLTWH(390, 0, 20, 600), DisplayFeatureType.Hinge),
             ]);
         using var harness = new WidgetRenderHarness(new Directionality(
             TextDirection.Rtl,
@@ -658,8 +658,8 @@ public sealed class MaterialPopupMenuTests : IDisposable
 
         RenderPopupMenuPositionLayout layout = Assert.Single(
             FindDescendants<RenderPopupMenuPositionLayout>(harness.RenderView));
-        Point offset = ((BoxParentData)layout.Child!.parentData!).offset;
-        Assert.Equal(382, offset.X + layout.Child.Size.Width, precision: 3);
+        Offset offset = ((BoxParentData)layout.Child!.parentData!).offset;
+        Assert.Equal(382, offset.Dx + layout.Child.Size.Width, precision: 3);
         Assert.Contains(FindDescendants<RenderPadding>(harness.RenderView), padding =>
             padding.Padding == EdgeInsets.FromLTRB(4, 6, 20, 10));
     }
@@ -761,7 +761,7 @@ public sealed class MaterialPopupMenuTests : IDisposable
         enabledListener.OnEnter?.Invoke(new PointerEnterEvent(
             101,
             PointerDeviceKind.Mouse,
-            new Point(10, 10),
+            new Offset(10, 10),
             PointerButtons.None,
             DateTime.UtcNow));
         enabled.Pump(new Size(200, 80));

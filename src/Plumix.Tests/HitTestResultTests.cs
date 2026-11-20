@@ -85,8 +85,8 @@ public sealed class HitTestResultTests
 
         Matrix4 m1 = Matrix4.RotationZ(1);
         Matrix4 m2 = Matrix4.Diagonal3Values(1.1, 1.2, 1.0);
-        var o3 = new Point(10, 20);
-        Matrix4 m3 = Matrix4.TranslationValues(o3.X, o3.Y, 0.0);
+        var o3 = new Offset(10, 20);
+        Matrix4 m3 = Matrix4.TranslationValues(o3.Dx, o3.Dy, 0.0);
 
         // An offset pushed as the first element is the translation itself.
         result.PublicPushOffset(o3);
@@ -146,11 +146,11 @@ public sealed class HitTestResultTests
         var result = new BoxHitTestResult();
 
         bool isHit = result.AddWithPaintOffset(
-            new Point(10, 20),
-            new Point(30, 45),
+            new Offset(10, 20),
+            new Offset(30, 45),
             (hitResult, transformed) =>
             {
-                Assert.Equal(new Point(20, 25), transformed);
+                Assert.Equal(new Offset(20, 25), transformed);
                 hitResult.Add(new HitTestEntry(target));
                 return true;
             });
@@ -166,10 +166,10 @@ public sealed class HitTestResultTests
 
         Assert.True(result.AddWithPaintOffset(
             null,
-            new Point(30, 45),
+            new Offset(30, 45),
             (hitResult, transformed) =>
             {
-                Assert.Equal(new Point(30, 45), transformed);
+                Assert.Equal(new Offset(30, 45), transformed);
                 hitResult.Add(new HitTestEntry(new DummyHitTestTarget()));
                 return true;
             }));
@@ -185,10 +185,10 @@ public sealed class HitTestResultTests
 
         Assert.True(result.AddWithPaintTransform(
             paintTransform,
-            new Point(30, 40),
+            new Offset(30, 40),
             (hitResult, transformed) =>
             {
-                Assert.Equal(new Point(15, 20), transformed);
+                Assert.Equal(new Offset(15, 20), transformed);
                 hitResult.Add(new HitTestEntry(new DummyHitTestTarget()));
                 return true;
             }));
@@ -208,7 +208,7 @@ public sealed class HitTestResultTests
 
         Assert.False(result.AddWithPaintTransform(
             Matrix4.Diagonal3Values(0.0, 0.0, 1.0),
-            new Point(30, 40),
+            new Offset(30, 40),
             (_, _) =>
             {
                 ran = true;
@@ -230,12 +230,12 @@ public sealed class HitTestResultTests
                 hitResult.Add(new HitTestEntry(new DummyHitTestTarget()));
                 return true;
             },
-            paintOffset: new Point(5, 7)));
+            paintOffset: new Offset(5, 7)));
         Assert.Equal(Matrix4.TranslationValues(-5, -7, 0), result.Path[0].Transform);
 
         Assert.Throws<Plumix.Foundation.AssertionError>(() => result.AddWithOutOfBandPosition(
             _ => true,
-            paintOffset: new Point(1, 1),
+            paintOffset: new Offset(1, 1),
             rawTransform: Matrix4.Identity()));
 
         Assert.Throws<Plumix.Foundation.AssertionError>(() => result.AddWithOutOfBandPosition(_ => true));
@@ -250,13 +250,13 @@ public sealed class HitTestResultTests
         PipelineOwner pipeline = BuildPipeline(transform);
 
         var result = new BoxHitTestResult();
-        Assert.True(pipeline.Root.HitTest(result, new Point(24, 26)));
+        Assert.True(pipeline.Root.HitTest(result, new Offset(24, 26)));
 
         HitTestEntry leafEntry = result.Path.First(entry => ReferenceEquals(entry.Target, leaf));
         Assert.NotNull(leafEntry.Transform);
 
         // Global (24, 26) is (12, 13) after the 2x scale and (2, 3) after the padding.
-        Assert.Equal(new Point(2, 3), MatrixUtils.TransformPoint(leafEntry.Transform!, new Point(24, 26)));
+        Assert.Equal(new Offset(2, 3), MatrixUtils.TransformPoint(leafEntry.Transform!, new Offset(24, 26)));
     }
 
     [Fact]
@@ -265,8 +265,8 @@ public sealed class HitTestResultTests
         GestureBinding binding = GestureBinding.Instance;
         binding.ResetForTests();
 
-        Point? localPosition = null;
-        Point? localDelta = null;
+        Offset? localPosition = null;
+        Offset? localDelta = null;
         var listener = new RenderPointerListener(
             behavior: HitTestBehavior.Opaque,
             onPointerDown: @event => localPosition = @event.LocalPosition,
@@ -285,26 +285,26 @@ public sealed class HitTestResultTests
             new PointerDownEvent(
                 pointer: 7,
                 kind: PointerDeviceKind.Touch,
-                position: new Point(40, 50),
+                position: new Offset(40, 50),
                 buttons: PointerButtons.Primary,
                 timestampUtc: DateTime.UtcNow));
 
         // The root is sized to its 50x60 child and its bottom edge is outside it, so the pointer stays
         // inside. (40, 50) / 2 = (20, 25); minus the (10, 20) padding = (10, 5).
-        Assert.Equal(new Point(10, 5), localPosition);
+        Assert.Equal(new Offset(10, 5), localPosition);
 
         binding.HandlePointerEvent(
             pipeline.Root,
             new PointerMoveEvent(
                 pointer: 7,
                 kind: PointerDeviceKind.Touch,
-                position: new Point(60, 50),
+                position: new Offset(60, 50),
                 buttons: PointerButtons.Primary,
                 timestampUtc: DateTime.UtcNow));
 
         // The 20 global pixels of travel are 10 local pixels under the 2x scale.
-        Assert.Equal(new Point(20, 5), localPosition);
-        Assert.Equal(new Point(10, 0), localDelta);
+        Assert.Equal(new Offset(20, 5), localPosition);
+        Assert.Equal(new Offset(10, 0), localDelta);
 
         binding.ResetForTests();
     }
@@ -317,8 +317,8 @@ public sealed class HitTestResultTests
 
         var recognizer = new HorizontalDragGestureRecognizer();
         int starts = 0;
-        Point? updateGlobalPosition = null;
-        Point? updateLocalPosition = null;
+        Offset? updateGlobalPosition = null;
+        Offset? updateLocalPosition = null;
         recognizer.OnStart = _ => starts += 1;
         recognizer.OnUpdate = details =>
         {
@@ -339,7 +339,7 @@ public sealed class HitTestResultTests
             new PointerDownEvent(
                 pointer: 9,
                 kind: PointerDeviceKind.Touch,
-                position: new Point(20, 20),
+                position: new Offset(20, 20),
                 buttons: PointerButtons.Primary,
                 timestampUtc: start));
 
@@ -348,14 +348,14 @@ public sealed class HitTestResultTests
             new PointerMoveEvent(
                 pointer: 9,
                 kind: PointerDeviceKind.Touch,
-                position: new Point(60, 20),
+                position: new Offset(60, 20),
                 buttons: PointerButtons.Primary,
                 timestampUtc: start.AddMilliseconds(16)));
 
         // 40 global pixels beat the 18-pixel touch slop even though they are 20 local pixels.
         Assert.Equal(1, starts);
-        Assert.Equal(new Point(60, 20), updateGlobalPosition);
-        Assert.Equal(new Point(30, 10), updateLocalPosition);
+        Assert.Equal(new Offset(60, 20), updateGlobalPosition);
+        Assert.Equal(new Offset(30, 10), updateLocalPosition);
 
         recognizer.Dispose();
         binding.ResetForTests();
@@ -402,7 +402,7 @@ public sealed class HitTestResultTests
 
         public void PublicPushTransform(Matrix4 transform) => PushTransform(transform);
 
-        public void PublicPushOffset(Point offset) => PushOffset(offset);
+        public void PublicPushOffset(Offset offset) => PushOffset(offset);
 
         public void PublicPopTransform() => PopTransform();
     }
@@ -414,9 +414,9 @@ public sealed class HitTestResultTests
             Size = Constraints.Constrain(size);
         }
 
-        protected override bool HitTestSelf(Point position) => true;
+        protected override bool HitTestSelf(Offset position) => true;
 
-        public override void Paint(PaintingContext ctx, Point offset)
+        public override void Paint(PaintingContext ctx, Offset offset)
         {
         }
     }

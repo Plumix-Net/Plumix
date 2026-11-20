@@ -30,7 +30,7 @@ public class RenderRepaintBoundary : RenderProxyBox
         }
 
         var offsetLayer = (OffsetLayer)Layer!;
-        return offsetLayer.ToImage(new Avalonia.Rect(default, Size), pixelRatio: pixelRatio);
+        return offsetLayer.ToImage(DartGeometry.RectFromOffsetAndSize(default, Size), pixelRatio: pixelRatio);
     }
 
     /// <summary>Capture an image of the current state of this render object and its children, synchronously.</summary>
@@ -43,7 +43,7 @@ public class RenderRepaintBoundary : RenderProxyBox
         }
 
         var offsetLayer = (OffsetLayer)Layer!;
-        return offsetLayer.ToImageSync(new Avalonia.Rect(default, Size), pixelRatio: pixelRatio);
+        return offsetLayer.ToImageSync(DartGeometry.RectFromOffsetAndSize(default, Size), pixelRatio: pixelRatio);
     }
 
     /// <summary>

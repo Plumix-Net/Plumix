@@ -1084,8 +1084,8 @@ internal sealed class SwitchConfigCupertino : SwitchConfig
 
     private static readonly IReadOnlyList<BoxShadow> CupertinoThumbShadow =
     [
-        new BoxShadow(Color.FromARGB(0x26, 0x00, 0x00, 0x00), new Point(0.0, 3.0), 8.0),
-        new BoxShadow(Color.FromARGB(0x0F, 0x00, 0x00, 0x00), new Point(0.0, 3.0), 1.0),
+        new BoxShadow(Color.FromARGB(0x26, 0x00, 0x00, 0x00), new Offset(0.0, 3.0), 8.0),
+        new BoxShadow(Color.FromARGB(0x0F, 0x00, 0x00, 0x00), new Offset(0.0, 3.0), 1.0),
     ];
 
     private readonly ColorScheme _colors;
@@ -1447,7 +1447,7 @@ internal sealed class SwitchPainter : ToggleablePainter
         Color hoverColor,
         Color focusColor,
         double splashRadius,
-        Point? downPosition,
+        Offset? downPosition,
         bool isFocused,
         bool isHovered,
         Color activeColor,
@@ -1645,23 +1645,23 @@ internal sealed class SwitchPainter : ToggleablePainter
             ? _onInactiveThumbImageError
             : _onActiveThumbImageError;
 
-        var trackPaintOffset = new Point(
+        var trackPaintOffset = new Offset(
             (size.Width - _trackWidth) / 2.0,
             (size.Height - _trackHeight) / 2.0);
         double trackRadius = _trackHeight / 2.0;
         double additionalThumbRadius = (thumbSize.Height / 2.0) - trackRadius;
         double horizontalProgress = visualPosition * (_trackInnerLength - _pressedThumbExtension);
-        var thumbPaintOffset = new Point(
-            trackPaintOffset.X + trackRadius + (_pressedThumbExtension / 2.0)
+        var thumbPaintOffset = new Offset(
+            trackPaintOffset.Dx + trackRadius + (_pressedThumbExtension / 2.0)
             - (thumbSize.Width / 2.0) + horizontalProgress,
-            trackPaintOffset.Y - additionalThumbRadius);
-        var radialReactionOrigin = new Point(
-            thumbPaintOffset.X + (thumbSize.Height / 2.0),
+            trackPaintOffset.Dy - additionalThumbRadius);
+        var radialReactionOrigin = new Offset(
+            thumbPaintOffset.Dx + (thumbSize.Height / 2.0),
             size.Height / 2.0);
 
-        var trackRect = new Rect(
-            trackPaintOffset.X,
-            trackPaintOffset.Y,
+        var trackRect = DartGeometry.RectFromLTWH(
+            trackPaintOffset.Dx,
+            trackPaintOffset.Dy,
             _trackWidth,
             _trackHeight);
         context.Canvas.DrawRRect(
@@ -1670,9 +1670,9 @@ internal sealed class SwitchPainter : ToggleablePainter
             null);
         if (trackOutlineColor != null)
         {
-            var outlineRect = new Rect(
-                trackPaintOffset.X + 1.0,
-                trackPaintOffset.Y + 1.0,
+            var outlineRect = DartGeometry.RectFromLTWH(
+                trackPaintOffset.Dx + 1.0,
+                trackPaintOffset.Dy + 1.0,
                 _trackWidth - 2.0,
                 _trackHeight - 2.0);
             context.Canvas.DrawRRect(
@@ -1696,7 +1696,7 @@ internal sealed class SwitchPainter : ToggleablePainter
 
             context.PushClipRRect(
                 false,
-                new Point(0, 0),
+                new Offset(0, 0),
                 trackRect,
                 RRect.FromRectAndRadius(trackRect, trackRadius),
                 (clipped, _) =>
@@ -1776,7 +1776,7 @@ internal sealed class SwitchPainter : ToggleablePainter
 
     private void PaintThumb(
         PaintingContext context,
-        Point offset,
+        Offset offset,
         Size thumbSize,
         double colorValue,
         Color thumbColor,
@@ -1810,7 +1810,7 @@ internal sealed class SwitchPainter : ToggleablePainter
 
             if (icon?.IconData is not null)
             {
-                var thumbBounds = new Rect(offset.X, offset.Y, thumbSize.Width, thumbSize.Height);
+                var thumbBounds = DartGeometry.RectFromLTWH(offset.Dx, offset.Dy, thumbSize.Width, thumbSize.Height);
                 PaintIcon(context, thumbBounds, icon, colorValue);
             }
         }
@@ -1832,13 +1832,13 @@ internal sealed class SwitchPainter : ToggleablePainter
             Shadows: _isCupertino ? null : _thumbShadow);
     }
 
-    private void PaintCupertinoThumbShadowAndBorder(Canvas canvas, Point thumbPaintOffset, Size thumbSize)
+    private void PaintCupertinoThumbShadowAndBorder(Canvas canvas, Offset thumbPaintOffset, Size thumbSize)
     {
         RRect thumbBounds = RRect.FromLTRBR(
-            thumbPaintOffset.X,
-            thumbPaintOffset.Y,
-            thumbPaintOffset.X + thumbSize.Width,
-            thumbPaintOffset.Y + thumbSize.Height,
+            thumbPaintOffset.Dx,
+            thumbPaintOffset.Dy,
+            thumbPaintOffset.Dx + thumbSize.Width,
+            thumbPaintOffset.Dy + thumbSize.Height,
             Radius.Circular(thumbSize.Height / 2.0));
         if (_thumbShadow is not null)
         {
@@ -1873,7 +1873,7 @@ internal sealed class SwitchPainter : ToggleablePainter
             char.ConvertFromUtf32(icon.IconData!.CodePoint),
             style: style);
         _textPainter.Layout();
-        var offset = new Point(
+        var offset = new Offset(
             thumbBounds.Left + ((thumbBounds.Width - iconSize) / 2.0),
             thumbBounds.Top + ((thumbBounds.Height - iconSize) / 2.0));
         _textPainter.Paint(context.Canvas, offset);

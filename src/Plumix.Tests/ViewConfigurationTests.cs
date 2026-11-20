@@ -240,7 +240,7 @@ public sealed class ViewConfigurationTests
         Size logicalSize = view.Size;
         double devicePixelRatio = view.Configuration.DevicePixelRatio;
         Assert.Equal(
-            new Rect(0, 0, logicalSize.Width * devicePixelRatio, logicalSize.Height * devicePixelRatio),
+            DartGeometry.RectFromLTWH(0, 0, logicalSize.Width * devicePixelRatio, logicalSize.Height * devicePixelRatio),
             view.PaintBounds);
     }
 
@@ -300,14 +300,14 @@ public sealed class ViewConfigurationTests
         // The view gives its child plain parent data: it is a bare RenderObject, not a RenderBox.
         Assert.IsNotType<BoxParentData>(center.parentData);
         // Dart's `semanticBounds`: the logical box under the root transform.
-        Assert.Equal(new Rect(0, 0, 200, 100), view.SemanticBoundsForSemantics);
+        Assert.Equal(DartGeometry.RectFromLTWH(0, 0, 200, 100), view.SemanticBoundsForSemantics);
 
         Matrix4 toView = child.GetTransformTo(view);
-        Assert.Equal(new Point(70, 30), MatrixUtils.TransformPoint(toView, new Point(0, 0)));
+        Assert.Equal(new Offset(70, 30), MatrixUtils.TransformPoint(toView, new Offset(0, 0)));
         // A null target stops below the root, so global coordinates stay in logical pixels.
-        Assert.Equal(new Point(35, 15), MatrixUtils.TransformPoint(child.GetTransformTo(null), new Point(0, 0)));
-        Assert.Equal(new Point(35, 15), child.LocalToGlobal(new Point(0, 0)));
-        Assert.Equal(new Point(0, 0), child.GlobalToLocal(new Point(35, 15)));
+        Assert.Equal(new Offset(35, 15), MatrixUtils.TransformPoint(child.GetTransformTo(null), new Offset(0, 0)));
+        Assert.Equal(new Offset(35, 15), child.LocalToGlobal(new Offset(0, 0)));
+        Assert.Equal(new Offset(0, 0), child.GlobalToLocal(new Offset(35, 15)));
     }
 
     [Fact]
@@ -323,19 +323,19 @@ public sealed class ViewConfigurationTests
 
         // Positions are logical: (60, 40) is inside the 100x50 logical view.
         var inside = new HitTestResult();
-        Assert.True(view.HitTest(inside, new Point(60, 40)));
+        Assert.True(view.HitTest(inside, new Offset(60, 40)));
         Assert.Equal(2, inside.Path.Count);
         Assert.IsType<RenderPointerListener>(inside.Path[0].Target);
         Assert.Same(view, inside.Path[1].Target);
 
         // Dart's `hitTest` has no bounds check: a miss still reports the view and returns true.
         var outside = new HitTestResult();
-        Assert.True(view.HitTest(outside, new Point(500, 500)));
+        Assert.True(view.HitTest(outside, new Offset(500, 500)));
         Assert.Same(view, Assert.Single(outside.Path).Target);
 
         var empty = new RenderView(new FlutterView(new Size(10, 10)));
         var emptyResult = new HitTestResult();
-        Assert.True(empty.HitTest(emptyResult, new Point(-1, -1)));
+        Assert.True(empty.HitTest(emptyResult, new Offset(-1, -1)));
         Assert.Same(empty, Assert.Single(emptyResult.Path).Target);
     }
 

@@ -71,11 +71,11 @@ internal sealed class DecoratorHarness : IDisposable
 
     public void Dispose() => _root.UnmountRoot();
 
-    public static Point OffsetOf(RenderBox? box) =>
+    public static Offset OffsetOf(RenderBox? box) =>
         box is null ? default : ((BoxParentData)box.parentData!).offset;
 
     public static Rect RectOf(RenderBox? box) =>
-        box is null ? default : new Rect(OffsetOf(box), box.Size);
+        box is null ? default : DartGeometry.RectFromOffsetAndSize(OffsetOf(box), box.Size);
 
     public static T? Find<T>(RenderObject? root) where T : RenderObject
     {

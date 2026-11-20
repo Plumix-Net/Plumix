@@ -25,7 +25,7 @@ public abstract class ToggleableState : State
     private CurvedAnimation? _reactionFocusFade;
     private bool _hovering;
     private bool _focused;
-    private Point? _downPosition;
+    private Offset? _downPosition;
     private Action? _onTap;
 
     protected abstract bool IsInteractive { get; }
@@ -46,7 +46,7 @@ public abstract class ToggleableState : State
 
     protected Animation<double> ReactionFocusFade => _reactionFocusFade!;
 
-    protected Point? DownPosition => _downPosition;
+    protected Offset? DownPosition => _downPosition;
 
     protected bool IsFocused => _focused;
 
@@ -410,7 +410,7 @@ public abstract class ToggleablePainter : CustomPainter
     private Color? _hoverColor;
     private Color? _focusColor;
     private double _splashRadius;
-    private Point? _downPosition;
+    private Offset? _downPosition;
     private bool _isFocused;
     private bool _isHovered;
     private bool _isActive;
@@ -497,7 +497,7 @@ public abstract class ToggleablePainter : CustomPainter
         set => SetField(ref _splashRadius, value);
     }
 
-    public Point? DownPosition
+    public Offset? DownPosition
     {
         get => _downPosition;
         set => SetField(ref _downPosition, value);
@@ -528,8 +528,8 @@ public abstract class ToggleablePainter : CustomPainter
 
     protected void PaintRadialReaction(
         PaintingContext context,
-        Point origin,
-        Point offset = default)
+        Offset origin,
+        Offset offset = default)
     {
         if (Reaction.Status.IsDismissed()
             && ReactionFocusFade.Status.IsDismissed()
@@ -552,7 +552,7 @@ public abstract class ToggleablePainter : CustomPainter
         context.Canvas.DrawCircle(
             new SolidColorBrush(color),
             null,
-            new Point(origin.X + offset.X, origin.Y + offset.Y),
+            new Offset(origin.Dx + offset.Dx, origin.Dy + offset.Dy),
             reactionRadius);
     }
 

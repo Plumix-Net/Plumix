@@ -8,7 +8,7 @@ namespace Plumix.Tests;
 
 public sealed class CurvesDartParityTests
 {
-    private static readonly Point Zero = new(0.0, 0.0);
+    private static readonly Offset Zero = new(0.0, 0.0);
 
     // flutter_test's `hasOneLineDescription`.
     private static void AssertOneLineDescription(object value)
@@ -61,7 +61,7 @@ public sealed class CurvesDartParityTests
             Assert.StartsWith("Split#", new Split(0.25).ToString());
         }
 
-        Assert.Equal("[(0.25, 0.50), 0.13]", new Curve2DSample(0.125, new Point(0.25, 0.5)).ToString());
+        Assert.Equal("[(0.25, 0.50), 0.13]", new Curve2DSample(0.125, new Offset(0.25, 0.5)).ToString());
     }
 
     [Fact]
@@ -197,11 +197,11 @@ public sealed class CurvesDartParityTests
     public void ThreePointCubicInterpolatesMidpoint()
     {
         var test = new ThreePointCubic(
-            new Point(0.05, 0),
-            new Point(0.133333, 0.06),
-            new Point(0.166666, 0.4),
-            new Point(0.208333, 0.82),
-            new Point(0.25, 1));
+            new Offset(0.05, 0),
+            new Offset(0.133333, 0.06),
+            new Offset(0.166666, 0.4),
+            new Offset(0.208333, 0.82),
+            new Offset(0.25, 1));
 
         Assert.Equal(0.4, test.Transform(0.166666));
     }
@@ -302,7 +302,7 @@ public sealed class CurvesDartParityTests
         Assert.Equal(d, cubic.D);
     }
 
-    private static readonly Point[] SplinePoints =
+    private static readonly Offset[] SplinePoints =
     [
         new(0.0, 0.0), new(0.01, 0.25), new(0.2, 0.25), new(0.33, 0.25), new(0.5, 1.0), new(0.66, 0.75),
         new(1.0, 1.0),
@@ -311,17 +311,17 @@ public sealed class CurvesDartParityTests
     private static void AssertSplineValues(CatmullRomSpline curve)
     {
         const double tolerance = 1e-6;
-        AssertPoint(new Point(0.0, 0.0), curve.Transform(0.0), tolerance);
-        AssertPoint(new Point(0.0966945, 0.2626806), curve.Transform(0.25), tolerance);
-        AssertPoint(new Point(0.33, 0.25), curve.Transform(0.5), tolerance);
-        AssertPoint(new Point(0.570260, 0.883085), curve.Transform(0.75), tolerance);
-        AssertPoint(new Point(1.0, 1.0), curve.Transform(1.0), tolerance);
+        AssertPoint(new Offset(0.0, 0.0), curve.Transform(0.0), tolerance);
+        AssertPoint(new Offset(0.0966945, 0.2626806), curve.Transform(0.25), tolerance);
+        AssertPoint(new Offset(0.33, 0.25), curve.Transform(0.5), tolerance);
+        AssertPoint(new Offset(0.570260, 0.883085), curve.Transform(0.75), tolerance);
+        AssertPoint(new Offset(1.0, 1.0), curve.Transform(1.0), tolerance);
     }
 
-    private static void AssertPoint(Point expected, Point actual, double tolerance)
+    private static void AssertPoint(Offset expected, Offset actual, double tolerance)
     {
-        Assert.Equal(expected.X, actual.X, tolerance);
-        Assert.Equal(expected.Y, actual.Y, tolerance);
+        Assert.Equal(expected.Dx, actual.Dx, tolerance);
+        Assert.Equal(expected.Dy, actual.Dy, tolerance);
     }
 
     [Fact]
@@ -329,8 +329,8 @@ public sealed class CurvesDartParityTests
     {
         AssertSplineValues(new CatmullRomSpline(
             SplinePoints,
-            startHandle: new Point(0.0, -0.3),
-            endHandle: new Point(1.3, 1.3)));
+            startHandle: new Offset(0.0, -0.3),
+            endHandle: new Offset(1.3, 1.3)));
     }
 
     [Fact]
@@ -338,15 +338,15 @@ public sealed class CurvesDartParityTests
     {
         AssertSplineValues(CatmullRomSpline.Precompute(
             SplinePoints,
-            startHandle: new Point(0.0, -0.3),
-            endHandle: new Point(1.3, 1.3)));
+            startHandle: new Offset(0.0, -0.3),
+            endHandle: new Offset(1.3, 1.3)));
     }
 
     private static IEnumerable<Action> SplineContractViolations(
-        Func<IReadOnlyList<Point>, double, Point?, Point?, CatmullRomSpline> create,
+        Func<IReadOnlyList<Offset>, double, Offset?, Offset?, CatmullRomSpline> create,
         bool sample)
     {
-        Point[] four = [Zero, Zero, Zero, Zero];
+        Offset[] four = [Zero, Zero, Zero, Zero];
         yield return () => create([], 0.0, null, null);
         yield return () => create([Zero], 0.0, null, null);
         yield return () => create([Zero, Zero], 0.0, null, null);
@@ -356,12 +356,12 @@ public sealed class CurvesDartParityTests
 
         Action Sampled(Func<CatmullRomSpline> build) => sample ? () => build().GenerateSamples() : () => build();
 
-        var infiniteX = new Point(double.PositiveInfinity, 0.0);
-        var infiniteY = new Point(0.0, double.PositiveInfinity);
+        var infiniteX = new Offset(double.PositiveInfinity, 0.0);
+        var infiniteY = new Offset(0.0, double.PositiveInfinity);
         yield return Sampled(() => create([infiniteX, Zero, Zero, Zero], 0.0, null, null));
         yield return Sampled(() => create([infiniteY, Zero, Zero, Zero], 0.0, null, null));
-        yield return Sampled(() => create(four, 0.0, new Point(0.0, double.PositiveInfinity), null));
-        yield return Sampled(() => create(four, 0.0, null, new Point(0.0, double.PositiveInfinity)));
+        yield return Sampled(() => create(four, 0.0, new Offset(0.0, double.PositiveInfinity), null));
+        yield return Sampled(() => create(four, 0.0, null, new Offset(0.0, double.PositiveInfinity)));
     }
 
     [DebugOnlyFact]
@@ -388,7 +388,7 @@ public sealed class CurvesDartParityTests
         }
     }
 
-    private static readonly Point[] CurvePoints = [new(0.2, 0.25), new(0.33, 0.25), new(0.5, 1.0), new(0.8, 0.75)];
+    private static readonly Offset[] CurvePoints = [new(0.2, 0.25), new(0.33, 0.25), new(0.5, 1.0), new(0.8, 0.75)];
 
     private static void AssertCatmullRomCurveValues(CatmullRomCurve curve)
     {
@@ -415,7 +415,7 @@ public sealed class CurvesDartParityTests
         AssertCatmullRomCurveValues(CatmullRomCurve.Precompute(CurvePoints));
     }
 
-    private static readonly Point[][] InvalidCurvePoints =
+    private static readonly Offset[][] InvalidCurvePoints =
     [
         // Not monotonically increasing in X.
         [new(0.2, 0.25), new(0.01, 0.25)],
@@ -436,7 +436,7 @@ public sealed class CurvesDartParityTests
         Assert.ThrowsAny<AssertionError>(() => new CatmullRomCurve([Zero]));
         Assert.ThrowsAny<AssertionError>(() => new CatmullRomCurve([Zero, Zero]));
 
-        foreach (Point[] points in InvalidCurvePoints)
+        foreach (Offset[] points in InvalidCurvePoints)
         {
             Assert.False(CatmullRomCurve.ValidateControlPoints(points));
             Assert.ThrowsAny<AssertionError>(() => new CatmullRomCurve(points));
@@ -450,7 +450,7 @@ public sealed class CurvesDartParityTests
         Assert.ThrowsAny<AssertionError>(() => CatmullRomCurve.Precompute([Zero]));
         Assert.ThrowsAny<AssertionError>(() => CatmullRomCurve.Precompute([Zero, Zero]));
 
-        foreach (Point[] points in InvalidCurvePoints)
+        foreach (Offset[] points in InvalidCurvePoints)
         {
             Assert.ThrowsAny<AssertionError>(() => CatmullRomCurve.Precompute(points));
         }
@@ -461,14 +461,14 @@ public sealed class CurvesDartParityTests
     {
         var reasons = new List<string>();
         Assert.False(CatmullRomCurve.ValidateControlPoints(
-            [new Point(0.2, 0.25), new Point(1.01, 0.25)],
+            [new Offset(0.2, 0.25), new Offset(1.01, 0.25)],
             reasons: reasons));
         Assert.Equal(
             "Control points must have X values between 0.0 and 1.0, exclusive. "
             + "Point 3 has an x value (1.01) which is outside the range.",
             Assert.Single(reasons));
 
-        AssertionError error = Assert.ThrowsAny<AssertionError>(() => new CatmullRomCurve([new Point(0.2, 0.25)]));
+        AssertionError error = Assert.ThrowsAny<AssertionError>(() => new CatmullRomCurve([new Offset(0.2, 0.25)]));
         Assert.Equal(
             "control points [Offset(0.2, 0.3)] could not be validated:\n"
             + "  There must be at least two points supplied to create a valid curve.",
@@ -480,10 +480,10 @@ public sealed class CurvesDartParityTests
     {
         var spline = new CatmullRomSpline(
             SplinePoints,
-            startHandle: new Point(0.0, -0.3),
-            endHandle: new Point(1.3, 1.3));
+            startHandle: new Offset(0.0, -0.3),
+            endHandle: new Offset(1.3, 1.3));
         double t = spline.FindInverse(0.33);
-        Assert.Equal(0.33, spline.Transform(t).X, 1e-5);
+        Assert.Equal(0.33, spline.Transform(t).Dx, 1e-5);
 
         List<Curve2DSample> samples = spline.GenerateSamples().ToList();
         Assert.Equal(0.0, samples[0].T);

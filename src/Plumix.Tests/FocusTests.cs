@@ -408,10 +408,10 @@ public sealed class FocusTests : IDisposable
     [Fact]
     public void FocusManager_DirectionalKeys_UseGeometryWhenTraversalRectsAvailable()
     {
-        var source = new FocusNode { TraversalRect = new Rect(0, 0, 20, 20) };
-        var right = new FocusNode { TraversalRect = new Rect(120, 0, 20, 20) };
-        var down = new FocusNode { TraversalRect = new Rect(0, 120, 20, 20) };
-        var diagonal = new FocusNode { TraversalRect = new Rect(120, 120, 20, 20) };
+        var source = new FocusNode { TraversalRect = DartGeometry.RectFromLTWH(0, 0, 20, 20) };
+        var right = new FocusNode { TraversalRect = DartGeometry.RectFromLTWH(120, 0, 20, 20) };
+        var down = new FocusNode { TraversalRect = DartGeometry.RectFromLTWH(0, 120, 20, 20) };
+        var diagonal = new FocusNode { TraversalRect = DartGeometry.RectFromLTWH(120, 120, 20, 20) };
 
         // `TraversalRect` (C#-only) overrides the render geometry, so the tree's own layout does not
         // matter; the widgets exist only so the nodes sit under the app's `FocusTraversalGroup`.

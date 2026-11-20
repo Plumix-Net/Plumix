@@ -168,7 +168,7 @@ internal sealed class ApngImageCodec : Codec
         }
 
         using var bitmap = new Bitmap(PixelFormat.Rgba8888, AlphaFormat.Premul, _canvas.GetPixels(),
-            new PixelSize(Width, Height), new Vector(96, 96), _canvas.RowBytes);
+            new PixelSize(Width, Height), new Offset(96, 96), _canvas.RowBytes);
         Bitmap image = bitmap.CreateScaledBitmap(TargetSize, BitmapInterpolationMode.HighQuality);
         if (disposal == 1)
         {

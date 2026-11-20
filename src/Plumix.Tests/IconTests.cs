@@ -88,8 +88,8 @@ public sealed class IconTests
         tester.PumpWidget(Wrap(new Icon(Glyph)));
         Assert.Equal(Variations(0.0, 400.0, 0.0, 48.0), Style(tester).FontVariations);
         Assert.Null(Style(tester).Shadows);
-        var themeShadows = new[] { new Shadow(color: Colors.Red, offset: new Point(2, 3), blurRadius: 4) };
-        var widgetShadows = new[] { new Shadow(color: Colors.Blue, offset: new Point(-1, 2), blurRadius: 2) };
+        var themeShadows = new[] { new Shadow(color: Colors.Red, offset: new Offset(2, 3), blurRadius: 4) };
+        var widgetShadows = new[] { new Shadow(color: Colors.Blue, offset: new Offset(-1, 2), blurRadius: 2) };
         var theme = new IconThemeData(Fill: 0.2, Weight: 3.0, Grade: 4.0, OpticalSize: 5.0, Shadows: themeShadows);
         tester.PumpWidget(Wrap(new IconTheme(theme, new Icon(Glyph))));
         Assert.Equal(Variations(0.2, 3.0, 4.0, 5.0), Style(tester).FontVariations);

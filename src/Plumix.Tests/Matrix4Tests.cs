@@ -42,7 +42,7 @@ public sealed class Matrix4Tests
         Matrix4 composed = Matrix4.TranslationValues(10.0, 0.0, 0.0);
         composed.Multiply(Matrix4.Diagonal3Values(2.0, 2.0, 1.0));
 
-        Assert.Equal(new Point(30.0, 20.0), MatrixUtils.TransformPoint(composed, new Point(10.0, 10.0)));
+        Assert.Equal(new Offset(30.0, 20.0), MatrixUtils.TransformPoint(composed, new Offset(10.0, 10.0)));
     }
 
     [Fact]
@@ -50,14 +50,14 @@ public sealed class Matrix4Tests
     {
         Matrix4 transform = Matrix4.Identity();
         transform.TranslateByDouble(2.0, -2.0, 0.0, 1);
-        Assert.Equal(new Point(2.0, -2.0), MatrixUtils.GetAsTranslation(transform));
+        Assert.Equal(new Offset(2.0, -2.0), MatrixUtils.GetAsTranslation(transform));
 
         transform.TranslateByDouble(4.0, 8.0, 0.0, 1);
-        Assert.Equal(new Point(6.0, 6.0), MatrixUtils.GetAsTranslation(transform));
+        Assert.Equal(new Offset(6.0, 6.0), MatrixUtils.GetAsTranslation(transform));
 
         Matrix4 scaled = Matrix4.TranslationValues(10.0, 0.0, 0.0);
         scaled.ScaleByDouble(3.0, 3.0, 1.0, 1);
-        Assert.Equal(new Point(40.0, 30.0), MatrixUtils.TransformPoint(scaled, new Point(10.0, 10.0)));
+        Assert.Equal(new Offset(40.0, 30.0), MatrixUtils.TransformPoint(scaled, new Offset(10.0, 10.0)));
     }
 
     [Fact]
@@ -68,9 +68,9 @@ public sealed class Matrix4Tests
         double determinant = inverted.Invert();
 
         Assert.Equal(8.0, determinant, precision: 10);
-        Assert.Equal(new Point(5.0, 5.0), MatrixUtils.TransformPoint(inverted, new Point(10.0, 20.0)));
+        Assert.Equal(new Offset(5.0, 5.0), MatrixUtils.TransformPoint(inverted, new Offset(10.0, 20.0)));
 
-        Matrix4 singular = MatrixUtils.ForceToPoint(new Point(20.0, -30.0));
+        Matrix4 singular = MatrixUtils.ForceToPoint(new Offset(20.0, -30.0));
         Matrix4 copy = Matrix4.Copy(singular);
         Assert.Equal(0.0, copy.Invert());
         Assert.Equal(singular, copy);
@@ -116,10 +116,10 @@ public sealed class Matrix4Tests
         Assert.Equal(perspective.Storage[7], hostMatrix.M23);
         Assert.Equal(perspective.Storage[15], hostMatrix.M33);
 
-        var probe = new Point(37.0, -19.0);
-        Point expected = MatrixUtils.TransformPoint(perspective, probe);
-        Point actual = hostMatrix.Transform(probe);
-        Assert.Equal(expected.X, actual.X, precision: 6);
-        Assert.Equal(expected.Y, actual.Y, precision: 6);
+        var probe = new Offset(37.0, -19.0);
+        Offset expected = MatrixUtils.TransformPoint(perspective, probe);
+        Offset actual = hostMatrix.Transform(probe);
+        Assert.Equal(expected.Dx, actual.Dx, precision: 6);
+        Assert.Equal(expected.Dy, actual.Dy, precision: 6);
     }
 }

@@ -208,9 +208,9 @@ public sealed class CupertinoSlidingSegmentedControlTests : IDisposable
         RenderCupertinoSlidingSegmentedControl<string> rtlRender = FindRender(rtl);
         Assert.Equal(1, rtlRender.HighlightedIndex);
         Assert.True(
-            ParentData(SegmentChildren(rtlRender)[0]).offset.X
-            < ParentData(SegmentChildren(rtlRender)[1]).offset.X);
-        Tap(rtl.RenderView, new Point(30.0, 14.0), pointer: 5);
+            ParentData(SegmentChildren(rtlRender)[0]).offset.Dx
+            < ParentData(SegmentChildren(rtlRender)[1]).offset.Dx);
+        Tap(rtl.RenderView, new Offset(30.0, 14.0), pointer: 5);
         Assert.Equal("two", rtlReport);
     }
 
@@ -232,9 +232,9 @@ public sealed class CupertinoSlidingSegmentedControlTests : IDisposable
             proportionalWidth: true)));
         harness.Pump(ViewSize);
 
-        Tap(harness.RenderView, new Point(13.0, 14.0), pointer: 10);
-        Tap(harness.RenderView, new Point(45.0, 14.0), pointer: 11);
-        Tap(harness.RenderView, new Point(101.0, 14.0), pointer: 12);
+        Tap(harness.RenderView, new Offset(13.0, 14.0), pointer: 10);
+        Tap(harness.RenderView, new Offset(45.0, 14.0), pointer: 11);
+        Tap(harness.RenderView, new Offset(101.0, 14.0), pointer: 12);
 
         Assert.Equal(["three"], reports);
         Assert.Equal(0, FindRender(harness).HighlightedIndex);
@@ -255,8 +255,8 @@ public sealed class CupertinoSlidingSegmentedControlTests : IDisposable
         Assert.All(
             harness.FindWidgets<AnimatedDefaultTextStyle>(),
             style => Assert.Equal(Color.FromARGB(115, 122, 122, 122), style.Style.Color));
-        Tap(harness.RenderView, new Point(30.0, 14.0), pointer: 20);
-        Tap(harness.RenderView, new Point(110.0, 14.0), pointer: 21);
+        Tap(harness.RenderView, new Offset(30.0, 14.0), pointer: 20);
+        Tap(harness.RenderView, new Offset(110.0, 14.0), pointer: 21);
         Assert.Equal(0, reports);
     }
 
@@ -269,21 +269,21 @@ public sealed class CupertinoSlidingSegmentedControlTests : IDisposable
             harness.FindWidgets<AnimatedDefaultTextStyle>(),
             style => style.Style.FontWeight == FontWeight.DemiBold);
 
-        PointerDown(harness.RenderView, new Point(110.0, 14.0), pointer: 30);
+        PointerDown(harness.RenderView, new Offset(110.0, 14.0), pointer: 30);
         harness.Pump(ViewSize);
         AnimatedOpacity fading = Assert.Single(
             harness.FindWidgets<AnimatedOpacity>(),
             opacity => opacity.Opacity == 0.2);
         Assert.Equal(TimeSpan.FromMilliseconds(470.0), fading.Duration);
 
-        PointerCancel(harness.RenderView, new Point(110.0, 14.0), pointer: 30);
+        PointerCancel(harness.RenderView, new Offset(110.0, 14.0), pointer: 30);
         harness.Pump(ViewSize);
         Assert.DoesNotContain(harness.FindWidgets<AnimatedOpacity>(), opacity => opacity.Opacity == 0.2);
 
-        PointerDown(harness.RenderView, new Point(30.0, 14.0), pointer: 31);
+        PointerDown(harness.RenderView, new Offset(30.0, 14.0), pointer: 31);
         harness.Pump(ViewSize);
         Assert.DoesNotContain(harness.FindWidgets<AnimatedOpacity>(), opacity => opacity.Opacity == 0.2);
-        PointerCancel(harness.RenderView, new Point(30.0, 14.0), pointer: 31);
+        PointerCancel(harness.RenderView, new Offset(30.0, 14.0), pointer: 31);
     }
 
     [Fact]
@@ -297,28 +297,28 @@ public sealed class CupertinoSlidingSegmentedControlTests : IDisposable
         RenderCupertinoSlidingSegmentedControl<string> render = FindRender(harness);
         Rect initial = Assert.IsType<Rect>(render.CurrentThumbRect);
 
-        PointerDown(harness.RenderView, new Point(30.0, 14.0), pointer: 40);
+        PointerDown(harness.RenderView, new Offset(30.0, 14.0), pointer: 40);
         // The move that carries the drag past the touch slop only wins the arena and reports
         // `onStart`; with `DragStartBehavior.Start` the first `onUpdate` arrives on the next move.
-        Move(harness.RenderView, new Point(110.0, 14.0), pointer: 40);
+        Move(harness.RenderView, new Offset(110.0, 14.0), pointer: 40);
         harness.Pump(ViewSize);
         Assert.Equal(0, render.HighlightedIndex);
-        Move(harness.RenderView, new Point(112.0, 14.0), pointer: 40);
+        Move(harness.RenderView, new Offset(112.0, 14.0), pointer: 40);
         harness.Pump(ViewSize);
         Assert.Equal(1, render.HighlightedIndex);
         Assert.Null(reported);
-        Move(harness.RenderView, new Point(110.0, 200.0), pointer: 40);
+        Move(harness.RenderView, new Offset(110.0, 200.0), pointer: 40);
         harness.Pump(ViewSize);
         Assert.Equal("two", render.ControlState.Pressed);
 
         PumpAnimation(harness, 500.0);
         Rect shrunken = Assert.IsType<Rect>(render.CurrentThumbRect);
         Assert.True(
-            shrunken.Center.X > initial.Center.X,
+            shrunken.Center.Dx > initial.Center.Dx,
             $"Thumb stayed at {shrunken} from {initial}; animation value was "
             + $"{render.ControlState.ThumbController.Value}.");
 
-        PointerUp(harness.RenderView, new Point(110.0, 14.0), pointer: 40);
+        PointerUp(harness.RenderView, new Offset(110.0, 14.0), pointer: 40);
         harness.Pump(ViewSize);
         Assert.Equal("two", reported);
         PumpAnimation(harness, 500.0);
@@ -391,14 +391,14 @@ public sealed class CupertinoSlidingSegmentedControlTests : IDisposable
         Assert.Null(FindRender(harness).HighlightedIndex);
         Assert.Null(FindRender(harness).CurrentThumbRect);
 
-        PointerDown(harness.RenderView, new Point(30.0, 14.0), pointer: 50);
+        PointerDown(harness.RenderView, new Offset(30.0, 14.0), pointer: 50);
         harness.Pump(ViewSize);
         PumpAnimation(harness, 80.0);
         Assert.Contains(harness.FindWidgets<ScaleTransition>(), scale => scale.Scale.Value > 1.0);
-        PointerUp(harness.RenderView, new Point(30.0, 14.0), pointer: 50);
+        PointerUp(harness.RenderView, new Offset(30.0, 14.0), pointer: 50);
         PumpAnimation(harness, 500.0);
         Assert.All(harness.FindWidgets<ScaleTransition>(), scale => Assert.Equal(1.0, scale.Scale.Value, 2));
-        Tap(harness.RenderView, new Point(110.0, 14.0), pointer: 51);
+        Tap(harness.RenderView, new Offset(110.0, 14.0), pointer: 51);
         Assert.Equal("two", reported);
     }
 
@@ -430,7 +430,7 @@ public sealed class CupertinoSlidingSegmentedControlTests : IDisposable
         Assert.True(buttons[1].PerformAction(SemanticsActions.Tap));
         Assert.Null(reported);
 
-        Tap(harness.RenderView, new Point(30.0, 14.0), pointer: 60);
+        Tap(harness.RenderView, new Offset(30.0, 14.0), pointer: 60);
         EventLoop.FlushMicrotasks();
         Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowRight)));
         Assert.Equal("three", reported);
@@ -454,11 +454,11 @@ public sealed class CupertinoSlidingSegmentedControlTests : IDisposable
         harness.Pump(ViewSize);
         Assert.All(harness.FindWidgets<MouseRegion>(), region => Assert.Equal(SystemMouseCursors.Click, region.Cursor));
 
-        PointerDown(harness.RenderView, new Point(30.0, 14.0), pointer: 70);
+        PointerDown(harness.RenderView, new Offset(30.0, 14.0), pointer: 70);
         harness.PumpWidget(Wrap(new SizedBox(width: 10.0, height: 10.0)));
         harness.Pump(ViewSize);
-        Move(harness.RenderView, new Point(110.0, 14.0), pointer: 70);
-        PointerUp(harness.RenderView, new Point(110.0, 14.0), pointer: 70);
+        Move(harness.RenderView, new Offset(110.0, 14.0), pointer: 70);
+        PointerUp(harness.RenderView, new Offset(110.0, 14.0), pointer: 70);
     }
 
     private static CupertinoSlidingSegmentedControl<string> Control(
@@ -558,13 +558,13 @@ public sealed class CupertinoSlidingSegmentedControlTests : IDisposable
         harness.Pump(ViewSize);
     }
 
-    private static void Tap(RenderView view, Point position, int pointer)
+    private static void Tap(RenderView view, Offset position, int pointer)
     {
         PointerDown(view, position, pointer);
         PointerUp(view, position, pointer);
     }
 
-    private static void PointerDown(RenderView view, Point position, int pointer)
+    private static void PointerDown(RenderView view, Offset position, int pointer)
     {
         GestureBinding.Instance.HandlePointerEvent(
             view,
@@ -576,7 +576,7 @@ public sealed class CupertinoSlidingSegmentedControlTests : IDisposable
                 DateTime.UtcNow));
     }
 
-    private static void Move(RenderView view, Point position, int pointer)
+    private static void Move(RenderView view, Offset position, int pointer)
     {
         GestureBinding.Instance.HandlePointerEvent(
             view,
@@ -588,7 +588,7 @@ public sealed class CupertinoSlidingSegmentedControlTests : IDisposable
                 DateTime.UtcNow.AddMilliseconds(16.0)));
     }
 
-    private static void PointerUp(RenderView view, Point position, int pointer)
+    private static void PointerUp(RenderView view, Offset position, int pointer)
     {
         GestureBinding.Instance.HandlePointerEvent(
             view,
@@ -600,7 +600,7 @@ public sealed class CupertinoSlidingSegmentedControlTests : IDisposable
                 DateTime.UtcNow.AddMilliseconds(32.0)));
     }
 
-    private static void PointerCancel(RenderView view, Point position, int pointer)
+    private static void PointerCancel(RenderView view, Offset position, int pointer)
     {
         GestureBinding.Instance.HandlePointerEvent(
             view,

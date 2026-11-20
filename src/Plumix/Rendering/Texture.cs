@@ -79,12 +79,12 @@ public class TextureBox : RenderBox
         return constraints.Biggest;
     }
 
-    protected override bool HitTestSelf(Point position) => true;
+    protected override bool HitTestSelf(Offset position) => true;
 
-    public override void Paint(PaintingContext context, Point offset)
+    public override void Paint(PaintingContext context, Offset offset)
     {
         context.AddLayer(new TextureLayer(
-            rect: new Rect(offset.X, offset.Y, Size.Width, Size.Height),
+            rect: DartGeometry.RectFromLTWH(offset.Dx, offset.Dy, Size.Width, Size.Height),
             textureId: _textureId,
             freeze: Freeze,
             filterQuality: _filterQuality));

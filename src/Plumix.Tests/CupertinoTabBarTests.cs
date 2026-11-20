@@ -168,7 +168,7 @@ public sealed class CupertinoTabBarTests : IDisposable
             new PointerDownEvent(
                 pointer: 71,
                 kind: PointerDeviceKind.Mouse,
-                position: new Point(80.0, 100.0),
+                position: new Offset(80.0, 100.0),
                 buttons: PointerButtons.Primary,
                 timestampUtc: now));
         GestureBinding.Instance.HandlePointerEvent(
@@ -176,7 +176,7 @@ public sealed class CupertinoTabBarTests : IDisposable
             new PointerUpEvent(
                 pointer: 71,
                 kind: PointerDeviceKind.Mouse,
-                position: new Point(80.0, 100.0),
+                position: new Offset(80.0, 100.0),
                 buttons: PointerButtons.None,
                 timestampUtc: now.AddMilliseconds(16.0)));
 
@@ -235,7 +235,7 @@ public sealed class CupertinoTabBarTests : IDisposable
             new PointerDownEvent(
                 pointer: 72,
                 kind: PointerDeviceKind.Mouse,
-                position: new Point(240.0, 100.0),
+                position: new Offset(240.0, 100.0),
                 buttons: PointerButtons.Primary,
                 timestampUtc: now));
         GestureBinding.Instance.HandlePointerEvent(
@@ -243,7 +243,7 @@ public sealed class CupertinoTabBarTests : IDisposable
             new PointerUpEvent(
                 pointer: 72,
                 kind: PointerDeviceKind.Mouse,
-                position: new Point(240.0, 100.0),
+                position: new Offset(240.0, 100.0),
                 buttons: PointerButtons.None,
                 timestampUtc: now.AddMilliseconds(16.0)));
         Assert.Equal(1, tappedIndex);

@@ -345,14 +345,14 @@ internal sealed partial class FrameworkDartTester : IDisposable
     public TState State<TState>() where TState : State => StateList<TState>().Single();
 
     /// <summary>Dart's <c>tester.getCenter</c>.</summary>
-    public Point GetCenter(Element element)
+    public Offset GetCenter(Element element)
     {
         var box = (RenderBox)element.FindRenderObject()!;
-        return box.LocalToGlobal(new Point(box.Size.Width / 2.0, box.Size.Height / 2.0));
+        return box.LocalToGlobal(new Offset(box.Size.Width / 2.0, box.Size.Height / 2.0));
     }
 
     /// <summary>Dart's <c>tester.startGesture</c>: dispatches the down event and returns the pointer.</summary>
-    public int StartGesture(Point location)
+    public int StartGesture(Offset location)
     {
         int pointer = Interlocked.Increment(ref _nextPointer);
         SendEventToBinding(new PointerDownEvent(
@@ -365,7 +365,7 @@ internal sealed partial class FrameworkDartTester : IDisposable
     }
 
     /// <summary>Dart's <c>TestGesture.up</c>.</summary>
-    public void Up(int pointer, Point location)
+    public void Up(int pointer, Offset location)
     {
         SendEventToBinding(new PointerUpEvent(
             pointer: pointer,

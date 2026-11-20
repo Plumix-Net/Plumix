@@ -275,7 +275,7 @@ internal sealed class RenderSampleTableViewport : RenderTwoDimensionalViewport
                     child.Layout(
                         BoxConstraints.TightFor(width: CellWidth, height: CellHeight),
                         parentUsesSize: true);
-                    ParentDataOf(child).LayoutOffset = new Point(xLayoutOffset, yLayoutOffset);
+                    ParentDataOf(child).LayoutOffset = new Offset(xLayoutOffset, yLayoutOffset);
                 }
 
                 yLayoutOffset += CellHeight;

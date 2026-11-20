@@ -334,7 +334,7 @@ public sealed class CupertinoPageTransition : StatefulWidget
             secondaryAnimation,
             Curves.LinearToEaseOut,
             Curves.EaseInToLinear);
-        Animation<Vector> position = curve.Drive(CupertinoRouteTweens.MiddleLeft);
+        Animation<Offset> position = curve.Drive(CupertinoRouteTweens.MiddleLeft);
         return new SlideTransition(
             position: position,
             textDirection: Directionality.Of(context),
@@ -346,8 +346,8 @@ public sealed class CupertinoPageTransition : StatefulWidget
 
     private sealed class CupertinoPageTransitionState : State<CupertinoPageTransition>
     {
-        private Animation<Vector> _primaryPositionAnimation = null!;
-        private Animation<Vector> _secondaryPositionAnimation = null!;
+        private Animation<Offset> _primaryPositionAnimation = null!;
+        private Animation<Offset> _secondaryPositionAnimation = null!;
         private Animation<Decoration> _primaryShadowAnimation = null!;
         private CurvedAnimation? _primaryPositionCurve;
         private CurvedAnimation? _secondaryPositionCurve;
@@ -462,8 +462,8 @@ public sealed class CupertinoFullscreenDialogTransition : StatefulWidget
 
     private sealed class CupertinoFullscreenDialogTransitionState : State<CupertinoFullscreenDialogTransition>
     {
-        private Animation<Vector> _primaryPositionAnimation = null!;
-        private Animation<Vector> _secondaryPositionAnimation = null!;
+        private Animation<Offset> _primaryPositionAnimation = null!;
+        private Animation<Offset> _secondaryPositionAnimation = null!;
         private CurvedAnimation? _primaryPositionCurve;
         private CurvedAnimation? _secondaryPositionCurve;
 
@@ -572,8 +572,8 @@ public sealed class CupertinoPageTransitionsBuilder
 public sealed class CupertinoModalPopupRoute<T> : PopupRoute
 {
     private static readonly VectorTween OffsetTween = new(
-        begin: new Vector(0.0, 1.0),
-        end: new Vector(0.0, 0.0));
+        begin: new Offset(0.0, 1.0),
+        end: new Offset(0.0, 0.0));
 
     private readonly WidgetBuilder _builder;
     private readonly bool _barrierDismissible;
@@ -591,7 +591,7 @@ public sealed class CupertinoModalPopupRoute<T> : PopupRoute
         ImageFilter? filter = null,
         RouteSettings? settings = null,
         bool? requestFocus = null,
-        Point? anchorPoint = null) : base(settings, filter, requestFocus)
+        Offset? anchorPoint = null) : base(settings, filter, requestFocus)
     {
         _builder = builder ?? throw new ArgumentNullException(nameof(builder));
         _barrierLabel = barrierLabel ?? throw new ArgumentNullException(nameof(barrierLabel));
@@ -616,7 +616,7 @@ public sealed class CupertinoModalPopupRoute<T> : PopupRoute
 
     public override TimeSpan TransitionDuration => TimeSpan.FromMilliseconds(335);
 
-    public Point? AnchorPoint { get; }
+    public Offset? AnchorPoint { get; }
 
     private Task<T?>? _typedCompleted;
     private Task<T?>? _typedPopped;
@@ -657,7 +657,7 @@ public sealed class CupertinoModalPopupRoute<T> : PopupRoute
         return new Align(
             alignment: Alignment.BottomCenter,
             child: new FractionalTranslation(
-                translation: (Point)OffsetTween.Transform(animation.Value),
+                translation: (Offset)OffsetTween.Transform(animation.Value),
                 child: child));
     }
 
@@ -666,16 +666,16 @@ public sealed class CupertinoModalPopupRoute<T> : PopupRoute
 internal static class CupertinoRouteTweens
 {
     public static VectorTween RightMiddle { get; } = new(
-        begin: new Vector(1.0, 0.0),
-        end: new Vector(0.0, 0.0));
+        begin: new Offset(1.0, 0.0),
+        end: new Offset(0.0, 0.0));
 
     public static VectorTween MiddleLeft { get; } = new(
-        begin: new Vector(0.0, 0.0),
-        end: new Vector(-1.0 / 3.0, 0.0));
+        begin: new Offset(0.0, 0.0),
+        end: new Offset(-1.0 / 3.0, 0.0));
 
     public static VectorTween BottomUp { get; } = new(
-        begin: new Vector(0.0, 1.0),
-        end: new Vector(0.0, 0.0));
+        begin: new Offset(0.0, 1.0),
+        end: new Offset(0.0, 0.0));
 }
 
 internal sealed class DirectionalCurveAnimation : Animation<double>
@@ -796,7 +796,7 @@ internal sealed record CupertinoEdgeShadowDecoration : Decoration
 
         public override void Paint(
             PaintingContext context,
-            Point offset,
+            Offset offset,
             ImageConfiguration configuration)
         {
             IReadOnlyList<Color>? colors = _decoration._colors;
@@ -811,7 +811,7 @@ internal sealed record CupertinoEdgeShadowDecoration : Decoration
             TextDirection textDirection = configuration.TextDirection
                 ?? throw new InvalidOperationException("The Cupertino page shadow requires a text direction.");
             double shadowDirection = textDirection == TextDirection.Rtl ? 1.0 : -1.0;
-            double start = textDirection == TextDirection.Rtl ? offset.X + size.Width : offset.X;
+            double start = textDirection == TextDirection.Rtl ? offset.Dx + size.Width : offset.Dx;
 
             for (double dx = 0.0; dx < shadowWidth; dx += 1.0)
             {
@@ -822,7 +822,7 @@ internal sealed record CupertinoEdgeShadowDecoration : Decoration
                 context.Canvas.DrawRectangle(
                     new SolidColorBrush(color),
                     null,
-                    new Rect(x - 1.0, offset.Y, 1.0, shadowHeight));
+                    DartGeometry.RectFromLTWH(x - 1.0, offset.Dy, 1.0, shadowHeight));
             }
         }
     }

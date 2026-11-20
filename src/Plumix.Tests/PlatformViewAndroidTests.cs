@@ -41,7 +41,7 @@ public sealed class PlatformViewAndroidTests : IDisposable
     private List<FakeAndroidMotionEvent>? MotionEvents(int id) =>
         _viewsController.MotionEvents.GetValueOrDefault(id);
 
-    private static FakeAndroidMotionEvent Motion(int action, Point position) => new(action, [0], [position]);
+    private static FakeAndroidMotionEvent Motion(int action, Offset position) => new(action, [0], [position]);
 
     private void AssertViews(params FakeAndroidPlatformView[] expected)
     {
@@ -114,7 +114,7 @@ public sealed class PlatformViewAndroidTests : IDisposable
 
         List<Layer> layers = Layers(_tester);
         var clipRectLayer = Assert.IsType<ClipRectLayer>(layers[^2]);
-        Assert.Equal(new Rect(0.0, 0.0, 100.0, 50.0), clipRectLayer.ClipRect);
+        Assert.Equal(DartGeometry.RectFromLTWH(0.0, 0.0, 100.0, 50.0), clipRectLayer.ClipRect);
 
         // Resize is still in progress.
         // We should clip the texture to the size of the widget.
@@ -173,13 +173,13 @@ public sealed class PlatformViewAndroidTests : IDisposable
         _viewsController.RegisterViewType("webview");
         _tester.PumpWidget(TopLeft(200.0, 100.0, WebView()));
 
-        TestGesture gesture = _tester.StartGesture(new Point(50.0, 50.0), PointerDeviceKind.Touch);
+        TestGesture gesture = _tester.StartGesture(new Offset(50.0, 50.0), PointerDeviceKind.Touch);
         gesture.Up();
 
         Assert.Equal(
             [
-                Motion(AndroidViewController.ActionDown, new Point(50.0, 50.0)),
-                Motion(AndroidViewController.ActionUp, new Point(50.0, 50.0)),
+                Motion(AndroidViewController.ActionDown, new Offset(50.0, 50.0)),
+                Motion(AndroidViewController.ActionUp, new Offset(50.0, 50.0)),
             ],
             MotionEvents(currentViewId + 1)!);
     }
@@ -202,12 +202,12 @@ public sealed class PlatformViewAndroidTests : IDisposable
             new AndroidView(viewType: "webview", hitTestBehavior: behavior, layoutDirection: TextDirection.Ltr),
             () => numPointerDownsOnParent++));
 
-        TestGesture gesture = _tester.StartGesture(new Point(50.0, 50.0), PointerDeviceKind.Touch);
+        TestGesture gesture = _tester.StartGesture(new Offset(50.0, 50.0), PointerDeviceKind.Touch);
 
         if (viewGetsTheDown)
         {
             Assert.Equal(
-                [Motion(AndroidViewController.ActionDown, new Point(50.0, 50.0))],
+                [Motion(AndroidViewController.ActionDown, new Offset(50.0, 50.0))],
                 MotionEvents(currentViewId + 1)!);
         }
         else
@@ -233,13 +233,13 @@ public sealed class PlatformViewAndroidTests : IDisposable
                 margin: EdgeInsets.All(10.0),
                 child: new SizedBox(width: 200.0, height: 100.0, child: WebView()))));
 
-        TestGesture gesture = _tester.StartGesture(new Point(50.0, 50.0), PointerDeviceKind.Touch);
+        TestGesture gesture = _tester.StartGesture(new Offset(50.0, 50.0), PointerDeviceKind.Touch);
         gesture.Up();
 
         Assert.Equal(
             [
-                Motion(AndroidViewController.ActionDown, new Point(40.0, 40.0)),
-                Motion(AndroidViewController.ActionUp, new Point(40.0, 40.0)),
+                Motion(AndroidViewController.ActionDown, new Offset(40.0, 40.0)),
+                Motion(AndroidViewController.ActionUp, new Offset(40.0, 40.0)),
             ],
             MotionEvents(currentViewId + 1)!);
     }
@@ -297,8 +297,8 @@ public sealed class PlatformViewAndroidTests : IDisposable
                     onVerticalDragStart: _ => verticalDragAcceptedByParent = true,
                     child: new SizedBox(width: 200.0, height: 100.0, child: WebView())))));
 
-        TestGesture gesture = _tester.StartGesture(new Point(50.0, 50.0), PointerDeviceKind.Touch);
-        gesture.MoveBy(new Vector(0.0, 100.0));
+        TestGesture gesture = _tester.StartGesture(new Offset(50.0, 50.0), PointerDeviceKind.Touch);
+        gesture.MoveBy(new Offset(0.0, 100.0));
         gesture.Up();
 
         Assert.True(verticalDragAcceptedByParent);
@@ -321,16 +321,16 @@ public sealed class PlatformViewAndroidTests : IDisposable
                     child: WebView(gestureRecognizers: Recognizers(
                         new Factory<VerticalDragGestureRecognizer>(() => new VerticalDragGestureRecognizer())))))));
 
-        TestGesture gesture = _tester.StartGesture(new Point(50.0, 50.0), PointerDeviceKind.Touch);
-        gesture.MoveBy(new Vector(0.0, 100.0));
+        TestGesture gesture = _tester.StartGesture(new Offset(50.0, 50.0), PointerDeviceKind.Touch);
+        gesture.MoveBy(new Offset(0.0, 100.0));
         gesture.Up();
 
         Assert.False(verticalDragAcceptedByParent);
         Assert.Equal(
             [
-                Motion(AndroidViewController.ActionDown, new Point(50.0, 50.0)),
-                Motion(AndroidViewController.ActionMove, new Point(50.0, 150.0)),
-                Motion(AndroidViewController.ActionUp, new Point(50.0, 150.0)),
+                Motion(AndroidViewController.ActionDown, new Offset(50.0, 50.0)),
+                Motion(AndroidViewController.ActionMove, new Offset(50.0, 150.0)),
+                Motion(AndroidViewController.ActionUp, new Offset(50.0, 150.0)),
             ],
             MotionEvents(currentViewId + 1)!);
     }
@@ -351,13 +351,13 @@ public sealed class PlatformViewAndroidTests : IDisposable
                     child: WebView(gestureRecognizers: Recognizers(
                         new Factory<LongPressGestureRecognizer>(() => new LongPressGestureRecognizer())))))));
 
-        LongPressAt(_tester, new Point(50.0, 50.0));
+        LongPressAt(_tester, new Offset(50.0, 50.0));
 
         Assert.False(longPressAccessedByParent);
         Assert.Equal(
             [
-                Motion(AndroidViewController.ActionDown, new Point(50.0, 50.0)),
-                Motion(AndroidViewController.ActionUp, new Point(50.0, 50.0)),
+                Motion(AndroidViewController.ActionDown, new Offset(50.0, 50.0)),
+                Motion(AndroidViewController.ActionUp, new Offset(50.0, 50.0)),
             ],
             MotionEvents(currentViewId + 1)!);
     }
@@ -378,13 +378,13 @@ public sealed class PlatformViewAndroidTests : IDisposable
                     child: WebView(gestureRecognizers: Recognizers(
                         new Factory<TapGestureRecognizer>(() => new TapGestureRecognizer())))))));
 
-        TapAt(_tester, new Point(50.0, 50.0));
+        TapAt(_tester, new Offset(50.0, 50.0));
 
         Assert.False(tapAccessedByParent);
         Assert.Equal(
             [
-                Motion(AndroidViewController.ActionDown, new Point(50.0, 50.0)),
-                Motion(AndroidViewController.ActionUp, new Point(50.0, 50.0)),
+                Motion(AndroidViewController.ActionDown, new Offset(50.0, 50.0)),
+                Motion(AndroidViewController.ActionUp, new Offset(50.0, 50.0)),
             ],
             MotionEvents(currentViewId + 1)!);
     }
@@ -405,14 +405,14 @@ public sealed class PlatformViewAndroidTests : IDisposable
                 onLongPress: () => { },
                 child: new SizedBox(width: 200.0, height: 100.0, child: WebView()))));
 
-        TestGesture gesture = _tester.StartGesture(new Point(50.0, 50.0), PointerDeviceKind.Touch);
+        TestGesture gesture = _tester.StartGesture(new Offset(50.0, 50.0), PointerDeviceKind.Touch);
         gesture.Up();
 
         Assert.False(verticalDragAcceptedByParent);
         Assert.Equal(
             [
-                Motion(AndroidViewController.ActionDown, new Point(50.0, 50.0)),
-                Motion(AndroidViewController.ActionUp, new Point(50.0, 50.0)),
+                Motion(AndroidViewController.ActionDown, new Offset(50.0, 50.0)),
+                Motion(AndroidViewController.ActionUp, new Offset(50.0, 50.0)),
             ],
             MotionEvents(currentViewId + 1)!);
     }
@@ -424,8 +424,8 @@ public sealed class PlatformViewAndroidTests : IDisposable
         _viewsController.RegisterViewType("webview");
         _tester.PumpWidget(TopLeft(200.0, 100.0, WebView()));
 
-        TestGesture gesture = _tester.StartGesture(new Point(50.0, 50.0), PointerDeviceKind.Touch);
-        gesture.MoveBy(new Vector(0.0, 100.0));
+        TestGesture gesture = _tester.StartGesture(new Offset(50.0, 50.0), PointerDeviceKind.Touch);
+        gesture.MoveBy(new Offset(0.0, 100.0));
 
         _tester.PumpWidget(TopLeft(200.0, 100.0, WebView()));
 
@@ -433,9 +433,9 @@ public sealed class PlatformViewAndroidTests : IDisposable
 
         Assert.Equal(
             [
-                Motion(AndroidViewController.ActionDown, new Point(50.0, 50.0)),
-                Motion(AndroidViewController.ActionMove, new Point(50.0, 150.0)),
-                Motion(AndroidViewController.ActionUp, new Point(50.0, 150.0)),
+                Motion(AndroidViewController.ActionDown, new Offset(50.0, 50.0)),
+                Motion(AndroidViewController.ActionMove, new Offset(50.0, 150.0)),
+                Motion(AndroidViewController.ActionUp, new Offset(50.0, 150.0)),
             ],
             MotionEvents(currentViewId + 1)!);
     }
@@ -455,14 +455,14 @@ public sealed class PlatformViewAndroidTests : IDisposable
                     child: WebView(gestureRecognizers: Recognizers(
                         new Factory<OneSequenceGestureRecognizer>(() => new EagerGestureRecognizer())))))));
 
-        TestGesture gesture = _tester.StartGesture(new Point(50.0, 50.0), PointerDeviceKind.Touch);
+        TestGesture gesture = _tester.StartGesture(new Offset(50.0, 50.0), PointerDeviceKind.Touch);
 
         // Normally (without the eager gesture recognizer) after just the pointer down event no gesture
         // recognizer will win the arena (so no motion events will be dispatched to the Android view).
         // Here we assert that with the eager recognizer in the gesture team the pointer down event is
         // immediately dispatched.
         Assert.Equal(
-            [Motion(AndroidViewController.ActionDown, new Point(50.0, 50.0))],
+            [Motion(AndroidViewController.ActionDown, new Offset(50.0, 50.0))],
             MotionEvents(currentViewId + 1)!);
 
         // Finish gesture to release resources.
@@ -662,10 +662,10 @@ public sealed class PlatformViewAndroidTests : IDisposable
 
         // Resize trigger clip when the clip behavior is not Clip.none .
         _tester.PumpWidget(BuildView(50.0, 100.0, Clip.HardEdge));
-        Assert.Equal(new Rect(0.0, 0.0, 50.0, 100.0), Assert.Single(ClipLayers()).ClipRect);
+        Assert.Equal(DartGeometry.RectFromLTWH(0.0, 0.0, 50.0, 100.0), Assert.Single(ClipLayers()).ClipRect);
 
         _tester.PumpWidget(BuildView(50.0, 50.0, Clip.HardEdge));
-        Assert.Equal(new Rect(0.0, 0.0, 50.0, 50.0), Assert.Single(ClipLayers()).ClipRect);
+        Assert.Equal(DartGeometry.RectFromLTWH(0.0, 0.0, 50.0, 50.0), Assert.Single(ClipLayers()).ClipRect);
     }
 
     [Fact]
@@ -676,7 +676,7 @@ public sealed class PlatformViewAndroidTests : IDisposable
         _tester.PumpWidget(new Padding(new EdgeInsets(10, 20, 0, 0), child: WebView()));
         _tester.Pump();
 
-        Assert.Equal([new Point(10, 20)], _viewsController.Offsets.Values);
+        Assert.Equal([new Offset(10, 20)], _viewsController.Offsets.Values);
     }
 
     [Fact]

@@ -361,15 +361,15 @@ public sealed class MaterialTabsTests
         var inset = new UnderlineTabIndicator(
             borderSide: new BorderSide(Colors.Red, 8),
             insets: EdgeInsetsGeometry.Only(left: 8, right: 4));
-        Rect rect = inset.IndicatorRectFor(new Rect(0, 0, 200, 54), TextDirection.Ltr);
-        Assert.Equal(new Rect(8, 46, 188, 8), rect);
+        Rect rect = inset.IndicatorRectFor(DartGeometry.RectFromLTWH(0, 0, 200, 54), TextDirection.Ltr);
+        Assert.Equal(DartGeometry.RectFromLTWH(8, 46, 188, 8), rect);
 
         // Directional insets mirror with the text direction.
         var directional = new UnderlineTabIndicator(
             borderSide: new BorderSide(Colors.Red, 2),
             insets: EdgeInsetsGeometry.DirectionalOnly(start: 100));
-        Assert.Equal(100, directional.IndicatorRectFor(new Rect(0, 0, 200, 50), TextDirection.Ltr).Left);
-        Assert.Equal(0, directional.IndicatorRectFor(new Rect(0, 0, 200, 50), TextDirection.Rtl).Left);
+        Assert.Equal(100, directional.IndicatorRectFor(DartGeometry.RectFromLTWH(0, 0, 200, 50), TextDirection.Ltr).Left);
+        Assert.Equal(0, directional.IndicatorRectFor(DartGeometry.RectFromLTWH(0, 0, 200, 50), TextDirection.Rtl).Left);
 
         // lerp interpolates the side and insets and drops the border radius, as Dart does.
         var from = new UnderlineTabIndicator(
@@ -691,21 +691,21 @@ public sealed class MaterialTabsTests
         ltr.Pump(new Size(800, 200));
         // 46 (tab height) + 8 (indicator weight)
         Assert.Equal(54, FindDescendant<RenderCustomPaint>(ltr.RenderView)!.Size.Height, precision: 3);
-        Assert.Equal(new Rect(8, 0, 188, 54), RequireIndicatorPainter(ltr.RenderView).CurrentRect);
+        Assert.Equal(DartGeometry.RectFromLTWH(8, 0, 188, 54), RequireIndicatorPainter(ltr.RenderView).CurrentRect);
 
         ltrController.Index = 3;
         ltr.Pump(new Size(800, 200));
-        Assert.Equal(new Rect(608, 0, 188, 54), RequireIndicatorPainter(ltr.RenderView).CurrentRect);
+        Assert.Equal(DartGeometry.RectFromLTWH(608, 0, 188, 54), RequireIndicatorPainter(ltr.RenderView).CurrentRect);
 
         using var rtlController = new TabController(4);
         using var rtl = new WidgetRenderHarness(Build(TextDirection.Rtl, rtlController));
         rtl.Pump(new Size(800, 200));
         // The insets are non-directional, so only the tab rect mirrors.
-        Assert.Equal(new Rect(608, 0, 188, 54), RequireIndicatorPainter(rtl.RenderView).CurrentRect);
+        Assert.Equal(DartGeometry.RectFromLTWH(608, 0, 188, 54), RequireIndicatorPainter(rtl.RenderView).CurrentRect);
 
         rtlController.Index = 3;
         rtl.Pump(new Size(800, 200));
-        Assert.Equal(new Rect(8, 0, 188, 54), RequireIndicatorPainter(rtl.RenderView).CurrentRect);
+        Assert.Equal(DartGeometry.RectFromLTWH(8, 0, 188, 54), RequireIndicatorPainter(rtl.RenderView).CurrentRect);
     }
 
     [Fact]
@@ -734,7 +734,7 @@ public sealed class MaterialTabsTests
             return RequireIndicatorPainter(harness.RenderView).CurrentRect!.Value;
         }
 
-        Assert.Equal(new Rect(0, 0, 200, 48), RectFor(TabIndicatorAnimation.Linear, 0));
+        Assert.Equal(DartGeometry.RectFromLTWH(0, 0, 200, 48), RectFor(TabIndicatorAnimation.Linear, 0));
         // Linear moves both edges by the same fraction: 0.2 * 200 = 40.
         Rect linear = RectFor(TabIndicatorAnimation.Linear, 0.2);
         Assert.Equal(40, linear.Left, precision: 3);
@@ -830,7 +830,7 @@ public sealed class MaterialTabsTests
         harness.Pump(new Size(300, 100));
 
         var flex = FindDescendant<RenderFlex>(harness.RenderView)!;
-        Point target = TabRects(flex)[1].Center;
+        Offset target = TabRects(flex)[1].Center;
         DateTime now = DateTime.UtcNow;
         GestureBinding.Instance.HandlePointerEvent(harness.RenderView, new PointerDownEvent(
             30, PointerDeviceKind.Mouse, target, PointerButtons.Primary, now));
@@ -848,8 +848,8 @@ public sealed class MaterialTabsTests
         harness.Pump(new Size(300, 100));
         Assert.False(controller.IndexIsChanging);
         Assert.Equal(
-            TabRects(FindDescendant<RenderFlex>(harness.RenderView)!)[1].Center.X,
-            RequireIndicatorPainter(harness.RenderView).CurrentRect!.Value.Center.X,
+            TabRects(FindDescendant<RenderFlex>(harness.RenderView)!)[1].Center.Dx,
+            RequireIndicatorPainter(harness.RenderView).CurrentRect!.Value.Center.Dx,
             precision: 3);
     }
 
@@ -1089,11 +1089,11 @@ public sealed class MaterialTabsTests
         harness.Pump(new Size(300, 180));
         DateTime now = DateTime.UtcNow;
         GestureBinding.Instance.HandlePointerEvent(harness.RenderView, new PointerDownEvent(
-            44, PointerDeviceKind.Touch, new Point(260, 90), PointerButtons.Primary, now));
+            44, PointerDeviceKind.Touch, new Offset(260, 90), PointerButtons.Primary, now));
         GestureBinding.Instance.HandlePointerEvent(harness.RenderView, new PointerMoveEvent(
-            44, PointerDeviceKind.Touch, new Point(20, 90), PointerButtons.Primary, now.AddMilliseconds(40)));
+            44, PointerDeviceKind.Touch, new Offset(20, 90), PointerButtons.Primary, now.AddMilliseconds(40)));
         GestureBinding.Instance.HandlePointerEvent(harness.RenderView, new PointerUpEvent(
-            44, PointerDeviceKind.Touch, new Point(20, 90), PointerButtons.None, now.AddMilliseconds(50)));
+            44, PointerDeviceKind.Touch, new Offset(20, 90), PointerButtons.None, now.AddMilliseconds(50)));
         clock = AnimationPump.CurrentSeconds;
         AnimationPump.Prime();
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(clock + 0.01));
@@ -1172,11 +1172,11 @@ public sealed class MaterialTabsTests
 
         DateTime now = DateTime.UtcNow;
         GestureBinding.Instance.HandlePointerEvent(harness.RenderView, new PointerDownEvent(
-            77, PointerDeviceKind.Touch, new Point(260, 90), PointerButtons.Primary, now));
+            77, PointerDeviceKind.Touch, new Offset(260, 90), PointerButtons.Primary, now));
         GestureBinding.Instance.HandlePointerEvent(harness.RenderView, new PointerMoveEvent(
-            77, PointerDeviceKind.Touch, new Point(20, 90), PointerButtons.Primary, now.AddMilliseconds(40)));
+            77, PointerDeviceKind.Touch, new Offset(20, 90), PointerButtons.Primary, now.AddMilliseconds(40)));
         GestureBinding.Instance.HandlePointerEvent(harness.RenderView, new PointerUpEvent(
-            77, PointerDeviceKind.Touch, new Point(20, 90), PointerButtons.None, now.AddMilliseconds(50)));
+            77, PointerDeviceKind.Touch, new Offset(20, 90), PointerButtons.None, now.AddMilliseconds(50)));
 
         Assert.Contains(notifications, notification => notification is ScrollUpdateNotification);
         Assert.All(notifications, notification => Assert.Equal(0, notification.Depth));
@@ -1390,8 +1390,8 @@ public sealed class MaterialTabsTests
         var rects = new List<Rect>();
         for (RenderBox? child = flex.FirstChild; child is not null; child = flex.ChildAfter(child))
         {
-            Point offset = ((FlexParentData)child.parentData!).offset;
-            rects.Add(new Rect(offset, child.Size));
+            Offset offset = ((FlexParentData)child.parentData!).offset;
+            rects.Add(DartGeometry.RectFromOffsetAndSize(offset, child.Size));
         }
 
         return rects;
@@ -1457,7 +1457,7 @@ public sealed class MaterialTabsTests
     }
 
     /// <summary>The x offset of a laid-out page relative to the render view.</summary>
-    private static double PageLeft(RenderBox page) => page.GetPaintOffsetToRoot().X;
+    private static double PageLeft(RenderBox page) => page.GetPaintOffsetToRoot().Dx;
 
     private static T? FindDescendant<T>(RenderObject? root) where T : RenderObject
     {

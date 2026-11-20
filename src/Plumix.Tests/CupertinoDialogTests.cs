@@ -105,10 +105,10 @@ public sealed class CupertinoDialogTests : IDisposable
         RenderParagraph no = FindParagraph(sideBySide.RenderView, "No")!;
         RenderParagraph yes = FindParagraph(sideBySide.RenderView, "Yes")!;
         Assert.Equal(
-            no.GetPaintOffsetToRoot().Y,
-            yes.GetPaintOffsetToRoot().Y,
+            no.GetPaintOffsetToRoot().Dy,
+            yes.GetPaintOffsetToRoot().Dy,
             precision: 1);
-        Assert.True(yes.GetPaintOffsetToRoot().X > no.GetPaintOffsetToRoot().X);
+        Assert.True(yes.GetPaintOffsetToRoot().Dx > no.GetPaintOffsetToRoot().Dx);
 
         using var stacked = new RenderHarness(Wrap(new CupertinoAlertDialog(
             title: new Text("Title"),
@@ -123,7 +123,7 @@ public sealed class CupertinoDialogTests : IDisposable
         RenderParagraph longLabel = FindParagraph(
             stacked.RenderView, "This is a very long action label that cannot fit")!;
         RenderParagraph shortLabel = FindParagraph(stacked.RenderView, "Short")!;
-        Assert.True(shortLabel.GetPaintOffsetToRoot().Y > longLabel.GetPaintOffsetToRoot().Y);
+        Assert.True(shortLabel.GetPaintOffsetToRoot().Dy > longLabel.GetPaintOffsetToRoot().Dy);
     }
 
     [Fact]
@@ -169,8 +169,8 @@ public sealed class CupertinoDialogTests : IDisposable
             ])));
         harness.Pump(new Size(600, 600));
 
-        Point onePosition = CenterOf(FindParagraph(harness.RenderView, "One")!);
-        Point twoPosition = CenterOf(FindParagraph(harness.RenderView, "Two")!);
+        Offset onePosition = CenterOf(FindParagraph(harness.RenderView, "One")!);
+        Offset twoPosition = CenterOf(FindParagraph(harness.RenderView, "Two")!);
         harness.HandlePointerEvent(new PointerDownEvent(
             pointer: 1, kind: PointerDeviceKind.Touch, position: onePosition,
             buttons: PointerButtons.Primary, timestampUtc: DateTime.UtcNow));
@@ -201,7 +201,7 @@ public sealed class CupertinoDialogTests : IDisposable
             ])));
         harness.Pump(new Size(600, 600));
 
-        Point disabledPosition = CenterOf(FindParagraph(harness.RenderView, "Disabled")!);
+        Offset disabledPosition = CenterOf(FindParagraph(harness.RenderView, "Disabled")!);
         harness.HandlePointerEvent(new PointerDownEvent(
             pointer: 1, kind: PointerDeviceKind.Touch, position: disabledPosition,
             buttons: PointerButtons.Primary, timestampUtc: DateTime.UtcNow));
@@ -328,7 +328,7 @@ public sealed class CupertinoDialogTests : IDisposable
             barrierDismissible: false,
             semanticsDismissible: true,
             routeSettings: new RouteSettings(Name: "/popup"),
-            anchorPoint: new Point(500.0, 0.0),
+            anchorPoint: new Offset(500.0, 0.0),
             requestFocus: false);
 
         var route = Assert.IsType<CupertinoModalPopupRoute<string>>(
@@ -337,7 +337,7 @@ public sealed class CupertinoDialogTests : IDisposable
         Assert.False(route.BarrierDismissible);
         Assert.True(route.SemanticsDismissible);
         Assert.Equal("/popup", route.Settings.Name);
-        Assert.Equal(new Point(500.0, 0.0), route.AnchorPoint);
+        Assert.Equal(new Offset(500.0, 0.0), route.AnchorPoint);
         Assert.False(route.RequestFocus);
     }
 
@@ -401,10 +401,10 @@ public sealed class CupertinoDialogTests : IDisposable
     private static Color ParagraphColor(RenderParagraph paragraph) =>
         (Color)((Avalonia.Media.ISolidColorBrush)paragraph.Foreground).Color;
 
-    private static Point CenterOf(RenderBox box)
+    private static Offset CenterOf(RenderBox box)
     {
-        Point origin = box.GetPaintOffsetToRoot();
-        return new Point(origin.X + (box.Size.Width / 2), origin.Y + (box.Size.Height / 2));
+        Offset origin = box.GetPaintOffsetToRoot();
+        return new Offset(origin.Dx + (box.Size.Width / 2), origin.Dy + (box.Size.Height / 2));
     }
 
     private static RenderParagraph? FindParagraph(RenderObject? root, string text) =>

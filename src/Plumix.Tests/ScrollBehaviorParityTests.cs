@@ -43,21 +43,21 @@ public sealed class ScrollBehaviorParityTests : IDisposable
     {
         var tracker = new VelocityTracker(PointerDeviceKind.Touch);
         DateTime start = new(2026, 8, 2, 12, 0, 0, DateTimeKind.Utc);
-        tracker.AddPosition(start, new Point(0, 0));
-        tracker.AddPosition(start.AddMilliseconds(10), new Point(6, -3));
-        tracker.AddPosition(start.AddMilliseconds(20), new Point(12, -6));
+        tracker.AddPosition(start, new Offset(0, 0));
+        tracker.AddPosition(start.AddMilliseconds(10), new Offset(6, -3));
+        tracker.AddPosition(start.AddMilliseconds(20), new Offset(12, -6));
 
         Velocity velocity = tracker.GetVelocity();
-        Assert.Equal(600, velocity.PixelsPerSecond.X, precision: 6);
-        Assert.Equal(-300, velocity.PixelsPerSecond.Y, precision: 6);
+        Assert.Equal(600, velocity.PixelsPerSecond.Dx, precision: 6);
+        Assert.Equal(-300, velocity.PixelsPerSecond.Dy, precision: 6);
         Assert.Equal(Velocity.Zero, new VelocityTracker(PointerDeviceKind.Touch).GetVelocity());
 
-        var horizontal = new Velocity(new Vector(7, 0));
-        var second = new Velocity(new Vector(12, 0));
-        Assert.Equal(new Vector(19, 0), (horizontal + second).PixelsPerSecond);
-        Assert.Equal(new Vector(5, 0), (second - horizontal).PixelsPerSecond);
-        Assert.Equal(new Vector(-7, 0), (-horizontal).PixelsPerSecond);
-        Assert.Equal(5, horizontal.ClampMagnitude(0, 5).PixelsPerSecond.Length, precision: 6);
+        var horizontal = new Velocity(new Offset(7, 0));
+        var second = new Velocity(new Offset(12, 0));
+        Assert.Equal(new Offset(19, 0), (horizontal + second).PixelsPerSecond);
+        Assert.Equal(new Offset(5, 0), (second - horizontal).PixelsPerSecond);
+        Assert.Equal(new Offset(-7, 0), (-horizontal).PixelsPerSecond);
+        Assert.Equal(5, horizontal.ClampMagnitude(0, 5).PixelsPerSecond.DartDistance, precision: 6);
     }
 
     [Fact]
@@ -68,17 +68,17 @@ public sealed class ScrollBehaviorParityTests : IDisposable
         var macos = new MacOSScrollViewFlingVelocityTracker(PointerDeviceKind.Touch);
         foreach (VelocityTracker tracker in new VelocityTracker[] { ios, macos })
         {
-            tracker.AddPosition(start, new Point(0, 0));
-            tracker.AddPosition(start.AddMilliseconds(10), new Point(10, 0));
-            tracker.AddPosition(start.AddMilliseconds(20), new Point(30, 0));
-            tracker.AddPosition(start.AddMilliseconds(30), new Point(60, 0));
+            tracker.AddPosition(start, new Offset(0, 0));
+            tracker.AddPosition(start.AddMilliseconds(10), new Offset(10, 0));
+            tracker.AddPosition(start.AddMilliseconds(20), new Offset(30, 0));
+            tracker.AddPosition(start.AddMilliseconds(30), new Offset(60, 0));
         }
 
-        Assert.Equal(1450, ios.GetVelocity().PixelsPerSecond.X, precision: 6);
-        Assert.Equal(2050, macos.GetVelocity().PixelsPerSecond.X, precision: 6);
+        Assert.Equal(1450, ios.GetVelocity().PixelsPerSecond.Dx, precision: 6);
+        Assert.Equal(2050, macos.GetVelocity().PixelsPerSecond.Dx, precision: 6);
         Assert.Throws<InvalidOperationException>(
             () => new IOSScrollViewFlingVelocityTracker(PointerDeviceKind.Touch).GetVelocity());
-        Assert.Throws<ArgumentException>(() => ios.AddPosition(start, new Point(0, 0)));
+        Assert.Throws<ArgumentException>(() => ios.AddPosition(start, new Offset(0, 0)));
     }
 
     [Fact]
@@ -93,10 +93,10 @@ public sealed class ScrollBehaviorParityTests : IDisposable
         ];
         foreach (VelocityTracker tracker in trackers)
         {
-            tracker.AddPosition(start, new Point(0, 0));
-            tracker.AddPosition(start.AddMilliseconds(10), new Point(1, 0));
-            tracker.AddPosition(start.AddMilliseconds(20), new Point(2, 0));
-            tracker.AddPosition(start.AddMilliseconds(30), new Point(3, 0));
+            tracker.AddPosition(start, new Offset(0, 0));
+            tracker.AddPosition(start.AddMilliseconds(10), new Offset(1, 0));
+            tracker.AddPosition(start.AddMilliseconds(20), new Offset(2, 0));
+            tracker.AddPosition(start.AddMilliseconds(30), new Offset(3, 0));
         }
 
         Thread.Sleep(50);
@@ -155,10 +155,10 @@ public sealed class ScrollBehaviorParityTests : IDisposable
 
         DateTime now = DateTime.UtcNow;
         binding.HandlePointerEvent(harness.RenderView, new PointerDownEvent(
-            2, PointerDeviceKind.Touch, new Point(50, 50), PointerButtons.Primary, now));
+            2, PointerDeviceKind.Touch, new Offset(50, 50), PointerButtons.Primary, now));
         Assert.Equal(1, trackerCreations);
         binding.HandlePointerEvent(harness.RenderView, new PointerCancelEvent(
-            2, PointerDeviceKind.Touch, new Point(50, 50), PointerButtons.None, now.AddMilliseconds(1)));
+            2, PointerDeviceKind.Touch, new Offset(50, 50), PointerButtons.None, now.AddMilliseconds(1)));
 
         FocusManager.Instance.HandleKeyEvent(KeySim.Up(LogicalKeyboardKey.AltLeft));
         FocusManager.Instance.HandleKeyEvent(KeySim.Up(LogicalKeyboardKey.Space));
@@ -190,8 +190,8 @@ public sealed class ScrollBehaviorParityTests : IDisposable
         binding.HandlePointerEvent(renderView, new PointerScrollEvent(
             device: 1,
             kind: kind,
-            position: new Point(50, 50),
-            scrollDelta: new Point(0, 20),
+            position: new Offset(50, 50),
+            scrollDelta: new Offset(0, 20),
             timestampUtc: DateTime.UtcNow,
             onRespond: onRespond));
     }

@@ -18,7 +18,7 @@ namespace Plumix.Rendering;
 /// <param name="Point">Coordinates of the lower left or lower right corner of the selection, relative to
 /// the top left of the <see cref="RenderEditable"/> object.</param>
 /// <param name="Direction">Direction of the text at this edge of the selection.</param>
-public readonly record struct TextSelectionPoint(Point Point, TextDirection? Direction)
+public readonly record struct TextSelectionPoint(Offset Point, TextDirection? Direction)
 {
     /// <inheritdoc />
     public override string ToString()
@@ -45,8 +45,8 @@ public sealed class VerticalCaretMovementRun : IEnumerator<TextPosition>
 {
     private readonly RenderEditable _editable;
     private readonly IReadOnlyList<LineMetrics> _lineMetrics;
-    private readonly Dictionary<int, KeyValuePair<Point, TextPosition>> _positionCache = [];
-    private Point _currentOffset;
+    private readonly Dictionary<int, KeyValuePair<Offset, TextPosition>> _positionCache = [];
+    private Offset _currentOffset;
     private int _currentLine;
     private TextPosition _currentTextPosition;
     private bool _isValid = true;
@@ -56,7 +56,7 @@ public sealed class VerticalCaretMovementRun : IEnumerator<TextPosition>
         IReadOnlyList<LineMetrics> lineMetrics,
         TextPosition currentTextPosition,
         int currentLine,
-        Point currentOffset)
+        Offset currentOffset)
     {
         _editable = editable;
         _lineMetrics = lineMetrics;
@@ -92,20 +92,20 @@ public sealed class VerticalCaretMovementRun : IEnumerator<TextPosition>
         }
     }
 
-    private KeyValuePair<Point, TextPosition> GetTextPositionForLine(int lineNumber)
+    private KeyValuePair<Offset, TextPosition> GetTextPositionForLine(int lineNumber)
     {
         RenderEditable.DebugAssert(IsValid);
         RenderEditable.DebugAssert(lineNumber >= 0);
-        if (_positionCache.TryGetValue(lineNumber, out KeyValuePair<Point, TextPosition> cachedPosition))
+        if (_positionCache.TryGetValue(lineNumber, out KeyValuePair<Offset, TextPosition> cachedPosition))
         {
             return cachedPosition;
         }
 
         RenderEditable.DebugAssert(lineNumber != _currentLine);
 
-        var newOffset = new Point(_currentOffset.X, _lineMetrics[lineNumber].Baseline);
+        var newOffset = new Offset(_currentOffset.Dx, _lineMetrics[lineNumber].Baseline);
         TextPosition closestPosition = _editable.TextPainter.GetPositionForOffset(newOffset);
-        var position = new KeyValuePair<Point, TextPosition>(newOffset, closestPosition);
+        var position = new KeyValuePair<Offset, TextPosition>(newOffset, closestPosition);
         _positionCache[lineNumber] = position;
         return position;
     }
@@ -131,7 +131,7 @@ public sealed class VerticalCaretMovementRun : IEnumerator<TextPosition>
             return false;
         }
 
-        KeyValuePair<Point, TextPosition> position = GetTextPositionForLine(_currentLine + 1);
+        KeyValuePair<Offset, TextPosition> position = GetTextPositionForLine(_currentLine + 1);
         _currentLine += 1;
         _currentOffset = position.Key;
         _currentTextPosition = position.Value;
@@ -148,7 +148,7 @@ public sealed class VerticalCaretMovementRun : IEnumerator<TextPosition>
             return false;
         }
 
-        KeyValuePair<Point, TextPosition> position = GetTextPositionForLine(_currentLine - 1);
+        KeyValuePair<Offset, TextPosition> position = GetTextPositionForLine(_currentLine - 1);
         _currentLine -= 1;
         _currentOffset = position.Key;
         _currentTextPosition = position.Value;
@@ -163,10 +163,10 @@ public sealed class VerticalCaretMovementRun : IEnumerator<TextPosition>
     /// </remarks>
     public bool MoveByOffset(double offset)
     {
-        Point initialOffset = _currentOffset;
+        Offset initialOffset = _currentOffset;
         if (offset >= 0.0)
         {
-            while (_currentOffset.Y < initialOffset.Y + offset)
+            while (_currentOffset.Dy < initialOffset.Dy + offset)
             {
                 if (!MoveNext())
                 {
@@ -176,7 +176,7 @@ public sealed class VerticalCaretMovementRun : IEnumerator<TextPosition>
         }
         else
         {
-            while (_currentOffset.Y > initialOffset.Y + offset)
+            while (_currentOffset.Dy > initialOffset.Dy + offset)
             {
                 if (!MovePrevious())
                 {
@@ -280,12 +280,12 @@ public class RenderEditable : RenderBox,
     private int? _cachedLineBreakCount;
     private TapGestureRecognizer? _tap;
     private LongPressGestureRecognizer? _longPress;
-    private Point? _lastTapDownPosition;
-    private Point? _lastSecondaryTapDownPosition;
+    private Offset? _lastTapDownPosition;
+    private Offset? _lastSecondaryTapDownPosition;
     private List<PlaceholderDimensions>? _placeholderDimensions;
     private Rect _caretPrototype;
-    private Point _relativeOrigin;
-    private Point? _previousOffset;
+    private Offset _relativeOrigin;
+    private Offset? _previousOffset;
     private bool _shouldResetOrigin = true;
     private bool _resetOriginOnLeft;
     private bool _resetOriginOnRight;
@@ -339,7 +339,7 @@ public class RenderEditable : RenderBox,
         double? cursorHeight = null,
         Radius? cursorRadius = null,
         bool paintCursorAboveText = false,
-        Point cursorOffset = default,
+        Offset cursorOffset = default,
         double devicePixelRatio = 1.0,
         BoxHeightStyle selectionHeightStyle = BoxHeightStyle.Max,
         BoxWidthStyle selectionWidthStyle = BoxWidthStyle.Max,
@@ -483,9 +483,9 @@ public class RenderEditable : RenderBox,
 
     public void Remove(RenderBox child) => _container.Remove(child);
 
-    public void DefaultPaint(PaintingContext ctx, Point offset) => _container.DefaultPaint(ctx, offset);
+    public void DefaultPaint(PaintingContext ctx, Offset offset) => _container.DefaultPaint(ctx, offset);
 
-    public bool DefaultHitTestChildren(BoxHitTestResult result, Point position)
+    public bool DefaultHitTestChildren(BoxHitTestResult result, Offset position)
     {
         return _container.DefaultHitTestChildren(result, position);
     }
@@ -764,8 +764,8 @@ public class RenderEditable : RenderBox,
     /// <summary>Returns the TextPosition above or below the given offset.</summary>
     private TextPosition GetTextPositionVertical(TextPosition position, double verticalOffset)
     {
-        Point caretOffset = _textPainter.GetOffsetForCaret(position, _caretPrototype);
-        var caretOffsetTranslated = new Point(caretOffset.X, caretOffset.Y + verticalOffset);
+        Offset caretOffset = _textPainter.GetOffsetForCaret(position, _caretPrototype);
+        var caretOffsetTranslated = new Offset(caretOffset.Dx, caretOffset.Dy + verticalOffset);
         return _textPainter.GetPositionForOffset(caretOffsetTranslated);
     }
 
@@ -809,7 +809,7 @@ public class RenderEditable : RenderBox,
 
     // End TextLayoutMetrics.
 
-    private void UpdateSelectionExtentsVisibility(Point effectiveOffset)
+    private void UpdateSelectionExtentsVisibility(Offset effectiveOffset)
     {
         DebugAssert(Selection is not null);
         TextSelection selection = Selection!.Value;
@@ -820,9 +820,9 @@ public class RenderEditable : RenderBox,
             return;
         }
 
-        var visibleRegion = new Rect(Size);
+        var visibleRegion = DartGeometry.RectFromSize(Size);
 
-        Point startOffset = _textPainter.GetOffsetForCaret(
+        Offset startOffset = _textPainter.GetOffsetForCaret(
             new TextPosition(selection.Start, selection.Affinity),
             _caretPrototype);
         // Check if the selection is visible with an approximation because a difference between rounded
@@ -835,7 +835,7 @@ public class RenderEditable : RenderBox,
             visibleRegion.Inflate(visibleRegionSlop),
             startOffset + effectiveOffset);
 
-        Point endOffset = _textPainter.GetOffsetForCaret(
+        Offset endOffset = _textPainter.GetOffsetForCaret(
             new TextPosition(selection.End, selection.Affinity),
             _caretPrototype);
         _selectionEndInViewport.Value = Contains(
@@ -844,9 +844,9 @@ public class RenderEditable : RenderBox,
     }
 
     // Dart's `Rect.contains`: the left and top edges are inside, the right and bottom edges are not.
-    private static bool Contains(Rect rect, Point point)
+    private static bool Contains(Rect rect, Offset point)
     {
-        return point.X >= rect.Left && point.X < rect.Right && point.Y >= rect.Top && point.Y < rect.Bottom;
+        return point.Dx >= rect.Left && point.Dx < rect.Right && point.Dy >= rect.Top && point.Dy < rect.Bottom;
     }
 
     private void SetTextEditingValue(TextEditingValue newValue, SelectionChangedCause cause)
@@ -1319,7 +1319,7 @@ public class RenderEditable : RenderBox,
     /// <remarks>By default, the cursor position should be set to an offset of (-cursorWidth * 0.5, 0.0)
     /// on iOS platforms and (0, 0) on Android platforms. The origin from where the offset is applied to
     /// is the arbitrary location where the cursor ends up being rendered from by default.</remarks>
-    public Point CursorOffset
+    public Offset CursorOffset
     {
         get => CaretPainterInstance.CursorOffset;
         set => CaretPainterInstance.CursorOffset = value;
@@ -1445,14 +1445,14 @@ public class RenderEditable : RenderBox,
     public IReadOnlyList<TextBox> GetBoxesForSelection(TextSelection selection)
     {
         ComputeTextMetricsIfNeeded();
-        Point paintOffset = PaintOffset;
+        Offset paintOffset = PaintOffset;
         return _textPainter
             .GetBoxesForSelection(selection, SelectionHeightStyle, SelectionWidthStyle)
             .Select(textBox => TextBox.FromLTRBD(
-                textBox.Left + paintOffset.X,
-                textBox.Top + paintOffset.Y,
-                textBox.Right + paintOffset.X,
-                textBox.Bottom + paintOffset.Y,
+                textBox.Left + paintOffset.Dx,
+                textBox.Top + paintOffset.Dy,
+                textBox.Right + paintOffset.Dx,
+                textBox.Bottom + paintOffset.Dy,
                 textBox.Direction))
             .ToList();
     }
@@ -1605,13 +1605,13 @@ public class RenderEditable : RenderBox,
                 currentDirection = rects[0].Direction;
                 foreach (TextBox textBox in rects.Skip(1))
                 {
-                    rect = rect.Union(textBox.ToRect());
+                    rect = rect.ExpandToInclude(textBox.ToRect());
                     currentDirection = textBox.Direction;
                 }
 
                 // Any of the text boxes may have had infinite dimensions. We shouldn't pass infinite
                 // dimensions up to the bridges.
-                rect = new Rect(
+                rect = DartGeometry.RectFromLTWH(
                     Math.Max(0.0, rect.Left),
                     Math.Max(0.0, rect.Top),
                     Math.Min(rect.Width, Constraints.MaxWidth),
@@ -1696,7 +1696,7 @@ public class RenderEditable : RenderBox,
 
     private static Rect FromLTRB(double left, double top, double right, double bottom)
     {
-        return new Rect(left, top, Math.Max(0.0, right - left), Math.Max(0.0, bottom - top));
+        return DartGeometry.RectFromLTWH(left, top, Math.Max(0.0, right - left), Math.Max(0.0, bottom - top));
     }
 
     // Dart's `Rect.isEmpty`.
@@ -1894,10 +1894,10 @@ public class RenderEditable : RenderBox,
 
     /// <summary>The offset the text is painted at, which is the negated scroll offset along the
     /// viewport axis.</summary>
-    internal Point PaintOffset => ViewportAxis switch
+    internal Offset PaintOffset => ViewportAxis switch
     {
-        Axis.Horizontal => new Point(-Offset.Pixels, 0.0),
-        _ => new Point(0.0, -Offset.Pixels),
+        Axis.Horizontal => new Offset(-Offset.Pixels, 0.0),
+        _ => new Offset(0.0, -Offset.Pixels),
     };
 
     private double ViewportExtent
@@ -1938,7 +1938,7 @@ public class RenderEditable : RenderBox,
     {
         ComputeTextMetricsIfNeeded();
 
-        Point paintOffset = PaintOffset;
+        Offset paintOffset = PaintOffset;
 
         IReadOnlyList<TextBox> boxes = selection.IsCollapsed
             ? []
@@ -1946,20 +1946,20 @@ public class RenderEditable : RenderBox,
         if (boxes.Count == 0)
         {
             // TODO(mpcomplete): This doesn't work well at an RTL/LTR boundary.
-            Point caretOffset = _textPainter.GetOffsetForCaret(selection.Extent, _caretPrototype);
-            var start = new Point(
-                caretOffset.X + paintOffset.X,
-                PreferredLineHeight + caretOffset.Y + paintOffset.Y);
+            Offset caretOffset = _textPainter.GetOffsetForCaret(selection.Extent, _caretPrototype);
+            var start = new Offset(
+                caretOffset.Dx + paintOffset.Dx,
+                PreferredLineHeight + caretOffset.Dy + paintOffset.Dy);
             return [new TextSelectionPoint(start, null)];
         }
         else
         {
-            var start = new Point(
-                Math.Clamp(boxes[0].Start, 0, _textPainter.Size.Width) + paintOffset.X,
-                boxes[0].Bottom + paintOffset.Y);
-            var end = new Point(
-                Math.Clamp(boxes[^1].End, 0, _textPainter.Size.Width) + paintOffset.X,
-                boxes[^1].Bottom + paintOffset.Y);
+            var start = new Offset(
+                Math.Clamp(boxes[0].Start, 0, _textPainter.Size.Width) + paintOffset.Dx,
+                boxes[0].Bottom + paintOffset.Dy);
+            var end = new Offset(
+                Math.Clamp(boxes[^1].End, 0, _textPainter.Size.Width) + paintOffset.Dx,
+                boxes[^1].Bottom + paintOffset.Dy);
             return
             [
                 new TextSelectionPoint(start, boxes[0].Direction),
@@ -1990,10 +1990,10 @@ public class RenderEditable : RenderBox,
         Rect? accumulated = null;
         foreach (TextBox incoming in boxes)
         {
-            accumulated = accumulated?.Union(incoming.ToRect()) ?? incoming.ToRect();
+            accumulated = accumulated?.ExpandToInclude(incoming.ToRect()) ?? incoming.ToRect();
         }
 
-        return accumulated?.Translate(new Vector(PaintOffset.X, PaintOffset.Y));
+        return accumulated?.Shift(new Offset(PaintOffset.Dx, PaintOffset.Dy));
     }
 
     /// <summary>Returns the position in the text for the given global coordinate.</summary>
@@ -2001,7 +2001,7 @@ public class RenderEditable : RenderBox,
     /// <see cref="TextPosition"/> and returning a <see cref="Rect"/>, and
     /// <see cref="TextPainter.GetPositionForOffset"/>, which is the equivalent method for a
     /// <see cref="TextPainter"/> object.</remarks>
-    public TextPosition GetPositionForPoint(Point globalPosition)
+    public TextPosition GetPositionForPoint(Offset globalPosition)
     {
         ComputeTextMetricsIfNeeded();
         return _textPainter.GetPositionForOffset(GlobalToLocal(globalPosition) - PaintOffset);
@@ -2015,14 +2015,14 @@ public class RenderEditable : RenderBox,
     {
         ComputeTextMetricsIfNeeded();
         Rect caretPrototype = _caretPrototype;
-        Point caretOffset = _textPainter.GetOffsetForCaret(caretPosition, caretPrototype);
-        Rect caretRect = caretPrototype.Translate(new Vector(
-            caretOffset.X + CursorOffset.X,
-            caretOffset.Y + CursorOffset.Y));
+        Offset caretOffset = _textPainter.GetOffsetForCaret(caretPosition, caretPrototype);
+        Rect caretRect = caretPrototype.Shift(new Offset(
+            caretOffset.Dx + CursorOffset.Dx,
+            caretOffset.Dy + CursorOffset.Dy));
         double scrollableWidth = Math.Max(_textPainter.Width + CaretMargin, Size.Width);
 
         double caretX = Math.Clamp(caretRect.Left, 0, Math.Max(scrollableWidth - CaretMargin, 0));
-        caretRect = new Rect(new Point(caretX, caretRect.Top), caretRect.Size);
+        caretRect = DartGeometry.RectFromOffsetAndSize(new Offset(caretX, caretRect.Top), caretRect.Size);
 
         double fullHeight = _textPainter.GetFullHeightForCaret(caretPosition, caretPrototype);
         switch (PlatformDefaults.TargetPlatform)
@@ -2032,7 +2032,7 @@ public class RenderEditable : RenderBox,
             {
                 // Center the caret vertically along the text.
                 double heightDiff = fullHeight - caretRect.Height;
-                caretRect = new Rect(
+                caretRect = DartGeometry.RectFromLTWH(
                     caretRect.Left,
                     caretRect.Top + (heightDiff / 2),
                     caretRect.Width,
@@ -2049,7 +2049,7 @@ public class RenderEditable : RenderBox,
                 // TODO(garyq): See the TODO for _computeCaretPrototype().
                 double caretHeight = EffectiveCursorHeight;
                 double heightDiff = fullHeight - caretHeight;
-                caretRect = new Rect(
+                caretRect = DartGeometry.RectFromLTWH(
                     caretRect.Left,
                     caretRect.Top - KCaretHeightOffset + (heightDiff / 2),
                     caretRect.Width,
@@ -2058,9 +2058,9 @@ public class RenderEditable : RenderBox,
             }
         }
 
-        caretRect = caretRect.Translate(new Vector(PaintOffset.X, PaintOffset.Y));
-        Point snap = SnapToPhysicalPixel(caretRect.TopLeft);
-        return caretRect.Translate(new Vector(snap.X, snap.Y));
+        caretRect = caretRect.Shift(new Offset(PaintOffset.Dx, PaintOffset.Dy));
+        Offset snap = SnapToPhysicalPixel(caretRect.TopLeft);
+        return caretRect.Shift(new Offset(snap.Dx, snap.Dy));
     }
 
     // -- Intrinsics ----------------------------------------------------------------------------------
@@ -2204,12 +2204,12 @@ public class RenderEditable : RenderBox,
     // -- Hit testing and gestures ---------------------------------------------------------------------
 
     /// <inheritdoc />
-    protected override bool HitTestSelf(Point position) => true;
+    protected override bool HitTestSelf(Offset position) => true;
 
     /// <inheritdoc />
-    protected override bool HitTestChildren(BoxHitTestResult result, Point position)
+    protected override bool HitTestChildren(BoxHitTestResult result, Offset position)
     {
-        Point effectivePosition = position - PaintOffset;
+        Offset effectivePosition = position - PaintOffset;
         GlyphInfo? glyph = _textPainter.GetClosestGlyphForOffset(effectivePosition);
         // The hit-test can't fall through the horizontal gaps between visually adjacent characters on
         // the same line, even with a large letter-spacing or text justification, as
@@ -2249,7 +2249,7 @@ public class RenderEditable : RenderBox,
     }
 
     /// <summary>The position of the most recent secondary tap down event on this text input.</summary>
-    public Point? LastSecondaryTapDownPosition => _lastSecondaryTapDownPosition;
+    public Offset? LastSecondaryTapDownPosition => _lastSecondaryTapDownPosition;
 
     /// <summary>Tracks the position of a secondary tap event.</summary>
     /// <remarks>Should be called before attempting to change the selection based on the position of a
@@ -2329,7 +2329,7 @@ public class RenderEditable : RenderBox,
     /// <paramref name="to"/>.</summary>
     /// <remarks><paramref name="from"/> corresponds to the <see cref="TextSelection.BaseOffset"/>, and
     /// <paramref name="to"/> corresponds to the <see cref="TextSelection.ExtentOffset"/>.</remarks>
-    public void SelectPositionAt(Point from, SelectionChangedCause cause, Point? to = null)
+    public void SelectPositionAt(Offset from, SelectionChangedCause cause, Offset? to = null)
     {
         ComputeTextMetricsIfNeeded();
         TextPosition fromPosition = _textPainter.GetPositionForOffset(GlobalToLocal(from) - PaintOffset);
@@ -2360,7 +2360,7 @@ public class RenderEditable : RenderBox,
     /// <remarks>The set of words selected are not strictly bounded by the range of global positions.
     /// The first and last endpoints of the selection will always be at the beginning and end of a word
     /// respectively.</remarks>
-    public void SelectWordsInRange(Point from, SelectionChangedCause cause, Point? to = null)
+    public void SelectWordsInRange(Offset from, SelectionChangedCause cause, Offset? to = null)
     {
         ComputeTextMetricsIfNeeded();
         TextPosition fromPosition = _textPainter.GetPositionForOffset(GlobalToLocal(from) - PaintOffset);
@@ -2515,13 +2515,13 @@ public class RenderEditable : RenderBox,
         {
             case TargetPlatform.IOS:
             case TargetPlatform.MacOS:
-                _caretPrototype = new Rect(0.0, 0.0, CursorWidth, EffectiveCursorHeight + 2);
+                _caretPrototype = DartGeometry.RectFromLTWH(0.0, 0.0, CursorWidth, EffectiveCursorHeight + 2);
                 break;
             case TargetPlatform.Android:
             case TargetPlatform.Fuchsia:
             case TargetPlatform.Linux:
             case TargetPlatform.Windows:
-                _caretPrototype = new Rect(
+                _caretPrototype = DartGeometry.RectFromLTWH(
                     0.0,
                     KCaretHeightOffset,
                     CursorWidth,
@@ -2532,16 +2532,16 @@ public class RenderEditable : RenderBox,
 
     // Computes the offset to apply to the given [sourceOffset] so it perfectly snaps to physical
     // pixels.
-    private Point SnapToPhysicalPixel(Point sourceOffset)
+    private Offset SnapToPhysicalPixel(Offset sourceOffset)
     {
-        Point globalOffset = LocalToGlobal(sourceOffset);
+        Offset globalOffset = LocalToGlobal(sourceOffset);
         double pixelMultiple = 1.0 / _devicePixelRatio;
-        return new Point(
-            double.IsFinite(globalOffset.X)
-                ? (DartRound(globalOffset.X / pixelMultiple) * pixelMultiple) - globalOffset.X
+        return new Offset(
+            double.IsFinite(globalOffset.Dx)
+                ? (DartRound(globalOffset.Dx / pixelMultiple) * pixelMultiple) - globalOffset.Dx
                 : 0,
-            double.IsFinite(globalOffset.Y)
-                ? (DartRound(globalOffset.Y / pixelMultiple) * pixelMultiple) - globalOffset.Y
+            double.IsFinite(globalOffset.Dy)
+                ? (DartRound(globalOffset.Dy / pixelMultiple) * pixelMultiple) - globalOffset.Dy
                 : 0);
     }
 
@@ -2626,19 +2626,19 @@ public class RenderEditable : RenderBox,
 
     // -- Floating cursor --------------------------------------------------------------------------------
 
-    private static Point CalculateAdjustedCursorOffset(Point offset, Rect boundingRects)
+    private static Offset CalculateAdjustedCursorOffset(Offset offset, Rect boundingRects)
     {
-        double adjustedX = Math.Clamp(offset.X, boundingRects.Left, boundingRects.Right);
-        double adjustedY = Math.Clamp(offset.Y, boundingRects.Top, boundingRects.Bottom);
-        return new Point(adjustedX, adjustedY);
+        double adjustedX = Math.Clamp(offset.Dx, boundingRects.Left, boundingRects.Right);
+        double adjustedY = Math.Clamp(offset.Dy, boundingRects.Top, boundingRects.Bottom);
+        return new Offset(adjustedX, adjustedY);
     }
 
     /// <summary>Returns the position within the text field closest to the raw cursor offset.</summary>
     /// <remarks>See also <see cref="FloatingCursorDragState"/>, which explains the floating cursor
     /// feature in detail.</remarks>
-    public Point CalculateBoundedFloatingCursorOffset(Point rawCursorOffset, bool? shouldResetOrigin = null)
+    public Offset CalculateBoundedFloatingCursorOffset(Offset rawCursorOffset, bool? shouldResetOrigin = null)
     {
-        Point deltaPosition = default;
+        Offset deltaPosition = default;
         double topBound = -FloatingCursorAddedMargin.Top;
         double bottomBound = Math.Min(Size.Height, _textPainter.Height)
                              - PreferredLineHeight
@@ -2659,51 +2659,51 @@ public class RenderEditable : RenderBox,
 
         if (_previousOffset is { } previousOffset)
         {
-            deltaPosition = new Point(rawCursorOffset.X - previousOffset.X, rawCursorOffset.Y - previousOffset.Y);
+            deltaPosition = new Offset(rawCursorOffset.Dx - previousOffset.Dx, rawCursorOffset.Dy - previousOffset.Dy);
         }
 
         // If the cursor was previously out of bounds, reset the relative origin to be the current
         // position, so the cursor begins moving from the correct point.
-        if (_resetOriginOnLeft && deltaPosition.X > 0)
+        if (_resetOriginOnLeft && deltaPosition.Dx > 0)
         {
-            _relativeOrigin = new Point(rawCursorOffset.X - boundingRects.Left, _relativeOrigin.Y);
+            _relativeOrigin = new Offset(rawCursorOffset.Dx - boundingRects.Left, _relativeOrigin.Dy);
             _resetOriginOnLeft = false;
         }
-        else if (_resetOriginOnRight && deltaPosition.X < 0)
+        else if (_resetOriginOnRight && deltaPosition.Dx < 0)
         {
-            _relativeOrigin = new Point(rawCursorOffset.X - boundingRects.Right, _relativeOrigin.Y);
+            _relativeOrigin = new Offset(rawCursorOffset.Dx - boundingRects.Right, _relativeOrigin.Dy);
             _resetOriginOnRight = false;
         }
 
-        if (_resetOriginOnTop && deltaPosition.Y > 0)
+        if (_resetOriginOnTop && deltaPosition.Dy > 0)
         {
-            _relativeOrigin = new Point(_relativeOrigin.X, rawCursorOffset.Y - boundingRects.Top);
+            _relativeOrigin = new Offset(_relativeOrigin.Dx, rawCursorOffset.Dy - boundingRects.Top);
             _resetOriginOnTop = false;
         }
-        else if (_resetOriginOnBottom && deltaPosition.Y < 0)
+        else if (_resetOriginOnBottom && deltaPosition.Dy < 0)
         {
-            _relativeOrigin = new Point(_relativeOrigin.X, rawCursorOffset.Y - boundingRects.Bottom);
+            _relativeOrigin = new Offset(_relativeOrigin.Dx, rawCursorOffset.Dy - boundingRects.Bottom);
             _resetOriginOnBottom = false;
         }
 
-        double currentX = rawCursorOffset.X - _relativeOrigin.X;
-        double currentY = rawCursorOffset.Y - _relativeOrigin.Y;
-        Point adjustedOffset = CalculateAdjustedCursorOffset(new Point(currentX, currentY), boundingRects);
+        double currentX = rawCursorOffset.Dx - _relativeOrigin.Dx;
+        double currentY = rawCursorOffset.Dy - _relativeOrigin.Dy;
+        Offset adjustedOffset = CalculateAdjustedCursorOffset(new Offset(currentX, currentY), boundingRects);
 
-        if (currentX < boundingRects.Left && deltaPosition.X < 0)
+        if (currentX < boundingRects.Left && deltaPosition.Dx < 0)
         {
             _resetOriginOnLeft = true;
         }
-        else if (currentX > boundingRects.Right && deltaPosition.X > 0)
+        else if (currentX > boundingRects.Right && deltaPosition.Dx > 0)
         {
             _resetOriginOnRight = true;
         }
 
-        if (currentY < boundingRects.Top && deltaPosition.Y < 0)
+        if (currentY < boundingRects.Top && deltaPosition.Dy < 0)
         {
             _resetOriginOnTop = true;
         }
-        else if (currentY > boundingRects.Bottom && deltaPosition.Y > 0)
+        else if (currentY > boundingRects.Bottom && deltaPosition.Dy > 0)
         {
             _resetOriginOnBottom = true;
         }
@@ -2717,7 +2717,7 @@ public class RenderEditable : RenderBox,
     // `CalculateAdjustedCursorOffset` reads its edges only.
     private static Rect FromLTRBUnclamped(double left, double top, double right, double bottom)
     {
-        return new Rect(left, top, Math.Max(0.0, right - left), Math.Max(0.0, bottom - top));
+        return DartGeometry.RectFromLTWH(left, top, Math.Max(0.0, right - left), Math.Max(0.0, bottom - top));
     }
 
     /// <summary>Sets the screen position of the floating cursor and the text position closest to the
@@ -2726,7 +2726,7 @@ public class RenderEditable : RenderBox,
     /// <c>EditableTextState.OnFloatingCursorResetTick</c>.</remarks>
     public void SetFloatingCursor(
         FloatingCursorDragState state,
-        Point boundedOffset,
+        Offset boundedOffset,
         TextPosition lastTextPosition,
         double? resetLerpValue = null)
     {
@@ -2751,7 +2751,7 @@ public class RenderEditable : RenderBox,
                 ? EdgeInsets.Lerp(KFloatingCursorSizeIncrease, EdgeInsets.Zero, value)!.Value
                 : KFloatingCursorSizeIncrease;
             Rect inflated = sizeAdjustment.InflateRect(_caretPrototype);
-            CaretPainterInstance.FloatingCursorRect = inflated.Translate(new Vector(boundedOffset.X, boundedOffset.Y));
+            CaretPainterInstance.FloatingCursorRect = inflated.Shift(new Offset(boundedOffset.Dx, boundedOffset.Dy));
         }
         else
         {
@@ -2764,25 +2764,25 @@ public class RenderEditable : RenderBox,
     /// <summary>The text position the floating cursor sits on, read by the caret painter.</summary>
     internal TextPosition FloatingCursorTextPosition => _floatingCursorTextPosition;
 
-    private KeyValuePair<int, Point> LineNumberFor(TextPosition startPosition, IReadOnlyList<LineMetrics> metrics)
+    private KeyValuePair<int, Offset> LineNumberFor(TextPosition startPosition, IReadOnlyList<LineMetrics> metrics)
     {
         // TODO(LongCatIsLooong): include line boundaries information in ui.LineMetrics, then we can get
         // rid of this.
-        Point offset = _textPainter.GetOffsetForCaret(startPosition, default);
+        Offset offset = _textPainter.GetOffsetForCaret(startPosition, default);
         foreach (LineMetrics lineMetrics in metrics)
         {
-            if (lineMetrics.Baseline > offset.Y)
+            if (lineMetrics.Baseline > offset.Dy)
             {
-                return new KeyValuePair<int, Point>(
+                return new KeyValuePair<int, Offset>(
                     lineMetrics.LineNumber,
-                    new Point(offset.X, lineMetrics.Baseline));
+                    new Offset(offset.Dx, lineMetrics.Baseline));
             }
         }
 
         DebugAssert(startPosition.Offset == 0, $"unable to find the line for {startPosition}");
-        return new KeyValuePair<int, Point>(
+        return new KeyValuePair<int, Offset>(
             Math.Max(0, metrics.Count - 1),
-            new Point(offset.X, metrics.Count > 0 ? metrics[^1].Baseline + metrics[^1].Descent : 0.0));
+            new Offset(offset.Dx, metrics.Count > 0 ? metrics[^1].Baseline + metrics[^1].Descent : 0.0));
     }
 
     /// <summary>Starts a <see cref="VerticalCaretMovementRun"/> at the given location in the text, for
@@ -2793,16 +2793,16 @@ public class RenderEditable : RenderBox,
     public VerticalCaretMovementRun StartVerticalCaretMovement(TextPosition startPosition)
     {
         IReadOnlyList<LineMetrics> metrics = _textPainter.ComputeLineMetrics();
-        KeyValuePair<int, Point> currentLine = LineNumberFor(startPosition, metrics);
+        KeyValuePair<int, Offset> currentLine = LineNumberFor(startPosition, metrics);
         return new VerticalCaretMovementRun(this, metrics, startPosition, currentLine.Key, currentLine.Value);
     }
 
     // -- Paint ----------------------------------------------------------------------------------------
 
-    private void PaintContents(PaintingContext context, Point offset)
+    private void PaintContents(PaintingContext context, Offset offset)
     {
-        Point paintOffset = PaintOffset;
-        var effectiveOffset = new Point(offset.X + paintOffset.X, offset.Y + paintOffset.Y);
+        Offset paintOffset = PaintOffset;
+        var effectiveOffset = new Offset(offset.Dx + paintOffset.Dx, offset.Dy + paintOffset.Dy);
 
         if (Selection is not null && !_floatingCursorOn)
         {
@@ -2828,20 +2828,20 @@ public class RenderEditable : RenderBox,
         }
     }
 
-    private void PaintHandleLayers(PaintingContext context, IReadOnlyList<TextSelectionPoint> endpoints, Point offset)
+    private void PaintHandleLayers(PaintingContext context, IReadOnlyList<TextSelectionPoint> endpoints, Offset offset)
     {
-        Point startPoint = endpoints[0].Point;
-        startPoint = new Point(
-            Math.Clamp(startPoint.X, 0.0, Size.Width),
-            Math.Clamp(startPoint.Y, 0.0, Size.Height));
+        Offset startPoint = endpoints[0].Point;
+        startPoint = new Offset(
+            Math.Clamp(startPoint.Dx, 0.0, Size.Width),
+            Math.Clamp(startPoint.Dy, 0.0, Size.Height));
         _leaderLayerHandler.Layer = new LeaderLayer(StartHandleLayerLink, startPoint + offset);
         context.PushLayer(_leaderLayerHandler.Layer, PaintNothing, default);
         if (endpoints.Count == 2)
         {
-            Point endPoint = endpoints[1].Point;
-            endPoint = new Point(
-                Math.Clamp(endPoint.X, 0.0, Size.Width),
-                Math.Clamp(endPoint.Y, 0.0, Size.Height));
+            Offset endPoint = endpoints[1].Point;
+            endPoint = new Offset(
+                Math.Clamp(endPoint.Dx, 0.0, Size.Width),
+                Math.Clamp(endPoint.Dy, 0.0, Size.Height));
             context.PushLayer(new LeaderLayer(EndHandleLayerLink, endPoint + offset), PaintNothing, default);
         }
         else if (Selection!.Value.IsCollapsed)
@@ -2852,7 +2852,7 @@ public class RenderEditable : RenderBox,
 
     // Dart passes `super.paint` (the empty `RenderBox.paint`) as the leader layers' painter; C#'s
     // `RenderObject.Paint` is abstract, so the no-op is spelled out.
-    private static void PaintNothing(PaintingContext context, Point offset)
+    private static void PaintNothing(PaintingContext context, Offset offset)
     {
     }
 
@@ -2870,7 +2870,7 @@ public class RenderEditable : RenderBox,
     }
 
     /// <inheritdoc />
-    public override void Paint(PaintingContext context, Point offset)
+    public override void Paint(PaintingContext context, Offset offset)
     {
         ComputeTextMetricsIfNeeded();
         if (HasVisualOverflow && ClipBehavior != Clip.None)
@@ -2878,7 +2878,7 @@ public class RenderEditable : RenderBox,
             _clipRectLayer.Layer = context.PushClipRect(
                 NeedsCompositing,
                 offset,
-                new Rect(Size),
+                DartGeometry.RectFromSize(Size),
                 PaintContents,
                 clipBehavior: ClipBehavior,
                 oldLayer: _clipRectLayer.Layer);
@@ -2903,7 +2903,7 @@ public class RenderEditable : RenderBox,
             case Clip.None:
                 return null;
             default:
-                return HasVisualOverflow ? new Rect(Size) : null;
+                return HasVisualOverflow ? DartGeometry.RectFromSize(Size) : null;
         }
     }
 

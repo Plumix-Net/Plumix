@@ -115,8 +115,8 @@ internal sealed class FrameStopwatch
         const int maxFrameMarkers = 8;
 
         // Establish the graph position.
-        double x = rect.X;
-        double y = rect.Y;
+        double x = rect.Left;
+        double y = rect.Top;
         double width = rect.Width;
         double height = rect.Height;
         double bottom = rect.Bottom;
@@ -139,7 +139,7 @@ internal sealed class FrameStopwatch
             double sampleUnitHeight = height * UnitHeight(timeMilliseconds, maxUnitInterval);
             double barTop = bottom - sampleUnitHeight;
             double barRight = x + ((i + 1) * sampleUnitWidth);
-            FillRect(context, new Rect(new Point(barLeft, barTop), new Point(barRight, bottom)), 0xAA0000FF);
+            FillRect(context, DartGeometry.RectFromCorners(new Offset(barLeft, barTop), new Offset(barRight, bottom)), 0xAA0000FF);
             barLeft = barRight;
         }
 
@@ -161,7 +161,7 @@ internal sealed class FrameStopwatch
                 // Draw a skinny rectangle (i.e. a line).
                 FillRect(
                     context,
-                    new Rect(new Point(x, y + frameHeight), new Point(x + width, y + frameHeight + 1)),
+                    DartGeometry.RectFromCorners(new Offset(x, y + frameHeight), new Offset(x + width, y + frameHeight + 1)),
                     0xCC000000);
             }
         }
@@ -176,7 +176,7 @@ internal sealed class FrameStopwatch
 
         int sample = (CurrentSample + 1) % LapsCount;
         double left = x + (sample * sampleUnitWidth);
-        FillRect(context, new Rect(new Point(left, y), new Point(left + sampleUnitWidth, rect.Bottom)), color);
+        FillRect(context, DartGeometry.RectFromCorners(new Offset(left, y), new Offset(left + sampleUnitWidth, rect.Bottom)), color);
     }
 
     private static void FillRect(DrawingContext context, Rect rect, uint argb)

@@ -52,10 +52,10 @@ public sealed class ImplicitAnimationsTests : IDisposable
     public void AnimatedSlide_ExposesFlutterDefaults()
     {
         var slide = new AnimatedSlide(
-            offset: new Vector(0.25, -0.5),
+            offset: new Offset(0.25, -0.5),
             duration: TimeSpan.FromMilliseconds(200));
 
-        Assert.Equal(new Vector(0.25, -0.5), slide.Offset);
+        Assert.Equal(new Offset(0.25, -0.5), slide.Offset);
         Assert.Equal(TimeSpan.FromMilliseconds(200), slide.Duration);
         Assert.Null(slide.Child);
         Assert.Equal(Curves.Linear.Transform(0.3), slide.Curve.Transform(0.3));
@@ -183,7 +183,7 @@ public sealed class ImplicitAnimationsTests : IDisposable
         Mount(root, owner);
 
         root.Update(new AnimatedSlide(
-            offset: new Vector(1.0, -0.5),
+            offset: new Offset(1.0, -0.5),
             duration: TimeSpan.FromMilliseconds(200),
             curve: Curves.Linear,
             child: new SizedBox(width: 10, height: 10),
@@ -195,28 +195,28 @@ public sealed class ImplicitAnimationsTests : IDisposable
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.10));
         owner.PumpFrame();
         var halfway = RequireRenderObject<RenderFractionalTranslation>(root.ChildElement);
-        Assert.InRange(halfway.Translation.X, 0.01, 0.99);
-        Assert.InRange(halfway.Translation.Y, -0.49, -0.01);
+        Assert.InRange(halfway.Translation.Dx, 0.01, 0.99);
+        Assert.InRange(halfway.Translation.Dy, -0.49, -0.01);
         Assert.Equal(0, completed);
-        Vector halfwayTranslation = halfway.Translation;
+        Offset halfwayTranslation = halfway.Translation;
 
         root.Update(new AnimatedSlide(
-            offset: new Vector(-0.5, 0.75),
+            offset: new Offset(-0.5, 0.75),
             duration: TimeSpan.FromMilliseconds(200),
             curve: Curves.Linear,
             child: new SizedBox(width: 10, height: 10),
             onEnd: () => completed++));
         owner.PumpFrame();
         var interrupted = RequireRenderObject<RenderFractionalTranslation>(root.ChildElement);
-        Assert.Equal(halfwayTranslation.X, interrupted.Translation.X, precision: 6);
-        Assert.Equal(halfwayTranslation.Y, interrupted.Translation.Y, precision: 6);
+        Assert.Equal(halfwayTranslation.Dx, interrupted.Translation.Dx, precision: 6);
+        Assert.Equal(halfwayTranslation.Dy, interrupted.Translation.Dy, precision: 6);
 
         AnimationPump.Prime();
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 1.0));
         owner.PumpFrame();
-        Vector finished = RequireRenderObject<RenderFractionalTranslation>(root.ChildElement).Translation;
-        Assert.Equal(-0.5, finished.X, precision: 6);
-        Assert.Equal(0.75, finished.Y, precision: 6);
+        Offset finished = RequireRenderObject<RenderFractionalTranslation>(root.ChildElement).Translation;
+        Assert.Equal(-0.5, finished.Dx, precision: 6);
+        Assert.Equal(0.75, finished.Dy, precision: 6);
         Assert.Equal(1, completed);
 
         root.UnmountRoot();
@@ -585,7 +585,7 @@ public sealed class ImplicitAnimationsTests : IDisposable
         Assert.Null(positioned.OnEnd);
 
         var fromRect = AnimatedPositioned.FromRect(
-            rect: new Rect(3, 5, 40, 20),
+            rect: DartGeometry.RectFromLTWH(3, 5, 40, 20),
             child: child,
             duration: TimeSpan.FromMilliseconds(200));
         Assert.Equal(3, fromRect.Left);

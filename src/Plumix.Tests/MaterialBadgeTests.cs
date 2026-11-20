@@ -49,7 +49,7 @@ public sealed class MaterialBadgeTests
         Assert.NotNull(positioner);
         Assert.True(positioner!.HasLabel);
         Assert.Equal(16, positioner.WidthOffset);
-        Assert.Equal(new Vector(4, 4), positioner.Offset);
+        Assert.Equal(new Offset(4, 4), positioner.Offset);
         Assert.NotNull(paragraph);
         Assert.Equal(9, paragraph!.FontSize);
         Assert.Equal(FontWeight.Bold, paragraph.FontWeight);
@@ -68,7 +68,7 @@ public sealed class MaterialBadgeTests
                 LargeSize: 20,
                 Padding: EdgeInsets.Symmetric(horizontal: 6),
                 Alignment: Alignment.BottomLeft,
-                Offset: new Vector(2, 3)),
+                Offset: new Offset(2, 3)),
         };
         using var harness = new WidgetRenderHarness(
             new Directionality(
@@ -89,7 +89,7 @@ public sealed class MaterialBadgeTests
         Assert.NotNull(positioner);
         Assert.Equal(22, positioner!.WidthOffset);
         Assert.Equal(Alignment.BottomRight, positioner.Alignment);
-        Assert.Equal(new Vector(2, 11), positioner.Offset);
+        Assert.Equal(new Offset(2, 11), positioner.Offset);
         Assert.Equal(Colors.Gold, Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color);
         Assert.Contains(
             FindDescendants<RenderDecoratedBox>(harness.RenderView),
@@ -117,14 +117,14 @@ public sealed class MaterialBadgeTests
 
         RenderBadgePositioner ltr = FindDescendant<RenderBadgePositioner>(ltrHarness.RenderView)!;
         RenderBadgePositioner rtl = FindDescendant<RenderBadgePositioner>(rtlHarness.RenderView)!;
-        Point ltrOffset = ((BoxParentData)ltr.Child!.parentData!).offset;
-        Point rtlOffset = ((BoxParentData)rtl.Child!.parentData!).offset;
+        Offset ltrOffset = ((BoxParentData)ltr.Child!.parentData!).offset;
+        Offset rtlOffset = ((BoxParentData)rtl.Child!.parentData!).offset;
 
         Assert.Equal((AlignmentGeometry)AlignmentDirectional.TopEnd, ltr.Alignment);
         Assert.Equal(TextDirection.Ltr, ltr.TextDirection);
         Assert.Equal(TextDirection.Rtl, rtl.TextDirection);
-        Assert.True(ltrOffset.X > rtlOffset.X);
-        Assert.Equal(ltrOffset.Y, rtlOffset.Y, precision: 6);
+        Assert.True(ltrOffset.Dx > rtlOffset.Dx);
+        Assert.Equal(ltrOffset.Dy, rtlOffset.Dy, precision: 6);
         Assert.Equal(Clip.None, Assert.IsType<RenderStack>(ltr.Parent).ClipBehavior);
     }
 
@@ -149,10 +149,10 @@ public sealed class MaterialBadgeTests
 
         RenderBadgePositioner physical = FindDescendant<RenderBadgePositioner>(physicalHarness.RenderView)!;
         RenderBadgePositioner directional = FindDescendant<RenderBadgePositioner>(directionalHarness.RenderView)!;
-        Point physicalOffset = ((BoxParentData)physical.Child!.parentData!).offset;
-        Point directionalOffset = ((BoxParentData)directional.Child!.parentData!).offset;
+        Offset physicalOffset = ((BoxParentData)physical.Child!.parentData!).offset;
+        Offset directionalOffset = ((BoxParentData)directional.Child!.parentData!).offset;
 
-        Assert.True(physicalOffset.X > directionalOffset.X);
+        Assert.True(physicalOffset.Dx > directionalOffset.Dx);
     }
 
     [Fact]
@@ -180,7 +180,7 @@ public sealed class MaterialBadgeTests
             TextStyle: new TextStyle(FontSize: 10),
             Padding: EdgeInsets.Symmetric(horizontal: 2),
             Alignment: Alignment.TopLeft,
-            Offset: new Vector(2, -2));
+            Offset: new Offset(2, -2));
         var end = new BadgeThemeData(
             BackgroundColor: Colors.White,
             TextColor: Colors.Black,
@@ -189,7 +189,7 @@ public sealed class MaterialBadgeTests
             TextStyle: new TextStyle(FontSize: 14),
             Padding: EdgeInsets.Symmetric(horizontal: 6, vertical: 2),
             Alignment: AlignmentDirectional.TopEnd,
-            Offset: new Vector(6, 2));
+            Offset: new Offset(6, 2));
 
         BadgeThemeData copy = begin.CopyWith(largeSize: 18, alignment: AlignmentDirectional.BottomEnd);
         BadgeThemeData halfway = BadgeThemeData.Lerp(begin, end, 0.5);
@@ -202,7 +202,7 @@ public sealed class MaterialBadgeTests
         Assert.Equal(16, halfway.LargeSize);
         Assert.Equal(12, halfway.TextStyle!.FontSize);
         Assert.Equal(EdgeInsets.Symmetric(horizontal: 4, vertical: 1), halfway.Padding);
-        Assert.Equal(new Vector(4, 0), halfway.Offset);
+        Assert.Equal(new Offset(4, 0), halfway.Offset);
         Assert.Equal(0, mixedLtr.X, precision: 6);
         Assert.Equal(-1, mixedRtl.X, precision: 6);
         Assert.Equal(-1, mixedLtr.Y, precision: 6);
@@ -217,16 +217,16 @@ public sealed class MaterialBadgeTests
             TextDirection.Ltr,
             new Badge(
                 alignment: Alignment.TopRight,
-                offset: new Vector(0, -8),
+                offset: new Offset(0, -8),
                 label: new SizedBox(width: 1, height: 1),
                 child: new SizedBox(width: 4, height: 4)));
 
         harness.Pump(new Size(100, 100));
 
         RenderBadgePositioner positioner = FindDescendant<RenderBadgePositioner>(harness.RenderView)!;
-        Point badgeOffset = ((BoxParentData)positioner.Child!.parentData!).offset;
+        Offset badgeOffset = ((BoxParentData)positioner.Child!.parentData!).offset;
 
-        Assert.Equal(-12, badgeOffset.X, precision: 6);
+        Assert.Equal(-12, badgeOffset.Dx, precision: 6);
     }
 
     [Fact]

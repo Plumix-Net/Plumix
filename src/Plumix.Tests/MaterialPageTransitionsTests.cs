@@ -201,11 +201,11 @@ public sealed class MaterialPageTransitionsTests : IDisposable
 
         Assert.Equal(0.25, gesture.Progress);
         Assert.Equal(SwipeEdge.Right, gesture.SwipeEdge);
-        Assert.Equal(new Point(12.0, 24.0), gesture.TouchOffset);
+        Assert.Equal(new Offset(12.0, 24.0), gesture.TouchOffset);
         Assert.False(gesture.IsButtonEvent);
         Assert.True(new PredictiveBackEvent(0.0, SwipeEdge.Left).IsButtonEvent);
         Assert.Throws<ArgumentOutOfRangeException>(() =>
-            new PredictiveBackEvent(1.1, SwipeEdge.Left, new Point(1.0, 1.0)));
+            new PredictiveBackEvent(1.1, SwipeEdge.Left, new Offset(1.0, 1.0)));
     }
 
     [Fact]
@@ -217,12 +217,12 @@ public sealed class MaterialPageTransitionsTests : IDisposable
         var rejected = new RecordingBackObserver(accept: false);
         binding.AddObserver(first);
         binding.AddObserver(rejected);
-        var start = new PredictiveBackEvent(0.0, SwipeEdge.Left, new Point(2.0, 3.0));
+        var start = new PredictiveBackEvent(0.0, SwipeEdge.Left, new Offset(2.0, 3.0));
 
         Assert.True(binding.HandleStartBackGesture(start));
         binding.AddObserver(late);
         binding.HandleUpdateBackGestureProgress(
-            new PredictiveBackEvent(0.5, SwipeEdge.Left, new Point(40.0, 3.0)));
+            new PredictiveBackEvent(0.5, SwipeEdge.Left, new Offset(40.0, 3.0)));
         _ = await binding.HandleCommitBackGesture();
 
         Assert.Equal(1, first.StartCount);
@@ -254,10 +254,10 @@ public sealed class MaterialPageTransitionsTests : IDisposable
         Settle(root.TestOwner);
         Assert.True(detailsRoute.PopGestureEnabled);
 
-        var start = new PredictiveBackEvent(0.0, SwipeEdge.Left, new Point(8.0, 300.0));
+        var start = new PredictiveBackEvent(0.0, SwipeEdge.Left, new Offset(8.0, 300.0));
         Assert.True(WidgetsBinding.Instance.HandleStartBackGesture(start));
         WidgetsBinding.Instance.HandleUpdateBackGestureProgress(
-            new PredictiveBackEvent(0.5, SwipeEdge.Left, new Point(80.0, 340.0)));
+            new PredictiveBackEvent(0.5, SwipeEdge.Left, new Offset(80.0, 340.0)));
         root.TestOwner.PumpFrame();
 
         Assert.True(detailsRoute.PopGestureInProgress);
@@ -271,7 +271,7 @@ public sealed class MaterialPageTransitionsTests : IDisposable
 
         Assert.True(WidgetsBinding.Instance.HandleStartBackGesture(start));
         WidgetsBinding.Instance.HandleUpdateBackGestureProgress(
-            new PredictiveBackEvent(0.6, SwipeEdge.Left, new Point(100.0, 360.0)));
+            new PredictiveBackEvent(0.6, SwipeEdge.Left, new Offset(100.0, 360.0)));
         _ = await WidgetsBinding.Instance.HandleCommitBackGesture();
         root.TestOwner.PumpFrame();
         Assert.Same(initialRoute, navigator.CurrentRoute);
@@ -302,12 +302,12 @@ public sealed class MaterialPageTransitionsTests : IDisposable
         Settle(root.TestOwner);
 
         Assert.True(WidgetsBinding.Instance.HandleStartBackGesture(
-            new PredictiveBackEvent(0.0, SwipeEdge.Left, new Point(8.0, 300.0))));
+            new PredictiveBackEvent(0.0, SwipeEdge.Left, new Offset(8.0, 300.0))));
         WidgetsBinding.Instance.HandleUpdateBackGestureProgress(
-            new PredictiveBackEvent(0.0, SwipeEdge.Left, new Point(8.0, 300.0)));
+            new PredictiveBackEvent(0.0, SwipeEdge.Left, new Offset(8.0, 300.0)));
         Assert.True(navigator.UserGestureInProgress);
         WidgetsBinding.Instance.HandleUpdateBackGestureProgress(
-            new PredictiveBackEvent(0.5, SwipeEdge.Left, new Point(200.0, 300.0)));
+            new PredictiveBackEvent(0.5, SwipeEdge.Left, new Offset(200.0, 300.0)));
         root.TestOwner.PumpFrame();
         Assert.Equal(0.5, detailsRoute.Animation.Value, precision: 6);
 
@@ -392,13 +392,13 @@ public sealed class MaterialPageTransitionsTests : IDisposable
         harness.Dispatch(new PointerDownEvent(
             pointer,
             PointerDeviceKind.Touch,
-            new Point(startX, 300.0),
+            new Offset(startX, 300.0),
             PointerButtons.Primary,
             timestamp));
         harness.Dispatch(new PointerMoveEvent(
             pointer,
             PointerDeviceKind.Touch,
-            new Point(endX, 300.0),
+            new Offset(endX, 300.0),
             PointerButtons.Primary,
             timestamp.AddMilliseconds(100.0)));
     }
@@ -412,7 +412,7 @@ public sealed class MaterialPageTransitionsTests : IDisposable
         harness.Dispatch(new PointerUpEvent(
             pointer,
             PointerDeviceKind.Touch,
-            new Point(x, 300.0),
+            new Offset(x, 300.0),
             PointerButtons.None,
             timestamp));
     }

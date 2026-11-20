@@ -47,7 +47,7 @@ public sealed class ScrollableMiscDartParityTests
         try
         {
             PumpFlingTest(tester, TargetPlatform.Android);
-            tester.Fling(tester.ElementOfType<ListView>(), new Vector(0.0, -DragOffset), 1000.0);
+            tester.Fling(tester.ElementOfType<ListView>(), new Offset(0.0, -DragOffset), 1000.0);
             Assert.Equal(DragOffset, CurrentOffset(tester));
             tester.Pump(); // trigger fling
             Assert.Equal(DragOffset, CurrentOffset(tester));
@@ -58,7 +58,7 @@ public sealed class ScrollableMiscDartParityTests
             Assert.True(androidResult < 409.0, $"{androidResult}");
 
             PumpFlingTest(tester, TargetPlatform.Linux);
-            tester.Fling(tester.ElementOfType<ListView>(), new Vector(0.0, -DragOffset), 1000.0);
+            tester.Fling(tester.ElementOfType<ListView>(), new Offset(0.0, -DragOffset), 1000.0);
             Assert.Equal(DragOffset, CurrentOffset(tester));
             tester.Pump(); // trigger fling
             Assert.Equal(DragOffset, CurrentOffset(tester));
@@ -66,7 +66,7 @@ public sealed class ScrollableMiscDartParityTests
             double linuxResult = CurrentOffset(tester);
 
             PumpFlingTest(tester, TargetPlatform.Windows);
-            tester.Fling(tester.ElementOfType<ListView>(), new Vector(0.0, -DragOffset), 1000.0);
+            tester.Fling(tester.ElementOfType<ListView>(), new Offset(0.0, -DragOffset), 1000.0);
             Assert.Equal(DragOffset, CurrentOffset(tester));
             tester.Pump(); // trigger fling
             Assert.Equal(DragOffset, CurrentOffset(tester));
@@ -74,7 +74,7 @@ public sealed class ScrollableMiscDartParityTests
             double windowsResult = CurrentOffset(tester);
 
             PumpFlingTest(tester, TargetPlatform.IOS);
-            tester.Fling(tester.ElementOfType<ListView>(), new Vector(0.0, -DragOffset), 1000.0);
+            tester.Fling(tester.ElementOfType<ListView>(), new Offset(0.0, -DragOffset), 1000.0);
             // Scroll starts ease into the scroll on iOS.
             AssertMoreOrLessEquals(210.71026666666666, CurrentOffset(tester));
             tester.Pump(); // trigger fling
@@ -83,7 +83,7 @@ public sealed class ScrollableMiscDartParityTests
             double iOSResult = CurrentOffset(tester);
 
             PumpFlingTest(tester, TargetPlatform.MacOS);
-            tester.Fling(tester.ElementOfType<ListView>(), new Vector(0.0, -DragOffset), 1000.0);
+            tester.Fling(tester.ElementOfType<ListView>(), new Offset(0.0, -DragOffset), 1000.0);
             // Scroll starts ease into the scroll on iOS.
             AssertMoreOrLessEquals(210.71026666666666, CurrentOffset(tester));
             tester.Pump(); // trigger fling
@@ -134,7 +134,7 @@ public sealed class ScrollableMiscDartParityTests
         tester.Tap(tester.ElementOfType<Scrollable>());
         tester.Pump(TimeSpan.FromMilliseconds(50));
         Assert.Equal(new List<string> { "tap 21" }, log);
-        tester.Fling(tester.ElementOfType<Scrollable>(), new Vector(0.0, -200.0), 1000.0);
+        tester.Fling(tester.ElementOfType<Scrollable>(), new Offset(0.0, -200.0), 1000.0);
         tester.Pump(TimeSpan.FromMilliseconds(50));
         Assert.Equal(new List<string> { "tap 21" }, log);
         tester.Tap(tester.ElementOfType<Scrollable>()); // should stop the fling but not tap anything
@@ -157,7 +157,7 @@ public sealed class ScrollableMiscDartParityTests
         tester.Tap(tester.ElementOfType<Scrollable>());
         tester.Pump(TimeSpan.FromMilliseconds(50));
         Assert.Equal(new List<string> { "tap 21" }, log);
-        tester.Fling(tester.ElementOfType<Scrollable>(), new Vector(0.0, -200.0), 1000.0);
+        tester.Fling(tester.ElementOfType<Scrollable>(), new Offset(0.0, -200.0), 1000.0);
         tester.Pump(TimeSpan.FromMilliseconds(50));
         Assert.Equal(new List<string> { "tap 21" }, log);
         tester.Pump(TimeSpan.FromSeconds(50)); // long wait, so the fling will have ended at the end of it
@@ -227,7 +227,7 @@ public sealed class ScrollableMiscDartParityTests
             },
             child: new SingleChildScrollView(child: new SizedBox(height: 1200.0))));
 
-        TestGesture gesture = tester.StartGesture(new Point(100.0, 100.0), PointerDeviceKind.Touch);
+        TestGesture gesture = tester.StartGesture(new Offset(100.0, 100.0), PointerDeviceKind.Touch);
         tester.Pump(TimeSpan.FromSeconds(1));
 
         var scrollableElement = (StatefulElement)tester.ElementsOfType<Scrollable>().First();
@@ -322,7 +322,7 @@ public sealed class ScrollableMiscDartParityTests
                     children: Enumerable.Range(0, 250).Select(i => (Widget)new Text($"{i}")).ToList()),
                 right: new Container())));
 
-        tester.Fling(tester.ElementOfType<ListView>(), new Vector(0.0, -200.0), 1000.0);
+        tester.Fling(tester.ElementOfType<ListView>(), new Offset(0.0, -200.0), 1000.0);
         tester.Pump();
 
         tester.State<FrameworkDartFlipWidgetState>().Flip();
@@ -366,7 +366,7 @@ public sealed class ScrollableMiscDartParityTests
 
             // Go into overscroll.
             double lastScrollOffset;
-            tester.Fling(tester.OnstageElementsWithText("Hello 0").Single(), new Vector(0.0, 1000.0), 1000.0);
+            tester.Fling(tester.OnstageElementsWithText("Hello 0").Single(), new Offset(0.0, 1000.0), 1000.0);
             tester.Pump(TimeSpan.FromMilliseconds(100));
             lastScrollOffset = controller.Offset;
             Assert.True(lastScrollOffset < 0.0, $"{lastScrollOffset}");
@@ -379,7 +379,7 @@ public sealed class ScrollableMiscDartParityTests
 
             // Start a hold activity by putting one pointer down.
             TestGesture gesture = tester.StartGesture(
-                tester.GetTopLeft(tester.ElementsWithKey(outerContainer).Single()) + new Vector(50.0, 50.0),
+                tester.GetTopLeft(tester.ElementsWithKey(outerContainer).Single()) + new Offset(50.0, 50.0),
                 PointerDeviceKind.Touch);
             tester.PumpAndSettle(); // This shouldn't change the scroll offset because of the down event above.
             Assert.Equal(currentOffset, controller.Offset);
@@ -496,7 +496,7 @@ public sealed class ScrollableMiscDartParityTests
         ExpectNoAnimation();
 
         // Drag to initiate the scroll animation.
-        tester.Drag(tester.ElementOfType<Scrollable>(), new Vector(0.0, 1.0));
+        tester.Drag(tester.ElementOfType<Scrollable>(), new Offset(0.0, 1.0));
         tester.Pump();
 
         // Pump to halfway through the animation.
@@ -507,7 +507,7 @@ public sealed class ScrollableMiscDartParityTests
         TestGesture gesture = tester.StartGesture(
             tester.GetCenter(tester.ElementOfType<Scrollable>()),
             PointerDeviceKind.Touch);
-        gesture.MoveBy(new Vector(0.0, dragExtent));
+        gesture.MoveBy(new Offset(0.0, dragExtent));
         gesture.Up();
 
         tester.Pump(TimeSpan.FromMilliseconds(500));
@@ -691,33 +691,33 @@ public sealed class ScrollableMiscDartParityTests
                 child: new Column(children: FiftyTiles())));
         tester.PumpWidget(widget);
 
-        Assert.Equal(new Point(0, 0), tester.GetTopLeft(TextElement(tester, "Tile 0")));
-        Assert.Equal(new Point(0, 50), tester.GetTopLeft(TextElement(tester, "Tile 1")));
+        Assert.Equal(new Offset(0, 0), tester.GetTopLeft(TextElement(tester, "Tile 0")));
+        Assert.Equal(new Offset(0, 50), tester.GetTopLeft(TextElement(tester, "Tile 1")));
 
         tester.State<ScrollableState>().Position.JumpTo(525);
         tester.Pump();
 
-        Assert.Equal(new Point(0, -525), tester.GetTopLeft(TextElement(tester, "Tile 0")));
-        Assert.Equal(new Point(0, -475), tester.GetTopLeft(TextElement(tester, "Tile 1")));
+        Assert.Equal(new Offset(0, -525), tester.GetTopLeft(TextElement(tester, "Tile 0")));
+        Assert.Equal(new Offset(0, -475), tester.GetTopLeft(TextElement(tester, "Tile 1")));
 
         tester.RestartAndRestore();
 
         Assert.Equal(525, tester.State<ScrollableState>().Position.Pixels);
-        Assert.Equal(new Point(0, -525), tester.GetTopLeft(TextElement(tester, "Tile 0")));
-        Assert.Equal(new Point(0, -475), tester.GetTopLeft(TextElement(tester, "Tile 1")));
+        Assert.Equal(new Offset(0, -525), tester.GetTopLeft(TextElement(tester, "Tile 0")));
+        Assert.Equal(new Offset(0, -475), tester.GetTopLeft(TextElement(tester, "Tile 1")));
 
         TestRestorationData data = tester.GetRestorationData();
         tester.State<ScrollableState>().Position.JumpTo(0);
         tester.Pump();
 
-        Assert.Equal(new Point(0, 0), tester.GetTopLeft(TextElement(tester, "Tile 0")));
-        Assert.Equal(new Point(0, 50), tester.GetTopLeft(TextElement(tester, "Tile 1")));
+        Assert.Equal(new Offset(0, 0), tester.GetTopLeft(TextElement(tester, "Tile 0")));
+        Assert.Equal(new Offset(0, 50), tester.GetTopLeft(TextElement(tester, "Tile 1")));
 
         tester.RestoreFrom(data);
 
         Assert.Equal(525, tester.State<ScrollableState>().Position.Pixels);
-        Assert.Equal(new Point(0, -525), tester.GetTopLeft(TextElement(tester, "Tile 0")));
-        Assert.Equal(new Point(0, -475), tester.GetTopLeft(TextElement(tester, "Tile 1")));
+        Assert.Equal(new Offset(0, -525), tester.GetTopLeft(TextElement(tester, "Tile 0")));
+        Assert.Equal(new Offset(0, -475), tester.GetTopLeft(TextElement(tester, "Tile 1")));
     }
 
     // Flutter: 'scrollable_restoration_test.dart: PageView restoration'
@@ -823,7 +823,7 @@ public sealed class ScrollableMiscDartParityTests
         Assert.Single(tester.OnstageElementsWithText("Tile 0"));
         Assert.Empty(tester.OnstageElementsWithText("Tile 10"));
 
-        tester.Drag(tester.ElementOfType<NestedScrollView>(), new Vector(0, -500));
+        tester.Drag(tester.ElementOfType<NestedScrollView>(), new Offset(0, -500));
         tester.Pump();
 
         Assert.Equal(56, HeaderPaintExtent());
@@ -837,7 +837,7 @@ public sealed class ScrollableMiscDartParityTests
         Assert.Single(tester.OnstageElementsWithText("Tile 10"));
 
         TestRestorationData data = tester.GetRestorationData();
-        tester.Drag(tester.ElementOfType<NestedScrollView>(), new Vector(0, 600));
+        tester.Drag(tester.ElementOfType<NestedScrollView>(), new Offset(0, 600));
         tester.Pump();
 
         Assert.Equal(150, HeaderPaintExtent());
@@ -872,7 +872,7 @@ public sealed class ScrollableMiscDartParityTests
         TestGesture gesture = tester.StartGesture(
             tester.GetCenter(tester.ElementOfType<ListView>()),
             PointerDeviceKind.Touch);
-        gesture.MoveBy(new Vector(0, -525));
+        gesture.MoveBy(new Offset(0, -525));
         tester.Pump();
 
         Assert.Empty(tester.OnstageElementsWithText("Tile 0"));
@@ -1065,7 +1065,7 @@ public sealed class ScrollableMiscDartParityTests
         tester.GetRect(tester.ElementsWithKey(new ValueKey<string>(key)).Single());
 
     private static Rect Ltrb(double left, double top, double right, double bottom) =>
-        new(new Point(left, top), new Point(right, bottom));
+        DartGeometry.RectFromCorners(new Offset(left, top), new Offset(right, bottom));
 
     // Flutter: "scrollable_helpers_test.dart: Keyboard scrolling doesn't happen if scroll physics are set to
     // NeverScrollableScrollPhysics"
@@ -1463,7 +1463,7 @@ public sealed class ScrollableMiscDartParityTests
         ScrollableState scrollableState = tester.State<ScrollableState>();
         var scroller = new EdgeDraggingAutoScroller(scrollableState, velocityScalar: 1.0);
         var scrollRenderBox = (RenderBox)scrollableState.Context.FindRenderObject()!;
-        var dragTarget = new Rect(0, 0, scrollRenderBox.Size.Width, scrollRenderBox.Size.Height);
+        var dragTarget = DartGeometry.RectFromLTWH(0, 0, scrollRenderBox.Size.Width, scrollRenderBox.Size.Height);
 
         scroller.StartAutoScrollIfNecessary(dragTarget);
         tester.Pump();

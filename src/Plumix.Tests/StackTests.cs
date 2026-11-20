@@ -29,7 +29,7 @@ public sealed class StackTests
         pipeline.FlushLayout(new Size(100, 80));
 
         Assert.Equal(new Size(100, 80), stack.Size);
-        Assert.Equal(new Point(80, 70), ((StackParentData)child.parentData!).offset);
+        Assert.Equal(new Offset(80, 70), ((StackParentData)child.parentData!).offset);
     }
 
     [Fact]
@@ -51,7 +51,7 @@ public sealed class StackTests
 
         pipeline.FlushLayout(new Size(100, 80));
 
-        Assert.Equal(new Point(5, 7), parentData.offset);
+        Assert.Equal(new Offset(5, 7), parentData.offset);
     }
 
     [Fact]
@@ -73,7 +73,7 @@ public sealed class StackTests
 
         pipeline.FlushLayout(new Size(100, 80));
 
-        Assert.Equal(new Point(74, 66), parentData.offset);
+        Assert.Equal(new Offset(74, 66), parentData.offset);
     }
 
     [Fact]
@@ -216,7 +216,7 @@ public sealed class StackTests
         stack.Layout(BoxConstraints.Tight(new Size(100, 100)));
 
         Assert.Equal(BoxConstraints.TightFor(width: 30.0), child.LastConstraints);
-        Assert.Equal(new Point(10, 20), data.offset);
+        Assert.Equal(new Offset(10, 20), data.offset);
     }
 
     [Fact]
@@ -247,7 +247,7 @@ public sealed class StackTests
 
         Assert.Same(stack, child.Parent);
         Assert.Equal(new Size(30, 40), child.Size);
-        Assert.Equal(new Point(10, 20), data.offset);
+        Assert.Equal(new Offset(10, 20), data.offset);
         root.UnmountRoot();
     }
 
@@ -289,7 +289,7 @@ public sealed class StackTests
         ((StackParentData)second.parentData!).Top = 10.0;
         stack.Layout(BoxConstraints.Tight(new Size(100, 100)));
 
-        Assert.True(stack.HitTest(new BoxHitTestResult(), new Point(1, 11)));
+        Assert.True(stack.HitTest(new BoxHitTestResult(), new Offset(1, 11)));
         Assert.Equal(0, first.HitTestCount);
         Assert.Equal(1, second.HitTestCount);
 
@@ -352,7 +352,7 @@ public sealed class StackTests
             Size = Constraints.Constrain(_size);
         }
 
-        public override void Paint(PaintingContext ctx, Point offset)
+        public override void Paint(PaintingContext ctx, Offset offset)
         {
         }
     }
@@ -384,13 +384,13 @@ public sealed class StackTests
             Size = Constraints.Constrain(_size);
         }
 
-        protected override bool HitTestSelf(Point position)
+        protected override bool HitTestSelf(Offset position)
         {
             HitTestCount += 1;
             return true;
         }
 
-        public override void Paint(PaintingContext ctx, Point offset)
+        public override void Paint(PaintingContext ctx, Offset offset)
         {
         }
     }

@@ -33,7 +33,7 @@ public sealed class ScaleGestureRecognizerTests : IDisposable
 
     private static PointerDownEvent Down(
         int pointer,
-        Point position,
+        Offset position,
         PointerDeviceKind kind = PointerDeviceKind.Touch,
         double milliseconds = 0.0)
     {
@@ -43,7 +43,7 @@ public sealed class ScaleGestureRecognizerTests : IDisposable
 
     private static PointerMoveEvent Move(
         int pointer,
-        Point position,
+        Offset position,
         PointerDeviceKind kind = PointerDeviceKind.Touch,
         double milliseconds = 0.0)
     {
@@ -57,21 +57,21 @@ public sealed class ScaleGestureRecognizerTests : IDisposable
 
     private static PointerUpEvent Up(
         int pointer,
-        Point position,
+        Offset position,
         PointerDeviceKind kind = PointerDeviceKind.Touch)
     {
         return new PointerUpEvent(pointer, kind, position, PointerButtons.None, DateTime.UnixEpoch);
     }
 
-    private static PointerPanZoomStartEvent PanZoomStart(int pointer, Point position, double milliseconds = 0.0)
+    private static PointerPanZoomStartEvent PanZoomStart(int pointer, Offset position, double milliseconds = 0.0)
     {
         return new PointerPanZoomStartEvent(pointer, position, DateTime.UnixEpoch.AddMilliseconds(milliseconds));
     }
 
     private static PointerPanZoomUpdateEvent PanZoomUpdate(
         int pointer,
-        Point position,
-        Point pan = default,
+        Offset position,
+        Offset pan = default,
         double scale = 1.0,
         double rotation = 0.0,
         double milliseconds = 0.0)
@@ -85,7 +85,7 @@ public sealed class ScaleGestureRecognizerTests : IDisposable
             rotation: rotation);
     }
 
-    private static PointerPanZoomEndEvent PanZoomEnd(int pointer, Point position, double milliseconds = 0.0)
+    private static PointerPanZoomEndEvent PanZoomEnd(int pointer, Offset position, double milliseconds = 0.0)
     {
         return new PointerPanZoomEndEvent(pointer, position, DateTime.UnixEpoch.AddMilliseconds(milliseconds));
     }
@@ -96,11 +96,11 @@ public sealed class ScaleGestureRecognizerTests : IDisposable
         _binding.GestureArena.FlushDefaultResolutions();
     }
 
-    private static void AssertPoint(Point expected, Point? actual)
+    private static void AssertPoint(Offset expected, Offset? actual)
     {
         Assert.NotNull(actual);
-        Assert.Equal(expected.X, actual!.Value.X, Tolerance);
-        Assert.Equal(expected.Y, actual.Value.Y, Tolerance);
+        Assert.Equal(expected.Dx, actual!.Value.Dx, Tolerance);
+        Assert.Equal(expected.Dy, actual.Value.Dy, Tolerance);
     }
 
     private static void AssertClose(double expected, double? actual, double tolerance = Tolerance)
@@ -114,8 +114,8 @@ public sealed class ScaleGestureRecognizerTests : IDisposable
     {
         public bool DidStart;
         public bool DidEnd;
-        public Point? FocalPoint;
-        public Point? Delta;
+        public Offset? FocalPoint;
+        public Offset? Delta;
         public double? Scale;
         public double? HorizontalScale;
         public double? VerticalScale;
@@ -183,7 +183,7 @@ public sealed class ScaleGestureRecognizerTests : IDisposable
 
         try
         {
-            PointerDownEvent down = Down(1, new Point(0.0, 0.0));
+            PointerDownEvent down = Down(1, new Offset(0.0, 0.0));
             scale.AddPointer(down);
             tap.AddPointer(down);
             _binding.GestureArena.Close(1);
@@ -199,18 +199,18 @@ public sealed class ScaleGestureRecognizerTests : IDisposable
             Assert.Null(log.Scale);
             Assert.False(log.DidEnd);
 
-            Route(Move(1, new Point(20.0, 30.0)));
+            Route(Move(1, new Offset(20.0, 30.0)));
             Assert.True(log.DidStart);
-            AssertPoint(new Point(20.0, 30.0), log.FocalPoint);
+            AssertPoint(new Offset(20.0, 30.0), log.FocalPoint);
             AssertClose(1.0, log.Scale);
-            AssertPoint(new Point(20.0, 30.0), log.Delta);
+            AssertPoint(new Offset(20.0, 30.0), log.Delta);
             Assert.Equal(1, log.PointerCount);
             Assert.False(log.DidEnd);
             Assert.False(didTap);
             log.Reset();
 
             // Two-finger scaling: the extra pointer ends the gesture in progress.
-            PointerDownEvent down2 = Down(2, new Point(10.0, 20.0));
+            PointerDownEvent down2 = Down(2, new Offset(10.0, 20.0));
             scale.AddPointer(down2);
             tap.AddPointer(down2);
             _binding.GestureArena.Close(2);
@@ -222,44 +222,44 @@ public sealed class ScaleGestureRecognizerTests : IDisposable
             log.Reset();
 
             // Zoom in.
-            Route(Move(2, new Point(0.0, 10.0)));
+            Route(Move(2, new Offset(0.0, 10.0)));
             Assert.True(log.DidStart);
-            AssertPoint(new Point(10.0, 20.0), log.FocalPoint);
+            AssertPoint(new Offset(10.0, 20.0), log.FocalPoint);
             AssertClose(2.0, log.Scale);
             AssertClose(2.0, log.HorizontalScale);
             AssertClose(2.0, log.VerticalScale);
-            AssertPoint(new Point(-5.0, -5.0), log.Delta);
+            AssertPoint(new Offset(-5.0, -5.0), log.Delta);
             Assert.Equal(2, log.PointerCount);
             Assert.False(log.DidEnd);
             log.Reset();
 
             // Zoom out.
-            Route(Move(2, new Point(15.0, 25.0)));
-            AssertPoint(new Point(17.5, 27.5), log.FocalPoint);
+            Route(Move(2, new Offset(15.0, 25.0)));
+            AssertPoint(new Offset(17.5, 27.5), log.FocalPoint);
             AssertClose(0.5, log.Scale);
             AssertClose(0.5, log.HorizontalScale);
             AssertClose(0.5, log.VerticalScale);
-            AssertPoint(new Point(7.5, 7.5), log.Delta);
+            AssertPoint(new Offset(7.5, 7.5), log.Delta);
             Assert.Equal(2, log.PointerCount);
             Assert.False(didTap);
 
             // Horizontal scaling.
-            Route(Move(2, new Point(0.0, 20.0)));
+            Route(Move(2, new Offset(0.0, 20.0)));
             AssertClose(2.0, log.HorizontalScale);
             AssertClose(1.0, log.VerticalScale);
             Assert.Equal(2, log.PointerCount);
 
             // Vertical scaling.
-            Route(Move(2, new Point(10.0, 10.0)));
+            Route(Move(2, new Offset(10.0, 10.0)));
             AssertClose(1.0, log.HorizontalScale);
             AssertClose(2.0, log.VerticalScale);
-            AssertPoint(new Point(5.0, -5.0), log.Delta);
+            AssertPoint(new Offset(5.0, -5.0), log.Delta);
             Assert.Equal(2, log.PointerCount);
-            Route(Move(2, new Point(15.0, 25.0)));
+            Route(Move(2, new Offset(15.0, 25.0)));
             log.Reset();
 
             // Three-finger scaling.
-            PointerDownEvent down3 = Down(3, new Point(25.0, 35.0));
+            PointerDownEvent down3 = Down(3, new Offset(25.0, 35.0));
             scale.AddPointer(down3);
             tap.AddPointer(down3);
             _binding.GestureArena.Close(3);
@@ -270,72 +270,72 @@ public sealed class ScaleGestureRecognizerTests : IDisposable
             log.Reset();
 
             // Zoom in.
-            Route(Move(3, new Point(55.0, 65.0)));
+            Route(Move(3, new Offset(55.0, 65.0)));
             Assert.True(log.DidStart);
-            AssertPoint(new Point(30.0, 40.0), log.FocalPoint);
+            AssertPoint(new Offset(30.0, 40.0), log.FocalPoint);
             AssertClose(5.0, log.Scale);
-            AssertPoint(new Point(10.0, 10.0), log.Delta);
+            AssertPoint(new Offset(10.0, 10.0), log.Delta);
             Assert.Equal(3, log.PointerCount);
             Assert.False(log.DidEnd);
             log.Reset();
 
             // Return to the original positions but with different fingers.
-            Route(Move(1, new Point(25.0, 35.0)));
-            Route(Move(2, new Point(20.0, 30.0)));
-            Route(Move(3, new Point(15.0, 25.0)));
+            Route(Move(1, new Offset(25.0, 35.0)));
+            Route(Move(2, new Offset(20.0, 30.0)));
+            Route(Move(3, new Offset(15.0, 25.0)));
             Assert.False(log.DidStart);
-            AssertPoint(new Point(20.0, 30.0), log.FocalPoint);
+            AssertPoint(new Offset(20.0, 30.0), log.FocalPoint);
             AssertClose(1.0, log.Scale);
-            AssertClose(-13.3, log.Delta!.Value.X, 0.1);
-            AssertClose(-13.3, log.Delta.Value.Y, 0.1);
+            AssertClose(-13.3, log.Delta!.Value.Dx, 0.1);
+            AssertClose(-13.3, log.Delta.Value.Dy, 0.1);
             Assert.Equal(3, log.PointerCount);
             Assert.False(log.DidEnd);
             log.Reset();
 
-            Route(Up(1, new Point(25.0, 35.0)));
+            Route(Up(1, new Offset(25.0, 35.0)));
             Assert.False(log.DidStart);
             Assert.Null(log.Scale);
             Assert.True(log.DidEnd);
             log.Reset();
 
             // Continue scaling with two fingers.
-            Route(Move(3, new Point(10.0, 20.0)));
+            Route(Move(3, new Offset(10.0, 20.0)));
             Assert.True(log.DidStart);
-            AssertPoint(new Point(15.0, 25.0), log.FocalPoint);
+            AssertPoint(new Offset(15.0, 25.0), log.FocalPoint);
             AssertClose(2.0, log.Scale);
-            AssertPoint(new Point(-2.5, -2.5), log.Delta);
+            AssertPoint(new Offset(-2.5, -2.5), log.Delta);
             Assert.Equal(2, log.PointerCount);
             log.Reset();
 
             // Continue rotating with two fingers.
-            Route(Move(3, new Point(30.0, 40.0)));
-            AssertPoint(new Point(25.0, 35.0), log.FocalPoint);
+            Route(Move(3, new Offset(30.0, 40.0)));
+            AssertPoint(new Offset(25.0, 35.0), log.FocalPoint);
             AssertClose(2.0, log.Scale);
-            AssertPoint(new Point(10.0, 10.0), log.Delta);
-            Route(Move(3, new Point(10.0, 20.0)));
-            AssertPoint(new Point(15.0, 25.0), log.FocalPoint);
+            AssertPoint(new Offset(10.0, 10.0), log.Delta);
+            Route(Move(3, new Offset(10.0, 20.0)));
+            AssertPoint(new Offset(15.0, 25.0), log.FocalPoint);
             AssertClose(2.0, log.Scale);
-            AssertPoint(new Point(-10.0, -10.0), log.Delta);
+            AssertPoint(new Offset(-10.0, -10.0), log.Delta);
             Assert.Equal(2, log.PointerCount);
             log.Reset();
 
-            Route(Up(2, new Point(20.0, 30.0)));
+            Route(Up(2, new Offset(20.0, 30.0)));
             Assert.False(log.DidStart);
             Assert.Null(log.Scale);
             Assert.True(log.DidEnd);
             log.Reset();
 
             // Continue panning with one finger.
-            Route(Move(3, new Point(0.0, 0.0)));
+            Route(Move(3, new Offset(0.0, 0.0)));
             Assert.True(log.DidStart);
-            AssertPoint(new Point(0.0, 0.0), log.FocalPoint);
+            AssertPoint(new Offset(0.0, 0.0), log.FocalPoint);
             AssertClose(1.0, log.Scale);
-            AssertPoint(new Point(-10.0, -20.0), log.Delta);
+            AssertPoint(new Offset(-10.0, -20.0), log.Delta);
             Assert.Equal(1, log.PointerCount);
             log.Reset();
 
             // We are done.
-            Route(Up(3, new Point(0.0, 0.0)));
+            Route(Up(3, new Offset(0.0, 0.0)));
             Assert.False(log.DidStart);
             Assert.Null(log.Scale);
             Assert.True(log.DidEnd);
@@ -360,7 +360,7 @@ public sealed class ScaleGestureRecognizerTests : IDisposable
 
         try
         {
-            PointerDownEvent down = Down(1, new Point(0.0, 0.0), PointerDeviceKind.Mouse);
+            PointerDownEvent down = Down(1, new Offset(0.0, 0.0), PointerDeviceKind.Mouse);
             scale.AddPointer(down);
             _binding.GestureArena.Close(1);
 
@@ -369,7 +369,7 @@ public sealed class ScaleGestureRecognizerTests : IDisposable
             Assert.Null(log.Scale);
 
             // Using a mouse the scale gesture must not even start.
-            Route(Move(1, new Point(20.0, 30.0), PointerDeviceKind.Mouse));
+            Route(Move(1, new Offset(20.0, 30.0), PointerDeviceKind.Mouse));
             Assert.False(log.DidStart);
             Assert.Null(log.Scale);
         }
@@ -391,7 +391,7 @@ public sealed class ScaleGestureRecognizerTests : IDisposable
 
         try
         {
-            PointerDownEvent down = Down(1, new Point(0.0, 0.0));
+            PointerDownEvent down = Down(1, new Offset(0.0, 0.0));
             scale.AddPointer(down);
             _binding.GestureArena.Close(1);
 
@@ -399,18 +399,18 @@ public sealed class ScaleGestureRecognizerTests : IDisposable
             Route(down);
             Assert.True(log.DidStart);
             Assert.Null(log.Scale);
-            AssertPoint(new Point(0.0, 0.0), log.FocalPoint);
+            AssertPoint(new Offset(0.0, 0.0), log.FocalPoint);
             Assert.False(log.DidEnd);
             log.Reset();
 
-            Route(Move(1, new Point(20.0, 30.0)));
-            AssertPoint(new Point(20.0, 30.0), log.FocalPoint);
+            Route(Move(1, new Offset(20.0, 30.0)));
+            AssertPoint(new Offset(20.0, 30.0), log.FocalPoint);
             AssertClose(1.0, log.Scale);
             Assert.False(log.DidEnd);
             log.Reset();
 
             // A mouse pointer is ignored entirely.
-            PointerDownEvent down2 = Down(2, new Point(10.0, 20.0), PointerDeviceKind.Mouse);
+            PointerDownEvent down2 = Down(2, new Offset(10.0, 20.0), PointerDeviceKind.Mouse);
             scale.AddPointer(down2);
             _binding.GestureArena.Close(2);
             Route(down2);
@@ -418,7 +418,7 @@ public sealed class ScaleGestureRecognizerTests : IDisposable
             Assert.Null(log.Scale);
             Assert.False(log.DidStart);
 
-            Route(Move(2, new Point(0.0, 10.0), PointerDeviceKind.Mouse));
+            Route(Move(2, new Offset(0.0, 10.0), PointerDeviceKind.Mouse));
             Assert.Null(log.Scale);
             Assert.False(log.DidEnd);
         }
@@ -442,7 +442,7 @@ public sealed class ScaleGestureRecognizerTests : IDisposable
 
         try
         {
-            PointerDownEvent down = Down(1, new Point(10.0, 10.0));
+            PointerDownEvent down = Down(1, new Offset(10.0, 10.0));
             scale.AddPointer(down);
             drag.AddPointer(down);
             _binding.GestureArena.Close(1);
@@ -452,11 +452,11 @@ public sealed class ScaleGestureRecognizerTests : IDisposable
             Assert.Empty(log);
 
             // Scale wins once the focal point delta exceeds the pan slop of 18.0 * 2.
-            Route(Move(1, new Point(10.0, 50.0)));
+            Route(Move(1, new Offset(10.0, 50.0)));
             Assert.Equal(["scale-start", "scale-update"], log);
             log.Clear();
 
-            PointerDownEvent down2 = Down(2, new Point(10.0, 20.0));
+            PointerDownEvent down2 = Down(2, new Offset(10.0, 20.0));
             scale.AddPointer(down2);
             drag.AddPointer(down2);
             _binding.GestureArena.Close(2);
@@ -467,30 +467,30 @@ public sealed class ScaleGestureRecognizerTests : IDisposable
             Assert.Equal(["scale-end"], log);
             log.Clear();
 
-            Route(Move(2, new Point(30.0, 20.0)));
+            Route(Move(2, new Offset(30.0, 20.0)));
             Assert.Equal(["scale-start", "scale-update"], log);
             log.Clear();
 
-            Route(Up(1, new Point(10.0, 50.0)));
+            Route(Up(1, new Offset(10.0, 50.0)));
             Assert.Equal(["scale-end"], log);
             log.Clear();
 
-            Route(Up(2, new Point(30.0, 20.0)));
+            Route(Up(2, new Offset(30.0, 20.0)));
             Assert.Empty(log);
 
             // A fast horizontal move lets the scale win before the horizontal drag does.
-            PointerDownEvent down3 = Down(3, new Point(30.0, 30.0));
+            PointerDownEvent down3 = Down(3, new Offset(30.0, 30.0));
             scale.AddPointer(down3);
             drag.AddPointer(down3);
             _binding.GestureArena.Close(3);
             Route(down3);
             Assert.Empty(log);
 
-            Route(Move(3, new Point(100.0, 30.0)));
+            Route(Move(3, new Offset(100.0, 30.0)));
             Assert.Equal(["scale-start", "scale-update"], log);
             log.Clear();
 
-            Route(Up(3, new Point(100.0, 30.0)));
+            Route(Up(3, new Offset(100.0, 30.0)));
             Assert.Equal(["scale-end"], log);
         }
         finally
@@ -512,21 +512,21 @@ public sealed class ScaleGestureRecognizerTests : IDisposable
 
         try
         {
-            PointerDownEvent down = Down(1, new Point(0.0, 0.0));
+            PointerDownEvent down = Down(1, new Offset(0.0, 0.0));
             scale.AddPointer(down);
             tap.AddPointer(down);
             _binding.GestureArena.Close(1);
 
             Route(down);
-            Route(Move(1, new Point(20.0, 30.0)));
+            Route(Move(1, new Offset(20.0, 30.0)));
             Assert.True(log.DidStart);
-            AssertPoint(new Point(20.0, 30.0), log.FocalPoint);
-            AssertPoint(new Point(20.0, 30.0), log.Delta);
+            AssertPoint(new Offset(20.0, 30.0), log.FocalPoint);
+            AssertPoint(new Offset(20.0, 30.0), log.Delta);
             AssertClose(0.0, log.Rotation);
             Assert.Equal(1, log.PointerCount);
             log.Reset();
 
-            PointerDownEvent down2 = Down(2, new Point(30.0, 40.0));
+            PointerDownEvent down2 = Down(2, new Offset(30.0, 40.0));
             scale.AddPointer(down2);
             tap.AddPointer(down2);
             _binding.GestureArena.Close(2);
@@ -536,24 +536,24 @@ public sealed class ScaleGestureRecognizerTests : IDisposable
             log.Reset();
 
             // Zoom in.
-            Route(Move(2, new Point(40.0, 50.0)));
+            Route(Move(2, new Offset(40.0, 50.0)));
             Assert.True(log.DidStart);
-            AssertPoint(new Point(30.0, 40.0), log.FocalPoint);
-            AssertPoint(new Point(5.0, 5.0), log.Delta);
+            AssertPoint(new Offset(30.0, 40.0), log.FocalPoint);
+            AssertPoint(new Offset(5.0, 5.0), log.Delta);
             AssertClose(0.0, log.Rotation);
             Assert.Equal(2, log.PointerCount);
             log.Reset();
 
             // Rotate by half a turn.
-            Route(Move(2, new Point(0.0, 10.0)));
-            AssertPoint(new Point(10.0, 20.0), log.FocalPoint);
-            AssertPoint(new Point(-20.0, -20.0), log.Delta);
+            Route(Move(2, new Offset(0.0, 10.0)));
+            AssertPoint(new Offset(10.0, 20.0), log.FocalPoint);
+            AssertPoint(new Offset(-20.0, -20.0), log.Delta);
             AssertClose(Math.PI, log.Rotation);
             Assert.Equal(2, log.PointerCount);
             log.Reset();
 
             // A third finger reconfigures the gesture.
-            PointerDownEvent down3 = Down(3, new Point(25.0, 35.0));
+            PointerDownEvent down3 = Down(3, new Offset(25.0, 35.0));
             scale.AddPointer(down3);
             tap.AddPointer(down3);
             _binding.GestureArena.Close(3);
@@ -561,37 +561,37 @@ public sealed class ScaleGestureRecognizerTests : IDisposable
             Assert.True(log.DidEnd);
             log.Reset();
 
-            Route(Move(3, new Point(55.0, 65.0)));
+            Route(Move(3, new Offset(55.0, 65.0)));
             Assert.True(log.DidStart);
-            AssertPoint(new Point(25.0, 35.0), log.FocalPoint);
+            AssertPoint(new Offset(25.0, 35.0), log.FocalPoint);
             AssertClose(0.0, log.Rotation);
             Assert.Equal(3, log.PointerCount);
             log.Reset();
 
             // Return to the original positions but with different fingers.
-            Route(Move(1, new Point(25.0, 35.0)));
-            Route(Move(2, new Point(20.0, 30.0)));
-            Route(Move(3, new Point(15.0, 25.0)));
+            Route(Move(1, new Offset(25.0, 35.0)));
+            Route(Move(2, new Offset(20.0, 30.0)));
+            Route(Move(3, new Offset(15.0, 25.0)));
             Assert.False(log.DidStart);
-            AssertPoint(new Point(20.0, 30.0), log.FocalPoint);
-            AssertClose(-13.3, log.Delta!.Value.X, 0.1);
-            AssertClose(-13.3, log.Delta.Value.Y, 0.1);
+            AssertPoint(new Offset(20.0, 30.0), log.FocalPoint);
+            AssertClose(-13.3, log.Delta!.Value.Dx, 0.1);
+            AssertClose(-13.3, log.Delta.Value.Dy, 0.1);
             AssertClose(0.0, log.Rotation);
             Assert.Equal(3, log.PointerCount);
             log.Reset();
 
-            Route(Up(1, new Point(25.0, 35.0)));
+            Route(Up(1, new Offset(25.0, 35.0)));
             Assert.True(log.DidEnd);
             log.Reset();
 
-            Route(Move(3, new Point(10.0, 20.0)));
+            Route(Move(3, new Offset(10.0, 20.0)));
             Assert.True(log.DidStart);
             AssertClose(0.0, log.Rotation);
             log.Reset();
 
-            Route(Move(3, new Point(30.0, 40.0)));
+            Route(Move(3, new Offset(30.0, 40.0)));
             AssertClose(-Math.PI, log.Rotation);
-            Route(Move(3, new Point(10.0, 20.0)));
+            Route(Move(3, new Offset(10.0, 20.0)));
             AssertClose(0.0, log.Rotation);
             Assert.Equal(2, log.PointerCount);
             Assert.False(didTap);
@@ -613,19 +613,19 @@ public sealed class ScaleGestureRecognizerTests : IDisposable
 
         try
         {
-            PointerDownEvent down = Down(1, new Point(0.0, 0.0));
+            PointerDownEvent down = Down(1, new Offset(0.0, 0.0));
             scale.AddPointer(down);
             _binding.GestureArena.Close(1);
             Route(down);
 
-            PointerDownEvent down2 = Down(2, new Point(10.0, 10.0));
+            PointerDownEvent down2 = Down(2, new Offset(10.0, 10.0));
             scale.AddPointer(down2);
             _binding.GestureArena.Close(2);
             Route(down2);
             Assert.Null(updatedRotation);
 
             // Rotation by 45 degrees.
-            Route(Move(2, new Point(0.0, 10.0)));
+            Route(Move(2, new Offset(0.0, 10.0)));
             AssertClose(Math.PI / 4.0, updatedRotation);
         }
         finally
@@ -647,34 +647,34 @@ public sealed class ScaleGestureRecognizerTests : IDisposable
 
         try
         {
-            PointerDownEvent down = Down(1, new Point(0.0, 0.0));
+            PointerDownEvent down = Down(1, new Offset(0.0, 0.0));
             scale.AddPointer(down);
             _binding.GestureArena.Close(1);
 
             Route(down);
             Assert.Equal(1, pointerCountOfStart);
-            Route(Move(1, new Point(20.0, 30.0)));
+            Route(Move(1, new Offset(20.0, 30.0)));
             Assert.Equal(1, pointerCountOfUpdate);
 
-            PointerDownEvent down2 = Down(2, new Point(10.0, 20.0));
+            PointerDownEvent down2 = Down(2, new Offset(10.0, 20.0));
             scale.AddPointer(down2);
             _binding.GestureArena.Close(2);
             Route(down2);
             // The additional pointer going down ends the gesture in progress.
             Assert.Equal(2, pointerCountOfEnd);
 
-            Route(Move(2, new Point(0.0, 10.0)));
+            Route(Move(2, new Offset(0.0, 10.0)));
             Assert.Equal(2, pointerCountOfStart);
             Assert.Equal(2, pointerCountOfUpdate);
 
-            Route(Up(1, new Point(20.0, 30.0)));
+            Route(Up(1, new Offset(20.0, 30.0)));
             Assert.Equal(1, pointerCountOfEnd);
 
-            Route(Move(2, new Point(0.0, 10.0)));
+            Route(Move(2, new Offset(0.0, 10.0)));
             Assert.Equal(1, pointerCountOfStart);
             Assert.Equal(1, pointerCountOfUpdate);
 
-            Route(Up(2, new Point(0.0, 10.0)));
+            Route(Up(2, new Offset(0.0, 10.0)));
             Assert.Equal(0, pointerCountOfEnd);
         }
         finally
@@ -693,7 +693,7 @@ public sealed class ScaleGestureRecognizerTests : IDisposable
 
         try
         {
-            PointerPanZoomStartEvent start = PanZoomStart(2, new Point(0.0, 0.0));
+            PointerPanZoomStartEvent start = PanZoomStart(2, new Offset(0.0, 0.0));
             scale.AddPointerPanZoom(start);
             drag.AddPointerPanZoom(start);
             _binding.GestureArena.Close(2);
@@ -704,36 +704,36 @@ public sealed class ScaleGestureRecognizerTests : IDisposable
             Assert.Null(log.Scale);
             Assert.False(log.DidEnd);
 
-            Route(PanZoomUpdate(2, new Point(0.0, 0.0), pan: new Point(20.0, 30.0)));
+            Route(PanZoomUpdate(2, new Offset(0.0, 0.0), pan: new Offset(20.0, 30.0)));
             Assert.True(log.DidStart);
-            AssertPoint(new Point(20.0, 30.0), log.FocalPoint);
+            AssertPoint(new Offset(20.0, 30.0), log.FocalPoint);
             AssertClose(1.0, log.Scale);
-            AssertPoint(new Point(20.0, 30.0), log.Delta);
+            AssertPoint(new Offset(20.0, 30.0), log.Delta);
             Assert.Equal(2, log.PointerCount);
             Assert.False(log.DidEnd);
             log.Reset();
 
             // Zoom in.
-            Route(PanZoomUpdate(2, new Point(0.0, 0.0), pan: new Point(20.0, 30.0), scale: 2.0));
-            AssertPoint(new Point(20.0, 30.0), log.FocalPoint);
+            Route(PanZoomUpdate(2, new Offset(0.0, 0.0), pan: new Offset(20.0, 30.0), scale: 2.0));
+            AssertPoint(new Offset(20.0, 30.0), log.FocalPoint);
             AssertClose(2.0, log.Scale);
             AssertClose(2.0, log.HorizontalScale);
             AssertClose(2.0, log.VerticalScale);
-            AssertPoint(new Point(0.0, 0.0), log.Delta);
+            AssertPoint(new Offset(0.0, 0.0), log.Delta);
             Assert.Equal(2, log.PointerCount);
             Assert.False(log.DidEnd);
             log.Reset();
 
             // Zoom out.
-            Route(PanZoomUpdate(2, new Point(0.0, 0.0), pan: new Point(20.0, 30.0)));
-            AssertPoint(new Point(20.0, 30.0), log.FocalPoint);
+            Route(PanZoomUpdate(2, new Offset(0.0, 0.0), pan: new Offset(20.0, 30.0)));
+            AssertPoint(new Offset(20.0, 30.0), log.FocalPoint);
             AssertClose(1.0, log.Scale);
-            AssertPoint(new Point(0.0, 0.0), log.Delta);
+            AssertPoint(new Offset(0.0, 0.0), log.Delta);
             Assert.False(log.DidEnd);
             log.Reset();
 
             // We are done.
-            Route(PanZoomEnd(2, new Point(0.0, 0.0)));
+            Route(PanZoomEnd(2, new Offset(0.0, 0.0)));
             Assert.False(log.DidStart);
             Assert.Null(log.Scale);
             Assert.True(log.DidEnd);
@@ -755,7 +755,7 @@ public sealed class ScaleGestureRecognizerTests : IDisposable
 
         try
         {
-            PointerPanZoomStartEvent panZoomStart = PanZoomStart(4, new Point(0.0, 0.0));
+            PointerPanZoomStartEvent panZoomStart = PanZoomStart(4, new Offset(0.0, 0.0));
             scale.AddPointerPanZoom(panZoomStart);
             drag.AddPointerPanZoom(panZoomStart);
             _binding.GestureArena.Close(4);
@@ -763,16 +763,16 @@ public sealed class ScaleGestureRecognizerTests : IDisposable
             Route(panZoomStart);
             Assert.False(log.DidStart);
 
-            Route(PanZoomUpdate(4, new Point(0.0, 0.0), pan: new Point(40.0, 40.0)));
+            Route(PanZoomUpdate(4, new Offset(0.0, 0.0), pan: new Offset(40.0, 40.0)));
             Assert.True(log.DidStart);
-            AssertPoint(new Point(40.0, 40.0), log.FocalPoint);
+            AssertPoint(new Offset(40.0, 40.0), log.FocalPoint);
             AssertClose(1.0, log.Scale);
-            AssertPoint(new Point(40.0, 40.0), log.Delta);
+            AssertPoint(new Offset(40.0, 40.0), log.Delta);
             Assert.Equal(2, log.PointerCount);
             log.Reset();
 
             // Add a touch pointer.
-            PointerDownEvent touchStart1 = Down(2, new Point(40.0, 40.0));
+            PointerDownEvent touchStart1 = Down(2, new Offset(40.0, 40.0));
             scale.AddPointer(touchStart1);
             drag.AddPointer(touchStart1);
             _binding.GestureArena.Close(2);
@@ -780,17 +780,17 @@ public sealed class ScaleGestureRecognizerTests : IDisposable
             Assert.True(log.DidEnd);
             log.Reset();
 
-            Route(Move(2, new Point(10.0, 10.0)));
+            Route(Move(2, new Offset(10.0, 10.0)));
             Assert.True(log.DidStart);
-            AssertPoint(new Point(25.0, 25.0), log.FocalPoint);
+            AssertPoint(new Offset(25.0, 25.0), log.FocalPoint);
             // One pointer down plus a pan/zoom pans without scaling.
             AssertClose(1.0, log.Scale);
-            AssertPoint(new Point(-15.0, -15.0), log.Delta);
+            AssertPoint(new Offset(-15.0, -15.0), log.Delta);
             Assert.Equal(3, log.PointerCount);
             log.Reset();
 
             // Add a second touch pointer.
-            PointerDownEvent touchStart2 = Down(3, new Point(10.0, 40.0));
+            PointerDownEvent touchStart2 = Down(3, new Offset(10.0, 40.0));
             scale.AddPointer(touchStart2);
             drag.AddPointer(touchStart2);
             _binding.GestureArena.Close(3);
@@ -799,13 +799,13 @@ public sealed class ScaleGestureRecognizerTests : IDisposable
             log.Reset();
 
             // Moving the second pointer causes pan, zoom and rotation at once.
-            Route(Move(3, new Point(40.0, 40.0)));
+            Route(Move(3, new Offset(40.0, 40.0)));
             Assert.True(log.DidStart);
-            AssertPoint(new Point(30.0, 30.0), log.FocalPoint);
+            AssertPoint(new Offset(30.0, 30.0), log.FocalPoint);
             AssertClose(Math.Sqrt(2.0), log.Scale);
             AssertClose(1.0, log.HorizontalScale);
             AssertClose(1.0, log.VerticalScale);
-            AssertPoint(new Point(10.0, 0.0), log.Delta);
+            AssertPoint(new Offset(10.0, 0.0), log.Delta);
             AssertClose(-Math.PI / 4.0, log.Rotation);
             Assert.Equal(4, log.PointerCount);
             log.Reset();
@@ -813,16 +813,16 @@ public sealed class ScaleGestureRecognizerTests : IDisposable
             // The pan/zoom scale multiplies with the pointer scale and the rotations add up.
             Route(PanZoomUpdate(
                 4,
-                new Point(0.0, 0.0),
-                pan: new Point(40.0, 40.0),
+                new Offset(0.0, 0.0),
+                pan: new Offset(40.0, 40.0),
                 scale: Math.Sqrt(2.0),
                 rotation: Math.PI / 3.0));
             Assert.False(log.DidStart);
-            AssertPoint(new Point(30.0, 30.0), log.FocalPoint);
+            AssertPoint(new Offset(30.0, 30.0), log.FocalPoint);
             AssertClose(2.0, log.Scale, 0.0001);
             AssertClose(Math.Sqrt(2.0), log.HorizontalScale);
             AssertClose(Math.Sqrt(2.0), log.VerticalScale);
-            AssertPoint(new Point(0.0, 0.0), log.Delta);
+            AssertPoint(new Offset(0.0, 0.0), log.Delta);
             AssertClose(Math.PI / 12.0, log.Rotation, 0.0001);
             Assert.Equal(4, log.PointerCount);
             log.Reset();
@@ -830,26 +830,26 @@ public sealed class ScaleGestureRecognizerTests : IDisposable
             // Moving the pan/zoom origin moves the focal point.
             Route(PanZoomUpdate(
                 4,
-                new Point(15.0, 15.0),
-                pan: new Point(55.0, 55.0),
+                new Offset(15.0, 15.0),
+                pan: new Offset(55.0, 55.0),
                 scale: Math.Sqrt(2.0),
                 rotation: Math.PI / 3.0));
-            AssertPoint(new Point(40.0, 40.0), log.FocalPoint);
+            AssertPoint(new Offset(40.0, 40.0), log.FocalPoint);
             AssertClose(2.0, log.Scale, 0.0001);
-            AssertPoint(new Point(10.0, 10.0), log.Delta);
+            AssertPoint(new Offset(10.0, 10.0), log.Delta);
             AssertClose(Math.PI / 12.0, log.Rotation, 0.0001);
             Assert.Equal(4, log.PointerCount);
             log.Reset();
 
             // We are done.
-            Route(PanZoomEnd(4, new Point(15.0, 15.0)));
+            Route(PanZoomEnd(4, new Offset(15.0, 15.0)));
             Assert.True(log.DidEnd);
             Assert.False(log.DidStart);
             log.Reset();
-            Route(Up(2, new Point(10.0, 10.0)));
+            Route(Up(2, new Offset(10.0, 10.0)));
             Assert.False(log.DidEnd);
             Assert.False(log.DidStart);
-            Route(Up(3, new Point(40.0, 40.0)));
+            Route(Up(3, new Offset(40.0, 40.0)));
             Assert.False(log.DidEnd);
             Assert.False(log.DidStart);
         }
@@ -874,7 +874,7 @@ public sealed class ScaleGestureRecognizerTests : IDisposable
 
         try
         {
-            PointerPanZoomStartEvent down = PanZoomStart(2, new Point(10.0, 10.0));
+            PointerPanZoomStartEvent down = PanZoomStart(2, new Offset(10.0, 10.0));
             scale.AddPointerPanZoom(down);
             drag.AddPointerPanZoom(down);
             _binding.GestureArena.Close(2);
@@ -884,11 +884,11 @@ public sealed class ScaleGestureRecognizerTests : IDisposable
             Assert.Empty(log);
 
             // A pan of 40 exceeds the pan slop of 18.0 * 2.
-            Route(PanZoomUpdate(2, new Point(10.0, 10.0), pan: new Point(10.0, 40.0)));
+            Route(PanZoomUpdate(2, new Offset(10.0, 10.0), pan: new Offset(10.0, 40.0)));
             Assert.Equal(["scale-start", "scale-update"], log);
             log.Clear();
 
-            PointerPanZoomStartEvent down2 = PanZoomStart(3, new Point(10.0, 20.0));
+            PointerPanZoomStartEvent down2 = PanZoomStart(3, new Offset(10.0, 20.0));
             scale.AddPointerPanZoom(down2);
             drag.AddPointerPanZoom(down2);
             _binding.GestureArena.Close(3);
@@ -898,29 +898,29 @@ public sealed class ScaleGestureRecognizerTests : IDisposable
             Assert.Equal(["scale-end"], log);
             log.Clear();
 
-            Route(PanZoomUpdate(3, new Point(10.0, 20.0), pan: new Point(20.0, 0.0)));
+            Route(PanZoomUpdate(3, new Offset(10.0, 20.0), pan: new Offset(20.0, 0.0)));
             Assert.Equal(["scale-start", "scale-update"], log);
             log.Clear();
 
-            Route(PanZoomEnd(2, new Point(10.0, 10.0)));
+            Route(PanZoomEnd(2, new Offset(10.0, 10.0)));
             Assert.Equal(["scale-end"], log);
             log.Clear();
 
-            Route(PanZoomEnd(3, new Point(10.0, 20.0)));
+            Route(PanZoomEnd(3, new Offset(10.0, 20.0)));
             Assert.Empty(log);
 
-            PointerPanZoomStartEvent down3 = PanZoomStart(4, new Point(30.0, 30.0));
+            PointerPanZoomStartEvent down3 = PanZoomStart(4, new Offset(30.0, 30.0));
             scale.AddPointerPanZoom(down3);
             drag.AddPointerPanZoom(down3);
             _binding.GestureArena.Close(4);
             Route(down3);
             Assert.Empty(log);
 
-            Route(PanZoomUpdate(4, new Point(30.0, 30.0), pan: new Point(70.0, 0.0)));
+            Route(PanZoomUpdate(4, new Offset(30.0, 30.0), pan: new Offset(70.0, 0.0)));
             Assert.Equal(["scale-start", "scale-update"], log);
             log.Clear();
 
-            Route(PanZoomEnd(4, new Point(30.0, 30.0)));
+            Route(PanZoomEnd(4, new Offset(30.0, 30.0)));
             Assert.Equal(["scale-end"], log);
         }
         finally
@@ -940,7 +940,7 @@ public sealed class ScaleGestureRecognizerTests : IDisposable
 
         try
         {
-            PointerPanZoomStartEvent start = PanZoomStart(2, new Point(0.0, 0.0));
+            PointerPanZoomStartEvent start = PanZoomStart(2, new Offset(0.0, 0.0));
             scale.AddPointerPanZoom(start);
             drag.AddPointerPanZoom(start);
             _binding.GestureArena.Close(2);
@@ -950,32 +950,32 @@ public sealed class ScaleGestureRecognizerTests : IDisposable
             Assert.Null(log.Scale);
 
             // Zoom enough to win the gesture; the scale is rebased on the accepted value.
-            Route(PanZoomUpdate(2, new Point(0.0, 0.0), scale: 1.1, rotation: 1.0));
+            Route(PanZoomUpdate(2, new Offset(0.0, 0.0), scale: 1.1, rotation: 1.0));
             Assert.True(log.DidStart);
-            AssertPoint(new Point(0.0, 0.0), log.FocalPoint);
+            AssertPoint(new Offset(0.0, 0.0), log.FocalPoint);
             AssertClose(1.0, log.Scale);
-            AssertPoint(new Point(0.0, 0.0), log.Delta);
+            AssertPoint(new Offset(0.0, 0.0), log.Delta);
             Assert.False(log.DidEnd);
             log.Reset();
 
             // Zoom in, relative to 1.1.
-            Route(PanZoomUpdate(2, new Point(0.0, 0.0), scale: 1.21, rotation: 1.5));
+            Route(PanZoomUpdate(2, new Offset(0.0, 0.0), scale: 1.21, rotation: 1.5));
             AssertClose(1.1, log.Scale, 0.0001);
             AssertClose(1.1, log.HorizontalScale, 0.0001);
             AssertClose(1.1, log.VerticalScale, 0.0001);
             AssertClose(0.5, log.Rotation, 0.0001);
-            AssertPoint(new Point(0.0, 0.0), log.Delta);
+            AssertPoint(new Offset(0.0, 0.0), log.Delta);
             log.Reset();
 
             // Zoom out, relative to 1.1.
-            Route(PanZoomUpdate(2, new Point(0.0, 0.0), scale: 0.99, rotation: 1.0));
+            Route(PanZoomUpdate(2, new Offset(0.0, 0.0), scale: 0.99, rotation: 1.0));
             AssertClose(0.9, log.Scale, 0.0001);
             AssertClose(0.9, log.HorizontalScale, 0.0001);
             AssertClose(0.9, log.VerticalScale, 0.0001);
             AssertClose(0.0, log.Rotation, 0.0001);
             log.Reset();
 
-            Route(PanZoomEnd(2, new Point(0.0, 0.0)));
+            Route(PanZoomEnd(2, new Offset(0.0, 0.0)));
             Assert.False(log.DidStart);
             Assert.True(log.DidEnd);
         }
@@ -999,7 +999,7 @@ public sealed class ScaleGestureRecognizerTests : IDisposable
 
         try
         {
-            PointerPanZoomStartEvent start = PanZoomStart(2, new Point(0.0, 0.0));
+            PointerPanZoomStartEvent start = PanZoomStart(2, new Offset(0.0, 0.0));
             scale.AddPointerPanZoom(start);
             _binding.GestureArena.Close(2);
             Assert.False(log.DidStart);
@@ -1007,34 +1007,34 @@ public sealed class ScaleGestureRecognizerTests : IDisposable
             Route(start);
             Assert.True(log.DidStart);
             Assert.Null(log.Scale);
-            AssertPoint(new Point(0.0, 0.0), log.FocalPoint);
+            AssertPoint(new Offset(0.0, 0.0), log.FocalPoint);
             Assert.Equal(2, log.PointerCount);
             Assert.False(log.DidEnd);
             log.Reset();
 
             // Zoom in by scrolling up: 200 pixels is one e-fold.
-            Route(PanZoomUpdate(2, new Point(0.0, 0.0), pan: new Point(0.0, -200.0)));
+            Route(PanZoomUpdate(2, new Offset(0.0, 0.0), pan: new Offset(0.0, -200.0)));
             Assert.False(log.DidStart);
-            AssertPoint(new Point(0.0, 0.0), log.FocalPoint);
+            AssertPoint(new Offset(0.0, 0.0), log.FocalPoint);
             AssertClose(Math.E, log.Scale);
-            AssertPoint(new Point(0.0, 0.0), log.Delta);
+            AssertPoint(new Offset(0.0, 0.0), log.Delta);
             Assert.Equal(2, log.PointerCount);
             log.Reset();
 
             // A horizontal scroll does nothing.
-            Route(PanZoomUpdate(2, new Point(0.0, 0.0), pan: new Point(200.0, -200.0)));
+            Route(PanZoomUpdate(2, new Offset(0.0, 0.0), pan: new Offset(200.0, -200.0)));
             AssertClose(Math.E, log.Scale);
-            AssertPoint(new Point(0.0, 0.0), log.Delta);
+            AssertPoint(new Offset(0.0, 0.0), log.Delta);
             log.Reset();
 
-            Route(PanZoomEnd(2, new Point(0.0, 0.0)));
+            Route(PanZoomEnd(2, new Offset(0.0, 0.0)));
             Assert.True(log.DidEnd);
             log.Reset();
 
             // The factor is settable, and it flips which axis scales.
-            scale.TrackpadScrollToScaleFactor = new Point(1.0 / 125.0, 0.0);
+            scale.TrackpadScrollToScaleFactor = new Offset(1.0 / 125.0, 0.0);
 
-            PointerPanZoomStartEvent start2 = PanZoomStart(2, new Point(0.0, 0.0));
+            PointerPanZoomStartEvent start2 = PanZoomStart(2, new Offset(0.0, 0.0));
             scale.AddPointerPanZoom(start2);
             _binding.GestureArena.Close(2);
             Route(start2);
@@ -1043,17 +1043,17 @@ public sealed class ScaleGestureRecognizerTests : IDisposable
             log.Reset();
 
             // Zoom in by scrolling left.
-            Route(PanZoomUpdate(2, new Point(0.0, 0.0), pan: new Point(125.0, 0.0)));
+            Route(PanZoomUpdate(2, new Offset(0.0, 0.0), pan: new Offset(125.0, 0.0)));
             AssertClose(Math.E, log.Scale);
-            AssertPoint(new Point(0.0, 0.0), log.Delta);
+            AssertPoint(new Offset(0.0, 0.0), log.Delta);
             log.Reset();
 
             // A vertical scroll now does nothing.
-            Route(PanZoomUpdate(2, new Point(0.0, 0.0), pan: new Point(125.0, 125.0)));
+            Route(PanZoomUpdate(2, new Offset(0.0, 0.0), pan: new Offset(125.0, 125.0)));
             AssertClose(Math.E, log.Scale);
             log.Reset();
 
-            Route(PanZoomEnd(2, new Point(0.0, 0.0)));
+            Route(PanZoomEnd(2, new Offset(0.0, 0.0)));
             Assert.True(log.DidEnd);
         }
         finally
@@ -1075,7 +1075,7 @@ public sealed class ScaleGestureRecognizerTests : IDisposable
 
         try
         {
-            PointerPanZoomStartEvent start = PanZoomStart(2, new Point(0.0, 0.0));
+            PointerPanZoomStartEvent start = PanZoomStart(2, new Offset(0.0, 0.0));
             scale.AddPointerPanZoom(start);
             _binding.GestureArena.Close(2);
 
@@ -1088,12 +1088,12 @@ public sealed class ScaleGestureRecognizerTests : IDisposable
             {
                 Route(PanZoomUpdate(
                     2,
-                    new Point(0.0, 0.0),
-                    pan: new Point(0.0, i * -10.0),
+                    new Offset(0.0, 0.0),
+                    pan: new Offset(0.0, i * -10.0),
                     milliseconds: i * 25.0));
             }
 
-            Route(PanZoomEnd(2, new Point(0.0, 0.0), milliseconds: 2500.0));
+            Route(PanZoomEnd(2, new Offset(0.0, 0.0), milliseconds: 2500.0));
             Assert.True(log.DidEnd);
             AssertClose(281.41454098027765, log.ScaleVelocity, 1e-6);
         }
@@ -1117,7 +1117,7 @@ public sealed class ScaleGestureRecognizerTests : IDisposable
 
         try
         {
-            PointerDownEvent down = Down(1, new Point(0.0, 0.0), milliseconds: 10.0);
+            PointerDownEvent down = Down(1, new Offset(0.0, 0.0), milliseconds: 10.0);
             scale.AddPointer(down);
             tap.AddPointer(down);
             _binding.GestureArena.Close(1);
@@ -1126,7 +1126,7 @@ public sealed class ScaleGestureRecognizerTests : IDisposable
             Route(down);
             Assert.Null(log.StartTimestamp);
 
-            Route(Move(1, new Point(20.0, 30.0), milliseconds: 20.0));
+            Route(Move(1, new Offset(20.0, 30.0), milliseconds: 20.0));
             Assert.True(log.DidStart);
             // The start reports the timestamp of the pointer *down*, the update its own.
             Assert.Equal(DateTime.UnixEpoch.AddMilliseconds(10.0), log.StartTimestamp);
@@ -1134,7 +1134,7 @@ public sealed class ScaleGestureRecognizerTests : IDisposable
             Assert.Equal(1, scale.PointerCount);
             log.Reset();
 
-            PointerDownEvent down2 = Down(2, new Point(10.0, 20.0), milliseconds: 30.0);
+            PointerDownEvent down2 = Down(2, new Offset(10.0, 20.0), milliseconds: 30.0);
             scale.AddPointer(down2);
             tap.AddPointer(down2);
             _binding.GestureArena.Close(2);
@@ -1146,14 +1146,14 @@ public sealed class ScaleGestureRecognizerTests : IDisposable
 
             // A restart in the middle of a sequence reports the timestamp of the event that
             // restarted it, not of the original down.
-            Route(Move(2, new Point(0.0, 10.0), milliseconds: 40.0));
+            Route(Move(2, new Offset(0.0, 10.0), milliseconds: 40.0));
             Assert.True(log.DidStart);
             Assert.Equal(DateTime.UnixEpoch.AddMilliseconds(40.0), log.StartTimestamp);
             Assert.Equal(DateTime.UnixEpoch.AddMilliseconds(40.0), log.UpdateTimestamp);
             log.Reset();
 
             // A plain update leaves the start untouched.
-            Route(Move(2, new Point(15.0, 25.0), milliseconds: 50.0));
+            Route(Move(2, new Offset(15.0, 25.0), milliseconds: 50.0));
             Assert.False(log.DidStart);
             Assert.Null(log.StartTimestamp);
             Assert.Equal(DateTime.UnixEpoch.AddMilliseconds(50.0), log.UpdateTimestamp);
@@ -1191,26 +1191,26 @@ public sealed class ScaleGestureRecognizerTests : IDisposable
                          PointerDeviceKind.Unknown,
                      })
             {
-                PointerDownEvent down = Down(pointer, new Point(10.0, 20.0), kind);
+                PointerDownEvent down = Down(pointer, new Offset(10.0, 20.0), kind);
                 scale.AddPointer(down);
                 _binding.GestureArena.Close(pointer);
                 Route(down);
-                Route(Move(pointer, new Point(20.0, 30.0), kind));
+                Route(Move(pointer, new Offset(20.0, 30.0), kind));
                 Assert.True(didStartScale);
                 Assert.Equal(kind, updatedKind);
-                Route(Up(pointer, new Point(20.0, 30.0), kind));
+                Route(Up(pointer, new Offset(20.0, 30.0), kind));
                 Assert.False(didStartScale);
                 pointer++;
             }
 
-            PointerPanZoomStartEvent panZoomStart = PanZoomStart(pointer, new Point(10.0, 20.0));
+            PointerPanZoomStartEvent panZoomStart = PanZoomStart(pointer, new Offset(10.0, 20.0));
             scale.AddPointerPanZoom(panZoomStart);
             _binding.GestureArena.Close(pointer);
             Route(panZoomStart);
-            Route(PanZoomUpdate(pointer, new Point(20.0, 30.0)));
+            Route(PanZoomUpdate(pointer, new Offset(20.0, 30.0)));
             Assert.True(didStartScale);
             Assert.Equal(PointerDeviceKind.Trackpad, updatedKind);
-            Route(PanZoomEnd(pointer, new Point(20.0, 30.0)));
+            Route(PanZoomEnd(pointer, new Offset(20.0, 30.0)));
             Assert.False(didStartScale);
         }
         finally
@@ -1245,28 +1245,28 @@ public sealed class ScaleGestureRecognizerTests : IDisposable
             child: new SizedBox(width: 240, height: 120)));
 
         // A lone recognizer wins the arena when it closes, so the gesture starts on the first down.
-        harness.Dispatch(Down(1, new Point(100.0, 60.0)));
+        harness.Dispatch(Down(1, new Offset(100.0, 60.0)));
         Assert.True(log.DidStart);
-        AssertPoint(new Point(100.0, 60.0), log.FocalPoint);
+        AssertPoint(new Offset(100.0, 60.0), log.FocalPoint);
         Assert.Equal(1, log.PointerCount);
         log.Reset();
 
         // The second finger reconfigures the gesture: it ends and restarts.
-        harness.Dispatch(Down(2, new Point(140.0, 60.0)));
+        harness.Dispatch(Down(2, new Offset(140.0, 60.0)));
         Assert.True(log.DidEnd);
         Assert.False(log.DidStart);
         log.Reset();
 
-        harness.Dispatch(Move(2, new Point(180.0, 60.0)));
+        harness.Dispatch(Move(2, new Offset(180.0, 60.0)));
         Assert.True(log.DidStart);
         AssertClose(2.0, log.Scale);
-        AssertPoint(new Point(140.0, 60.0), log.FocalPoint);
+        AssertPoint(new Offset(140.0, 60.0), log.FocalPoint);
         Assert.Equal(2, log.PointerCount);
         log.Reset();
 
-        harness.Dispatch(Up(1, new Point(100.0, 60.0)));
+        harness.Dispatch(Up(1, new Offset(100.0, 60.0)));
         Assert.True(log.DidEnd);
-        harness.Dispatch(Up(2, new Point(180.0, 60.0)));
+        harness.Dispatch(Up(2, new Offset(180.0, 60.0)));
     }
 
     private sealed class WidgetHarness : IDisposable

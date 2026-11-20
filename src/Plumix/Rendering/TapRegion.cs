@@ -66,8 +66,8 @@ public sealed class RenderTapRegionSurface : RenderProxyBoxWithHitTestBehavior
             return;
         }
 
-        Point globalCenter = globalRect.Value.Center;
-        Point localPosition = GlobalToLocal(globalCenter);
+        Offset globalCenter = globalRect.Value.Center;
+        Offset localPosition = GlobalToLocal(globalCenter);
 
         var hitResult = new BoxHitTestResult();
         if (!HitTest(hitResult, localPosition))
@@ -132,13 +132,13 @@ public sealed class RenderTapRegionSurface : RenderProxyBoxWithHitTestBehavior
         return (insideRegions, outsideRegions);
     }
 
-    public override bool HitTest(BoxHitTestResult result, Point position)
+    public override bool HitTest(BoxHitTestResult result, Offset position)
     {
         if (!HasSize
-            || position.X < 0.0
-            || position.Y < 0.0
-            || position.X > Size.Width
-            || position.Y > Size.Height)
+            || position.Dx < 0.0
+            || position.Dy < 0.0
+            || position.Dx > Size.Width
+            || position.Dy > Size.Height)
         {
             return false;
         }

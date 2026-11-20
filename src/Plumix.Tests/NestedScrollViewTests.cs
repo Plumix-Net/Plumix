@@ -590,7 +590,7 @@ public sealed class NestedScrollViewTests : IDisposable
         directions.Clear();
 
         IDrag drag = StartDrag(key);
-        drag.Update(new DragUpdateDetails(new Point(0, 0), new Point(0, 0), new Point(0, -20), -20));
+        drag.Update(new DragUpdateDetails(new Offset(0, 0), new Offset(0, 0), new Offset(0, -20), -20));
         drag.End(new DragEndDetails(0.0));
         harness.Pump(new Size(800, ViewportExtent));
         // One idle report, as the pinned Flutter SDK produces for the same drag: Dart's
@@ -602,7 +602,7 @@ public sealed class NestedScrollViewTests : IDisposable
 
         directions.Clear();
         drag = StartDrag(key);
-        drag.Update(new DragUpdateDetails(new Point(0, 0), new Point(0, 0), new Point(0, 20), 20));
+        drag.Update(new DragUpdateDetails(new Offset(0, 0), new Offset(0, 0), new Offset(0, 20), 20));
         drag.End(new DragEndDetails(0.0));
         harness.Pump(new Size(800, ViewportExtent));
         Assert.Equal(
@@ -761,16 +761,16 @@ public sealed class NestedScrollViewTests : IDisposable
     {
         ScrollPosition outer = key.CurrentState!.OuterController.Position;
         outer.Hold();
-        return outer.Drag(new DragStartDetails(new Point(0, 0)));
+        return outer.Drag(new DragStartDetails(new Offset(0, 0)));
     }
 
     private static void Drag(LabeledGlobalKey<NestedScrollViewState> key, double delta)
     {
         IDrag drag = StartDrag(key);
         drag.Update(new DragUpdateDetails(
-            new Point(0, 0),
-            new Point(0, 0),
-            new Point(0, delta),
+            new Offset(0, 0),
+            new Offset(0, 0),
+            new Offset(0, delta),
             delta));
         drag.End(new DragEndDetails(0.0));
     }
@@ -930,7 +930,7 @@ public sealed class NestedScrollViewTests : IDisposable
 
     private static double GlobalTopOf(RenderObject target, RenderView view)
     {
-        return RenderObject.TransformRect(target.GetTransformTo(view), target.PaintBounds).Y;
+        return RenderObject.TransformRect(target.GetTransformTo(view), target.PaintBounds).Top;
     }
 
     /// <summary>A persistent header that never shrinks, standing in for a pinned app bar.</summary>
@@ -957,7 +957,7 @@ public sealed class NestedScrollViewTests : IDisposable
             Geometry = geometry;
         }
 
-        public override void Paint(PaintingContext ctx, Point offset)
+        public override void Paint(PaintingContext ctx, Offset offset)
         {
         }
     }

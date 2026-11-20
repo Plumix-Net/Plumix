@@ -415,7 +415,7 @@ internal static class TreeSliverFixtures
         PaintPattern pattern = PaintPattern.Paints;
         foreach ((double X, double Y)? offset in offsets)
         {
-            pattern = offset is { } point ? pattern.Paragraph(new Point(point.X, point.Y)) : pattern.Paragraph();
+            pattern = offset is { } point ? pattern.Paragraph(new Offset(point.X, point.Y)) : pattern.Paragraph();
         }
 
         return pattern;
@@ -429,6 +429,6 @@ internal static class TreeSliverFixtures
         double right,
         double bottom)
     {
-        Assert.Equal(new Rect(left, top, right - left, bottom - top), tester.GetRect(Find.Text(text)));
+        Assert.Equal(DartGeometry.RectFromLTWH(left, top, right - left, bottom - top), tester.GetRect(Find.Text(text)));
     }
 }

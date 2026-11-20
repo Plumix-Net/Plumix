@@ -448,7 +448,7 @@ public sealed class CupertinoCheckboxTests
             harness.FindWidgets<GestureDetector>(),
             candidate => candidate.OnTapDown is not null);
         detector.OnTapDown!(new TapDownDetails(
-            globalPosition: new Point(7.0, 7.0),
+            globalPosition: new Offset(7.0, 7.0),
             kind: PointerDeviceKind.Touch));
         harness.Pump(ViewSize);
 

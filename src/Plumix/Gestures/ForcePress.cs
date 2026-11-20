@@ -42,7 +42,7 @@ public sealed class ForcePressDetails : Diagnosticable, IPositionedGestureDetail
     /// Creates the details. An omitted <paramref name="localPosition"/> falls back to
     /// <paramref name="globalPosition"/>, exactly as Dart's constructor does.
     /// </summary>
-    public ForcePressDetails(Point globalPosition, double pressure, Point? localPosition = null)
+    public ForcePressDetails(Offset globalPosition, double pressure, Offset? localPosition = null)
     {
         GlobalPosition = globalPosition;
         LocalPosition = localPosition ?? globalPosition;
@@ -50,10 +50,10 @@ public sealed class ForcePressDetails : Diagnosticable, IPositionedGestureDetail
     }
 
     /// <inheritdoc />
-    public Point GlobalPosition { get; }
+    public Offset GlobalPosition { get; }
 
     /// <inheritdoc />
-    public Point LocalPosition { get; }
+    public Offset LocalPosition { get; }
 
     /// <summary>The pressure of the pointer on the screen.</summary>
     public double Pressure { get; }

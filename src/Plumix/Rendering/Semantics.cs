@@ -318,7 +318,7 @@ public sealed record SemanticsActionEvent(
 /// Signature for <see cref="SemanticsConfiguration.OnScrollToOffset"/>.
 /// </summary>
 /// <remarks>Flutter's <c>ScrollToOffsetHandler</c>.</remarks>
-public delegate void ScrollToOffsetHandler(Point targetOffset);
+public delegate void ScrollToOffsetHandler(Offset targetOffset);
 
 /// <summary>
 /// An action a widget exposes to assistive technologies in addition to the standard
@@ -1871,12 +1871,12 @@ public sealed class SemanticsConfiguration
     private Action? _onScrollDown;
     private ScrollToOffsetHandler? _onScrollToOffset;
 
-    private static Point ResolveOffsetArgument(object? args)
+    private static Offset ResolveOffsetArgument(object? args)
     {
         return args switch
         {
-            Point point => point,
-            IReadOnlyList<double> { Count: >= 2 } list => new Point(list[0], list[1]),
+            Offset point => point,
+            IReadOnlyList<double> { Count: >= 2 } list => new Offset(list[0], list[1]),
             _ => throw new ArgumentException(
                 "SemanticsActions.ScrollToOffset requires a Point or a two-element double list.",
                 nameof(args))
@@ -2429,7 +2429,7 @@ public sealed partial class SemanticsNode
         set
         {
             Debug.Assert(
-                double.IsFinite(value.X) && double.IsFinite(value.Y)
+                double.IsFinite(value.Left) && double.IsFinite(value.Top)
                 && double.IsFinite(value.Width) && double.IsFinite(value.Height),
                 $"{this} (with {Owner}) tried to set a non-finite rect.");
             if (_rect != value)
@@ -3099,7 +3099,7 @@ public sealed partial class SemanticsOwner : ChangeNotifier
     /// handle it, starting from <see cref="RootNode"/>.
     /// </summary>
     /// <remarks>Flutter's <c>SemanticsOwner.performActionAt</c>.</remarks>
-    public bool PerformActionAt(Point position, SemanticsActions action, object? args = null)
+    public bool PerformActionAt(Offset position, SemanticsActions action, object? args = null)
     {
         if (action == SemanticsActions.None || RootNode is not { } node)
         {
@@ -3164,7 +3164,7 @@ public sealed partial class SemanticsOwner : ChangeNotifier
     /// <remarks>Flutter's private <c>SemanticsOwner._getSemanticsActionHandlerForPosition</c>.</remarks>
     private static SemanticsActionHandler? GetSemanticsActionHandlerForPosition(
         SemanticsNode node,
-        Point position,
+        Offset position,
         SemanticsActions action,
         object? args)
     {

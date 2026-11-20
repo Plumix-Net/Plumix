@@ -1042,7 +1042,7 @@ public sealed class WindowingTests : IDisposable
 
         public override Size ContentSize => new(0, 0);
 
-        public override Point OffsetFromParent => default;
+        public override Offset OffsetFromParent => default;
 
         public override void SetConstraints(BoxConstraints constraints)
         {

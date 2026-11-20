@@ -191,7 +191,7 @@ public sealed partial class RenderParagraph
 
     internal void MarkSelectionNeedsPaint() => MarkNeedsPaint();
 
-    private void PaintSelectionHighlights(PaintingContext context, Point offset)
+    private void PaintSelectionHighlights(PaintingContext context, Offset offset)
     {
         if (_lastSelectableFragments is null)
         {
@@ -204,7 +204,7 @@ public sealed partial class RenderParagraph
         }
     }
 
-    private void PaintSelectionHandles(PaintingContext context, Point offset)
+    private void PaintSelectionHandles(PaintingContext context, Offset offset)
     {
         if (_lastSelectableFragments is null)
         {
@@ -303,7 +303,7 @@ internal sealed partial class SelectableFragment : ChangeNotifier, ISelectable, 
                     Rect result = boxes[0].ToRect();
                     for (int index = 1; index < boxes.Count; index += 1)
                     {
-                        result = result.Union(boxes[index].ToRect());
+                        result = result.ExpandToInclude(boxes[index].ToRect());
                     }
 
                     _cachedRect = result;
@@ -335,13 +335,13 @@ internal sealed partial class SelectableFragment : ChangeNotifier, ISelectable, 
 
     private Rect EmptyRangeRect()
     {
-        Point offset = _paragraph.GetPositionOffset(new TextPosition(_range.Start));
-        return new Rect(
-            new Point(offset.X, offset.Y - _paragraph.PreferredLineHeight),
+        Offset offset = _paragraph.GetPositionOffset(new TextPosition(_range.Start));
+        return DartGeometry.RectFromCorners(
+            new Offset(offset.Dx, offset.Dy - _paragraph.PreferredLineHeight),
             offset);
     }
 
-    private bool BoundingBoxesContains(Point position)
+    private bool BoundingBoxesContains(Offset position)
     {
         return BoundingBoxes.Any(rect => SelectionUtils.RectContains(rect, position));
     }
@@ -429,7 +429,7 @@ internal sealed partial class SelectableFragment : ChangeNotifier, ISelectable, 
         return SelectionResult.None;
     }
 
-    private SelectionResult HandleSelectWord(Point globalPosition)
+    private SelectionResult HandleSelectWord(Offset globalPosition)
     {
         TextPosition position = _paragraph.GetPositionForOffset(_paragraph.GlobalToLocal(globalPosition));
         if (PositionIsWithinCurrentSelection(position) && TextSelectionStart != TextSelectionEnd)
@@ -440,9 +440,9 @@ internal sealed partial class SelectableFragment : ChangeNotifier, ISelectable, 
         return HandleSelectTextBoundary(GetWordBoundaryAtPosition(position));
     }
 
-    private SelectionResult HandleSelectParagraph(Point globalPosition)
+    private SelectionResult HandleSelectParagraph(Offset globalPosition)
     {
-        Point localPosition = _paragraph.GlobalToLocal(globalPosition);
+        Offset localPosition = _paragraph.GlobalToLocal(globalPosition);
         TextPosition position = _paragraph.GetPositionForOffset(localPosition);
         return HandleSelectMultiFragmentTextBoundary(GetParagraphBoundaryAtPosition(position, _fullText));
     }
@@ -500,10 +500,10 @@ internal sealed partial class SelectableFragment : ChangeNotifier, ISelectable, 
 
     // -- Selection edge updates ----------------------------------------------
 
-    private SelectionResult UpdateSelectionEdge(Point globalPosition, bool isEnd)
+    private SelectionResult UpdateSelectionEdge(Offset globalPosition, bool isEnd)
     {
         SetSelectionPosition(null, isEnd);
-        if (!TryGlobalToLocal(globalPosition, out Point localPosition))
+        if (!TryGlobalToLocal(globalPosition, out Offset localPosition))
         {
             return SelectionResult.None;
         }
@@ -513,7 +513,7 @@ internal sealed partial class SelectableFragment : ChangeNotifier, ISelectable, 
             return HandleEmptyRect(localPosition, isEnd);
         }
 
-        Point adjustedOffset = SelectionUtils.AdjustDragOffset(Rect, localPosition, _paragraph.TextDirection);
+        Offset adjustedOffset = SelectionUtils.AdjustDragOffset(Rect, localPosition, _paragraph.TextDirection);
         TextPosition position = ClampTextPosition(_paragraph.GetPositionForOffset(adjustedOffset));
         SetSelectionPosition(position, isEnd);
         if (position.Offset == _range.End)
@@ -529,7 +529,7 @@ internal sealed partial class SelectableFragment : ChangeNotifier, ISelectable, 
         return SelectionUtils.GetResultBasedOnRect(Rect, localPosition);
     }
 
-    private SelectionResult HandleEmptyRect(Point localPosition, bool isEnd)
+    private SelectionResult HandleEmptyRect(Offset localPosition, bool isEnd)
     {
         SelectionResult result = SelectionUtils.GetResultBasedOnRect(Rect, localPosition);
         SetSelectionPosition(
@@ -541,14 +541,14 @@ internal sealed partial class SelectableFragment : ChangeNotifier, ISelectable, 
     }
 
     private SelectionResult UpdateSelectionEdgeByTextBoundary(
-        Point globalPosition,
+        Offset globalPosition,
         bool isEnd,
         Func<TextPosition, TextBoundaryRecord> getTextBoundary)
     {
         TextPosition? existingSelectionStart = TextSelectionStart;
         TextPosition? existingSelectionEnd = TextSelectionEnd;
         SetSelectionPosition(null, isEnd);
-        if (!TryGlobalToLocal(globalPosition, out Point localPosition))
+        if (!TryGlobalToLocal(globalPosition, out Offset localPosition))
         {
             return SelectionResult.None;
         }
@@ -558,7 +558,7 @@ internal sealed partial class SelectableFragment : ChangeNotifier, ISelectable, 
             return HandleEmptyRect(localPosition, isEnd);
         }
 
-        Point adjustedOffset = SelectionUtils.AdjustDragOffset(Rect, localPosition, _paragraph.TextDirection);
+        Offset adjustedOffset = SelectionUtils.AdjustDragOffset(Rect, localPosition, _paragraph.TextDirection);
         TextPosition position = _paragraph.GetPositionForOffset(adjustedOffset);
         TextBoundaryRecord? textBoundary = SelectionUtils.RectContains(Rect, localPosition)
             ? getTextBoundary(position)
@@ -748,12 +748,12 @@ internal sealed partial class SelectableFragment : ChangeNotifier, ISelectable, 
         return startDistance < endDistance ? boundary.BoundaryStart : boundary.BoundaryEnd;
     }
 
-    private SelectionResult UpdateSelectionEdgeByMultiSelectableTextBoundary(Point globalPosition, bool isEnd)
+    private SelectionResult UpdateSelectionEdgeByMultiSelectableTextBoundary(Offset globalPosition, bool isEnd)
     {
         TextPosition? existingSelectionStart = TextSelectionStart;
         TextPosition? existingSelectionEnd = TextSelectionEnd;
         SetSelectionPosition(null, isEnd);
-        if (!TryGlobalToLocal(globalPosition, out Point localPosition))
+        if (!TryGlobalToLocal(globalPosition, out Offset localPosition))
         {
             return SelectionResult.None;
         }
@@ -763,8 +763,8 @@ internal sealed partial class SelectableFragment : ChangeNotifier, ISelectable, 
             return HandleEmptyRect(localPosition, isEnd);
         }
 
-        Point adjustedOffset = SelectionUtils.AdjustDragOffset(Rect, localPosition, _paragraph.TextDirection);
-        Point adjustedOffsetRelativeToParagraph = SelectionUtils.AdjustDragOffset(
+        Offset adjustedOffset = SelectionUtils.AdjustDragOffset(Rect, localPosition, _paragraph.TextDirection);
+        Offset adjustedOffsetRelativeToParagraph = SelectionUtils.AdjustDragOffset(
             _paragraph.PaintBounds,
             localPosition,
             _paragraph.TextDirection);
@@ -1222,7 +1222,7 @@ internal sealed partial class SelectableFragment : ChangeNotifier, ISelectable, 
         }
 
         double baselineInParagraphCoordinates =
-            MatrixUtils.TransformPoint(inverse, new Point(horizontalBaseline, 0)).X;
+            MatrixUtils.TransformPoint(inverse, new Offset(horizontalBaseline, 0)).Dx;
         TextPosition newPosition;
         SelectionResult result;
         switch (movement)
@@ -1242,10 +1242,10 @@ internal sealed partial class SelectableFragment : ChangeNotifier, ISelectable, 
                     : new TextPosition(_range.End, TextAffinity.Upstream);
                 TextSelectionStart ??= TextSelectionEnd;
                 TextPosition targetedEdge = isExtent ? TextSelectionEnd!.Value : TextSelectionStart!.Value;
-                Point edgeOffset = _paragraph.GetPositionOffset(targetedEdge);
-                newPosition = _paragraph.GetPositionForOffset(new Point(
+                Offset edgeOffset = _paragraph.GetPositionOffset(targetedEdge);
+                newPosition = _paragraph.GetPositionForOffset(new Offset(
                     baselineInParagraphCoordinates,
-                    edgeOffset.Y - (_paragraph.PreferredLineHeight / 2)));
+                    edgeOffset.Dy - (_paragraph.PreferredLineHeight / 2)));
                 result = SelectionResult.End;
                 break;
             default:
@@ -1267,11 +1267,11 @@ internal sealed partial class SelectableFragment : ChangeNotifier, ISelectable, 
             return (position, SelectionResult.End);
         }
 
-        Point offset = _paragraph.GetOffsetForCaret(position, default);
+        Offset offset = _paragraph.GetOffsetForCaret(position, default);
         int currentLine = lines.Count - 1;
         foreach (LineMetrics lineMetrics in lines)
         {
-            if (lineMetrics.Baseline > offset.Y)
+            if (lineMetrics.Baseline > offset.Dy)
             {
                 currentLine = lineMetrics.LineNumber;
                 break;
@@ -1289,7 +1289,7 @@ internal sealed partial class SelectableFragment : ChangeNotifier, ISelectable, 
         }
         else
         {
-            newPosition = ClampTextPosition(_paragraph.GetPositionForOffset(new Point(
+            newPosition = ClampTextPosition(_paragraph.GetPositionForOffset(new Offset(
                 horizontalBaselineInParagraphCoordinates,
                 lines[below ? currentLine + 1 : currentLine - 1].Baseline)));
         }
@@ -1427,7 +1427,7 @@ internal sealed partial class SelectableFragment : ChangeNotifier, ISelectable, 
         return position.Affinity == TextAffinity.Upstream ? 1 : -1;
     }
 
-    private bool TryGlobalToLocal(Point globalPosition, out Point localPosition)
+    private bool TryGlobalToLocal(Offset globalPosition, out Offset localPosition)
     {
         Matrix4 transform = _paragraph.GetTransformTo(null);
         Matrix4? inverse = Matrix4.TryInvert(transform);
@@ -1517,8 +1517,8 @@ internal sealed partial class SelectableFragment : ChangeNotifier, ISelectable, 
         int selectionStart = start.Offset;
         int selectionEnd = end.Offset;
         bool isReversed = selectionStart > selectionEnd;
-        Point startOffsetInParagraphCoordinates = _paragraph.GetPositionOffset(start);
-        Point endOffsetInParagraphCoordinates = selectionStart == selectionEnd
+        Offset startOffsetInParagraphCoordinates = _paragraph.GetPositionOffset(start);
+        Offset endOffsetInParagraphCoordinates = selectionStart == selectionEnd
             ? startOffsetInParagraphCoordinates
             : _paragraph.GetPositionOffset(end);
         bool flipHandles = isReversed != (_paragraph.TextDirection == TextDirection.Rtl);
@@ -1580,7 +1580,7 @@ internal sealed partial class SelectableFragment : ChangeNotifier, ISelectable, 
         }
     }
 
-    internal void PaintSelection(PaintingContext context, Point offset)
+    internal void PaintSelection(PaintingContext context, Offset offset)
     {
         if (TextSelectionStart is not { } start || TextSelectionEnd is not { } end)
         {
@@ -1597,11 +1597,11 @@ internal sealed partial class SelectableFragment : ChangeNotifier, ISelectable, 
         foreach (TextBox box in _paragraph.GetBoxesForSelection(selection))
         {
             Rect rect = box.ToRect();
-            context.Canvas.DrawRectangle(brush, null, new Rect(rect.Position + offset, rect.Size));
+            context.Canvas.DrawRectangle(brush, null, DartGeometry.RectFromOffsetAndSize(rect.TopLeft + offset, rect.Size));
         }
     }
 
-    internal void PaintHandles(PaintingContext context, Point offset)
+    internal void PaintHandles(PaintingContext context, Offset offset)
     {
         if (TextSelectionStart is null || TextSelectionEnd is null)
         {
@@ -1611,13 +1611,13 @@ internal sealed partial class SelectableFragment : ChangeNotifier, ISelectable, 
         if (_startHandleLayerLink is { } startLink && Value.StartSelectionPoint is { } startPoint)
         {
             context.PushLayer(new LeaderLayer(startLink, offset + startPoint.LocalPosition), (_, _) => { },
-                new Point(0, 0));
+                new Offset(0, 0));
         }
 
         if (_endHandleLayerLink is { } endLink && Value.EndSelectionPoint is { } endPoint)
         {
             context.PushLayer(new LeaderLayer(endLink, offset + endPoint.LocalPosition), (_, _) => { },
-                new Point(0, 0));
+                new Offset(0, 0));
         }
     }
 }

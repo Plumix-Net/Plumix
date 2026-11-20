@@ -21,12 +21,12 @@ public class MaterialTextSelectionControls : TextSelectionControls
     /// <summary>Material handles are a fixed size regardless of the line height they sit on.</summary>
     public override Size GetHandleSize(double textLineHeight) => new(HandleSize, HandleSize);
 
-    public override Point GetHandleAnchor(TextSelectionHandleType type, double textLineHeight)
+    public override Offset GetHandleAnchor(TextSelectionHandleType type, double textLineHeight)
     {
         return type switch
         {
-            TextSelectionHandleType.Collapsed => new Point(HandleSize / 2, -4),
-            TextSelectionHandleType.Left => new Point(HandleSize, 0),
+            TextSelectionHandleType.Collapsed => new Offset(HandleSize / 2, -4),
+            TextSelectionHandleType.Left => new Offset(HandleSize, 0),
             _ => default,
         };
     }
@@ -84,11 +84,11 @@ public class MaterialTextSelectionControls : TextSelectionControls
         BuildContext context,
         Rect globalEditableRegion,
         double textLineHeight,
-        Point selectionMidpoint,
+        Offset selectionMidpoint,
         IReadOnlyList<TextSelectionPoint> endpoints,
         ITextSelectionDelegate @delegate,
         IValueListenable<ClipboardStatus>? clipboardStatus,
-        Point? lastSecondaryTapDownPosition)
+        Offset? lastSecondaryTapDownPosition)
     {
         return new TextSelectionControlsToolbar(
             globalEditableRegion: globalEditableRegion,
@@ -114,11 +114,11 @@ public sealed class MaterialTextSelectionHandleControls
         BuildContext context,
         Rect globalEditableRegion,
         double textLineHeight,
-        Point selectionMidpoint,
+        Offset selectionMidpoint,
         IReadOnlyList<TextSelectionPoint> endpoints,
         ITextSelectionDelegate @delegate,
         IValueListenable<ClipboardStatus>? clipboardStatus,
-        Point? lastSecondaryTapDownPosition)
+        Offset? lastSecondaryTapDownPosition)
     {
         return new SizedBox();
     }
@@ -178,8 +178,8 @@ internal sealed class TextSelectionHandlePainter : CustomPainter
     internal static Geometry BuildPath(Size size)
     {
         double radius = size.Width / 2.0;
-        var circle = new EllipseGeometry(new Rect(0.0, 0.0, radius * 2, radius * 2));
-        var point = new RectangleGeometry(new Rect(0.0, 0.0, radius, radius));
+        var circle = new EllipseGeometry(DartGeometry.RectFromLTWH(0.0, 0.0, radius * 2, radius * 2));
+        var point = new RectangleGeometry(DartGeometry.RectFromLTWH(0.0, 0.0, radius, radius));
         return new CombinedGeometry(GeometryCombineMode.Union, circle, point);
     }
 
@@ -195,7 +195,7 @@ internal sealed class TextSelectionControlsToolbar : StatefulWidget
     public TextSelectionControlsToolbar(
         Rect globalEditableRegion,
         double textLineHeight,
-        Point selectionMidpoint,
+        Offset selectionMidpoint,
         IReadOnlyList<TextSelectionPoint> endpoints,
         IValueListenable<ClipboardStatus>? clipboardStatus = null,
         Action? handleCut = null,
@@ -219,7 +219,7 @@ internal sealed class TextSelectionControlsToolbar : StatefulWidget
 
     public double TextLineHeight { get; }
 
-    public Point SelectionMidpoint { get; }
+    public Offset SelectionMidpoint { get; }
 
     public IReadOnlyList<TextSelectionPoint> Endpoints { get; }
 
@@ -289,15 +289,15 @@ internal sealed class TextSelectionControlsToolbar : StatefulWidget
             TextSelectionPoint endTextSelectionPoint = widget.Endpoints.Count > 1
                 ? widget.Endpoints[1]
                 : widget.Endpoints[0];
-            Point anchorAbove = new(
-                widget.GlobalEditableRegion.Left + widget.SelectionMidpoint.X,
-                Math.Max(startTextSelectionPoint.Point.Y - widget.TextLineHeight, 0)
+            Offset anchorAbove = new(
+                widget.GlobalEditableRegion.Left + widget.SelectionMidpoint.Dx,
+                Math.Max(startTextSelectionPoint.Point.Dy - widget.TextLineHeight, 0)
                 + widget.GlobalEditableRegion.Top
                 - MaterialTextSelectionControls.ToolbarContentDistance);
-            Point anchorBelow = new(
-                widget.GlobalEditableRegion.Left + widget.SelectionMidpoint.X,
+            Offset anchorBelow = new(
+                widget.GlobalEditableRegion.Left + widget.SelectionMidpoint.Dx,
                 widget.GlobalEditableRegion.Top
-                + endTextSelectionPoint.Point.Y
+                + endTextSelectionPoint.Point.Dy
                 + MaterialTextSelectionControls.ToolbarContentDistanceBelow);
 
             MaterialLocalizations localizations = MaterialLocalizations.Of(context);

@@ -49,14 +49,14 @@ public sealed class RenderColoredBox : RenderProxyBoxWithHitTestBehavior
         }
     }
 
-    public override void Paint(PaintingContext context, Point offset)
+    public override void Paint(PaintingContext context, Offset offset)
     {
         if (Size.Width > 0.0 && Size.Height > 0.0)
         {
             context.Canvas.DrawRectangle(
                 new SolidColorBrush(Color),
                 null,
-                new Rect(offset, Size),
+                DartGeometry.RectFromOffsetAndSize(offset, Size),
                 isAntiAlias: IsAntiAlias);
         }
 

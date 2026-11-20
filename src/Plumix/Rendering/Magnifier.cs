@@ -48,14 +48,14 @@ public sealed class RenderMagnifier : RenderProxyBox
     private Size _requestedSize;
     private MagnifierDecoration _decoration;
     private Clip _clipBehavior;
-    private Point _focalPointOffset;
+    private Offset _focalPointOffset;
     private double _magnificationScale;
 
     public RenderMagnifier(
         Size requestedSize,
         MagnifierDecoration decoration,
         Clip clipBehavior,
-        Point focalPointOffset,
+        Offset focalPointOffset,
         double magnificationScale,
         RenderBox? child = null)
     {
@@ -112,7 +112,7 @@ public sealed class RenderMagnifier : RenderProxyBox
         }
     }
 
-    public Point FocalPointOffset
+    public Offset FocalPointOffset
     {
         get => _focalPointOffset;
         set
@@ -155,10 +155,10 @@ public sealed class RenderMagnifier : RenderProxyBox
         Child.Layout(BoxConstraints.Tight(Size));
     }
 
-    public override void Paint(PaintingContext context, Point offset)
+    public override void Paint(PaintingContext context, Offset offset)
     {
         context.PushMagnifier(
-            lensRect: new Rect(offset, Size),
+            lensRect: DartGeometry.RectFromOffsetAndSize(offset, Size),
             focalPointOffset: _focalPointOffset,
             magnificationScale: _magnificationScale,
             decoration: _decoration,

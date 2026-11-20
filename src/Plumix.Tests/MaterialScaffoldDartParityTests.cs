@@ -93,7 +93,7 @@ public sealed class MaterialScaffoldDartParityTests
         tester.PumpWidget(Shell(scaffold));
         var fab = Assert.Single(tester.AllElements(), e => e.Widget == scaffold.FloatingActionButton);
         var render = Assert.IsAssignableFrom<RenderBox>(fab.RenderObject);
-        Assert.Equal(new Point(728, 528), render.LocalToGlobal(default));
+        Assert.Equal(new Offset(728, 528), render.LocalToGlobal(default));
         tester.PumpWidget(Shell(new Scaffold(
             floatingActionButton: scaffold.FloatingActionButton,
             floatingActionButtonLocation: FloatingActionButtonLocation.CenterFloat,
@@ -101,7 +101,7 @@ public sealed class MaterialScaffoldDartParityTests
         tester.Pump(TimeSpan.FromMilliseconds(500));
         tester.PumpWidget(Shell(scaffold));
         tester.Pump(TimeSpan.FromMilliseconds(500));
-        Assert.Equal(new Point(728, 528), render.LocalToGlobal(default));
+        Assert.Equal(new Offset(728, 528), render.LocalToGlobal(default));
         Assert.Null(tester.TakeException());
     }
 

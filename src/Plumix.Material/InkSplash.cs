@@ -12,7 +12,7 @@ internal sealed class InkSplashFactory : InteractiveInkFeatureFactory
     public override InteractiveInkFeature Create(
         MaterialInkController controller,
         RenderBox referenceBox,
-        Point position,
+        Offset position,
         Color color,
         TextDirection textDirection,
         bool containedInkWell = false,
@@ -48,7 +48,7 @@ public class InkSplash : InteractiveInkFeature
     private const double SplashInitialSize = 0.0; // logical pixels
     private const double SplashConfirmedVelocity = 1.0; // logical pixels per millisecond
 
-    private readonly Point? _position;
+    private readonly Offset? _position;
     private readonly BorderRadius _borderRadius;
     private readonly double _targetRadius;
     private readonly RectCallback? _clipCallback;
@@ -68,7 +68,7 @@ public class InkSplash : InteractiveInkFeature
         RenderBox referenceBox,
         TextDirection textDirection,
         Color color,
-        Point? position = null,
+        Offset? position = null,
         bool containedInkWell = false,
         RectCallback? rectCallback = null,
         BorderRadius? borderRadius = null,
@@ -132,7 +132,7 @@ public class InkSplash : InteractiveInkFeature
     protected override void PaintFeature(Canvas canvas, Matrix4 transform)
     {
         var paint = new Paint { Color = Color.WithAlpha(_alpha.Value) };
-        Point? center = _position;
+        Offset? center = _position;
         if (_repositionToReferenceBox)
         {
             center = InkFeatureGeometry.LerpOffset(
@@ -166,7 +166,7 @@ public class InkSplash : InteractiveInkFeature
 
         if (containedInkWell)
         {
-            return () => new Rect(referenceBox.Size);
+            return () => DartGeometry.RectFromSize(referenceBox.Size);
         }
 
         return null;
@@ -176,7 +176,7 @@ public class InkSplash : InteractiveInkFeature
         RenderBox referenceBox,
         bool containedInkWell,
         RectCallback? rectCallback,
-        Point position)
+        Offset position)
     {
         if (containedInkWell)
         {
@@ -187,12 +187,12 @@ public class InkSplash : InteractiveInkFeature
         return Material.DefaultSplashRadius;
     }
 
-    private static double GetSplashRadiusForPositionInSize(Size bounds, Point position)
+    private static double GetSplashRadiusForPositionInSize(Size bounds, Offset position)
     {
-        double d1 = InkFeatureGeometry.Distance(position, new Point(0.0, 0.0));
-        double d2 = InkFeatureGeometry.Distance(position, new Point(bounds.Width, 0.0));
-        double d3 = InkFeatureGeometry.Distance(position, new Point(0.0, bounds.Height));
-        double d4 = InkFeatureGeometry.Distance(position, new Point(bounds.Width, bounds.Height));
+        double d1 = InkFeatureGeometry.Distance(position, new Offset(0.0, 0.0));
+        double d2 = InkFeatureGeometry.Distance(position, new Offset(bounds.Width, 0.0));
+        double d3 = InkFeatureGeometry.Distance(position, new Offset(0.0, bounds.Height));
+        double d4 = InkFeatureGeometry.Distance(position, new Offset(bounds.Width, bounds.Height));
         return Math.Ceiling(Math.Max(Math.Max(d1, d2), Math.Max(d3, d4)));
     }
 }

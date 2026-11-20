@@ -45,7 +45,7 @@ public sealed class RenderColorFilter : RenderProxyBox
 
     public override bool AlwaysNeedsCompositing => Child != null;
 
-    public override void Paint(PaintingContext ctx, Point offset)
+    public override void Paint(PaintingContext ctx, Offset offset)
     {
         if (Child is null)
         {
@@ -57,7 +57,7 @@ public sealed class RenderColorFilter : RenderProxyBox
             ColorFilter,
             base.Paint,
             _layer as ColorFilterLayer);
-        layer.FilterBounds = new Rect(offset, Size);
+        layer.FilterBounds = DartGeometry.RectFromOffsetAndSize(offset, Size);
         _layer = layer;
     }
 }
@@ -127,7 +127,7 @@ public sealed class RenderImageFilter : RenderProxyBox
     {
         var imageFilterLayer = (ImageFilterLayer)layer;
         imageFilterLayer.ImageFilter = ImageFilter;
-        imageFilterLayer.FilterBounds = new Rect(default, Size);
+        imageFilterLayer.FilterBounds = DartGeometry.RectFromOffsetAndSize(default, Size);
     }
 }
 
@@ -187,15 +187,15 @@ public class RenderShaderMask : RenderProxyBox
     public override bool AlwaysNeedsCompositing => Child != null;
 
     /// <inheritdoc />
-    public override void Paint(PaintingContext context, Point offset)
+    public override void Paint(PaintingContext context, Offset offset)
     {
         if (Child is not null)
         {
             Debug.Assert(NeedsCompositing);
             var layer = Layer as ShaderMaskLayer ?? new ShaderMaskLayer();
             Layer = layer;
-            layer.Shader = _shaderCallback(new Rect(new Point(0, 0), Size));
-            layer.MaskRect = new Rect(offset, Size);
+            layer.Shader = _shaderCallback(DartGeometry.RectFromOffsetAndSize(new Offset(0, 0), Size));
+            layer.MaskRect = DartGeometry.RectFromOffsetAndSize(offset, Size);
             layer.BlendMode = _blendMode;
             context.PushLayer(layer, base.Paint, offset);
             if (Constants.KDebugMode)
@@ -337,7 +337,7 @@ public class RenderBackdropFilter : RenderProxyBox
     public override bool AlwaysNeedsCompositing => Child != null;
 
     /// <inheritdoc />
-    public override void Paint(PaintingContext context, Point offset)
+    public override void Paint(PaintingContext context, Offset offset)
     {
         if (!_enabled)
         {
@@ -345,7 +345,7 @@ public class RenderBackdropFilter : RenderProxyBox
             return;
         }
 
-        ImageFilter effectiveFilter = _filterConfig.Resolve(new ImageFilterContext(new Rect(offset, Size)));
+        ImageFilter effectiveFilter = _filterConfig.Resolve(new ImageFilterContext(DartGeometry.RectFromOffsetAndSize(offset, Size)));
 
         if (Child is not null)
         {

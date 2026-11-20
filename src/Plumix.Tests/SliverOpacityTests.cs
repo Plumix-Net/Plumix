@@ -268,9 +268,9 @@ public sealed class SliverOpacityTests : IDisposable
             Size = Constraints.Constrain(size);
         }
 
-        protected override bool HitTestSelf(Point position) => true;
+        protected override bool HitTestSelf(Offset position) => true;
 
-        public override void Paint(PaintingContext ctx, Point offset)
+        public override void Paint(PaintingContext ctx, Offset offset)
         {
         }
     }
@@ -284,10 +284,10 @@ public sealed class SliverOpacityTests : IDisposable
             Size = Constraints.Constrain(size);
         }
 
-        public override void Paint(PaintingContext ctx, Point offset)
+        public override void Paint(PaintingContext ctx, Offset offset)
         {
             PaintCount += 1;
-            ctx.Canvas.DrawRectangle(Brushes.Blue, null, new Rect(offset, Size));
+            ctx.Canvas.DrawRectangle(Brushes.Blue, null, DartGeometry.RectFromOffsetAndSize(offset, Size));
         }
     }
 

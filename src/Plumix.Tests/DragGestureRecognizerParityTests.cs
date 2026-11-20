@@ -21,11 +21,11 @@ public sealed partial class DragGestureRecognizerTests
         _ => new PanGestureRecognizer()
     };
 
-    private static Point AxisPoint(int axis, double value) => axis switch
+    private static Offset AxisPoint(int axis, double value) => axis switch
     {
-        0 => new Point(value, 0),
-        1 => new Point(0, value),
-        _ => new Point(value, value)
+        0 => new Offset(value, 0),
+        1 => new Offset(0, value),
+        _ => new Offset(value, value)
     };
 
     [Fact]
@@ -188,7 +188,7 @@ public sealed partial class DragGestureRecognizerTests
         {
             using DragGestureRecognizer drag = AxisRecognizer(axis);
             drag.MultitouchDragStrategy = MultitouchDragStrategy.AverageBoundaryPointers;
-            var updates = new List<Point>();
+            var updates = new List<Offset>();
             drag.OnUpdate = details => updates.Add(details.Delta);
             Begin(drag, Down(5, default));
             Route(Move(5, AxisPoint(axis, 100), AxisPoint(axis, 100)));
@@ -212,9 +212,9 @@ public sealed partial class DragGestureRecognizerTests
             Assert.Equal(expected.Length, updates.Count);
             for (int i = 0; i < expected.Length; i++)
             {
-                Point point = AxisPoint(axis, expected[i]);
-                Assert.Equal(point.X, updates[i].X, 10);
-                Assert.Equal(point.Y, updates[i].Y, 10);
+                Offset point = AxisPoint(axis, expected[i]);
+                Assert.Equal(point.Dx, updates[i].Dx, 10);
+                Assert.Equal(point.Dy, updates[i].Dy, 10);
             }
 
             foreach (int pointer in new[] { 5, 6, 7, 8 })
@@ -237,13 +237,13 @@ public sealed partial class DragGestureRecognizerTests
         drag.OnUpdate = details => updates.Add(details.PrimaryDelta);
         Begin(drag, Down(1, default));
         Begin(drag, Down(2, default));
-        Route(Move(1, new Point(100, 0), new Point(100, 0)));
-        Route(Move(2, new Point(100, 0), new Point(100, 0)));
+        Route(Move(1, new Offset(100, 0), new Offset(100, 0)));
+        Route(Move(2, new Offset(100, 0), new Offset(100, 0)));
         drag.MultitouchDragStrategy = MultitouchDragStrategy.SumAllPointers;
-        Route(Move(2, new Point(110, 0), new Point(10, 0)));
+        Route(Move(2, new Offset(110, 0), new Offset(10, 0)));
         drag.MultitouchDragStrategy = MultitouchDragStrategy.AverageBoundaryPointers;
-        Route(Move(1, new Point(110, 0), new Point(10, 0)));
-        Route(Move(2, new Point(120, 0), new Point(10, 0)));
+        Route(Move(1, new Offset(110, 0), new Offset(10, 0)));
+        Route(Move(2, new Offset(120, 0), new Offset(10, 0)));
         Assert.Equal(new double?[] { 100, 0, 10, 10, 0 }, updates);
         Route(Up(1, default));
         Route(Up(2, default));
@@ -261,17 +261,17 @@ public sealed partial class DragGestureRecognizerTests
         drag.OnStart = details => start = details;
         drag.OnUpdate = updates.Add;
         var down = new PointerDownEvent(
-            1, PointerDeviceKind.Touch, new Point(10, 10), PointerButtons.Primary,
+            1, PointerDeviceKind.Touch, new Offset(10, 10), PointerButtons.Primary,
             DateTime.UnixEpoch.AddMilliseconds(100));
         Begin(drag, down);
-        Route(Move(1, new Point(20, 25), new Point(10, 15), milliseconds: 200));
-        Route(Move(1, new Point(20, 25), default, milliseconds: 300));
+        Route(Move(1, new Offset(20, 25), new Offset(10, 15), milliseconds: 200));
+        Route(Move(1, new Offset(20, 25), default, milliseconds: 300));
         DragStartDetails started = Assert.IsType<DragStartDetails>(start);
         Assert.Equal(down.TimestampUtc, started.SourceTimeStampUtc);
         Assert.Equal(DateTime.UnixEpoch.AddMilliseconds(200), updates[0].SourceTimeStampUtc);
         Assert.Equal(DateTime.UnixEpoch.AddMilliseconds(300), updates[1].SourceTimeStampUtc);
-        Assert.Equal(new Point(20, 25), updates[0].GlobalPosition);
-        Assert.Equal(new Point(20, 25), updates[0].LocalPosition);
+        Assert.Equal(new Offset(20, 25), updates[0].GlobalPosition);
+        Assert.Equal(new Offset(20, 25), updates[0].LocalPosition);
         Assert.Equal(default, updates[1].Delta);
         Route(Up(1, default));
     }
@@ -285,8 +285,8 @@ public sealed partial class DragGestureRecognizerTests
         using DragGestureRecognizer drag = AxisRecognizer(axis);
         drag.OnStart = _ => { };
         Begin(drag, Down(1, default));
-        Vector speed = axis == 1 ? new Vector(0, 50) : new Vector(50, 0);
-        Vector distance = axis == 1 ? new Vector(0, 18) : new Vector(18, 0);
+        Offset speed = axis == 1 ? new Offset(0, 50) : new Offset(50, 0);
+        Offset distance = axis == 1 ? new Offset(0, 18) : new Offset(18, 0);
         var estimate = new VelocityEstimate(speed, 1, TimeSpan.FromMilliseconds(20), distance);
         Assert.False(drag.IsFlingGesture(estimate, PointerDeviceKind.Touch));
         Assert.False(drag.IsFlingGesture(estimate with { PixelsPerSecond = speed * 2 }, PointerDeviceKind.Touch));
@@ -299,7 +299,7 @@ public sealed partial class DragGestureRecognizerTests
         drag.MinFlingVelocity = 30;
         drag.MaxFlingVelocity = 40;
         DragEndDetails fling = Assert.IsType<DragEndDetails>(drag.ConsiderFling(estimate, PointerDeviceKind.Touch));
-        Assert.Equal(40, fling.Velocity.PixelsPerSecond.Length, 8);
+        Assert.Equal(40, fling.Velocity.PixelsPerSecond.DartDistance, 8);
         Route(Up(1, default));
     }
 
@@ -310,13 +310,13 @@ public sealed partial class DragGestureRecognizerTests
     public void PanFling_ClampsMagnitudeIsotropically(double x, double y, double expectedX, double expectedY)
     {
         using var drag = new PanGestureRecognizer { OnStart = _ => { } };
-        Begin(drag, Down(1, new Point(10, 20)));
-        var estimate = new VelocityEstimate(new Vector(x, y), 1, TimeSpan.FromMilliseconds(20), new Vector(50, 50));
+        Begin(drag, Down(1, new Offset(10, 20)));
+        var estimate = new VelocityEstimate(new Offset(x, y), 1, TimeSpan.FromMilliseconds(20), new Offset(50, 50));
         DragEndDetails fling = Assert.IsType<DragEndDetails>(drag.ConsiderFling(estimate, PointerDeviceKind.Touch));
-        Assert.Equal(expectedX, fling.Velocity.PixelsPerSecond.X, 8);
-        Assert.Equal(expectedY, fling.Velocity.PixelsPerSecond.Y, 8);
+        Assert.Equal(expectedX, fling.Velocity.PixelsPerSecond.Dx, 8);
+        Assert.Equal(expectedY, fling.Velocity.PixelsPerSecond.Dy, 8);
         Assert.Null(fling.PrimaryVelocity);
-        Assert.Equal(new Point(10, 20), fling.GlobalPosition);
+        Assert.Equal(new Offset(10, 20), fling.GlobalPosition);
         Route(Up(1, default));
     }
 
@@ -329,14 +329,14 @@ public sealed partial class DragGestureRecognizerTests
         DragEndDetails? end = null;
         drag.OnEnd = details => end = details;
         Begin(drag, Down(1, default));
-        Route(Move(1, new Point(10, 0), new Point(10, 0), milliseconds: 10));
-        Route(Move(1, new Point(20, 0), new Point(10, 0), milliseconds: 20));
+        Route(Move(1, new Offset(10, 0), new Offset(10, 0), milliseconds: 10));
+        Route(Move(1, new Offset(20, 0), new Offset(10, 0), milliseconds: 20));
         if (synthesizedWobble)
         {
             var wobble = new PointerMoveEvent(
                 1,
                 PointerDeviceKind.Touch,
-                new Point(21, 1),
+                new Offset(21, 1),
                 PointerButtons.Primary,
                 DateTime.UnixEpoch.AddMilliseconds(30),
                 synthesized: true);
@@ -345,8 +345,8 @@ public sealed partial class DragGestureRecognizerTests
 
         Route(Up(1, default));
         DragEndDetails ended = Assert.IsType<DragEndDetails>(end);
-        Assert.Equal(1000, ended.Velocity.PixelsPerSecond.X, 6);
-        Assert.Equal(0, ended.Velocity.PixelsPerSecond.Y);
+        Assert.Equal(1000, ended.Velocity.PixelsPerSecond.Dx, 6);
+        Assert.Equal(0, ended.Velocity.PixelsPerSecond.Dy);
     }
 
     [Theory]
@@ -368,7 +368,7 @@ public sealed partial class DragGestureRecognizerTests
             BeginContested(drag, Down(1, default));
         }
 
-        Route(Move(1, new Point(1, 0), new Point(1, 0), PointerButtons.Secondary));
+        Route(Move(1, new Offset(1, 0), new Offset(1, 0), PointerButtons.Secondary));
         Assert.Equal(accepted ? new[] { "start", "end" } : ["cancel"], log);
         log.Clear();
         Begin(drag, Down(2, default));
@@ -381,14 +381,14 @@ public sealed partial class DragGestureRecognizerTests
     {
         using var vertical = new VerticalDragGestureRecognizer { OnStart = _ => { }, OnEnd = _ => { } };
         using var horizontal = new HorizontalDragGestureRecognizer { OnStart = _ => { } };
-        Begin(vertical, Down(90, new Point(10, 10)));
-        PointerDownEvent down = Down(91, new Point(20, 20));
+        Begin(vertical, Down(90, new Offset(10, 10)));
+        PointerDownEvent down = Down(91, new Offset(20, 20));
         horizontal.AddPointer(down);
         vertical.AddPointer(down);
         _binding.GestureArena.Close(91);
         Route(down);
-        Route(Up(90, new Point(10, 10)));
-        Route(Up(91, new Point(20, 20)));
+        Route(Up(90, new Offset(10, 10)));
+        Route(Up(91, new Offset(20, 20)));
     }
 
     [Fact]
@@ -439,11 +439,11 @@ public sealed partial class DragGestureRecognizerTests
         try
         {
             harness.Pump(new Size(200, 200));
-            _binding.HandlePointerEvent(harness.RenderView, Down(1, new Point(50, 50)));
+            _binding.HandlePointerEvent(harness.RenderView, Down(1, new Offset(50, 50)));
             _binding.HandlePointerEvent(
-                harness.RenderView, Move(1, new Point(80, 69), new Point(30, 19), milliseconds: 16));
+                harness.RenderView, Move(1, new Offset(80, 69), new Offset(30, 19), milliseconds: 16));
             Assert.Equal(1, starts);
-            _binding.HandlePointerEvent(harness.RenderView, Up(1, new Point(80, 69)));
+            _binding.HandlePointerEvent(harness.RenderView, Up(1, new Offset(80, 69)));
         }
         finally
         {
@@ -522,7 +522,7 @@ public sealed partial class DragGestureRecognizerTests
 
         if (buttonChange)
         {
-            Route(Move(1, new Point(-0.1, -0.1), new Point(-0.1, -0.1), PointerButtons.Secondary));
+            Route(Move(1, new Offset(-0.1, -0.1), new Offset(-0.1, -0.1), PointerButtons.Secondary));
             Assert.Equal(["start"], log);
             log.Clear();
         }
@@ -533,7 +533,7 @@ public sealed partial class DragGestureRecognizerTests
             Assert.Empty(log);
         }
 
-        Route(Move(2, new Point(100, 100), new Point(100, 100)));
+        Route(Move(2, new Offset(100, 100), new Offset(100, 100)));
         Assert.Equal(buttonChange ? new[] { "update" } : ["start"], log);
         log.Clear();
         Route(Up(2, default));
@@ -559,7 +559,7 @@ public sealed partial class DragGestureRecognizerTests
             Route(down);
         }
 
-        Route(Move(1, new Point(100, 100), new Point(100, 100)));
+        Route(Move(1, new Offset(100, 100), new Offset(100, 100)));
         Assert.Equal(["start"], log);
         Route(Up(2, default));
         Assert.Equal(["start"], log);
@@ -635,22 +635,22 @@ public sealed partial class DragGestureRecognizerTests
         };
         Matrix4 transform = Matrix4.Diagonal3Values(2, 2, 1);
         var pointer = new PanZoomPointer(1);
-        PointerEvent start = pointer.Start(new Point(20, 30)).Transformed(transform);
+        PointerEvent start = pointer.Start(new Offset(20, 30)).Transformed(transform);
         drag.AddPointerPanZoom((PointerPanZoomStartEvent)start);
         _binding.GestureArena.Close(1);
         Route(start);
-        Route(pointer.Update(new Point(20, 30), new Point(10, 15), milliseconds: 10).Transformed(transform));
+        Route(pointer.Update(new Offset(20, 30), new Offset(10, 15), milliseconds: 10).Transformed(transform));
         var synthesized = new PointerPanZoomUpdateEvent(
-            1, new Point(20, 30), DateTime.UnixEpoch.AddMilliseconds(20),
-            pan: new Point(12, 18), panDelta: new Point(2, 3), synthesized: true);
+            1, new Offset(20, 30), DateTime.UnixEpoch.AddMilliseconds(20),
+            pan: new Offset(12, 18), panDelta: new Offset(2, 3), synthesized: true);
         Route(synthesized.Transformed(transform));
-        Assert.Equal(new[] { default(Point), new Point(10, 15) }, tracker.Positions);
-        Route(pointer.End(new Point(20, 30)));
+        Assert.Equal(new[] { default(Offset), new Offset(10, 15) }, tracker.Positions);
+        Route(pointer.End(new Offset(20, 30)));
     }
 
     private sealed class RecordingVelocityTracker() : VelocityTracker(PointerDeviceKind.Trackpad)
     {
-        public List<Point> Positions { get; } = [];
-        public override void AddPosition(DateTime timestampUtc, Point position) => Positions.Add(position);
+        public List<Offset> Positions { get; } = [];
+        public override void AddPosition(DateTime timestampUtc, Offset position) => Positions.Add(position);
     }
 }

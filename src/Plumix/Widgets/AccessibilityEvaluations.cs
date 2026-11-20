@@ -186,7 +186,7 @@ public class MinimumTapTargetEvaluation : AccessibilityEvaluation
             current = current.Parent;
         }
 
-        var viewRect = new Rect(default, view.PhysicalSize);
+        var viewRect = DartGeometry.RectFromOffsetAndSize(default, view.PhysicalSize);
         if (IsAtBoundary(paintBounds, viewRect))
         {
             return violations;
@@ -403,7 +403,7 @@ public abstract class ContrastEvaluation : AccessibilityEvaluation
         int width,
         int height)
     {
-        Rect truePaintBounds = Intersect(paintBounds, new Rect(0, 0, width, height));
+        Rect truePaintBounds = Intersect(paintBounds, DartGeometry.RectFromLTWH(0, 0, width, height));
 
         int leftX = (int)Math.Floor(truePaintBounds.Left);
         int rightX = (int)Math.Ceiling(truePaintBounds.Right);

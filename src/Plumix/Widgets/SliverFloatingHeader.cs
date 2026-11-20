@@ -375,7 +375,7 @@ internal sealed class RenderSliverFloatingHeader : RenderSliverSingleBoxAdapter
         this.ApplyPaintTransformForBoxChild((RenderBox)child, transform);
     }
 
-    public override void Paint(PaintingContext context, Point offset)
+    public override void Paint(PaintingContext context, Offset offset)
     {
         if (Child != null && Geometry!.Visible)
         {
@@ -383,14 +383,14 @@ internal sealed class RenderSliverFloatingHeader : RenderSliverSingleBoxAdapter
                 Constraints.AxisDirection,
                 Constraints.GrowthDirection) switch
             {
-                AxisDirection.Up => new Point(
+                AxisDirection.Up => new Offset(
                     0.0,
                     Geometry.PaintExtent - ChildMainAxisPosition(Child) - ChildExtent),
-                AxisDirection.Left => new Point(
+                AxisDirection.Left => new Offset(
                     Geometry.PaintExtent - ChildMainAxisPosition(Child) - ChildExtent,
                     0.0),
-                AxisDirection.Right => new Point(ChildMainAxisPosition(Child), 0.0),
-                _ => new Point(0.0, ChildMainAxisPosition(Child)),
+                AxisDirection.Right => new Offset(ChildMainAxisPosition(Child), 0.0),
+                _ => new Offset(0.0, ChildMainAxisPosition(Child)),
             };
             context.PaintChild(Child, offset);
         }

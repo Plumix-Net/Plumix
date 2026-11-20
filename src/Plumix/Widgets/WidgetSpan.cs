@@ -383,7 +383,7 @@ internal sealed class RenderScaledInlineWidget : RenderProxyBox
         Size = Constraints.Constrain(new Size(child.Size.Width * _scale, child.Size.Height * _scale));
     }
 
-    public override void Paint(PaintingContext context, Point offset)
+    public override void Paint(PaintingContext context, Offset offset)
     {
         RenderBox? child = Child;
         if (child is null)
@@ -414,7 +414,7 @@ internal sealed class RenderScaledInlineWidget : RenderProxyBox
         transform.ScaleByDouble(_scale, _scale, _scale, 1.0);
     }
 
-    protected override bool HitTestChildren(BoxHitTestResult result, Point position)
+    protected override bool HitTestChildren(BoxHitTestResult result, Offset position)
     {
         RenderBox? child = Child;
         if (child is null)

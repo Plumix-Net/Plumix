@@ -114,7 +114,7 @@ internal sealed class RenderEnsureMinSemanticsSize : RenderProxyBox
         {
             double width = Math.Max(Size.Width, _minSemanticSize.Width);
             double height = Math.Max(Size.Height, _minSemanticSize.Height);
-            return new Rect(
+            return DartGeometry.RectFromLTWH(
                 (Size.Width - width) / 2.0,
                 (Size.Height - height) / 2.0,
                 width,
@@ -494,7 +494,7 @@ internal sealed class RenderChip : RenderBox, ISlottedRenderObjectContainer
     protected override double? ComputeDistanceToActualBaseline(TextBaseline baseline)
     {
         double? childBaseline = Label.GetDistanceToActualBaseline(baseline);
-        return childBaseline.HasValue ? childBaseline.Value + ParentDataOf(Label).offset.Y : null;
+        return childBaseline.HasValue ? childBaseline.Value + ParentDataOf(Label).offset.Dy : null;
     }
 
     protected override Size ComputeDryLayout(BoxConstraints constraints)
@@ -529,7 +529,7 @@ internal sealed class RenderChip : RenderBox, ISlottedRenderObjectContainer
         PositionChildren(sizes);
     }
 
-    public override void Paint(PaintingContext context, Point offset)
+    public override void Paint(PaintingContext context, Offset offset)
     {
         double opacity = _isEnabled ? 1.0 : 97.0 / 255.0;
         if (!_isEnabled || _enableProgress < 1.0)
@@ -543,9 +543,9 @@ internal sealed class RenderChip : RenderBox, ISlottedRenderObjectContainer
         PaintWithOpacity(context, _label, offset, opacity);
     }
 
-    public override bool HitTest(BoxHitTestResult result, Point position)
+    public override bool HitTest(BoxHitTestResult result, Offset position)
     {
-        if (position.X < 0.0 || position.Y < 0.0 || position.X > Size.Width || position.Y > Size.Height)
+        if (position.Dx < 0.0 || position.Dy < 0.0 || position.Dx > Size.Width || position.Dy > Size.Height)
         {
             return false;
         }
@@ -554,7 +554,7 @@ internal sealed class RenderChip : RenderBox, ISlottedRenderObjectContainer
         RenderBox target = onDelete && _deleteIcon is not null ? _deleteIcon : Label;
         bool childHit = target.HitTest(
             result,
-            new Point(target.Size.Width / 2.0, target.Size.Height / 2.0));
+            new Offset(target.Size.Width / 2.0, target.Size.Height / 2.0));
         if (childHit || HitTestSelf(position))
         {
             result.Add(new BoxHitTestEntry(this, position));
@@ -564,7 +564,7 @@ internal sealed class RenderChip : RenderBox, ISlottedRenderObjectContainer
         return false;
     }
 
-    protected override bool HitTestSelf(Point position)
+    protected override bool HitTestSelf(Offset position)
     {
         return _pressRect.Contains(position) || _deleteButtonRect.Contains(position);
     }
@@ -620,7 +620,7 @@ internal sealed class RenderChip : RenderBox, ISlottedRenderObjectContainer
         var labelSize = new Size(
             actualLabelSize.Width + Horizontal(_labelPadding),
             actualLabelSize.Height + Vertical(_labelPadding));
-        double densityAdjustmentY = _visualDensity.BaseSizeAdjustment.Y / 2.0;
+        double densityAdjustmentY = _visualDensity.BaseSizeAdjustment.Dy / 2.0;
         double overallWidth = logicalAvatarSize.Width + labelSize.Width + logicalDeleteSize.Width;
         double overallHeight = Math.Max(0.0, contentSize + densityAdjustmentY);
         var paddedSize = new Size(
@@ -645,9 +645,9 @@ internal sealed class RenderChip : RenderBox, ISlottedRenderObjectContainer
     {
         bool ltr = _textDirection == TextDirection.Ltr;
         double start = ltr ? 0.0 : sizes.OverallWidth;
-        Point avatarOffset = default;
-        Point labelOffset;
-        Point deleteOffset = default;
+        Offset avatarOffset = default;
+        Offset labelOffset;
+        Offset deleteOffset = default;
 
         if (sizes.LogicalAvatarSize.Width > 0.0)
         {
@@ -664,7 +664,7 @@ internal sealed class RenderChip : RenderBox, ISlottedRenderObjectContainer
         if (ltr)
         {
             _pressRect = _canTap
-                ? new Rect(
+                ? DartGeometry.RectFromLTWH(
                     0.0,
                     0.0,
                     sizes.LogicalDeleteSize.Width > 0.0
@@ -676,7 +676,7 @@ internal sealed class RenderChip : RenderBox, ISlottedRenderObjectContainer
             if (sizes.LogicalDeleteSize.Width > 0.0)
             {
                 deleteOffset = CenterLayout(sizes.LogicalDeleteSize, start, sizes, ltr: true);
-                _deleteButtonRect = new Rect(
+                _deleteButtonRect = DartGeometry.RectFromLTWH(
                     start + _padding.Left,
                     0.0,
                     sizes.LogicalDeleteSize.Width + _padding.Right,
@@ -691,7 +691,7 @@ internal sealed class RenderChip : RenderBox, ISlottedRenderObjectContainer
         {
             if (sizes.LogicalDeleteSize.Width > 0.0)
             {
-                _deleteButtonRect = new Rect(
+                _deleteButtonRect = DartGeometry.RectFromLTWH(
                     0.0,
                     0.0,
                     sizes.LogicalDeleteSize.Width + _padding.Right,
@@ -705,7 +705,7 @@ internal sealed class RenderChip : RenderBox, ISlottedRenderObjectContainer
 
             start -= sizes.LogicalDeleteSize.Width;
             _pressRect = _canTap
-                ? new Rect(
+                ? DartGeometry.RectFromLTWH(
                     _deleteButtonRect.Width,
                     0.0,
                     sizes.OverallWidth - _deleteButtonRect.Width + Horizontal(_padding),
@@ -715,7 +715,7 @@ internal sealed class RenderChip : RenderBox, ISlottedRenderObjectContainer
 
         double labelCentering = ((sizes.LabelSize.Height - Vertical(_labelPadding))
                                  - sizes.ActualLabelSize.Height) / 2.0;
-        Point paddingOffset = new(_padding.Left, _padding.Top);
+        Offset paddingOffset = new(_padding.Left, _padding.Top);
         if (_avatar is not null)
         {
             ParentDataOf(_avatar).offset = paddingOffset + avatarOffset;
@@ -723,21 +723,21 @@ internal sealed class RenderChip : RenderBox, ISlottedRenderObjectContainer
 
         ParentDataOf(Label).offset = paddingOffset
                                      + labelOffset
-                                     + new Vector(_labelPadding.Left, _labelPadding.Top + labelCentering);
+                                     + new Offset(_labelPadding.Left, _labelPadding.Top + labelCentering);
         if (_deleteIcon is not null)
         {
             ParentDataOf(_deleteIcon).offset = paddingOffset + deleteOffset;
         }
     }
 
-    private static Point CenterLayout(Size boxSize, double x, ChipSizes sizes, bool ltr)
+    private static Offset CenterLayout(Size boxSize, double x, ChipSizes sizes, bool ltr)
     {
         double resolvedX = ltr ? x : x - boxSize.Width;
         double y = (sizes.ContentSize - boxSize.Height + sizes.DensityAdjustmentY) / 2.0;
-        return new Point(resolvedX, y);
+        return new Offset(resolvedX, y);
     }
 
-    private bool HitIsOnDeleteIcon(Point position)
+    private bool HitIsOnDeleteIcon(Offset position)
     {
         if (_deleteIcon is null || _deleteButtonRect.Width <= 0.0)
         {
@@ -749,13 +749,13 @@ internal sealed class RenderChip : RenderBox, ISlottedRenderObjectContainer
         double accessibleWidth = Math.Min(
             deflatedWidth * 0.499,
             Math.Min(_labelPadding.Right + deleteWidth, 24.0 + (deleteWidth / 2.0)));
-        double localX = position.X - _padding.Left;
+        double localX = position.Dx - _padding.Left;
         return _textDirection == TextDirection.Ltr
             ? localX >= deflatedWidth - accessibleWidth
             : localX <= accessibleWidth;
     }
 
-    private void PaintAvatarSelection(PaintingContext context, Point offset)
+    private void PaintAvatarSelection(PaintingContext context, Offset offset)
     {
         if (!_showCheckmark || _checkmarkProgress <= 0.0 || _avatarDrawerProgress <= 0.0)
         {
@@ -765,7 +765,7 @@ internal sealed class RenderChip : RenderBox, ISlottedRenderObjectContainer
         Rect avatarRect;
         if (_avatar is not null)
         {
-            avatarRect = new Rect(ParentDataOf(_avatar).offset + offset, _avatar.Size);
+            avatarRect = DartGeometry.RectFromOffsetAndSize(ParentDataOf(_avatar).offset + offset, _avatar.Size);
             var scrim = new SolidColorBrush(Color.FromARGB(0x60, 0x19, 0x19, 0x19));
             if (_avatarBorder is CircleBorder)
             {
@@ -788,9 +788,9 @@ internal sealed class RenderChip : RenderBox, ISlottedRenderObjectContainer
         {
             double contentHeight = Math.Max(0.0, Size.Height - Vertical(_padding));
             double x = _textDirection == TextDirection.Ltr
-                ? offset.X + _padding.Left
-                : offset.X + Size.Width - _padding.Right - contentHeight;
-            avatarRect = new Rect(x, offset.Y + _padding.Top, contentHeight, contentHeight);
+                ? offset.Dx + _padding.Left
+                : offset.Dx + Size.Width - _padding.Right - contentHeight;
+            avatarRect = DartGeometry.RectFromLTWH(x, offset.Dy + _padding.Top, contentHeight, contentHeight);
         }
 
         PaintCheckmark(context, avatarRect, _checkmarkProgress);
@@ -799,10 +799,10 @@ internal sealed class RenderChip : RenderBox, ISlottedRenderObjectContainer
     private void PaintCheckmark(PaintingContext context, Rect avatarRect, double progress)
     {
         double checkSize = avatarRect.Height * 0.75;
-        Point origin = avatarRect.Position + new Vector(avatarRect.Height * 0.125, avatarRect.Height * 0.125);
-        Point start = origin + new Vector(checkSize * 0.15, checkSize * 0.45);
-        Point middle = origin + new Vector(checkSize * 0.4, checkSize * 0.7);
-        Point end = origin + new Vector(checkSize * 0.85, checkSize * 0.25);
+        Offset origin = avatarRect.TopLeft + new Offset(avatarRect.Height * 0.125, avatarRect.Height * 0.125);
+        Offset start = origin + new Offset(checkSize * 0.15, checkSize * 0.45);
+        Offset middle = origin + new Offset(checkSize * 0.4, checkSize * 0.7);
+        Offset end = origin + new Offset(checkSize * 0.85, checkSize * 0.25);
         var color = Color.FromARGB(
             (byte)Math.Round(_checkmarkColor.Alpha * Math.Clamp(progress, 0.0, 1.0)),
             _checkmarkColor.Red,
@@ -819,17 +819,17 @@ internal sealed class RenderChip : RenderBox, ISlottedRenderObjectContainer
         context.Canvas.DrawLine(pen, middle, Lerp(middle, end, (progress - 0.5) * 2.0));
     }
 
-    private static Point Lerp(Point begin, Point end, double t)
+    private static Offset Lerp(Offset begin, Offset end, double t)
     {
-        return new Point(
-            begin.X + ((end.X - begin.X) * t),
-            begin.Y + ((end.Y - begin.Y) * t));
+        return new Offset(
+            begin.Dx + ((end.Dx - begin.Dx) * t),
+            begin.Dy + ((end.Dy - begin.Dy) * t));
     }
 
     private static void PaintWithOpacity(
         PaintingContext context,
         RenderBox? child,
-        Point offset,
+        Offset offset,
         double opacity)
     {
         if (child is null)
@@ -837,7 +837,7 @@ internal sealed class RenderChip : RenderBox, ISlottedRenderObjectContainer
             return;
         }
 
-        Point localOffset = ParentDataOf(child).offset;
+        Offset localOffset = ParentDataOf(child).offset;
         if (opacity >= 0.999)
         {
             context.PaintChild(child, localOffset + offset);

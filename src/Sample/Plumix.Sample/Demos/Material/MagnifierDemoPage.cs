@@ -71,7 +71,7 @@ internal sealed class MagnifierDemoPageState : State
                                     child: new RawMagnifier(
                                         size: new Size(100, 54),
                                         magnificationScale: 1.8,
-                                        focalPointOffset: new Point(0, 74),
+                                        focalPointOffset: new Offset(0, 74),
                                         decoration: new MagnifierDecoration(
                                             shape: new RoundedRectangleBorder(
                                                 new BorderSide(new Color(0xFF006A6A), 2),
@@ -121,7 +121,7 @@ internal sealed class MagnifierDemoPageState : State
         [
             new Plumix.Rendering.BoxShadow(
                 color: Color.FromARGB(25, 0, 0, 0),
-                offset: new Point(0, 2),
+                offset: new Offset(0, 2),
                 blurRadius: 1.5,
                 spreadRadius: 0.75),
         ];

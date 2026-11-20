@@ -166,12 +166,12 @@ public sealed class ParagraphEngineTests
         Paragraph paragraph = Build("Test\nTest", new ParagraphStyle(FontSize: 10.0));
         paragraph.Layout(new ParagraphConstraints(double.PositiveInfinity));
 
-        GlyphInfo bottomRight = paragraph.GetClosestGlyphInfoForOffset(new Point(99.0, 99.0))!;
+        GlyphInfo bottomRight = paragraph.GetClosestGlyphInfoForOffset(new Offset(99.0, 99.0))!;
         GlyphInfo last = paragraph.GetGlyphInfoAt(8)!;
         Assert.Equal(last, bottomRight);
         Assert.NotEqual(paragraph.GetGlyphInfoAt(0), bottomRight);
 
-        Assert.Equal(new Rect(30, 10, 10, 10), last.GraphemeClusterLayoutBounds);
+        Assert.Equal(DartGeometry.RectFromLTWH(30, 10, 10, 10), last.GraphemeClusterLayoutBounds);
         Assert.Equal(new TextRange(8, 9), last.GraphemeClusterCodeUnitRange);
         Assert.Equal(TextDirection.Ltr, last.WritingDirection);
     }
@@ -341,8 +341,8 @@ public sealed class ParagraphEngineTests
     [Fact]
     public void GlyphInfo_AndTextBox_StoreTheirFields()
     {
-        var info = new GlyphInfo(new Rect(1, 2, 3, 4), new TextRange(5, 6), TextDirection.Rtl);
-        Assert.Equal(new Rect(1, 2, 3, 4), info.GraphemeClusterLayoutBounds);
+        var info = new GlyphInfo(DartGeometry.RectFromLTWH(1, 2, 3, 4), new TextRange(5, 6), TextDirection.Rtl);
+        Assert.Equal(DartGeometry.RectFromLTWH(1, 2, 3, 4), info.GraphemeClusterLayoutBounds);
         Assert.Equal(new TextRange(5, 6), info.GraphemeClusterCodeUnitRange);
         Assert.Equal(TextDirection.Rtl, info.WritingDirection);
 
@@ -449,11 +449,11 @@ public sealed class ParagraphEngineTests
     [Fact]
     public void Paint_SemiboldAndHeavier_FakeBoldsTheGlyph()
     {
-        Assert.Equal(255, PaintedPixel("X", new ParagraphTextStyle(FontSize: 40), new Point(10.3, 0.3), 9, 20).R);
+        Assert.Equal(255, PaintedPixel("X", new ParagraphTextStyle(FontSize: 40), new Offset(10.3, 0.3), 9, 20).R);
         Assert.InRange(PaintedPixel(
             "X",
             new ParagraphTextStyle(FontSize: 40, FontWeight: FontWeight.SemiBold),
-            new Point(10.3, 0.3),
+            new Offset(10.3, 0.3),
             9,
             20).R, (byte)160, (byte)230);
     }
@@ -482,7 +482,7 @@ public sealed class ParagraphEngineTests
         var style = new ParagraphTextStyle(
             FontSize: 16,
             Color: new Color(0xFF000000),
-            Shadows: [new Rendering.Shadow(new Color(0xFF0000FF), new Point(3, 3))]);
+            Shadows: [new Rendering.Shadow(new Color(0xFF0000FF), new Offset(3, 3))]);
 
         Assert.Equal((0, 0, 255, 255), PaintedPixel("XX", style, default, 20, 18));
         Assert.Equal((0, 0, 0, 255), PaintedPixel("XX", style, default, 20, 10));
@@ -502,7 +502,7 @@ public sealed class ParagraphEngineTests
             Decoration: decoration,
             DecorationColor: new Color(0xFFFF0000));
         int redRows = Enumerable.Range(0, 40)
-            .Count(y => PaintedPixel("X X", style, new Point(0, 10), 30, y) is { R: > 200, G: < 230 });
+            .Count(y => PaintedPixel("X X", style, new Offset(0, 10), 30, y) is { R: > 200, G: < 230 });
 
         Assert.InRange(redRows, 1, 3);
     }
@@ -510,7 +510,7 @@ public sealed class ParagraphEngineTests
     private static (byte R, byte G, byte B, byte A) PaintedPixel(
         string text,
         ParagraphTextStyle style,
-        Point offset,
+        Offset offset,
         int x,
         int y)
     {
@@ -521,7 +521,7 @@ public sealed class ParagraphEngineTests
         paragraph.Layout(new ParagraphConstraints(400));
         var recorder = new PictureRecorder();
         var canvas = new Canvas(recorder);
-        canvas.DrawRect(new Rect(0, 0, 80, 60), new Paint { Color = new Color(0xFFFFFFFF) });
+        canvas.DrawRect(DartGeometry.RectFromLTWH(0, 0, 80, 60), new Paint { Color = new Color(0xFFFFFFFF) });
         canvas.DrawParagraph(paragraph, offset);
         using Avalonia.Media.Imaging.Bitmap image = recorder.EndRecording().ToImageSync(80, 60);
         return RasterBackend.PixelAt(image, x, y);

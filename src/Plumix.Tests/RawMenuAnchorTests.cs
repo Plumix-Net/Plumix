@@ -373,13 +373,13 @@ public sealed class RawMenuAnchorTests : IDisposable
             child: new SizedBox(width: 80, height: 40))));
         harness.Pump(new Size(400, 300));
 
-        controller.Open(new Vector(10.0, 15.0));
+        controller.Open(new Offset(10.0, 15.0));
         harness.Pump(new Size(400, 300));
 
         Assert.NotNull(info);
-        Assert.Equal(new Point(0, 0), info!.AnchorRect.TopLeft);
+        Assert.Equal(new Offset(0, 0), info!.AnchorRect.TopLeft);
         Assert.Equal(new Size(400, 300), info.OverlaySize);
-        Assert.Equal(new Vector(10.0, 15.0), info.Position);
+        Assert.Equal(new Offset(10.0, 15.0), info.Position);
         Assert.Same(controller, info.TapRegionGroupId);
     }
 

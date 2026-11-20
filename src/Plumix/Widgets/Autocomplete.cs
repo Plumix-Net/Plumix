@@ -273,7 +273,7 @@ internal sealed class RawAutocompleteState<T> : State<RawAutocomplete<T>>
         MediaQueryData mediaQuery = MediaQuery.Of(context);
         Rect usableOverlayRect = DeflateRect(
             DeflateRect(
-                new Rect(layoutInfo.OverlaySize),
+                DartGeometry.RectFromSize(layoutInfo.OverlaySize),
                 mediaQuery.ViewInsets),
             mediaQuery.Padding);
         Rect overlayRectInField = TransformRect(overlayToField, usableOverlayRect);
@@ -658,15 +658,15 @@ internal sealed class RawAutocompleteState<T> : State<RawAutocomplete<T>>
         double top = rect.Top + insets.Top;
         double right = Math.Max(left, rect.Right - insets.Right);
         double bottom = Math.Max(top, rect.Bottom - insets.Bottom);
-        return new Rect(left, top, right - left, bottom - top);
+        return DartGeometry.RectFromLTWH(left, top, right - left, bottom - top);
     }
 
     private static Rect TransformRect(Matrix4 transform, Rect rect)
     {
         Rect transformed = MatrixUtils.TransformRect(transform, rect);
-        return new Rect(
-            transformed.X,
-            transformed.Y,
+        return DartGeometry.RectFromLTWH(
+            transformed.Left,
+            transformed.Top,
             Math.Max(0, transformed.Width),
             Math.Max(0, transformed.Height));
     }

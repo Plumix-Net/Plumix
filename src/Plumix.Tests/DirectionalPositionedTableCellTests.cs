@@ -130,11 +130,11 @@ public sealed class DirectionalPositionedTableCellTests
         table.Layout(new BoxConstraints(MaxWidth: 80, MaxHeight: 80));
 
         Assert.Equal(20, Assert.Single(table.ResolvedRowHeights));
-        Assert.Equal(0, ((TableCellParentData)top.parentData!).offset.Y);
-        Assert.Equal(0, ((TableCellParentData)middle.parentData!).offset.Y);
-        Assert.Equal(10, ((TableCellParentData)bottom.parentData!).offset.Y);
+        Assert.Equal(0, ((TableCellParentData)top.parentData!).offset.Dy);
+        Assert.Equal(0, ((TableCellParentData)middle.parentData!).offset.Dy);
+        Assert.Equal(10, ((TableCellParentData)bottom.parentData!).offset.Dy);
         Assert.Equal(new Size(20, 20), fill.Size);
-        Assert.Equal(0, ((TableCellParentData)fill.parentData!).offset.Y);
+        Assert.Equal(0, ((TableCellParentData)fill.parentData!).offset.Dy);
     }
 
     [Fact]
@@ -152,8 +152,8 @@ public sealed class DirectionalPositionedTableCellTests
         table.Layout(new BoxConstraints(MaxWidth: 40, MaxHeight: 40));
 
         Assert.Equal(17, Assert.Single(table.ResolvedRowHeights));
-        Assert.Equal(0, ((TableCellParentData)first.parentData!).offset.Y);
-        Assert.Equal(3, ((TableCellParentData)second.parentData!).offset.Y);
+        Assert.Equal(0, ((TableCellParentData)first.parentData!).offset.Dy);
+        Assert.Equal(3, ((TableCellParentData)second.parentData!).offset.Dy);
         Assert.Equal(8, table.GetDistanceToBaseline(TextBaseline.Alphabetic, onlyReal: true));
     }
 
@@ -180,9 +180,9 @@ public sealed class DirectionalPositionedTableCellTests
 
         table.Layout(new BoxConstraints(MaxWidth: 60, MaxHeight: 40));
 
-        Assert.Equal(50, ((TableCellParentData)first.parentData!).offset.X);
-        Assert.Equal(30, ((TableCellParentData)second.parentData!).offset.X);
-        Assert.Equal(0, ((TableCellParentData)third.parentData!).offset.X);
+        Assert.Equal(50, ((TableCellParentData)first.parentData!).offset.Dx);
+        Assert.Equal(30, ((TableCellParentData)second.parentData!).offset.Dx);
+        Assert.Equal(0, ((TableCellParentData)third.parentData!).offset.Dx);
     }
 
     [Fact]
@@ -307,7 +307,7 @@ public sealed class DirectionalPositionedTableCellTests
             return baseline == TextBaseline.Alphabetic ? _alphabeticBaseline : null;
         }
 
-        public override void Paint(PaintingContext context, Point offset)
+        public override void Paint(PaintingContext context, Offset offset)
         {
         }
     }

@@ -53,8 +53,8 @@ public sealed class CupertinoMenuAnchorTests : IDisposable
         Assert.Equal(new Color(0x4DFFFFFF), lines[0].Color);
         Assert.Equal(BlendMode.SourceOver, lines[1].BlendMode);
         Assert.Equal(new Color(0x14000000), lines[1].Color);
-        Assert.Equal(new Point(0.0, 0.5), lines[1].Offset);
-        Assert.Equal(new Point(100.0, 0.5), lines[1].EndOffset);
+        Assert.Equal(new Offset(0.0, 0.5), lines[1].Offset);
+        Assert.Equal(new Offset(100.0, 0.5), lines[1].EndOffset);
     }
 
     [Fact]
@@ -197,7 +197,7 @@ public sealed class CupertinoMenuAnchorTests : IDisposable
             [new CupertinoMenuItem(child: new Text("Press me"), onPressed: () => pressed++)]);
         using var harness = Open(menu, controller);
         RenderParagraph paragraph = FindParagraph(harness.RenderView, "Press me");
-        Point position = paragraph.LocalToGlobal(new Point(2.0, 2.0));
+        Offset position = paragraph.LocalToGlobal(new Offset(2.0, 2.0));
 
         GestureBinding.Instance.HandlePointerEvent(
             harness.RenderView,
@@ -246,7 +246,7 @@ public sealed class CupertinoMenuAnchorTests : IDisposable
             ]);
         using var harness = Open(menu, controller);
         RenderParagraph paragraph = FindParagraph(harness.RenderView, "Stay open");
-        Tap(harness.RenderView, paragraph.LocalToGlobal(new Point(2.0, 2.0)), pointer: 502);
+        Tap(harness.RenderView, paragraph.LocalToGlobal(new Offset(2.0, 2.0)), pointer: 502);
         harness.Pump(ViewSize);
 
         Assert.Equal(1, pressed);
@@ -267,7 +267,7 @@ public sealed class CupertinoMenuAnchorTests : IDisposable
             ]);
         using var harness = Open(menu, controller);
         RenderParagraph plain = FindParagraph(harness.RenderView, "Plain");
-        double withLeading = plain.LocalToGlobal(default).X;
+        double withLeading = plain.LocalToGlobal(default).Dx;
 
         var secondController = new MenuController();
         using var withoutHarness = Open(
@@ -278,7 +278,7 @@ public sealed class CupertinoMenuAnchorTests : IDisposable
                     new CupertinoMenuItem(child: new Text("Plain")),
                 ]),
             secondController);
-        double withoutLeading = FindParagraph(withoutHarness.RenderView, "Plain").LocalToGlobal(default).X;
+        double withoutLeading = FindParagraph(withoutHarness.RenderView, "Plain").LocalToGlobal(default).Dx;
 
         Assert.Equal(16.0, withLeading - withoutLeading, precision: 4);
     }
@@ -424,7 +424,7 @@ public sealed class CupertinoMenuAnchorTests : IDisposable
             ]);
         using var harness = Open(menu, controller);
         RenderParagraph paragraph = FindParagraph(harness.RenderView, "Hover me");
-        Point inside = paragraph.LocalToGlobal(new Point(2.0, 2.0));
+        Offset inside = paragraph.LocalToGlobal(new Offset(2.0, 2.0));
 
         Hover(harness, inside);
         Hover(harness, inside);
@@ -451,7 +451,7 @@ public sealed class CupertinoMenuAnchorTests : IDisposable
                     onFocusChange: focusChanges.Add),
             ]);
         using var harness = Open(menu, controller);
-        Point inside = FindParagraph(harness.RenderView, "Disabled").LocalToGlobal(new Point(2.0, 2.0));
+        Offset inside = FindParagraph(harness.RenderView, "Disabled").LocalToGlobal(new Offset(2.0, 2.0));
 
         Hover(harness, inside);
         Exit(harness);
@@ -475,7 +475,7 @@ public sealed class CupertinoMenuAnchorTests : IDisposable
                     onPressed: static () => { }),
             ]);
         using var harness = Open(menu, controller);
-        Hover(harness, FindParagraph(harness.RenderView, "No focus").LocalToGlobal(new Point(2.0, 2.0)));
+        Hover(harness, FindParagraph(harness.RenderView, "No focus").LocalToGlobal(new Offset(2.0, 2.0)));
 
         Assert.Empty(focusChanges);
     }
@@ -622,7 +622,7 @@ public sealed class CupertinoMenuAnchorTests : IDisposable
         paragraph.Layout(new ParagraphConstraints(100.0));
         var recorder = new PictureRecorder();
         var canvas = new Canvas(recorder);
-        canvas.DrawRect(new Rect(0.0, 0.0, 100.0, 100.0), new Paint { Color = new Color(0xFF204060) });
+        canvas.DrawRect(DartGeometry.RectFromLTWH(0.0, 0.0, 100.0, 100.0), new Paint { Color = new Color(0xFF204060) });
         canvas.DrawParagraph(paragraph, default);
         using Bitmap image = recorder.EndRecording().ToImageSync(100, 100);
 
@@ -771,7 +771,7 @@ public sealed class CupertinoMenuAnchorTests : IDisposable
             BuildAnchor(controller, [Pressable("a")]),
             controller);
         RenderParagraph paragraph = FindParagraph(harness.RenderView, "a");
-        Point inside = paragraph.LocalToGlobal(new Point(2.0, 2.0));
+        Offset inside = paragraph.LocalToGlobal(new Offset(2.0, 2.0));
         ScaleTransition scale = Assert.Single(harness.FindWidgets<ScaleTransition>());
         Assert.Equal(1.0, scale.Scale.Value, precision: 2);
 
@@ -789,7 +789,7 @@ public sealed class CupertinoMenuAnchorTests : IDisposable
             new PointerMoveEvent(
                 701,
                 PointerDeviceKind.Touch,
-                new Point(inside.X, inside.Y + 400.0),
+                new Offset(inside.Dx, inside.Dy + 400.0),
                 PointerButtons.Primary,
                 timestamp.AddMilliseconds(20.0)));
         for (int frame = 0; frame < 40; frame++)
@@ -807,7 +807,7 @@ public sealed class CupertinoMenuAnchorTests : IDisposable
             new PointerUpEvent(
                 701,
                 PointerDeviceKind.Touch,
-                new Point(inside.X, inside.Y + 400.0),
+                new Offset(inside.Dx, inside.Dy + 400.0),
                 PointerButtons.None,
                 timestamp.AddMilliseconds(700.0)));
         for (int frame = 0; frame < 40; frame++)
@@ -831,7 +831,7 @@ public sealed class CupertinoMenuAnchorTests : IDisposable
                     menuChildren: [Pressable("a")],
                     child: new SizedBox(width: 44.0, height: 44.0, child: new Text("Open")))));
         using var harness = Open(menu, controller);
-        Point inside = FindParagraph(harness.RenderView, "a").LocalToGlobal(new Point(2.0, 2.0));
+        Offset inside = FindParagraph(harness.RenderView, "a").LocalToGlobal(new Offset(2.0, 2.0));
 
         DateTime timestamp = DateTime.UtcNow;
         GestureBinding.Instance.HandlePointerEvent(
@@ -847,7 +847,7 @@ public sealed class CupertinoMenuAnchorTests : IDisposable
             new PointerMoveEvent(
                 702,
                 PointerDeviceKind.Touch,
-                new Point(inside.X, inside.Y + 400.0),
+                new Offset(inside.Dx, inside.Dy + 400.0),
                 PointerButtons.Primary,
                 timestamp.AddMilliseconds(20.0)));
         for (int frame = 0; frame < 30; frame++)
@@ -874,25 +874,25 @@ public sealed class CupertinoMenuAnchorTests : IDisposable
         extra.Attach(new PipelineOwner());
         extra.Layout(BoxConstraints.Tight(new Size(100.0, 100.0)));
         var surface = (RenderBox)harness.FindRenderObject<CupertinoMenuSwipeSurface>();
-        Point start = surface.LocalToGlobal(new Point(10.0, 10.0));
+        Offset start = surface.LocalToGlobal(new Offset(10.0, 10.0));
         DateTime timestamp = DateTime.UtcNow;
         try
         {
             GestureBinding.Instance.HandlePointerEvent(harness.RenderView, new PointerDownEvent(
                 703, PointerDeviceKind.Touch, start, PointerButtons.Primary, timestamp));
             GestureBinding.Instance.HandlePointerEvent(harness.RenderView, new PointerMoveEvent(
-                703, PointerDeviceKind.Touch, start + new Vector(30.0, 0.0), PointerButtons.Primary,
+                703, PointerDeviceKind.Touch, start + new Offset(30.0, 0.0), PointerButtons.Primary,
                 timestamp.AddMilliseconds(20.0)));
             Assert.NotEmpty(distances);
 
             extra.Detach();
             GestureBinding.Instance.HandlePointerEvent(harness.RenderView, new PointerMoveEvent(
-                703, PointerDeviceKind.Touch, new Point(10.0, 10.0), PointerButtons.Primary,
+                703, PointerDeviceKind.Touch, new Offset(10.0, 10.0), PointerButtons.Primary,
                 timestamp.AddMilliseconds(40.0)));
 
             Assert.True(distances[^1] > 100.0, $"Detached surface still affected swipe distance: {distances[^1]}.");
             GestureBinding.Instance.HandlePointerEvent(harness.RenderView, new PointerUpEvent(
-                703, PointerDeviceKind.Touch, new Point(10.0, 10.0), PointerButtons.None,
+                703, PointerDeviceKind.Touch, new Offset(10.0, 10.0), PointerButtons.None,
                 timestamp.AddMilliseconds(60.0)));
             Assert.Equal(0.0, distances[^1]);
         }
@@ -929,13 +929,13 @@ public sealed class CupertinoMenuAnchorTests : IDisposable
         using var harness = new CupertinoThemeTestHarness(Wrap(new Center(child)), registerForPointerEvents: true);
         harness.Pump(ViewSize);
         RenderBox parent = (RenderBox)harness.FindRenderObject<CupertinoMenuSwipeTarget>();
-        Point start = parent.LocalToGlobal(new Point(10.0, 10.0));
+        Offset start = parent.LocalToGlobal(new Offset(10.0, 10.0));
         var handle = new CupertinoMenuSwipeHandle(
             harness.RenderView.FlutterView.ViewId, start, _ => { }, _ => { }, () => { });
         Assert.Equal(["enter:a"], events);
 
         void Move(double x, double y) => handle.Update(new DragUpdateDetails(
-            default, default, new Point(x, y), null));
+            default, default, new Offset(x, y), null));
         Move(100.0, 0.0);
         Move(0.0, 100.0);
         Move(-100.0, -100.0);
@@ -977,7 +977,7 @@ public sealed class CupertinoMenuAnchorTests : IDisposable
         harness.Pump(ViewSize);
     }
 
-    private static void Hover(CupertinoThemeTestHarness harness, Point position)
+    private static void Hover(CupertinoThemeTestHarness harness, Offset position)
     {
         GestureBinding.Instance.HandlePointerEvent(
             harness.RenderView,
@@ -998,7 +998,7 @@ public sealed class CupertinoMenuAnchorTests : IDisposable
             new PointerHoverEvent(
                 HoverDevice,
                 PointerDeviceKind.Mouse,
-                new Point(1.0, 1.0),
+                new Offset(1.0, 1.0),
                 PointerButtons.None,
                 DateTime.UtcNow));
         harness.Pump(ViewSize);
@@ -1093,7 +1093,7 @@ public sealed class CupertinoMenuAnchorTests : IDisposable
         return result;
     }
 
-    private static void Tap(RenderView view, Point position, int pointer)
+    private static void Tap(RenderView view, Offset position, int pointer)
     {
         DateTime timestamp = DateTime.UtcNow;
         GestureBinding.Instance.HandlePointerEvent(

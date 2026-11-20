@@ -388,13 +388,13 @@ public sealed class HostTextInputPluginTests : IDisposable
                 10.0, 20.0, 0.0, 1.0,
             },
         });
-        Invoke("TextInput.setMarkedTextRect", RectJson(new Rect(3, 4, 5, 6)));
+        Invoke("TextInput.setMarkedTextRect", RectJson(DartGeometry.RectFromLTWH(3, 4, 5, 6)));
 
-        Assert.Equal(new Rect(16, 28, 10, 12), _plugin.GetCaretRect());
+        Assert.Equal(DartGeometry.RectFromLTWH(16, 28, 10, 12), _plugin.GetCaretRect());
 
         // The caret rect wins over the marked text rect, as the macOS plugin positions only the caret.
-        Invoke("TextInput.setCaretRect", RectJson(new Rect(1, 1, 2, 18)));
-        Assert.Equal(new Rect(12, 22, 4, 36), _plugin.GetCaretRect());
+        Invoke("TextInput.setCaretRect", RectJson(DartGeometry.RectFromLTWH(1, 1, 2, 18)));
+        Assert.Equal(DartGeometry.RectFromLTWH(12, 22, 4, 36), _plugin.GetCaretRect());
         Assert.Equal(3, changes);
     }
 
@@ -414,7 +414,7 @@ public sealed class HostTextInputPluginTests : IDisposable
                 0.0, 0.0, 0.0, 0.0,
             },
         });
-        Invoke("TextInput.setCaretRect", RectJson(new Rect(1, 1, 2, 18)));
+        Invoke("TextInput.setCaretRect", RectJson(DartGeometry.RectFromLTWH(1, 1, 2, 18)));
 
         Assert.Equal(default(Rect), _plugin.GetCaretRect());
     }
@@ -666,8 +666,8 @@ public sealed class HostTextInputPluginTests : IDisposable
 
     private static Dictionary<string, object?> RectJson(Rect rect) => new()
     {
-        ["x"] = rect.X,
-        ["y"] = rect.Y,
+        ["x"] = rect.Left,
+        ["y"] = rect.Top,
         ["width"] = rect.Width,
         ["height"] = rect.Height,
     };

@@ -395,7 +395,7 @@ public sealed class RenderObjectDiagnosticsTests
     public void ContainerLayer_DebugDescribeChildren_NumbersTheChildrenFromOne()
     {
         var root = new ContainerLayer();
-        root.Append(new OffsetLayer { Offset = new Point(1, 2) });
+        root.Append(new OffsetLayer { Offset = new Offset(1, 2) });
         root.Append(new OpacityLayer { Opacity = 0.5 });
 
         List<DiagnosticsNode> children = root.DebugDescribeChildren();
@@ -526,7 +526,7 @@ public sealed class RenderObjectDiagnosticsTests
 
         protected override Size ComputeDryLayout(BoxConstraints constraints) => constraints.Constrain(size);
 
-        public override void Paint(PaintingContext ctx, Point offset)
+        public override void Paint(PaintingContext ctx, Offset offset)
         {
         }
     }

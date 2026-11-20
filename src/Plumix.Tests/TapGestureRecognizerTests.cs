@@ -38,7 +38,7 @@ public sealed class TapGestureRecognizerTests : IDisposable
 
     private static PointerDownEvent Down(
         int pointer,
-        Point position,
+        Offset position,
         PointerButtons buttons = PointerButtons.Primary,
         PointerDeviceKind kind = PointerDeviceKind.Touch)
     {
@@ -47,7 +47,7 @@ public sealed class TapGestureRecognizerTests : IDisposable
 
     private static PointerUpEvent Up(
         int pointer,
-        Point position,
+        Offset position,
         PointerDeviceKind kind = PointerDeviceKind.Touch)
     {
         return new PointerUpEvent(pointer, kind, position, PointerButtons.None, DateTime.UnixEpoch);
@@ -55,14 +55,14 @@ public sealed class TapGestureRecognizerTests : IDisposable
 
     private static PointerMoveEvent Move(
         int pointer,
-        Point position,
+        Offset position,
         PointerButtons buttons = PointerButtons.Primary,
         PointerDeviceKind kind = PointerDeviceKind.Touch)
     {
         return new PointerMoveEvent(pointer, kind, position, buttons, DateTime.UnixEpoch);
     }
 
-    private static PointerCancelEvent Cancel(int pointer, Point position)
+    private static PointerCancelEvent Cancel(int pointer, Offset position)
     {
         return new PointerCancelEvent(
             pointer, PointerDeviceKind.Touch, position, PointerButtons.None, DateTime.UnixEpoch);
@@ -103,14 +103,14 @@ public sealed class TapGestureRecognizerTests : IDisposable
 
         try
         {
-            var down = Down(1, new Point(10.0, 10.0));
+            var down = Down(1, new Offset(10.0, 10.0));
             tap.AddPointer(down);
             _binding.GestureArena.Close(1);
             // Dart resolves the sole remaining member in a microtask, so nothing has fired yet.
             Assert.Empty(events);
             Route(down);
             Assert.Equal(["down"], events);
-            Route(Up(1, new Point(11.0, 9.0)));
+            Route(Up(1, new Offset(11.0, 9.0)));
             Assert.Equal(["down", "up", "tap"], events);
             _binding.GestureArena.Sweep(1);
             Assert.Equal(["down", "up", "tap"], events);
@@ -137,19 +137,19 @@ public sealed class TapGestureRecognizerTests : IDisposable
 
         try
         {
-            var touchDown = Down(1, new Point(10.0, 10.0));
+            var touchDown = Down(1, new Offset(10.0, 10.0));
             tap.AddPointer(touchDown);
             _binding.GestureArena.Close(1);
             Route(touchDown);
-            Route(Up(1, new Point(11.0, 9.0)));
+            Route(Up(1, new Offset(11.0, 9.0)));
             _binding.GestureArena.Sweep(1);
             Assert.Equal(0, taps);
 
-            var mouseDown = Down(2, new Point(10.0, 10.0), kind: PointerDeviceKind.Mouse);
+            var mouseDown = Down(2, new Offset(10.0, 10.0), kind: PointerDeviceKind.Mouse);
             tap.AddPointer(mouseDown);
             _binding.GestureArena.Close(2);
             Route(mouseDown);
-            Route(Up(2, new Point(11.0, 9.0), kind: PointerDeviceKind.Mouse));
+            Route(Up(2, new Offset(11.0, 9.0), kind: PointerDeviceKind.Mouse));
             _binding.GestureArena.Sweep(2);
             Assert.Equal(1, taps);
         }
@@ -172,17 +172,17 @@ public sealed class TapGestureRecognizerTests : IDisposable
 
         try
         {
-            var down = Down(1, new Point(5.0, 5.0), kind: PointerDeviceKind.Mouse);
+            var down = Down(1, new Offset(5.0, 5.0), kind: PointerDeviceKind.Mouse);
             tap.AddPointer(down);
             _binding.GestureArena.Close(1);
             Route(down);
-            Route(Up(1, new Point(8.0, 6.0), kind: PointerDeviceKind.Mouse));
+            Route(Up(1, new Offset(8.0, 6.0), kind: PointerDeviceKind.Mouse));
             _binding.GestureArena.Sweep(1);
 
             Assert.Equal(PointerDeviceKind.Mouse, downDetails!.Kind);
-            Assert.Equal(new Point(5.0, 5.0), downDetails.GlobalPosition);
+            Assert.Equal(new Offset(5.0, 5.0), downDetails.GlobalPosition);
             Assert.Equal(PointerDeviceKind.Mouse, upDetails!.Kind);
-            Assert.Equal(new Point(8.0, 6.0), upDetails.GlobalPosition);
+            Assert.Equal(new Offset(8.0, 6.0), upDetails.GlobalPosition);
         }
         finally
         {
@@ -227,21 +227,21 @@ public sealed class TapGestureRecognizerTests : IDisposable
 
         try
         {
-            var down1 = Down(1, new Point(10.0, 10.0));
+            var down1 = Down(1, new Offset(10.0, 10.0));
             tap.AddPointer(down1);
             _binding.GestureArena.Close(1);
             Route(down1);
 
-            var down2 = Down(2, new Point(15.0, 15.0));
+            var down2 = Down(2, new Offset(15.0, 15.0));
             tap.AddPointer(down2);
             _binding.GestureArena.Close(2);
             Route(down2);
 
-            Route(Up(1, new Point(10.0, 10.0)));
+            Route(Up(1, new Offset(10.0, 10.0)));
             _binding.GestureArena.Sweep(1);
             Assert.Equal(1, taps);
 
-            Route(Up(2, new Point(15.0, 15.0)));
+            Route(Up(2, new Offset(15.0, 15.0)));
             _binding.GestureArena.Sweep(2);
             Assert.Equal(1, taps);
         }
@@ -262,21 +262,21 @@ public sealed class TapGestureRecognizerTests : IDisposable
 
         try
         {
-            var down1 = Down(1, new Point(10.0, 10.0));
+            var down1 = Down(1, new Offset(10.0, 10.0));
             tap.AddPointer(down1);
             _binding.GestureArena.Close(1);
             Route(down1);
 
-            var down2 = Down(2, new Point(15.0, 15.0));
+            var down2 = Down(2, new Offset(15.0, 15.0));
             tap.AddPointer(down2);
             _binding.GestureArena.Close(2);
             Route(down2);
 
-            Route(Up(2, new Point(15.0, 15.0)));
+            Route(Up(2, new Offset(15.0, 15.0)));
             _binding.GestureArena.Sweep(2);
             Assert.Equal(0, taps);
 
-            Route(Up(1, new Point(10.0, 10.0)));
+            Route(Up(1, new Offset(10.0, 10.0)));
             _binding.GestureArena.Sweep(1);
             Assert.Equal(1, taps);
         }
@@ -299,17 +299,17 @@ public sealed class TapGestureRecognizerTests : IDisposable
 
         try
         {
-            var down = Down(1, new Point(10.0, 10.0));
+            var down = Down(1, new Offset(10.0, 10.0));
             tap.AddPointer(down);
             _binding.GestureArena.Close(1);
             Route(down);
             Assert.Equal(["down"], events);
 
             // ~21 px: past the default 18 px post-accept slop, so the won tap self-rejects.
-            Route(Move(1, new Point(25.0, 25.0)));
+            Route(Move(1, new Offset(25.0, 25.0)));
             Assert.Equal(["down", "cancel"], events);
 
-            Route(Up(1, new Point(25.0, 25.0)));
+            Route(Up(1, new Offset(25.0, 25.0)));
             _binding.GestureArena.Sweep(1);
             Assert.Equal(["down", "cancel"], events);
         }
@@ -331,13 +331,13 @@ public sealed class TapGestureRecognizerTests : IDisposable
 
         try
         {
-            var down = Down(1, new Point(10.0, 10.0));
+            var down = Down(1, new Offset(10.0, 10.0));
             tap.AddPointer(down);
             _binding.GestureArena.Close(1);
             Route(down);
             // ~17 px: inside the default 18 px slop.
-            Route(Move(1, new Point(22.0, 22.0)));
-            Route(Up(1, new Point(22.0, 22.0)));
+            Route(Move(1, new Offset(22.0, 22.0)));
+            Route(Up(1, new Offset(22.0, 22.0)));
             _binding.GestureArena.Sweep(1);
             Assert.Equal(["tap"], events);
         }
@@ -361,7 +361,7 @@ public sealed class TapGestureRecognizerTests : IDisposable
 
         try
         {
-            var down = Down(1, new Point(10.0, 10.0));
+            var down = Down(1, new Offset(10.0, 10.0));
             tap.AddPointer(down);
             _binding.GestureArena.Add(1, passive);
             _binding.GestureArena.Close(1);
@@ -372,7 +372,7 @@ public sealed class TapGestureRecognizerTests : IDisposable
             Assert.Equal(["down"], events);
 
             // A pointer cancel after the deadline fires the cancel with Dart's empty reason.
-            Route(Cancel(1, new Point(10.0, 10.0)));
+            Route(Cancel(1, new Offset(10.0, 10.0)));
             Assert.Equal(["down", "cancel"], events);
         }
         finally
@@ -395,13 +395,13 @@ public sealed class TapGestureRecognizerTests : IDisposable
 
         try
         {
-            var down = Down(1, new Point(10.0, 10.0));
+            var down = Down(1, new Offset(10.0, 10.0));
             tap.AddPointer(down);
             GestureArenaEntry entry = _binding.GestureArena.Add(1, passive);
             _binding.GestureArena.Hold(1);
             _binding.GestureArena.Close(1);
             Route(down);
-            Route(Up(1, new Point(10.0, 10.0)));
+            Route(Up(1, new Offset(10.0, 10.0)));
             _binding.GestureArena.Sweep(1);
             Assert.Empty(events);
 
@@ -436,14 +436,14 @@ public sealed class TapGestureRecognizerTests : IDisposable
 
         try
         {
-            var down = Down(1, new Point(10.0, 10.0));
+            var down = Down(1, new Offset(10.0, 10.0));
             tapA.AddPointer(down);
             tapB.AddPointer(down);
             _binding.GestureArena.Close(1);
             Route(down);
             Assert.Empty(events);
 
-            Route(Up(1, new Point(10.0, 10.0)));
+            Route(Up(1, new Offset(10.0, 10.0)));
             _binding.GestureArena.Sweep(1);
             Assert.Equal(["tapADown", "tapAUp", "tapATap"], events);
         }
@@ -469,21 +469,21 @@ public sealed class TapGestureRecognizerTests : IDisposable
 
         try
         {
-            var down = Down(1, new Point(10.0, 10.0));
+            var down = Down(1, new Offset(10.0, 10.0));
             tap.AddPointer(down);
             _binding.GestureArena.Add(1, passive);
             _binding.GestureArena.Close(1);
             Route(down);
-            Route(Move(1, new Point(10.0, 10.0), buttons: PointerButtons.Primary | PointerButtons.Secondary));
-            Route(Up(1, new Point(10.0, 10.0)));
+            Route(Move(1, new Offset(10.0, 10.0), buttons: PointerButtons.Primary | PointerButtons.Secondary));
+            Route(Up(1, new Offset(10.0, 10.0)));
             _binding.GestureArena.Sweep(1);
             Assert.Empty(events);
 
-            var down2 = Down(2, new Point(10.0, 10.0));
+            var down2 = Down(2, new Offset(10.0, 10.0));
             tap.AddPointer(down2);
             _binding.GestureArena.Close(2);
             Route(down2);
-            Route(Up(2, new Point(10.0, 10.0)));
+            Route(Up(2, new Offset(10.0, 10.0)));
             _binding.GestureArena.Sweep(2);
             Assert.Equal(["down", "up"], events);
         }
@@ -508,7 +508,7 @@ public sealed class TapGestureRecognizerTests : IDisposable
 
         try
         {
-            var down = Down(1, new Point(10.0, 10.0));
+            var down = Down(1, new Offset(10.0, 10.0));
             tap.AddPointer(down);
             _binding.GestureArena.Add(1, passive);
             _binding.GestureArena.Close(1);
@@ -516,7 +516,7 @@ public sealed class TapGestureRecognizerTests : IDisposable
             timers.Elapse(GestureConstants.PressTimeout);
             Assert.Equal(["down"], events);
 
-            Route(Move(1, new Point(10.0, 10.0), buttons: PointerButtons.Primary | PointerButtons.Secondary));
+            Route(Move(1, new Offset(10.0, 10.0), buttons: PointerButtons.Primary | PointerButtons.Secondary));
             Assert.Equal(["down", "cancel"], events);
         }
         finally
@@ -541,7 +541,7 @@ public sealed class TapGestureRecognizerTests : IDisposable
 
         try
         {
-            var down = Down(1, new Point(10.0, 10.0));
+            var down = Down(1, new Offset(10.0, 10.0));
             primary.AddPointer(down);
             secondary.AddPointer(down);
             _binding.GestureArena.Close(1);
@@ -550,7 +550,7 @@ public sealed class TapGestureRecognizerTests : IDisposable
             Assert.Empty(events);
             Route(down);
             Assert.Equal(["primaryDown"], events);
-            Route(Up(1, new Point(10.0, 10.0)));
+            Route(Up(1, new Offset(10.0, 10.0)));
             _binding.GestureArena.Sweep(1);
             Assert.Equal(["primaryDown", "primaryUp"], events);
         }
@@ -575,11 +575,11 @@ public sealed class TapGestureRecognizerTests : IDisposable
 
         try
         {
-            var down = Down(1, new Point(10.0, 10.0), buttons: PointerButtons.Secondary);
+            var down = Down(1, new Offset(10.0, 10.0), buttons: PointerButtons.Secondary);
             tap.AddPointer(down);
             _binding.GestureArena.Close(1);
             Route(down);
-            Route(Up(1, new Point(10.0, 10.0)));
+            Route(Up(1, new Offset(10.0, 10.0)));
             _binding.GestureArena.Sweep(1);
             Assert.Equal(["secondaryDown", "secondaryUp", "secondaryTap"], events);
         }
@@ -602,11 +602,11 @@ public sealed class TapGestureRecognizerTests : IDisposable
 
         try
         {
-            var down = Down(1, new Point(10.0, 10.0), buttons: PointerButtons.Tertiary);
+            var down = Down(1, new Offset(10.0, 10.0), buttons: PointerButtons.Tertiary);
             tap.AddPointer(down);
             _binding.GestureArena.Close(1);
             Route(down);
-            Route(Up(1, new Point(10.0, 10.0)));
+            Route(Up(1, new Offset(10.0, 10.0)));
             _binding.GestureArena.Sweep(1);
             Assert.Equal(["tertiaryDown", "tertiaryUp"], events);
         }
@@ -629,11 +629,11 @@ public sealed class TapGestureRecognizerTests : IDisposable
         try
         {
             var down = Down(
-                1, new Point(10.0, 10.0), buttons: PointerButtons.Primary | PointerButtons.Secondary);
+                1, new Offset(10.0, 10.0), buttons: PointerButtons.Primary | PointerButtons.Secondary);
             tap.AddPointer(down);
             _binding.GestureArena.Close(1);
             Route(down);
-            Route(Up(1, new Point(10.0, 10.0)));
+            Route(Up(1, new Offset(10.0, 10.0)));
             _binding.GestureArena.Sweep(1);
             Assert.Empty(events);
         }
@@ -654,18 +654,18 @@ public sealed class TapGestureRecognizerTests : IDisposable
 
         try
         {
-            var down = Down(1, new Point(10.0, 10.0));
+            var down = Down(1, new Offset(10.0, 10.0));
             tap.AddPointer(down);
             _binding.GestureArena.Close(1);
             Route(down);
-            Route((PointerMoveEvent)Move(1, new Point(60.0, 10.0)).WithDelta(new Point(50.0, 0.0)));
-            Route((PointerMoveEvent)Move(1, new Point(70.0, 20.0)).WithDelta(new Point(10.0, 10.0)));
+            Route((PointerMoveEvent)Move(1, new Offset(60.0, 10.0)).WithDelta(new Offset(50.0, 0.0)));
+            Route((PointerMoveEvent)Move(1, new Offset(70.0, 20.0)).WithDelta(new Offset(10.0, 10.0)));
 
             Assert.Equal(2, moves.Count);
-            Assert.Equal(new Point(60.0, 10.0), moves[0].GlobalPosition);
-            Assert.Equal(new Point(50.0, 0.0), moves[0].Delta);
-            Assert.Equal(new Point(70.0, 20.0), moves[1].GlobalPosition);
-            Assert.Equal(new Point(10.0, 10.0), moves[1].Delta);
+            Assert.Equal(new Offset(60.0, 10.0), moves[0].GlobalPosition);
+            Assert.Equal(new Offset(50.0, 0.0), moves[0].Delta);
+            Assert.Equal(new Offset(70.0, 20.0), moves[1].GlobalPosition);
+            Assert.Equal(new Offset(10.0, 10.0), moves[1].Delta);
         }
         finally
         {
@@ -687,15 +687,15 @@ public sealed class TapGestureRecognizerTests : IDisposable
 
         try
         {
-            var down = Down(1, new Point(10.0, 10.0));
+            var down = Down(1, new Offset(10.0, 10.0));
             tap.AddPointer(down);
             _binding.GestureArena.Add(1, passive);
             _binding.GestureArena.Close(1);
             Route(down);
 
             // Past the pre-accept slop before any tap-down was sent: silent rejection.
-            Route(Move(1, new Point(60.0, 10.0)));
-            Route(Up(1, new Point(60.0, 10.0)));
+            Route(Move(1, new Offset(60.0, 10.0)));
+            Route(Up(1, new Offset(60.0, 10.0)));
             _binding.GestureArena.Sweep(1);
             Assert.Empty(events);
             Assert.True(passive.Accepted);
@@ -720,15 +720,15 @@ public sealed class TapGestureRecognizerTests : IDisposable
             Assert.Null(tap.PrimaryPointer);
             Assert.Null(tap.InitialPosition);
 
-            var down = Down(7, new Point(10.0, 11.0));
+            var down = Down(7, new Offset(10.0, 11.0));
             tap.AddPointer(down);
             Assert.Equal(GestureRecognizerState.Possible, tap.State);
             Assert.Equal(7, tap.PrimaryPointer);
-            Assert.Equal(new Point(10.0, 11.0), tap.InitialPosition!.Value.Global);
+            Assert.Equal(new Offset(10.0, 11.0), tap.InitialPosition!.Value.Global);
 
             _binding.GestureArena.Close(7);
             Route(down);
-            Route(Up(7, new Point(10.0, 11.0)));
+            Route(Up(7, new Offset(10.0, 11.0)));
             _binding.GestureArena.Sweep(7);
 
             // Won and completed: the recognizer is ready again, keeping the last primary pointer.

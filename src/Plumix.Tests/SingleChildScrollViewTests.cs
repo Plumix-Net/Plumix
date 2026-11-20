@@ -120,7 +120,7 @@ public sealed class SingleChildScrollViewTests
         Assert.Equal(!Constants.KReleaseMode, viewport.DebugNeedsSemanticsUpdate);
         var transform = Matrix4.Identity();
         viewport.ApplyPaintTransform(child, transform);
-        Assert.Equal(new Point(0, -25), MatrixUtils.TransformPoint(transform, default));
+        Assert.Equal(new Offset(0, -25), MatrixUtils.TransformPoint(transform, default));
         viewport.Offset = second;
         Assert.False(first.IsObserved);
         Assert.True(second.IsObserved);
@@ -214,14 +214,14 @@ public sealed class SingleChildScrollViewTests
         viewport.Layout(BoxConstraints.Tight(horizontal ? new Size(200, 300) : new Size(300, 200)));
         var pipeline = new PipelineOwner();
         pipeline.Attach(viewport);
-        var targetRect = horizontal ? new Rect(1400, 0, 100, 300) : new Rect(0, 1400, 300, 100);
+        var targetRect = horizontal ? DartGeometry.RectFromLTWH(1400, 0, 100, 300) : DartGeometry.RectFromLTWH(0, 1400, 300, 100);
         RevealedOffset leading = viewport.GetOffsetToReveal(child, 0, targetRect, axis: Axis.Horizontal);
         RevealedOffset trailing = viewport.GetOffsetToReveal(child, 1, targetRect);
         Assert.Equal(500, leading.Offset);
         Assert.Equal(400, trailing.Offset);
-        Assert.Equal(horizontal ? new Rect(100, 0, 100, 300) : new Rect(0, 100, 300, 100), leading.Rect);
-        Assert.Equal(horizontal ? new Rect(0, 0, 100, 300) : new Rect(0, 0, 300, 100), trailing.Rect);
-        var subrect = horizontal ? new Rect(1440, 40, 10, 10) : new Rect(40, 1440, 10, 10);
+        Assert.Equal(horizontal ? DartGeometry.RectFromLTWH(100, 0, 100, 300) : DartGeometry.RectFromLTWH(0, 100, 300, 100), leading.Rect);
+        Assert.Equal(horizontal ? DartGeometry.RectFromLTWH(0, 0, 100, 300) : DartGeometry.RectFromLTWH(0, 0, 300, 100), trailing.Rect);
+        var subrect = horizontal ? DartGeometry.RectFromLTWH(1440, 40, 10, 10) : DartGeometry.RectFromLTWH(40, 1440, 10, 10);
         Assert.Equal(550, viewport.GetOffsetToReveal(child, 0, subrect).Offset);
         Assert.Equal(360, viewport.GetOffsetToReveal(child, 1, subrect).Offset);
         Rect semanticsClip = viewport.InvokeDescribeSemanticsClip(child)!.Value;
@@ -366,7 +366,7 @@ public sealed class SingleChildScrollViewTests
 
     private sealed class ContentBox(Size desiredSize) : RenderBox
     {
-        public Point LastPaintOffset { get; private set; }
+        public Offset LastPaintOffset { get; private set; }
         protected override void PerformLayout() => Size = Constraints.Constrain(desiredSize);
         protected override Size ComputeDryLayout(BoxConstraints constraints) => constraints.Constrain(desiredSize);
         protected override double ComputeMinIntrinsicWidth(double height) => desiredSize.Width;
@@ -375,7 +375,7 @@ public sealed class SingleChildScrollViewTests
         protected override double ComputeMaxIntrinsicHeight(double width) => desiredSize.Height;
         protected override double? ComputeDistanceToActualBaseline(TextBaseline baseline) => 20;
         protected override double? ComputeDryBaseline(BoxConstraints constraints, TextBaseline baseline) => 20;
-        public override void Paint(PaintingContext context, Point offset) => LastPaintOffset = offset;
+        public override void Paint(PaintingContext context, Offset offset) => LastPaintOffset = offset;
     }
 
     private sealed class MutableOffset(double pixels) : ViewportOffset

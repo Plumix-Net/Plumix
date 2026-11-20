@@ -444,8 +444,8 @@ public sealed class TextField : StatefulWidget
             bool applePlatform = theme.Platform is TargetPlatform.IOS or TargetPlatform.MacOS;
             bool cursorOpacityAnimates = Current.CursorOpacityAnimates ?? theme.Platform == TargetPlatform.IOS;
             Radius? cursorRadius = Current.CursorRadius ?? (applePlatform ? Radius.Circular(2.0) : null);
-            Point? cursorOffset = applePlatform
-                ? new Point(IOSHorizontalOffset / MediaQuery.DevicePixelRatioOf(context), 0)
+            Offset? cursorOffset = applePlatform
+                ? new Offset(IOSHorizontalOffset / MediaQuery.DevicePixelRatioOf(context), 0)
                 : null;
             // Dart resolves the input style with the field's interaction states.
             var states = new HashSet<WidgetState>();

@@ -73,6 +73,6 @@ public sealed class ErrorWidgetBuilderDartParityTests
 
         public IReadOnlyList<CanvasCall> Calls => _canvas.DebugCalls;
 
-        public override void PaintChild(RenderObject child, Point offset) => child.Paint(this, offset);
+        public override void PaintChild(RenderObject child, Offset offset) => child.Paint(this, offset);
     }
 }

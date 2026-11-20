@@ -174,16 +174,16 @@ internal sealed class TransformFlowLayer(Matrix4 transform) : ContainerFlowLayer
 }
 
 /// <summary>The engine's <c>flutter::OpacityLayer</c>: children at an offset, with an alpha.</summary>
-internal sealed class OpacityFlowLayer(int alpha, Point offset) : ContainerFlowLayer
+internal sealed class OpacityFlowLayer(int alpha, Offset offset) : ContainerFlowLayer
 {
     public int Alpha { get; } = alpha;
 
-    public Point Offset { get; } = offset;
+    public Offset Offset { get; } = offset;
 
     public override void Paint(FlowPaintContext context)
     {
         Matrix previous = context.Transform;
-        Matrix translation = Matrix.CreateTranslation(Offset.X, Offset.Y);
+        Matrix translation = Matrix.CreateTranslation(Offset.Dx, Offset.Dy);
         using (context.Canvas.PushTransform(translation))
         {
             context.Transform = translation * previous;
@@ -296,21 +296,21 @@ internal sealed class ClipPathFlowLayer(Path clipPath, Clip clipBehavior) : Cont
 }
 
 /// <summary>Plumix-only: a clip by a backend geometry (<see cref="Rendering.ClipGeometryLayer"/>).</summary>
-internal sealed class ClipGeometryFlowLayer(Geometry geometry, Point geometryOffset, Clip clipBehavior)
+internal sealed class ClipGeometryFlowLayer(Geometry geometry, Offset geometryOffset, Clip clipBehavior)
     : ContainerFlowLayer
 {
     public Geometry Geometry { get; } = geometry;
 
-    public Point GeometryOffset { get; } = geometryOffset;
+    public Offset GeometryOffset { get; } = geometryOffset;
 
     public Clip ClipBehavior { get; } = clipBehavior;
 
     public override void Paint(FlowPaintContext context)
     {
-        using (context.Canvas.PushTransform(Matrix.CreateTranslation(GeometryOffset.X, GeometryOffset.Y)))
+        using (context.Canvas.PushTransform(Matrix.CreateTranslation(GeometryOffset.Dx, GeometryOffset.Dy)))
         using (context.Canvas.PushGeometryClip(Geometry))
         using (SaveLayerIfNeeded(context, ClipBehavior, Geometry.Bounds))
-        using (context.Canvas.PushTransform(Matrix.CreateTranslation(-GeometryOffset.X, -GeometryOffset.Y)))
+        using (context.Canvas.PushTransform(Matrix.CreateTranslation(-GeometryOffset.Dx, -GeometryOffset.Dy)))
         {
             PaintChildren(context);
         }
@@ -342,11 +342,11 @@ internal sealed class ColorFilterFlowLayer(ColorFilter filter, Rect? bounds) : C
 }
 
 /// <summary>The engine's <c>flutter::ImageFilterLayer</c>, over the CPU filter backend.</summary>
-internal sealed class ImageFilterFlowLayer(ImageFilter filter, Point offset, Rect? bounds) : ContainerFlowLayer
+internal sealed class ImageFilterFlowLayer(ImageFilter filter, Offset offset, Rect? bounds) : ContainerFlowLayer
 {
     public ImageFilter Filter { get; } = filter;
 
-    public Point Offset { get; } = offset;
+    public Offset Offset { get; } = offset;
 
     /// <summary>The Plumix-only rasterization bounds, in the children's (offset) coordinates.</summary>
     public Rect? Bounds { get; } = bounds;
@@ -361,13 +361,13 @@ internal sealed class ImageFilterFlowLayer(ImageFilter filter, Point offset, Rec
             // device pixel ratio. Vectors stay sharp where Skia resamples the layer (DIVERGENCES.md).
             IReadOnlyList<double> m = matrix.Values;
             var transform = new Matrix(m[0], m[1], m[3], m[4], m[5], m[7], m[12], m[13], m[15]);
-            PaintChildrenTransformed(context, transform * Matrix.CreateTranslation(Offset.X, Offset.Y));
+            PaintChildrenTransformed(context, transform * Matrix.CreateTranslation(Offset.Dx, Offset.Dy));
             return;
         }
 
         if (Bounds is not { } bounds)
         {
-            PaintChildrenTransformed(context, Matrix.CreateTranslation(Offset.X, Offset.Y));
+            PaintChildrenTransformed(context, Matrix.CreateTranslation(Offset.Dx, Offset.Dy));
             return;
         }
 
@@ -460,14 +460,14 @@ internal sealed class BackdropFilterFlowLayer(ImageFilter filter, BlendMode blen
 /// </summary>
 internal sealed class MagnifierFlowLayer(
     Rect lensRect,
-    Point focalPointOffset,
+    Offset focalPointOffset,
     double magnificationScale,
     MagnifierDecoration decoration,
     Clip clipBehavior) : ContainerFlowLayer
 {
     public Rect LensRect { get; } = lensRect;
 
-    public Point FocalPointOffset { get; } = focalPointOffset;
+    public Offset FocalPointOffset { get; } = focalPointOffset;
 
     public double MagnificationScale { get; } = magnificationScale;
 
@@ -497,9 +497,9 @@ internal sealed class MagnifierFlowLayer(
             return;
         }
 
-        var focalPointOffset = new Point(
-            (FocalPointOffset.X * toTarget.M11) + (FocalPointOffset.Y * toTarget.M21),
-            (FocalPointOffset.X * toTarget.M12) + (FocalPointOffset.Y * toTarget.M22));
+        var focalPointOffset = new Offset(
+            (FocalPointOffset.Dx * toTarget.M11) + (FocalPointOffset.Dy * toTarget.M21),
+            (FocalPointOffset.Dx * toTarget.M12) + (FocalPointOffset.Dy * toTarget.M22));
         BorderRadius borderRadius = ResolveBorderRadius(lensRect);
         double opacity = Math.Clamp(Decoration.Opacity, 0.0, 1.0);
         using (context.Canvas.PushTransform(toBase))
@@ -546,7 +546,7 @@ internal sealed class MagnifierFlowLayer(
         DrawingContext context,
         BackdropCapture? backdrop,
         Rect lensRect,
-        Point focalPointOffset)
+        Offset focalPointOffset)
     {
         if (backdrop == null)
         {
@@ -560,11 +560,11 @@ internal sealed class MagnifierFlowLayer(
             return;
         }
 
-        Point focalPoint = lensRect.Center + focalPointOffset;
+        Offset focalPoint = lensRect.Center + focalPointOffset;
         var sourceSize = new Size(lensRect.Width / absoluteScale, lensRect.Height / absoluteScale);
-        var sourceRect = new Rect(
-            focalPoint.X - (sourceSize.Width / 2.0),
-            focalPoint.Y - (sourceSize.Height / 2.0),
+        var sourceRect = DartGeometry.RectFromLTWH(
+            focalPoint.Dx - (sourceSize.Width / 2.0),
+            focalPoint.Dy - (sourceSize.Height / 2.0),
             sourceSize.Width,
             sourceSize.Height);
         if (scale > 0)
@@ -574,9 +574,9 @@ internal sealed class MagnifierFlowLayer(
         }
 
         using (context.PushTransform(
-                   Matrix.CreateTranslation(lensRect.Center.X, lensRect.Center.Y)
+                   Matrix.CreateTranslation(lensRect.Center.Dx, lensRect.Center.Dy)
                    * Matrix.CreateScale(-1, -1)
-                   * Matrix.CreateTranslation(-lensRect.Center.X, -lensRect.Center.Y)))
+                   * Matrix.CreateTranslation(-lensRect.Center.Dx, -lensRect.Center.Dy)))
         {
             context.DrawImage(backdrop.Image, sourceRect, lensRect);
         }
@@ -598,7 +598,7 @@ internal sealed class MagnifierFlowLayer(
         using BoxPainter painter = decoration.CreateBoxPainter();
         var configuration = new ImageConfiguration(Size: rect.Size, TextDirection: TextDirection.Ltr);
 
-        void PaintDecoration() => painter.Paint(paintingContext, rect.Position, configuration);
+        void PaintDecoration() => painter.Paint(paintingContext, rect.TopLeft, configuration);
 
         if (ClipBehavior == Clip.None)
         {
@@ -620,10 +620,10 @@ internal sealed class MagnifierFlowLayer(
 }
 
 /// <summary>The engine's <c>flutter::DisplayListLayer</c>: a recorded picture at an offset.</summary>
-internal sealed class DisplayListFlowLayer(Point offset, Picture picture, bool isComplex, bool willChange)
+internal sealed class DisplayListFlowLayer(Offset offset, Picture picture, bool isComplex, bool willChange)
     : FlowLayer
 {
-    public Point Offset { get; } = offset;
+    public Offset Offset { get; } = offset;
 
     public Picture Picture { get; } = picture;
 
@@ -638,10 +638,10 @@ internal sealed class DisplayListFlowLayer(Point offset, Picture picture, bool i
 }
 
 /// <summary>The engine's <c>flutter::TextureLayer</c>: a registered backend texture.</summary>
-internal sealed class TextureFlowLayer(Point offset, Size size, int textureId, bool freeze, FilterQuality quality)
+internal sealed class TextureFlowLayer(Offset offset, Size size, int textureId, bool freeze, FilterQuality quality)
     : FlowLayer
 {
-    public Point Offset { get; } = offset;
+    public Offset Offset { get; } = offset;
 
     public Size Size { get; } = size;
 
@@ -660,7 +660,7 @@ internal sealed class TextureFlowLayer(Point offset, Size size, int textureId, b
             return;
         }
 
-        texture.Paint(context.Canvas, new Rect(Offset, Size), Freeze, FilterQuality);
+        texture.Paint(context.Canvas, DartGeometry.RectFromOffsetAndSize(Offset, Size), Freeze, FilterQuality);
     }
 }
 
@@ -668,9 +668,9 @@ internal sealed class TextureFlowLayer(Point offset, Size size, int textureId, b
 /// The engine's <c>flutter::PlatformViewLayer</c>. No Plumix host embeds platform views, so it paints
 /// nothing (docs/ai/DIVERGENCES.md).
 /// </summary>
-internal sealed class PlatformViewFlowLayer(Point offset, Size size, int viewId) : FlowLayer
+internal sealed class PlatformViewFlowLayer(Offset offset, Size size, int viewId) : FlowLayer
 {
-    public Point Offset { get; } = offset;
+    public Offset Offset { get; } = offset;
 
     public Size Size { get; } = size;
 
@@ -721,8 +721,8 @@ internal sealed class PerformanceOverlayFlowLayer(int options, Rect bounds) : Fl
         }
 
         CompositorContext compositor = context.State.Compositor;
-        double x = Bounds.X + padding;
-        double y = Bounds.Y + padding;
+        double x = Bounds.Left + padding;
+        double y = Bounds.Top + padding;
         double width = Bounds.Width - (padding * 2);
         double height = Bounds.Height / 2;
         VisualizeStopwatch(
@@ -763,7 +763,7 @@ internal sealed class PerformanceOverlayFlowLayer(int options, Rect bounds) : Fl
         const int labelY = -10; // distance from y+height
         if (showGraph && width > 0 && height > 0)
         {
-            stopwatch.Visualize(canvas, new Rect(x, y, width, height));
+            stopwatch.Visualize(canvas, DartGeometry.RectFromLTWH(x, y, width, height));
         }
 
         if (!showLabels)
@@ -778,7 +778,7 @@ internal sealed class PerformanceOverlayFlowLayer(int options, Rect bounds) : Fl
         }
 
         // The engine draws the text with its baseline at (x + labelX, y + height + labelY).
-        canvas.DrawText(text, new Point(x + labelX, y + height + labelY - text.Baseline));
+        canvas.DrawText(text, new Offset(x + labelX, y + height + labelY - text.Baseline));
     }
 }
 
@@ -865,7 +865,7 @@ internal sealed class FlowPaintContext(DrawingContext canvas, Matrix transform, 
 /// <summary>Paints a scene's layer tree: the engine's rasterizer, over Avalonia's drawing context.</summary>
 internal static class SceneRasterizer
 {
-    private static readonly Vector Dpi = new(96.0, 96.0);
+    private static readonly Offset Dpi = new(96.0, 96.0);
 
     [ThreadStatic]
     private static int t_captureDepth;
@@ -1027,7 +1027,7 @@ internal static class SceneRasterizer
     {
         int width = Math.Max(1, (int)Math.Ceiling(state.TargetSize.Width));
         int height = Math.Max(1, (int)Math.Ceiling(state.TargetSize.Height));
-        var bounds = new Rect(0.0, 0.0, width, height);
+        var bounds = DartGeometry.RectFromLTWH(0.0, 0.0, width, height);
         var image = new RenderTargetBitmap(new PixelSize(width, height), Dpi);
         t_captureDepth++;
         try
@@ -1133,10 +1133,10 @@ internal static class SceneRasterizer
 
         return context.PushClip(new RoundedRect(
             rect,
-            new Vector(topLeft.X, topLeft.Y),
-            new Vector(topRight.X, topRight.Y),
-            new Vector(bottomRight.X, bottomRight.Y),
-            new Vector(bottomLeft.X, bottomLeft.Y)));
+            new Offset(topLeft.X, topLeft.Y),
+            new Offset(topRight.X, topRight.Y),
+            new Offset(bottomRight.X, bottomRight.Y),
+            new Offset(bottomLeft.X, bottomLeft.Y)));
     }
 
     private static Radius ClipRadius(Radius radius) =>

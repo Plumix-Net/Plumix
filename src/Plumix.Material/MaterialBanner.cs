@@ -277,8 +277,8 @@ public sealed class MaterialBanner : StatefulWidget
             if (!mediaQuery.AccessibleNavigation)
             {
                 var slideOutAnimation = new VectorTween(
-                        begin: new Vector(0.0, -1.0),
-                        end: new Vector(0.0, 0.0))
+                        begin: new Offset(0.0, -1.0),
+                        end: new Offset(0.0, 0.0))
                     .Animate(_slideOutCurvedAnimation!);
                 materialBanner = new SlideTransition(
                     position: slideOutAnimation,

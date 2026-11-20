@@ -376,7 +376,7 @@ public sealed class FramePipelineTests
             Size = Constraints.Constrain(new Size(10, 10));
         }
 
-        public override void Paint(PaintingContext ctx, Point offset)
+        public override void Paint(PaintingContext ctx, Offset offset)
         {
         }
 

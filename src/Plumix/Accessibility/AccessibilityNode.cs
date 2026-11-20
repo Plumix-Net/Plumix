@@ -300,7 +300,7 @@ public sealed class AccessibilityNode
                 Rect childRect = child.Transform is { } childTransform
                     ? MatrixUtils.TransformRect(childTransform, child.Rect)
                     : child.Rect;
-                union = union is { } current ? current.Union(childRect) : childRect;
+                union = union is { } current ? current.ExpandToInclude(childRect) : childRect;
             }
 
             if (union is { Width: > 0, Height: > 0 } children)
@@ -334,7 +334,7 @@ public sealed class AccessibilityNode
             return rect;
         }
 
-        return new Rect(rect.X / scale, rect.Y / scale, rect.Width / scale, rect.Height / scale);
+        return DartGeometry.RectFromLTWH(rect.Left / scale, rect.Top / scale, rect.Width / scale, rect.Height / scale);
     }
 
     /// <summary>Asks the framework to perform <paramref name="action"/> on this node.</summary>

@@ -174,7 +174,7 @@ public sealed class RenderingDebugTests : IDisposable
     {
         var probe = new PaintCallbackRenderBox(
             new Size(60.0, 40.0),
-            (context, offset) => RenderingDebug.PaintPadding(context, new Rect(offset, new Size(60.0, 40.0)), null));
+            (context, offset) => RenderingDebug.PaintPadding(context, DartGeometry.RectFromOffsetAndSize(offset, new Size(60.0, 40.0)), null));
 
         OffsetLayer layer = Paint(probe, new Size(60.0, 40.0));
 
@@ -185,8 +185,8 @@ public sealed class RenderingDebugTests : IDisposable
     [Fact]
     public void PaintPadding_WithInnerRect_BuildsAnEvenOddRingOverTheOuterRect()
     {
-        var outer = new Rect(0.0, 0.0, 60.0, 40.0);
-        var inner = new Rect(10.0, 10.0, 40.0, 20.0);
+        var outer = DartGeometry.RectFromLTWH(0.0, 0.0, 60.0, 40.0);
+        var inner = DartGeometry.RectFromLTWH(10.0, 10.0, 40.0, 20.0);
 
         Plumix.UI.Path ring = RenderingDebug.BuildDoubleRectPath(outer, inner);
 
@@ -201,7 +201,7 @@ public sealed class RenderingDebugTests : IDisposable
             new Size(60.0, 40.0),
             (context, offset) => RenderingDebug.PaintPadding(
                 context,
-                new Rect(offset, new Size(60.0, 40.0)),
+                DartGeometry.RectFromOffsetAndSize(offset, new Size(60.0, 40.0)),
                 default(Rect)));
 
         OffsetLayer layer = Paint(probe, new Size(60.0, 40.0));
@@ -282,7 +282,7 @@ public sealed class RenderingDebugTests : IDisposable
     {
         var probe = new DebugPaintProbeRenderBox();
         Paint(probe, new Size(40.0, 40.0));
-        var entry = new BoxHitTestEntry(probe, new Point(1.0, 1.0));
+        var entry = new BoxHitTestEntry(probe, new Offset(1.0, 1.0));
 
         probe.DebugHandleEvent(PointerDownAt(1), entry);
         Assert.False(probe.DebugNeedsPaint);
@@ -305,7 +305,7 @@ public sealed class RenderingDebugTests : IDisposable
 
         Assert.False(probe.LastPaintPointersDrew);
 
-        var entry = new BoxHitTestEntry(probe, new Point(1.0, 1.0));
+        var entry = new BoxHitTestEntry(probe, new Offset(1.0, 1.0));
         probe.DebugHandleEvent(PointerDownAt(1), entry);
         Repaint(pipeline, new Size(40.0, 40.0));
         Assert.True(probe.LastPaintPointersDrew);
@@ -320,7 +320,7 @@ public sealed class RenderingDebugTests : IDisposable
     {
         RenderingDebug.PaintPointersEnabled = true;
         var probe = new DebugPaintProbeRenderBox();
-        var entry = new BoxHitTestEntry(probe, new Point(1.0, 1.0));
+        var entry = new BoxHitTestEntry(probe, new Offset(1.0, 1.0));
 
         probe.DebugHandleEvent(PointerDownAt(1), entry);
         probe.DebugHandleEvent(PointerCancelAt(1), entry);
@@ -598,7 +598,7 @@ public sealed class RenderingDebugTests : IDisposable
         RenderingDebug.PaintLayerBordersEnabled = true;
         var probe = new PaintCallbackRenderBox(
             new Size(40.0, 40.0),
-            (context, offset) => context.Canvas.DrawRectangle(Brushes.Red, null, new Rect(offset, new Size(4.0, 4.0))));
+            (context, offset) => context.Canvas.DrawRectangle(Brushes.Red, null, DartGeometry.RectFromOffsetAndSize(offset, new Size(4.0, 4.0))));
 
         OffsetLayer layer = Paint(probe, new Size(40.0, 40.0));
 
@@ -638,8 +638,8 @@ public sealed class RenderingDebugTests : IDisposable
         Assert.Throws<ArgumentOutOfRangeException>(() => PaintUtilities.PaintZigZag(
             new PaintingContext(new ContainerLayer()),
             new Pen(Brushes.Red),
-            new Point(0.0, 0.0),
-            new Point(10.0, 0.0),
+            new Offset(0.0, 0.0),
+            new Offset(10.0, 0.0),
             zigs: 0,
             width: 4.0));
     }
@@ -652,9 +652,9 @@ public sealed class RenderingDebugTests : IDisposable
         Plumix.UI.Path path = PaintUtilities.BuildZigZagPath(length: 20.0, zigs: 4, width: 3.0);
 
         Rect bounds = path.GetBounds();
-        Assert.Equal(0.0, bounds.Y, 6);
+        Assert.Equal(0.0, bounds.Top, 6);
         Assert.Equal(20.0, bounds.Bottom, 6);
-        Assert.Equal(-3.0, bounds.X, 6);
+        Assert.Equal(-3.0, bounds.Left, 6);
         Assert.Equal(3.0, bounds.Right, 6);
     }
 
@@ -667,8 +667,8 @@ public sealed class RenderingDebugTests : IDisposable
         PaintUtilities.PaintZigZag(
             context,
             new Pen(Brushes.Red),
-            new Point(5.0, 5.0),
-            new Point(5.0, 25.0),
+            new Offset(5.0, 5.0),
+            new Offset(5.0, 25.0),
             zigs: 2,
             width: 4.0);
 
@@ -682,21 +682,21 @@ public sealed class RenderingDebugTests : IDisposable
     private static PointerDownEvent PointerDownAt(int pointer) => new(
         pointer,
         PointerDeviceKind.Touch,
-        new Point(1.0, 1.0),
+        new Offset(1.0, 1.0),
         PointerButtons.Primary,
         DateTime.UnixEpoch);
 
     private static PointerUpEvent PointerUpAt(int pointer) => new(
         pointer,
         PointerDeviceKind.Touch,
-        new Point(1.0, 1.0),
+        new Offset(1.0, 1.0),
         PointerButtons.None,
         DateTime.UnixEpoch);
 
     private static PointerCancelEvent PointerCancelAt(int pointer) => new(
         pointer,
         PointerDeviceKind.Touch,
-        new Point(1.0, 1.0),
+        new Offset(1.0, 1.0),
         PointerButtons.None,
         DateTime.UnixEpoch);
 
@@ -757,9 +757,9 @@ public sealed class RenderingDebugTests : IDisposable
     private sealed class PaintCallbackRenderBox : RenderBox
     {
         private readonly Size _desiredSize;
-        private readonly Action<PaintingContext, Point> _paint;
+        private readonly Action<PaintingContext, Offset> _paint;
 
-        public PaintCallbackRenderBox(Size desiredSize, Action<PaintingContext, Point> paint)
+        public PaintCallbackRenderBox(Size desiredSize, Action<PaintingContext, Offset> paint)
         {
             _desiredSize = desiredSize;
             _paint = paint;
@@ -769,7 +769,7 @@ public sealed class RenderingDebugTests : IDisposable
 
         protected override Size ComputeDryLayout(BoxConstraints constraints) => constraints.Constrain(_desiredSize);
 
-        public override void Paint(PaintingContext ctx, Point offset) => _paint(ctx, offset);
+        public override void Paint(PaintingContext ctx, Offset offset) => _paint(ctx, offset);
     }
 
     private sealed class DebugPaintProbeRenderBox : RenderBox
@@ -787,23 +787,23 @@ public sealed class RenderingDebugTests : IDisposable
         protected override Size ComputeDryLayout(BoxConstraints constraints) =>
             constraints.Constrain(new Size(32.0, 32.0));
 
-        public override void Paint(PaintingContext ctx, Point offset)
+        public override void Paint(PaintingContext ctx, Offset offset)
         {
         }
 
-        protected internal override void DebugPaintSize(PaintingContext context, Point offset)
+        protected internal override void DebugPaintSize(PaintingContext context, Offset offset)
         {
             DebugPaintSizeCount += 1;
             base.DebugPaintSize(context, offset);
         }
 
-        protected override void DebugPaintBaselines(PaintingContext context, Point offset)
+        protected override void DebugPaintBaselines(PaintingContext context, Offset offset)
         {
             DebugPaintBaselinesCount += 1;
             base.DebugPaintBaselines(context, offset);
         }
 
-        protected override void DebugPaintPointers(PaintingContext context, Point offset)
+        protected override void DebugPaintPointers(PaintingContext context, Offset offset)
         {
             DebugPaintPointersCount += 1;
             var container = new ContainerLayer();
@@ -821,7 +821,7 @@ public sealed class RenderingDebugTests : IDisposable
 
         protected override double ComputeMinIntrinsicWidth(double height) => -1.0;
 
-        public override void Paint(PaintingContext ctx, Point offset)
+        public override void Paint(PaintingContext ctx, Offset offset)
         {
         }
     }
@@ -833,7 +833,7 @@ public sealed class RenderingDebugTests : IDisposable
         protected override Size ComputeDryLayout(BoxConstraints constraints) =>
             constraints.Constrain(new Size(10.0, 10.0));
 
-        public override void Paint(PaintingContext ctx, Point offset)
+        public override void Paint(PaintingContext ctx, Offset offset)
         {
         }
     }
@@ -849,7 +849,7 @@ public sealed class RenderingDebugTests : IDisposable
 
         protected override double? ComputeDryBaseline(BoxConstraints constraints, TextBaseline baseline) => 9.0;
 
-        public override void Paint(PaintingContext ctx, Point offset)
+        public override void Paint(PaintingContext ctx, Offset offset)
         {
         }
     }

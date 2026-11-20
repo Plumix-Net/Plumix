@@ -48,15 +48,15 @@ public sealed class RenderErrorBoxTests
             box.Layout(BoxConstraints.Tight(new Size(width, height)));
             var root = new ContainerLayer();
             var context = new PaintingContext(root);
-            var origin = new Point(7, 11);
+            var origin = new Offset(7, 11);
 
             box.Paint(context, origin);
             context.DebugStopRecordingIfNeeded();
 
             Assert.Equal(paragraphWidth, spy.Width);
-            Assert.Equal(origin + new Point(left, top), spy.PaintedOffset);
+            Assert.Equal(origin + new Offset(left, top), spy.PaintedOffset);
             Assert.Equal(2, Assert.IsType<PictureLayer>(Assert.Single(root.Children)).Picture!.DrawCommandCount);
-            Assert.True(box.HitTest(new BoxHitTestResult(), new Point(1, 1)));
+            Assert.True(box.HitTest(new BoxHitTestResult(), new Offset(1, 1)));
         }
         finally
         {
@@ -126,7 +126,7 @@ public sealed class RenderErrorBoxTests
                 RenderErrorBox.BackgroundColor = color;
                 var root = new ContainerLayer();
                 var context = new PaintingContext(root);
-                box.Paint(context, new Point(7, 11));
+                box.Paint(context, new Offset(7, 11));
                 context.DebugStopRecordingIfNeeded();
                 Picture picture = Assert.IsType<PictureLayer>(Assert.Single(root.Children)).Picture!;
                 var commands = (IReadOnlyList<CanvasCommand>)typeof(Picture)
@@ -135,7 +135,7 @@ public sealed class RenderErrorBoxTests
                 object?[] captured = closure.GetType()
                     .GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
                     .Select(field => field.GetValue(closure)).ToArray();
-                Assert.Equal(new Rect(7, 11, 800, 600), Assert.Single(captured.OfType<Rect>()));
+                Assert.Equal(DartGeometry.RectFromLTWH(7, 11, 800, 600), Assert.Single(captured.OfType<Rect>()));
                 Assert.Equal(color, Assert.Single(captured.OfType<SolidColorBrush>()).Color);
             }
         }
@@ -167,7 +167,7 @@ public sealed class RenderErrorBoxTests
     {
         private double _width;
         public bool ThrowOnLayout { get; init; }
-        public Point? PaintedOffset { get; private set; }
+        public Offset? PaintedOffset { get; private set; }
         public override double Width => _width;
         public override double Height => 14;
         public override double LongestLine => 14;
@@ -188,14 +188,14 @@ public sealed class RenderErrorBoxTests
         public override IReadOnlyList<TextBox> GetBoxesForRange(
             int start, int end, BoxHeightStyle boxHeightStyle, BoxWidthStyle boxWidthStyle) => [];
         public override IReadOnlyList<TextBox> GetBoxesForPlaceholders() => [];
-        public override TextPosition GetPositionForOffset(Point offset) => new(0);
+        public override TextPosition GetPositionForOffset(Offset offset) => new(0);
         public override GlyphInfo? GetGlyphInfoAt(int codeUnitOffset) => null;
-        public override GlyphInfo? GetClosestGlyphInfoForOffset(Point offset) => null;
+        public override GlyphInfo? GetClosestGlyphInfoForOffset(Offset offset) => null;
         private protected override TextRange GetLineRange(int offset) => TextRange.Empty;
         public override IReadOnlyList<LineMetrics> ComputeLineMetrics() => [];
         public override LineMetrics? GetLineMetricsAt(int lineNumber) => null;
         public override int? GetLineNumberAt(int codeUnitOffset) => null;
-        internal override Action<DrawingContext>? CreateDrawAction(Point offset)
+        internal override Action<DrawingContext>? CreateDrawAction(Offset offset)
         {
             PaintedOffset = offset;
             return static _ => { };

@@ -116,8 +116,8 @@ public sealed class RenderSliverCrossAxisGroup : RenderSliver,
 
     public override double ChildCrossAxisPosition(RenderObject child)
     {
-        Point paintOffset = ((SliverPhysicalParentData)child.parentData!).PaintOffset;
-        return Constraints.Axis == Axis.Vertical ? paintOffset.X : paintOffset.Y;
+        Offset paintOffset = ((SliverPhysicalParentData)child.parentData!).PaintOffset;
+        return Constraints.Axis == Axis.Vertical ? paintOffset.Dx : paintOffset.Dy;
     }
 
     public override void VisitChildren(Action<RenderObject> visitor)
@@ -189,13 +189,13 @@ public sealed class RenderSliverCrossAxisGroup : RenderSliver,
             double childExtent = childGeometry.CrossAxisExtent
                 ?? extentPerFlexValue * (parentData.CrossAxisFlex ?? 0);
             parentData.PaintOffset = constraints.Axis == Axis.Vertical
-                ? new Point(crossAxisOffset, -paintCorrection)
-                : new Point(-paintCorrection, crossAxisOffset);
+                ? new Offset(crossAxisOffset, -paintCorrection)
+                : new Offset(-paintCorrection, crossAxisOffset);
             crossAxisOffset += childExtent;
         }
     }
 
-    public override void Paint(PaintingContext context, Point offset)
+    public override void Paint(PaintingContext context, Offset offset)
     {
         for (RenderSliver? child = FirstChild; child != null; child = ChildAfter(child))
         {
@@ -217,7 +217,7 @@ public sealed class RenderSliverCrossAxisGroup : RenderSliver,
         RenderSliver? child = LastChild;
         while (child != null)
         {
-            Point paintOffset = ((SliverPhysicalParentData)child.parentData!).PaintOffset;
+            Offset paintOffset = ((SliverPhysicalParentData)child.parentData!).PaintOffset;
             bool isHit = result.AddWithAxisOffset(
                 mainAxisPosition: mainAxisPosition,
                 crossAxisPosition: crossAxisPosition,
@@ -367,8 +367,8 @@ public sealed class RenderSliverMainAxisGroup : RenderSliver,
             double childPaintOffset = layoutOffset + childGeometry.PaintOrigin;
             var parentData = (SliverPhysicalParentData)child.parentData!;
             parentData.PaintOffset = constraints.Axis == Axis.Vertical
-                ? new Point(0.0, childPaintOffset)
-                : new Point(childPaintOffset, 0.0);
+                ? new Offset(0.0, childPaintOffset)
+                : new Offset(childPaintOffset, 0.0);
             scrollOffset += childGeometry.ScrollExtent;
             layoutOffset += childGeometry.LayoutExtent;
             maxPaintExtent += childGeometry.MaxPaintExtent;
@@ -399,15 +399,15 @@ public sealed class RenderSliverMainAxisGroup : RenderSliver,
                 SliverGeometry childGeometry = child.Geometry!;
                 var parentData = (SliverPhysicalParentData)child.parentData!;
                 double childMainAxisPaintOffset = constraints.Axis == Axis.Vertical
-                    ? parentData.PaintOffset.Y
-                    : parentData.PaintOffset.X;
+                    ? parentData.PaintOffset.Dy
+                    : parentData.PaintOffset.Dx;
                 double childPaintEnd = childMainAxisPaintOffset + childGeometry.PaintExtent;
                 bool childIsPinned = childGeometry.MaxScrollObstructionExtent > 0.0;
                 if (childPaintEnd > remainingExtent || pinnedChildrenOverflow && childIsPinned)
                 {
                     parentData.PaintOffset = constraints.Axis == Axis.Vertical
-                        ? new Point(0.0, parentData.PaintOffset.Y - paintCorrection)
-                        : new Point(parentData.PaintOffset.X - paintCorrection, 0.0);
+                        ? new Offset(0.0, parentData.PaintOffset.Dy - paintCorrection)
+                        : new Offset(parentData.PaintOffset.Dx - paintCorrection, 0.0);
                 }
             }
         }
@@ -434,18 +434,18 @@ public sealed class RenderSliverMainAxisGroup : RenderSliver,
                 constraints.GrowthDirection);
             parentData.PaintOffset = effectiveDirection switch
             {
-                AxisDirection.Up => new Point(
+                AxisDirection.Up => new Offset(
                     0.0,
-                    paintExtent - parentData.PaintOffset.Y - child.Geometry!.PaintExtent),
-                AxisDirection.Left => new Point(
-                    paintExtent - parentData.PaintOffset.X - child.Geometry!.PaintExtent,
+                    paintExtent - parentData.PaintOffset.Dy - child.Geometry!.PaintExtent),
+                AxisDirection.Left => new Offset(
+                    paintExtent - parentData.PaintOffset.Dx - child.Geometry!.PaintExtent,
                     0.0),
                 _ => parentData.PaintOffset,
             };
         }
     }
 
-    public override void Paint(PaintingContext context, Point offset)
+    public override void Paint(PaintingContext context, Offset offset)
     {
         for (RenderSliver? child = LastChild; child != null; child = ChildBefore(child))
         {
@@ -467,7 +467,7 @@ public sealed class RenderSliverMainAxisGroup : RenderSliver,
         RenderSliver? child = FirstChild;
         while (child != null)
         {
-            Point paintOffset = ((SliverPhysicalParentData)child.parentData!).PaintOffset;
+            Offset paintOffset = ((SliverPhysicalParentData)child.parentData!).PaintOffset;
             bool isHit = result.AddWithAxisOffset(
                 mainAxisPosition: mainAxisPosition,
                 crossAxisPosition: crossAxisPosition,
@@ -503,17 +503,17 @@ public sealed class RenderSliverMainAxisGroup : RenderSliver,
     public override double ChildMainAxisPosition(RenderObject child)
     {
         var sliver = (RenderSliver)child;
-        Point paintOffset = ((SliverPhysicalParentData)child.parentData!).PaintOffset;
+        Offset paintOffset = ((SliverPhysicalParentData)child.parentData!).PaintOffset;
         AxisDirection effectiveDirection = ApplyGrowthDirectionToAxisDirection(
             sliver.Constraints.AxisDirection,
             sliver.Constraints.GrowthDirection);
         return effectiveDirection switch
         {
-            AxisDirection.Down => paintOffset.Y,
-            AxisDirection.Right => paintOffset.X,
-            AxisDirection.Up => Geometry!.PaintExtent - sliver.Geometry!.PaintExtent - paintOffset.Y,
-            AxisDirection.Left => Geometry!.PaintExtent - sliver.Geometry!.PaintExtent - paintOffset.X,
-            _ => paintOffset.Y,
+            AxisDirection.Down => paintOffset.Dy,
+            AxisDirection.Right => paintOffset.Dx,
+            AxisDirection.Up => Geometry!.PaintExtent - sliver.Geometry!.PaintExtent - paintOffset.Dy,
+            AxisDirection.Left => Geometry!.PaintExtent - sliver.Geometry!.PaintExtent - paintOffset.Dx,
+            _ => paintOffset.Dy,
         };
     }
 

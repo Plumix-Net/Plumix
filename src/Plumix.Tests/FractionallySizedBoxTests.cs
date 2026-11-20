@@ -53,7 +53,7 @@ public sealed class FractionallySizedBoxTests
 
         Assert.Equal(new Size(100, 60), child.Size);
         Assert.Equal(new Size(200, 120), fractionallySizedBox.Size);
-        Assert.Equal(new Point(100, 60), ((BoxParentData)child.parentData!).offset);
+        Assert.Equal(new Offset(100, 60), ((BoxParentData)child.parentData!).offset);
     }
 
     [Fact]
@@ -139,7 +139,7 @@ public sealed class FractionallySizedBoxTests
             Size = Constraints.Constrain(_size);
         }
 
-        public override void Paint(PaintingContext ctx, Point offset)
+        public override void Paint(PaintingContext ctx, Offset offset)
         {
         }
     }

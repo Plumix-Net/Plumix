@@ -164,9 +164,9 @@ public static class Diagnostics
             string text => text,
             TimeSpan duration => DescribeDuration(duration),
             // dart:ui's `Size.toString` and `Offset.toString`; Avalonia's own spell them `w, h`.
-            Avalonia.Size size => $"Size({Fixed(size.Width)}, {Fixed(size.Height)})",
-            Avalonia.Point offset => $"Offset({Fixed(offset.X)}, {Fixed(offset.Y)})",
-            Avalonia.Rect rect =>
+            Size size => $"Size({Fixed(size.Width)}, {Fixed(size.Height)})",
+            Offset offset => $"Offset({Fixed(offset.Dx)}, {Fixed(offset.Dy)})",
+            Rect rect =>
                 $"Rect.fromLTRB({Fixed(rect.Left)}, {Fixed(rect.Top)}, {Fixed(rect.Right)}, {Fixed(rect.Bottom)})",
             // Dart's enum `toString` is `EnumType.member`.
             Enum enumValue when Enum.IsDefined(enumValue.GetType(), enumValue) =>

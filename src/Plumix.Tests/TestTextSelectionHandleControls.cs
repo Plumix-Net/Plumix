@@ -22,7 +22,7 @@ internal sealed class TestTextSelectionHandleControls : TextSelectionControls, I
         return new SizedBox(width: 0.0, height: 0.0);
     }
 
-    public override Point GetHandleAnchor(TextSelectionHandleType type, double textLineHeight) => default;
+    public override Offset GetHandleAnchor(TextSelectionHandleType type, double textLineHeight) => default;
 
     public override Size GetHandleSize(double textLineHeight) => default;
 
@@ -31,11 +31,11 @@ internal sealed class TestTextSelectionHandleControls : TextSelectionControls, I
         BuildContext context,
         Rect globalEditableRegion,
         double textLineHeight,
-        Point selectionMidpoint,
+        Offset selectionMidpoint,
         IReadOnlyList<TextSelectionPoint> endpoints,
         ITextSelectionDelegate @delegate,
         IValueListenable<ClipboardStatus>? clipboardStatus,
-        Point? lastSecondaryTapDownPosition)
+        Offset? lastSecondaryTapDownPosition)
     {
         return new SizedBox(width: 0.0, height: 0.0);
     }

@@ -332,7 +332,7 @@ public sealed class ScrollbarPainter : CustomPainter, IListenable
 
         Color borderColor = ApplyOpacity(TrackBorderColor, opacity);
         var pen = new Pen(new SolidColorBrush(borderColor), 1);
-        (Point start, Point end) = TrackBorderLine(value);
+        (Offset start, Offset end) = TrackBorderLine(value);
         context.Canvas.DrawLine(pen, start, end);
 
         Color thumbColor = ApplyOpacity(Color, opacity);
@@ -366,7 +366,7 @@ public sealed class ScrollbarPainter : CustomPainter, IListenable
     private bool LastMetricsAreScrollable =>
         _metrics is not null && _metrics.MinScrollExtent != _metrics.MaxScrollExtent;
 
-    public override bool? HitTest(Point position)
+    public override bool? HitTest(Offset position)
     {
         ScrollbarGeometry? geometry = Geometry;
         if (!geometry.HasValue)
@@ -384,7 +384,7 @@ public sealed class ScrollbarPainter : CustomPainter, IListenable
         return geometry.Value.TrackRect.Contains(position);
     }
 
-    public bool HitTestInteractive(Point position, PointerDeviceKind kind, bool forHover = false)
+    public bool HitTestInteractive(Offset position, PointerDeviceKind kind, bool forHover = false)
     {
         ScrollbarGeometry? geometry = Geometry;
         if (!geometry.HasValue || IgnorePointer || !LastMetricsAreScrollable)
@@ -409,7 +409,7 @@ public sealed class ScrollbarPainter : CustomPainter, IListenable
             : interactiveRect.Contains(position);
     }
 
-    public bool HitTestOnlyThumbInteractive(Point position, PointerDeviceKind kind)
+    public bool HitTestOnlyThumbInteractive(Offset position, PointerDeviceKind kind)
     {
         ScrollbarGeometry? geometry = Geometry;
         if (!geometry.HasValue ||
@@ -612,8 +612,8 @@ public sealed class ScrollbarPainter : CustomPainter, IListenable
             double trackX = orientation == global::Plumix.Widgets.ScrollbarOrientation.Left
                 ? _resolvedPadding.Left
                 : thumbX - CrossAxisMargin;
-            trackRect = new Rect(trackX, trackRectStart, Thickness + (2 * CrossAxisMargin), trackRectExtent);
-            thumbRect = new Rect(thumbX, trackStart + thumbOffset, Thickness, thumbExtent);
+            trackRect = DartGeometry.RectFromLTWH(trackX, trackRectStart, Thickness + (2 * CrossAxisMargin), trackRectExtent);
+            thumbRect = DartGeometry.RectFromLTWH(thumbX, trackStart + thumbOffset, Thickness, thumbExtent);
         }
         else
         {
@@ -623,8 +623,8 @@ public sealed class ScrollbarPainter : CustomPainter, IListenable
             double trackY = orientation == global::Plumix.Widgets.ScrollbarOrientation.Top
                 ? _resolvedPadding.Top
                 : thumbY - CrossAxisMargin;
-            trackRect = new Rect(trackRectStart, trackY, trackRectExtent, Thickness + (2 * CrossAxisMargin));
-            thumbRect = new Rect(trackStart + thumbOffset, thumbY, thumbExtent, Thickness);
+            trackRect = DartGeometry.RectFromLTWH(trackRectStart, trackY, trackRectExtent, Thickness + (2 * CrossAxisMargin));
+            thumbRect = DartGeometry.RectFromLTWH(trackStart + thumbOffset, thumbY, thumbExtent, Thickness);
         }
 
         return new ScrollbarGeometry(
@@ -638,7 +638,7 @@ public sealed class ScrollbarPainter : CustomPainter, IListenable
             thumbExtent);
     }
 
-    private (Point Start, Point End) TrackBorderLine(ScrollbarGeometry geometry)
+    private (Offset Start, Offset End) TrackBorderLine(ScrollbarGeometry geometry)
     {
         ScrollbarOrientation orientation = ScrollbarOrientation ?? (geometry.Axis == Axis.Vertical
             ? TextDirection == global::Plumix.UI.TextDirection.Rtl
@@ -658,9 +658,9 @@ public sealed class ScrollbarPainter : CustomPainter, IListenable
     }
 
     /// <summary>`Rect.fromCircle(center: center, radius: radius)`.</summary>
-    private static Rect FromCircle(Point center, double radius) => new(
-        center.X - radius,
-        center.Y - radius,
+    private static Rect FromCircle(Offset center, double radius) => DartGeometry.RectFromLTWH(
+        center.Dx - radius,
+        center.Dy - radius,
         radius * 2,
         radius * 2);
 
@@ -669,7 +669,7 @@ public sealed class ScrollbarPainter : CustomPainter, IListenable
     {
         double left = Math.Min(rect.Left, other.Left);
         double top = Math.Min(rect.Top, other.Top);
-        return new Rect(
+        return DartGeometry.RectFromLTWH(
             left,
             top,
             Math.Max(rect.Right, other.Right) - left,
@@ -918,8 +918,8 @@ public class RawScrollbarState<T> : State<T> where T : RawScrollbar
     private readonly GlobalKey<RawGestureDetectorState> _gestureDetectorKey =
         new LabeledGlobalKey<RawGestureDetectorState>("RawScrollbar gestures");
 
-    private Point? _startDragScrollbarAxisOffset;
-    private Point? _lastDragUpdateOffset;
+    private Offset? _startDragScrollbarAxisOffset;
+    private Offset? _lastDragUpdateOffset;
     private double? _startDragThumbOffset;
     private ScrollController? _cachedController;
     private Timer? _fadeoutTimer;
@@ -1181,7 +1181,7 @@ public class RawScrollbarState<T> : State<T> where T : RawScrollbar
     // in the scroll axis direction. Deals with the complications arising from scroll metrics changes
     // that have occurred since the last drag update and the need to prevent overscrolling on some
     // platforms.
-    private double? GetPrimaryDelta(Point localPosition)
+    private double? GetPrimaryDelta(Offset localPosition)
     {
         ScrollPosition position = _cachedController!.Position;
         double primaryDeltaFromDragStart;
@@ -1189,20 +1189,20 @@ public class RawScrollbarState<T> : State<T> where T : RawScrollbar
         switch (position.AxisDirection)
         {
             case AxisDirection.Up:
-                primaryDeltaFromDragStart = _startDragScrollbarAxisOffset!.Value.Y - localPosition.Y;
-                primaryDeltaFromLastDragUpdate = _lastDragUpdateOffset!.Value.Y - localPosition.Y;
+                primaryDeltaFromDragStart = _startDragScrollbarAxisOffset!.Value.Dy - localPosition.Dy;
+                primaryDeltaFromLastDragUpdate = _lastDragUpdateOffset!.Value.Dy - localPosition.Dy;
                 break;
             case AxisDirection.Right:
-                primaryDeltaFromDragStart = localPosition.X - _startDragScrollbarAxisOffset!.Value.X;
-                primaryDeltaFromLastDragUpdate = localPosition.X - _lastDragUpdateOffset!.Value.X;
+                primaryDeltaFromDragStart = localPosition.Dx - _startDragScrollbarAxisOffset!.Value.Dx;
+                primaryDeltaFromLastDragUpdate = localPosition.Dx - _lastDragUpdateOffset!.Value.Dx;
                 break;
             case AxisDirection.Down:
-                primaryDeltaFromDragStart = localPosition.Y - _startDragScrollbarAxisOffset!.Value.Y;
-                primaryDeltaFromLastDragUpdate = localPosition.Y - _lastDragUpdateOffset!.Value.Y;
+                primaryDeltaFromDragStart = localPosition.Dy - _startDragScrollbarAxisOffset!.Value.Dy;
+                primaryDeltaFromLastDragUpdate = localPosition.Dy - _lastDragUpdateOffset!.Value.Dy;
                 break;
             default:
-                primaryDeltaFromDragStart = _startDragScrollbarAxisOffset!.Value.X - localPosition.X;
-                primaryDeltaFromLastDragUpdate = _lastDragUpdateOffset!.Value.X - localPosition.X;
+                primaryDeltaFromDragStart = _startDragScrollbarAxisOffset!.Value.Dx - localPosition.Dx;
+                primaryDeltaFromLastDragUpdate = _lastDragUpdateOffset!.Value.Dx - localPosition.Dx;
                 break;
         }
 
@@ -1271,7 +1271,7 @@ public class RawScrollbarState<T> : State<T> where T : RawScrollbar
     /// Handler called when the thumb drag has started. Begins the fade in animation and creates the
     /// thumb's <see cref="IDrag"/>.
     /// </summary>
-    protected virtual void HandleThumbPressStart(Point localPosition)
+    protected virtual void HandleThumbPressStart(Offset localPosition)
     {
         CheckHasValidScrollPosition();
         Axis? direction = GetScrollbarDirection();
@@ -1299,7 +1299,7 @@ public class RawScrollbarState<T> : State<T> where T : RawScrollbar
     /// Handler called when a currently active thumb drag moves. Updates the position of the child
     /// scrollable through the thumb's <see cref="IDrag"/>.
     /// </summary>
-    protected virtual void HandleThumbPressUpdate(Point localPosition)
+    protected virtual void HandleThumbPressUpdate(Offset localPosition)
     {
         CheckHasValidScrollPosition();
         if (_lastDragUpdateOffset == localPosition)
@@ -1331,9 +1331,9 @@ public class RawScrollbarState<T> : State<T> where T : RawScrollbar
             return;
         }
 
-        Point delta = direction == Axis.Horizontal
-            ? new Point(primaryDelta.Value, 0)
-            : new Point(0, primaryDelta.Value);
+        Offset delta = direction == Axis.Horizontal
+            ? new Offset(primaryDelta.Value, 0)
+            : new Offset(0, primaryDelta.Value);
         var renderBox = (RenderBox)_scrollbarPainterKey.CurrentContext!.FindRenderObject()!;
 
         // Triggers updates to the ScrollPosition and the ScrollbarPainter.
@@ -1347,7 +1347,7 @@ public class RawScrollbarState<T> : State<T> where T : RawScrollbar
     }
 
     /// <summary>Handler called when a thumb drag has ended.</summary>
-    protected virtual void HandleThumbPressEnd(Point localPosition, Velocity velocity)
+    protected virtual void HandleThumbPressEnd(Offset localPosition, Velocity velocity)
     {
         CheckHasValidScrollPosition();
         Axis? direction = GetScrollbarDirection();
@@ -1376,8 +1376,8 @@ public class RawScrollbarState<T> : State<T> where T : RawScrollbar
         var details = new DragEndDetails(
             velocity: adjustedVelocity,
             primaryVelocity: direction == Axis.Horizontal
-                ? adjustedVelocity.PixelsPerSecond.X
-                : adjustedVelocity.PixelsPerSecond.Y,
+                ? adjustedVelocity.PixelsPerSecond.Dx
+                : adjustedVelocity.PixelsPerSecond.Dy,
             globalPosition: renderBox.LocalToGlobal(localPosition),
             localPosition: localPosition);
 
@@ -1407,13 +1407,13 @@ public class RawScrollbarState<T> : State<T> where T : RawScrollbar
         AxisDirection scrollDirection;
         if (ScrollDirectionUtils.AxisDirectionToAxis(position.AxisDirection) == Axis.Vertical)
         {
-            scrollDirection = details.LocalPosition.Y > ScrollbarPainter.ThumbOffset
+            scrollDirection = details.LocalPosition.Dy > ScrollbarPainter.ThumbOffset
                 ? AxisDirection.Down
                 : AxisDirection.Up;
         }
         else
         {
-            scrollDirection = details.LocalPosition.X > ScrollbarPainter.ThumbOffset
+            scrollDirection = details.LocalPosition.Dx > ScrollbarPainter.ThumbOffset
                 ? AxisDirection.Right
                 : AxisDirection.Left;
         }
@@ -1542,7 +1542,7 @@ public class RawScrollbarState<T> : State<T> where T : RawScrollbar
     // HandleThumbPressEnd - all depend on a localPosition parameter that defines the event's location
     // relative to the scrollbar. Ensure that the localPosition is reported consistently, even if the
     // source of the event is a trackpad or a stylus.
-    private Point GlobalToScrollbar(Point offset)
+    private Offset GlobalToScrollbar(Offset offset)
     {
         var renderBox = (RenderBox)_scrollbarPainterKey.CurrentContext!.FindRenderObject()!;
         return renderBox.GlobalToLocal(offset);
@@ -1630,20 +1630,20 @@ public class RawScrollbarState<T> : State<T> where T : RawScrollbar
     /// <summary>
     /// Whether the given offset is located over the track of the scrollbar, excluding its thumb.
     /// </summary>
-    protected bool IsPointerOverTrack(Point position, PointerDeviceKind kind)
+    protected bool IsPointerOverTrack(Offset position, PointerDeviceKind kind)
     {
         if (_scrollbarPainterKey.CurrentContext is null)
         {
             return false;
         }
 
-        Point localOffset = GlobalToScrollbar(position);
+        Offset localOffset = GlobalToScrollbar(position);
         return ScrollbarPainter.HitTestInteractive(localOffset, kind) &&
                !ScrollbarPainter.HitTestOnlyThumbInteractive(localOffset, kind);
     }
 
     /// <summary>Whether the given offset is located over the thumb of the scrollbar.</summary>
-    protected bool IsPointerOverThumb(Point position, PointerDeviceKind kind)
+    protected bool IsPointerOverThumb(Offset position, PointerDeviceKind kind)
     {
         if (_scrollbarPainterKey.CurrentContext is null)
         {
@@ -1658,7 +1658,7 @@ public class RawScrollbarState<T> : State<T> where T : RawScrollbar
     /// area for a hovering mouse is larger than regular hit testing, to make the scrollbar easier to
     /// reach; that larger area is always used here, exactly as in Flutter.
     /// </summary>
-    protected bool IsPointerOverScrollbar(Point position, PointerDeviceKind kind, bool forHover = false)
+    protected bool IsPointerOverScrollbar(Offset position, PointerDeviceKind kind, bool forHover = false)
     {
         if (_scrollbarPainterKey.CurrentContext is null)
         {
@@ -1706,8 +1706,8 @@ public class RawScrollbarState<T> : State<T> where T : RawScrollbar
     {
         ScrollPosition position = _cachedController!.Position;
         double delta = position.Axis == Axis.Horizontal
-            ? @event.ScrollDelta.X
-            : @event.ScrollDelta.Y;
+            ? @event.ScrollDelta.Dx
+            : @event.ScrollDelta.Dy;
 
         if (ScrollDirectionUtils.AxisDirectionIsReversed(position.AxisDirection))
         {
@@ -1839,7 +1839,7 @@ internal static class ScrollbarHitTest
     private static ScrollbarPainter? Painter(GlobalKey customPaintKey) =>
         (customPaintKey.CurrentWidget as CustomPaint)?.ForegroundPainter as ScrollbarPainter;
 
-    private static Point? LocalOffset(GlobalKey customPaintKey, Point position) =>
+    private static Offset? LocalOffset(GlobalKey customPaintKey, Offset position) =>
         customPaintKey.CurrentContext?.FindRenderObject() is RenderBox box
             ? box.GlobalToLocal(position)
             : null;

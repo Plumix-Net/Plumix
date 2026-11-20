@@ -24,10 +24,10 @@ public sealed class MaterialFloatingActionButtonLocationTests
     [Fact]
     public void StandardLocations_ResolveStartCenterEndAndTopGeometry()
     {
-        Assert.Equal(new Point(20, 52), FloatingActionButtonLocation.StartTop.GetOffset(Geometry));
-        Assert.Equal(new Point(172, 52), FloatingActionButtonLocation.CenterTop.GetOffset(Geometry));
-        Assert.Equal(new Point(320, 52), FloatingActionButtonLocation.EndTop.GetOffset(Geometry));
-        Assert.Equal(new Point(172, 648), FloatingActionButtonLocation.CenterFloat.GetOffset(Geometry));
+        Assert.Equal(new Offset(20, 52), FloatingActionButtonLocation.StartTop.GetOffset(Geometry));
+        Assert.Equal(new Offset(172, 52), FloatingActionButtonLocation.CenterTop.GetOffset(Geometry));
+        Assert.Equal(new Offset(320, 52), FloatingActionButtonLocation.EndTop.GetOffset(Geometry));
+        Assert.Equal(new Offset(172, 648), FloatingActionButtonLocation.CenterFloat.GetOffset(Geometry));
     }
 
     [Fact]
@@ -35,25 +35,25 @@ public sealed class MaterialFloatingActionButtonLocationTests
     {
         var rtl = Geometry with { TextDirection = TextDirection.Rtl };
 
-        Assert.Equal(new Point(320, 52), FloatingActionButtonLocation.StartTop.GetOffset(rtl));
+        Assert.Equal(new Offset(320, 52), FloatingActionButtonLocation.StartTop.GetOffset(rtl));
 
         // kMiniButtonOffsetAdjustment is 4.0: mini locations sit 4px closer to the edge.
-        Assert.Equal(new Point(16, 52), FloatingActionButtonLocation.MiniEndTop.GetOffset(rtl));
-        Assert.Equal(new Point(324, 652), FloatingActionButtonLocation.MiniEndFloat.GetOffset(Geometry));
+        Assert.Equal(new Offset(16, 52), FloatingActionButtonLocation.MiniEndTop.GetOffset(rtl));
+        Assert.Equal(new Offset(324, 652), FloatingActionButtonLocation.MiniEndFloat.GetOffset(Geometry));
     }
 
     [Fact]
     public void DockedAndContainedLocations_UseBottomNavigationGeometry()
     {
-        Assert.Equal(new Point(320, 692), FloatingActionButtonLocation.EndDocked.GetOffset(Geometry));
-        Assert.Equal(new Point(320, 726), FloatingActionButtonLocation.EndContained.GetOffset(Geometry));
+        Assert.Equal(new Offset(320, 692), FloatingActionButtonLocation.EndDocked.GetOffset(Geometry));
+        Assert.Equal(new Offset(320, 726), FloatingActionButtonLocation.EndContained.GetOffset(Geometry));
     }
 
     [Fact]
     public void FloatingActionButtonAnimator_MatchesScalingAndNoAnimationContracts()
     {
-        Point begin = new(10, 20);
-        Point end = new(30, 40);
+        Offset begin = new(10, 20);
+        Offset end = new(30, 40);
 
         Assert.Equal(begin, FloatingActionButtonAnimator.Scaling.GetOffset(begin, end, 0.49));
         Assert.Equal(end, FloatingActionButtonAnimator.Scaling.GetOffset(begin, end, 0.5));

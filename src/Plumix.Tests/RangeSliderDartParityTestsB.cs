@@ -398,7 +398,7 @@ public sealed class RangeSliderDartParityTestsB : IDisposable
 
             // Dragged.
             gesture.Down(tester.GetCenter(SliderElement(tester)));
-            gesture.MoveBy(new Vector(20.0, 0.0));
+            gesture.MoveBy(new Offset(20.0, 0.0));
             tester.Pump();
             Assert.Equal(draggedCursor, ActiveCursor(gesture));
 
@@ -604,7 +604,7 @@ public sealed class RangeSliderDartParityTestsB : IDisposable
         tester.Pump(GestureConstants.PressTimeout);
 
         // Less than configured touch slop, more than default touch slop
-        drag.MoveBy(new Vector(19.0, 0));
+        drag.MoveBy(new Offset(19.0, 0));
         tester.Pump();
 
         // RangeSlider has overlay when enabled and dragged.
@@ -692,7 +692,7 @@ public sealed class RangeSliderDartParityTestsB : IDisposable
         tester.Pump(GestureConstants.PressTimeout);
 
         // Less than configured touch slop, more than default touch slop.
-        drag.MoveBy(new Vector(19.0, 0));
+        drag.MoveBy(new Offset(19.0, 0));
         tester.Pump();
 
         // RangeSlider has overlay when enabled and dragged.
@@ -729,7 +729,7 @@ public sealed class RangeSliderDartParityTestsB : IDisposable
 
         tester.TimedDragFrom(
             tester.GetTopLeft(SliderElement(tester)),
-            new Vector(100.0, 0.0),
+            new Offset(100.0, 0.0),
             TimeSpan.FromMilliseconds(500));
 
         Assert.Equal(1, startFired);
@@ -829,7 +829,7 @@ public sealed class RangeSliderDartParityTestsB : IDisposable
         {
             // Discrete enabled widget.
             tester.PumpWidget(BuildApp(sliderTheme: theme, divisions: divisions, enabled: enabled));
-            Point center = tester.GetCenter(SliderElement(tester));
+            Offset center = tester.GetCenter(SliderElement(tester));
             TestGesture? gesture = null;
             if (dragged)
             {
@@ -964,10 +964,10 @@ public sealed class RangeSliderDartParityTestsB : IDisposable
             PaintAssert.DoesNotPaint(MaterialOf(tester), PaintPattern.Paints.Circle(color: dragColor));
 
             // Drag start thumb to left.
-            Point topThumbLocation = tester.GetCenter(SliderElement(tester));
+            Offset topThumbLocation = tester.GetCenter(SliderElement(tester));
             TestGesture dragStartThumb = tester.StartGesture(topThumbLocation, PointerDeviceKind.Touch);
             tester.Pump(GestureConstants.PressTimeout);
-            dragStartThumb.MoveBy(new Vector(-20.0, 0));
+            dragStartThumb.MoveBy(new Offset(-20.0, 0));
             tester.PumpAndSettle();
 
             // Verify overlay is visible and shadow is visible on single thumb.
@@ -979,7 +979,7 @@ public sealed class RangeSliderDartParityTestsB : IDisposable
                     .Path(color: MaterialColors.Black, style: PaintingStyle.Stroke, strokeWidth: 12.0));
 
             // Move back and release.
-            dragStartThumb.MoveBy(new Vector(20.0, 0));
+            dragStartThumb.MoveBy(new Offset(20.0, 0));
             dragStartThumb.Up();
             tester.PumpAndSettle();
 
@@ -992,12 +992,12 @@ public sealed class RangeSliderDartParityTestsB : IDisposable
                     .Path(color: MaterialColors.Black, style: PaintingStyle.Stroke, strokeWidth: 2.0));
 
             // Drag end thumb and return to original position.
-            Point bottomThumbLocation = tester.GetCenter(SliderElement(tester)) + new Vector(220.0, 0.0);
+            Offset bottomThumbLocation = tester.GetCenter(SliderElement(tester)) + new Offset(220.0, 0.0);
             TestGesture dragEndThumb = tester.StartGesture(bottomThumbLocation, PointerDeviceKind.Touch);
             tester.Pump(GestureConstants.PressTimeout);
-            dragEndThumb.MoveBy(new Vector(20.0, 0));
+            dragEndThumb.MoveBy(new Offset(20.0, 0));
             tester.Pump(GestureConstants.PressTimeout);
-            dragEndThumb.MoveBy(new Vector(-20.0, 0));
+            dragEndThumb.MoveBy(new Offset(-20.0, 0));
             dragEndThumb.Up();
             tester.PumpAndSettle();
 
@@ -1337,7 +1337,7 @@ public sealed class RangeSliderDartParityTestsB : IDisposable
         tester.PumpWidget(BuildApp(divisions: 4));
         tester.PumpAndSettle();
 
-        Point topLeft = tester.GetTopLeft(SliderElement(tester));
+        Offset topLeft = tester.GetTopLeft(SliderElement(tester));
         TestGesture gesture = tester.StartGesture(topLeft, PointerDeviceKind.Touch);
         // Wait for value indicator animation to finish.
         tester.PumpAndSettle();
@@ -1375,7 +1375,7 @@ public sealed class RangeSliderDartParityTestsB : IDisposable
                         labels: new RangeLabels(DartRound(values.Start), DartRound(values.End)),
                         divisions: 4,
                         onChanged: _ => { })))));
-        Point topLeft = tester.GetTopLeft(SliderElement(tester));
+        Offset topLeft = tester.GetTopLeft(SliderElement(tester));
         TestGesture gesture = tester.StartGesture(topLeft, PointerDeviceKind.Touch);
         tester.PumpAndSettle();
 
@@ -1412,7 +1412,7 @@ public sealed class RangeSliderDartParityTestsB : IDisposable
                         labels: new RangeLabels(DartRound(values.Start), DartRound(values.End)),
                         divisions: 4,
                         onChanged: _ => { })))));
-        Point topLeft = tester.GetTopLeft(SliderElement(tester));
+        Offset topLeft = tester.GetTopLeft(SliderElement(tester));
         TestGesture gesture = tester.StartGesture(topLeft, PointerDeviceKind.Touch);
         tester.PumpAndSettle();
 
@@ -1494,11 +1494,11 @@ public sealed class RangeSliderDartParityTestsB : IDisposable
         FocusNode? initialFocus = FocusManager.Instance.PrimaryFocus;
         Assert.NotNull(initialFocus);
 
-        Point topLeft = tester.GetTopLeft(SliderElement(tester));
-        Point bottomRight = tester.GetBottomRight(SliderElement(tester));
+        Offset topLeft = tester.GetTopLeft(SliderElement(tester));
+        Offset bottomRight = tester.GetBottomRight(SliderElement(tester));
 
         // Tap near the start thumb (0.3)
-        Point startThumbPos = topLeft + ((bottomRight - topLeft) * 0.3);
+        Offset startThumbPos = topLeft + ((bottomRight - topLeft) * 0.3);
         TapAt(tester, startThumbPos);
         tester.Pump();
 
@@ -1512,7 +1512,7 @@ public sealed class RangeSliderDartParityTestsB : IDisposable
         tester.Pump();
 
         // Tap near the end thumb (0.7)
-        Point endThumbPos = topLeft + ((bottomRight - topLeft) * 0.7);
+        Offset endThumbPos = topLeft + ((bottomRight - topLeft) * 0.7);
         TapAt(tester, endThumbPos);
         tester.Pump();
 
@@ -1540,11 +1540,11 @@ public sealed class RangeSliderDartParityTestsB : IDisposable
         FocusNode? initialFocus = FocusManager.Instance.PrimaryFocus;
         Assert.NotNull(initialFocus);
 
-        Point topLeft = tester.GetTopLeft(SliderElement(tester));
-        Point bottomRight = tester.GetBottomRight(SliderElement(tester));
+        Offset topLeft = tester.GetTopLeft(SliderElement(tester));
+        Offset bottomRight = tester.GetBottomRight(SliderElement(tester));
 
         // Drag start thumb
-        Point startThumbPos = topLeft + ((bottomRight - topLeft) * 0.3);
+        Offset startThumbPos = topLeft + ((bottomRight - topLeft) * 0.3);
         TestGesture gesture = tester.StartGesture(startThumbPos, PointerDeviceKind.Touch);
         tester.Pump();
 
@@ -1553,7 +1553,7 @@ public sealed class RangeSliderDartParityTestsB : IDisposable
         Assert.True(startFocusNode.HasFocus, "Start thumb should have focus on drag start");
         Assert.Same(startFocusNode, FocusManager.Instance.PrimaryFocus);
 
-        gesture.MoveBy(new Vector(10, 0));
+        gesture.MoveBy(new Offset(10, 0));
         gesture.Up();
         tester.Pump();
 
@@ -1562,7 +1562,7 @@ public sealed class RangeSliderDartParityTestsB : IDisposable
         tester.Pump();
 
         // Drag end thumb
-        Point endThumbPos = topLeft + ((bottomRight - topLeft) * 0.7);
+        Offset endThumbPos = topLeft + ((bottomRight - topLeft) * 0.7);
         TestGesture endGesture = tester.StartGesture(endThumbPos, PointerDeviceKind.Touch);
         tester.Pump();
 
@@ -1571,7 +1571,7 @@ public sealed class RangeSliderDartParityTestsB : IDisposable
         Assert.True(endFocusNode.HasFocus, "End thumb should have focus on drag start");
         Assert.Same(endFocusNode, FocusManager.Instance.PrimaryFocus);
 
-        endGesture.MoveBy(new Vector(-10, 0));
+        endGesture.MoveBy(new Offset(-10, 0));
         endGesture.Up();
         tester.Pump();
     }
@@ -1590,11 +1590,11 @@ public sealed class RangeSliderDartParityTestsB : IDisposable
                         values: values,
                         onChanged: newValues => setState(() => values = newValues)))))));
 
-        Point topLeft = tester.GetTopLeft(SliderElement(tester));
-        Point bottomRight = tester.GetBottomRight(SliderElement(tester));
+        Offset topLeft = tester.GetTopLeft(SliderElement(tester));
+        Offset bottomRight = tester.GetBottomRight(SliderElement(tester));
 
         // Tap near the start thumb (0.3)
-        Point startThumbPos = topLeft + ((bottomRight - topLeft) * 0.3);
+        Offset startThumbPos = topLeft + ((bottomRight - topLeft) * 0.3);
         TapAt(tester, startThumbPos);
         tester.Pump();
 
@@ -1653,7 +1653,7 @@ public sealed class RangeSliderDartParityTestsB : IDisposable
         (a > b - epsilon && a < b + epsilon) || a == b;
 
     private static Rect Ltrb(double left, double top, double right, double bottom) =>
-        new(new Point(left, top), new Point(right, bottom));
+        DartGeometry.RectFromCorners(new Offset(left, top), new Offset(right, bottom));
 
     private static Element SliderElement(FrameworkDartTester tester) => tester.ElementOfType<RangeSlider>();
 
@@ -1662,14 +1662,14 @@ public sealed class RangeSliderDartParityTestsB : IDisposable
         (RangeSlider.RangeSliderState)((StatefulElement)SliderElement(tester)).State;
 
     // `tester.getTopRight`.
-    private static Point TopRight(FrameworkDartTester tester, Element element)
+    private static Offset TopRight(FrameworkDartTester tester, Element element)
     {
         var box = (RenderBox)element.FindRenderObject()!;
-        return box.LocalToGlobal(new Point(box.Size.Width, 0.0));
+        return box.LocalToGlobal(new Offset(box.Size.Width, 0.0));
     }
 
     // `tester.tapAt`.
-    private static void TapAt(FrameworkDartTester tester, Point location)
+    private static void TapAt(FrameworkDartTester tester, Offset location)
     {
         TestGesture gesture = tester.StartGesture(location, PointerDeviceKind.Touch);
         gesture.Up();
@@ -1903,7 +1903,7 @@ public sealed class RangeSliderDartParityTestsB : IDisposable
 
         public override void Paint(
             PaintingContext context,
-            Point center,
+            Offset center,
             Animation<double> activationAnimation,
             Animation<double> enableAnimation,
             TextPainter labelPainter,

@@ -36,14 +36,14 @@ public sealed class NavigatorLifecycleDartParityTests
                 child: new SizedBox(width: 100, height: 100)),
         ]);
         harness.Mount();
-        harness.Tap(new Point(50, 50));
-        harness.Tap(new Point(150, 50));
+        harness.Tap(new Offset(50, 50));
+        harness.Tap(new Offset(150, 50));
         Assert.Equal(["left"], log);
 
         harness.Tester.PumpAndSettle();
         harness.Navigator.Pop();
         harness.Tester.PumpAndSettle();
-        harness.Tap(new Point(150, 50));
+        harness.Tap(new Offset(150, 50));
         Assert.Equal(["left", "right"], log);
     }
 
@@ -60,7 +60,7 @@ public sealed class NavigatorLifecycleDartParityTests
                 onTap: () => taps++,
                 child: new SizedBox(width: 200, height: 100)));
         harness.Mount();
-        TestGesture gesture = harness.Tester.StartGesture(new Point(50, 50), PointerDeviceKind.Touch);
+        TestGesture gesture = harness.Tester.StartGesture(new Offset(50, 50), PointerDeviceKind.Touch);
         harness.Navigator.Push(Page("next"));
         EventLoop.FlushMicrotasks();
         gesture.Up();
@@ -431,7 +431,7 @@ public sealed class NavigatorLifecycleDartParityTests
             child: new SizedBox(width: 200, height: 100)));
         harness.Navigator.Push(route);
         harness.Tester.PumpAndSettle();
-        TestGesture gesture = harness.Tester.StartGesture(new Point(50, 50), PointerDeviceKind.Touch);
+        TestGesture gesture = harness.Tester.StartGesture(new Offset(50, 50), PointerDeviceKind.Touch);
         switch (operation)
         {
             case "push": harness.Navigator.Push(Page("new")); break;
@@ -674,7 +674,7 @@ public sealed class NavigatorLifecycleDartParityTests
         public void Mount() => Tester.PumpWidget(new Directionality(
             TextDirection.Ltr,
             new Navigator(initialRoute: Page("home", Home), key: _key)));
-        public void Tap(Point position)
+        public void Tap(Offset position)
         {
             TestGesture gesture = Tester.StartGesture(position, PointerDeviceKind.Touch);
             gesture.Up();

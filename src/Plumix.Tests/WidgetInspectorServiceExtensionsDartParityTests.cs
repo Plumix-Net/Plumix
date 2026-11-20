@@ -1221,10 +1221,10 @@ public sealed class WidgetInspectorServiceExtensionsDartParityTests : IDisposabl
         var box2 = (RenderBox)key2.CurrentContext!.FindRenderObject()!;
         // Snapshot the positions of the two relevant boxes to ensure that taking
         // screenshots doesn't impact their positions.
-        Point position1 = box1.LocalToGlobal(new Point(0, 0));
-        Point position2 = box2.LocalToGlobal(new Point(0, 0));
-        Assert.Equal(position1.X, position2.X, 1e-10);
-        Assert.Equal(position1.Y, position2.Y, 1e-10);
+        Offset position1 = box1.LocalToGlobal(new Offset(0, 0));
+        Offset position2 = box2.LocalToGlobal(new Offset(0, 0));
+        Assert.Equal(position1.Dx, position2.Dx, 1e-10);
+        Assert.Equal(position1.Dy, position2.Dy, 1e-10);
 
         Screenshot(tester.FirstElement(Find.ByKey(mainStackKey)), width: 500.0, height: 500.0).Dispose();
         Screenshot(tester.FirstElement(Find.ByKey(stackWithTransformTarget)), width: 500.0, height: 500.0).Dispose();
@@ -1234,7 +1234,7 @@ public sealed class WidgetInspectorServiceExtensionsDartParityTests : IDisposabl
         // TransformTarget or TransformFollower layers.
         Assert.Same(box1, key1.CurrentContext!.FindRenderObject());
         Assert.Same(box2, key2.CurrentContext!.FindRenderObject());
-        Assert.Equal(position1, box1.LocalToGlobal(new Point(0, 0)));
-        Assert.Equal(position2, box2.LocalToGlobal(new Point(0, 0)));
+        Assert.Equal(position1, box1.LocalToGlobal(new Offset(0, 0)));
+        Assert.Equal(position2, box2.LocalToGlobal(new Offset(0, 0)));
     }
 }

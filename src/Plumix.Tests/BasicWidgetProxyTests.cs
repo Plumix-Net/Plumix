@@ -101,7 +101,7 @@ public sealed class BasicWidgetProxyTests
         var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new FractionalTranslation(
-                translation: new Point(0.25, -0.5),
+                translation: new Offset(0.25, -0.5),
                 child: new SizedBox(width: 20, height: 12)));
 
         root.Attach(owner);
@@ -109,39 +109,39 @@ public sealed class BasicWidgetProxyTests
         owner.PumpFrame();
 
         var translation = RequireRenderObject<RenderFractionalTranslation>(root.ChildElement);
-        Assert.Equal(new Point(0.25, -0.5), translation.Translation);
+        Assert.Equal(new Offset(0.25, -0.5), translation.Translation);
         Assert.True(translation.TransformHitTests);
 
         root.Update(new FractionalTranslation(
-            translation: new Point(double.PositiveInfinity, 0.75),
+            translation: new Offset(double.PositiveInfinity, 0.75),
             transformHitTests: false,
             child: new SizedBox(width: 20, height: 12)));
         owner.PumpFrame();
 
         var updated = RequireRenderObject<RenderFractionalTranslation>(root.ChildElement);
         Assert.Same(translation, updated);
-        Assert.Equal(new Point(double.PositiveInfinity, 0.75), updated.Translation);
+        Assert.Equal(new Offset(double.PositiveInfinity, 0.75), updated.Translation);
         Assert.False(updated.TransformHitTests);
     }
 
     [Fact]
     public void RenderFractionalTranslation_HitTestingAndSemanticsFollowPaintOffset()
     {
-        var child = new RegionHitTestRenderBox(new Size(20, 10), new Rect(0, 0, 20, 10));
+        var child = new RegionHitTestRenderBox(new Size(20, 10), DartGeometry.RectFromLTWH(0, 0, 20, 10));
         var translation = new RenderFractionalTranslation(
-            translation: new Point(1, 0),
+            translation: new Offset(1, 0),
             transformHitTests: true,
             child: child);
 
         translation.Layout(new BoxConstraints(MaxWidth: 100, MaxHeight: 100));
 
         var shiftedResult = new BoxHitTestResult();
-        Assert.True(translation.HitTest(shiftedResult, new Point(25, 5)));
+        Assert.True(translation.HitTest(shiftedResult, new Offset(25, 5)));
         Assert.Contains(shiftedResult.Path, entry => ReferenceEquals(entry.Target, child));
 
         translation.TransformHitTests = false;
-        Assert.True(translation.HitTest(new BoxHitTestResult(), new Point(5, 5)));
-        Assert.False(translation.HitTest(new BoxHitTestResult(), new Point(25, 5)));
+        Assert.True(translation.HitTest(new BoxHitTestResult(), new Offset(5, 5)));
+        Assert.False(translation.HitTest(new BoxHitTestResult(), new Offset(25, 5)));
 
         Matrix4 semanticsTransform = Matrix4.Identity();
         translation.ApplyPaintTransform(translation.Child!, semanticsTransform);
@@ -179,7 +179,7 @@ public sealed class BasicWidgetProxyTests
     {
         var child = new RegionHitTestRenderBox(
             new Size(80, 30),
-            new Rect(0, 0, 20, 10),
+            DartGeometry.RectFromLTWH(0, 0, 20, 10),
             baseline: 8);
         var rotated = new RenderRotatedBox(quarterTurns: 1, child: child);
 
@@ -188,8 +188,8 @@ public sealed class BasicWidgetProxyTests
         Assert.Equal(new BoxConstraints(MaxWidth: 200, MaxHeight: 100), child.LastConstraints);
         Assert.Equal(new Size(30, 80), rotated.Size);
         Assert.Null(rotated.GetDistanceToBaseline(Plumix.UI.TextBaseline.Alphabetic, onlyReal: true));
-        Assert.True(rotated.HitTest(new BoxHitTestResult(), new Point(25, 10)));
-        Assert.False(rotated.HitTest(new BoxHitTestResult(), new Point(10, 60)));
+        Assert.True(rotated.HitTest(new BoxHitTestResult(), new Offset(25, 10)));
+        Assert.False(rotated.HitTest(new BoxHitTestResult(), new Offset(10, 60)));
 
         Matrix4 expectedTransform = Matrix4.TranslationValues(15, 40, 0.0);
         expectedTransform.RotateZ(Math.PI / 2.0);
@@ -219,7 +219,7 @@ public sealed class BasicWidgetProxyTests
     public void ClipRectWidget_CreatesRenderClipRect_AndUpdatesClip()
     {
         var owner = TestBuildOwner.Create();
-        var initialClipper = new FixedRectClipper(new Rect(1, 2, 30, 40));
+        var initialClipper = new FixedRectClipper(DartGeometry.RectFromLTWH(1, 2, 30, 40));
         var root = new TestRootElement(
             new ClipRect(
                 clipper: initialClipper,
@@ -233,7 +233,7 @@ public sealed class BasicWidgetProxyTests
         Assert.Same(initialClipper, renderClipRect.Clipper);
         Assert.Equal(Plumix.UI.Clip.HardEdge, renderClipRect.ClipBehavior);
 
-        var updatedClipper = new FixedRectClipper(new Rect(4, 6, 12, 14));
+        var updatedClipper = new FixedRectClipper(DartGeometry.RectFromLTWH(4, 6, 12, 14));
         root.Update(new ClipRect(
             clipper: updatedClipper,
             child: new SizedBox(width: 40, height: 50)));
@@ -506,7 +506,7 @@ public sealed class BasicWidgetProxyTests
             Size = Constraints.Constrain(_desiredSize);
         }
 
-        protected override bool HitTestSelf(Point position)
+        protected override bool HitTestSelf(Offset position)
         {
             return _hitRegion.Contains(position);
         }
@@ -516,7 +516,7 @@ public sealed class BasicWidgetProxyTests
             return _baseline;
         }
 
-        public override void Paint(PaintingContext ctx, Point offset)
+        public override void Paint(PaintingContext ctx, Offset offset)
         {
         }
     }

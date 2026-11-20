@@ -675,7 +675,7 @@ public sealed class RenderTable : RenderBox
     public Rect GetRowBox(int row)
     {
         if (row < 0 || row >= _rows) throw new ArgumentOutOfRangeException(nameof(row));
-        return new Rect(0.0, _rowTops[row], Size.Width, _rowTops[row + 1] - _rowTops[row]);
+        return DartGeometry.RectFromLTWH(0.0, _rowTops[row], Size.Width, _rowTops[row + 1] - _rowTops[row]);
     }
 
     protected override void OnDetach()
@@ -742,18 +742,18 @@ public sealed class RenderTable : RenderBox
         // rect shifted by the translation its transform carries.
         static Rect RectWithOffset(SemanticsNode child)
         {
-            Point translation = GetAsTranslation(child.Transform);
-            return new Rect(
-                child.Rect.X + translation.X,
-                child.Rect.Y + translation.Y,
+            Offset translation = GetAsTranslation(child.Transform);
+            return DartGeometry.RectFromLTWH(
+                child.Rect.Left + translation.Dx,
+                child.Rect.Top + translation.Dy,
                 child.Rect.Width,
                 child.Rect.Height);
         }
 
         static void ShiftTransform(SemanticsNode child, double dx, double dy)
         {
-            Point translation = GetAsTranslation(child.Transform);
-            child.Transform = Matrix4.TranslationValues(translation.X + dx, translation.Y + dy, 0.0);
+            Offset translation = GetAsTranslation(child.Transform);
+            child.Transform = Matrix4.TranslationValues(translation.Dx + dx, translation.Dy + dy, 0.0);
         }
 
         int FindRowIndex(double top)
@@ -791,8 +791,8 @@ public sealed class RenderTable : RenderBox
             else
             {
                 Rect rect = RectWithOffset(child);
-                int y = FindRowIndex(rect.Y);
-                int x = FindColumnIndex(rect.X);
+                int y = FindRowIndex(rect.Top);
+                int x = FindColumnIndex(rect.Left);
                 if (y >= 0 && y < _rows && x >= 0 && x < _columns)
                 {
                     rawCells[y, x].Add(child);
@@ -862,7 +862,7 @@ public sealed class RenderTable : RenderBox
                 if (addCellWrapper)
                 {
                     cell.Transform = Matrix4.TranslationValues(_columnLefts[x], 0.0, 0.0);
-                    cell.Rect = new Rect(0, 0, cellWidth, rowBox.Height);
+                    cell.Rect = DartGeometry.RectFromLTWH(0, 0, cellWidth, rowBox.Height);
                 }
 
                 foreach (SemanticsNode child in rawChildren)
@@ -871,7 +871,7 @@ public sealed class RenderTable : RenderBox
                     Rect localRect = RectWithOffset(child);
                     double dy = localRect.Bottom > rowBox.Height + PrecisionErrorTolerance ? -_rowTops[y] : 0.0;
                     double dx = addCellWrapper
-                        ? (localRect.X >= cellWidth ? -_columnLefts[x] : 0.0)
+                        ? (localRect.Left >= cellWidth ? -_columnLefts[x] : 0.0)
                         : (localRect.Right <= _columnLefts[x] ? _columnLefts[x] : 0.0);
                     if (dx != 0.0 || dy != 0.0)
                     {
@@ -886,8 +886,8 @@ public sealed class RenderTable : RenderBox
             newRow.UpdateWith(
                 new SemanticsConfiguration { IndexInParent = y, Role = SemanticsRole.Row },
                 cells);
-            newRow.Transform = Matrix4.TranslationValues(rowBox.X, rowBox.Y, 0.0);
-            newRow.Rect = new Rect(0, 0, rowBox.Width, rowBox.Height);
+            newRow.Transform = Matrix4.TranslationValues(rowBox.Left, rowBox.Top, 0.0);
+            newRow.Rect = DartGeometry.RectFromLTWH(0, 0, rowBox.Width, rowBox.Height);
 
             rows.Add(newRow);
         }
@@ -898,7 +898,7 @@ public sealed class RenderTable : RenderBox
     private const double PrecisionErrorTolerance = 1e-10;
 
     /// <summary>The translation a translation-only transform carries, or zero for anything else.</summary>
-    private static Point GetAsTranslation(Matrix4? transform) =>
+    private static Offset GetAsTranslation(Matrix4? transform) =>
         transform is { } value ? MatrixUtils.GetAsTranslation(value) ?? default : default;
 
     private SemanticsNode CreateSynthesizedSemanticsNode()
@@ -1125,7 +1125,7 @@ public sealed class RenderTable : RenderBox
                         else
                         {
                             rowHeight = Math.Max(rowHeight, child.Size.Height);
-                            parentData.offset = new Point(positions[x], rowTop);
+                            parentData.offset = new Offset(positions[x], rowTop);
                         }
 
                         break;
@@ -1156,25 +1156,25 @@ public sealed class RenderTable : RenderBox
                 switch (parentData.VerticalAlignment ?? _defaultVerticalAlignment)
                 {
                     case TableCellVerticalAlignment.Baseline:
-                        parentData.offset = new Point(
+                        parentData.offset = new Offset(
                             positions[x],
                             rowTop + beforeBaselineDistance - baselines[x]);
                         break;
                     case TableCellVerticalAlignment.Top:
-                        parentData.offset = new Point(positions[x], rowTop);
+                        parentData.offset = new Offset(positions[x], rowTop);
                         break;
                     case TableCellVerticalAlignment.Middle:
-                        parentData.offset = new Point(
+                        parentData.offset = new Offset(
                             positions[x],
                             rowTop + ((rowHeight - child.Size.Height) / 2.0));
                         break;
                     case TableCellVerticalAlignment.Bottom:
-                        parentData.offset = new Point(positions[x], rowTop + rowHeight - child.Size.Height);
+                        parentData.offset = new Offset(positions[x], rowTop + rowHeight - child.Size.Height);
                         break;
                     case TableCellVerticalAlignment.Fill:
                     case TableCellVerticalAlignment.IntrinsicHeight:
                         child.Layout(BoxConstraints.TightFor(width: widths[x], height: rowHeight));
-                        parentData.offset = new Point(positions[x], rowTop);
+                        parentData.offset = new Offset(positions[x], rowTop);
                         break;
                 }
             }
@@ -1189,7 +1189,7 @@ public sealed class RenderTable : RenderBox
         Size = constraints.Constrain(new Size(_tableWidth, rowTop));
     }
 
-    protected override bool HitTestChildren(BoxHitTestResult result, Point position)
+    protected override bool HitTestChildren(BoxHitTestResult result, Offset position)
     {
         for (int index = _children.Count - 1; index >= 0; index--)
         {
@@ -1207,13 +1207,13 @@ public sealed class RenderTable : RenderBox
         return false;
     }
 
-    public override void Paint(PaintingContext context, Point offset)
+    public override void Paint(PaintingContext context, Offset offset)
     {
         if (_rows * _columns == 0)
         {
             if (_border is not null)
             {
-                var emptyRect = new Rect(offset.X, offset.Y, _tableWidth, 0.0);
+                var emptyRect = DartGeometry.RectFromLTWH(offset.Dx, offset.Dy, _tableWidth, 0.0);
                 _border.Paint(context, emptyRect, rows: [], columns: []);
             }
 
@@ -1231,7 +1231,7 @@ public sealed class RenderTable : RenderBox
                 _rowDecorationPainters[y] = painter;
                 painter.Paint(
                     context,
-                    new Point(offset.X, offset.Y + _rowTops[y]),
+                    new Offset(offset.Dx, offset.Dy + _rowTops[y]),
                     _configuration.CopyWith(size: new Size(Size.Width, _rowTops[y + 1] - _rowTops[y])));
             }
         }
@@ -1245,7 +1245,7 @@ public sealed class RenderTable : RenderBox
 
         if (_border is not null)
         {
-            var borderRect = new Rect(offset.X, offset.Y, _tableWidth, _rowTops[^1]);
+            var borderRect = DartGeometry.RectFromLTWH(offset.Dx, offset.Dy, _tableWidth, _rowTops[^1]);
             IReadOnlyList<double> rows = [.. _rowTops.GetRange(1, _rowTops.Count - 2)];
             IReadOnlyList<double> columns = [.. _columnLefts!.Skip(1)];
             _border.Paint(context, borderRect, rows: rows, columns: columns);

@@ -30,7 +30,7 @@ public sealed class LongPressGestureRecognizerTests : IDisposable
 
     private static PointerDownEvent Down(
         int pointer,
-        Point position,
+        Offset position,
         PointerButtons buttons = PointerButtons.Primary,
         PointerDeviceKind kind = PointerDeviceKind.Touch)
     {
@@ -39,20 +39,20 @@ public sealed class LongPressGestureRecognizerTests : IDisposable
 
     private static PointerMoveEvent Move(
         int pointer,
-        Point position,
+        Offset position,
         PointerButtons buttons = PointerButtons.Primary)
     {
         return new PointerMoveEvent(
             pointer, PointerDeviceKind.Touch, position, buttons, DateTime.UnixEpoch);
     }
 
-    private static PointerUpEvent Up(int pointer, Point position)
+    private static PointerUpEvent Up(int pointer, Offset position)
     {
         return new PointerUpEvent(
             pointer, PointerDeviceKind.Touch, position, PointerButtons.None, DateTime.UnixEpoch);
     }
 
-    private static PointerCancelEvent Cancel(int pointer, Point position)
+    private static PointerCancelEvent Cancel(int pointer, Offset position)
     {
         return new PointerCancelEvent(
             pointer, PointerDeviceKind.Touch, position, PointerButtons.None, DateTime.UnixEpoch);
@@ -85,7 +85,7 @@ public sealed class LongPressGestureRecognizerTests : IDisposable
         LongPressGestureRecognizer recognizer = Primary(log);
         try
         {
-            PointerDownEvent down = Down(5, new Point(10.0, 10.0));
+            PointerDownEvent down = Down(5, new Offset(10.0, 10.0));
             recognizer.AddPointer(down);
             _binding.GestureArena.Close(5);
             Route(down);
@@ -110,7 +110,7 @@ public sealed class LongPressGestureRecognizerTests : IDisposable
         LongPressGestureRecognizer recognizer = Primary(log, TimeSpan.FromMilliseconds(100.0));
         try
         {
-            PointerDownEvent down = Down(5, new Point(10.0, 10.0));
+            PointerDownEvent down = Down(5, new Offset(10.0, 10.0));
             recognizer.AddPointer(down);
             _binding.GestureArena.Close(5);
             Route(down);
@@ -134,12 +134,12 @@ public sealed class LongPressGestureRecognizerTests : IDisposable
         LongPressGestureRecognizer recognizer = Primary(log);
         try
         {
-            PointerDownEvent down = Down(5, new Point(10.0, 10.0));
+            PointerDownEvent down = Down(5, new Offset(10.0, 10.0));
             recognizer.AddPointer(down);
             _binding.GestureArena.Close(5);
             Route(down);
             _timers.Elapse(TimeSpan.FromMilliseconds(300.0));
-            Route(Up(5, new Point(10.0, 10.0)));
+            Route(Up(5, new Offset(10.0, 10.0)));
             _binding.GestureArena.Sweep(5);
 
             Assert.Equal(["down", "cancel"], log);
@@ -160,16 +160,16 @@ public sealed class LongPressGestureRecognizerTests : IDisposable
         LongPressGestureRecognizer recognizer = Primary(log);
         try
         {
-            PointerDownEvent down = Down(5, new Point(10.0, 10.0));
+            PointerDownEvent down = Down(5, new Offset(10.0, 10.0));
             recognizer.AddPointer(down);
             _binding.GestureArena.Close(5);
             Route(down);
             _timers.Elapse(TimeSpan.FromMilliseconds(300.0));
-            Route(Move(5, new Point(100.0, 200.0)));
+            Route(Move(5, new Offset(100.0, 200.0)));
 
             Assert.Equal(["down", "cancel"], log);
 
-            Route(Up(5, new Point(100.0, 200.0)));
+            Route(Up(5, new Offset(100.0, 200.0)));
             Assert.Equal(["down", "cancel"], log);
         }
         finally
@@ -192,19 +192,19 @@ public sealed class LongPressGestureRecognizerTests : IDisposable
 
         try
         {
-            PointerDownEvent down = Down(5, new Point(10.0, 10.0));
+            PointerDownEvent down = Down(5, new Offset(10.0, 10.0));
             recognizer.AddPointer(down);
             _binding.GestureArena.Close(5);
             Route(down);
             _timers.Elapse(TimeSpan.FromMilliseconds(500.0));
-            Route(Move(5, new Point(100.0, 200.0)));
-            Route(Up(5, new Point(100.0, 200.0)));
+            Route(Move(5, new Offset(100.0, 200.0)));
+            Route(Up(5, new Offset(100.0, 200.0)));
 
             Assert.Equal(["down", "start", "longPress", "move", "end", "up"], log);
             Assert.NotNull(update);
-            Assert.Equal(new Point(100.0, 200.0), update!.Value.GlobalPosition);
-            Assert.Equal(new Point(90.0, 190.0), update!.Value.OffsetFromOrigin);
-            Assert.Equal(new Point(90.0, 190.0), update!.Value.LocalOffsetFromOrigin);
+            Assert.Equal(new Offset(100.0, 200.0), update!.Value.GlobalPosition);
+            Assert.Equal(new Offset(90.0, 190.0), update!.Value.OffsetFromOrigin);
+            Assert.Equal(new Offset(90.0, 190.0), update!.Value.LocalOffsetFromOrigin);
         }
         finally
         {
@@ -220,12 +220,12 @@ public sealed class LongPressGestureRecognizerTests : IDisposable
         try
         {
             PointerDownEvent down = Down(
-                5, new Point(10.0, 10.0), PointerButtons.Secondary | PointerButtons.Tertiary);
+                5, new Offset(10.0, 10.0), PointerButtons.Secondary | PointerButtons.Tertiary);
             recognizer.AddPointer(down);
             _binding.GestureArena.Close(5);
             Route(down);
             _timers.Elapse(TimeSpan.FromSeconds(1.0));
-            Route(Up(5, new Point(10.0, 10.0)));
+            Route(Up(5, new Offset(10.0, 10.0)));
 
             Assert.Empty(log);
         }
@@ -242,11 +242,11 @@ public sealed class LongPressGestureRecognizerTests : IDisposable
         LongPressGestureRecognizer recognizer = Primary(log);
         try
         {
-            PointerDownEvent down = Down(5, new Point(10.0, 10.0));
+            PointerDownEvent down = Down(5, new Offset(10.0, 10.0));
             recognizer.AddPointer(down);
             _binding.GestureArena.Close(5);
             Route(down);
-            Route(Move(5, new Point(10.0, 10.0), PointerButtons.Tertiary));
+            Route(Move(5, new Offset(10.0, 10.0), PointerButtons.Tertiary));
 
             Assert.Equal(["down", "cancel"], log);
 
@@ -266,17 +266,17 @@ public sealed class LongPressGestureRecognizerTests : IDisposable
         LongPressGestureRecognizer recognizer = Primary(log);
         try
         {
-            PointerDownEvent down = Down(5, new Point(10.0, 10.0));
+            PointerDownEvent down = Down(5, new Offset(10.0, 10.0));
             recognizer.AddPointer(down);
             _binding.GestureArena.Close(5);
             Route(down);
             _timers.Elapse(TimeSpan.FromMilliseconds(500.0));
             log.Clear();
 
-            Route(Move(5, new Point(10.0, 10.0), PointerButtons.Secondary));
+            Route(Move(5, new Offset(10.0, 10.0), PointerButtons.Secondary));
             Assert.Equal(["move"], log);
 
-            Route(Up(5, new Point(10.0, 10.0)));
+            Route(Up(5, new Offset(10.0, 10.0)));
             Assert.Equal(["move", "end", "up"], log);
         }
         finally
@@ -293,13 +293,13 @@ public sealed class LongPressGestureRecognizerTests : IDisposable
         recognizer.SupportedDevices = new HashSet<PointerDeviceKind> { PointerDeviceKind.Mouse };
         try
         {
-            PointerDownEvent touch = Down(5, new Point(10.0, 10.0));
+            PointerDownEvent touch = Down(5, new Offset(10.0, 10.0));
             recognizer.AddPointer(touch);
             _binding.GestureArena.Close(5);
             _timers.Elapse(TimeSpan.FromSeconds(2.0));
             Assert.Empty(log);
 
-            PointerDownEvent mouse = Down(6, new Point(10.0, 10.0), kind: PointerDeviceKind.Mouse);
+            PointerDownEvent mouse = Down(6, new Offset(10.0, 10.0), kind: PointerDeviceKind.Mouse);
             recognizer.AddPointer(mouse);
             _binding.GestureArena.Close(6);
             Route(mouse);
@@ -330,18 +330,18 @@ public sealed class LongPressGestureRecognizerTests : IDisposable
 
         try
         {
-            PointerDownEvent secondary = Down(5, new Point(10.0, 10.0), PointerButtons.Secondary);
+            PointerDownEvent secondary = Down(5, new Offset(10.0, 10.0), PointerButtons.Secondary);
             recognizer.AddPointer(secondary);
             _binding.GestureArena.Close(5);
             Route(secondary);
             _timers.Elapse(TimeSpan.FromMilliseconds(500.0));
-            Route(Up(5, new Point(10.0, 10.0)));
+            Route(Up(5, new Offset(10.0, 10.0)));
             Assert.Equal(
                 ["secondaryDown", "secondaryStart", "secondary", "secondaryEnd", "secondaryUp"],
                 log);
 
             log.Clear();
-            PointerDownEvent tertiary = Down(6, new Point(10.0, 10.0), PointerButtons.Tertiary);
+            PointerDownEvent tertiary = Down(6, new Offset(10.0, 10.0), PointerButtons.Tertiary);
             recognizer.AddPointer(tertiary);
             _binding.GestureArena.Close(6);
             Route(tertiary);
@@ -361,7 +361,7 @@ public sealed class LongPressGestureRecognizerTests : IDisposable
         LongPressGestureRecognizer recognizer = Primary(log);
         try
         {
-            PointerDownEvent down = Down(5, new Point(10.0, 10.0), PointerButtons.Secondary);
+            PointerDownEvent down = Down(5, new Offset(10.0, 10.0), PointerButtons.Secondary);
             recognizer.AddPointer(down);
             _binding.GestureArena.Close(5);
             _timers.Elapse(TimeSpan.FromSeconds(1.0));
@@ -385,15 +385,15 @@ public sealed class LongPressGestureRecognizerTests : IDisposable
 
         try
         {
-            PointerDownEvent down = Down(5, new Point(10.0, 10.0));
+            PointerDownEvent down = Down(5, new Offset(10.0, 10.0));
             recognizer.AddPointer(down);
             _binding.GestureArena.Close(5);
             Route(down);
             _timers.Elapse(TimeSpan.FromMilliseconds(500.0));
-            Route(Up(5, new Point(30.0, 10.0)));
+            Route(Up(5, new Offset(30.0, 10.0)));
 
             Assert.NotNull(end);
-            Assert.Equal(new Point(30.0, 10.0), end!.Value.GlobalPosition);
+            Assert.Equal(new Offset(30.0, 10.0), end!.Value.GlobalPosition);
         }
         finally
         {
@@ -408,11 +408,11 @@ public sealed class LongPressGestureRecognizerTests : IDisposable
         LongPressGestureRecognizer recognizer = Primary(log);
         try
         {
-            PointerDownEvent down = Down(5, new Point(10.0, 10.0));
+            PointerDownEvent down = Down(5, new Offset(10.0, 10.0));
             recognizer.AddPointer(down);
             _binding.GestureArena.Close(5);
             Route(down);
-            Route(Cancel(5, new Point(10.0, 10.0)));
+            Route(Cancel(5, new Offset(10.0, 10.0)));
 
             Assert.Equal(["down", "cancel"], log);
         }

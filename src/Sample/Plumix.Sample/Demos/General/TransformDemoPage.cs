@@ -87,7 +87,7 @@ internal sealed class TransformDemoPageState : State
                             alignment: Alignment.Center,
                             child: BuildCard("3D", new Color(0xFFF57C00)))),
                         BuildStage("translate", Transform.Translate(
-                            offset: new Point(_turns * 40.0, 0.0),
+                            offset: new Offset(_turns * 40.0, 0.0),
                             child: BuildCard("Move", new Color(0xFF6750A4)))),
                     ]),
             ]);

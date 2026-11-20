@@ -359,13 +359,13 @@ public abstract class Paragraph : IDisposable
     public abstract IReadOnlyList<TextBox> GetBoxesForPlaceholders();
 
     /// Returns the text position closest to the given offset.
-    public abstract TextPosition GetPositionForOffset(Point offset);
+    public abstract TextPosition GetPositionForOffset(Offset offset);
 
     /// Returns the glyph at the given code unit offset, or null when it is not laid out.
     public abstract GlyphInfo? GetGlyphInfoAt(int codeUnitOffset);
 
     /// Returns the glyph closest to the given offset, or null when the paragraph shows no glyphs.
-    public abstract GlyphInfo? GetClosestGlyphInfoForOffset(Point offset);
+    public abstract GlyphInfo? GetClosestGlyphInfoForOffset(Offset offset);
 
     /// Returns the backend's word boundary range enclosing the character at `position`.
     ///
@@ -460,7 +460,7 @@ public abstract class Paragraph : IDisposable
 
     /// Captures the current layout as a draw call with its origin at `offset`, or null when this
     /// paragraph has nothing a backend can draw.
-    internal abstract Action<DrawingContext>? CreateDrawAction(Point offset);
+    internal abstract Action<DrawingContext>? CreateDrawAction(Offset offset);
 
     public override string ToString() => _disposed ? "Paragraph(DISPOSED)" : "Paragraph()";
 }

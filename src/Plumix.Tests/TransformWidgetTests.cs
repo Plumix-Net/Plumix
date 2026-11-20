@@ -65,7 +65,7 @@ public sealed class TransformWidgetTests
     [Fact]
     public void Translate_CarriesNoOriginOrAlignment()
     {
-        Transform translate = Transform.Translate(new Point(100.0, 50.0));
+        Transform translate = Transform.Translate(new Offset(100.0, 50.0));
 
         Assert.Equal(Matrix4.TranslationValues(100.0, 50.0, 0.0), translate.Matrix);
         Assert.Null(translate.Origin);
@@ -91,7 +91,7 @@ public sealed class TransformWidgetTests
 
         RenderTransform withOrigin = Laid(
             Matrix4.Diagonal3Values(0.5, 0.5, 1.0),
-            origin: new Point(100.0, 50.0));
+            origin: new Offset(100.0, 50.0));
         Matrix4 expectedOrigin = Matrix4.TranslationValues(100.0, 50.0, 0.0);
         expectedOrigin.ScaleByDouble(0.5, 0.5, 1.0, 1);
         expectedOrigin.TranslateByDouble(-100.0, -50.0, 0, 1);
@@ -106,7 +106,7 @@ public sealed class TransformWidgetTests
         // Both together: `origin(100, 0)` plus `centerLeft` is again the anchor (100, 50).
         RenderTransform both = Laid(
             Matrix4.Diagonal3Values(0.5, 0.5, 1.0),
-            origin: new Point(100.0, 0.0),
+            origin: new Offset(100.0, 0.0),
             alignment: Alignment.CenterLeft);
         Assert.Equal(expectedOrigin, both.DebugEffectiveTransform());
     }
@@ -122,7 +122,7 @@ public sealed class TransformWidgetTests
         transform.ApplyPaintTransform(transform.Child!, accumulated);
 
         Assert.Equal(transform.DebugEffectiveTransform(), accumulated);
-        Assert.Equal(new Point(50.0, 25.0), MatrixUtils.TransformPoint(accumulated, new Point(0.0, 0.0)));
+        Assert.Equal(new Offset(50.0, 25.0), MatrixUtils.TransformPoint(accumulated, new Offset(0.0, 0.0)));
     }
 
     [Theory]
@@ -140,7 +140,7 @@ public sealed class TransformWidgetTests
 
         Assert.True(transform.PaintsChild(transform.Child!));
 
-        transform.Paint(new PaintingContext(new ContainerLayer()), new Point(0, 0));
+        transform.Paint(new PaintingContext(new ContainerLayer()), new Offset(0, 0));
         Assert.Null(transform.DebugLayer);
     }
 
@@ -160,11 +160,11 @@ public sealed class TransformWidgetTests
             alignment: Alignment.CenterRight);
 
         // The child occupies global x in [50, 100], y in [25, 75] once scaled about the right edge.
-        Assert.True(transform.HitTest(new BoxHitTestResult(), new Point(90.0, 50.0)));
-        Assert.False(transform.HitTest(new BoxHitTestResult(), new Point(10.0, 10.0)));
+        Assert.True(transform.HitTest(new BoxHitTestResult(), new Offset(90.0, 50.0)));
+        Assert.False(transform.HitTest(new BoxHitTestResult(), new Offset(10.0, 10.0)));
 
         transform.TransformHitTests = false;
-        Assert.True(transform.HitTest(new BoxHitTestResult(), new Point(10.0, 10.0)));
+        Assert.True(transform.HitTest(new BoxHitTestResult(), new Offset(10.0, 10.0)));
     }
 
     [Fact]
@@ -172,7 +172,7 @@ public sealed class TransformWidgetTests
     {
         RenderTransform transform = Laid(Matrix4.Diagonal3Values(1.0, 0.0, 1.0));
 
-        Assert.False(transform.HitTest(new BoxHitTestResult(), new Point(50.0, 50.0)));
+        Assert.False(transform.HitTest(new BoxHitTestResult(), new Offset(50.0, 50.0)));
     }
 
     [Fact]
@@ -184,7 +184,7 @@ public sealed class TransformWidgetTests
         RenderTransform transform = Laid(matrix, alignment: Alignment.Center);
 
         // The z row is removed before inverting, so the centre still maps onto itself.
-        Assert.True(transform.HitTest(new BoxHitTestResult(), new Point(50.0, 50.0)));
+        Assert.True(transform.HitTest(new BoxHitTestResult(), new Offset(50.0, 50.0)));
     }
 
     [Fact]
@@ -193,7 +193,7 @@ public sealed class TransformWidgetTests
         RenderTransform transform = Laid(Matrix4.Identity());
 
         transform.Translate(10.0, 20.0);
-        Assert.Equal(new Point(10.0, 20.0), MatrixUtils.GetAsTranslation(transform.DebugTransformMatrix()));
+        Assert.Equal(new Offset(10.0, 20.0), MatrixUtils.GetAsTranslation(transform.DebugTransformMatrix()));
 
         transform.Scale(2.0);
         Matrix4 expected = Matrix4.TranslationValues(10.0, 20.0, 0.0);
@@ -218,7 +218,7 @@ public sealed class TransformWidgetTests
         Assert.True(transform.DebugTransformMatrix().IsIdentity());
     }
 
-    private static RenderTransform Laid(Matrix4 matrix, Point? origin = null, Alignment? alignment = null)
+    private static RenderTransform Laid(Matrix4 matrix, Offset? origin = null, Alignment? alignment = null)
     {
         var child = new HitTestBox();
         var transform = new RenderTransform(
@@ -237,9 +237,9 @@ public sealed class TransformWidgetTests
             Size = Constraints.Constrain(new Size(100, 100));
         }
 
-        protected override bool HitTestSelf(Point position) => true;
+        protected override bool HitTestSelf(Offset position) => true;
 
-        public override void Paint(PaintingContext ctx, Point offset)
+        public override void Paint(PaintingContext ctx, Offset offset)
         {
         }
     }

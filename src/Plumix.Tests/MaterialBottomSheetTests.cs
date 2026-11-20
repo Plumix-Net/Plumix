@@ -344,7 +344,7 @@ public sealed class MaterialBottomSheetTests : IDisposable
         capped.Pump(new Size(400, 320));
         var cappedLayout = Assert.Single(FindDescendants<RenderBottomSheetLayoutWithSizeListener>(capped.RenderView));
         Assert.Equal(180, cappedLayout.Child!.Size.Height, precision: 3);
-        Assert.Equal(140, ((BoxParentData)cappedLayout.Child.parentData!).offset.Y, precision: 3);
+        Assert.Equal(140, ((BoxParentData)cappedLayout.Child.parentData!).offset.Dy, precision: 3);
 
         using var half = new WidgetRenderHarness(new BottomSheetLayoutWithSizeListener(
             onChildSizeChanged: _ => { },
@@ -386,7 +386,7 @@ public sealed class MaterialBottomSheetTests : IDisposable
 
         Assert.Equal(new Size(400, 120), Assert.Single(reported));
         var layout = Assert.Single(FindDescendants<RenderBottomSheetLayoutWithSizeListener>(harness.RenderView));
-        Assert.Equal(260, ((BoxParentData)layout.Child!.parentData!).offset.Y, precision: 3);
+        Assert.Equal(260, ((BoxParentData)layout.Child!.parentData!).offset.Dy, precision: 3);
     }
 
     [Fact]
@@ -407,12 +407,12 @@ public sealed class MaterialBottomSheetTests : IDisposable
 
         var binding = GestureBinding.Instance;
         var start = DateTime.UtcNow;
-        DispatchDown(binding, harness.RenderView, 41, new Point(120, 20), start);
+        DispatchDown(binding, harness.RenderView, 41, new Offset(120, 20), start);
         // The sheet's recognizer sets `onlyAcceptDragOnThreshold`, so the slop-crossing move is
         // absorbed into the drag start exactly as Dart's `WidgetTester.drag` splits it off.
-        DispatchMove(binding, harness.RenderView, 41, new Point(120, 38.5), start.AddMilliseconds(150));
-        DispatchMove(binding, harness.RenderView, 41, new Point(120, 145), start.AddMilliseconds(300));
-        DispatchUp(binding, harness.RenderView, 41, new Point(120, 145), start.AddMilliseconds(600));
+        DispatchMove(binding, harness.RenderView, 41, new Offset(120, 38.5), start.AddMilliseconds(150));
+        DispatchMove(binding, harness.RenderView, 41, new Offset(120, 145), start.AddMilliseconds(300));
+        DispatchUp(binding, harness.RenderView, 41, new Offset(120, 145), start.AddMilliseconds(600));
 
         Assert.True(reportedClosing);
         Assert.Equal(1, closingCalls);
@@ -437,10 +437,10 @@ public sealed class MaterialBottomSheetTests : IDisposable
 
         var binding = GestureBinding.Instance;
         var start = DateTime.UtcNow;
-        DispatchDown(binding, harness.RenderView, 42, new Point(120, 20), start);
-        DispatchMove(binding, harness.RenderView, 42, new Point(120, 38.5), start.AddMilliseconds(150));
-        DispatchMove(binding, harness.RenderView, 42, new Point(120, 50), start.AddMilliseconds(300));
-        DispatchUp(binding, harness.RenderView, 42, new Point(120, 50), start.AddMilliseconds(600));
+        DispatchDown(binding, harness.RenderView, 42, new Offset(120, 20), start);
+        DispatchMove(binding, harness.RenderView, 42, new Offset(120, 38.5), start.AddMilliseconds(150));
+        DispatchMove(binding, harness.RenderView, 42, new Offset(120, 50), start.AddMilliseconds(300));
+        DispatchUp(binding, harness.RenderView, 42, new Offset(120, 50), start.AddMilliseconds(600));
 
         Assert.False(reportedClosing);
         Assert.Equal(0, closingCalls);
@@ -464,9 +464,9 @@ public sealed class MaterialBottomSheetTests : IDisposable
 
         var binding = GestureBinding.Instance;
         var start = DateTime.UtcNow;
-        DispatchDown(binding, harness.RenderView, 43, new Point(120, 20), start);
-        DispatchMove(binding, harness.RenderView, 43, new Point(120, 180), start.AddMilliseconds(300));
-        DispatchUp(binding, harness.RenderView, 43, new Point(120, 180), start.AddMilliseconds(600));
+        DispatchDown(binding, harness.RenderView, 43, new Offset(120, 20), start);
+        DispatchMove(binding, harness.RenderView, 43, new Offset(120, 180), start.AddMilliseconds(300));
+        DispatchUp(binding, harness.RenderView, 43, new Offset(120, 180), start.AddMilliseconds(600));
 
         Assert.Equal(0, closingCalls);
         Assert.Equal(1.0, controller.Value, precision: 6);
@@ -484,7 +484,7 @@ public sealed class MaterialBottomSheetTests : IDisposable
 
         var binding = GestureBinding.Instance;
         var start = DateTime.UtcNow;
-        DispatchDown(binding, harness.RenderView, 44, new Point(120, 20), start);
+        DispatchDown(binding, harness.RenderView, 44, new Offset(120, 20), start);
 
         // Dart's `invokeCallback` reports a throwing gesture callback through `FlutterError.onError`
         // instead of unwinding the pointer dispatch, so the failure surfaces here, not as a throw.
@@ -493,7 +493,7 @@ public sealed class MaterialBottomSheetTests : IDisposable
         FlutterError.OnError = reported.Add;
         try
         {
-            DispatchMove(binding, harness.RenderView, 44, new Point(120, 120), start.AddMilliseconds(200));
+            DispatchMove(binding, harness.RenderView, 44, new Offset(120, 120), start.AddMilliseconds(200));
         }
         finally
         {
@@ -634,7 +634,7 @@ public sealed class MaterialBottomSheetTests : IDisposable
         PumpAnimation();
         harness.Pump(new Size(500, 400));
 
-        TapAt(harness, new Point(20, 20));
+        TapAt(harness, new Offset(20, 20));
         PumpAnimation();
         harness.Pump(new Size(500, 400));
         Assert.NotNull(FindParagraph(harness.RenderView, "Modal sheet"));
@@ -657,7 +657,7 @@ public sealed class MaterialBottomSheetTests : IDisposable
         PumpAnimation();
         harness.Pump(new Size(500, 400));
 
-        TapAt(harness, new Point(20, 20));
+        TapAt(harness, new Offset(20, 20));
         PumpAnimation();
         harness.Pump(new Size(500, 400));
         Assert.Null(FindParagraph(harness.RenderView, "Modal sheet"));
@@ -713,9 +713,9 @@ public sealed class MaterialBottomSheetTests : IDisposable
     {
         var media = new MediaQueryData(
             Size: new Size(800, 600),
-            DisplayFeatures: [new DisplayFeature(new Rect(390, 0, 20, 600), DisplayFeatureType.Hinge)]);
+            DisplayFeatures: [new DisplayFeature(DartGeometry.RectFromLTWH(390, 0, 20, 600), DisplayFeatureType.Hinge)]);
 
-        Rect trailing = ShowModalAndMeasureSheet(media, new Point(1000, 0));
+        Rect trailing = ShowModalAndMeasureSheet(media, new Offset(1000, 0));
         Assert.Equal(410, trailing.Left, precision: 3);
         Assert.Equal(800, trailing.Right, precision: 3);
 
@@ -1199,7 +1199,7 @@ public sealed class MaterialBottomSheetTests : IDisposable
         return harness;
     }
 
-    private static Rect ShowModalAndMeasureSheet(MediaQueryData media, Point? anchorPoint)
+    private static Rect ShowModalAndMeasureSheet(MediaQueryData media, Offset? anchorPoint)
     {
         BuildContext captured = null!;
         using var harness = new WidgetRenderHarness(new Directionality(
@@ -1222,8 +1222,8 @@ public sealed class MaterialBottomSheetTests : IDisposable
         harness.Pump(media.Size);
 
         var layout = Assert.Single(FindDescendants<RenderBottomSheetLayoutWithSizeListener>(harness.RenderView));
-        Point origin = layout.LocalToGlobal(default);
-        return new Rect(origin, layout.Size);
+        Offset origin = layout.LocalToGlobal(default);
+        return DartGeometry.RectFromOffsetAndSize(origin, layout.Size);
     }
 
     private static MediaQueryData ShowModalAndCaptureMediaQuery(bool useSafeArea)
@@ -1255,15 +1255,15 @@ public sealed class MaterialBottomSheetTests : IDisposable
         return sheetMedia!;
     }
 
-    private static Point HandleCenter(WidgetRenderHarness harness)
+    private static Offset HandleCenter(WidgetRenderHarness harness)
     {
         var handle = Assert.Single(FindDescendants<RenderConstrainedBox>(harness.RenderView), box =>
             box.AdditionalConstraints.MaxWidth == 48 && box.AdditionalConstraints.MaxHeight == 48);
-        Point origin = handle.LocalToGlobal(default);
-        return new Point(origin.X + (handle.Size.Width / 2), origin.Y + (handle.Size.Height / 2));
+        Offset origin = handle.LocalToGlobal(default);
+        return new Offset(origin.Dx + (handle.Size.Width / 2), origin.Dy + (handle.Size.Height / 2));
     }
 
-    private static void TapAt(WidgetRenderHarness harness, Point position)
+    private static void TapAt(WidgetRenderHarness harness, Offset position)
     {
         var binding = GestureBinding.Instance;
         var now = DateTime.UtcNow;
@@ -1287,13 +1287,13 @@ public sealed class MaterialBottomSheetTests : IDisposable
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.60));
     }
 
-    private static void DispatchDown(GestureBinding binding, RenderView view, int pointer, Point position, DateTime time) =>
+    private static void DispatchDown(GestureBinding binding, RenderView view, int pointer, Offset position, DateTime time) =>
         binding.HandlePointerEvent(view, new PointerDownEvent(pointer, PointerDeviceKind.Mouse, position, PointerButtons.Primary, time));
-    private static void DispatchMove(GestureBinding binding, RenderView view, int pointer, Point position, DateTime time) =>
+    private static void DispatchMove(GestureBinding binding, RenderView view, int pointer, Offset position, DateTime time) =>
         binding.HandlePointerEvent(
             view,
             new PointerMoveEvent(pointer, PointerDeviceKind.Mouse, position, PointerButtons.Primary, time));
-    private static void DispatchUp(GestureBinding binding, RenderView view, int pointer, Point position, DateTime time) =>
+    private static void DispatchUp(GestureBinding binding, RenderView view, int pointer, Offset position, DateTime time) =>
         binding.HandlePointerEvent(view, new PointerUpEvent(pointer, PointerDeviceKind.Mouse, position, PointerButtons.None, time));
 
     private static RenderParagraph? FindParagraph(RenderObject? root, string text) =>

@@ -20,26 +20,26 @@ public sealed class GesturePipelineTests
         var pipeline = BuildPipeline(transform);
 
         var insideResult = new BoxHitTestResult();
-        Assert.True(pipeline.Root.Child!.HitTest(insideResult, new Point(5, 10)));
+        Assert.True(pipeline.Root.Child!.HitTest(insideResult, new Offset(5, 10)));
         Assert.Contains(insideResult.Path, entry => ReferenceEquals(entry.Target, child));
 
         var outsideResult = new BoxHitTestResult();
-        Assert.False(pipeline.Root.Child!.HitTest(outsideResult, new Point(15, 10)));
+        Assert.False(pipeline.Root.Child!.HitTest(outsideResult, new Offset(15, 10)));
     }
 
     [Fact]
     public void RenderClipRect_HitTest_RejectsOutsideEffectiveClip()
     {
         var child = new FixedHitTestBox(new Size(80, 80), hitSelf: true);
-        var clip = new RenderClipRect(child, clipper: new FixedRectClipper(new Rect(0, 0, 20, 20)));
+        var clip = new RenderClipRect(child, clipper: new FixedRectClipper(DartGeometry.RectFromLTWH(0, 0, 20, 20)));
 
         var pipeline = BuildPipeline(clip);
 
         var insideResult = new BoxHitTestResult();
-        Assert.True(pipeline.Root.Child!.HitTest(insideResult, new Point(10, 10)));
+        Assert.True(pipeline.Root.Child!.HitTest(insideResult, new Offset(10, 10)));
 
         var outsideResult = new BoxHitTestResult();
-        Assert.False(pipeline.Root.Child!.HitTest(outsideResult, new Point(40, 40)));
+        Assert.False(pipeline.Root.Child!.HitTest(outsideResult, new Offset(40, 40)));
     }
 
     [Fact]
@@ -54,12 +54,12 @@ public sealed class GesturePipelineTests
         // Dart's `RenderProxyBoxWithHitTestBehavior.hitTest` adds the translucent target to the
         // path but still reports `hitTarget` (false here), so ancestors keep testing behind it.
         var translucentResult = new BoxHitTestResult();
-        Assert.False(pipeline.Root.Child!.HitTest(translucentResult, new Point(10, 10)));
+        Assert.False(pipeline.Root.Child!.HitTest(translucentResult, new Offset(10, 10)));
         Assert.Contains(translucentResult.Path, entry => ReferenceEquals(entry.Target, listener));
 
         listener.Behavior = HitTestBehavior.DeferToChild;
         var deferResult = new BoxHitTestResult();
-        Assert.False(pipeline.Root.Child!.HitTest(deferResult, new Point(10, 10)));
+        Assert.False(pipeline.Root.Child!.HitTest(deferResult, new Offset(10, 10)));
     }
 
     [Fact]
@@ -70,12 +70,12 @@ public sealed class GesturePipelineTests
         var pipeline = BuildPipeline(ignorePointer);
 
         var ignoredResult = new BoxHitTestResult();
-        Assert.False(pipeline.Root.Child!.HitTest(ignoredResult, new Point(10, 10)));
+        Assert.False(pipeline.Root.Child!.HitTest(ignoredResult, new Offset(10, 10)));
         Assert.DoesNotContain(ignoredResult.Path, entry => ReferenceEquals(entry.Target, child));
 
         ignorePointer.Ignoring = false;
         var activeResult = new BoxHitTestResult();
-        Assert.True(pipeline.Root.Child!.HitTest(activeResult, new Point(10, 10)));
+        Assert.True(pipeline.Root.Child!.HitTest(activeResult, new Offset(10, 10)));
         Assert.Contains(activeResult.Path, entry => ReferenceEquals(entry.Target, child));
         Assert.Contains(activeResult.Path, entry => ReferenceEquals(entry.Target, ignorePointer));
     }
@@ -90,13 +90,13 @@ public sealed class GesturePipelineTests
         // Dart's `RenderAbsorbPointer.hitTest` returns `size.contains(position)` without adding
         // itself, so the absorber swallows the event instead of becoming its target.
         var absorbedResult = new BoxHitTestResult();
-        Assert.True(pipeline.Root.Child!.HitTest(absorbedResult, new Point(10, 10)));
+        Assert.True(pipeline.Root.Child!.HitTest(absorbedResult, new Offset(10, 10)));
         Assert.DoesNotContain(absorbedResult.Path, entry => ReferenceEquals(entry.Target, absorbPointer));
         Assert.DoesNotContain(absorbedResult.Path, entry => ReferenceEquals(entry.Target, child));
 
         absorbPointer.Absorbing = false;
         var activeResult = new BoxHitTestResult();
-        Assert.True(pipeline.Root.Child!.HitTest(activeResult, new Point(10, 10)));
+        Assert.True(pipeline.Root.Child!.HitTest(activeResult, new Offset(10, 10)));
         Assert.Contains(activeResult.Path, entry => ReferenceEquals(entry.Target, child));
         Assert.Contains(activeResult.Path, entry => ReferenceEquals(entry.Target, absorbPointer));
     }
@@ -126,7 +126,7 @@ public sealed class GesturePipelineTests
                 new PointerDownEvent(
                     pointer: 1,
                     kind: PointerDeviceKind.Mouse,
-                    position: new Point(12, 12),
+                    position: new Offset(12, 12),
                     buttons: PointerButtons.Primary,
                     timestampUtc: DateTime.UtcNow));
 
@@ -135,7 +135,7 @@ public sealed class GesturePipelineTests
                 new PointerUpEvent(
                     pointer: 1,
                     kind: PointerDeviceKind.Mouse,
-                    position: new Point(12, 12),
+                    position: new Offset(12, 12),
                     buttons: PointerButtons.None,
                     timestampUtc: DateTime.UtcNow));
 
@@ -182,9 +182,9 @@ public sealed class GesturePipelineTests
             for (int pointer = 21; pointer <= 22; pointer++)
             {
                 binding.HandlePointerEvent(pipeline.Root, new PointerDownEvent(
-                    pointer, PointerDeviceKind.Mouse, new Point(12, 12), PointerButtons.Primary, now));
+                    pointer, PointerDeviceKind.Mouse, new Offset(12, 12), PointerButtons.Primary, now));
                 binding.HandlePointerEvent(pipeline.Root, new PointerUpEvent(
-                    pointer, PointerDeviceKind.Mouse, new Point(12, 12), PointerButtons.None, now.AddMilliseconds(20)));
+                    pointer, PointerDeviceKind.Mouse, new Offset(12, 12), PointerButtons.None, now.AddMilliseconds(20)));
                 // Past kDoubleTapMinTime (40 ms), well inside kDoubleTapTimeout (300 ms).
                 timers.Elapse(TimeSpan.FromMilliseconds(80));
                 now = now.AddMilliseconds(80);
@@ -222,9 +222,9 @@ public sealed class GesturePipelineTests
             {
                 foreach (PointerEvent @event in new PointerEvent[]
                 {
-                    new PointerDownEvent(7, PointerDeviceKind.Mouse, new Point(12, 12),
+                    new PointerDownEvent(7, PointerDeviceKind.Mouse, new Offset(12, 12),
                         PointerButtons.Primary, now),
-                    new PointerUpEvent(7, PointerDeviceKind.Mouse, new Point(12, 12),
+                    new PointerUpEvent(7, PointerDeviceKind.Mouse, new Offset(12, 12),
                         PointerButtons.None, now.AddMilliseconds(20)),
                 })
                 {
@@ -275,9 +275,9 @@ public sealed class GesturePipelineTests
             var pipeline = BuildPipeline(listener);
             var now = DateTime.UtcNow;
             binding.HandlePointerEvent(pipeline.Root, new PointerDownEvent(
-                31, PointerDeviceKind.Mouse, new Point(12, 12), PointerButtons.Primary, now));
+                31, PointerDeviceKind.Mouse, new Offset(12, 12), PointerButtons.Primary, now));
             binding.HandlePointerEvent(pipeline.Root, new PointerUpEvent(
-                31, PointerDeviceKind.Mouse, new Point(12, 12), PointerButtons.None, now.AddMilliseconds(20)));
+                31, PointerDeviceKind.Mouse, new Offset(12, 12), PointerButtons.None, now.AddMilliseconds(20)));
 
             // The double tap holds the arena past the up; the tap fires only after the timeout.
             Assert.Equal(0, taps);
@@ -318,13 +318,13 @@ public sealed class GesturePipelineTests
             var now = DateTime.UtcNow;
 
             binding.HandlePointerEvent(pipeline.Root, new PointerDownEvent(
-                23, PointerDeviceKind.Mouse, new Point(12, 12), PointerButtons.Primary, now));
+                23, PointerDeviceKind.Mouse, new Offset(12, 12), PointerButtons.Primary, now));
             binding.HandlePointerEvent(pipeline.Root, new PointerUpEvent(
-                23, PointerDeviceKind.Mouse, new Point(12, 12), PointerButtons.None, now.AddMilliseconds(20)));
+                23, PointerDeviceKind.Mouse, new Offset(12, 12), PointerButtons.None, now.AddMilliseconds(20)));
             binding.HandlePointerEvent(pipeline.Root, new PointerDownEvent(
-                24, PointerDeviceKind.Mouse, new Point(12, 12), PointerButtons.Secondary, now.AddMilliseconds(40)));
+                24, PointerDeviceKind.Mouse, new Offset(12, 12), PointerButtons.Secondary, now.AddMilliseconds(40)));
             binding.HandlePointerEvent(pipeline.Root, new PointerUpEvent(
-                24, PointerDeviceKind.Mouse, new Point(12, 12), PointerButtons.None, now.AddMilliseconds(60)));
+                24, PointerDeviceKind.Mouse, new Offset(12, 12), PointerButtons.None, now.AddMilliseconds(60)));
 
             Assert.Equal(["primary-up", "primary", "secondary-down", "secondary-up", "secondary"], events);
         }
@@ -357,10 +357,10 @@ public sealed class GesturePipelineTests
             var pipeline = BuildPipeline(listener);
             var now = DateTime.UtcNow;
             binding.HandlePointerEvent(pipeline.Root, new PointerDownEvent(
-                25, PointerDeviceKind.Mouse, new Point(12, 12), PointerButtons.Primary, now));
+                25, PointerDeviceKind.Mouse, new Offset(12, 12), PointerButtons.Primary, now));
             timers.Elapse(TimeSpan.FromMilliseconds(500));
             binding.HandlePointerEvent(pipeline.Root, new PointerUpEvent(
-                25, PointerDeviceKind.Mouse, new Point(12, 12), PointerButtons.None, now.AddMilliseconds(560)));
+                25, PointerDeviceKind.Mouse, new Offset(12, 12), PointerButtons.None, now.AddMilliseconds(560)));
 
             Assert.Equal(["long-press", "long-press-up"], events);
         }
@@ -396,7 +396,7 @@ public sealed class GesturePipelineTests
                 new PointerDownEvent(
                     pointer: 7,
                     kind: PointerDeviceKind.Mouse,
-                    position: new Point(8, 8),
+                    position: new Offset(8, 8),
                     buttons: PointerButtons.Primary,
                     timestampUtc: DateTime.UtcNow));
 
@@ -405,7 +405,7 @@ public sealed class GesturePipelineTests
                 new PointerMoveEvent(
                     pointer: 7,
                     kind: PointerDeviceKind.Mouse,
-                    position: new Point(34, 10),
+                    position: new Offset(34, 10),
                     buttons: PointerButtons.Primary,
                     timestampUtc: DateTime.UtcNow));
 
@@ -414,7 +414,7 @@ public sealed class GesturePipelineTests
                 new PointerMoveEvent(
                     pointer: 7,
                     kind: PointerDeviceKind.Mouse,
-                    position: new Point(70, 11),
+                    position: new Offset(70, 11),
                     buttons: PointerButtons.Primary,
                     timestampUtc: DateTime.UtcNow));
 
@@ -423,7 +423,7 @@ public sealed class GesturePipelineTests
                 new PointerUpEvent(
                     pointer: 7,
                     kind: PointerDeviceKind.Mouse,
-                    position: new Point(70, 11),
+                    position: new Offset(70, 11),
                     buttons: PointerButtons.None,
                     timestampUtc: DateTime.UtcNow));
 
@@ -444,7 +444,7 @@ public sealed class GesturePipelineTests
         binding.ResetForTests();
 
         var log = new List<string>();
-        Point? startPosition = null;
+        Offset? startPosition = null;
         double totalDelta = 0.0;
         var recognizer = new VerticalDragGestureRecognizer
         {
@@ -469,24 +469,24 @@ public sealed class GesturePipelineTests
             binding.HandlePointerEvent(pipeline.Root, new PointerDownEvent(
                 10,
                 PointerDeviceKind.Touch,
-                new Point(20, 20),
+                new Offset(20, 20),
                 PointerButtons.Primary,
                 start));
             binding.HandlePointerEvent(pipeline.Root, new PointerMoveEvent(
                 10,
                 PointerDeviceKind.Touch,
-                new Point(20, 25),
+                new Offset(20, 25),
                 PointerButtons.Primary,
                 start.AddMilliseconds(20)));
             binding.HandlePointerEvent(pipeline.Root, new PointerUpEvent(
                 10,
                 PointerDeviceKind.Touch,
-                new Point(20, 25),
+                new Offset(20, 25),
                 PointerButtons.None,
                 start.AddMilliseconds(40)));
 
             Assert.False(recognizer.OnlyAcceptDragOnThreshold);
-            Assert.Equal(new Point(20, 20), startPosition);
+            Assert.Equal(new Offset(20, 20), startPosition);
             Assert.Equal(5.0, totalDelta);
             Assert.Equal(["start", "end"], log);
         }
@@ -508,7 +508,7 @@ public sealed class GesturePipelineTests
         var binding = GestureBinding.Instance;
         binding.ResetForTests();
 
-        Point? startPosition = null;
+        Offset? startPosition = null;
         var deltas = new List<double>();
         var recognizer = new VerticalDragGestureRecognizer
         {
@@ -530,7 +530,7 @@ public sealed class GesturePipelineTests
             binding.HandlePointerEvent(pipeline.Root, new PointerDownEvent(
                 11,
                 PointerDeviceKind.Touch,
-                new Point(20, 20),
+                new Offset(20, 20),
                 PointerButtons.Primary,
                 start));
 
@@ -539,11 +539,11 @@ public sealed class GesturePipelineTests
             binding.HandlePointerEvent(pipeline.Root, new PointerMoveEvent(
                 11,
                 PointerDeviceKind.Touch,
-                new Point(20, 45),
+                new Offset(20, 45),
                 PointerButtons.Primary,
                 start.AddMilliseconds(20)));
 
-            Assert.Equal(new Point(20, expectedStartY), startPosition);
+            Assert.Equal(new Offset(20, expectedStartY), startPosition);
             Assert.Equal(expectedInitialDelta, deltas.Sum());
         }
         finally
@@ -581,7 +581,7 @@ public sealed class GesturePipelineTests
                 new PointerDownEvent(
                     pointer: 8,
                     kind: PointerDeviceKind.Mouse,
-                    position: new Point(10, 10),
+                    position: new Offset(10, 10),
                     buttons: PointerButtons.Primary,
                     timestampUtc: start));
 
@@ -590,7 +590,7 @@ public sealed class GesturePipelineTests
                 new PointerMoveEvent(
                     pointer: 8,
                     kind: PointerDeviceKind.Mouse,
-                    position: new Point(34, 10),
+                    position: new Offset(34, 10),
                     buttons: PointerButtons.Primary,
                     timestampUtc: start.AddMilliseconds(30)));
 
@@ -599,7 +599,7 @@ public sealed class GesturePipelineTests
                 new PointerMoveEvent(
                     pointer: 8,
                     kind: PointerDeviceKind.Mouse,
-                    position: new Point(58, 10),
+                    position: new Offset(58, 10),
                     buttons: PointerButtons.Primary,
                     timestampUtc: start.AddMilliseconds(60)));
 
@@ -608,12 +608,12 @@ public sealed class GesturePipelineTests
                 new PointerUpEvent(
                     pointer: 8,
                     kind: PointerDeviceKind.Mouse,
-                    position: new Point(82, 10),
+                    position: new Offset(82, 10),
                     buttons: PointerButtons.None,
                     timestampUtc: start.AddMilliseconds(90)));
 
             Assert.True(velocity.HasValue);
-            Assert.Equal(new[] { 10.0, 34.0, 58.0 }, velocityTracker.Positions.Select(point => point.X));
+            Assert.Equal(new[] { 10.0, 34.0, 58.0 }, velocityTracker.Positions.Select(point => point.Dx));
             Assert.Equal(800, velocity.Value, precision: 3);
         }
         finally
@@ -666,7 +666,7 @@ public sealed class GesturePipelineTests
                 new PointerDownEvent(
                     pointer: 9,
                     kind: PointerDeviceKind.Mouse,
-                    position: new Point(10, 10),
+                    position: new Offset(10, 10),
                     buttons: PointerButtons.Primary,
                     timestampUtc: start));
 
@@ -677,7 +677,7 @@ public sealed class GesturePipelineTests
                     new PointerMoveEvent(
                         pointer: 9,
                         kind: PointerDeviceKind.Mouse,
-                        position: new Point(10 + (24 * step), 10),
+                        position: new Offset(10 + (24 * step), 10),
                         buttons: PointerButtons.Primary,
                         timestampUtc: start.AddMilliseconds(30 * step)));
             }
@@ -687,7 +687,7 @@ public sealed class GesturePipelineTests
                 new PointerUpEvent(
                     pointer: 9,
                     kind: PointerDeviceKind.Mouse,
-                    position: new Point(106, 10),
+                    position: new Offset(106, 10),
                     buttons: PointerButtons.None,
                     timestampUtc: start.AddMilliseconds(120)));
 
@@ -731,7 +731,7 @@ public sealed class GesturePipelineTests
                 new PointerDownEvent(
                     pointer: 10,
                     kind: PointerDeviceKind.Touch,
-                    position: new Point(20, 20),
+                    position: new Offset(20, 20),
                     buttons: PointerButtons.Primary,
                     timestampUtc: start));
             binding.HandlePointerEvent(
@@ -739,7 +739,7 @@ public sealed class GesturePipelineTests
                 new PointerUpEvent(
                     pointer: 10,
                     kind: PointerDeviceKind.Touch,
-                    position: new Point(20, 22),
+                    position: new Offset(20, 22),
                     buttons: PointerButtons.None,
                     timestampUtc: start.AddMilliseconds(40)));
 
@@ -756,9 +756,9 @@ public sealed class GesturePipelineTests
 
     private sealed class RecordingVelocityTracker(PointerDeviceKind kind) : VelocityTracker(kind)
     {
-        public List<Point> Positions { get; } = [];
+        public List<Offset> Positions { get; } = [];
 
-        public override void AddPosition(DateTime timestampUtc, Point position)
+        public override void AddPosition(DateTime timestampUtc, Offset position)
         {
             Positions.Add(position);
             base.AddPosition(timestampUtc, position);
@@ -796,14 +796,14 @@ public sealed class GesturePipelineTests
 
             binding.HandlePointerEvent(
                 pipeline.Root,
-                new PointerDownEvent(3, PointerDeviceKind.Mouse, new Point(10, 10), PointerButtons.Primary, DateTime.UtcNow));
+                new PointerDownEvent(3, PointerDeviceKind.Mouse, new Offset(10, 10), PointerButtons.Primary, DateTime.UtcNow));
 
             binding.HandlePointerEvent(
                 pipeline.Root,
                 new PointerMoveEvent(
                     3,
                     PointerDeviceKind.Mouse,
-                    new Point(90, 12),
+                    new Offset(90, 12),
                     PointerButtons.Primary,
                     DateTime.UtcNow));
 
@@ -812,7 +812,7 @@ public sealed class GesturePipelineTests
                 new PointerMoveEvent(
                     3,
                     PointerDeviceKind.Mouse,
-                    new Point(100, 12),
+                    new Offset(100, 12),
                     PointerButtons.Primary,
                     DateTime.UtcNow));
 
@@ -821,7 +821,7 @@ public sealed class GesturePipelineTests
                 new PointerUpEvent(
                     3,
                     PointerDeviceKind.Mouse,
-                    new Point(100, 12),
+                    new Offset(100, 12),
                     PointerButtons.None,
                     DateTime.UtcNow));
 
@@ -842,7 +842,7 @@ public sealed class GesturePipelineTests
         var binding = GestureBinding.Instance;
         binding.ResetForTests();
 
-        Point? scrollDelta = null;
+        Offset? scrollDelta = null;
         var listener = new RenderPointerListener(
             behavior: HitTestBehavior.Opaque,
             onPointerSignal: @event =>
@@ -860,11 +860,11 @@ public sealed class GesturePipelineTests
             new PointerScrollEvent(
                 device: 44,
                 kind: PointerDeviceKind.Mouse,
-                position: new Point(30, 30),
-                scrollDelta: new Point(0, -1),
+                position: new Offset(30, 30),
+                scrollDelta: new Offset(0, -1),
                 timestampUtc: DateTime.UtcNow));
 
-        Assert.Equal(new Point(0, -1), scrollDelta);
+        Assert.Equal(new Offset(0, -1), scrollDelta);
         binding.ResetForTests();
     }
 
@@ -891,7 +891,7 @@ public sealed class GesturePipelineTests
             new PointerHoverEvent(
                 pointer: 91,
                 kind: PointerDeviceKind.Mouse,
-                position: new Point(10, 10),
+                position: new Offset(10, 10),
                 buttons: PointerButtons.None,
                 timestampUtc: DateTime.UtcNow));
 
@@ -900,7 +900,7 @@ public sealed class GesturePipelineTests
             new PointerHoverEvent(
                 pointer: 91,
                 kind: PointerDeviceKind.Mouse,
-                position: new Point(14, 14),
+                position: new Offset(14, 14),
                 buttons: PointerButtons.None,
                 timestampUtc: DateTime.UtcNow));
 
@@ -909,7 +909,7 @@ public sealed class GesturePipelineTests
             new PointerHoverEvent(
                 pointer: 91,
                 kind: PointerDeviceKind.Mouse,
-                position: new Point(140, 140),
+                position: new Offset(140, 140),
                 buttons: PointerButtons.None,
                 timestampUtc: DateTime.UtcNow));
 
@@ -948,12 +948,12 @@ public sealed class GesturePipelineTests
             Size = Constraints.Constrain(_size);
         }
 
-        protected override bool HitTestSelf(Point position)
+        protected override bool HitTestSelf(Offset position)
         {
             return _hitSelf;
         }
 
-        public override void Paint(PaintingContext ctx, Point offset)
+        public override void Paint(PaintingContext ctx, Offset offset)
         {
         }
     }

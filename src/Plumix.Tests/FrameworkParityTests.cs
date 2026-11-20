@@ -630,7 +630,7 @@ public sealed class FrameworkParityTests
             }
         }
 
-        public override void Paint(PaintingContext ctx, Point offset)
+        public override void Paint(PaintingContext ctx, Offset offset)
         {
         }
 

@@ -54,7 +54,7 @@ public sealed class LayoutBuilderTests
         Assert.Equal(renderObject.Child!.Geometry, renderObject.Geometry);
         Assert.Equal(140, renderObject.Geometry!.ScrollExtent);
         Assert.Equal(80, renderObject.Geometry!.PaintExtent);
-        Assert.Equal(new Rect(0, 0, 100, 80), renderObject.PaintBounds);
+        Assert.Equal(DartGeometry.RectFromLTWH(0, 0, 100, 80), renderObject.PaintBounds);
     }
 
     [Fact]

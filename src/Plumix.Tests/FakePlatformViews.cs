@@ -75,7 +75,7 @@ internal sealed class FakeAndroidViewController : AndroidViewController
     public bool RequiresSize { get; set; }
 
     // Offset passed to the last successful call to create.
-    public Point? CreatePosition { get; private set; }
+    public Offset? CreatePosition { get; private set; }
 
     /// <summary>Events dispatched to this platform view.</summary>
     public List<PointerEvent> DispatchedPointerEvents { get; } = [];
@@ -118,7 +118,7 @@ internal sealed class FakeAndroidViewController : AndroidViewController
 
     public override Task<Size> SetSize(Size size) => Task.FromResult(size);
 
-    public override Task SetOffset(Point off) => Task.CompletedTask;
+    public override Task SetOffset(Offset off) => Task.CompletedTask;
 
     public override int? TextureId => 0;
 
@@ -142,7 +142,7 @@ internal sealed class FakeAndroidViewController : AndroidViewController
     public override Task SetLayoutDirection(TextDirection layoutDirection) =>
         throw new NotImplementedException();
 
-    public override Task Create(Size? size = null, Point? position = null)
+    public override Task Create(Size? size = null, Offset? position = null)
     {
         Assert.False(_createCalledSuccessfully);
         if (RequiresSize && size is not null)
@@ -163,7 +163,7 @@ internal sealed class FakeAndroidViewController : AndroidViewController
 
     private protected override bool CreateRequiresSize => throw new NotImplementedException();
 
-    private protected override Task SendCreateMessage(Size? size, Point? position = null) =>
+    private protected override Task SendCreateMessage(Size? size, Offset? position = null) =>
         throw new NotImplementedException();
 
     private protected override Task<Size> SendResizeMessage(Size size) => throw new NotImplementedException();
@@ -228,7 +228,7 @@ internal sealed class FakeAndroidPlatformViewsController : IDisposable
 
     public int? LastClearedFocusViewId { get; set; }
 
-    public Dictionary<int, Point> Offsets { get; } = [];
+    public Dictionary<int, Offset> Offsets { get; } = [];
 
     /// <summary>True if Texture Layer Hybrid Composition mode should be enabled.</summary>
     /// <remarks>When false, <c>create</c> will simulate the engine's fallback mode.</remarks>
@@ -324,7 +324,7 @@ internal sealed class FakeAndroidPlatformViewsController : IDisposable
             hybrid: hybrid,
             hybridFallback: hybridFallback,
             creationParams: creationParams,
-            position: left is not null && top is not null ? new Point(left.Value, top.Value) : null);
+            position: left is not null && top is not null ? new Offset(left.Value, top.Value) : null);
 
         // Return a hybrid result (null rather than a texture ID) if:
         bool hybridResult =
@@ -403,7 +403,7 @@ internal sealed class FakeAndroidPlatformViewsController : IDisposable
         int id = FakePlatformViewArgs.Int(args["id"]);
         double top = FakePlatformViewArgs.Double(args["top"])!.Value;
         double left = FakePlatformViewArgs.Double(args["left"])!.Value;
-        Offsets[id] = new Point(left, top);
+        Offsets[id] = new Offset(left, top);
         return Task.FromResult<object?>(null);
     }
 
@@ -415,13 +415,13 @@ internal sealed class FakeAndroidPlatformViewsController : IDisposable
         var pointerProperties = ((IList)args[5]!).Cast<IList>().ToList();
         var pointerCoords = ((IList)args[6]!).Cast<IList>().ToList();
         var pointerIds = new List<int>();
-        var pointerOffsets = new List<Point>();
+        var pointerOffsets = new List<Offset>();
         for (int i = 0; i < pointerCoords.Count; i++)
         {
             pointerIds.Add(FakePlatformViewArgs.Int(pointerProperties[i][0]));
             double x = FakePlatformViewArgs.Double(pointerCoords[i][7])!.Value;
             double y = FakePlatformViewArgs.Double(pointerCoords[i][8])!.Value;
-            pointerOffsets.Add(new Point(x, y));
+            pointerOffsets.Add(new Offset(x, y));
         }
 
         if (!MotionEvents.TryGetValue(id, out List<FakeAndroidMotionEvent>? events))
@@ -618,7 +618,7 @@ internal sealed class FakeAndroidPlatformView(
     bool? hybrid = null,
     bool? hybridFallback = null,
     byte[]? creationParams = null,
-    Point? position = null)
+    Offset? position = null)
 {
     public int Id { get; } = id;
 
@@ -634,7 +634,7 @@ internal sealed class FakeAndroidPlatformView(
 
     public bool? HybridFallback { get; } = hybridFallback;
 
-    public Point? Position { get; } = position;
+    public Offset? Position { get; } = position;
 
     public FakeAndroidPlatformView CopyWith(Size? size = null, int? layoutDirection = null) =>
         new(
@@ -673,11 +673,11 @@ internal sealed class FakeAndroidPlatformView(
 }
 
 /// <summary>Flutter's <c>FakeAndroidMotionEvent</c>.</summary>
-internal sealed class FakeAndroidMotionEvent(int action, IReadOnlyList<int> pointerIds, IReadOnlyList<Point> pointers)
+internal sealed class FakeAndroidMotionEvent(int action, IReadOnlyList<int> pointerIds, IReadOnlyList<Offset> pointers)
 {
     public int Action { get; } = action;
 
-    public IReadOnlyList<Point> Pointers { get; } = pointers;
+    public IReadOnlyList<Offset> Pointers { get; } = pointers;
 
     public IReadOnlyList<int> PointerIds { get; } = pointerIds;
 

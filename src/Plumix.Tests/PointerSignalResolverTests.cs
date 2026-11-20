@@ -11,13 +11,13 @@ namespace Plumix.Tests;
 
 public sealed class PointerSignalResolverTests
 {
-    private static PointerScrollEvent Scroll(Point position, RespondPointerEventCallback? onRespond = null)
+    private static PointerScrollEvent Scroll(Offset position, RespondPointerEventCallback? onRespond = null)
     {
         return new PointerScrollEvent(
             device: 1,
             kind: PointerDeviceKind.Mouse,
             position: position,
-            scrollDelta: new Point(0.0, 10.0),
+            scrollDelta: new Offset(0.0, 10.0),
             timestampUtc: DateTime.UnixEpoch,
             onRespond: onRespond);
     }
@@ -27,7 +27,7 @@ public sealed class PointerSignalResolverTests
     {
         var resolver = new PointerSignalResolver();
         var log = new List<string>();
-        var scroll = Scroll(new Point(10.0, 10.0));
+        var scroll = Scroll(new Offset(10.0, 10.0));
 
         resolver.Register(scroll, _ => log.Add("first"));
         resolver.Register(scroll, _ => log.Add("second"));
@@ -37,7 +37,7 @@ public sealed class PointerSignalResolverTests
         Assert.Equal(["first"], log);
 
         // The resolver is reusable for the next event.
-        var next = Scroll(new Point(20.0, 20.0));
+        var next = Scroll(new Offset(20.0, 20.0));
         resolver.Register(next, _ => log.Add("next"));
         resolver.Resolve(next);
         Assert.Equal(["first", "next"], log);
@@ -48,7 +48,7 @@ public sealed class PointerSignalResolverTests
     {
         var resolver = new PointerSignalResolver();
         var log = new List<string>();
-        var scroll = Scroll(new Point(10.0, 10.0));
+        var scroll = Scroll(new Offset(10.0, 10.0));
         var transformed = (PointerScrollEvent)scroll.Transformed(Matrix4.TranslationValues(-9.0, -9.0, 0.0));
 
         resolver.Register(transformed, _ => log.Add("inner"));
@@ -62,7 +62,7 @@ public sealed class PointerSignalResolverTests
     {
         var resolver = new PointerSignalResolver();
         bool? allowPlatformDefault = null;
-        var scroll = Scroll(new Point(10.0, 10.0), allow => allowPlatformDefault = allow);
+        var scroll = Scroll(new Offset(10.0, 10.0), allow => allowPlatformDefault = allow);
 
         resolver.Resolve(scroll);
         Assert.True(allowPlatformDefault);
@@ -92,7 +92,7 @@ public sealed class PointerSignalResolverTests
             pipeline.Attach(root);
             pipeline.FlushLayout(new Size(200.0, 200.0));
 
-            binding.HandlePointerEvent(root, Scroll(new Point(10.0, 10.0)));
+            binding.HandlePointerEvent(root, Scroll(new Offset(10.0, 10.0)));
             Assert.Equal(["inner"], log);
         }
         finally
@@ -108,12 +108,12 @@ public sealed class PointerSignalResolverTests
             Size = Constraints.Constrain(size);
         }
 
-        protected override bool HitTestSelf(Point position)
+        protected override bool HitTestSelf(Offset position)
         {
             return true;
         }
 
-        public override void Paint(PaintingContext context, Point offset)
+        public override void Paint(PaintingContext context, Offset offset)
         {
         }
     }

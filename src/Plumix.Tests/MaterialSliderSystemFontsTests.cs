@@ -34,7 +34,7 @@ public sealed class MaterialSliderSystemFontsTests
             .OfType<RenderBox>().Single(box => range ? box is RenderRangeSlider : box is RenderSlider);
 
         TestGesture gesture = tester.StartGesture(
-            render.LocalToGlobal(new Point(render.Size.Width / 2, render.Size.Height / 2)), PointerDeviceKind.Touch);
+            render.LocalToGlobal(new Offset(render.Size.Width / 2, render.Size.Height / 2)), PointerDeviceKind.Touch);
         tester.Pump(TimeSpan.FromMilliseconds(200));
         RenderObject? indicator = Descendants(tester.RenderView)
             .SingleOrDefault(box => box.GetType().Name == "RenderValueIndicator");

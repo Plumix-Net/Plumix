@@ -30,8 +30,8 @@ internal enum ScaleState
 public readonly record struct ScaleStartDetails
 {
     public ScaleStartDetails(
-        Point focalPoint = default,
-        Point? localFocalPoint = null,
+        Offset focalPoint = default,
+        Offset? localFocalPoint = null,
         int pointerCount = 0,
         DateTime? sourceTimeStampUtc = null,
         PointerDeviceKind? kind = null)
@@ -44,13 +44,13 @@ public readonly record struct ScaleStartDetails
     }
 
     /// <summary>The initial focal point of the pointers in contact with the screen, in global space.</summary>
-    public Point FocalPoint { get; }
+    public Offset FocalPoint { get; }
 
     /// <summary>
     /// <see cref="FocalPoint"/> in the coordinate space of the event receiver; defaults to
     /// <see cref="FocalPoint"/> when the constructor is not given one.
     /// </summary>
-    public Point LocalFocalPoint { get; }
+    public Offset LocalFocalPoint { get; }
 
     /// <summary>The number of pointers being tracked by the gesture recognizer.</summary>
     public int PointerCount { get; }
@@ -72,14 +72,14 @@ public readonly record struct ScaleStartDetails
 public readonly record struct ScaleUpdateDetails
 {
     public ScaleUpdateDetails(
-        Point focalPoint = default,
-        Point? localFocalPoint = null,
+        Offset focalPoint = default,
+        Offset? localFocalPoint = null,
         double scale = 1.0,
         double horizontalScale = 1.0,
         double verticalScale = 1.0,
         double rotation = 0.0,
         int pointerCount = 0,
-        Point focalPointDelta = default,
+        Offset focalPointDelta = default,
         DateTime? sourceTimeStampUtc = null)
     {
         ArgumentOutOfRangeException.ThrowIfNegative(scale);
@@ -100,13 +100,13 @@ public readonly record struct ScaleUpdateDetails
     /// How far the focal point moved in the coordinate space of the event receiver since the
     /// previous update.
     /// </summary>
-    public Point FocalPointDelta { get; }
+    public Offset FocalPointDelta { get; }
 
     /// <summary>The focal point of the pointers in contact with the screen, in global space.</summary>
-    public Point FocalPoint { get; }
+    public Offset FocalPoint { get; }
 
     /// <summary><see cref="FocalPoint"/> in the coordinate space of the event receiver.</summary>
-    public Point LocalFocalPoint { get; }
+    public Offset LocalFocalPoint { get; }
 
     /// <summary>The scale implied by the average distance between the pointers on the screen.</summary>
     public double Scale { get; }
@@ -166,10 +166,10 @@ public class ScaleGestureRecognizer : OneSequenceGestureRecognizer
     /// Dart's `kDefaultTrackpadScrollToScaleFactor`; matches
     /// <see cref="KDefaultMouseScrollToScaleFactor"/> and the convention that scrolling up zooms in.
     /// </summary>
-    public static Point KDefaultTrackpadScrollToScaleFactor { get; } =
+    public static Offset KDefaultTrackpadScrollToScaleFactor { get; } =
         new(0.0, -1.0 / KDefaultMouseScrollToScaleFactor);
 
-    private readonly Dictionary<int, Point> _pointerLocations = [];
+    private readonly Dictionary<int, Offset> _pointerLocations = [];
 
     /// <summary>A queue that keeps the pointers in the order they entered. Dart's `_pointerQueue`.</summary>
     private readonly List<int> _pointerQueue = [];
@@ -179,19 +179,19 @@ public class ScaleGestureRecognizer : OneSequenceGestureRecognizer
 
     private ScaleState _state = ScaleState.Ready;
     private Matrix4? _lastTransform;
-    private Point _initialFocalPoint;
-    private Point? _currentFocalPoint;
+    private Offset _initialFocalPoint;
+    private Offset? _currentFocalPoint;
     private double _initialSpan;
     private double _currentSpan;
     private double _initialHorizontalSpan;
     private double _currentHorizontalSpan;
     private double _initialVerticalSpan;
     private double _currentVerticalSpan;
-    private Point _localFocalPoint;
+    private Offset _localFocalPoint;
     private LineBetweenPointers? _initialLine;
     private LineBetweenPointers? _currentLine;
     private VelocityTracker? _scaleVelocityTracker;
-    private Point _delta;
+    private Offset _delta;
     private double _initialPanZoomScaleFactor = 1.0;
     private double _initialPanZoomRotationFactor;
     private DateTime? _initialEventTimestamp;
@@ -227,7 +227,7 @@ public class ScaleGestureRecognizer : OneSequenceGestureRecognizer
     /// trackpad pan offsets are multiplied by this factor, so a larger divisor scrolls less.
     /// Defaults to <see cref="KDefaultTrackpadScrollToScaleFactor"/>.
     /// </summary>
-    public Point TrackpadScrollToScaleFactor { get; set; } = KDefaultTrackpadScrollToScaleFactor;
+    public Offset TrackpadScrollToScaleFactor { get; set; } = KDefaultTrackpadScrollToScaleFactor;
 
     /// <summary>
     /// The number of pointers being tracked by the gesture recognizer. The pan/zoom protocol does
@@ -424,15 +424,15 @@ public class ScaleGestureRecognizer : OneSequenceGestureRecognizer
         double factor = 0.0;
         if (_initialLine is { } initialLine && _currentLine is { } currentLine)
         {
-            double fx = initialLine.PointerStartLocation.X;
-            double fy = initialLine.PointerStartLocation.Y;
-            double sx = initialLine.PointerEndLocation.X;
-            double sy = initialLine.PointerEndLocation.Y;
+            double fx = initialLine.PointerStartLocation.Dx;
+            double fy = initialLine.PointerStartLocation.Dy;
+            double sx = initialLine.PointerEndLocation.Dx;
+            double sy = initialLine.PointerEndLocation.Dy;
 
-            double nfx = currentLine.PointerStartLocation.X;
-            double nfy = currentLine.PointerStartLocation.Y;
-            double nsx = currentLine.PointerEndLocation.X;
-            double nsy = currentLine.PointerEndLocation.Y;
+            double nfx = currentLine.PointerStartLocation.Dx;
+            double nfy = currentLine.PointerStartLocation.Dy;
+            double nsx = currentLine.PointerEndLocation.Dx;
+            double nsy = currentLine.PointerEndLocation.Dy;
 
             double angle1 = Math.Atan2(fy - sy, fx - sx);
             double angle2 = Math.Atan2(nfy - nsy, nfx - nsx);
@@ -451,11 +451,11 @@ public class ScaleGestureRecognizer : OneSequenceGestureRecognizer
 
     private void Update()
     {
-        Point? previousFocalPoint = _currentFocalPoint;
+        Offset? previousFocalPoint = _currentFocalPoint;
 
         // Compute the focal point.
-        var focalPoint = new Point(0.0, 0.0);
-        foreach (Point location in _pointerLocations.Values)
+        var focalPoint = new Offset(0.0, 0.0);
+        foreach (Offset location in _pointerLocations.Values)
         {
             focalPoint += location;
         }
@@ -474,15 +474,15 @@ public class ScaleGestureRecognizer : OneSequenceGestureRecognizer
         }
         else
         {
-            Point localPreviousFocalPoint = _localFocalPoint;
+            Offset localPreviousFocalPoint = _localFocalPoint;
             _localFocalPoint = PointerEvent.TransformPosition(_lastTransform, _currentFocalPoint.Value);
             _delta = _localFocalPoint - localPreviousFocalPoint;
         }
 
         int count = _pointerLocations.Count;
 
-        var pointerFocalPoint = new Point(0.0, 0.0);
-        foreach (Point location in _pointerLocations.Values)
+        var pointerFocalPoint = new Offset(0.0, 0.0);
+        foreach (Offset location in _pointerLocations.Values)
         {
             pointerFocalPoint += location;
         }
@@ -497,11 +497,11 @@ public class ScaleGestureRecognizer : OneSequenceGestureRecognizer
         double totalDeviation = 0.0;
         double totalHorizontalDeviation = 0.0;
         double totalVerticalDeviation = 0.0;
-        foreach (Point location in _pointerLocations.Values)
+        foreach (Offset location in _pointerLocations.Values)
         {
             totalDeviation += (pointerFocalPoint - location).Distance();
-            totalHorizontalDeviation += Math.Abs(pointerFocalPoint.X - location.X);
-            totalVerticalDeviation += Math.Abs(pointerFocalPoint.Y - location.Y);
+            totalHorizontalDeviation += Math.Abs(pointerFocalPoint.Dx - location.Dx);
+            totalVerticalDeviation += Math.Abs(pointerFocalPoint.Dy - location.Dy);
         }
 
         _currentSpan = count > 0 ? totalDeviation / count : 0.0;
@@ -560,12 +560,12 @@ public class ScaleGestureRecognizer : OneSequenceGestureRecognizer
                 Velocity velocity = tracker.GetVelocity();
                 if (IsFlingGesture(velocity))
                 {
-                    Vector pixelsPerSecond = velocity.PixelsPerSecond;
-                    if (pixelsPerSecond.SquaredLength
+                    Offset pixelsPerSecond = velocity.PixelsPerSecond;
+                    if (pixelsPerSecond.DartDistanceSquared
                         > GestureConstants.MaxFlingVelocity * GestureConstants.MaxFlingVelocity)
                     {
                         velocity = new Velocity(
-                            pixelsPerSecond / pixelsPerSecond.Length * GestureConstants.MaxFlingVelocity);
+                            pixelsPerSecond / pixelsPerSecond.DartDistance * GestureConstants.MaxFlingVelocity);
                     }
 
                     Velocity endVelocity = velocity;
@@ -624,7 +624,7 @@ public class ScaleGestureRecognizer : OneSequenceGestureRecognizer
 
         if (_state == ScaleState.Started)
         {
-            _scaleVelocityTracker?.AddPosition(@event.TimestampUtc, new Point(ScaleFactor, 0.0));
+            _scaleVelocityTracker?.AddPosition(@event.TimestampUtc, new Offset(ScaleFactor, 0.0));
             if (OnUpdate is { } onUpdate)
             {
                 InvokeCallback("onUpdate", () => onUpdate(new ScaleUpdateDetails(
@@ -665,7 +665,7 @@ public class ScaleGestureRecognizer : OneSequenceGestureRecognizer
     /// Dart's `_scaleVelocityTracker?.getVelocity().pixelsPerSecond.dx ?? -1`: the scale velocity
     /// reported to <see cref="OnEnd"/>, or -1 when no sample has been collected.
     /// </summary>
-    private double ScaleVelocity => _scaleVelocityTracker?.GetVelocity().PixelsPerSecond.X ?? -1.0;
+    private double ScaleVelocity => _scaleVelocityTracker?.GetVelocity().PixelsPerSecond.Dx ?? -1.0;
 
     private void CaptureInitialPanZoomFactors()
     {
@@ -683,7 +683,7 @@ public class ScaleGestureRecognizer : OneSequenceGestureRecognizer
 
     private static bool IsFlingGesture(Velocity velocity)
     {
-        double speedSquared = velocity.PixelsPerSecond.SquaredLength;
+        double speedSquared = velocity.PixelsPerSecond.DartDistanceSquared;
         return speedSquared > GestureConstants.MinFlingVelocity * GestureConstants.MinFlingVelocity;
     }
 
@@ -693,15 +693,15 @@ public class ScaleGestureRecognizer : OneSequenceGestureRecognizer
     private sealed class PointerPanZoomData
     {
         private readonly ScaleGestureRecognizer _parent;
-        private readonly Point _position;
-        private readonly Point _pan;
+        private readonly Offset _position;
+        private readonly Offset _pan;
         private readonly double _scale;
         private readonly double _rotation;
 
         private PointerPanZoomData(
             ScaleGestureRecognizer parent,
-            Point position,
-            Point pan,
+            Offset position,
+            Offset pan,
             double scale,
             double rotation)
         {
@@ -726,7 +726,7 @@ public class ScaleGestureRecognizer : OneSequenceGestureRecognizer
             return new PointerPanZoomData(parent, @event.Position, @event.Pan, @event.Scale, @event.Rotation);
         }
 
-        public Point FocalPoint => _parent.TrackpadScrollCausesScale ? _position : _position + _pan;
+        public Offset FocalPoint => _parent.TrackpadScrollCausesScale ? _position : _position + _pan;
 
         public double Scale
         {
@@ -735,8 +735,8 @@ public class ScaleGestureRecognizer : OneSequenceGestureRecognizer
                 if (_parent.TrackpadScrollCausesScale)
                 {
                     return _scale * Math.Exp(
-                        (_pan.X * _parent.TrackpadScrollToScaleFactor.X)
-                        + (_pan.Y * _parent.TrackpadScrollToScaleFactor.Y));
+                        (_pan.Dx * _parent.TrackpadScrollToScaleFactor.Dx)
+                        + (_pan.Dy * _parent.TrackpadScrollToScaleFactor.Dy));
                 }
 
                 return _scale;
@@ -760,9 +760,9 @@ public class ScaleGestureRecognizer : OneSequenceGestureRecognizer
     private sealed class LineBetweenPointers
     {
         public LineBetweenPointers(
-            Point pointerStartLocation = default,
+            Offset pointerStartLocation = default,
             int pointerStartId = 0,
-            Point pointerEndLocation = default,
+            Offset pointerEndLocation = default,
             int pointerEndId = 1)
         {
             if (pointerStartId == pointerEndId)
@@ -779,13 +779,13 @@ public class ScaleGestureRecognizer : OneSequenceGestureRecognizer
         }
 
         /// <summary>Where the pointer that marks the start of the line is.</summary>
-        public Point PointerStartLocation { get; }
+        public Offset PointerStartLocation { get; }
 
         /// <summary>The id of the pointer that marks the start of the line.</summary>
         public int PointerStartId { get; }
 
         /// <summary>Where the pointer that marks the end of the line is.</summary>
-        public Point PointerEndLocation { get; }
+        public Offset PointerEndLocation { get; }
 
         /// <summary>The id of the pointer that marks the end of the line.</summary>
         public int PointerEndId { get; }

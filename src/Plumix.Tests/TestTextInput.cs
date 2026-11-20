@@ -200,10 +200,10 @@ internal sealed class TestTextInput : IDisposable
     }
 
     /// <summary>Simulates a scribble interaction focusing an element.</summary>
-    public void ScribbleFocusElement(string elementIdentifier, Point offset)
+    public void ScribbleFocusElement(string elementIdentifier, Offset offset)
     {
         System.Diagnostics.Debug.Assert(IsRegistered);
-        Send("TextInputClient.focusElement", new List<object?> { elementIdentifier, offset.X, offset.Y });
+        Send("TextInputClient.focusElement", new List<object?> { elementIdentifier, offset.Dx, offset.Dy });
     }
 
     /// <summary>Simulates iOS asking for the list of scribble elements during UIIndirectScribbleInteraction.

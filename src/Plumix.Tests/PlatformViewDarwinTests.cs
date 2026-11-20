@@ -201,7 +201,7 @@ public sealed class PlatformViewDarwinTests : IDisposable
 
         Assert.Equal(0, viewsController.GesturesAccepted[currentViewId + 1]);
 
-        TestGesture gesture = _tester.StartGesture(new Point(50.0, 50.0), PointerDeviceKind.Touch);
+        TestGesture gesture = _tester.StartGesture(new Offset(50.0, 50.0), PointerDeviceKind.Touch);
         gesture.Up();
 
         Assert.Equal(1, viewsController.GesturesAccepted[currentViewId + 1]);
@@ -227,7 +227,7 @@ public sealed class PlatformViewDarwinTests : IDisposable
         // is not yet in the tree.
         _tester.Pump();
 
-        TestGesture gesture = _tester.StartGesture(new Point(50.0, 50.0), PointerDeviceKind.Touch);
+        TestGesture gesture = _tester.StartGesture(new Offset(50.0, 50.0), PointerDeviceKind.Touch);
         gesture.Up();
 
         Assert.Equal(expectedAccepted, viewsController.GesturesAccepted[currentViewId + 1]);
@@ -253,8 +253,8 @@ public sealed class PlatformViewDarwinTests : IDisposable
         // is not yet in the tree.
         _tester.Pump();
 
-        TestGesture gesture = _tester.StartGesture(new Point(50.0, 50.0), PointerDeviceKind.Touch);
-        gesture.MoveBy(new Vector(0.0, 100.0));
+        TestGesture gesture = _tester.StartGesture(new Offset(50.0, 50.0), PointerDeviceKind.Touch);
+        gesture.MoveBy(new Offset(0.0, 100.0));
         gesture.Up();
 
         Assert.True(verticalDragAcceptedByParent);
@@ -283,8 +283,8 @@ public sealed class PlatformViewDarwinTests : IDisposable
         // is not yet in the tree.
         _tester.Pump();
 
-        TestGesture gesture = _tester.StartGesture(new Point(50.0, 50.0), PointerDeviceKind.Touch);
-        gesture.MoveBy(new Vector(0.0, 100.0));
+        TestGesture gesture = _tester.StartGesture(new Offset(50.0, 50.0), PointerDeviceKind.Touch);
+        gesture.MoveBy(new Offset(0.0, 100.0));
         gesture.Up();
 
         Assert.False(gestureAcceptedByParent);
@@ -312,7 +312,7 @@ public sealed class PlatformViewDarwinTests : IDisposable
         // is not yet in the tree.
         _tester.Pump();
 
-        LongPressAt(_tester, new Point(50.0, 50.0));
+        LongPressAt(_tester, new Offset(50.0, 50.0));
 
         Assert.False(gestureAcceptedByParent);
         Assert.Equal(1, viewsController.GesturesAccepted[currentViewId + 1]);
@@ -340,7 +340,7 @@ public sealed class PlatformViewDarwinTests : IDisposable
         // is not yet in the tree.
         _tester.Pump();
 
-        TapAt(_tester, new Point(50.0, 50.0));
+        TapAt(_tester, new Offset(50.0, 50.0));
 
         Assert.False(verticalDragAcceptedByParent);
         Assert.Equal(1, viewsController.GesturesAccepted[currentViewId + 1]);
@@ -367,7 +367,7 @@ public sealed class PlatformViewDarwinTests : IDisposable
         // is not yet in the tree.
         _tester.Pump();
 
-        TestGesture gesture = _tester.StartGesture(new Point(50.0, 50.0), PointerDeviceKind.Touch);
+        TestGesture gesture = _tester.StartGesture(new Offset(50.0, 50.0), PointerDeviceKind.Touch);
         gesture.Up();
 
         Assert.False(verticalDragAcceptedByParent);
@@ -386,8 +386,8 @@ public sealed class PlatformViewDarwinTests : IDisposable
         // is not yet in the tree.
         _tester.Pump();
 
-        TestGesture gesture = _tester.StartGesture(new Point(50.0, 50.0), PointerDeviceKind.Touch);
-        gesture.MoveBy(new Vector(0.0, 100.0));
+        TestGesture gesture = _tester.StartGesture(new Offset(50.0, 50.0), PointerDeviceKind.Touch);
+        gesture.MoveBy(new Offset(0.0, 100.0));
 
         _tester.PumpWidget(TopLeft(200.0, 100.0, WebView()));
 
@@ -416,7 +416,7 @@ public sealed class PlatformViewDarwinTests : IDisposable
         // is not yet in the tree.
         _tester.Pump();
 
-        TestGesture gesture = _tester.StartGesture(new Point(50.0, 50.0), PointerDeviceKind.Touch);
+        TestGesture gesture = _tester.StartGesture(new Offset(50.0, 50.0), PointerDeviceKind.Touch);
 
         // Normally (without the eager gesture recognizer) after just the pointer down event no gesture
         // recognizer will win the arena (so no motion events will be dispatched to the Android view).
@@ -448,7 +448,7 @@ public sealed class PlatformViewDarwinTests : IDisposable
         // is not yet in the tree.
         _tester.Pump();
 
-        TestGesture gesture = _tester.StartGesture(new Point(50.0, 50.0), PointerDeviceKind.Touch);
+        TestGesture gesture = _tester.StartGesture(new Offset(50.0, 50.0), PointerDeviceKind.Touch);
         gesture.Up();
 
         Assert.Equal(1, viewsController.GesturesRejected[currentViewId + 1]);
@@ -474,10 +474,10 @@ public sealed class PlatformViewDarwinTests : IDisposable
                 children:
                 [
                     Transform.Translate(
-                        offset: new Point(0, 100),
+                        offset: new Offset(0, 100),
                         child: new SizedBox(width: 300, height: 500, child: WebView())),
                     Transform.Translate(
-                        offset: new Point(0, 500),
+                        offset: new Offset(0, 500),
                         child: new Container(
                             color: Color.FromARGB(255, 255, 255, 255),
                             width: 300,
@@ -488,7 +488,7 @@ public sealed class PlatformViewDarwinTests : IDisposable
         // is not yet in the tree.
         _tester.Pump();
 
-        TestGesture gesture = _tester.StartGesture(new Point(150, 550), PointerDeviceKind.Touch);
+        TestGesture gesture = _tester.StartGesture(new Offset(150, 550), PointerDeviceKind.Touch);
         gesture.Up();
 
         Assert.Equal(1, viewsController.GesturesRejected[currentViewId + 1]);

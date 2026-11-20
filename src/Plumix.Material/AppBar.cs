@@ -32,9 +32,9 @@ internal sealed class ToolbarContainerLayout : SingleChildLayoutDelegate
         return new Size(constraints.MaxWidth, ToolbarHeight);
     }
 
-    public override Point GetPositionForChild(Size size, Size childSize)
+    public override Offset GetPositionForChild(Size size, Size childSize)
     {
-        return new Point(0.0, size.Height - childSize.Height);
+        return new Offset(0.0, size.Height - childSize.Height);
     }
 
     public override bool ShouldRelayout(SingleChildLayoutDelegate oldDelegate)

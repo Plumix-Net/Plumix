@@ -164,7 +164,7 @@ public sealed class ContextMenuControllerTests : IDisposable
         Assert.Equal(19, inheritedFontSize);
         RenderParagraph paragraph = harness.FindText("menu")!;
         Assert.Equal(new Size(120, 25), paragraph.Size);
-        Assert.Equal(new Point(30, 40), paragraph.GetPaintOffsetToRoot());
+        Assert.Equal(new Offset(30, 40), paragraph.GetPaintOffsetToRoot());
         OverlayEntry entry = harness.Overlay.Entries.Last();
         Assert.False(entry.Opaque);
         Assert.False(entry.MaintainState);
@@ -199,9 +199,9 @@ public sealed class ContextMenuControllerTests : IDisposable
         Assert.Equal(entries, navigator.Overlay.Entries.Count);
         DateTime time = DateTime.UtcNow;
         GestureBinding.Instance.HandlePointerEvent(harness.View, new PointerDownEvent(
-            1, PointerDeviceKind.Mouse, new Point(10, 10), PointerButtons.Primary, time));
+            1, PointerDeviceKind.Mouse, new Offset(10, 10), PointerButtons.Primary, time));
         GestureBinding.Instance.HandlePointerEvent(harness.View, new PointerUpEvent(
-            1, PointerDeviceKind.Mouse, new Point(10, 10), PointerButtons.None, time.AddMilliseconds(10)));
+            1, PointerDeviceKind.Mouse, new Offset(10, 10), PointerButtons.None, time.AddMilliseconds(10)));
         Assert.Equal(1, taps);
         Assert.True(controller.IsShown);
     }

@@ -30,11 +30,11 @@ public class CupertinoTextSelectionControls : TextSelectionControls
         BuildContext context,
         Rect globalEditableRegion,
         double textLineHeight,
-        Point selectionMidpoint,
+        Offset selectionMidpoint,
         IReadOnlyList<TextSelectionPoint> endpoints,
         ITextSelectionDelegate @delegate,
         IValueListenable<ClipboardStatus>? clipboardStatus,
-        Point? lastSecondaryTapDownPosition)
+        Offset? lastSecondaryTapDownPosition)
     {
         return new CupertinoTextSelectionControlsToolbar(
             clipboardStatus: clipboardStatus,
@@ -80,16 +80,16 @@ public class CupertinoTextSelectionControls : TextSelectionControls
         return new Plumix.Widgets.Transform(transform, child: handle);
     }
 
-    public override Point GetHandleAnchor(TextSelectionHandleType type, double textLineHeight)
+    public override Offset GetHandleAnchor(TextSelectionHandleType type, double textLineHeight)
     {
         Size handleSize = GetHandleSize(textLineHeight);
         return type switch
         {
-            TextSelectionHandleType.Left => new Point(handleSize.Width / 2.0, handleSize.Height),
-            TextSelectionHandleType.Right => new Point(
+            TextSelectionHandleType.Left => new Offset(handleSize.Width / 2.0, handleSize.Height),
+            TextSelectionHandleType.Right => new Offset(
                 handleSize.Width / 2.0,
                 handleSize.Height - 2.0 * SelectionHandleRadius + SelectionHandleOverlap),
-            _ => new Point(
+            _ => new Offset(
                 handleSize.Width / 2.0,
                 textLineHeight + (handleSize.Height - textLineHeight) / 2.0),
         };
@@ -108,11 +108,11 @@ public sealed class CupertinoTextSelectionHandleControls
         BuildContext context,
         Rect globalEditableRegion,
         double textLineHeight,
-        Point selectionMidpoint,
+        Offset selectionMidpoint,
         IReadOnlyList<TextSelectionPoint> endpoints,
         ITextSelectionDelegate @delegate,
         IValueListenable<ClipboardStatus>? clipboardStatus,
-        Point? lastSecondaryTapDownPosition)
+        Offset? lastSecondaryTapDownPosition)
     {
         return new SizedBox();
     }
@@ -168,8 +168,8 @@ internal sealed class CupertinoTextSelectionHandlePainter : CustomPainter
     {
         const double halfStrokeWidth = 1.0;
         double radius = CupertinoTextSelectionControls.SelectionHandleRadius;
-        var circle = new EllipseGeometry(new Rect(0.0, 0.0, radius * 2.0, radius * 2.0));
-        var line = new RectangleGeometry(new Rect(
+        var circle = new EllipseGeometry(DartGeometry.RectFromLTWH(0.0, 0.0, radius * 2.0, radius * 2.0));
+        var line = new RectangleGeometry(DartGeometry.RectFromLTWH(
             radius - halfStrokeWidth,
             radius * 2.0 - CupertinoTextSelectionControls.SelectionHandleOverlap,
             halfStrokeWidth * 2.0,
@@ -195,7 +195,7 @@ internal sealed class CupertinoTextSelectionControlsToolbar : StatefulWidget
         Action? handleCut,
         Action? handlePaste,
         Action? handleSelectAll,
-        Point selectionMidpoint,
+        Offset selectionMidpoint,
         double textLineHeight,
         Key? key = null) : base(key)
     {
@@ -224,7 +224,7 @@ internal sealed class CupertinoTextSelectionControlsToolbar : StatefulWidget
 
     internal Action? HandleSelectAll { get; }
 
-    internal Point SelectionMidpoint { get; }
+    internal Offset SelectionMidpoint { get; }
 
     internal double TextLineHeight { get; }
 
@@ -274,15 +274,15 @@ internal sealed class CupertinoTextSelectionControlsToolbar : StatefulWidget
                                 - mediaQuery.Padding.Right
                                 - CupertinoTextSelectionControls.ArrowScreenPadding;
             double anchorX = Math.Clamp(
-                widget.SelectionMidpoint.X + widget.GlobalEditableRegion.Left,
+                widget.SelectionMidpoint.Dx + widget.GlobalEditableRegion.Left,
                 leftLimit,
                 Math.Max(leftLimit, rightLimit));
-            double topAmountInEditableRegion = widget.Endpoints[0].Point.Y - widget.TextLineHeight;
+            double topAmountInEditableRegion = widget.Endpoints[0].Point.Dy - widget.TextLineHeight;
             double anchorTop = Math.Max(topAmountInEditableRegion, 0.0) + widget.GlobalEditableRegion.Top;
-            Point anchorAbove = new(anchorX, anchorTop);
-            Point anchorBelow = new(
+            Offset anchorAbove = new(anchorX, anchorTop);
+            Offset anchorBelow = new(
                 anchorX,
-                widget.Endpoints[^1].Point.Y + widget.GlobalEditableRegion.Top);
+                widget.Endpoints[^1].Point.Dy + widget.GlobalEditableRegion.Top);
 
             CupertinoLocalizations localizations = CupertinoLocalizations.Of(context);
             var items = new List<Widget>();

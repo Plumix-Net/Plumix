@@ -13,8 +13,8 @@ namespace Plumix.Cupertino;
 /// <summary>Builds the toolbar surface (background, shape and shadow) around its children.</summary>
 public delegate Widget CupertinoToolbarBuilder(
     BuildContext context,
-    Point anchorAbove,
-    Point anchorBelow,
+    Offset anchorAbove,
+    Offset anchorBelow,
     Widget child);
 
 /// <summary>An iOS-style text-selection toolbar with horizontal overflow pages.</summary>
@@ -56,8 +56,8 @@ public sealed class CupertinoTextSelectionToolbar : StatelessWidget
     internal static readonly TimeSpan ToolbarTransitionDuration = TimeSpan.FromMilliseconds(125);
 
     public CupertinoTextSelectionToolbar(
-        Point anchorAbove,
-        Point anchorBelow,
+        Offset anchorAbove,
+        Offset anchorBelow,
         IReadOnlyList<Widget> children,
         CupertinoToolbarBuilder? toolbarBuilder = null,
         Key? key = null) : base(key)
@@ -75,10 +75,10 @@ public sealed class CupertinoTextSelectionToolbar : StatelessWidget
     }
 
     /// <summary>The focal point above the selection that the toolbar attaches to.</summary>
-    public Point AnchorAbove { get; }
+    public Offset AnchorAbove { get; }
 
     /// <summary>The focal point below the selection that the toolbar attaches to.</summary>
-    public Point AnchorBelow { get; }
+    public Offset AnchorBelow { get; }
 
     /// <summary>The children of the toolbar, typically buttons.</summary>
     public IReadOnlyList<Widget> Children { get; }
@@ -90,8 +90,8 @@ public sealed class CupertinoTextSelectionToolbar : StatelessWidget
     // rounded cutout with an arrow.
     private static Widget DefaultToolbarBuilder(
         BuildContext context,
-        Point anchorAbove,
-        Point anchorBelow,
+        Offset anchorAbove,
+        Offset anchorBelow,
         Widget child)
     {
         return new CupertinoTextSelectionToolbarShape(
@@ -110,12 +110,12 @@ public sealed class CupertinoTextSelectionToolbar : StatelessWidget
         double leftMargin = ArrowScreenPadding + mediaQueryPadding.Left;
         double rightMargin = MediaQuery.WidthOf(context) - mediaQueryPadding.Right - ArrowScreenPadding;
 
-        var anchorAboveAdjusted = new Point(
-            Math.Clamp(AnchorAbove.X, leftMargin, Math.Max(leftMargin, rightMargin)),
-            AnchorAbove.Y - ToolbarContentDistance - paddingAbove);
-        var anchorBelowAdjusted = new Point(
-            Math.Clamp(AnchorBelow.X, leftMargin, Math.Max(leftMargin, rightMargin)),
-            AnchorBelow.Y + ToolbarContentDistance - paddingAbove);
+        var anchorAboveAdjusted = new Offset(
+            Math.Clamp(AnchorAbove.Dx, leftMargin, Math.Max(leftMargin, rightMargin)),
+            AnchorAbove.Dy - ToolbarContentDistance - paddingAbove);
+        var anchorBelowAdjusted = new Offset(
+            Math.Clamp(AnchorBelow.Dx, leftMargin, Math.Max(leftMargin, rightMargin)),
+            AnchorBelow.Dy + ToolbarContentDistance - paddingAbove);
 
         return new Padding(
             EdgeInsets.FromLTRB(
@@ -137,8 +137,8 @@ public sealed class CupertinoTextSelectionToolbar : StatelessWidget
 internal sealed class CupertinoTextSelectionToolbarContent : StatefulWidget
 {
     public CupertinoTextSelectionToolbarContent(
-        Point anchorAbove,
-        Point anchorBelow,
+        Offset anchorAbove,
+        Offset anchorBelow,
         IReadOnlyList<Widget> children,
         CupertinoToolbarBuilder toolbarBuilder,
         Key? key = null) : base(key)
@@ -149,9 +149,9 @@ internal sealed class CupertinoTextSelectionToolbarContent : StatefulWidget
         ToolbarBuilder = toolbarBuilder;
     }
 
-    public Point AnchorAbove { get; }
+    public Offset AnchorAbove { get; }
 
-    public Point AnchorBelow { get; }
+    public Offset AnchorBelow { get; }
 
     public IReadOnlyList<Widget> Children { get; }
 
@@ -317,8 +317,8 @@ internal sealed class CupertinoTextSelectionToolbarContent : StatefulWidget
 internal sealed class CupertinoTextSelectionToolbarShape : SingleChildRenderObjectWidget
 {
     public CupertinoTextSelectionToolbarShape(
-        Point anchorAbove,
-        Point anchorBelow,
+        Offset anchorAbove,
+        Offset anchorBelow,
         Color? shadowColor,
         Widget? child = null,
         Key? key = null) : base(child, key)
@@ -328,9 +328,9 @@ internal sealed class CupertinoTextSelectionToolbarShape : SingleChildRenderObje
         ShadowColor = shadowColor;
     }
 
-    public Point AnchorAbove { get; }
+    public Offset AnchorAbove { get; }
 
-    public Point AnchorBelow { get; }
+    public Offset AnchorBelow { get; }
 
     public Color? ShadowColor { get; }
 
@@ -354,13 +354,13 @@ internal sealed class CupertinoTextSelectionToolbarShape : SingleChildRenderObje
 /// </summary>
 internal sealed class RenderCupertinoTextSelectionToolbarShape : RenderShiftedBox
 {
-    private Point _anchorAbove;
-    private Point _anchorBelow;
+    private Offset _anchorAbove;
+    private Offset _anchorBelow;
     private Color? _shadowColor;
 
     public RenderCupertinoTextSelectionToolbarShape(
-        Point anchorAbove,
-        Point anchorBelow,
+        Offset anchorAbove,
+        Offset anchorBelow,
         Color? shadowColor,
         RenderBox? child = null) : base(child)
     {
@@ -382,7 +382,7 @@ internal sealed class RenderCupertinoTextSelectionToolbarShape : RenderShiftedBo
         base.Dispose();
     }
 
-    public Point AnchorAbove
+    public Offset AnchorAbove
     {
         get => _anchorAbove;
         set
@@ -397,7 +397,7 @@ internal sealed class RenderCupertinoTextSelectionToolbarShape : RenderShiftedBo
         }
     }
 
-    public Point AnchorBelow
+    public Offset AnchorBelow
     {
         get => _anchorBelow;
         set
@@ -451,7 +451,7 @@ internal sealed class RenderCupertinoTextSelectionToolbarShape : RenderShiftedBo
         double? result = Child.GetDryBaseline(enforcedConstraint, baseline);
         return result is null
             ? null
-            : result + ComputeChildOffset(Child.GetDryLayout(enforcedConstraint)).Y;
+            : result + ComputeChildOffset(Child.GetDryLayout(enforcedConstraint)).Dy;
     }
 
     protected override void PerformLayout()
@@ -473,7 +473,7 @@ internal sealed class RenderCupertinoTextSelectionToolbarShape : RenderShiftedBo
             Child.Size.Height - CupertinoTextSelectionToolbar.ToolbarArrowSize.Height);
     }
 
-    public override void Paint(PaintingContext context, Point offset)
+    public override void Paint(PaintingContext context, Offset offset)
     {
         if (Child is null)
         {
@@ -494,21 +494,21 @@ internal sealed class RenderCupertinoTextSelectionToolbarShape : RenderShiftedBo
                     rrect.Right,
                     rrect.Bottom + CupertinoTextSelectionToolbar.ToolbarArrowSize.Height,
                     CupertinoTextSelectionToolbar.ToolbarBorderRadius)
-                .Shift(offset + (Vector)childParentData.offset + (Vector)boxShadow.Offset);
+                .Shift(offset + (Offset)childParentData.offset + (Offset)boxShadow.Offset);
             context.Canvas.DrawRRect(shadowRRect, boxShadow.ToPaint());
         }
 
-        Point childOffset = offset + (Vector)childParentData.offset;
+        Offset childOffset = offset + (Offset)childParentData.offset;
         _clipPathLayer.Layer = context.PushClipPath(
             NeedsCompositing,
             childOffset,
-            new Rect(Child.Size),
+            DartGeometry.RectFromSize(Child.Size),
             clipPath,
             (childContext, clippedOffset) => childContext.PaintChild(Child, clippedOffset),
             oldLayer: _clipPathLayer.Layer);
     }
 
-    protected override bool HitTestChildren(BoxHitTestResult result, Point position)
+    protected override bool HitTestChildren(BoxHitTestResult result, Offset position)
     {
         if (Child is null)
         {
@@ -517,9 +517,9 @@ internal sealed class RenderCupertinoTextSelectionToolbarShape : RenderShiftedBo
 
         // Positions outside of the clipped area of the child are not counted as hits.
         var childParentData = (BoxParentData)Child.parentData!;
-        var hitBox = new Rect(
-            childParentData.offset.X,
-            childParentData.offset.Y + CupertinoTextSelectionToolbar.ToolbarArrowSize.Height,
+        var hitBox = DartGeometry.RectFromLTWH(
+            childParentData.offset.Dx,
+            childParentData.offset.Dy + CupertinoTextSelectionToolbar.ToolbarArrowSize.Height,
             Child.Size.Width,
             Child.Size.Height - (CupertinoTextSelectionToolbar.ToolbarArrowSize.Height * 2.0));
         if (!hitBox.Contains(position))
@@ -532,7 +532,7 @@ internal sealed class RenderCupertinoTextSelectionToolbarShape : RenderShiftedBo
 
     /// <inheritdoc />
     /// <remarks>Flutter's <c>_RenderCupertinoTextSelectionToolbarShape.debugPaintSize</c>.</remarks>
-    protected internal override void DebugPaintSize(PaintingContext context, Point offset)
+    protected internal override void DebugPaintSize(PaintingContext context, Offset offset)
     {
         ArgumentNullException.ThrowIfNull(context);
         if (Child is null)
@@ -558,7 +558,7 @@ internal sealed class RenderCupertinoTextSelectionToolbarShape : RenderShiftedBo
 
         var childParentData = (BoxParentData)Child.parentData!;
         Plumix.UI.Path clipPath = ClipPath(Child, ShapeRRect(Child));
-        Point shift = offset + childParentData.offset;
+        Offset shift = offset + childParentData.offset;
         context.Canvas.DrawGeometry(
             null,
             debugPaint,
@@ -572,7 +572,7 @@ internal sealed class RenderCupertinoTextSelectionToolbarShape : RenderShiftedBo
     /// <summary>Dart's `_shapeRRect`: the rounded body of the toolbar, in child coordinates.</summary>
     internal Plumix.UI.RRect ShapeRRect(RenderBox child)
     {
-        var rect = new Rect(
+        var rect = DartGeometry.RectFromLTWH(
             0.0,
             CupertinoTextSelectionToolbar.ToolbarArrowSize.Height,
             child.Size.Width,
@@ -596,11 +596,11 @@ internal sealed class RenderCupertinoTextSelectionToolbarShape : RenderShiftedBo
         }
 
         bool isAbove = IsAbove(child.Size.Height);
-        Point localAnchor = GlobalToLocal(isAbove ? _anchorAbove : _anchorBelow);
+        Offset localAnchor = GlobalToLocal(isAbove ? _anchorAbove : _anchorBelow);
         double lowerBound = CupertinoTextSelectionToolbar.ToolbarBorderRadius.X + (arrowWidth / 2.0);
         double upperBound = Size.Width - (arrowWidth / 2.0)
             - CupertinoTextSelectionToolbar.ToolbarBorderRadius.X;
-        double arrowTipX = Math.Clamp(localAnchor.X, lowerBound, Math.Max(lowerBound, upperBound));
+        double arrowTipX = Math.Clamp(localAnchor.Dx, lowerBound, Math.Max(lowerBound, upperBound));
 
         if (isAbove)
         {
@@ -632,7 +632,7 @@ internal sealed class RenderCupertinoTextSelectionToolbarShape : RenderShiftedBo
     {
         const double halfPi = Math.PI / 2.0;
         Rect outerRect = rrect.Rect;
-        (Point Vertex, Radius CenterOffset)[] corners =
+        (Offset Vertex, Radius CenterOffset)[] corners =
         [
             (outerRect.BottomRight, new Radius(-rrect.BottomRight.X, -rrect.BottomRight.Y)),
             (outerRect.BottomLeft, new Radius(rrect.BottomLeft.X, -rrect.BottomLeft.Y)),
@@ -643,10 +643,10 @@ internal sealed class RenderCupertinoTextSelectionToolbarShape : RenderShiftedBo
         int startQuadrantIndex = (int)(startAngle / halfPi);
         for (int index = startQuadrantIndex; index < 4 + startQuadrantIndex; index++)
         {
-            (Point vertex, Radius centerOffset) = corners[((index % 4) + 4) % 4];
-            var otherVertex = new Point(
-                vertex.X + (2.0 * centerOffset.X),
-                vertex.Y + (2.0 * centerOffset.Y));
+            (Offset vertex, Radius centerOffset) = corners[((index % 4) + 4) % 4];
+            var otherVertex = new Offset(
+                vertex.Dx + (2.0 * centerOffset.X),
+                vertex.Dy + (2.0 * centerOffset.Y));
             Rect cornerRect = RectFromPoints(vertex, otherVertex);
             path.ArcTo(cornerRect, halfPi * index, halfPi, forceMoveTo: false);
         }
@@ -654,13 +654,13 @@ internal sealed class RenderCupertinoTextSelectionToolbarShape : RenderShiftedBo
         return path;
     }
 
-    private static Rect RectFromPoints(Point a, Point b)
+    private static Rect RectFromPoints(Offset a, Offset b)
     {
-        return new Rect(
-            Math.Min(a.X, b.X),
-            Math.Min(a.Y, b.Y),
-            Math.Abs(a.X - b.X),
-            Math.Abs(a.Y - b.Y));
+        return DartGeometry.RectFromLTWH(
+            Math.Min(a.Dx, b.Dx),
+            Math.Min(a.Dy, b.Dy),
+            Math.Abs(a.Dx - b.Dx),
+            Math.Abs(a.Dy - b.Dy));
     }
 
     private static BoxConstraints ConstraintsForChild(BoxConstraints constraints)
@@ -671,16 +671,16 @@ internal sealed class RenderCupertinoTextSelectionToolbarShape : RenderShiftedBo
             .Enforce(constraints.Loosen());
     }
 
-    private Point ComputeChildOffset(Size childSize)
+    private Offset ComputeChildOffset(Size childSize)
     {
-        return new Point(
+        return new Offset(
             0.0,
             IsAbove(childSize.Height) ? -CupertinoTextSelectionToolbar.ToolbarArrowSize.Height : 0.0);
     }
 
     private bool IsAbove(double childHeight)
     {
-        return _anchorAbove.Y >= childHeight - CupertinoTextSelectionToolbar.ToolbarArrowSize.Height;
+        return _anchorAbove.Dy >= childHeight - CupertinoTextSelectionToolbar.ToolbarArrowSize.Height;
     }
 }
 
@@ -1019,9 +1019,9 @@ internal sealed class RenderCupertinoTextSelectionToolbarItems : RenderBox,
 
     public void Remove(RenderBox child) => _container.Remove(child);
 
-    public void DefaultPaint(PaintingContext context, Point offset) => _container.DefaultPaint(context, offset);
+    public void DefaultPaint(PaintingContext context, Offset offset) => _container.DefaultPaint(context, offset);
 
-    public bool DefaultHitTestChildren(BoxHitTestResult result, Point position) =>
+    public bool DefaultHitTestChildren(BoxHitTestResult result, Offset position) =>
         _container.DefaultHitTestChildren(result, position);
 
     public override void SetupParentData(RenderObject child)
@@ -1142,7 +1142,7 @@ internal sealed class RenderCupertinoTextSelectionToolbarItems : RenderBox,
                     parentUsesSize: true);
             }
 
-            childParentData.offset = new Point(currentButtonPosition, 0.0);
+            childParentData.offset = new Offset(currentButtonPosition, 0.0);
             currentButtonPosition += child.Size.Width + DividerWidth;
             childParentData.ShouldPaint = currentPage == Page;
 
@@ -1167,14 +1167,14 @@ internal sealed class RenderCupertinoTextSelectionToolbarItems : RenderBox,
             // The forward button only shows when there's a page after this one.
             if (Page != currentPage)
             {
-                nextButtonParentData.offset = new Point(toolbarWidth, 0.0);
+                nextButtonParentData.offset = new Offset(toolbarWidth, 0.0);
                 nextButtonParentData.ShouldPaint = true;
                 toolbarWidth += _nextButton.Size.Width;
             }
 
             if (Page > 0)
             {
-                backButtonParentData.offset = new Point(0.0, 0.0);
+                backButtonParentData.offset = new Offset(0.0, 0.0);
                 backButtonParentData.ShouldPaint = true;
 
                 // No need to add the width of the back button to toolbarWidth here. It's already
@@ -1193,7 +1193,7 @@ internal sealed class RenderCupertinoTextSelectionToolbarItems : RenderBox,
         Size = Constraints.Constrain(new Size(toolbarWidth, greatestHeight));
     }
 
-    public override void Paint(PaintingContext context, Point offset)
+    public override void Paint(PaintingContext context, Offset offset)
     {
         VisitChildren(renderObjectChild =>
         {
@@ -1204,7 +1204,7 @@ internal sealed class RenderCupertinoTextSelectionToolbarItems : RenderBox,
                 return;
             }
 
-            Point childOffset = offset + (Vector)childParentData.offset;
+            Offset childOffset = offset + (Offset)childParentData.offset;
             context.PaintChild(child, childOffset);
 
             if (childParentData.nextSibling is null && !ReferenceEquals(child, _backButton))
@@ -1213,13 +1213,13 @@ internal sealed class RenderCupertinoTextSelectionToolbarItems : RenderBox,
             }
 
             context.Canvas.DrawLine(
-                new Point(childOffset.X + child.Size.Width, childOffset.Y),
-                new Point(childOffset.X + child.Size.Width, childOffset.Y + child.Size.Height),
+                new Offset(childOffset.Dx + child.Size.Width, childOffset.Dy),
+                new Offset(childOffset.Dx + child.Size.Width, childOffset.Dy + child.Size.Height),
                 new Paint { Color = DividerColor });
         });
     }
 
-    protected override bool HitTestChildren(BoxHitTestResult result, Point position)
+    protected override bool HitTestChildren(BoxHitTestResult result, Offset position)
     {
         // Hit test list children.
         RenderBox? child = LastChild;
@@ -1244,7 +1244,7 @@ internal sealed class RenderCupertinoTextSelectionToolbarItems : RenderBox,
         return HitTestChild(_backButton, result, position) || HitTestChild(_nextButton, result, position);
     }
 
-    private static bool HitTestChild(RenderBox? child, BoxHitTestResult result, Point position)
+    private static bool HitTestChild(RenderBox? child, BoxHitTestResult result, Offset position)
     {
         if (child is null)
         {
@@ -1324,7 +1324,7 @@ internal abstract class CupertinoChevronPainter : CustomPainter
     public bool IsLeft { get; }
 
     /// <summary>The three points of the chevron glyph, for a square of the given size.</summary>
-    internal (Point First, Point Middle, Point Lower) ChevronPoints(Size size)
+    internal (Offset First, Offset Middle, Offset Lower) ChevronPoints(Size size)
     {
         if (size.Height != size.Width)
         {
@@ -1335,17 +1335,17 @@ internal abstract class CupertinoChevronPainter : CustomPainter
 
         // The chevron is half of a square rotated 45º, so it needs to be shifted so that it does not
         // appear off center.
-        var centerOffset = new Vector(iconSize / 4.0 * (IsLeft ? 1.0 : -1.0), 0.0);
+        var centerOffset = new Offset(iconSize / 4.0 * (IsLeft ? 1.0 : -1.0), 0.0);
 
         return (
-            new Point(iconSize / 2.0, 0.0) + centerOffset,
-            new Point(IsLeft ? 0.0 : iconSize, iconSize / 2.0) + centerOffset,
-            new Point(iconSize / 2.0, iconSize) + centerOffset);
+            new Offset(iconSize / 2.0, 0.0) + centerOffset,
+            new Offset(IsLeft ? 0.0 : iconSize, iconSize / 2.0) + centerOffset,
+            new Offset(iconSize / 2.0, iconSize) + centerOffset);
     }
 
     public override void Paint(PaintingContext context, Size size)
     {
-        (Point firstPoint, Point middlePoint, Point lowerPoint) = ChevronPoints(size);
+        (Offset firstPoint, Offset middlePoint, Offset lowerPoint) = ChevronPoints(size);
 
         var pen = new Pen(
             new SolidColorBrush(Color),

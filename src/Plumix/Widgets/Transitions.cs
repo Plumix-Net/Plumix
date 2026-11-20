@@ -102,7 +102,7 @@ public sealed class AnimatedBuilder : ListenableBuilder
 public sealed class SlideTransition : AnimatedWidget
 {
     public SlideTransition(
-        Animation<Vector> position,
+        Animation<Offset> position,
         bool transformHitTests = true,
         TextDirection? textDirection = null,
         Widget? child = null,
@@ -113,7 +113,7 @@ public sealed class SlideTransition : AnimatedWidget
         Child = child;
     }
 
-    public Animation<Vector> Position => (Animation<Vector>)Listenable;
+    public Animation<Offset> Position => (Animation<Offset>)Listenable;
 
     public bool TransformHitTests { get; }
 
@@ -123,14 +123,14 @@ public sealed class SlideTransition : AnimatedWidget
 
     public override Widget Build(BuildContext context)
     {
-        Vector offset = Position.Value;
+        Offset offset = Position.Value;
         if (TextDirection == Plumix.UI.TextDirection.Rtl)
         {
-            offset = new Vector(-offset.X, offset.Y);
+            offset = new Offset(-offset.Dx, offset.Dy);
         }
 
         return new FractionalTranslation(
-            translation: new Point(offset.X, offset.Y),
+            translation: new Offset(offset.Dx, offset.Dy),
             transformHitTests: TransformHitTests,
             child: Child);
     }

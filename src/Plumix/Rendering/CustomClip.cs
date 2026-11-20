@@ -37,7 +37,7 @@ public abstract class CustomClipper<T> : IListenable
     /// <summary>
     /// Returns an approximation of the clip returned by <see cref="GetClip"/>, as an axis-aligned Rect.
     /// </summary>
-    public virtual Rect GetApproximateClipRect(Size size) => new(new Point(0, 0), size);
+    public virtual Rect GetApproximateClipRect(Size size) => DartGeometry.RectFromOffsetAndSize(new Offset(0, 0), size);
 
     /// <summary>Whether a new instance of the clipper represents different information than the old one.</summary>
     public abstract bool ShouldReclip(CustomClipper<T> oldClipper);
@@ -65,7 +65,7 @@ public class ShapeBorderClipper : CustomClipper<Path>
     /// <summary>Returns the outer path of <see cref="Shape"/> as the clip.</summary>
     public override Path GetClip(Size size)
     {
-        return Shape.GetOuterPath(new Rect(new Point(0, 0), size), TextDirection);
+        return Shape.GetOuterPath(DartGeometry.RectFromOffsetAndSize(new Offset(0, 0), size), TextDirection);
     }
 
     /// <inheritdoc />
@@ -214,7 +214,7 @@ public abstract class RenderCustomClip<T> : RenderProxyBox
             case Clip.AntiAlias:
             case Clip.AntiAliasWithSaveLayer:
             default:
-                return _clipper?.GetApproximateClipRect(Size) ?? new Rect(new Point(0, 0), Size);
+                return _clipper?.GetApproximateClipRect(Size) ?? DartGeometry.RectFromOffsetAndSize(new Offset(0, 0), Size);
         }
     }
 
@@ -225,7 +225,7 @@ public abstract class RenderCustomClip<T> : RenderProxyBox
     private protected TextPainter? _debugText;
 
     /// <inheritdoc />
-    protected internal override void DebugPaintSize(PaintingContext context, Point offset)
+    protected internal override void DebugPaintSize(PaintingContext context, Offset offset)
     {
         if (Constants.KDebugMode)
         {
@@ -279,10 +279,10 @@ public class RenderClipRect : RenderCustomClip<Rect>
     {
     }
 
-    private protected override Rect DefaultClip => new(new Point(0, 0), Size);
+    private protected override Rect DefaultClip => DartGeometry.RectFromOffsetAndSize(new Offset(0, 0), Size);
 
     /// <inheritdoc />
-    public override bool HitTest(BoxHitTestResult result, Point position)
+    public override bool HitTest(BoxHitTestResult result, Offset position)
     {
         if (Clipper is not null)
         {
@@ -297,7 +297,7 @@ public class RenderClipRect : RenderCustomClip<Rect>
     }
 
     /// <inheritdoc />
-    public override void Paint(PaintingContext context, Point offset)
+    public override void Paint(PaintingContext context, Offset offset)
     {
         if (Child is not null)
         {
@@ -325,7 +325,7 @@ public class RenderClipRect : RenderCustomClip<Rect>
     }
 
     /// <inheritdoc />
-    protected internal override void DebugPaintSize(PaintingContext context, Point offset)
+    protected internal override void DebugPaintSize(PaintingContext context, Offset offset)
     {
         if (Constants.KDebugMode)
         {
@@ -334,10 +334,10 @@ public class RenderClipRect : RenderCustomClip<Rect>
                 base.DebugPaintSize(context, offset);
                 if (ClipBehavior != Clip.None)
                 {
-                    context.Canvas.DrawRectangle(null, _debugPaint, new Rect(_clip.Position + offset, _clip.Size));
+                    context.Canvas.DrawRectangle(null, _debugPaint, DartGeometry.RectFromOffsetAndSize(_clip.TopLeft + offset, _clip.Size));
                     _debugText!.Paint(
                         context.Canvas,
-                        offset + new Point(_clip.Width / 8.0, -DebugTextFontSize * 1.1));
+                        offset + new Offset(_clip.Width / 8.0, -DebugTextFontSize * 1.1));
                 }
             }
         }
@@ -399,10 +399,10 @@ public class RenderClipRRect : RenderCustomClip<RRect>
     }
 
     private protected override RRect DefaultClip =>
-        _borderRadius.Resolve(TextDirection).ToRRect(new Rect(new Point(0, 0), Size));
+        _borderRadius.Resolve(TextDirection).ToRRect(DartGeometry.RectFromOffsetAndSize(new Offset(0, 0), Size));
 
     /// <inheritdoc />
-    public override bool HitTest(BoxHitTestResult result, Point position)
+    public override bool HitTest(BoxHitTestResult result, Offset position)
     {
         if (Clipper is not null)
         {
@@ -417,7 +417,7 @@ public class RenderClipRRect : RenderCustomClip<RRect>
     }
 
     /// <inheritdoc />
-    public override void Paint(PaintingContext context, Point offset)
+    public override void Paint(PaintingContext context, Offset offset)
     {
         if (Child is not null)
         {
@@ -446,7 +446,7 @@ public class RenderClipRRect : RenderCustomClip<RRect>
     }
 
     /// <inheritdoc />
-    protected internal override void DebugPaintSize(PaintingContext context, Point offset)
+    protected internal override void DebugPaintSize(PaintingContext context, Offset offset)
     {
         if (Constants.KDebugMode)
         {
@@ -458,7 +458,7 @@ public class RenderClipRRect : RenderCustomClip<RRect>
                     context.Canvas.DrawRRect(_clip.Shift(offset), brush: null, pen: _debugPaint);
                     _debugText!.Paint(
                         context.Canvas,
-                        offset + new Point(_clip.TopLeft.X, -DebugTextFontSize * 1.1));
+                        offset + new Offset(_clip.TopLeft.X, -DebugTextFontSize * 1.1));
                 }
             }
         }
@@ -517,10 +517,10 @@ public class RenderClipRSuperellipse : RenderCustomClip<RSuperellipse>
     }
 
     private protected override RSuperellipse DefaultClip =>
-        _borderRadius.Resolve(TextDirection).ToRSuperellipse(new Rect(new Point(0, 0), Size));
+        _borderRadius.Resolve(TextDirection).ToRSuperellipse(DartGeometry.RectFromOffsetAndSize(new Offset(0, 0), Size));
 
     /// <inheritdoc />
-    public override bool HitTest(BoxHitTestResult result, Point position)
+    public override bool HitTest(BoxHitTestResult result, Offset position)
     {
         if (Clipper is not null)
         {
@@ -535,7 +535,7 @@ public class RenderClipRSuperellipse : RenderCustomClip<RSuperellipse>
     }
 
     /// <inheritdoc />
-    public override void Paint(PaintingContext context, Point offset)
+    public override void Paint(PaintingContext context, Offset offset)
     {
         if (Child is not null)
         {
@@ -564,7 +564,7 @@ public class RenderClipRSuperellipse : RenderCustomClip<RSuperellipse>
     }
 
     /// <inheritdoc />
-    protected internal override void DebugPaintSize(PaintingContext context, Point offset)
+    protected internal override void DebugPaintSize(PaintingContext context, Offset offset)
     {
         if (Constants.KDebugMode)
         {
@@ -576,7 +576,7 @@ public class RenderClipRSuperellipse : RenderCustomClip<RSuperellipse>
                     context.Canvas.DrawRSuperellipse(_clip.Shift(offset), brush: null, pen: _debugPaint);
                     _debugText!.Paint(
                         context.Canvas,
-                        offset + new Point(_clip.TopLeft.X, -DebugTextFontSize * 1.1));
+                        offset + new Offset(_clip.TopLeft.X, -DebugTextFontSize * 1.1));
                 }
             }
         }
@@ -609,19 +609,19 @@ public class RenderClipOval : RenderCustomClip<Rect>
         return _cachedPath;
     }
 
-    private protected override Rect DefaultClip => new(new Point(0, 0), Size);
+    private protected override Rect DefaultClip => DartGeometry.RectFromOffsetAndSize(new Offset(0, 0), Size);
 
     /// <inheritdoc />
-    public override bool HitTest(BoxHitTestResult result, Point position)
+    public override bool HitTest(BoxHitTestResult result, Offset position)
     {
         UpdateClip();
-        Point center = _clip.Center;
+        Offset center = _clip.Center;
         // convert the position to an offset from the center of the unit circle
-        var offset = new Point(
-            (position.X - center.X) / _clip.Width,
-            (position.Y - center.Y) / _clip.Height);
+        var offset = new Offset(
+            (position.Dx - center.Dx) / _clip.Width,
+            (position.Dy - center.Dy) / _clip.Height);
         // check if the point is outside the unit circle
-        if ((offset.X * offset.X) + (offset.Y * offset.Y) > 0.25)
+        if ((offset.Dx * offset.Dx) + (offset.Dy * offset.Dy) > 0.25)
         {
             // x^2 + y^2 > r^2
             return false;
@@ -631,7 +631,7 @@ public class RenderClipOval : RenderCustomClip<Rect>
     }
 
     /// <inheritdoc />
-    public override void Paint(PaintingContext context, Point offset)
+    public override void Paint(PaintingContext context, Offset offset)
     {
         if (Child is not null)
         {
@@ -660,7 +660,7 @@ public class RenderClipOval : RenderCustomClip<Rect>
     }
 
     /// <inheritdoc />
-    protected internal override void DebugPaintSize(PaintingContext context, Point offset)
+    protected internal override void DebugPaintSize(PaintingContext context, Offset offset)
     {
         if (Constants.KDebugMode)
         {
@@ -672,7 +672,7 @@ public class RenderClipOval : RenderCustomClip<Rect>
                     context.Canvas.DrawPath(GetClipPath(_clip).Shift(offset), brush: null, pen: _debugPaint);
                     _debugText!.Paint(
                         context.Canvas,
-                        offset + new Point((_clip.Width - _debugText.Width) / 2.0, -DebugTextFontSize * 1.1));
+                        offset + new Offset((_clip.Width - _debugText.Width) / 2.0, -DebugTextFontSize * 1.1));
                 }
             }
         }
@@ -695,13 +695,13 @@ public class RenderClipPath : RenderCustomClip<Path>
         get
         {
             var path = new Path();
-            path.AddRect(new Rect(new Point(0, 0), Size));
+            path.AddRect(DartGeometry.RectFromOffsetAndSize(new Offset(0, 0), Size));
             return path;
         }
     }
 
     /// <inheritdoc />
-    public override bool HitTest(BoxHitTestResult result, Point position)
+    public override bool HitTest(BoxHitTestResult result, Offset position)
     {
         if (Clipper is not null)
         {
@@ -716,7 +716,7 @@ public class RenderClipPath : RenderCustomClip<Path>
     }
 
     /// <inheritdoc />
-    public override void Paint(PaintingContext context, Point offset)
+    public override void Paint(PaintingContext context, Offset offset)
     {
         if (Child is not null)
         {
@@ -726,7 +726,7 @@ public class RenderClipPath : RenderCustomClip<Path>
                 Layer = context.PushClipPath(
                     NeedsCompositing,
                     offset,
-                    new Rect(new Point(0, 0), Size),
+                    DartGeometry.RectFromOffsetAndSize(new Offset(0, 0), Size),
                     _clip,
                     base.Paint,
                     clipBehavior: ClipBehavior,
@@ -745,7 +745,7 @@ public class RenderClipPath : RenderCustomClip<Path>
     }
 
     /// <inheritdoc />
-    protected internal override void DebugPaintSize(PaintingContext context, Point offset)
+    protected internal override void DebugPaintSize(PaintingContext context, Offset offset)
     {
         if (Constants.KDebugMode)
         {
@@ -778,7 +778,7 @@ internal sealed class DecorationClipper : CustomClipper<Path>
     public override Path GetClip(Size size)
     {
         return Decoration.GetClipPath(
-            new Rect(new Point(0, 0), size),
+            DartGeometry.RectFromOffsetAndSize(new Offset(0, 0), size),
             TextDirection ?? Plumix.UI.TextDirection.Ltr);
     }
 

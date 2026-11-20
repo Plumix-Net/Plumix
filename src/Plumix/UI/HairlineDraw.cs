@@ -7,12 +7,12 @@ using SkiaSharp;
 namespace Plumix.UI;
 
 // C#-only backend bridge: Skia's zero-width stroke remains one device pixel under every transform.
-internal sealed class HairlineDraw(Point start, Point end, Color color, bool isAntiAlias, StrokeCap cap)
+internal sealed class HairlineDraw(Offset start, Offset end, Color color, bool isAntiAlias, StrokeCap cap)
     : ICustomDrawOperation
 {
-    public Rect Bounds => new Rect(start, end).Inflate(1.0);
+    public Rect Bounds => DartGeometry.RectFromCorners(start, end).Inflate(1.0);
 
-    public bool HitTest(Point point) => false;
+    public bool HitTest(Offset point) => false;
 
     public bool Equals(ICustomDrawOperation? other) => ReferenceEquals(this, other);
 
@@ -38,6 +38,6 @@ internal sealed class HairlineDraw(Point start, Point end, Color color, bool isA
                 _ => SKStrokeCap.Butt,
             },
         };
-        lease.SkCanvas.DrawLine((float)start.X, (float)start.Y, (float)end.X, (float)end.Y, paint);
+        lease.SkCanvas.DrawLine((float)start.Dx, (float)start.Dy, (float)end.Dx, (float)end.Dy, paint);
     }
 }

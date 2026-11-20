@@ -118,17 +118,17 @@ internal sealed class FollowLeaderDemoDelegate : MultiChildLayoutDelegate
     public override void PerformLayout(Size size)
     {
         Size leaderSize = LayoutChild(DemoLayoutSlot.Leader, BoxConstraints.Loose(size));
-        PositionChild(DemoLayoutSlot.Leader, new Point(16, 18));
+        PositionChild(DemoLayoutSlot.Leader, new Offset(16, 18));
 
         LayoutChild(DemoLayoutSlot.Follower, BoxConstraints.Tight(leaderSize));
         PositionChild(
             DemoLayoutSlot.Follower,
-            new Point(size.Width - leaderSize.Width - 16, size.Height - leaderSize.Height - 18));
+            new Offset(size.Width - leaderSize.Width - 16, size.Height - leaderSize.Height - 18));
 
         Size captionSize = LayoutChild(DemoLayoutSlot.Caption, BoxConstraints.Loose(size));
         PositionChild(
             DemoLayoutSlot.Caption,
-            new Point(
+            new Offset(
                 (size.Width - captionSize.Width) / 2.0,
                 (size.Height - captionSize.Height) / 2.0));
     }

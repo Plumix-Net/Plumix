@@ -10,7 +10,7 @@ namespace Plumix.Rendering;
 /// Signature for hit testing at <paramref name="position"/> in the view identified by
 /// <paramref name="viewId"/>. Dart's `MouseTrackerHitTest`.
 /// </summary>
-public delegate HitTestResult MouseTrackerHitTest(Point position, int viewId);
+public delegate HitTestResult MouseTrackerHitTest(Offset position, int viewId);
 
 /// <summary>
 /// Tracks the relationship between mouse devices and annotated regions, and dispatches mouse
@@ -202,7 +202,7 @@ public sealed class MouseTracker : ChangeNotifier
     /// </summary>
     private List<KeyValuePair<IMouseTrackerAnnotation, Matrix4>> FindAnnotations(MouseState state)
     {
-        Point globalPosition = state.LatestEvent.Position;
+        Offset globalPosition = state.LatestEvent.Position;
         int device = state.Device;
         int viewId = state.LatestEvent.ViewId;
         return _mouseStates.ContainsKey(device)

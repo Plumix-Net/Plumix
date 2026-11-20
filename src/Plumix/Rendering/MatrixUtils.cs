@@ -16,7 +16,7 @@ public static class MatrixUtils
     /// The offset <paramref name="transform"/> applies, when it is a pure 2D translation.
     /// </summary>
     /// <returns><c>null</c> when the matrix does anything besides translate in x and y.</returns>
-    public static Point? GetAsTranslation(Matrix4 transform)
+    public static Offset? GetAsTranslation(Matrix4 transform)
     {
         double[] values = transform.Storage;
         if (values[0] == 1.0 && values[1] == 0.0 && values[2] == 0.0 && values[3] == 0.0
@@ -24,7 +24,7 @@ public static class MatrixUtils
             && values[8] == 0.0 && values[9] == 0.0 && values[10] == 1.0 && values[11] == 0.0
             && values[14] == 0.0 && values[15] == 1.0)
         {
-            return new Point(values[12], values[13]);
+            return new Offset(values[12], values[13]);
         }
 
         return null;
@@ -85,15 +85,15 @@ public static class MatrixUtils
     public static bool IsIdentity(Matrix4 a) => a.IsIdentity();
 
     /// <summary>Applies <paramref name="transform"/> to <paramref name="point"/>, assuming z is zero.</summary>
-    public static Point TransformPoint(Matrix4 transform, Point point)
+    public static Offset TransformPoint(Matrix4 transform, Offset point)
     {
         double[] values = transform.Storage;
-        double x = point.X;
-        double y = point.Y;
+        double x = point.Dx;
+        double y = point.Dy;
         double rx = (values[0] * x) + (values[4] * y) + values[12];
         double ry = (values[1] * x) + (values[5] * y) + values[13];
         double rw = (values[3] * x) + (values[7] * y) + values[15];
-        return rw == 1.0 ? new Point(rx, ry) : new Point(rx / rw, ry / rw);
+        return rw == 1.0 ? new Offset(rx, ry) : new Offset(rx / rw, ry / rw);
     }
 
     /// <summary>The bounding rectangle of <paramref name="rect"/> after <paramref name="transform"/>.</summary>
@@ -252,12 +252,12 @@ public static class MatrixUtils
     }
 
     /// <summary>A transform that collapses everything onto the single point <paramref name="offset"/>.</summary>
-    public static Matrix4 ForceToPoint(Point offset)
+    public static Matrix4 ForceToPoint(Offset offset)
     {
         Matrix4 result = Matrix4.Zero();
         result.Storage[10] = 1;
-        result.Storage[12] = offset.X;
-        result.Storage[13] = offset.Y;
+        result.Storage[12] = offset.Dx;
+        result.Storage[13] = offset.Dy;
         result.Storage[15] = 1;
         return result;
     }
@@ -312,7 +312,7 @@ public static class MatrixUtils
     }
 
     private static Rect FromLtrb(double left, double top, double right, double bottom) =>
-        new(new Point(left, top), new Point(right, bottom));
+        DartGeometry.RectFromCorners(new Offset(left, top), new Offset(right, bottom));
 }
 
 /// <summary>

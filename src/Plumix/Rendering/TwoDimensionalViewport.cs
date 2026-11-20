@@ -91,7 +91,7 @@ public class TwoDimensionalViewportParentData : ParentData, IKeepAliveParentData
     /// The position of the child relative to the parent, in the viewport's own (unreversed)
     /// coordinate space. Must be set by <see cref="RenderTwoDimensionalViewport.LayoutChildSequence"/>.
     /// </summary>
-    public Point? LayoutOffset { get; set; }
+    public Offset? LayoutOffset { get; set; }
 
     /// <summary>The position of this child in the two-dimensional grid of children.</summary>
     public ChildVicinity Vicinity { get; set; } = ChildVicinity.Invalid;
@@ -114,7 +114,7 @@ public class TwoDimensionalViewportParentData : ParentData, IKeepAliveParentData
     /// this child. Equal to <see cref="LayoutOffset"/> when both axis directions are
     /// <see cref="AxisDirection.Down"/> and <see cref="AxisDirection.Right"/>.
     /// </summary>
-    public Point? PaintOffset { get; set; }
+    public Offset? PaintOffset { get; set; }
 
     /// <summary>Whether the child is currently visible in the viewport.</summary>
     public bool IsVisible
@@ -610,7 +610,7 @@ public abstract class RenderTwoDimensionalViewport : RenderBox, IRenderAbstractV
     }
 
     /// <inheritdoc />
-    protected override bool HitTestChildren(BoxHitTestResult result, Point position)
+    protected override bool HitTestChildren(BoxHitTestResult result, Offset position)
     {
         foreach (RenderBox child in _children.Values)
         {
@@ -691,13 +691,13 @@ public abstract class RenderTwoDimensionalViewport : RenderBox, IRenderAbstractV
         };
 
         // Scroll offset of `child` within the viewport.
-        Point paintOffset = ParentDataOf(box).PaintOffset!.Value;
+        Offset paintOffset = ParentDataOf(box).PaintOffset!.Value;
         leadingScrollOffset += axisDirection switch
         {
-            AxisDirection.Up => ViewportDimension.Height - paintOffset.Y - box.Size.Height,
-            AxisDirection.Left => ViewportDimension.Width - paintOffset.X - box.Size.Width,
-            AxisDirection.Right => paintOffset.X,
-            _ => paintOffset.Y,
+            AxisDirection.Up => ViewportDimension.Height - paintOffset.Dy - box.Size.Height,
+            AxisDirection.Left => ViewportDimension.Width - paintOffset.Dx - box.Size.Width,
+            AxisDirection.Right => paintOffset.Dx,
+            _ => paintOffset.Dy,
         };
 
         Matrix4 transform = target.GetTransformTo(this);
@@ -722,7 +722,7 @@ public abstract class RenderTwoDimensionalViewport : RenderBox, IRenderAbstractV
     }
 
     private static Rect Translate(Rect rect, double dx, double dy) =>
-        new(rect.X + dx, rect.Y + dy, rect.Width, rect.Height);
+        DartGeometry.RectFromLTWH(rect.Left + dx, rect.Top + dy, rect.Width, rect.Height);
 
     /// <inheritdoc />
     public override void ShowOnScreen(
@@ -1073,7 +1073,7 @@ public abstract class RenderTwoDimensionalViewport : RenderBox, IRenderAbstractV
                 + "layoutChildSequence, so child.HasSize is false.");
         }
 
-        Point layoutOffset = childParentData.LayoutOffset.Value;
+        Offset layoutOffset = childParentData.LayoutOffset.Value;
         childParentData.PaintExtent = ComputeChildPaintExtent(layoutOffset, child.Size);
         childParentData.PaintOffset = ComputeAbsolutePaintOffsetFor(child, layoutOffset);
         // Flutter writes `_hasVisualOverflow || layoutOffset != _paintExtent || !isVisible` here, and
@@ -1084,7 +1084,7 @@ public abstract class RenderTwoDimensionalViewport : RenderBox, IRenderAbstractV
     }
 
     /// <summary>The visible portion of a child laid out at <paramref name="layoutOffset"/>.</summary>
-    public Size ComputeChildPaintExtent(Point layoutOffset, Size childSize)
+    public Size ComputeChildPaintExtent(Offset layoutOffset, Size childSize)
     {
         if (childSize == default(Size) || childSize.Height == 0.0 || childSize.Width == 0.0)
         {
@@ -1092,44 +1092,44 @@ public abstract class RenderTwoDimensionalViewport : RenderBox, IRenderAbstractV
         }
 
         double width;
-        if (layoutOffset.X < 0.0)
+        if (layoutOffset.Dx < 0.0)
         {
-            if (layoutOffset.X + childSize.Width <= 0.0)
+            if (layoutOffset.Dx + childSize.Width <= 0.0)
             {
                 return default;
             }
 
-            width = layoutOffset.X + childSize.Width;
+            width = layoutOffset.Dx + childSize.Width;
         }
-        else if (layoutOffset.X >= ViewportDimension.Width)
+        else if (layoutOffset.Dx >= ViewportDimension.Width)
         {
             return default;
         }
         else
         {
-            width = layoutOffset.X + childSize.Width > ViewportDimension.Width
-                ? ViewportDimension.Width - layoutOffset.X
+            width = layoutOffset.Dx + childSize.Width > ViewportDimension.Width
+                ? ViewportDimension.Width - layoutOffset.Dx
                 : childSize.Width;
         }
 
         double height;
-        if (layoutOffset.Y < 0.0)
+        if (layoutOffset.Dy < 0.0)
         {
-            if (layoutOffset.Y + childSize.Height <= 0.0)
+            if (layoutOffset.Dy + childSize.Height <= 0.0)
             {
                 return default;
             }
 
-            height = layoutOffset.Y + childSize.Height;
+            height = layoutOffset.Dy + childSize.Height;
         }
-        else if (layoutOffset.Y >= ViewportDimension.Height)
+        else if (layoutOffset.Dy >= ViewportDimension.Height)
         {
             return default;
         }
         else
         {
-            height = layoutOffset.Y + childSize.Height > ViewportDimension.Height
-                ? ViewportDimension.Height - layoutOffset.Y
+            height = layoutOffset.Dy + childSize.Height > ViewportDimension.Height
+                ? ViewportDimension.Height - layoutOffset.Dy
                 : childSize.Height;
         }
 
@@ -1140,28 +1140,28 @@ public abstract class RenderTwoDimensionalViewport : RenderBox, IRenderAbstractV
     /// Converts the unreversed <paramref name="layoutOffset"/> into the offset the child is painted
     /// at, applying both axis directions.
     /// </summary>
-    protected Point ComputeAbsolutePaintOffsetFor(RenderBox child, Point layoutOffset)
+    protected Offset ComputeAbsolutePaintOffsetFor(RenderBox child, Offset layoutOffset)
     {
         // This is only usable once we have sizes.
         Debug.Assert(HasSize);
         Debug.Assert(child.HasSize);
         double xOffset = HorizontalAxisDirection switch
         {
-            AxisDirection.Right => layoutOffset.X,
-            AxisDirection.Left => ViewportDimension.Width - (layoutOffset.X + child.Size.Width),
+            AxisDirection.Right => layoutOffset.Dx,
+            AxisDirection.Left => ViewportDimension.Width - (layoutOffset.Dx + child.Size.Width),
             _ => throw new InvalidOperationException("This should not happen"),
         };
         double yOffset = VerticalAxisDirection switch
         {
-            AxisDirection.Up => ViewportDimension.Height - (layoutOffset.Y + child.Size.Height),
-            AxisDirection.Down => layoutOffset.Y,
+            AxisDirection.Up => ViewportDimension.Height - (layoutOffset.Dy + child.Size.Height),
+            AxisDirection.Down => layoutOffset.Dy,
             _ => throw new InvalidOperationException("This should not happen"),
         };
-        return new Point(xOffset, yOffset);
+        return new Offset(xOffset, yOffset);
     }
 
     /// <inheritdoc />
-    public override void Paint(PaintingContext context, Point offset)
+    public override void Paint(PaintingContext context, Offset offset)
     {
         if (_children.Count == 0)
         {
@@ -1173,7 +1173,7 @@ public abstract class RenderTwoDimensionalViewport : RenderBox, IRenderAbstractV
             _clipRectLayer.Layer = context.PushClipRect(
                 NeedsCompositing,
                 offset,
-                new Rect(0, 0, ViewportDimension.Width, ViewportDimension.Height),
+                DartGeometry.RectFromLTWH(0, 0, ViewportDimension.Width, ViewportDimension.Height),
                 PaintChildren,
                 ClipBehavior,
                 _clipRectLayer.Layer);
@@ -1185,7 +1185,7 @@ public abstract class RenderTwoDimensionalViewport : RenderBox, IRenderAbstractV
         }
     }
 
-    private void PaintChildren(PaintingContext context, Point offset)
+    private void PaintChildren(PaintingContext context, Offset offset)
     {
         RenderBox? child = _firstChild;
         while (child != null)
@@ -1193,8 +1193,8 @@ public abstract class RenderTwoDimensionalViewport : RenderBox, IRenderAbstractV
             TwoDimensionalViewportParentData childParentData = ParentDataOf(child);
             if (childParentData.IsVisible)
             {
-                Point paintOffset = childParentData.PaintOffset!.Value;
-                context.PaintChild(child, new Point(offset.X + paintOffset.X, offset.Y + paintOffset.Y));
+                Offset paintOffset = childParentData.PaintOffset!.Value;
+                context.PaintChild(child, new Offset(offset.Dx + paintOffset.Dx, offset.Dy + paintOffset.Dy));
             }
 
             child = childParentData.NextSibling;
@@ -1349,8 +1349,8 @@ public abstract class RenderTwoDimensionalViewport : RenderBox, IRenderAbstractV
     /// <inheritdoc />
     public override void ApplyPaintTransform(RenderObject child, Matrix4 transform)
     {
-        Point paintOffset = ParentDataOf((RenderBox)child).PaintOffset!.Value;
-        transform.TranslateByDouble(paintOffset.X, paintOffset.Y, 0, 1);
+        Offset paintOffset = ParentDataOf((RenderBox)child).PaintOffset!.Value;
+        transform.TranslateByDouble(paintOffset.Dx, paintOffset.Dy, 0, 1);
     }
 
     /// <inheritdoc />

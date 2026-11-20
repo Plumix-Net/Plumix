@@ -837,7 +837,7 @@ public sealed class Stepper : StatefulWidget
     {
         public Color Color { get; } = color;
 
-        public override bool? HitTest(Point position) => true; // Hitting the rectangle is fine enough.
+        public override bool? HitTest(Offset position) => true; // Hitting the rectangle is fine enough.
 
         public override bool ShouldRepaint(CustomPainter oldDelegate) =>
             oldDelegate is not TrianglePainter old || old.Color != Color;
@@ -847,7 +847,7 @@ public sealed class Stepper : StatefulWidget
             double @base = size.Width;
             double halfBase = size.Width / 2.0;
             double height = size.Height;
-            List<Point> points = [new Point(0.0, height), new Point(@base, height), new Point(halfBase, 0.0)];
+            List<Offset> points = [new Offset(0.0, height), new Offset(@base, height), new Offset(halfBase, 0.0)];
 
             var path = new Plumix.UI.Path();
             path.AddPolygon(points, true);

@@ -27,7 +27,7 @@ public sealed class AlignTests
         pipeline.FlushLayout(new Size(100, 80));
 
         Assert.Equal(new Size(100, 80), align.Size);
-        Assert.Equal(new Point(40, 35), ((BoxParentData)child.parentData!).offset);
+        Assert.Equal(new Offset(40, 35), ((BoxParentData)child.parentData!).offset);
     }
 
     [Fact]
@@ -47,7 +47,7 @@ public sealed class AlignTests
 
         pipeline.FlushLayout(new Size(100, 80));
 
-        Assert.Equal(new Point(80, 0), ((BoxParentData)child.parentData!).offset);
+        Assert.Equal(new Offset(80, 0), ((BoxParentData)child.parentData!).offset);
     }
 
     [Fact]
@@ -70,7 +70,7 @@ public sealed class AlignTests
         pipeline.FlushLayout(new Size(100, 80));
 
         Assert.Equal(new Size(40, 30), align.Size);
-        Assert.Equal(new Point(10, 10), ((BoxParentData)child.parentData!).offset);
+        Assert.Equal(new Offset(10, 10), ((BoxParentData)child.parentData!).offset);
     }
 
     [Fact]
@@ -185,7 +185,7 @@ public sealed class AlignTests
             Size = Constraints.Constrain(_size);
         }
 
-        public override void Paint(PaintingContext ctx, Point offset)
+        public override void Paint(PaintingContext ctx, Offset offset)
         {
         }
     }

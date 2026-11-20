@@ -265,21 +265,21 @@ public sealed class TwoDimensionalScrollViewTests
 
         // Each gesture spends its first move reaching the recognizer's touch slop, so only the
         // remaining 80 pixels are applied — the same accounting Flutter's `tester.drag` does.
-        DragPath(harness, [new Point(0.0, -20.0), new Point(0.0, -100.0)]);
+        DragPath(harness, [new Offset(0.0, -20.0), new Offset(0.0, -100.0)]);
         Assert.Equal(80.0, vertical.Position.Pixels, 3);
         Assert.Equal(0.0, horizontal.Position.Pixels, 3);
 
-        DragPath(harness, [new Point(-20.0, 0.0), new Point(-100.0, 0.0)]);
+        DragPath(harness, [new Offset(-20.0, 0.0), new Offset(-100.0, 0.0)]);
         Assert.Equal(80.0, vertical.Position.Pixels, 3);
         Assert.Equal(80.0, horizontal.Position.Pixels, 3);
 
         // A diagonal gesture is locked to the axis that won the arena: the horizontal component of
         // the drag below is dropped entirely.
-        DragPath(harness, [new Point(0.0, -20.0), new Point(-40.0, -100.0)]);
+        DragPath(harness, [new Offset(0.0, -20.0), new Offset(-40.0, -100.0)]);
         Assert.Equal(160.0, vertical.Position.Pixels, 3);
         Assert.Equal(80.0, horizontal.Position.Pixels, 3);
 
-        DragPath(harness, [new Point(-20.0, 0.0), new Point(-100.0, -40.0)]);
+        DragPath(harness, [new Offset(-20.0, 0.0), new Offset(-100.0, -40.0)]);
         Assert.Equal(160.0, vertical.Position.Pixels, 3);
         Assert.Equal(160.0, horizontal.Position.Pixels, 3);
     }
@@ -338,10 +338,10 @@ public sealed class TwoDimensionalScrollViewTests
         Assert.Equal(0.0, vertical.Position.MaxScrollExtent);
         Assert.Equal(3400.0, horizontal.Position.MaxScrollExtent);
 
-        Drag(harness, new Point(0.0, -200.0));
+        Drag(harness, new Offset(0.0, -200.0));
         Assert.Equal(0.0, vertical.Position.Pixels, 3);
 
-        Drag(harness, new Point(-200.0, 0.0));
+        Drag(harness, new Offset(-200.0, 0.0));
         Assert.Equal(0.0, vertical.Position.Pixels, 3);
         Assert.Equal(200.0, horizontal.Position.Pixels, 3);
     }
@@ -366,7 +366,7 @@ public sealed class TwoDimensionalScrollViewTests
     /// <summary>Flutter's `kDragSlopDefault`, the offset `tester.drag` spends reaching recognition.</summary>
     private const double DragSlop = 20.0;
 
-    private static readonly Point Center = new(400.0, 300.0);
+    private static readonly Offset Center = new(400.0, 300.0);
 
     private static int _nextPointer;
 
@@ -374,7 +374,7 @@ public sealed class TwoDimensionalScrollViewTests
     /// The four-step gesture the diagonal cases share: a slop step, a vertical-dominant step, a
     /// horizontal-only step, and a horizontal-dominant step that also carries some vertical motion.
     /// </summary>
-    private static readonly Point[] DiagonalPath =
+    private static readonly Offset[] DiagonalPath =
     [
         new(-30.0, -30.0),
         new(-30.0, -80.0),
@@ -386,11 +386,11 @@ public sealed class TwoDimensionalScrollViewTests
     /// One drag of <paramref name="offset"/> from the middle of the viewport, split into the slop
     /// move and the remainder exactly as Flutter's `WidgetController.drag` splits it.
     /// </summary>
-    private static void Drag(TwoDimensionalRenderHarness harness, Point offset)
+    private static void Drag(TwoDimensionalRenderHarness harness, Offset offset)
     {
-        var slop = new Point(
-            Math.Sign(offset.X) * Math.Min(Math.Abs(offset.X), DragSlop),
-            Math.Sign(offset.Y) * Math.Min(Math.Abs(offset.Y), DragSlop));
+        var slop = new Offset(
+            Math.Sign(offset.Dx) * Math.Min(Math.Abs(offset.Dx), DragSlop),
+            Math.Sign(offset.Dy) * Math.Min(Math.Abs(offset.Dy), DragSlop));
         DragPath(harness, [slop, offset]);
     }
 
@@ -398,7 +398,7 @@ public sealed class TwoDimensionalScrollViewTests
     /// Drives one pointer gesture from the middle of the viewport through every cumulative offset,
     /// the way Flutter's `startGesture`/`moveTo` sequences do.
     /// </summary>
-    private static void DragPath(TwoDimensionalRenderHarness harness, IReadOnlyList<Point> offsets)
+    private static void DragPath(TwoDimensionalRenderHarness harness, IReadOnlyList<Offset> offsets)
     {
         DateTime now = DateTime.UtcNow;
         int pointer = 7 + Interlocked.Increment(ref _nextPointer);
@@ -407,26 +407,26 @@ public sealed class TwoDimensionalScrollViewTests
             new PointerDownEvent(pointer, PointerDeviceKind.Touch, Center, PointerButtons.Primary, now));
 
         int step = 1;
-        foreach (Point offset in offsets)
+        foreach (Offset offset in offsets)
         {
             GestureBinding.Instance.HandlePointerEvent(
                 harness.RenderView,
                 new PointerMoveEvent(
                     pointer,
                     PointerDeviceKind.Touch,
-                    new Point(Center.X + offset.X, Center.Y + offset.Y),
+                    new Offset(Center.Dx + offset.Dx, Center.Dy + offset.Dy),
                     PointerButtons.Primary,
                     now));
             step++;
         }
 
-        Point last = offsets[^1];
+        Offset last = offsets[^1];
         GestureBinding.Instance.HandlePointerEvent(
             harness.RenderView,
             new PointerUpEvent(
                 pointer,
                 PointerDeviceKind.Touch,
-                new Point(Center.X + last.X, Center.Y + last.Y),
+                new Offset(Center.Dx + last.Dx, Center.Dy + last.Dy),
                 PointerButtons.None,
                 now));
         harness.Pump(Surface);

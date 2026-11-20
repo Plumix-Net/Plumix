@@ -14,12 +14,12 @@ internal sealed class CanvasPaintingContext(Canvas canvas) : PaintingContext(new
 {
     public override Canvas Canvas => canvas;
 
-    public override void PaintChild(RenderObject child, Point offset) => child.Paint(this, offset);
+    public override void PaintChild(RenderObject child, Offset offset) => child.Paint(this, offset);
 
     public override void PushLayer(
         ContainerLayer childLayer,
         PaintingContextCallback painter,
-        Point offset,
+        Offset offset,
         Rect? childPaintBounds = null)
     {
         painter(this, offset);
@@ -27,13 +27,13 @@ internal sealed class CanvasPaintingContext(Canvas canvas) : PaintingContext(new
 
     public override ClipRectLayer? PushClipRect(
         bool needsCompositing,
-        Point offset,
+        Offset offset,
         Rect clipRect,
         PaintingContextCallback painter,
         Clip clipBehavior = Clip.HardEdge,
         ClipRectLayer? oldLayer = null)
     {
-        Rect shifted = clipRect.Translate(new Vector(offset.X, offset.Y));
+        Rect shifted = clipRect.Shift(new Offset(offset.Dx, offset.Dy));
         ClipRectAndPaint(shifted, clipBehavior, shifted, () => painter(this, offset));
         return null;
     }

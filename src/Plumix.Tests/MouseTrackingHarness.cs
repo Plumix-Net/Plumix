@@ -83,21 +83,21 @@ internal sealed class MouseTrackingHarness : IDisposable
     }
 
     public static PointerAddedEvent Added(
-        Point position,
+        Offset position,
         int device = 1,
         PointerDeviceKind kind = PointerDeviceKind.Mouse,
         int viewId = 0)
         => new(device, kind, position, timestampUtc: DateTime.UtcNow, viewId: viewId);
 
     public static PointerRemovedEvent Removed(
-        Point position,
+        Offset position,
         int device = 1,
         PointerDeviceKind kind = PointerDeviceKind.Mouse,
         int viewId = 0)
         => new(device, kind, position, timestampUtc: DateTime.UtcNow, viewId: viewId);
 
     public static PointerHoverEvent Hover(
-        Point position,
+        Offset position,
         int device = 1,
         PointerDeviceKind kind = PointerDeviceKind.Mouse,
         int viewId = 0)

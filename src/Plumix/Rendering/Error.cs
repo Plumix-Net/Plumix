@@ -83,21 +83,21 @@ public class RenderErrorBox : RenderBox
 
     protected override double ComputeMaxIntrinsicHeight(double width) => KMaxHeight;
 
-    protected override bool HitTestSelf(Point position) => true;
+    protected override bool HitTestSelf(Offset position) => true;
 
     protected override Size ComputeDryLayout(BoxConstraints constraints)
     {
         return constraints.Constrain(new Size(KMaxWidth, KMaxHeight));
     }
 
-    public override void Paint(PaintingContext ctx, Point offset)
+    public override void Paint(PaintingContext ctx, Offset offset)
     {
         try
         {
             ctx.Canvas.DrawRectangle(
                 new SolidColorBrush(BackgroundColor),
                 null,
-                new Rect(offset, Size));
+                DartGeometry.RectFromOffsetAndSize(offset, Size));
             if (_paragraph is not null)
             {
                 EdgeInsets padding = Padding;
@@ -116,7 +116,7 @@ public class RenderErrorBox : RenderBox
                     top += padding.Top;
                 }
 
-                ctx.Canvas.DrawParagraph(_paragraph, offset + new Point(left, top));
+                ctx.Canvas.DrawParagraph(_paragraph, offset + new Offset(left, top));
             }
         }
         catch (Exception)

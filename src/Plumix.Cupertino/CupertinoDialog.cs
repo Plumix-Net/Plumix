@@ -900,9 +900,9 @@ internal sealed class RenderPriorityColumn : RenderFlex
         RenderBox top = FirstChild!;
         RenderBox bottom = ChildAfter(top)!;
         top.Layout(BoxConstraints.Tight(new Size(width, topHeight)), parentUsesSize: true);
-        ((FlexParentData)top.parentData!).offset = new Point(0, 0);
+        ((FlexParentData)top.parentData!).offset = new Offset(0, 0);
         bottom.Layout(BoxConstraints.Tight(new Size(width, bottomHeight)), parentUsesSize: true);
-        ((FlexParentData)bottom.parentData!).offset = new Point(0, topHeight);
+        ((FlexParentData)bottom.parentData!).offset = new Offset(0, topHeight);
     }
 
     private (double Top, double Bottom) ChildrenHeights(double width, double maxHeight)
@@ -1115,12 +1115,12 @@ internal sealed class RenderAlertDialogActionsLayout : RenderFlex
             child.Layout(BoxConstraints.Tight(new Size(childWidth, height)), parentUsesSize: true);
             if (rightToLeft)
             {
-                ((FlexParentData)child.parentData!).offset = new Point(x, 0);
+                ((FlexParentData)child.parentData!).offset = new Offset(x, 0);
                 x -= isDivider ? slotWidth : _dividerThickness;
             }
             else
             {
-                ((FlexParentData)child.parentData!).offset = new Point(x, 0);
+                ((FlexParentData)child.parentData!).offset = new Offset(x, 0);
                 x += childWidth;
             }
         }

@@ -119,7 +119,7 @@ public sealed class RenderRotatedBox : RenderProxyBox
         _paintTransform.TranslateByDouble(-Child.Size.Width / 2.0, -Child.Size.Height / 2.0, 0, 1);
     }
 
-    protected override bool HitTestChildren(BoxHitTestResult result, Point position)
+    protected override bool HitTestChildren(BoxHitTestResult result, Offset position)
     {
         if (Child is null)
         {
@@ -153,7 +153,7 @@ public sealed class RenderRotatedBox : RenderProxyBox
         return null;
     }
 
-    public override void Paint(PaintingContext ctx, Point offset)
+    public override void Paint(PaintingContext ctx, Offset offset)
     {
         if (Child is null)
         {

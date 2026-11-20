@@ -97,7 +97,7 @@ public abstract class RenderShiftedBox : RenderBox, IRenderObjectSingleChildCont
 
         double? result = child.GetDistanceToActualBaseline(baseline);
         var childParentData = (BoxParentData)child.parentData!;
-        return result + childParentData.offset.Y;
+        return result + childParentData.offset.Dy;
     }
 
     protected override double? ComputeDryBaseline(BoxConstraints constraints, TextBaseline baseline)
@@ -106,7 +106,7 @@ public abstract class RenderShiftedBox : RenderBox, IRenderObjectSingleChildCont
         return _child?.GetDryBaseline(constraints, baseline);
     }
 
-    public override void Paint(PaintingContext ctx, Point offset)
+    public override void Paint(PaintingContext ctx, Offset offset)
     {
         ArgumentNullException.ThrowIfNull(ctx);
         RenderBox? child = _child;
@@ -117,7 +117,7 @@ public abstract class RenderShiftedBox : RenderBox, IRenderObjectSingleChildCont
         }
     }
 
-    protected override bool HitTestChildren(BoxHitTestResult result, Point position)
+    protected override bool HitTestChildren(BoxHitTestResult result, Offset position)
     {
         RenderBox? child = _child;
         if (child == null)
@@ -295,17 +295,17 @@ public sealed class RenderPadding : RenderShiftedBox
         BoxConstraints innerConstraints = constraints.Deflate(padding);
         Child.Layout(innerConstraints, parentUsesSize: true);
         var childParentData = (BoxParentData)Child.parentData!;
-        childParentData.offset = new Point(padding.Left, padding.Top);
+        childParentData.offset = new Offset(padding.Left, padding.Top);
         Size = constraints.Constrain(
             new Size(horizontal + Child.Size.Width, vertical + Child.Size.Height));
     }
 
     /// <inheritdoc />
-    protected internal override void DebugPaintSize(PaintingContext context, Point offset)
+    protected internal override void DebugPaintSize(PaintingContext context, Offset offset)
     {
         ArgumentNullException.ThrowIfNull(context);
         base.DebugPaintSize(context, offset);
-        var outerRect = new Rect(offset, Size);
+        var outerRect = DartGeometry.RectFromOffsetAndSize(offset, Size);
         RenderingDebug.PaintPadding(
             context,
             outerRect,
@@ -498,7 +498,7 @@ public class RenderPositionedBox : RenderAligningShiftedBox
         Size size = constraints.Constrain(new Size(
             shrinkWrapWidth ? childSize.Width * (_widthFactor ?? 1.0) : double.PositiveInfinity,
             shrinkWrapHeight ? childSize.Height * (_heightFactor ?? 1.0) : double.PositiveInfinity));
-        return result + ResolvedAlignment.AlongOffset(size, childSize).Y;
+        return result + ResolvedAlignment.AlongOffset(size, childSize).Dy;
     }
 
     protected override void PerformLayout()
@@ -523,7 +523,7 @@ public class RenderPositionedBox : RenderAligningShiftedBox
     }
 
     /// <inheritdoc />
-    protected internal override void DebugPaintSize(PaintingContext context, Point offset)
+    protected internal override void DebugPaintSize(PaintingContext context, Offset offset)
     {
         ArgumentNullException.ThrowIfNull(context);
         base.DebugPaintSize(context, offset);
@@ -539,18 +539,18 @@ public class RenderPositionedBox : RenderAligningShiftedBox
             var path = new UI.Path();
             bool drew = false;
 
-            if (childParentData.offset.Y > 0.0)
+            if (childParentData.offset.Dy > 0.0)
             {
                 // Vertical alignment arrows.
-                double headSize = Math.Min(childParentData.offset.Y * 0.2, 10.0);
-                path.MoveTo(offset.X + (Size.Width / 2.0), offset.Y);
-                path.RelativeLineTo(0.0, childParentData.offset.Y - headSize);
+                double headSize = Math.Min(childParentData.offset.Dy * 0.2, 10.0);
+                path.MoveTo(offset.Dx + (Size.Width / 2.0), offset.Dy);
+                path.RelativeLineTo(0.0, childParentData.offset.Dy - headSize);
                 path.RelativeLineTo(headSize, 0.0);
                 path.RelativeLineTo(-headSize, headSize);
                 path.RelativeLineTo(-headSize, -headSize);
                 path.RelativeLineTo(headSize, 0.0);
-                path.MoveTo(offset.X + (Size.Width / 2.0), offset.Y + Size.Height);
-                path.RelativeLineTo(0.0, -childParentData.offset.Y + headSize);
+                path.MoveTo(offset.Dx + (Size.Width / 2.0), offset.Dy + Size.Height);
+                path.RelativeLineTo(0.0, -childParentData.offset.Dy + headSize);
                 path.RelativeLineTo(headSize, 0.0);
                 path.RelativeLineTo(-headSize, -headSize);
                 path.RelativeLineTo(-headSize, headSize);
@@ -558,18 +558,18 @@ public class RenderPositionedBox : RenderAligningShiftedBox
                 drew = true;
             }
 
-            if (childParentData.offset.X > 0.0)
+            if (childParentData.offset.Dx > 0.0)
             {
                 // Horizontal alignment arrows.
-                double headSize = Math.Min(childParentData.offset.X * 0.2, 10.0);
-                path.MoveTo(offset.X, offset.Y + (Size.Height / 2.0));
-                path.RelativeLineTo(childParentData.offset.X - headSize, 0.0);
+                double headSize = Math.Min(childParentData.offset.Dx * 0.2, 10.0);
+                path.MoveTo(offset.Dx, offset.Dy + (Size.Height / 2.0));
+                path.RelativeLineTo(childParentData.offset.Dx - headSize, 0.0);
                 path.RelativeLineTo(0.0, headSize);
                 path.RelativeLineTo(headSize, -headSize);
                 path.RelativeLineTo(-headSize, -headSize);
                 path.RelativeLineTo(0.0, headSize);
-                path.MoveTo(offset.X + Size.Width, offset.Y + (Size.Height / 2.0));
-                path.RelativeLineTo(-childParentData.offset.X + headSize, 0.0);
+                path.MoveTo(offset.Dx + Size.Width, offset.Dy + (Size.Height / 2.0));
+                path.RelativeLineTo(-childParentData.offset.Dx + headSize, 0.0);
                 path.RelativeLineTo(0.0, headSize);
                 path.RelativeLineTo(-headSize, -headSize);
                 path.RelativeLineTo(headSize, -headSize);
@@ -587,7 +587,7 @@ public class RenderPositionedBox : RenderAligningShiftedBox
             context.Canvas.DrawRectangle(
                 new SolidColorBrush(new Color(0x90909090)),
                 null,
-                new Rect(offset, Size));
+                DartGeometry.RectFromOffsetAndSize(offset, Size));
         }
     }
 
@@ -756,7 +756,7 @@ public sealed class RenderConstrainedOverflowBox : RenderAligningShiftedBox
 
         Size childSize = child.GetDryLayout(childConstraints);
         Size size = GetDryLayout(constraints);
-        return result + ResolvedAlignment.AlongOffset(size, childSize).Y;
+        return result + ResolvedAlignment.AlongOffset(size, childSize).Dy;
     }
 
     protected override void PerformLayout()
@@ -853,7 +853,7 @@ public sealed class RenderSizedOverflowBox : RenderAligningShiftedBox
         }
 
         var childParentData = (BoxParentData)child.parentData!;
-        return result + childParentData.offset.Y;
+        return result + childParentData.offset.Dy;
     }
 
     protected override double? ComputeDryBaseline(BoxConstraints constraints, TextBaseline baseline)
@@ -871,7 +871,7 @@ public sealed class RenderSizedOverflowBox : RenderAligningShiftedBox
 
         Size childSize = child.GetDryLayout(constraints);
         Size size = GetDryLayout(constraints);
-        return result + ResolvedAlignment.AlongOffset(size, childSize).Y;
+        return result + ResolvedAlignment.AlongOffset(size, childSize).Dy;
     }
 
     protected override Size ComputeDryLayout(BoxConstraints constraints) =>
@@ -1026,7 +1026,7 @@ public sealed class RenderFractionallySizedOverflowBox : RenderAligningShiftedBo
 
         Size childSize = child.GetDryLayout(childConstraints);
         Size size = GetDryLayout(constraints);
-        return result + ResolvedAlignment.AlongOffset(size, childSize).Y;
+        return result + ResolvedAlignment.AlongOffset(size, childSize).Dy;
     }
 
     protected override void PerformLayout()
@@ -1174,7 +1174,7 @@ public sealed class RenderConstraintsTransformBox : RenderAligningShiftedBox
 
         Size childSize = child.GetDryLayout(childConstraints);
         Size size = constraints.Constrain(childSize);
-        return result + ResolvedAlignment.AlongOffset(size, childSize).Y;
+        return result + ResolvedAlignment.AlongOffset(size, childSize).Dy;
     }
 
     protected override void PerformLayout()
@@ -1189,8 +1189,8 @@ public sealed class RenderConstraintsTransformBox : RenderAligningShiftedBox
             Size = constraints.Constrain(child.Size);
             AlignChild();
             var childParentData = (BoxParentData)child.parentData!;
-            _overflowContainerRect = new Rect(default, Size);
-            _overflowChildRect = new Rect(childParentData.offset, child.Size);
+            _overflowContainerRect = DartGeometry.RectFromOffsetAndSize(default, Size);
+            _overflowChildRect = DartGeometry.RectFromOffsetAndSize(childParentData.offset, child.Size);
         }
         else
         {
@@ -1203,7 +1203,7 @@ public sealed class RenderConstraintsTransformBox : RenderAligningShiftedBox
         _isOverflowing = HasOverflow(_overflowContainerRect, _overflowChildRect);
     }
 
-    public override void Paint(PaintingContext context, Point offset)
+    public override void Paint(PaintingContext context, Offset offset)
     {
         ArgumentNullException.ThrowIfNull(context);
         if (Child == null)
@@ -1221,7 +1221,7 @@ public sealed class RenderConstraintsTransformBox : RenderAligningShiftedBox
         _clipRectLayer.Layer = context.PushClipRect(
             NeedsCompositing,
             offset,
-            new Rect(default, Size),
+            DartGeometry.RectFromOffsetAndSize(default, Size),
             base.Paint,
             _clipBehavior,
             _clipRectLayer.Layer);
@@ -1252,7 +1252,7 @@ public sealed class RenderConstraintsTransformBox : RenderAligningShiftedBox
     {
         return _clipBehavior == Clip.None || !_isOverflowing
             ? null
-            : new Rect(default, Size);
+            : DartGeometry.RectFromOffsetAndSize(default, Size);
     }
 
     private BoxConstraints TransformConstraints(BoxConstraints constraints)

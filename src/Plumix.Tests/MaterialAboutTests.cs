@@ -888,12 +888,12 @@ public sealed class MaterialAboutTests : IDisposable
         FindDescendants<RenderParagraph>(harness.RenderView).Select(item => item.PlainText).ToArray();
 
     private static double Top(WidgetRenderHarness harness, string text) =>
-        ParagraphFor(harness, text).GetPaintOffsetToRoot().Y;
+        ParagraphFor(harness, text).GetPaintOffsetToRoot().Dy;
 
     private static double Bottom(WidgetRenderHarness harness, string text)
     {
         var paragraph = ParagraphFor(harness, text);
-        return paragraph.GetPaintOffsetToRoot().Y + paragraph.Size.Height;
+        return paragraph.GetPaintOffsetToRoot().Dy + paragraph.Size.Height;
     }
 
     private static RenderParagraph ParagraphFor(WidgetRenderHarness harness, string text) =>

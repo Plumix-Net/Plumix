@@ -33,7 +33,7 @@ public sealed class CupertinoDialogRoute<T> : RawDialogRoute<T>
         RouteTransitionsBuilder? transitionBuilder = null,
         RouteSettings? settings = null,
         bool? requestFocus = null,
-        Point? anchorPoint = null) : base(
+        Offset? anchorPoint = null) : base(
         pageBuilder: (pageContext, _, _) => builder(pageContext),
         barrierDismissible: barrierDismissible,
         barrierColor: barrierColor ?? CupertinoRouteConstants.ModalBarrierColor.ResolveFrom(context),
@@ -124,7 +124,7 @@ public static class CupertinoDialogs
         bool useRootNavigator = true,
         bool semanticsDismissible = false,
         RouteSettings? routeSettings = null,
-        Point? anchorPoint = null,
+        Offset? anchorPoint = null,
         bool? requestFocus = null)
     {
         Color resolvedBarrierColor = barrierColor
@@ -150,7 +150,7 @@ public static class CupertinoDialogs
         bool useRootNavigator = true,
         bool barrierDismissible = false,
         RouteSettings? routeSettings = null,
-        Point? anchorPoint = null,
+        Offset? anchorPoint = null,
         bool? requestFocus = null)
     {
         var route = new CupertinoDialogRoute<T>(

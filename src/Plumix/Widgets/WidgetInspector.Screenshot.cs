@@ -33,7 +33,7 @@ internal sealed class InspectorProxyLayer : Layer
 
     protected internal override bool FindAnnotations<S>(
         AnnotationResult<S> result,
-        Point localPosition,
+        Offset localPosition,
         bool onlyFirst)
     {
         return _layer.FindAnnotations(result, localPosition, onlyFirst);
@@ -75,7 +75,7 @@ internal sealed class InspectorMulticastCanvas : Canvas
         _screenshot.ClipRect(rect, doAntiAlias, clipOp);
     }
 
-    public override void ClipGeometry(Geometry geometry, bool doAntiAlias = true, Point geometryOffset = default)
+    public override void ClipGeometry(Geometry geometry, bool doAntiAlias = true, Offset geometryOffset = default)
     {
         _main.ClipGeometry(geometry, doAntiAlias, geometryOffset);
         _screenshot.ClipGeometry(geometry, doAntiAlias, geometryOffset);
@@ -92,13 +92,13 @@ internal sealed class InspectorMulticastCanvas : Canvas
         _screenshot.DrawArc(pen, rect, startAngleRadians, sweepAngleRadians);
     }
 
-    public override void DrawCircle(Point center, double radius, Paint paint)
+    public override void DrawCircle(Offset center, double radius, Paint paint)
     {
         _main.DrawCircle(center, radius, paint);
         _screenshot.DrawCircle(center, radius, paint);
     }
 
-    public override void DrawCircle(IBrush? brush, IPen? pen, Point center, double radius)
+    public override void DrawCircle(IBrush? brush, IPen? pen, Offset center, double radius)
     {
         _main.DrawCircle(brush, pen, center, radius);
         _screenshot.DrawCircle(brush, pen, center, radius);
@@ -116,7 +116,7 @@ internal sealed class InspectorMulticastCanvas : Canvas
         _screenshot.DrawDRRect(outer, inner, brush);
     }
 
-    public override void DrawImage(IImage image, Point offset, Paint paint)
+    public override void DrawImage(IImage image, Offset offset, Paint paint)
     {
         _main.DrawImage(image, offset, paint);
         _screenshot.DrawImage(image, offset, paint);
@@ -134,13 +134,13 @@ internal sealed class InspectorMulticastCanvas : Canvas
         _screenshot.DrawImageRect(image, src, dst, paint);
     }
 
-    public override void DrawLine(Point startPoint, Point endPoint, Paint paint)
+    public override void DrawLine(Offset startPoint, Offset endPoint, Paint paint)
     {
         _main.DrawLine(startPoint, endPoint, paint);
         _screenshot.DrawLine(startPoint, endPoint, paint);
     }
 
-    public override void DrawLine(IPen pen, Point startPoint, Point endPoint)
+    public override void DrawLine(IPen pen, Offset startPoint, Offset endPoint)
     {
         _main.DrawLine(pen, startPoint, endPoint);
         _screenshot.DrawLine(pen, startPoint, endPoint);
@@ -170,7 +170,7 @@ internal sealed class InspectorMulticastCanvas : Canvas
         _screenshot.DrawPaint(brush);
     }
 
-    public override void DrawParagraph(Paragraph paragraph, Point offset)
+    public override void DrawParagraph(Paragraph paragraph, Offset offset)
     {
         _main.DrawParagraph(paragraph, offset);
         _screenshot.DrawParagraph(paragraph, offset);
@@ -188,13 +188,13 @@ internal sealed class InspectorMulticastCanvas : Canvas
         _screenshot.DrawPath(path, brush, pen);
     }
 
-    public override void DrawPolygon(IBrush? brush, IPen? pen, IReadOnlyList<Point> points)
+    public override void DrawPolygon(IBrush? brush, IPen? pen, IReadOnlyList<Offset> points)
     {
         _main.DrawPolygon(brush, pen, points);
         _screenshot.DrawPolygon(brush, pen, points);
     }
 
-    public override void DrawGeometry(IBrush? brush, IPen? pen, Geometry geometry, Point geometryOffset = default)
+    public override void DrawGeometry(IBrush? brush, IPen? pen, Geometry geometry, Offset geometryOffset = default)
     {
         _main.DrawGeometry(brush, pen, geometry, geometryOffset);
         _screenshot.DrawGeometry(brush, pen, geometry, geometryOffset);
@@ -267,7 +267,7 @@ internal sealed class InspectorMulticastCanvas : Canvas
         Color color,
         double elevation,
         bool transparentOccluder,
-        Point geometryOffset = default)
+        Offset geometryOffset = default)
     {
         _main.DrawShadow(path, color, elevation, transparentOccluder, geometryOffset);
         _screenshot.DrawShadow(path, color, elevation, transparentOccluder, geometryOffset);
@@ -278,7 +278,7 @@ internal sealed class InspectorMulticastCanvas : Canvas
         Color color,
         double elevation,
         bool transparentOccluder,
-        Point geometryOffset = default)
+        Offset geometryOffset = default)
     {
         _main.DrawShadow(geometry, color, elevation, transparentOccluder, geometryOffset);
         _screenshot.DrawShadow(geometry, color, elevation, transparentOccluder, geometryOffset);
@@ -418,7 +418,7 @@ internal sealed class InspectorScreenshotData
 
     /// <summary>Offset of the screenshot corresponding to the offset the target was given as part of
     /// the regular paint.</summary>
-    public Point ScreenshotOffset
+    public Offset ScreenshotOffset
     {
         get
         {
@@ -570,7 +570,7 @@ internal sealed class InspectorScreenshotPaintingContext : PaintingContext
         return new InspectorScreenshotPaintingContext(childLayer, bounds, _data);
     }
 
-    public override void PaintChild(RenderObject child, Point offset)
+    public override void PaintChild(RenderObject child, Offset offset)
     {
         bool isScreenshotTarget = ReferenceEquals(child, _data.Target);
         if (isScreenshotTarget)
@@ -740,12 +740,12 @@ public abstract partial class WidgetInspectorService
         double top = Math.Max(a.Top, b.Top);
         double right = Math.Min(a.Right, b.Right);
         double bottom = Math.Min(a.Bottom, b.Bottom);
-        return right <= left || bottom <= top ? default : new Rect(left, top, right - left, bottom - top);
+        return right <= left || bottom <= top ? default : DartGeometry.RectFromLTWH(left, top, right - left, bottom - top);
     }
 
-    private static Rect ExpandToInclude(Rect a, Rect b) => new(
-        new Point(Math.Min(a.Left, b.Left), Math.Min(a.Top, b.Top)),
-        new Point(Math.Max(a.Right, b.Right), Math.Max(a.Bottom, b.Bottom)));
+    private static Rect ExpandToInclude(Rect a, Rect b) => DartGeometry.RectFromCorners(
+        new Offset(Math.Min(a.Left, b.Left), Math.Min(a.Top, b.Top)),
+        new Offset(Math.Max(a.Right, b.Right), Math.Max(a.Bottom, b.Bottom)));
 
     private static bool IsEmpty(Rect rect) => rect.Width <= 0 || rect.Height <= 0;
 

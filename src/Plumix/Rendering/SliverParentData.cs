@@ -42,7 +42,7 @@ public class SliverLogicalContainerParentData : SliverLogicalParentData, IContai
 public class SliverPhysicalParentData : ParentData
 {
     /// <summary>The offset at which to paint the child.</summary>
-    public Point PaintOffset { get; set; }
+    public Offset PaintOffset { get; set; }
 
     /// <summary>The child's proportional cross-axis flexibility, or null when inflexible.</summary>
     public int? CrossAxisFlex { get; set; }
@@ -50,7 +50,7 @@ public class SliverPhysicalParentData : ParentData
     /// <summary>Applies the child's paint offset to the supplied transform.</summary>
     public void ApplyPaintTransform(Matrix4 transform)
     {
-        transform.TranslateByDouble(PaintOffset.X, PaintOffset.Y, 0, 1);
+        transform.TranslateByDouble(PaintOffset.Dx, PaintOffset.Dy, 0, 1);
     }
 
     /// <inheritdoc />

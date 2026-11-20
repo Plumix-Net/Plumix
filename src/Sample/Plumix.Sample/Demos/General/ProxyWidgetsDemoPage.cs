@@ -32,8 +32,8 @@ internal sealed class ProxyWidgetsDemoPageState : State
     public override Widget Build(BuildContext context)
     {
         var clip = _tightClip
-            ? new Rect(0, 0, 120, 80)
-            : new Rect(0, 0, 190, 110);
+            ? DartGeometry.RectFromLTWH(0, 0, 120, 80)
+            : DartGeometry.RectFromLTWH(0, 0, 190, 110);
 
         return new SingleChildScrollView(child: new Column(
             crossAxisAlignment: CrossAxisAlignment.Stretch,
@@ -114,7 +114,7 @@ internal sealed class ProxyWidgetsDemoPageState : State
                             color: new Color(0xFFE7EDF6),
                             child: new Center(
                                 new FractionalTranslation(
-                                    translation: new Point(_fractionalShift, 0),
+                                    translation: new Offset(_fractionalShift, 0),
                                     child: new Container(
                                         width: 56,
                                         height: 32,
@@ -324,10 +324,10 @@ internal sealed class ProxyWidgetsDemoPageState : State
             left.CubicTo(10, -15, 140, -15, 140, 90);
             left.Close();
             var right = new Path();
-            right.AddOval(new Rect(65, 15, 110, 90));
+            right.AddOval(DartGeometry.RectFromLTWH(65, 15, 110, 90));
             Path result = Path.Combine(operation, left, right);
             // A boolean result can be extended and measured like any other path.
-            result.AddRect(new Rect(195, 15, 20, 20));
+            result.AddRect(DartGeometry.RectFromLTWH(195, 15, 20, 20));
             context.Canvas.DrawPath(result, new Paint { Color = new Color(0xFF6750A4) });
             PathMetric metric = result.ComputeMetrics().First();
             double distance = metric.Length * step / 4.0;

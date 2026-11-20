@@ -90,7 +90,7 @@ public sealed class DragTargetTests
         harness.Dispatch(new PointerDownEvent(
             10,
             PointerDeviceKind.Touch,
-            new Point(10, 10),
+            new Offset(10, 10),
             PointerButtons.Primary,
             now));
         Assert.Equal(0, starts);
@@ -98,7 +98,7 @@ public sealed class DragTargetTests
         harness.Dispatch(new PointerUpEvent(
             10,
             PointerDeviceKind.Touch,
-            new Point(10, 10),
+            new Offset(10, 10),
             PointerButtons.None,
             now.AddMilliseconds(50)));
         Assert.Equal(0, starts);
@@ -127,7 +127,7 @@ public sealed class DragTargetTests
             harness.Dispatch(new PointerDownEvent(
                 11,
                 PointerDeviceKind.Touch,
-                new Point(10, 10),
+                new Offset(10, 10),
                 PointerButtons.Primary,
                 now));
             harness.Pump();
@@ -138,7 +138,7 @@ public sealed class DragTargetTests
             harness.Dispatch(new PointerUpEvent(
                 11,
                 PointerDeviceKind.Touch,
-                new Point(10, 10),
+                new Offset(10, 10),
                 PointerButtons.None,
                 now.AddMilliseconds(20)));
             harness.Pump();
@@ -364,13 +364,13 @@ public sealed class DragTargetTests
         harness.Dispatch(new PointerDownEvent(
             20,
             PointerDeviceKind.Mouse,
-            new Point(90, 15),
+            new Offset(90, 15),
             PointerButtons.Primary,
             now));
         harness.Dispatch(new PointerUpEvent(
             20,
             PointerDeviceKind.Mouse,
-            new Point(90, 15),
+            new Offset(90, 15),
             PointerButtons.None,
             now.AddMilliseconds(20)));
         Assert.Equal(1, overlayTaps);
@@ -456,7 +456,7 @@ public sealed class DragTargetTests
         Assert.NotNull(layoutInfo);
         Assert.Equal(new Size(40, 30), layoutInfo.ChildSize);
         Assert.Equal(new Size(240, 120), layoutInfo.OverlaySize);
-        Assert.Equal(new Point(20, 10), MatrixUtils.TransformPoint(layoutInfo.ChildPaintTransform, new Point()));
+        Assert.Equal(new Offset(20, 10), MatrixUtils.TransformPoint(layoutInfo.ChildPaintTransform, new Offset()));
         Assert.Equal(new Size(25, 15), harness.FindRenderObject<RenderColoredBox>().Size);
     }
 
@@ -522,13 +522,13 @@ public sealed class DragTargetTests
             harness.Dispatch(new PointerDownEvent(
                 pointer,
                 PointerDeviceKind.Mouse,
-                new Point(90, 15),
+                new Offset(90, 15),
                 PointerButtons.Primary,
                 timestamp));
             harness.Dispatch(new PointerUpEvent(
                 pointer,
                 PointerDeviceKind.Mouse,
-                new Point(90, 15),
+                new Offset(90, 15),
                 PointerButtons.None,
                 timestamp.AddMilliseconds(20)));
         }
@@ -589,7 +589,7 @@ public sealed class DragTargetTests
         harness.Dispatch(new PointerDownEvent(
             1,
             PointerDeviceKind.Mouse,
-            new Point(10, 10),
+            new Offset(10, 10),
             PointerButtons.Primary,
             now));
         harness.Pump();
@@ -602,7 +602,7 @@ public sealed class DragTargetTests
         harness.Dispatch(new PointerMoveEvent(
             1,
             PointerDeviceKind.Mouse,
-            new Point(120, 20),
+            new Offset(120, 20),
             PointerButtons.Primary,
             now.AddMilliseconds(20)));
         harness.Pump();
@@ -611,22 +611,22 @@ public sealed class DragTargetTests
         Assert.DoesNotContain(rejectedSnapshots, snapshot => snapshot.Count > 0);
         Assert.NotEmpty(moves);
         Assert.Equal("plum", moves[^1].Data);
-        Assert.Equal(new Point(110, 10), moves[^1].Offset);
+        Assert.Equal(new Offset(110, 10), moves[^1].Offset);
 
         harness.Dispatch(new PointerUpEvent(
             1,
             PointerDeviceKind.Mouse,
-            new Point(120, 20),
+            new Offset(120, 20),
             PointerButtons.None,
             now.AddMilliseconds(40)));
         harness.Pump();
 
         Assert.Equal("plum", acceptedDetails?.Data);
-        Assert.Equal(new Point(110, 10), acceptedDetails?.Offset);
+        Assert.Equal(new Offset(110, 10), acceptedDetails?.Offset);
         Assert.Equal(1, completions);
         Assert.Equal(0, cancellations);
         Assert.True(endDetails?.WasAccepted);
-        Assert.Equal(new Point(110, 10), endDetails?.Offset);
+        Assert.Equal(new Offset(110, 10), endDetails?.Offset);
         Assert.DoesNotContain(
             harness.FindWidgets<ColoredBox>(),
             box => box.Color == Colors.LightGray);
@@ -638,7 +638,7 @@ public sealed class DragTargetTests
         var candidateSnapshots = new List<IReadOnlyList<string?>>();
         var rejectedSnapshots = new List<IReadOnlyList<object?>>();
         var leaves = new List<string?>();
-        Point? canceledOffset = null;
+        Offset? canceledOffset = null;
         bool? wasAccepted = null;
 
         var entry = new OverlayEntry(_ =>
@@ -679,13 +679,13 @@ public sealed class DragTargetTests
         harness.Dispatch(new PointerDownEvent(
             2,
             PointerDeviceKind.Touch,
-            new Point(10, 10),
+            new Offset(10, 10),
             PointerButtons.Primary,
             now));
         harness.Dispatch(new PointerMoveEvent(
             2,
             PointerDeviceKind.Touch,
-            new Point(100, 20),
+            new Offset(100, 20),
             PointerButtons.Primary,
             now.AddMilliseconds(20)));
         harness.Pump();
@@ -698,20 +698,20 @@ public sealed class DragTargetTests
         harness.Dispatch(new PointerMoveEvent(
             2,
             PointerDeviceKind.Touch,
-            new Point(180, 80),
+            new Offset(180, 80),
             PointerButtons.Primary,
             now.AddMilliseconds(40)));
         harness.Dispatch(new PointerUpEvent(
             2,
             PointerDeviceKind.Touch,
-            new Point(180, 80),
+            new Offset(180, 80),
             PointerButtons.None,
             now.AddMilliseconds(60)));
         harness.Pump();
 
         Assert.Equal(["rejected"], leaves);
         Assert.False(wasAccepted);
-        Assert.Equal(new Point(170, 70), canceledOffset);
+        Assert.Equal(new Offset(170, 70), canceledOffset);
     }
 
     [Fact]
@@ -747,13 +747,13 @@ public sealed class DragTargetTests
         harness.Dispatch(new PointerDownEvent(
             3,
             PointerDeviceKind.Mouse,
-            new Point(10, 10),
+            new Offset(10, 10),
             PointerButtons.Secondary,
             now));
         harness.Dispatch(new PointerUpEvent(
             3,
             PointerDeviceKind.Mouse,
-            new Point(10, 10),
+            new Offset(10, 10),
             PointerButtons.None,
             now.AddMilliseconds(10)));
         Assert.Equal(0, starts);
@@ -761,27 +761,27 @@ public sealed class DragTargetTests
         harness.Dispatch(new PointerDownEvent(
             4,
             PointerDeviceKind.Mouse,
-            new Point(10, 10),
+            new Offset(10, 10),
             PointerButtons.Primary,
             now.AddMilliseconds(20)));
         harness.Dispatch(new PointerMoveEvent(
             4,
             PointerDeviceKind.Mouse,
-            new Point(90, 70),
+            new Offset(90, 70),
             PointerButtons.Primary,
             now.AddMilliseconds(40)));
         harness.Dispatch(new PointerUpEvent(
             4,
             PointerDeviceKind.Mouse,
-            new Point(90, 70),
+            new Offset(90, 70),
             PointerButtons.None,
             now.AddMilliseconds(60)));
         harness.Pump();
 
         Assert.Equal(1, starts);
         Assert.Equal(1, updates);
-        Assert.Equal(new Point(80, 0), endDetails?.Offset);
-        Assert.Equal(0.0, endDetails?.Velocity.PixelsPerSecond.Y);
+        Assert.Equal(new Offset(80, 0), endDetails?.Offset);
+        Assert.Equal(0.0, endDetails?.Velocity.PixelsPerSecond.Dy);
     }
 
     [Fact]
@@ -825,19 +825,19 @@ public sealed class DragTargetTests
         harness.Dispatch(new PointerDownEvent(
             5,
             PointerDeviceKind.Mouse,
-            new Point(10, 10),
+            new Offset(10, 10),
             PointerButtons.Primary,
             now));
         harness.Dispatch(new PointerMoveEvent(
             5,
             PointerDeviceKind.Mouse,
-            new Point(100, 20),
+            new Offset(100, 20),
             PointerButtons.Primary,
             now.AddMilliseconds(20)));
         harness.Dispatch(new PointerUpEvent(
             5,
             PointerDeviceKind.Mouse,
-            new Point(100, 20),
+            new Offset(100, 20),
             PointerButtons.None,
             now.AddMilliseconds(40)));
         harness.Pump();

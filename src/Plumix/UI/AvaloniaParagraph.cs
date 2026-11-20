@@ -409,8 +409,8 @@ internal sealed class AvaloniaParagraph : Paragraph
                 }
 
                 Rect rect = runBounds.Rectangle;
-                var part = new Rect(rect.X, line.Baseline + delta - ascent, rect.Width, ascent + descent);
-                clusterBounds = clusterBounds is { } previous ? previous.Union(part) : part;
+                var part = DartGeometry.RectFromLTWH(rect.Left, line.Baseline + delta - ascent, rect.Width, ascent + descent);
+                clusterBounds = clusterBounds is { } previous ? previous.ExpandToInclude(part) : part;
                 direction ??= bounds.FlowDirection == FlowDirection.RightToLeft ? TextDirection.Rtl : TextDirection.Ltr;
             }
         }
@@ -448,9 +448,9 @@ internal sealed class AvaloniaParagraph : Paragraph
         return null;
     }
 
-    public override GlyphInfo? GetClosestGlyphInfoForOffset(Point offset)
+    public override GlyphInfo? GetClosestGlyphInfoForOffset(Offset offset)
     {
-        ParagraphLine? line = LineForY(offset.Y);
+        ParagraphLine? line = LineForY(offset.Dy);
         if (line is null || Text.Length == 0)
         {
             return null;
@@ -461,8 +461,8 @@ internal sealed class AvaloniaParagraph : Paragraph
         foreach ((GlyphInfo glyph, _, _) in Glyphs(line))
         {
             Rect bounds = glyph.GraphemeClusterLayoutBounds;
-            double current = offset.X < bounds.Left ? bounds.Left - offset.X
-                : offset.X > bounds.Right ? offset.X - bounds.Right : 0;
+            double current = offset.Dx < bounds.Left ? bounds.Left - offset.Dx
+                : offset.Dx > bounds.Right ? offset.Dx - bounds.Right : 0;
             if (current < distance)
             {
                 closest = glyph;
@@ -476,15 +476,15 @@ internal sealed class AvaloniaParagraph : Paragraph
     private ParagraphLine? LineForY(double y) =>
         _lines.FirstOrDefault(line => y < line.Top + line.Height) ?? _lines.LastOrDefault();
 
-    public override TextPosition GetPositionForOffset(Point offset)
+    public override TextPosition GetPositionForOffset(Offset offset)
     {
-        ParagraphLine? line = LineForY(offset.Y);
+        ParagraphLine? line = LineForY(offset.Dy);
         if (line is null)
         {
             return new TextPosition(0);
         }
 
-        CharacterHit hit = line.Native.GetCharacterHitFromDistance(offset.X);
+        CharacterHit hit = line.Native.GetCharacterHitFromDistance(offset.Dx);
         return new TextPosition(Math.Clamp(hit.FirstCharacterIndex + hit.TrailingLength, 0, Text.Length),
             hit.TrailingLength > 0 ? TextAffinity.Upstream : TextAffinity.Downstream);
     }
@@ -508,7 +508,7 @@ internal sealed class AvaloniaParagraph : Paragraph
             ResolvedTextStyle? previousStyle = null;
             bool previousPlaceholder = false;
             foreach ((GlyphInfo glyph, ResolvedTextStyle style, bool placeholder) in Glyphs(line)
-                         .OrderBy(item => item.Glyph.GraphemeClusterLayoutBounds.X))
+                         .OrderBy(item => item.Glyph.GraphemeClusterLayoutBounds.Left))
             {
                 TextRange range = glyph.GraphemeClusterCodeUnitRange;
                 if (range.Start < start || range.End > end)
@@ -653,7 +653,7 @@ internal sealed class AvaloniaParagraph : Paragraph
     public override LineMetrics? GetLineMetricsAt(int lineNumber) =>
         lineNumber >= 0 && lineNumber < NumberOfLines ? MetricsFor(lineNumber) : null;
 
-    internal override Action<DrawingContext>? CreateDrawAction(Point offset)
+    internal override Action<DrawingContext>? CreateDrawAction(Offset offset)
     {
         if (_layout is null)
         {
@@ -715,7 +715,7 @@ internal sealed class AvaloniaParagraph : Paragraph
                     foreach (Rendering.Shadow shadow in shadows)
                     {
                         canvas.Save();
-                        canvas.Translate(shadow.Offset.X, shadow.Offset.Y);
+                        canvas.Translate(shadow.Offset.Dx, shadow.Offset.Dy);
                         canvas.DrawTextGeometry(Outline(), new Paint
                         {
                             Color = shadow.Color,
@@ -944,7 +944,7 @@ internal sealed class PlaceholderTextRun : DrawableTextRun
 
     public override TextRunProperties Properties { get; }
 
-    public override void Draw(DrawingContext drawingContext, Point origin)
+    public override void Draw(DrawingContext drawingContext, Offset origin)
     {
         // Intentionally empty: RenderParagraph paints the inline child itself.
     }

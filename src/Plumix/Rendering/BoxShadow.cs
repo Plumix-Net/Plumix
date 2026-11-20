@@ -30,7 +30,7 @@ public record Shadow
     /// dart:ui `Shadow._kColorDefault`.
     public static Color DefaultColor { get; } = Color.FromARGB(0xFF, 0x00, 0x00, 0x00);
 
-    public Shadow(Color? color = null, Point offset = default, double blurRadius = 0.0)
+    public Shadow(Color? color = null, Offset offset = default, double blurRadius = 0.0)
     {
         if (blurRadius < 0.0)
         {
@@ -49,7 +49,7 @@ public record Shadow
     public Color Color { get; }
 
     /// <summary>The displacement of the shadow from the casting element.</summary>
-    public Point Offset { get; }
+    public Offset Offset { get; }
 
     /// <summary>The standard deviation of the Gaussian to convolve with the shadow's shape.</summary>
     public double BlurRadius { get; }
@@ -133,14 +133,14 @@ public record Shadow
 
     internal static double LerpDouble(double a, double b, double t) => a + ((b - a) * t);
 
-    internal static Point LerpOffset(Point a, Point b, double t)
+    internal static Offset LerpOffset(Offset a, Offset b, double t)
     {
-        return new Point(LerpDouble(a.X, b.X, t), LerpDouble(a.Y, b.Y, t));
+        return new Offset(LerpDouble(a.Dx, b.Dx, t), LerpDouble(a.Dy, b.Dy, t));
     }
 
-    internal static Point ScaleOffset(Point offset, double factor)
+    internal static Offset ScaleOffset(Offset offset, double factor)
     {
-        return new Point(offset.X * factor, offset.Y * factor);
+        return new Offset(offset.Dx * factor, offset.Dy * factor);
     }
 
     internal static Color LerpColor(Color a, Color b, double t) => Color.Lerp(a, b, t);
@@ -153,7 +153,7 @@ public sealed record BoxShadow : Shadow
 {
     public BoxShadow(
         Color? color = null,
-        Point offset = default,
+        Offset offset = default,
         double blurRadius = 0.0,
         double spreadRadius = 0.0,
         BlurStyle blurStyle = BlurStyle.Normal)
@@ -202,7 +202,7 @@ public sealed record BoxShadow : Shadow
 
     public BoxShadow CopyWith(
         Color? color = null,
-        Point? offset = null,
+        Offset? offset = null,
         double? blurRadius = null,
         double? spreadRadius = null,
         BlurStyle? blurStyle = null)
@@ -271,7 +271,7 @@ internal static class DartFormat
     public static string Color(Color color) => color.ToString();
 
     /// dart:ui `Offset.toString`.
-    public static string Offset(Point offset) => $"Offset({Fixed(offset.X)}, {Fixed(offset.Y)})";
+    public static string Offset(Offset offset) => $"Offset({Fixed(offset.Dx)}, {Fixed(offset.Dy)})";
 
     /// dart:ui `Size.toString`.
     public static string SizeOf(Size size) => $"Size({Fixed(size.Width)}, {Fixed(size.Height)})";

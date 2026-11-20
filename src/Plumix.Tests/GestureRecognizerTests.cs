@@ -23,14 +23,14 @@ public sealed class GestureRecognizerTests : IDisposable
 
     private static PointerDownEvent Down(int pointer = 5, PointerDeviceKind kind = PointerDeviceKind.Touch,
         PointerButtons buttons = PointerButtons.Primary) =>
-        new(pointer, kind, new Point(10, 10), buttons, DateTime.UnixEpoch);
+        new(pointer, kind, new Offset(10, 10), buttons, DateTime.UnixEpoch);
 
-    private static PointerMoveEvent Move(int pointer = 5, Point? position = null) =>
-        new(pointer, PointerDeviceKind.Touch, position ?? new Point(15, 15),
+    private static PointerMoveEvent Move(int pointer = 5, Offset? position = null) =>
+        new(pointer, PointerDeviceKind.Touch, position ?? new Offset(15, 15),
             PointerButtons.Primary, DateTime.UnixEpoch);
 
     private static PointerUpEvent Up(int pointer = 5) =>
-        new(pointer, PointerDeviceKind.Touch, new Point(15, 15), PointerButtons.None, DateTime.UnixEpoch);
+        new(pointer, PointerDeviceKind.Touch, new Offset(15, 15), PointerButtons.None, DateTime.UnixEpoch);
 
     private void Begin(GestureRecognizer recognizer, int pointer = 5)
     {
@@ -94,10 +94,10 @@ public sealed class GestureRecognizerTests : IDisposable
     [Fact]
     public void OffsetPair_ArithmeticAndEventFactoriesPreserveBothCoordinateSpaces()
     {
-        var first = new OffsetPair(new Point(10, 20), new Point(30, 40));
-        var second = new OffsetPair(new Point(50, 60), new Point(70, 80));
-        Assert.Equal(new OffsetPair(new Point(60, 80), new Point(100, 120)), second + first);
-        Assert.Equal(new OffsetPair(new Point(40, 40), new Point(40, 40)), second - first);
+        var first = new OffsetPair(new Offset(10, 20), new Offset(30, 40));
+        var second = new OffsetPair(new Offset(50, 60), new Offset(70, 80));
+        Assert.Equal(new OffsetPair(new Offset(60, 80), new Offset(100, 120)), second + first);
+        Assert.Equal(new OffsetPair(new Offset(40, 40), new Offset(40, 40)), second - first);
         Assert.Equal(new OffsetPair(default, default), OffsetPair.Zero);
         Assert.Equal("OffsetPair(local: Offset(10.0, 20.0), global: Offset(30.0, 40.0))", first.ToString());
 
@@ -190,7 +190,7 @@ public sealed class GestureRecognizerTests : IDisposable
         recognizer.AddPointer((PointerDownEvent)Down().Transformed(transform));
         recognizer.AddPointer(Down(6));
         _binding.PointerRouter.Route(Move());
-        Assert.Equal(new Point(30, 30), Assert.Single(recognizer.Events).LocalPosition);
+        Assert.Equal(new Offset(30, 30), Assert.Single(recognizer.Events).LocalPosition);
         _binding.PointerRouter.Route(Up());
         recognizer.Stop(5);
         Assert.Empty(recognizer.Stops);
@@ -292,7 +292,7 @@ public sealed class GestureRecognizerTests : IDisposable
         Begin(recognizer);
         Assert.Equal(GestureRecognizerState.Possible, recognizer.State);
         Assert.Equal(5, recognizer.PrimaryPointer);
-        Assert.Equal(new OffsetPair(new Point(10, 10), new Point(10, 10)), recognizer.InitialPosition);
+        Assert.Equal(new OffsetPair(new Offset(10, 10), new Offset(10, 10)), recognizer.InitialPosition);
         _binding.PointerRouter.Route(Up());
         Assert.Equal(GestureRecognizerState.Ready, recognizer.State);
         Assert.Equal(5, recognizer.PrimaryPointer);
@@ -323,7 +323,7 @@ public sealed class GestureRecognizerTests : IDisposable
         Begin(recognizer);
         _binding.PointerRouter.Route(Up());
         Begin(recognizer, 6);
-        _binding.PointerRouter.Route(Move(6, new Point(100, 200)));
+        _binding.PointerRouter.Route(Move(6, new Offset(100, 200)));
         _binding.PointerRouter.Route(Up(6));
         Assert.Equal(new[] { "accepted", "rejected" }, recognizer.Resolutions);
         Assert.Equal(GestureRecognizerState.Ready, recognizer.State);
@@ -342,9 +342,9 @@ public sealed class GestureRecognizerTests : IDisposable
         _binding.GestureArena.Close(5);
         EventLoop.FlushMicrotasks();
         Assert.Equal(new[] { "accepted" }, recognizer.Resolutions);
-        _binding.PointerRouter.Route(Move(position: new Point(15, 10)));
+        _binding.PointerRouter.Route(Move(position: new Offset(15, 10)));
         Assert.Equal(GestureRecognizerState.Possible, recognizer.State);
-        _binding.PointerRouter.Route(Move(position: new Point(16, 10)));
+        _binding.PointerRouter.Route(Move(position: new Offset(16, 10)));
         // The primary route stops at global slop even though its local displacement is only 0.6.
         Assert.Equal(GestureRecognizerState.Possible, recognizer.State);
         Assert.NotNull(recognizer.InitialPosition);
@@ -387,7 +387,7 @@ public sealed class GestureRecognizerTests : IDisposable
         }
 
         Begin(recognizer);
-        _binding.PointerRouter.Route(Move(position: pre is null ? new Point(100, 200) : null));
+        _binding.PointerRouter.Route(Move(position: pre is null ? new Offset(100, 200) : null));
         _binding.PointerRouter.Route(Up());
         Assert.Equal(new[] { rejects ? "rejected" : "accepted" }, recognizer.Resolutions);
     }

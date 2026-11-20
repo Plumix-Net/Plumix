@@ -237,9 +237,9 @@ public sealed class MaterialListTileTests
 
         var tile = Assert.IsType<RenderListTile>(FindDescendant<RenderListTile>(harness.RenderView));
         Assert.Equal(300.0 - startPadding - endPadding, tile.Size.Width, 3);
-        Assert.Equal(startPadding, GlobalOffsetOf(tile.Leading!).X, 3);
-        Assert.Equal(titleX, GlobalOffsetOf(tile.Title).X, 3);
-        Assert.Equal(300.0 - endPadding - 24.0, GlobalOffsetOf(tile.Trailing!).X, 3);
+        Assert.Equal(startPadding, GlobalOffsetOf(tile.Leading!).Dx, 3);
+        Assert.Equal(titleX, GlobalOffsetOf(tile.Title).Dx, 3);
+        Assert.Equal(300.0 - endPadding - 24.0, GlobalOffsetOf(tile.Trailing!).Dx, 3);
     }
 
     [Fact]
@@ -256,9 +256,9 @@ public sealed class MaterialListTileTests
         harness.Pump(new Size(400, 200));
 
         var tile = Assert.IsType<RenderListTile>(FindDescendant<RenderListTile>(harness.RenderView));
-        Assert.Equal(260, GlobalOffsetOf(tile.Leading!).X, 3);
-        Assert.Equal(64, GlobalOffsetOf(tile.Title).X, 3);
-        Assert.Equal(24, GlobalOffsetOf(tile.Trailing!).X, 3);
+        Assert.Equal(260, GlobalOffsetOf(tile.Leading!).Dx, 3);
+        Assert.Equal(64, GlobalOffsetOf(tile.Title).Dx, 3);
+        Assert.Equal(24, GlobalOffsetOf(tile.Trailing!).Dx, 3);
     }
 
     [Fact]
@@ -411,7 +411,7 @@ public sealed class MaterialListTileTests
                 new PointerDownEvent(
                     pointer: 320,
                     kind: PointerDeviceKind.Mouse,
-                    position: new Point(150, 28),
+                    position: new Offset(150, 28),
                     buttons: PointerButtons.Primary,
                     timestampUtc: DateTime.UtcNow));
             binding.HandlePointerEvent(
@@ -419,7 +419,7 @@ public sealed class MaterialListTileTests
                 new PointerUpEvent(
                     pointer: 320,
                     kind: PointerDeviceKind.Mouse,
-                    position: new Point(150, 28),
+                    position: new Offset(150, 28),
                     buttons: PointerButtons.None,
                     timestampUtc: DateTime.UtcNow));
         }
@@ -555,7 +555,7 @@ public sealed class MaterialListTileTests
                     child: new Plumix.Material.Material(child: tile))));
     }
 
-    private static void Tap(RenderView renderView, Point position, int pointer)
+    private static void Tap(RenderView renderView, Offset position, int pointer)
     {
         var binding = GestureBinding.Instance;
         binding.ResetForTests();
@@ -604,17 +604,17 @@ public sealed class MaterialListTileTests
             && Math.Abs(box.Size.Height - expectedHeight) < 0.001);
     }
 
-    private static Point GlobalOffsetOf(RenderObject renderObject)
+    private static Offset GlobalOffsetOf(RenderObject renderObject)
     {
-        var result = new Point();
+        var result = new Offset();
         RenderObject? current = renderObject;
         while (current is not null)
         {
             if (current.parentData is BoxParentData parentData)
             {
-                result = new Point(
-                    result.X + parentData.offset.X,
-                    result.Y + parentData.offset.Y);
+                result = new Offset(
+                    result.Dx + parentData.offset.Dx,
+                    result.Dy + parentData.offset.Dy);
             }
 
             current = current.Parent;

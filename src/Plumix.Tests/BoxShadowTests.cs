@@ -16,7 +16,7 @@ public sealed class BoxShadowTests
 
         Assert.Equal(new BoxShadow(blurRadius: 4.0), shadow);
         Assert.Equal(Color.FromARGB(0xFF, 0, 0, 0), shadow.Color);
-        Assert.Equal(new Point(0, 0), shadow.Offset);
+        Assert.Equal(new Offset(0, 0), shadow.Offset);
         Assert.Equal(0.0, shadow.SpreadRadius);
         Assert.Equal(BlurStyle.Normal, shadow.BlurStyle);
 
@@ -83,7 +83,7 @@ public sealed class BoxShadowTests
     {
         var shadow = new BoxShadow(
             color: Colors.Red,
-            offset: new Point(2, 4),
+            offset: new Offset(2, 4),
             blurRadius: 6.0,
             spreadRadius: 8.0,
             blurStyle: BlurStyle.Inner);
@@ -91,7 +91,7 @@ public sealed class BoxShadowTests
         BoxShadow scaled = shadow.Scale(0.5);
 
         Assert.Equal(Colors.Red, scaled.Color);
-        Assert.Equal(new Point(1, 2), scaled.Offset);
+        Assert.Equal(new Offset(1, 2), scaled.Offset);
         Assert.Equal(3.0, scaled.BlurRadius);
         Assert.Equal(4.0, scaled.SpreadRadius);
         Assert.Equal(BlurStyle.Inner, scaled.BlurStyle);
@@ -100,12 +100,12 @@ public sealed class BoxShadowTests
     [Fact]
     public void BoxShadow_CopyWithReplacesOnlyGivenFields()
     {
-        var shadow = new BoxShadow(color: Colors.Red, offset: new Point(1, 2), blurRadius: 3.0);
+        var shadow = new BoxShadow(color: Colors.Red, offset: new Offset(1, 2), blurRadius: 3.0);
 
         BoxShadow copy = shadow.CopyWith(spreadRadius: 5.0);
 
         Assert.Equal(Colors.Red, copy.Color);
-        Assert.Equal(new Point(1, 2), copy.Offset);
+        Assert.Equal(new Offset(1, 2), copy.Offset);
         Assert.Equal(3.0, copy.BlurRadius);
         Assert.Equal(5.0, copy.SpreadRadius);
     }

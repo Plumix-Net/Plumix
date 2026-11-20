@@ -337,7 +337,7 @@ public sealed class StatefulBuilderLookupBoundaryTests
             _owner.PumpFrame(() =>
             {
                 _pipeline.RequestLayout();
-                _pipeline.FlushLayout(new Avalonia.Size(100, 100));
+                _pipeline.FlushLayout(new Size(100, 100));
             });
         }
 

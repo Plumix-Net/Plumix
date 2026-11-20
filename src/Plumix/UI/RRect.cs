@@ -27,7 +27,7 @@ public readonly record struct RRect
     public double Bottom => _geometry.Bottom;
     public double Width => _geometry.Width;
     public double Height => _geometry.Height;
-    public Point Center => _geometry.Center;
+    public Offset Center => _geometry.Center;
     public double ShortestSide => _geometry.ShortestSide;
     public double LongestSide => _geometry.LongestSide;
     public Rect SafeInnerRect => _geometry.SafeInnerRect;
@@ -74,7 +74,7 @@ public readonly record struct RRect
         Radius? bottomRight = null, Radius? bottomLeft = null) =>
         new(rect, topLeft ?? default, topRight ?? default, bottomRight ?? default, bottomLeft ?? default);
 
-    public RRect Shift(Point offset) => new(_geometry.Shift(offset));
+    public RRect Shift(Offset offset) => new(_geometry.Shift(offset));
     public RRect Inflate(double delta) => new(_geometry.Inflate(delta));
     public RRect Deflate(double delta) => Inflate(-delta);
     public RRect ScaleRadii() => new(_geometry.ScaleRadii());
@@ -95,9 +95,9 @@ public readonly record struct RRect
     /// Dart's <c>RRect.contains</c>: the bounding box is half-open (the right and bottom edges are outside),
     /// and a point in a corner area must lie inside the corner's ellipse after <see cref="ScaleRadii"/>.
     /// </remarks>
-    public bool Contains(Point point)
+    public bool Contains(Offset point)
     {
-        if (point.X < Left || point.X >= Right || point.Y < Top || point.Y >= Bottom)
+        if (point.Dx < Left || point.Dx >= Right || point.Dy < Top || point.Dy >= Bottom)
         {
             return false;
         } // outside bounding box
@@ -110,31 +110,31 @@ public readonly record struct RRect
         double radiusY;
         // check whether point is in one of the rounded corner areas
         // x, y -> translate to ellipse center
-        if (point.X < Left + scaled.TopLeft.X && point.Y < Top + scaled.TopLeft.Y)
+        if (point.Dx < Left + scaled.TopLeft.X && point.Dy < Top + scaled.TopLeft.Y)
         {
-            x = point.X - Left - scaled.TopLeft.X;
-            y = point.Y - Top - scaled.TopLeft.Y;
+            x = point.Dx - Left - scaled.TopLeft.X;
+            y = point.Dy - Top - scaled.TopLeft.Y;
             radiusX = scaled.TopLeft.X;
             radiusY = scaled.TopLeft.Y;
         }
-        else if (point.X > Right - scaled.TopRight.X && point.Y < Top + scaled.TopRight.Y)
+        else if (point.Dx > Right - scaled.TopRight.X && point.Dy < Top + scaled.TopRight.Y)
         {
-            x = point.X - Right + scaled.TopRight.X;
-            y = point.Y - Top - scaled.TopRight.Y;
+            x = point.Dx - Right + scaled.TopRight.X;
+            y = point.Dy - Top - scaled.TopRight.Y;
             radiusX = scaled.TopRight.X;
             radiusY = scaled.TopRight.Y;
         }
-        else if (point.X > Right - scaled.BottomRight.X && point.Y > Bottom - scaled.BottomRight.Y)
+        else if (point.Dx > Right - scaled.BottomRight.X && point.Dy > Bottom - scaled.BottomRight.Y)
         {
-            x = point.X - Right + scaled.BottomRight.X;
-            y = point.Y - Bottom + scaled.BottomRight.Y;
+            x = point.Dx - Right + scaled.BottomRight.X;
+            y = point.Dy - Bottom + scaled.BottomRight.Y;
             radiusX = scaled.BottomRight.X;
             radiusY = scaled.BottomRight.Y;
         }
-        else if (point.X < Left + scaled.BottomLeft.X && point.Y > Bottom - scaled.BottomLeft.Y)
+        else if (point.Dx < Left + scaled.BottomLeft.X && point.Dy > Bottom - scaled.BottomLeft.Y)
         {
-            x = point.X - Left - scaled.BottomLeft.X;
-            y = point.Y - Bottom + scaled.BottomLeft.Y;
+            x = point.Dx - Left - scaled.BottomLeft.X;
+            y = point.Dy - Bottom + scaled.BottomLeft.Y;
             radiusX = scaled.BottomLeft.X;
             radiusY = scaled.BottomLeft.Y;
         }
@@ -165,18 +165,18 @@ public readonly record struct RRect
         return path;
     }
 
-    internal Rect TopLeftCorner() => new(Left, Top, TopLeft.X * 2.0, TopLeft.Y * 2.0);
+    internal Rect TopLeftCorner() => DartGeometry.RectFromLTWH(Left, Top, TopLeft.X * 2.0, TopLeft.Y * 2.0);
 
     internal Rect TopRightCorner() =>
-        new(Right - (TopRight.X * 2.0), Top, TopRight.X * 2.0, TopRight.Y * 2.0);
+        DartGeometry.RectFromLTWH(Right - (TopRight.X * 2.0), Top, TopRight.X * 2.0, TopRight.Y * 2.0);
 
-    internal Rect BottomRightCorner() => new(
+    internal Rect BottomRightCorner() => DartGeometry.RectFromLTWH(
         Right - (BottomRight.X * 2.0),
         Bottom - (BottomRight.Y * 2.0),
         BottomRight.X * 2.0,
         BottomRight.Y * 2.0);
 
     internal Rect BottomLeftCorner() =>
-        new(Left, Bottom - (BottomLeft.Y * 2.0), BottomLeft.X * 2.0, BottomLeft.Y * 2.0);
+        DartGeometry.RectFromLTWH(Left, Bottom - (BottomLeft.Y * 2.0), BottomLeft.X * 2.0, BottomLeft.Y * 2.0);
 
 }

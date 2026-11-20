@@ -75,7 +75,7 @@ public abstract class FloatingActionButtonLocation
     public static FloatingActionButtonLocation EndContained { get; } =
         new StandardFabLocation(FabHorizontal.End, FabVertical.Contained);
 
-    public abstract Point GetOffset(ScaffoldPrelayoutGeometry scaffoldGeometry);
+    public abstract Offset GetOffset(ScaffoldPrelayoutGeometry scaffoldGeometry);
 
     private enum FabHorizontal { Start, Center, End }
     private enum FabVertical { Top, Float, Docked, Contained }
@@ -83,7 +83,7 @@ public abstract class FloatingActionButtonLocation
     private sealed class StandardFabLocation(FabHorizontal horizontal, FabVertical vertical, bool mini = false)
         : FloatingActionButtonLocation
     {
-        public override Point GetOffset(ScaffoldPrelayoutGeometry geometry)
+        public override Offset GetOffset(ScaffoldPrelayoutGeometry geometry)
         {
             double adjustment = mini ? MiniButtonOffsetAdjustment : 0.0;
             double x = horizontal switch
@@ -101,7 +101,7 @@ public abstract class FloatingActionButtonLocation
                 FabVertical.Docked => Docked(geometry),
                 _ => Contained(geometry),
             };
-            return new Point(x, y);
+            return new Offset(x, y);
         }
 
         private static double Left(ScaffoldPrelayoutGeometry geometry, double adjustment) =>
@@ -194,7 +194,7 @@ public abstract class FloatingActionButtonAnimator
 
     /// <summary>Gets the <see cref="FloatingActionButton"/>'s position relative to the origin of the
     /// <see cref="Scaffold"/> based on <paramref name="progress"/>.</summary>
-    public abstract Point GetOffset(Point begin, Point end, double progress);
+    public abstract Offset GetOffset(Offset begin, Offset end, double progress);
 
     /// <summary>Animates the scale of the <see cref="FloatingActionButton"/>.</summary>
     public abstract Animation<double> GetScaleAnimation(Animation<double> parent);
@@ -219,7 +219,7 @@ public abstract class FloatingActionButtonAnimator
 
         private static readonly Animatable<double> ThresholdCenterTween = new CurveTween(new Threshold(0.5));
 
-        public override Point GetOffset(Point begin, Point end, double progress) => progress < 0.5 ? begin : end;
+        public override Offset GetOffset(Offset begin, Offset end, double progress) => progress < 0.5 ? begin : end;
 
         public override Animation<double> GetScaleAnimation(Animation<double> parent)
         {
@@ -251,7 +251,7 @@ public abstract class FloatingActionButtonAnimator
 
     private sealed class NoAnimationFabMotionAnimator : FloatingActionButtonAnimator
     {
-        public override Point GetOffset(Point begin, Point end, double progress) => end;
+        public override Offset GetOffset(Offset begin, Offset end, double progress) => end;
 
         public override Animation<double> GetScaleAnimation(Animation<double> parent) =>
             new ConstantAnimation<double>(1.0);
@@ -303,7 +303,7 @@ internal sealed class TransitionSnapshotFabLocation : FloatingActionButtonLocati
         _progress = progress;
     }
 
-    public override Point GetOffset(ScaffoldPrelayoutGeometry scaffoldGeometry)
+    public override Offset GetOffset(ScaffoldPrelayoutGeometry scaffoldGeometry)
     {
         return _animator.GetOffset(
             begin: _begin.GetOffset(scaffoldGeometry),

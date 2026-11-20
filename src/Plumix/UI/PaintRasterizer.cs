@@ -111,7 +111,7 @@ internal sealed class RasterizedShapeDraw
         byte[] coverage = PaintRasterizer.RasterizeAlpha(
             width,
             height,
-            bounds.Position,
+            bounds.TopLeft,
             scale,
             drawingContext =>
             {
@@ -132,7 +132,7 @@ internal sealed class RasterizedShapeDraw
             : PaintRasterizer.ShadeMask(
                 mask,
                 PaintRasterizer.RasterizeBrush(width, height, bounds, scale, _brush, _color.A));
-        return (PaintRasterizer.CreateBitmap(pixels, width, height), new Rect(bounds.Position, new Size(
+        return (PaintRasterizer.CreateBitmap(pixels, width, height), DartGeometry.RectFromOffsetAndSize(bounds.TopLeft, new Size(
             width / scale,
             height / scale)));
     }
@@ -141,7 +141,7 @@ internal sealed class RasterizedShapeDraw
 /// <summary>The pixel work behind <see cref="RasterizedShapeDraw"/>; the pure parts are testable.</summary>
 internal static class PaintRasterizer
 {
-    private static readonly Vector Dpi = new(96.0, 96.0);
+    private static readonly Offset Dpi = new(96.0, 96.0);
 
     // A shape this large (in device pixels) is not rasterized; the canvas falls back to its backend draw.
     internal const long MaxRasterPixels = 16L * 1024 * 1024;
@@ -166,8 +166,8 @@ internal static class PaintRasterizer
     {
         return bounds.Width > 0.0
                && bounds.Height > 0.0
-               && double.IsFinite(bounds.X)
-               && double.IsFinite(bounds.Y)
+               && double.IsFinite(bounds.Left)
+               && double.IsFinite(bounds.Top)
                && double.IsFinite(bounds.Width)
                && double.IsFinite(bounds.Height);
     }
@@ -289,7 +289,7 @@ internal static class PaintRasterizer
     internal static byte[] RasterizeAlpha(
         int width,
         int height,
-        Point origin,
+        Offset origin,
         double scale,
         Action<DrawingContext> draw)
     {
@@ -306,7 +306,7 @@ internal static class PaintRasterizer
     /// <summary>Rasterizes <paramref name="brush"/> over <paramref name="bounds"/> (premultiplied BGRA).</summary>
     internal static byte[] RasterizeBrush(
         int width, int height, Rect bounds, double scale, IBrush brush, double opacity = 1.0) =>
-        Rasterize(width, height, bounds.Position, scale, context =>
+        Rasterize(width, height, bounds.TopLeft, scale, context =>
         {
             using DrawingContext.PushedState alpha = context.PushOpacity(opacity);
             ShaderDrawing.DrawRectangle(context, brush, null, bounds);
@@ -336,13 +336,13 @@ internal static class PaintRasterizer
             BitmapBlendingMode = FilterLayerRasterizer.ToBitmapBlendingMode(blendMode),
             BitmapInterpolationMode = BitmapInterpolationMode.LowQuality,
         });
-        context.DrawImage(bitmap, new Rect(bitmap.Size), bounds);
+        context.DrawImage(bitmap, DartGeometry.RectFromSize(bitmap.Size), bounds);
     }
 
     private static byte[] Rasterize(
         int width,
         int height,
-        Point origin,
+        Offset origin,
         double scale,
         Action<DrawingContext> draw)
     {
@@ -350,7 +350,7 @@ internal static class PaintRasterizer
         using var target = new RenderTargetBitmap(pixelSize, Dpi);
         using (DrawingContext drawingContext = target.CreateDrawingContext())
         using (drawingContext.PushTransform(
-                   Matrix.CreateTranslation(-origin.X, -origin.Y) * Matrix.CreateScale(scale, scale)))
+                   Matrix.CreateTranslation(-origin.Dx, -origin.Dy) * Matrix.CreateScale(scale, scale)))
         {
             draw(drawingContext);
         }

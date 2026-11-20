@@ -1109,7 +1109,7 @@ public sealed partial class EditableText : StatefulWidget
         BoxHeightStyle? selectionHeightStyle = null,
         BoxWidthStyle? selectionWidthStyle = null,
         bool cursorOpacityAnimates = false,
-        Point? cursorOffset = null,
+        Offset? cursorOffset = null,
         bool paintCursorAboveText = false,
         bool? enableInteractiveSelection = null,
         bool? selectAllOnFocus = null,
@@ -1306,7 +1306,7 @@ public sealed partial class EditableText : StatefulWidget
     public BoxHeightStyle SelectionHeightStyle { get; }
     public BoxWidthStyle SelectionWidthStyle { get; }
     public bool CursorOpacityAnimates { get; }
-    public Point? CursorOffset { get; }
+    public Offset? CursorOffset { get; }
     public bool PaintCursorAboveText { get; }
     public bool EnableInteractiveSelection { get; }
 
@@ -1624,10 +1624,10 @@ public sealed partial class EditableText : StatefulWidget
         private double _lastBottomViewInset;
         private bool _observingMetrics;
         private TextRange? _currentPromptRectRange;
-        private Point? _startCaretCenter;
+        private Offset? _startCaretCenter;
         private TextPosition? _lastTextPosition;
-        private Point? _pointOffsetOrigin;
-        private Point? _lastBoundedOffset;
+        private Offset? _pointOffsetOrigin;
+        private Offset? _lastBoundedOffset;
         private AnimationController? _floatingCursorResetController;
         private ScrollNotificationObserverState? _scrollNotificationObserver;
         private (TextEditingValue Value, Rect SelectionBounds)? _dataWhenToolbarShowScheduled;
@@ -2596,7 +2596,7 @@ internal sealed class EditableRenderObjectWidget : MultiChildRenderObjectWidget
         bool obscureText,
         ViewportOffset offset,
         double cursorWidth,
-        Point cursorOffset,
+        Offset cursorOffset,
         bool paintCursorAboveText,
         ITextSelectionDelegate textSelectionDelegate,
         double devicePixelRatio,
@@ -2688,7 +2688,7 @@ internal sealed class EditableRenderObjectWidget : MultiChildRenderObjectWidget
     public double CursorWidth { get; }
     public double? CursorHeight { get; }
     public Radius? CursorRadius { get; }
-    public Point CursorOffset { get; }
+    public Offset CursorOffset { get; }
     public bool PaintCursorAboveText { get; }
     public BoxHeightStyle SelectionHeightStyle { get; }
     public BoxWidthStyle SelectionWidthStyle { get; }

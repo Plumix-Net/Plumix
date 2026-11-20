@@ -167,8 +167,8 @@ public sealed class MaterialInputDecoratorTests
         harness.Pump();
         RenderDecoration decorator = harness.Decorator;
 
-        Assert.Equal(0.0, DecoratorHarness.OffsetOf(decorator.InputBox).X, precision: 6);
-        Assert.Equal(0.0, DecoratorHarness.OffsetOf(decorator.InputBox).Y, precision: 6);
+        Assert.Equal(0.0, DecoratorHarness.OffsetOf(decorator.InputBox).Dx, precision: 6);
+        Assert.Equal(0.0, DecoratorHarness.OffsetOf(decorator.InputBox).Dy, precision: 6);
         Assert.Equal(
             Math.Max(24.0, decorator.HintBox!.Size.Height),
             decorator.ContainerBox!.Size.Height,
@@ -228,8 +228,8 @@ public sealed class MaterialInputDecoratorTests
 
         Assert.Equal(new Size(48.0, 48.0), prefixIcon.Size);
         Assert.Equal(new Size(48.0, 48.0), suffixIcon.Size);
-        Assert.Equal(container.Center.Y, prefixIcon.Center.Y, precision: 6);
-        Assert.Equal(container.Center.Y, suffixIcon.Center.Y, precision: 6);
+        Assert.Equal(container.Center.Dy, prefixIcon.Center.Dy, precision: 6);
+        Assert.Equal(container.Center.Dy, suffixIcon.Center.Dy, precision: 6);
         Assert.Equal(0.0, prefixIcon.Left, precision: 6);
         Assert.Equal(800.0, suffixIcon.Right, precision: 6);
         Assert.Equal(prefixIcon.Right + InputGapM3, input.Left, precision: 6);
@@ -318,7 +318,7 @@ public sealed class MaterialInputDecoratorTests
         Assert.Equal(labelWidth * FinalLabelScale, startPainter.GapExtent, precision: 6);
         Assert.NotNull(startPainter.GapStart);
         Assert.Equal(
-            DecoratorHarness.OffsetOf(startDecorator.LabelBox).X,
+            DecoratorHarness.OffsetOf(startDecorator.LabelBox).Dx,
             startPainter.GapStart!.Value,
             precision: 6);
         Assert.Equal(1.0, startPainter.GapPercentage, precision: 6);
@@ -752,7 +752,7 @@ public sealed class MaterialInputDecoratorTests
             isEmpty: true));
         inline.Pump();
         RenderBox inlineLabel = inline.Decorator.LabelBox!;
-        Point inlineTopLeft = inlineLabel.LocalToGlobal(default);
+        Offset inlineTopLeft = inlineLabel.LocalToGlobal(default);
         Size inlineSize = inlineLabel.Size;
 
         using var floating = new DecoratorHarness(Decorator(new InputDecoration(
@@ -765,19 +765,19 @@ public sealed class MaterialInputDecoratorTests
 
         // Flutter asserts the same shape through tester.getRect, which resolves applyPaintTransform:
         // the label keeps its left edge, is lifted above the outline and painted at 0.75 scale.
-        Point floatingTopLeft = label.LocalToGlobal(default);
-        Point floatingBottomRight = label.LocalToGlobal(new Point(label.Size.Width, label.Size.Height));
+        Offset floatingTopLeft = label.LocalToGlobal(default);
+        Offset floatingBottomRight = label.LocalToGlobal(new Offset(label.Size.Width, label.Size.Height));
         BorderSide side = Painter(floating).Border.BorderSide;
         double expectedTop = (-label.Size.Height * FinalLabelScale / 2.0) - (side.StrokeOffset / 2.0);
 
-        Assert.Equal(inlineTopLeft.X, floatingTopLeft.X, precision: 6);
-        Assert.Equal(expectedTop, floatingTopLeft.Y, precision: 6);
-        Assert.True(floatingTopLeft.Y < inlineTopLeft.Y);
-        Assert.Equal(inlineSize.Width * FinalLabelScale, floatingBottomRight.X - floatingTopLeft.X, precision: 6);
-        Assert.Equal(inlineSize.Height * FinalLabelScale, floatingBottomRight.Y - floatingTopLeft.Y, precision: 6);
+        Assert.Equal(inlineTopLeft.Dx, floatingTopLeft.Dx, precision: 6);
+        Assert.Equal(expectedTop, floatingTopLeft.Dy, precision: 6);
+        Assert.True(floatingTopLeft.Dy < inlineTopLeft.Dy);
+        Assert.Equal(inlineSize.Width * FinalLabelScale, floatingBottomRight.Dx - floatingTopLeft.Dx, precision: 6);
+        Assert.Equal(inlineSize.Height * FinalLabelScale, floatingBottomRight.Dy - floatingTopLeft.Dy, precision: 6);
 
         // The inverse maps a painted point back into the label's own coordinate space.
-        Assert.Equal(new Point(0, 0), label.GlobalToLocal(floatingTopLeft));
+        Assert.Equal(new Offset(0, 0), label.GlobalToLocal(floatingTopLeft));
 
         // Every other slot keeps the plain parent-data offset.
         RenderBox input = decorator.InputBox!;
@@ -848,8 +848,8 @@ public sealed class MaterialInputDecoratorTests
         Assert.True(border.IsOutline);
         Assert.Equal(EdgeInsets.All(2.0), border.Dimensions);
         Assert.Equal(shape.PreferPaintInterior, border.PreferPaintInterior);
-        Assert.Equal(shape.GetOuterPath(new Rect(0, 0, 40, 20)).GetBounds(),
-            border.GetOuterPath(new Rect(0, 0, 40, 20)).GetBounds());
+        Assert.Equal(shape.GetOuterPath(DartGeometry.RectFromLTWH(0, 0, 40, 20)).GetBounds(),
+            border.GetOuterPath(DartGeometry.RectFromLTWH(0, 0, 40, 20)).GetBounds());
 
         var scaled = (ShapedInputBorder)border.Scale(0.5);
         Assert.Equal(1.0, scaled.BorderSide.Width, precision: 6);
@@ -867,9 +867,9 @@ public sealed class MaterialInputDecoratorTests
 
         // The gap cuts the top edge of the outline out of the painted path.
         var probe = new PaintingContext(new OffsetLayer());
-        border.Paint(probe, new Rect(0, 0, 200, 56), gapStart: 40.0, gapExtent: 30.0, gapPercentage: 1.0,
+        border.Paint(probe, DartGeometry.RectFromLTWH(0, 0, 200, 56), gapStart: 40.0, gapExtent: 30.0, gapPercentage: 1.0,
             textDirection: TextDirection.Ltr);
-        border.Paint(probe, new Rect(0, 0, 200, 56), gapStart: null, textDirection: TextDirection.Ltr);
+        border.Paint(probe, DartGeometry.RectFromLTWH(0, 0, 200, 56), gapStart: null, textDirection: TextDirection.Ltr);
         Assert.Throws<ArgumentOutOfRangeException>(() => new ShapedInputBorder(shape, gapPadding: -1.0));
     }
 
@@ -882,19 +882,19 @@ public sealed class MaterialInputDecoratorTests
 
         // The inner edge is the rect deflated by the bottom side, which is what the ring is filled
         // between; Flutter asserts the same outer/inner pair through paintNonUniformBorder.
-        Plumix.UI.Path inner = border.GetInnerPath(new Rect(0, 0, 100, 100));
-        Assert.Equal(new Rect(0, 0, 100, 99), inner.GetBounds());
-        Assert.Equal(new Rect(0, 0, 100, 100), border.GetOuterPath(new Rect(0, 0, 100, 100)).GetBounds());
+        Plumix.UI.Path inner = border.GetInnerPath(DartGeometry.RectFromLTWH(0, 0, 100, 100));
+        Assert.Equal(DartGeometry.RectFromLTWH(0, 0, 100, 99), inner.GetBounds());
+        Assert.Equal(DartGeometry.RectFromLTWH(0, 0, 100, 100), border.GetOuterPath(DartGeometry.RectFromLTWH(0, 0, 100, 100)).GetBounds());
 
         var probe = new PaintingContext(new OffsetLayer());
         var squared = new UnderlineInputBorder(new BorderSide(Colors.Black, 2.0), BorderRadius.Zero);
-        squared.Paint(probe, new Rect(0, 0, 100, 100), gapStart: null);
+        squared.Paint(probe, DartGeometry.RectFromLTWH(0, 0, 100, 100), gapStart: null);
         Assert.Equal(EdgeInsets.FromLTRB(0, 0, 0, 2.0), squared.Dimensions);
 
         // A border with no style paints nothing at all.
         var invisible = new UnderlineInputBorder(BorderSide.None);
         var emptyProbe = new PaintingContext(new OffsetLayer());
-        invisible.Paint(emptyProbe, new Rect(0, 0, 100, 100), gapStart: null);
+        invisible.Paint(emptyProbe, DartGeometry.RectFromLTWH(0, 0, 100, 100), gapStart: null);
         Assert.Equal(EdgeInsetsGeometry.Zero, invisible.Dimensions);
     }
 

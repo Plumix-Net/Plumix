@@ -220,12 +220,12 @@ internal sealed class RenderSliverResizingHeader : RenderSliver, ISlottedRenderO
             constraints.GrowthDirection);
         childParentData.PaintOffset = direction switch
         {
-            AxisDirection.Up => new Point(
+            AxisDirection.Up => new Offset(
                 0.0,
                 -(geometry.ScrollExtent - (geometry.PaintExtent + constraints.ScrollOffset))),
-            AxisDirection.Right => new Point(-constraints.ScrollOffset, 0.0),
-            AxisDirection.Down => new Point(0.0, -constraints.ScrollOffset),
-            _ => new Point(
+            AxisDirection.Right => new Offset(-constraints.ScrollOffset, 0.0),
+            AxisDirection.Down => new Offset(0.0, -constraints.ScrollOffset),
+            _ => new Offset(
                 -(geometry.ScrollExtent - (geometry.PaintExtent + constraints.ScrollOffset)),
                 0.0),
         };
@@ -288,7 +288,7 @@ internal sealed class RenderSliverResizingHeader : RenderSliver, ISlottedRenderO
         childParentData.ApplyPaintTransform(transform);
     }
 
-    public override void Paint(PaintingContext context, Point offset)
+    public override void Paint(PaintingContext context, Offset offset)
     {
         if (Child != null && Geometry!.Visible)
         {

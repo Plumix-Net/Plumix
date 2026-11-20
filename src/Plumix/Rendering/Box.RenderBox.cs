@@ -472,7 +472,7 @@ public abstract class RenderBox : RenderObject
     public Size DebugAdoptSize(Size value) => value;
 
     /// <inheritdoc />
-    protected override Rect SemanticBounds => new(default, Size);
+    protected override Rect SemanticBounds => DartGeometry.RectFromOffsetAndSize(default, Size);
 
     /// <inheritdoc />
     /// <remarks>Flutter's <c>RenderBox.debugResetSize</c>: re-adopts the current size.</remarks>
@@ -900,7 +900,7 @@ public abstract class RenderBox : RenderObject
     /// one from being hit). The caller is responsible for transforming <paramref name="position"/> from
     /// global coordinates to its location relative to the origin of this <see cref="RenderBox"/>.
     /// </remarks>
-    public virtual bool HitTest(BoxHitTestResult result, Point position)
+    public virtual bool HitTest(BoxHitTestResult result, Offset position)
     {
         if (Constants.KDebugMode && !HasSize)
         {
@@ -934,7 +934,7 @@ public abstract class RenderBox : RenderObject
         Size size = _size ?? throw new InvalidOperationException(
             $"RenderBox was not laid out: {GetType().Name}#{Diagnostics.ShortHash(this)}");
         // Dart's `Size.contains`: the right and bottom edges are outside the box.
-        if (position.X >= 0.0 && position.X < size.Width && position.Y >= 0.0 && position.Y < size.Height)
+        if (position.Dx >= 0.0 && position.Dx < size.Width && position.Dy >= 0.0 && position.Dy < size.Height)
         {
             if (HitTestChildren(result, position) || HitTestSelf(position))
             {
@@ -949,10 +949,10 @@ public abstract class RenderBox : RenderObject
     /// <summary>
     /// Override this method if this render object can be hit even if its children were not hit.
     /// </summary>
-    protected virtual bool HitTestSelf(Point position) => false;
+    protected virtual bool HitTestSelf(Offset position) => false;
 
     /// <summary>Override this method to check whether any children are located at the given position.</summary>
-    protected virtual bool HitTestChildren(BoxHitTestResult result, Point position) => false;
+    protected virtual bool HitTestChildren(BoxHitTestResult result, Offset position) => false;
 
     /// <inheritdoc />
     /// <remarks>
@@ -982,8 +982,8 @@ public abstract class RenderBox : RenderObject
         }
 
         var childParentData = (BoxParentData)child.parentData!;
-        Point offset = childParentData.offset;
-        transform.TranslateByDouble(offset.X, offset.Y, 0, 1);
+        Offset offset = childParentData.offset;
+        transform.TranslateByDouble(offset.Dx, offset.Dy, 0, 1);
     }
 
     /// <summary>
@@ -995,7 +995,7 @@ public abstract class RenderBox : RenderObject
     /// back onto the z = 0 plane the way it was drawn from. If the transform from global coordinates to
     /// local coordinates is degenerate, this function returns <c>Offset.zero</c>.
     /// </remarks>
-    public Point GlobalToLocal(Point point, RenderObject? ancestor = null)
+    public Offset GlobalToLocal(Offset point, RenderObject? ancestor = null)
     {
         // We want to find point (p) that corresponds to a given point on the screen (s), but that also
         // physically resides on the local render plane, so that it is useful for visually accurate
@@ -1015,22 +1015,22 @@ public abstract class RenderBox : RenderObject
             return default;
         }
 
-        Vector3 s = transform.PerspectiveTransform(new Vector3(point.X, point.Y, 0.0));
+        Vector3 s = transform.PerspectiveTransform(new Vector3(point.Dx, point.Dy, 0.0));
         Vector3 p = s - (d * (s.Z / d.Z));
-        return new Point(p.X, p.Y);
+        return new Offset(p.X, p.Y);
     }
 
     /// <summary>
     /// Convert the given point from the local coordinate system for this box to the global coordinate
     /// system in logical pixels.
     /// </summary>
-    public Point LocalToGlobal(Point point, RenderObject? ancestor = null)
+    public Offset LocalToGlobal(Offset point, RenderObject? ancestor = null)
     {
         return MatrixUtils.TransformPoint(GetTransformTo(ancestor), point);
     }
 
     /// <summary>A rectangle that contains all the pixels painted by this box.</summary>
-    public override Rect PaintBounds => new(default, Size);
+    public override Rect PaintBounds => DartGeometry.RectFromOffsetAndSize(default, Size);
 
     /// <summary>Implements the <see cref="RenderingDebug.PaintPointersEnabled"/> debugging feature.</summary>
     /// <remarks>
@@ -1065,7 +1065,7 @@ public abstract class RenderBox : RenderObject
 
     /// <inheritdoc />
     /// <remarks>Flutter's <c>RenderBox.debugPaint</c>.</remarks>
-    protected override void DebugPaint(PaintingContext context, Point offset)
+    protected override void DebugPaint(PaintingContext context, Offset offset)
     {
         if (!Constants.KDebugMode)
         {
@@ -1101,11 +1101,11 @@ public abstract class RenderBox : RenderObject
     /// Flutter's <c>RenderBox.debugPaintSize</c>, called for every <see cref="RenderBox"/> when
     /// <see cref="RenderingDebug.PaintSizeEnabled"/> is set.
     /// </remarks>
-    protected internal virtual void DebugPaintSize(PaintingContext context, Point offset)
+    protected internal virtual void DebugPaintSize(PaintingContext context, Offset offset)
     {
         ArgumentNullException.ThrowIfNull(context);
         var pen = new Pen(new SolidColorBrush(new Color(0xFF00FFFF)), 1.0);
-        context.Canvas.DrawGeometry(null, pen, new RectangleGeometry(Deflate(new Rect(offset, Size), 0.5)));
+        context.Canvas.DrawGeometry(null, pen, new RectangleGeometry(Deflate(DartGeometry.RectFromOffsetAndSize(offset, Size), 0.5)));
     }
 
     /// <summary>In debug mode, paints a line for each baseline.</summary>
@@ -1113,7 +1113,7 @@ public abstract class RenderBox : RenderObject
     /// Flutter's <c>RenderBox.debugPaintBaselines</c>, called for every <see cref="RenderBox"/> when
     /// <see cref="RenderingDebug.PaintBaselinesEnabled"/> is set.
     /// </remarks>
-    protected virtual void DebugPaintBaselines(PaintingContext context, Point offset)
+    protected virtual void DebugPaintBaselines(PaintingContext context, Offset offset)
     {
         ArgumentNullException.ThrowIfNull(context);
 
@@ -1124,8 +1124,8 @@ public abstract class RenderBox : RenderObject
             var pen = new Pen(new SolidColorBrush(new Color(0xFFFFD000)), 0.25);
             context.Canvas.DrawLine(
                 pen,
-                new Point(offset.X, offset.Y + ideographic),
-                new Point(offset.X + Size.Width, offset.Y + ideographic));
+                new Offset(offset.Dx, offset.Dy + ideographic),
+                new Offset(offset.Dx + Size.Width, offset.Dy + ideographic));
         }
 
         // Alphabetic baseline.
@@ -1135,8 +1135,8 @@ public abstract class RenderBox : RenderObject
             var pen = new Pen(new SolidColorBrush(new Color(0xFF00FF00)), 0.25);
             context.Canvas.DrawLine(
                 pen,
-                new Point(offset.X, offset.Y + alphabetic),
-                new Point(offset.X + Size.Width, offset.Y + alphabetic));
+                new Offset(offset.Dx, offset.Dy + alphabetic),
+                new Offset(offset.Dx + Size.Width, offset.Dy + alphabetic));
         }
     }
 
@@ -1149,7 +1149,7 @@ public abstract class RenderBox : RenderObject
     /// <see cref="RenderingDebug.PaintPointersEnabled"/> is set. Events are only counted for classes
     /// that call <see cref="DebugHandleEvent"/>.
     /// </remarks>
-    protected virtual void DebugPaintPointers(PaintingContext context, Point offset)
+    protected virtual void DebugPaintPointers(PaintingContext context, Offset offset)
     {
         ArgumentNullException.ThrowIfNull(context);
         if (_debugActivePointers <= 0)
@@ -1158,7 +1158,7 @@ public abstract class RenderBox : RenderObject
         }
 
         var color = new Color(0x00BBBBu | (uint)(0x04000000 * Depth & 0xFF000000));
-        context.Canvas.DrawRectangle(new SolidColorBrush(color), null, new Rect(offset, Size));
+        context.Canvas.DrawRectangle(new SolidColorBrush(color), null, DartGeometry.RectFromOffsetAndSize(offset, Size));
     }
 
     /// <inheritdoc />
@@ -1195,9 +1195,9 @@ public abstract class RenderBox : RenderObject
     /// <remarks>Dart's <c>Rect.deflate</c>.</remarks>
     private static Rect Deflate(Rect rect, double delta)
     {
-        return new Rect(
-            rect.X + delta,
-            rect.Y + delta,
+        return DartGeometry.RectFromLTWH(
+            rect.Left + delta,
+            rect.Top + delta,
             Math.Max(0.0, rect.Width - (delta * 2.0)),
             Math.Max(0.0, rect.Height - (delta * 2.0)));
     }

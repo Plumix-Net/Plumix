@@ -166,7 +166,7 @@ internal sealed class AnimatedIconPainter : CustomPainter
                || oldPainter.Scale != Scale;
     }
 
-    public override bool? HitTest(Point position) => null;
+    public override bool? HitTest(Offset position) => null;
 }
 
 internal sealed class PathFrames
@@ -230,31 +230,31 @@ internal abstract class PathCommand
 {
 }
 
-internal sealed class PathMoveTo(IReadOnlyList<Point> points) : PathCommand
+internal sealed class PathMoveTo(IReadOnlyList<Offset> points) : PathCommand
 {
-    internal IReadOnlyList<Point> Points { get; } = points;
+    internal IReadOnlyList<Offset> Points { get; } = points;
 
-    internal Point Interpolate(double progress) => AnimatedIconInterpolation.Interpolate(Points, progress);
+    internal Offset Interpolate(double progress) => AnimatedIconInterpolation.Interpolate(Points, progress);
 }
 
 internal sealed class PathCubicTo(
-    IReadOnlyList<Point> controlPoints1,
-    IReadOnlyList<Point> controlPoints2,
-    IReadOnlyList<Point> targetPoints) : PathCommand
+    IReadOnlyList<Offset> controlPoints1,
+    IReadOnlyList<Offset> controlPoints2,
+    IReadOnlyList<Offset> targetPoints) : PathCommand
 {
-    internal IReadOnlyList<Point> ControlPoints1 { get; } = controlPoints1;
+    internal IReadOnlyList<Offset> ControlPoints1 { get; } = controlPoints1;
 
-    internal IReadOnlyList<Point> ControlPoints2 { get; } = controlPoints2;
+    internal IReadOnlyList<Offset> ControlPoints2 { get; } = controlPoints2;
 
-    internal IReadOnlyList<Point> TargetPoints { get; } = targetPoints;
+    internal IReadOnlyList<Offset> TargetPoints { get; } = targetPoints;
 
-    internal Point InterpolateControlPoint1(double progress) =>
+    internal Offset InterpolateControlPoint1(double progress) =>
         AnimatedIconInterpolation.Interpolate(ControlPoints1, progress);
 
-    internal Point InterpolateControlPoint2(double progress) =>
+    internal Offset InterpolateControlPoint2(double progress) =>
         AnimatedIconInterpolation.Interpolate(ControlPoints2, progress);
 
-    internal Point InterpolateTargetPoint(double progress) =>
+    internal Offset InterpolateTargetPoint(double progress) =>
         AnimatedIconInterpolation.Interpolate(TargetPoints, progress);
 }
 
@@ -278,7 +278,7 @@ internal static class AnimatedIconInterpolation
         return values[lowIndex] + ((values[highIndex] - values[lowIndex]) * t);
     }
 
-    internal static Point Interpolate(IReadOnlyList<Point> values, double progress)
+    internal static Offset Interpolate(IReadOnlyList<Offset> values, double progress)
     {
         if (values.Count == 1)
         {
@@ -289,10 +289,10 @@ internal static class AnimatedIconInterpolation
         int lowIndex = (int)Math.Floor(targetIndex);
         int highIndex = (int)Math.Ceiling(targetIndex);
         double t = targetIndex - lowIndex;
-        Point low = values[lowIndex];
-        Point high = values[highIndex];
-        return new Point(
-            low.X + ((high.X - low.X) * t),
-            low.Y + ((high.Y - low.Y) * t));
+        Offset low = values[lowIndex];
+        Offset high = values[highIndex];
+        return new Offset(
+            low.Dx + ((high.Dx - low.Dx) * t),
+            low.Dy + ((high.Dy - low.Dy) * t));
     }
 }

@@ -124,7 +124,7 @@ public sealed class ScrollableTests
         harness.Pump(Surface);
 
         ScrollableState state = Scrollable.Of(itemContext!);
-        Assert.Equal(new Point(0, 120), state.DeltaToScrollOrigin);
+        Assert.Equal(new Offset(0, 120), state.DeltaToScrollOrigin);
     }
 
     [Fact]

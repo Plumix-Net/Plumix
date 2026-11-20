@@ -173,7 +173,7 @@ internal sealed class RenderPublicApiPadding : RenderBox, IRenderObjectSingleChi
         Size = Constraints.Biggest;
     }
 
-    public override void Paint(PaintingContext context, Point offset)
+    public override void Paint(PaintingContext context, Offset offset)
     {
     }
 }

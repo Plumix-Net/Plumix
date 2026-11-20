@@ -27,7 +27,7 @@ public abstract class CustomPainter : IDisposable
 
     public abstract bool ShouldRepaint(CustomPainter oldDelegate);
 
-    public virtual bool? HitTest(Point position) => null;
+    public virtual bool? HitTest(Offset position) => null;
 
     public virtual void Dispose()
     {
@@ -85,7 +85,7 @@ public sealed class RenderCustomPaint : RenderProxyBox
         Size = Constraints.Constrain(PreferredSize);
     }
 
-    public override void Paint(PaintingContext context, Point offset)
+    public override void Paint(PaintingContext context, Offset offset)
     {
         if (Painter is not null)
         {
@@ -99,25 +99,25 @@ public sealed class RenderCustomPaint : RenderProxyBox
     }
 
     /// <remarks>Flutter's <c>RenderCustomPaint._paintWithPainter</c>.</remarks>
-    private void PaintWithPainter(PaintingContext context, Point offset, CustomPainter painter)
+    private void PaintWithPainter(PaintingContext context, Offset offset, CustomPainter painter)
     {
         context.Canvas.Save();
-        if (offset.X != 0.0 || offset.Y != 0.0)
+        if (offset.Dx != 0.0 || offset.Dy != 0.0)
         {
-            context.Canvas.Translate(offset.X, offset.Y);
+            context.Canvas.Translate(offset.Dx, offset.Dy);
         }
 
         painter.Paint(context, Size);
         context.Canvas.Restore();
     }
 
-    protected override bool HitTestChildren(BoxHitTestResult result, Point position)
+    protected override bool HitTestChildren(BoxHitTestResult result, Offset position)
     {
         return (ForegroundPainter?.HitTest(position) ?? false)
                || base.HitTestChildren(result, position);
     }
 
-    protected override bool HitTestSelf(Point position) =>
+    protected override bool HitTestSelf(Offset position) =>
         Painter is not null && (Painter.HitTest(position) ?? true);
 
     private void SetPainter(ref CustomPainter? field, CustomPainter? value)

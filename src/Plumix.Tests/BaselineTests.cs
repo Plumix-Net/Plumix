@@ -55,7 +55,7 @@ public sealed class BaselineTests
         baseline.Layout(new BoxConstraints(MaxWidth: 100, MaxHeight: 100));
 
         Assert.Equal(new Size(20, 17), baseline.Size);
-        Assert.Equal(new Point(0, 7), ((BoxParentData)child.parentData!).offset);
+        Assert.Equal(new Offset(0, 7), ((BoxParentData)child.parentData!).offset);
         Assert.Equal(15, baseline.GetDistanceToBaseline(TextBaseline.Alphabetic, onlyReal: true));
         Assert.Equal(16, baseline.GetDistanceToBaseline(TextBaseline.Ideographic, onlyReal: true));
     }
@@ -72,7 +72,7 @@ public sealed class BaselineTests
         baseline.Layout(new BoxConstraints(MaxWidth: 100, MaxHeight: 100));
 
         Assert.Equal(new Size(20, 15), baseline.Size);
-        Assert.Equal(new Point(0, 5), ((BoxParentData)child.parentData!).offset);
+        Assert.Equal(new Offset(0, 5), ((BoxParentData)child.parentData!).offset);
         Assert.Null(baseline.GetDistanceToBaseline(TextBaseline.Alphabetic, onlyReal: true));
         Assert.Equal(15, baseline.GetDistanceToBaseline(TextBaseline.Alphabetic));
     }
@@ -89,7 +89,7 @@ public sealed class BaselineTests
         baseline.Layout(new BoxConstraints(MaxWidth: 100, MaxHeight: 100));
 
         Assert.Equal(new Size(20, 7), baseline.Size);
-        Assert.Equal(new Point(0, -3), ((BoxParentData)child.parentData!).offset);
+        Assert.Equal(new Offset(0, -3), ((BoxParentData)child.parentData!).offset);
         Assert.Equal(5, baseline.GetDistanceToBaseline(TextBaseline.Alphabetic, onlyReal: true));
     }
 
@@ -149,9 +149,9 @@ public sealed class BaselineTests
         flex.Layout(new BoxConstraints(MaxWidth: 100, MaxHeight: 100));
 
         Assert.Equal(52, flex.Size.Height);
-        Assert.Equal(0, ((FlexParentData)first.parentData!).offset.Y);
-        Assert.Equal(0, ((FlexParentData)ignored.parentData!).offset.Y);
-        Assert.Equal(3, ((FlexParentData)last.parentData!).offset.Y);
+        Assert.Equal(0, ((FlexParentData)first.parentData!).offset.Dy);
+        Assert.Equal(0, ((FlexParentData)ignored.parentData!).offset.Dy);
+        Assert.Equal(3, ((FlexParentData)last.parentData!).offset.Dy);
     }
 
     private static T RequireRenderObject<T>(Element? element) where T : RenderObject
@@ -182,7 +182,7 @@ public sealed class BaselineTests
             Size = Constraints.Constrain(_desiredSize);
         }
 
-        public override void Paint(PaintingContext context, Point offset)
+        public override void Paint(PaintingContext context, Offset offset)
         {
         }
 

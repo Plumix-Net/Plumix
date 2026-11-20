@@ -957,7 +957,7 @@ public sealed class ProxyBoxLayoutParityTests
         {
         }
 
-        public override void Paint(PaintingContext context, Point offset)
+        public override void Paint(PaintingContext context, Offset offset)
         {
         }
     }
@@ -988,9 +988,9 @@ public sealed class ProxyBoxLayoutParityTests
         {
         }
 
-        protected override bool HitTestSelf(Point position) => true;
+        protected override bool HitTestSelf(Offset position) => true;
 
-        public override void Paint(PaintingContext context, Point offset)
+        public override void Paint(PaintingContext context, Offset offset)
         {
         }
 
@@ -1012,7 +1012,7 @@ public sealed class ProxyBoxLayoutParityTests
             Size = Constraints.Smallest;
         }
 
-        public override void Paint(PaintingContext context, Point offset)
+        public override void Paint(PaintingContext context, Offset offset)
         {
             if (setsOwnLayer)
             {
@@ -1034,7 +1034,7 @@ public sealed class ProxyBoxLayoutParityTests
 
     private sealed class RenderTestObject(PaintCounter counter) : RenderProxyBox
     {
-        public override void Paint(PaintingContext context, Point offset)
+        public override void Paint(PaintingContext context, Offset offset)
         {
             counter.Count += 1;
             base.Paint(context, offset);

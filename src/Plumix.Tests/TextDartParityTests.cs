@@ -39,12 +39,12 @@ public sealed class TextDartParityTests : IDisposable
     }
 
     // selectable_region_test.dart's top-level `textOffsetToPosition`.
-    private static Point TextOffsetToPosition(RenderParagraph paragraph, int offset)
+    private static Offset TextOffsetToPosition(RenderParagraph paragraph, int offset)
     {
-        var caret = new Rect(0.0, 0.0, 2.0, 20.0);
-        Point localOffset = paragraph.GetOffsetForCaret(new TextPosition(offset), caret)
-                            + new Vector(0.0, paragraph.PreferredLineHeight);
-        return paragraph.LocalToGlobal(localOffset) + new Vector(0.0, -2.0);
+        var caret = DartGeometry.RectFromLTWH(0.0, 0.0, 2.0, 20.0);
+        Offset localOffset = paragraph.GetOffsetForCaret(new TextPosition(offset), caret)
+                            + new Offset(0.0, paragraph.PreferredLineHeight);
+        return paragraph.LocalToGlobal(localOffset) + new Offset(0.0, -2.0);
     }
 
     // selectable_region_test.dart's `_selectableRegion`.

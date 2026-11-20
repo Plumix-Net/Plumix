@@ -318,18 +318,18 @@ public readonly record struct EdgeInsets(double Left, double Top, double Right, 
     public Size CollapsedSize => new(Horizontal, Vertical);
 
     /// <summary>An offset describing the vector from the top left of a rectangle to its inset top left.</summary>
-    public Point TopLeft => new(Left, Top);
+    public Offset TopLeft => new(Left, Top);
 
     /// <summary>An offset describing the vector from the top right of a rectangle to its inset top right.</summary>
-    public Point TopRight => new(-Right, Top);
+    public Offset TopRight => new(-Right, Top);
 
     /// <summary>An offset describing the vector from the bottom left of a rectangle to its inset bottom left.</summary>
-    public Point BottomLeft => new(Left, -Bottom);
+    public Offset BottomLeft => new(Left, -Bottom);
 
     /// <summary>
     /// An offset describing the vector from the bottom right of a rectangle to its inset bottom right.
     /// </summary>
-    public Point BottomRight => new(-Right, -Bottom);
+    public Offset BottomRight => new(-Right, -Bottom);
 
     /// <summary>Insets with top and bottom as well as left and right flipped.</summary>
     public EdgeInsets Flipped => new(Right, Bottom, Left, Top);

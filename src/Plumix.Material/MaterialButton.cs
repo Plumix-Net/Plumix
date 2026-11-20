@@ -348,15 +348,15 @@ public sealed class RawMaterialButton : StatefulWidget
             // `ShapeBorder` can subclass `WidgetStateProperty` (`docs/ai/DIVERGENCES.md`).
             Color? effectiveTextColor = widget.TextStyle?.Color;
             ShapeBorder effectiveShape = widget.Shape;
-            Vector densityAdjustment = widget.VisualDensity.BaseSizeAdjustment;
+            Offset densityAdjustment = widget.VisualDensity.BaseSizeAdjustment;
             BoxConstraints effectiveConstraints = widget.VisualDensity.EffectiveConstraints(widget.Constraints);
             MouseCursor effectiveMouseCursor = ResolveMouseCursor(widget.MouseCursor);
             EdgeInsetsGeometry padding = widget.Padding
                 .Add(EdgeInsetsGeometry.Only(
-                    left: densityAdjustment.X,
-                    top: densityAdjustment.Y,
-                    right: densityAdjustment.X,
-                    bottom: densityAdjustment.Y))
+                    left: densityAdjustment.Dx,
+                    top: densityAdjustment.Dy,
+                    right: densityAdjustment.Dx,
+                    bottom: densityAdjustment.Dy))
                 .Clamp(EdgeInsetsGeometry.Zero, EdgeInsetsGeometry.Infinity);
 
             Widget result = new ConstrainedBox(
@@ -403,8 +403,8 @@ public sealed class RawMaterialButton : StatefulWidget
             Size minSize = widget.MaterialTapTargetSize switch
             {
                 MaterialTapTargetSize.Padded => new Size(
-                    WidgetConstants.MinInteractiveDimension + densityAdjustment.X,
-                    WidgetConstants.MinInteractiveDimension + densityAdjustment.Y),
+                    WidgetConstants.MinInteractiveDimension + densityAdjustment.Dx,
+                    WidgetConstants.MinInteractiveDimension + densityAdjustment.Dy),
                 _ => default
             };
 

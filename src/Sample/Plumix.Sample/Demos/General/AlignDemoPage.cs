@@ -46,7 +46,7 @@ internal sealed class AlignDemoPageState : State
     private ValueNotifier<int> _builderCounter = null!;
     private ScrollController _scrollController = null!;
     private AnimationController _explicitTransitionsController = null!;
-    private Animation<Vector> _explicitSlideAnimation = null!;
+    private Animation<Offset> _explicitSlideAnimation = null!;
     private Animation<RelativeRect> _explicitPositionAnimation = null!;
     private Animation<Rect?> _explicitRelativePositionAnimation = null!;
     private Animation<AlignmentGeometry> _explicitAlignmentAnimation = null!;
@@ -59,9 +59,9 @@ internal sealed class AlignDemoPageState : State
         _scrollController = new ScrollController();
         _explicitTransitionsController = new AnimationController(duration: TimeSpan.FromMilliseconds(800), vsync: this);
         _explicitTransitionsController.SetValue(0.25);
-        _explicitSlideAnimation = new DerivedAnimation<Vector>(
+        _explicitSlideAnimation = new DerivedAnimation<Offset>(
             _explicitTransitionsController,
-            value => new Vector(value * 0.75, value * -0.5));
+            value => new Offset(value * 0.75, value * -0.5));
         var positionTween = new RelativeRectTween(
             begin: new RelativeRect(10, 12, 160, 78),
             end: new RelativeRect(160, 72, 10, 18));
@@ -69,8 +69,8 @@ internal sealed class AlignDemoPageState : State
             _explicitTransitionsController,
             positionTween.Transform);
         var rectTween = new RectTween(
-            begin: new Rect(12, 74, 70, 40),
-            end: new Rect(158, 14, 70, 40));
+            begin: DartGeometry.RectFromLTWH(12, 74, 70, 40),
+            end: DartGeometry.RectFromLTWH(158, 14, 70, 40));
         _explicitRelativePositionAnimation = new DerivedAnimation<Rect?>(
             _explicitTransitionsController,
             rectTween.Transform);
@@ -258,7 +258,7 @@ internal sealed class AlignDemoPageState : State
                     color: new Color(0xFFF3F5F8),
                     child: new Center(
                         child: new AnimatedSlide(
-                            offset: _shifted ? new Vector(0.75, -0.5) : default,
+                            offset: _shifted ? new Offset(0.75, -0.5) : default,
                             duration: TimeSpan.FromMilliseconds(350),
                             curve: Curves.EaseInOut,
                             onEnd: HandleAnimationEnd,

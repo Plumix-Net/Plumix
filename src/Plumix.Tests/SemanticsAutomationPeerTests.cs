@@ -444,7 +444,7 @@ public sealed class SemanticsAutomationPeerTests : IDisposable
         Assert.Equal(AutomationLiveSetting.Off, Find(host, "Title").GetLiveSetting());
 
         Rect bounds = Find(host, "Level 3").GetBoundingRectangle();
-        Assert.Equal(new Rect(140, 20, 40, 20), bounds);
+        Assert.Equal(DartGeometry.RectFromLTWH(140, 20, 40, 20), bounds);
         Assert.False(Find(host, "Level 3").IsOffscreen());
     }
 

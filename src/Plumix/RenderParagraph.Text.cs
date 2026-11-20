@@ -15,7 +15,7 @@ public sealed partial class RenderParagraph
     /// Returns the offset at which to paint the caret.
     ///
     /// Valid only after [RenderObject.Layout] has been called.
-    public Point GetOffsetForCaret(TextPosition position, Rect caretPrototype)
+    public Offset GetOffsetForCaret(TextPosition position, Rect caretPrototype)
     {
         LayoutTextWithConstraints(Constraints);
         return _textPainter.GetOffsetForCaret(position, caretPrototype);
@@ -52,7 +52,7 @@ public sealed partial class RenderParagraph
     /// Returns the position within the text for the given pixel offset.
     ///
     /// Valid only after [RenderObject.Layout] has been called.
-    public TextPosition GetPositionForOffset(Point offset)
+    public TextPosition GetPositionForOffset(Offset offset)
     {
         LayoutTextWithConstraints(Constraints);
         return _textPainter.GetPositionForOffset(offset);
@@ -89,10 +89,10 @@ public sealed partial class RenderParagraph
     public bool DidExceedMaxLines => _textPainter.DidExceedMaxLines;
 
     /// The bottom-left corner of the caret box at `position`. Dart's `_getOffsetForPosition`.
-    internal Point GetPositionOffset(TextPosition position)
+    internal Offset GetPositionOffset(TextPosition position)
     {
-        Point caret = GetOffsetForCaret(position, default);
-        return new Point(caret.X, caret.Y + GetFullHeightForCaret(position));
+        Offset caret = GetOffsetForCaret(position, default);
+        return new Offset(caret.Dx, caret.Dy + GetFullHeightForCaret(position));
     }
 
     /// Dart's `_getLineAtOffset`.
@@ -118,8 +118,8 @@ public sealed partial class RenderParagraph
 
     private TextPosition GetTextPositionVertical(TextPosition position, double verticalOffset)
     {
-        Point caretOffset = _textPainter.GetOffsetForCaret(position, default);
-        var caretOffsetTranslated = new Point(caretOffset.X, caretOffset.Y + verticalOffset);
+        Offset caretOffset = _textPainter.GetOffsetForCaret(position, default);
+        var caretOffsetTranslated = new Offset(caretOffset.Dx, caretOffset.Dy + verticalOffset);
         return _textPainter.GetPositionForOffset(caretOffsetTranslated);
     }
 }

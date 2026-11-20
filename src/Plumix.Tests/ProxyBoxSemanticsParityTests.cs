@@ -198,7 +198,7 @@ public sealed class ProxyBoxSemanticsParityTests
         static void ExpectTransform(RenderObject leader)
         {
             var leaderLayer = (LeaderLayer)leader.DebugLayer!;
-            Matrix4 expected = Matrix4.TranslationValues(leaderLayer.Offset.X, leaderLayer.Offset.Y, 0.0);
+            Matrix4 expected = Matrix4.TranslationValues(leaderLayer.Offset.Dx, leaderLayer.Offset.Dy, 0.0);
             Matrix4 transformed = Matrix4.Identity();
             leaderLayer.ApplyTransform(null, transformed);
             Assert.Equal(expected, transformed);
@@ -310,14 +310,14 @@ public sealed class ProxyBoxSemanticsParityTests
     {
         using var tester = new FrameworkDartTester();
         tester.PumpWidget(Transform.Translate(
-            new Point(25.0, 25.0),
+            new Offset(25.0, 25.0),
             child: new AnnotatedRegion<int>(value: 1, child: new SizedBox(width: 100.0, height: 100.0))));
         double devicePixelRatio = tester.View.DevicePixelRatio;
         Layer rootLayer = tester.RenderView.DebugLayer!;
         Assert.Empty(rootLayer.FindAllAnnotations<int>(
-            new Point(10.0 * devicePixelRatio, 10.0 * devicePixelRatio)).Entries);
+            new Offset(10.0 * devicePixelRatio, 10.0 * devicePixelRatio)).Entries);
         Assert.Equal(1, Assert.Single(rootLayer.FindAllAnnotations<int>(
-            new Point(50.0 * devicePixelRatio, 50.0 * devicePixelRatio)).Entries).Annotation);
+            new Offset(50.0 * devicePixelRatio, 50.0 * devicePixelRatio)).Entries).Annotation);
     }
 
     // composited_transform_test.dart
@@ -357,10 +357,10 @@ public sealed class ProxyBoxSemanticsParityTests
 
         tester.PumpWidget(Build());
         var box = (RenderBox)key.CurrentContext!.FindRenderObject()!;
-        AssertOffset(new Point(118.0, 451.0), box.LocalToGlobal(default));
+        AssertOffset(new Offset(118.0, 451.0), box.LocalToGlobal(default));
 
         tester.PumpWidget(Build(linkToUse: new LayerLink()));
-        AssertOffset(new Point(118.0, 451.0), box.LocalToGlobal(default));
+        AssertOffset(new Offset(118.0, 451.0), box.LocalToGlobal(default));
     }
 
     [Fact]
@@ -426,7 +426,7 @@ public sealed class ProxyBoxSemanticsParityTests
                             child: new SizedBox(key: key, height: 20.0, width: 20.0))),
                 ])));
         var box = (RenderBox)key.CurrentContext!.FindRenderObject()!;
-        AssertOffset(new Point(expectedX, expectedY), box.LocalToGlobal(default));
+        AssertOffset(new Offset(expectedX, expectedY), box.LocalToGlobal(default));
     }
 
     [Theory]
@@ -472,8 +472,8 @@ public sealed class ProxyBoxSemanticsParityTests
         var box1 = (RenderBox)key1.CurrentContext!.FindRenderObject()!;
         var box2 = (RenderBox)key2.CurrentContext!.FindRenderObject()!;
         AssertOffset(
-            box2.LocalToGlobal(new Point(followerX, followerY)),
-            box1.LocalToGlobal(new Point(targetX, targetY)));
+            box2.LocalToGlobal(new Offset(followerX, followerY)),
+            box1.LocalToGlobal(new Offset(targetX, targetY)));
     }
 
     [Theory]
@@ -520,8 +520,8 @@ public sealed class ProxyBoxSemanticsParityTests
                 ])));
         var box1 = (RenderBox)key1.CurrentContext!.FindRenderObject()!;
         var box2 = (RenderBox)key2.CurrentContext!.FindRenderObject()!;
-        Point position1 = box1.LocalToGlobal(Alignments[targetAlignment].AlongSize(new Size(80, 10)));
-        Point position2 = box2.LocalToGlobal(Alignments[followerAlignment].AlongSize(new Size(40, 20)));
+        Offset position1 = box1.LocalToGlobal(Alignments[targetAlignment].AlongSize(new Size(80, 10)));
+        Offset position2 = box2.LocalToGlobal(Alignments[followerAlignment].AlongSize(new Size(40, 20)));
         AssertOffset(position2, position1);
     }
 
@@ -613,10 +613,10 @@ public sealed class ProxyBoxSemanticsParityTests
         pipeline.CompositeFrame();
     }
 
-    private static void AssertOffset(Point expected, Point actual)
+    private static void AssertOffset(Offset expected, Offset actual)
     {
-        Assert.Equal(expected.X, actual.X, precision: 8);
-        Assert.Equal(expected.Y, actual.Y, precision: 8);
+        Assert.Equal(expected.Dx, actual.Dx, precision: 8);
+        Assert.Equal(expected.Dy, actual.Dy, precision: 8);
     }
 
     private static SemanticsNode? FindNodeByLabel(SemanticsNode? node, string label)
@@ -665,9 +665,9 @@ public sealed class ProxyBoxSemanticsParityTests
 
         protected override Size ComputeDryLayout(BoxConstraints constraints) => constraints.Constrain(_size);
 
-        protected override bool HitTestSelf(Point position) => true;
+        protected override bool HitTestSelf(Offset position) => true;
 
-        public override void Paint(PaintingContext ctx, Point offset)
+        public override void Paint(PaintingContext ctx, Offset offset)
         {
         }
     }
@@ -704,7 +704,7 @@ public sealed class ProxyBoxSemanticsParityTests
             Size = Constraints.Constrain(_size);
         }
 
-        public override void Paint(PaintingContext ctx, Point offset)
+        public override void Paint(PaintingContext ctx, Offset offset)
         {
         }
 

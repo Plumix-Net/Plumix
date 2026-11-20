@@ -52,7 +52,7 @@ public sealed class MagnifierTests : IDisposable
             alignment: Alignment.TopLeft,
             child: new RawMagnifier(
                 size: new Size(80, 40),
-                focalPointOffset: new Point(3, 12),
+                focalPointOffset: new Offset(3, 12),
                 magnificationScale: 1.5,
                 decoration: decoration,
                 clipBehavior: Clip.HardEdge,
@@ -63,7 +63,7 @@ public sealed class MagnifierTests : IDisposable
         var render = FindDescendant<RenderMagnifier>(harness.RenderView);
         Assert.NotNull(render);
         Assert.Equal(new Size(80, 40), render!.Size);
-        Assert.Equal(new Point(3, 12), render.FocalPointOffset);
+        Assert.Equal(new Offset(3, 12), render.FocalPointOffset);
         Assert.Equal(1.5, render.MagnificationScale);
         Assert.Equal(decoration, render.Decoration);
         Assert.Equal(Clip.HardEdge, render.ClipBehavior);
@@ -71,26 +71,26 @@ public sealed class MagnifierTests : IDisposable
         var layer = FindLayer<MagnifierLayer>(harness.Pipeline.RootLayer);
         Assert.NotNull(layer);
         Assert.Equal(new Size(80, 40), layer!.LensRect.Size);
-        Assert.Equal(new Point(3, 12), layer.FocalPointOffset);
+        Assert.Equal(new Offset(3, 12), layer.FocalPointOffset);
 
     }
 
     [Fact]
     public void MagnifierController_ShiftWithinBoundsUsesShortestTranslationAndGuardsSize()
     {
-        var bounds = new Rect(10, 20, 100, 80);
+        var bounds = DartGeometry.RectFromLTWH(10, 20, 100, 80);
 
         Assert.Equal(
-            new Rect(10, 20, 30, 20),
-            MagnifierController.ShiftWithinBounds(new Rect(0, 5, 30, 20), bounds));
+            DartGeometry.RectFromLTWH(10, 20, 30, 20),
+            MagnifierController.ShiftWithinBounds(DartGeometry.RectFromLTWH(0, 5, 30, 20), bounds));
         Assert.Equal(
-            new Rect(80, 80, 30, 20),
-            MagnifierController.ShiftWithinBounds(new Rect(95, 95, 30, 20), bounds));
+            DartGeometry.RectFromLTWH(80, 80, 30, 20),
+            MagnifierController.ShiftWithinBounds(DartGeometry.RectFromLTWH(95, 95, 30, 20), bounds));
         Assert.Equal(
-            new Rect(30, 40, 30, 20),
-            MagnifierController.ShiftWithinBounds(new Rect(30, 40, 30, 20), bounds));
+            DartGeometry.RectFromLTWH(30, 40, 30, 20),
+            MagnifierController.ShiftWithinBounds(DartGeometry.RectFromLTWH(30, 40, 30, 20), bounds));
         Assert.Throws<ArgumentException>(() =>
-            MagnifierController.ShiftWithinBounds(new Rect(0, 0, 101, 20), bounds));
+            MagnifierController.ShiftWithinBounds(DartGeometry.RectFromLTWH(0, 0, 101, 20), bounds));
     }
 
     [Fact]
@@ -205,7 +205,7 @@ public sealed class MagnifierTests : IDisposable
         Assert.Equal(MaterialMagnifier.DefaultMagnifierSize, render!.Size);
         Assert.Equal(1.25, render.MagnificationScale);
         Assert.Equal(
-            new Point(
+            new Offset(
                 0,
                 MaterialMagnifier.StandardVerticalFocalPointShift
                 + (MaterialMagnifier.DefaultMagnifierSize.Height / 2.0)),
@@ -219,10 +219,10 @@ public sealed class MagnifierTests : IDisposable
     public void TextMagnifier_ClampsLineScreenAndFieldFocalGeometry()
     {
         var info = new ValueNotifier<MagnifierInfo>(new MagnifierInfo(
-            GlobalGesturePosition: new Point(8, 12),
-            CaretRect: new Rect(8, 10, 2, 20),
-            FieldBounds: new Rect(20, 5, 140, 80),
-            CurrentLineBoundaries: new Rect(20, 10, 120, 20)));
+            GlobalGesturePosition: new Offset(8, 12),
+            CaretRect: DartGeometry.RectFromLTWH(8, 10, 2, 20),
+            FieldBounds: DartGeometry.RectFromLTWH(20, 5, 140, 80),
+            CurrentLineBoundaries: DartGeometry.RectFromLTWH(20, 10, 120, 20)));
         using var harness = new WidgetRenderHarness(
             new MediaQuery(
                 new MediaQueryData(Size: new Size(200, 120)),
@@ -231,20 +231,20 @@ public sealed class MagnifierTests : IDisposable
         harness.Pump(new Size(200, 120));
         var state = harness.FindState<TextMagnifier.TextMagnifierState>();
 
-        Assert.Equal(0, state.MagnifierPosition!.Value.X, 3);
-        Assert.Equal(0, state.MagnifierPosition.Value.Y, 3);
-        Assert.True(state.ExtraFocalPointOffset.X > 0);
+        Assert.Equal(0, state.MagnifierPosition!.Value.Dx, 3);
+        Assert.Equal(0, state.MagnifierPosition.Value.Dy, 3);
+        Assert.True(state.ExtraFocalPointOffset.Dx > 0);
         Assert.False(state.PositionShouldBeAnimated);
 
         info.Value = info.Value with
         {
-            GlobalGesturePosition = new Point(100, 60),
-            CaretRect = new Rect(100, 58, 2, 20),
-            CurrentLineBoundaries = new Rect(20, 58, 120, 20),
+            GlobalGesturePosition = new Offset(100, 60),
+            CaretRect = DartGeometry.RectFromLTWH(100, 58, 2, 20),
+            CurrentLineBoundaries = DartGeometry.RectFromLTWH(20, 58, 120, 20),
         };
         harness.Pump(new Size(200, 120));
 
-        Assert.True(state.MagnifierPosition.Value.Y > 0);
+        Assert.True(state.MagnifierPosition.Value.Dy > 0);
         Assert.True(state.PositionShouldBeAnimated);
     }
 
@@ -268,7 +268,7 @@ public sealed class MagnifierTests : IDisposable
         animation.SetValue(0.5);
         using var harness = new WidgetRenderHarness(new CupertinoMagnifier(
             inOutAnimation: animation,
-            additionalFocalPointOffset: new Point(2, 3)));
+            additionalFocalPointOffset: new Offset(2, 3)));
 
         harness.Pump(new Size(200, 120));
 
@@ -278,7 +278,7 @@ public sealed class MagnifierTests : IDisposable
         Assert.Equal(0.5, render.Decoration.Opacity);
         Assert.Equal(2, render.Decoration.Shape is OutlinedBorder shapeOutlined ? shapeOutlined.Side.Width : 0.0);
         Assert.Equal(1, render.MagnificationScale);
-        Assert.Equal(2, render.FocalPointOffset.X);
+        Assert.Equal(2, render.FocalPointOffset.Dx);
 
         // The focal point does not follow the in / out animation: `magnifier.dart` throws away the
         // result of `focalPointOffset.scale(...)`.
@@ -286,7 +286,7 @@ public sealed class MagnifierTests : IDisposable
             (CupertinoMagnifier.DefaultSize.Height / 2.0)
             - CupertinoMagnifier.MagnifierAboveFocalPoint
             + 3,
-            render.FocalPointOffset.Y,
+            render.FocalPointOffset.Dy,
             3);
         animation.Dispose();
     }

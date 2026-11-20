@@ -31,15 +31,15 @@ public sealed class CanvasSaveLayerTests
         // (empty) content, so the red backdrop survives the restore.
         Bitmap isolated = Render(canvas =>
         {
-            canvas.DrawRect(new Rect(0, 0, 20, 20), new Paint { Color = Red });
-            canvas.SaveLayer(new Rect(0, 0, 20, 20), new Paint());
-            canvas.DrawRect(new Rect(0, 0, 10, 20), new Paint { Color = Blue, BlendMode = BlendMode.DestinationOut });
+            canvas.DrawRect(DartGeometry.RectFromLTWH(0, 0, 20, 20), new Paint { Color = Red });
+            canvas.SaveLayer(DartGeometry.RectFromLTWH(0, 0, 20, 20), new Paint());
+            canvas.DrawRect(DartGeometry.RectFromLTWH(0, 0, 10, 20), new Paint { Color = Blue, BlendMode = BlendMode.DestinationOut });
             canvas.Restore();
         });
         Bitmap direct = Render(canvas =>
         {
-            canvas.DrawRect(new Rect(0, 0, 20, 20), new Paint { Color = Red });
-            canvas.DrawRect(new Rect(0, 0, 10, 20), new Paint { Color = Blue, BlendMode = BlendMode.DestinationOut });
+            canvas.DrawRect(DartGeometry.RectFromLTWH(0, 0, 20, 20), new Paint { Color = Red });
+            canvas.DrawRect(DartGeometry.RectFromLTWH(0, 0, 10, 20), new Paint { Color = Blue, BlendMode = BlendMode.DestinationOut });
         });
 
         Assert.Equal(((byte)0xFF, (byte)0, (byte)0, (byte)0xFF), RasterBackend.PixelAt(isolated, 5, 10));
@@ -54,8 +54,8 @@ public sealed class CanvasSaveLayerTests
         Bitmap image = Render(canvas =>
         {
             canvas.SaveLayer(null, new Paint { Color = Color.FromARGB(128, 0, 0, 0) });
-            canvas.DrawRect(new Rect(0, 0, 15, 20), new Paint { Color = Red });
-            canvas.DrawRect(new Rect(5, 0, 15, 20), new Paint { Color = Blue });
+            canvas.DrawRect(DartGeometry.RectFromLTWH(0, 0, 15, 20), new Paint { Color = Red });
+            canvas.DrawRect(DartGeometry.RectFromLTWH(5, 0, 15, 20), new Paint { Color = Blue });
             canvas.Restore();
         });
 
@@ -73,9 +73,9 @@ public sealed class CanvasSaveLayerTests
         Bitmap image = Render(canvas =>
         {
             canvas.SaveLayer(
-                new Rect(0, 0, 20, 20),
+                DartGeometry.RectFromLTWH(0, 0, 20, 20),
                 new Paint { ColorFilter = new ColorFilter.Mode(Green, BlendMode.SourceIn) });
-            canvas.DrawRect(new Rect(0, 0, 10, 20), new Paint { Color = Red });
+            canvas.DrawRect(DartGeometry.RectFromLTWH(0, 0, 10, 20), new Paint { Color = Red });
             canvas.Restore();
         });
 
@@ -88,9 +88,9 @@ public sealed class CanvasSaveLayerTests
     {
         Bitmap image = Render(canvas =>
         {
-            canvas.ClipRect(new Rect(0, 0, 10, 20));
+            canvas.ClipRect(DartGeometry.RectFromLTWH(0, 0, 10, 20));
             canvas.SaveLayer(null, new Paint { InvertColors = true });
-            canvas.DrawRect(new Rect(0, 0, 20, 20), new Paint { Color = Red });
+            canvas.DrawRect(DartGeometry.RectFromLTWH(0, 0, 20, 20), new Paint { Color = Red });
             canvas.Restore();
         });
 
@@ -104,9 +104,9 @@ public sealed class CanvasSaveLayerTests
     {
         Bitmap image = Render(canvas =>
         {
-            canvas.DrawRect(new Rect(0, 0, 20, 20), new Paint { Color = Red });
-            canvas.SaveLayer(new Rect(0, 0, 20, 20), new Paint { BlendMode = BlendMode.Plus });
-            canvas.DrawRect(new Rect(0, 0, 10, 20), new Paint { Color = Green });
+            canvas.DrawRect(DartGeometry.RectFromLTWH(0, 0, 20, 20), new Paint { Color = Red });
+            canvas.SaveLayer(DartGeometry.RectFromLTWH(0, 0, 20, 20), new Paint { BlendMode = BlendMode.Plus });
+            canvas.DrawRect(DartGeometry.RectFromLTWH(0, 0, 10, 20), new Paint { Color = Green });
             canvas.Restore();
         });
 
@@ -119,8 +119,8 @@ public sealed class CanvasSaveLayerTests
     {
         Bitmap image = Render(canvas =>
         {
-            canvas.SaveLayer(new Rect(0, 0, 20, 20), new Paint { ImageFilter = new ImageFilter.Blur(2.0, 2.0) });
-            canvas.DrawRect(new Rect(0, 0, 10, 20), new Paint { Color = Red });
+            canvas.SaveLayer(DartGeometry.RectFromLTWH(0, 0, 20, 20), new Paint { ImageFilter = new ImageFilter.Blur(2.0, 2.0) });
+            canvas.DrawRect(DartGeometry.RectFromLTWH(0, 0, 10, 20), new Paint { Color = Red });
             canvas.Restore();
         });
 
@@ -134,12 +134,12 @@ public sealed class CanvasSaveLayerTests
     public void SaveLayer_RecordsItsBoundsAndPaint()
     {
         var canvas = new Canvas(new PictureRecorder());
-        canvas.SaveLayer(new Rect(1, 2, 3, 4), new Paint { Color = Red, BlendMode = BlendMode.Multiply });
+        canvas.SaveLayer(DartGeometry.RectFromLTWH(1, 2, 3, 4), new Paint { Color = Red, BlendMode = BlendMode.Multiply });
         canvas.Restore();
 
         CanvasCall call = canvas.DebugCalls[0];
         Assert.Equal("saveLayer", call.Method);
-        Assert.Equal(new Rect(1, 2, 3, 4), call.Rect);
+        Assert.Equal(DartGeometry.RectFromLTWH(1, 2, 3, 4), call.Rect);
         Assert.Equal(BlendMode.Multiply, call.BlendMode);
         Assert.Equal(Red, call.Color);
     }
@@ -149,13 +149,13 @@ public sealed class CanvasSaveLayerTests
     {
         Bitmap image = Render(canvas =>
         {
-            canvas.DrawRect(new Rect(0, 0, 20, 20), new Paint { Color = Red });
+            canvas.DrawRect(DartGeometry.RectFromLTWH(0, 0, 20, 20), new Paint { Color = Red });
             new CanvasClipContext(canvas).ClipRectAndPaint(
-                new Rect(0, 0, 20, 20),
+                DartGeometry.RectFromLTWH(0, 0, 20, 20),
                 Clip.AntiAliasWithSaveLayer,
-                new Rect(0, 0, 20, 20),
+                DartGeometry.RectFromLTWH(0, 0, 20, 20),
                 () => canvas.DrawRect(
-                    new Rect(0, 0, 10, 20),
+                    DartGeometry.RectFromLTWH(0, 0, 10, 20),
                     new Paint { Color = Blue, BlendMode = BlendMode.DestinationOut }));
         });
 
@@ -172,12 +172,12 @@ public sealed class CanvasSaveLayerTests
             var root = new OffsetLayer();
             root.Append(new PictureLayer(default)
             {
-                Picture = SceneBuilderTests.DrawRectPicture(new Rect(0, 0, 20, 20), 0xFFFF0000),
+                Picture = SceneBuilderTests.DrawRectPicture(DartGeometry.RectFromLTWH(0, 0, 20, 20), 0xFFFF0000),
             });
-            var clipLayer = new ClipRectLayer { ClipRect = new Rect(0, 0, 20, 20), ClipBehavior = clip };
+            var clipLayer = new ClipRectLayer { ClipRect = DartGeometry.RectFromLTWH(0, 0, 20, 20), ClipBehavior = clip };
             var recorder = new PictureRecorder();
             new Canvas(recorder).DrawRect(
-                new Rect(0, 0, 10, 20),
+                DartGeometry.RectFromLTWH(0, 0, 10, 20),
                 new Paint { Color = Blue, BlendMode = BlendMode.DestinationOut });
             clipLayer.Append(new PictureLayer(default) { Picture = recorder.EndRecording() });
             root.Append(clipLayer);
@@ -196,18 +196,18 @@ public sealed class CanvasSaveLayerTests
 
         Bitmap faded = Render(canvas => canvas.DrawImageRect(
             white,
-            new Rect(0, 0, 4, 4),
-            new Rect(0, 0, 20, 20),
+            DartGeometry.RectFromLTWH(0, 0, 4, 4),
+            DartGeometry.RectFromLTWH(0, 0, 20, 20),
             new Paint { Color = Color.FromRGBO(0, 0, 0, 0.5) }));
         Bitmap filtered = Render(canvas => canvas.DrawImageRect(
             white,
-            new Rect(0, 0, 4, 4),
-            new Rect(0, 0, 20, 20),
+            DartGeometry.RectFromLTWH(0, 0, 4, 4),
+            DartGeometry.RectFromLTWH(0, 0, 20, 20),
             new Paint { ColorFilter = new ColorFilter.Mode(Red, BlendMode.SourceIn) }));
         Bitmap inverted = Render(canvas => canvas.DrawImageRect(
             white,
-            new Rect(0, 0, 4, 4),
-            new Rect(0, 0, 20, 20),
+            DartGeometry.RectFromLTWH(0, 0, 4, 4),
+            DartGeometry.RectFromLTWH(0, 0, 20, 20),
             new Paint { InvertColors = true }));
 
         Assert.InRange(RasterBackend.PixelAt(faded, 10, 10).A, 126, 130);
@@ -224,11 +224,11 @@ public sealed class CanvasSaveLayerTests
         Bitmap image = Render(canvas =>
         {
             canvas.SaveLayer(null, new Paint());
-            canvas.DrawImageRect(green, new Rect(0, 0, 2, 2), new Rect(0, 0, 20, 20), new Paint
+            canvas.DrawImageRect(green, DartGeometry.RectFromLTWH(0, 0, 2, 2), DartGeometry.RectFromLTWH(0, 0, 20, 20), new Paint
             {
                 Color = Color.FromRGBO(0, 0, 0, 0.5),
             });
-            canvas.DrawImageRect(red, new Rect(0, 0, 2, 2), new Rect(0, 0, 20, 20), new Paint
+            canvas.DrawImageRect(red, DartGeometry.RectFromLTWH(0, 0, 2, 2), DartGeometry.RectFromLTWH(0, 0, 20, 20), new Paint
             {
                 Color = Color.FromRGBO(0, 0, 0, 0.5),
                 BlendMode = BlendMode.Plus,
@@ -248,13 +248,13 @@ public sealed class CanvasSaveLayerTests
     {
         (Rect Source, Rect Destination)[] patches = Canvas.NinePatches(
             new Size(30, 30),
-            new Rect(10, 10, 10, 10),
-            new Rect(0, 0, 100, 60)).ToArray();
+            DartGeometry.RectFromLTWH(10, 10, 10, 10),
+            DartGeometry.RectFromLTWH(0, 0, 100, 60)).ToArray();
 
         Assert.Equal(9, patches.Length);
-        Assert.Equal((new Rect(0, 0, 10, 10), new Rect(0, 0, 10, 10)), patches[0]);
-        Assert.Equal((new Rect(10, 10, 10, 10), new Rect(10, 10, 80, 40)), patches[4]);
-        Assert.Equal((new Rect(20, 20, 10, 10), new Rect(90, 50, 10, 10)), patches[8]);
+        Assert.Equal((DartGeometry.RectFromLTWH(0, 0, 10, 10), DartGeometry.RectFromLTWH(0, 0, 10, 10)), patches[0]);
+        Assert.Equal((DartGeometry.RectFromLTWH(10, 10, 10, 10), DartGeometry.RectFromLTWH(10, 10, 80, 40)), patches[4]);
+        Assert.Equal((DartGeometry.RectFromLTWH(20, 20, 10, 10), DartGeometry.RectFromLTWH(90, 50, 10, 10)), patches[8]);
     }
 
     [Fact]
@@ -262,13 +262,13 @@ public sealed class CanvasSaveLayerTests
     {
         (Rect Source, Rect Destination)[] patches = Canvas.NinePatches(
             new Size(30, 30),
-            new Rect(10, 10, 10, 10),
-            new Rect(0, 0, 10, 10)).ToArray();
+            DartGeometry.RectFromLTWH(10, 10, 10, 10),
+            DartGeometry.RectFromLTWH(0, 0, 10, 10)).ToArray();
 
         // The middle row and column collapse; each corner takes half the destination.
         Assert.Equal(4, patches.Length);
-        Assert.Equal(new Rect(0, 0, 5, 5), patches[0].Destination);
-        Assert.Equal(new Rect(5, 5, 5, 5), patches[3].Destination);
+        Assert.Equal(DartGeometry.RectFromLTWH(0, 0, 5, 5), patches[0].Destination);
+        Assert.Equal(DartGeometry.RectFromLTWH(5, 5, 5, 5), patches[3].Destination);
     }
 
     [Fact]
@@ -278,12 +278,12 @@ public sealed class CanvasSaveLayerTests
         var paint = new Paint { Color = Color.FromRGBO(0, 0, 0, 0.25), FilterQuality = FilterQuality.High };
         WriteableBitmap image = SolidBitmap(4, 2, 0xFFFFFFFF);
 
-        canvas.DrawImage(image, new Point(3, 4), paint);
+        canvas.DrawImage(image, new Offset(3, 4), paint);
         paint.FilterQuality = FilterQuality.None;
 
         CanvasCall call = Assert.Single(canvas.DebugCalls);
         Assert.Equal("drawImage", call.Method);
-        Assert.Equal(new Point(3, 4), call.Offset);
+        Assert.Equal(new Offset(3, 4), call.Offset);
         Assert.Same(image, call.Image);
         Assert.Equal(FilterQuality.High, call.Paint!.FilterQuality);
     }
@@ -291,7 +291,7 @@ public sealed class CanvasSaveLayerTests
     private static IReadOnlyList<CanvasCall> PaintRecordingFor(Clip clip)
     {
         var canvas = new Canvas(new PictureRecorder());
-        new CanvasClipContext(canvas).ClipRectAndPaint(new Rect(0, 0, 5, 5), clip, new Rect(0, 0, 5, 5), () => { });
+        new CanvasClipContext(canvas).ClipRectAndPaint(DartGeometry.RectFromLTWH(0, 0, 5, 5), clip, DartGeometry.RectFromLTWH(0, 0, 5, 5), () => { });
         return canvas.DebugCalls;
     }
 
@@ -299,7 +299,7 @@ public sealed class CanvasSaveLayerTests
     {
         var bitmap = new WriteableBitmap(
             new PixelSize(width, height),
-            new Vector(96, 96),
+            new Offset(96, 96),
             PixelFormats.Bgra8888,
             AlphaFormat.Premul);
         using ILockedFramebuffer framebuffer = bitmap.Lock();

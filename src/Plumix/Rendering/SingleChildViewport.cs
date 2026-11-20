@@ -102,22 +102,22 @@ public sealed class RenderSingleChildViewport : RenderProxyBox, IRenderAbstractV
     /// </summary>
     protected override Rect? DescribeSemanticsClip(RenderObject? child)
     {
-        var semanticBounds = new Rect(new Point(0, 0), Size);
+        var semanticBounds = DartGeometry.RectFromOffsetAndSize(new Offset(0, 0), Size);
         double remainingOffset = MaxScrollExtent - OffsetPixels;
         return AxisDirection switch
         {
-            AxisDirection.Up => new Rect(
-                new Point(semanticBounds.Left, semanticBounds.Top - remainingOffset),
-                new Point(semanticBounds.Right, semanticBounds.Bottom + OffsetPixels)),
-            AxisDirection.Right => new Rect(
-                new Point(semanticBounds.Left - OffsetPixels, semanticBounds.Top),
-                new Point(semanticBounds.Right + remainingOffset, semanticBounds.Bottom)),
-            AxisDirection.Down => new Rect(
-                new Point(semanticBounds.Left, semanticBounds.Top - OffsetPixels),
-                new Point(semanticBounds.Right, semanticBounds.Bottom + remainingOffset)),
-            _ => new Rect(
-                new Point(semanticBounds.Left - remainingOffset, semanticBounds.Top),
-                new Point(semanticBounds.Right + OffsetPixels, semanticBounds.Bottom))
+            AxisDirection.Up => DartGeometry.RectFromCorners(
+                new Offset(semanticBounds.Left, semanticBounds.Top - remainingOffset),
+                new Offset(semanticBounds.Right, semanticBounds.Bottom + OffsetPixels)),
+            AxisDirection.Right => DartGeometry.RectFromCorners(
+                new Offset(semanticBounds.Left - OffsetPixels, semanticBounds.Top),
+                new Offset(semanticBounds.Right + remainingOffset, semanticBounds.Bottom)),
+            AxisDirection.Down => DartGeometry.RectFromCorners(
+                new Offset(semanticBounds.Left, semanticBounds.Top - OffsetPixels),
+                new Offset(semanticBounds.Right, semanticBounds.Bottom + remainingOffset)),
+            _ => DartGeometry.RectFromCorners(
+                new Offset(semanticBounds.Left - remainingOffset, semanticBounds.Top),
+                new Offset(semanticBounds.Right + OffsetPixels, semanticBounds.Bottom))
         };
     }
 
@@ -167,8 +167,8 @@ public sealed class RenderSingleChildViewport : RenderProxyBox, IRenderAbstractV
         }
 
         double targetOffset = leadingScrollOffset - (mainAxisExtent - targetMainAxisExtent) * alignment;
-        Point shift = ResolvePaintOffset(targetOffset);
-        var targetRect = new Rect(bounds.X + shift.X, bounds.Y + shift.Y, bounds.Width, bounds.Height);
+        Offset shift = ResolvePaintOffset(targetOffset);
+        var targetRect = DartGeometry.RectFromLTWH(bounds.Left + shift.Dx, bounds.Top + shift.Dy, bounds.Width, bounds.Height);
         return new RevealedOffset(targetOffset, targetRect);
     }
 
@@ -243,26 +243,26 @@ public sealed class RenderSingleChildViewport : RenderProxyBox, IRenderAbstractV
         base.Dispose();
     }
 
-    private bool ShouldClipAtPaintOffset(Point paintOffset) => ClipBehavior != Clip.None
+    private bool ShouldClipAtPaintOffset(Offset paintOffset) => ClipBehavior != Clip.None
         && Child is { } child
-        && (paintOffset.X < 0 || paintOffset.Y < 0
-            || paintOffset.X + child.Size.Width > Size.Width
-            || paintOffset.Y + child.Size.Height > Size.Height);
+        && (paintOffset.Dx < 0 || paintOffset.Dy < 0
+            || paintOffset.Dx + child.Size.Width > Size.Width
+            || paintOffset.Dy + child.Size.Height > Size.Height);
 
     protected override Rect? DescribeApproximatePaintClip(RenderObject? child) =>
-        child != null && ShouldClipAtPaintOffset(PaintOffset) ? new Rect(Size) : null;
+        child != null && ShouldClipAtPaintOffset(PaintOffset) ? DartGeometry.RectFromSize(Size) : null;
 
-    public override void Paint(PaintingContext context, Point offset)
+    public override void Paint(PaintingContext context, Offset offset)
     {
         if (Child is not { } child) return;
-        Point paintOffset = PaintOffset;
-        void PaintContents(PaintingContext ctx, Point point) => ctx.PaintChild(child, point + paintOffset);
+        Offset paintOffset = PaintOffset;
+        void PaintContents(PaintingContext ctx, Offset point) => ctx.PaintChild(child, point + paintOffset);
         if (ShouldClipAtPaintOffset(paintOffset))
         {
             _clipRectLayer.Layer = context.PushClipRect(
                 NeedsCompositing,
                 offset,
-                new Rect(Size),
+                DartGeometry.RectFromSize(Size),
                 PaintContents,
                 clipBehavior: ClipBehavior,
                 oldLayer: _clipRectLayer.Layer);
@@ -277,24 +277,24 @@ public sealed class RenderSingleChildViewport : RenderProxyBox, IRenderAbstractV
     public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
     {
         base.DebugFillProperties(properties);
-        properties.Add(new DiagnosticsProperty<Point>("offset", PaintOffset));
+        properties.Add(new DiagnosticsProperty<Offset>("offset", PaintOffset));
     }
 
     /// <summary>Dart's <c>_RenderSingleChildViewport._paintOffset</c>: the child is shifted by the
     /// scroll offset at paint time rather than through its parent data. Out-of-range offsets are
     /// kept: physics that allow overscroll (iOS bouncing) shift the child instead of being clamped.
     /// </summary>
-    private Point PaintOffset => ResolvePaintOffset(OffsetPixels);
+    private Offset PaintOffset => ResolvePaintOffset(OffsetPixels);
 
     /// <inheritdoc />
     public override void ApplyPaintTransform(RenderObject child, Matrix4 transform)
     {
         ArgumentNullException.ThrowIfNull(transform);
-        Point paintOffset = PaintOffset;
-        transform.TranslateByDouble(paintOffset.X, paintOffset.Y, 0, 1);
+        Offset paintOffset = PaintOffset;
+        transform.TranslateByDouble(paintOffset.Dx, paintOffset.Dy, 0, 1);
     }
 
-    protected override bool HitTestChildren(BoxHitTestResult result, Point position)
+    protected override bool HitTestChildren(BoxHitTestResult result, Offset position)
     {
         RenderBox? child = Child;
         if (child is null)
@@ -312,15 +312,15 @@ public sealed class RenderSingleChildViewport : RenderProxyBox, IRenderAbstractV
     // shift inside a baseline-aligned parent, which makes no sense.
     protected override double? ComputeDistanceToActualBaseline(TextBaseline baseline) => null;
 
-    private Point ResolvePaintOffset(double pixels)
+    private Offset ResolvePaintOffset(double pixels)
     {
         if (Child is null) return default;
         return AxisDirection switch
         {
-            AxisDirection.Right => new Point(-pixels, 0),
-            AxisDirection.Left => new Point(Size.Width - Child.Size.Width + pixels, 0),
-            AxisDirection.Down => new Point(0, -pixels),
-            AxisDirection.Up => new Point(0, Size.Height - Child.Size.Height + pixels),
+            AxisDirection.Right => new Offset(-pixels, 0),
+            AxisDirection.Left => new Offset(Size.Width - Child.Size.Width + pixels, 0),
+            AxisDirection.Down => new Offset(0, -pixels),
+            AxisDirection.Up => new Offset(0, Size.Height - Child.Size.Height + pixels),
             _ => throw new ArgumentOutOfRangeException(),
         };
     }

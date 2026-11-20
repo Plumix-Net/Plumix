@@ -336,7 +336,7 @@ public sealed class AndroidActivityDelegateTests : IDisposable
         SystemChannels.Platform.InvokeMethod<object>("SystemNavigator.pop").GetAwaiter().GetResult();
 
     private static PredictiveBackEvent BackEvent(double progress) =>
-        new(progress: progress, swipeEdge: SwipeEdge.Left, touchOffset: new Point(1, 2));
+        new(progress: progress, swipeEdge: SwipeEdge.Left, touchOffset: new Offset(1, 2));
 
     private MethodChannel RestorationChannel() =>
         new(SystemChannels.Restoration.Name, binaryMessenger: _messenger);

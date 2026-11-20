@@ -66,7 +66,7 @@ public sealed class Path
         _path.ArcTo(ToNative(oval), Degrees(startAngleRadians), Degrees(sweepAngleRadians), forceMoveTo);
     }
 
-    public void ArcToPoint(Point arcEnd, Radius radius = default,
+    public void ArcToPoint(Offset arcEnd, Radius radius = default,
         double rotation = 0.0, bool largeArc = false, bool clockwise = true)
     {
         CheckPoint(arcEnd);
@@ -74,10 +74,10 @@ public sealed class Path
         _path.ArcTo(Narrow(radius.X), Narrow(radius.Y), Narrow(rotation),
             largeArc ? SKPathArcSize.Large : SKPathArcSize.Small,
             clockwise ? SKPathDirection.Clockwise : SKPathDirection.CounterClockwise,
-            Narrow(arcEnd.X), Narrow(arcEnd.Y));
+            Narrow(arcEnd.Dx), Narrow(arcEnd.Dy));
     }
 
-    public void RelativeArcToPoint(Point arcEndDelta, Radius radius = default,
+    public void RelativeArcToPoint(Offset arcEndDelta, Radius radius = default,
         double rotation = 0.0, bool largeArc = false, bool clockwise = true)
     {
         CheckPoint(arcEndDelta);
@@ -85,7 +85,7 @@ public sealed class Path
         _path.RArcTo(Narrow(radius.X), Narrow(radius.Y), Narrow(rotation),
             largeArc ? SKPathArcSize.Large : SKPathArcSize.Small,
             clockwise ? SKPathDirection.Clockwise : SKPathDirection.CounterClockwise,
-            Narrow(arcEndDelta.X), Narrow(arcEndDelta.Y));
+            Narrow(arcEndDelta.Dx), Narrow(arcEndDelta.Dy));
     }
 
     public void AddRect(Rect rect)
@@ -106,7 +106,7 @@ public sealed class Path
         _path.AddArc(ToNative(oval), Degrees(startAngleRadians), Degrees(sweepAngleRadians));
     }
 
-    public void AddPolygon(IReadOnlyList<Point> points, bool close)
+    public void AddPolygon(IReadOnlyList<Offset> points, bool close)
     {
         ArgumentNullException.ThrowIfNull(points);
         var native = new SKPoint[points.Count];
@@ -135,24 +135,24 @@ public sealed class Path
 
     public void AddRSuperellipse(RSuperellipse rsuperellipse) => AddPath(rsuperellipse.ToPath());
     public void AddPath(Path other) => AddPath(other, default);
-    public void AddPath(Path path, Point offset, IReadOnlyList<double>? matrix4 = null) =>
+    public void AddPath(Path path, Offset offset, IReadOnlyList<double>? matrix4 = null) =>
         Append(path, offset, matrix4, SKPathAddMode.Append);
-    public void ExtendWithPath(Path path, Point offset, IReadOnlyList<double>? matrix4 = null) =>
+    public void ExtendWithPath(Path path, Offset offset, IReadOnlyList<double>? matrix4 = null) =>
         Append(path, offset, matrix4, SKPathAddMode.Extend);
 
-    private void Append(Path path, Point offset, IReadOnlyList<double>? matrix4, SKPathAddMode mode)
+    private void Append(Path path, Offset offset, IReadOnlyList<double>? matrix4, SKPathAddMode mode)
     {
         ArgumentNullException.ThrowIfNull(path);
         CheckPoint(offset);
         if (matrix4 is null)
         {
-            _path.AddPath(path._path, Narrow(offset.X), Narrow(offset.Y), mode);
+            _path.AddPath(path._path, Narrow(offset.Dx), Narrow(offset.Dy), mode);
         }
         else
         {
             SKMatrix matrix = ToNativeMatrix(matrix4);
-            matrix.TransX += Narrow(offset.X);
-            matrix.TransY += Narrow(offset.Y);
+            matrix.TransX += Narrow(offset.Dx);
+            matrix.TransY += Narrow(offset.Dy);
             _path.AddPath(path._path, in matrix, mode);
         }
     }
@@ -160,17 +160,17 @@ public sealed class Path
     public void Close() => _path.Close();
     public void Reset() => _path.Reset();
 
-    public bool Contains(Point point)
+    public bool Contains(Offset point)
     {
         CheckPoint(point);
-        return _path.Contains(Narrow(point.X), Narrow(point.Y));
+        return _path.Contains(Narrow(point.Dx), Narrow(point.Dy));
     }
 
-    public Path Shift(Point offset)
+    public Path Shift(Offset offset)
     {
         CheckPoint(offset);
         var result = new Path(this);
-        result._path.Offset(Narrow(offset.X), Narrow(offset.Y));
+        result._path.Offset(Narrow(offset.Dx), Narrow(offset.Dy));
         return result;
     }
 
@@ -218,7 +218,7 @@ public sealed class Path
             bottom = Math.Max(bottom, points[index].Y);
         }
 
-        return new Rect(left, top, right - left, bottom - top);
+        return DartGeometry.RectFromLTWH(left, top, right - left, bottom - top);
     }
 
     public static Path Combine(PathOperation operation, Path path1, Path path2)
@@ -389,11 +389,11 @@ public sealed class Path
     internal static float Narrow(double value) => double.IsFinite(value)
         ? (float)Math.Clamp(value, -float.MaxValue, float.MaxValue) : (float)value;
     private static float Degrees(double radians) => Narrow(radians) * 180.0f / (float)Math.PI;
-    private static SKPoint ToNative(Point point) => new(Narrow(point.X), Narrow(point.Y));
-    private static Point FromNative(SKPoint point) => new(point.X, point.Y);
+    private static SKPoint ToNative(Offset point) => new(Narrow(point.Dx), Narrow(point.Dy));
+    private static Offset FromNative(SKPoint point) => new(point.X, point.Y);
     private static SKRect ToNative(Rect rect) =>
         new(Narrow(rect.Left), Narrow(rect.Top), Narrow(rect.Right), Narrow(rect.Bottom));
-    private static Rect FromNative(SKRect rect) => new(rect.Left, rect.Top, rect.Width, rect.Height);
+    private static Rect FromNative(SKRect rect) => DartGeometry.RectFromLTWH(rect.Left, rect.Top, rect.Width, rect.Height);
 
     private static SKPoint ToNativeRadius(Radius radius)
     {
@@ -412,8 +412,8 @@ public sealed class Path
             Narrow(matrix4[3]), Narrow(matrix4[7]), Narrow(matrix4[15]));
     }
 
-    private static void CheckPoint(Point point) => DebugAssertions.Assert(
-        !double.IsNaN(point.X) && !double.IsNaN(point.Y), "Offset argument contained a NaN value.");
+    private static void CheckPoint(Offset point) => DebugAssertions.Assert(
+        !double.IsNaN(point.Dx) && !double.IsNaN(point.Dy), "Offset argument contained a NaN value.");
     private static void CheckRadius(Radius radius) => DebugAssertions.Assert(
         !double.IsNaN(radius.X) && !double.IsNaN(radius.Y), "Radius argument contained a NaN value.");
     private static void CheckRect(Rect rect) => DebugAssertions.Assert(

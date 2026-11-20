@@ -474,7 +474,7 @@ public sealed class MaterialLegacyButtonTests
             new PointerDownEvent(
                 pointer,
                 PointerDeviceKind.Mouse,
-                new Point(60, 40),
+                new Offset(60, 40),
                 PointerButtons.Primary,
                 now));
         tree.Pump(HarnessSize);
@@ -487,7 +487,7 @@ public sealed class MaterialLegacyButtonTests
             new PointerUpEvent(
                 pointer,
                 PointerDeviceKind.Mouse,
-                new Point(60, 40),
+                new Offset(60, 40),
                 PointerButtons.None,
                 now));
         tree.Pump(HarnessSize);

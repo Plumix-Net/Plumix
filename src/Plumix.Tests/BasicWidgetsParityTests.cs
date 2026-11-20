@@ -209,7 +209,7 @@ public sealed class BasicWidgetsParityTests
     {
         var child = new SizedBox();
 
-        Positioned fromRect = Positioned.FromRect(new Rect(3, 4, 10, 20), child);
+        Positioned fromRect = Positioned.FromRect(DartGeometry.RectFromLTWH(3, 4, 10, 20), child);
         Assert.Equal(3.0, fromRect.Left);
         Assert.Equal(4.0, fromRect.Top);
         Assert.Equal(10.0, fromRect.Width);
@@ -267,7 +267,7 @@ public sealed class BasicWidgetsParityTests
             Size = Constraints.Constrain(_size);
         }
 
-        public override void Paint(PaintingContext ctx, Point offset)
+        public override void Paint(PaintingContext ctx, Offset offset)
         {
         }
     }

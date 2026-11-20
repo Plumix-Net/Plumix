@@ -80,9 +80,9 @@ public sealed class MaterialGridTileTests
         Assert.Equal((0d, 0d, 0d), (footerData.Left, footerData.Right, footerData.Bottom));
         Assert.Null(footerData.Top);
         Assert.Equal(new Size(200, 24), header.Size);
-        Assert.Equal(new Point(0, 0), headerData.offset);
+        Assert.Equal(new Offset(0, 0), headerData.offset);
         Assert.Equal(new Size(200, 32), footer.Size);
-        Assert.Equal(new Point(0, 88), footerData.offset);
+        Assert.Equal(new Offset(0, 88), footerData.offset);
     }
 
     [Fact]
@@ -193,7 +193,7 @@ public sealed class MaterialGridTileTests
         var leading = Assert.IsAssignableFrom<RenderBox>(row.FirstChild);
         var title = Assert.IsAssignableFrom<RenderBox>(row.ChildAfter(leading));
         Assert.True(
-            ((FlexParentData)leading.parentData!).offset.X > ((FlexParentData)title.parentData!).offset.X,
+            ((FlexParentData)leading.parentData!).offset.Dx > ((FlexParentData)title.parentData!).offset.Dx,
             "RTL leading slot should be laid out on the visual right edge.");
         Assert.Equal(TextDirection.Rtl, FindParagraph(harness.RenderView, "عنوان")!.TextDirection);
     }

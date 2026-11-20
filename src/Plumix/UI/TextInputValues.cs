@@ -31,8 +31,8 @@ public sealed class RawFloatingCursorPoint
     /// </summary>
     public RawFloatingCursorPoint(
         FloatingCursorDragState state,
-        Point? offset = null,
-        (Point Offset, TextPosition Position)? startLocation = null)
+        Offset? offset = null,
+        (Offset Offset, TextPosition Position)? startLocation = null)
     {
         if (state == FloatingCursorDragState.Update && offset is null)
         {
@@ -47,13 +47,13 @@ public sealed class RawFloatingCursorPoint
     }
 
     /// <summary>The raw position of the floating cursor as determined by the engine.</summary>
-    public Point? Offset { get; }
+    public Offset? Offset { get; }
 
     /// <summary>The position of the floating cursor when it first became visible, together with the
     /// caret position it maps to.</summary>
     /// <remarks>Nothing on the inbound channel populates this; only the editing layer does.
     /// </remarks>
-    public (Point Offset, TextPosition Position)? StartLocation { get; }
+    public (Offset Offset, TextPosition Position)? StartLocation { get; }
 
     /// <summary>The state of the floating cursor.</summary>
     public FloatingCursorDragState State { get; }
@@ -316,7 +316,7 @@ public interface IScribbleClient
     string ElementIdentifier { get; }
 
     /// <summary>Requests that this client receive focus at the given global offset.</summary>
-    void OnScribbleFocus(Point offset);
+    void OnScribbleFocus(Offset offset);
 
     /// <summary>Whether this client overlaps the given global rectangle.</summary>
     bool IsInScribbleRect(Rect rect);

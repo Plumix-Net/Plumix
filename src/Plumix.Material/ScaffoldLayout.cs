@@ -185,7 +185,7 @@ internal sealed class ScaffoldLayout : MultiChildLayoutDelegate
                 LayoutChild(ScaffoldSlot.BottomNavigationBar, fullWidthConstraints).Height;
             bottomWidgetsHeight += bottomNavigationBarHeight;
             bottomNavigationBarTop = Math.Max(0.0, bottom - bottomWidgetsHeight);
-            PositionChild(ScaffoldSlot.BottomNavigationBar, new Point(0.0, bottomNavigationBarTop.Value));
+            PositionChild(ScaffoldSlot.BottomNavigationBar, new Offset(0.0, bottomNavigationBarTop.Value));
         }
 
         if (HasChild(ScaffoldSlot.PersistentFooter))
@@ -197,14 +197,14 @@ internal sealed class ScaffoldLayout : MultiChildLayoutDelegate
             bottomWidgetsHeight += persistentFooterHeight;
             PositionChild(
                 ScaffoldSlot.PersistentFooter,
-                new Point(0.0, Math.Max(0.0, bottom - bottomWidgetsHeight)));
+                new Offset(0.0, Math.Max(0.0, bottom - bottomWidgetsHeight)));
         }
 
         var materialBannerSize = default(Size);
         if (HasChild(ScaffoldSlot.MaterialBanner))
         {
             materialBannerSize = LayoutChild(ScaffoldSlot.MaterialBanner, fullWidthConstraints);
-            PositionChild(ScaffoldSlot.MaterialBanner, new Point(0.0, appBarHeight));
+            PositionChild(ScaffoldSlot.MaterialBanner, new Offset(0.0, appBarHeight));
 
             // Push content down only if elevation is 0.
             if (!ExtendBodyBehindMaterialBanner)
@@ -240,7 +240,7 @@ internal sealed class ScaffoldLayout : MultiChildLayoutDelegate
                     AppBarHeight: appBarHeight,
                     MaterialBannerHeight: materialBannerSize.Height));
             LayoutChild(ScaffoldSlot.Body, bodyConstraints);
-            PositionChild(ScaffoldSlot.Body, new Point(0.0, contentTop));
+            PositionChild(ScaffoldSlot.Body, new Offset(0.0, contentTop));
         }
 
         // The BottomSheet and the SnackBar are anchored to the bottom of the parent, they are
@@ -272,7 +272,7 @@ internal sealed class ScaffoldLayout : MultiChildLayoutDelegate
             bottomSheetSize = LayoutChild(ScaffoldSlot.BottomSheet, bottomSheetConstraints);
             PositionChild(
                 ScaffoldSlot.BottomSheet,
-                new Point(
+                new Offset(
                     (size.Width - bottomSheetSize.Width) / 2.0,
                     contentBottom - bottomSheetSize.Height));
         }
@@ -297,14 +297,14 @@ internal sealed class ScaffoldLayout : MultiChildLayoutDelegate
                 TextDirection: TextDirection,
                 MinInsets: MinInsets,
                 MinViewPadding: MinViewPadding);
-            Point currentFabOffset = CurrentFloatingActionButtonLocation.GetOffset(currentGeometry);
-            Point previousFabOffset = PreviousFloatingActionButtonLocation.GetOffset(currentGeometry);
-            Point fabOffset = FloatingActionButtonMotionAnimator.GetOffset(
+            Offset currentFabOffset = CurrentFloatingActionButtonLocation.GetOffset(currentGeometry);
+            Offset previousFabOffset = PreviousFloatingActionButtonLocation.GetOffset(currentGeometry);
+            Offset fabOffset = FloatingActionButtonMotionAnimator.GetOffset(
                 begin: previousFabOffset,
                 end: currentFabOffset,
                 progress: FloatingActionButtonMoveAnimation.Value);
             PositionChild(ScaffoldSlot.FloatingActionButton, fabOffset);
-            floatingActionButtonRect = new Rect(fabOffset, fabSize);
+            floatingActionButtonRect = DartGeometry.RectFromOffsetAndSize(fabOffset, fabSize);
         }
         else
         {
@@ -341,7 +341,7 @@ internal sealed class ScaffoldLayout : MultiChildLayoutDelegate
             }
 
             double xOffset = hasCustomWidth ? (size.Width - SnackBarWidth!.Value) / 2 : 0.0;
-            PositionChild(ScaffoldSlot.SnackBar, new Point(xOffset, snackBarYOffsetBase - snackBarSize.Height));
+            PositionChild(ScaffoldSlot.SnackBar, new Offset(xOffset, snackBarYOffsetBase - snackBarSize.Height));
 
             if (Constants.KDebugMode && IsSnackBarFloating && snackBarYOffsetBase - snackBarSize.Height < 0.0)
             {

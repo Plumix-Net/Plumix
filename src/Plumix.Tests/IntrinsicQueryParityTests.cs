@@ -258,7 +258,7 @@ public sealed class IntrinsicQueryParityTests
             Size = Constraints.Constrain(naturalSize);
         }
 
-        public override void Paint(PaintingContext ctx, Point offset)
+        public override void Paint(PaintingContext ctx, Offset offset)
         {
         }
     }
@@ -289,7 +289,7 @@ public sealed class IntrinsicQueryParityTests
             Size = Constraints.Smallest;
         }
 
-        public override void Paint(PaintingContext ctx, Point offset)
+        public override void Paint(PaintingContext ctx, Offset offset)
         {
         }
     }

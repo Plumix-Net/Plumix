@@ -93,10 +93,10 @@ public sealed record BeveledRectangleBorder : OutlinedBorder
 
     private static Path GetPath(RRect rrect)
     {
-        Point centerLeft = new(rrect.Left, rrect.Center.Y);
-        Point centerRight = new(rrect.Right, rrect.Center.Y);
-        Point centerTop = new(rrect.Center.X, rrect.Top);
-        Point centerBottom = new(rrect.Center.X, rrect.Bottom);
+        Offset centerLeft = new(rrect.Left, rrect.Center.Dy);
+        Offset centerRight = new(rrect.Right, rrect.Center.Dy);
+        Offset centerTop = new(rrect.Center.Dx, rrect.Top);
+        Offset centerBottom = new(rrect.Center.Dx, rrect.Bottom);
 
         double tlRadiusX = Math.Max(0.0, rrect.TopLeft.X);
         double tlRadiusY = Math.Max(0.0, rrect.TopLeft.Y);
@@ -107,16 +107,16 @@ public sealed record BeveledRectangleBorder : OutlinedBorder
         double brRadiusX = Math.Max(0.0, rrect.BottomRight.X);
         double brRadiusY = Math.Max(0.0, rrect.BottomRight.Y);
 
-        Point[] vertices =
+        Offset[] vertices =
         [
-            new(rrect.Left, Math.Min(centerLeft.Y, rrect.Top + tlRadiusY)),
-            new(Math.Min(centerTop.X, rrect.Left + tlRadiusX), rrect.Top),
-            new(Math.Max(centerTop.X, rrect.Right - trRadiusX), rrect.Top),
-            new(rrect.Right, Math.Min(centerRight.Y, rrect.Top + trRadiusY)),
-            new(rrect.Right, Math.Max(centerRight.Y, rrect.Bottom - brRadiusY)),
-            new(Math.Max(centerBottom.X, rrect.Right - brRadiusX), rrect.Bottom),
-            new(Math.Min(centerBottom.X, rrect.Left + blRadiusX), rrect.Bottom),
-            new(rrect.Left, Math.Max(centerLeft.Y, rrect.Bottom - blRadiusY)),
+            new(rrect.Left, Math.Min(centerLeft.Dy, rrect.Top + tlRadiusY)),
+            new(Math.Min(centerTop.Dx, rrect.Left + tlRadiusX), rrect.Top),
+            new(Math.Max(centerTop.Dx, rrect.Right - trRadiusX), rrect.Top),
+            new(rrect.Right, Math.Min(centerRight.Dy, rrect.Top + trRadiusY)),
+            new(rrect.Right, Math.Max(centerRight.Dy, rrect.Bottom - brRadiusY)),
+            new(Math.Max(centerBottom.Dx, rrect.Right - brRadiusX), rrect.Bottom),
+            new(Math.Min(centerBottom.Dx, rrect.Left + blRadiusX), rrect.Bottom),
+            new(rrect.Left, Math.Max(centerLeft.Dy, rrect.Bottom - blRadiusY)),
         ];
 
         var path = new Path();

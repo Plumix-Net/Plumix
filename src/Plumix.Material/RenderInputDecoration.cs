@@ -301,7 +301,7 @@ internal sealed class RenderDecoration : RenderBox, ISlottedRenderObjectContaine
 
     private bool IsOutlineAligned => !_decoration.IsCollapsed && _decoration.Border.IsOutline;
 
-    private Vector DensityOffset => _decoration.VisualDensity.BaseSizeAdjustment;
+    private Offset DensityOffset => _decoration.VisualDensity.BaseSizeAdjustment;
 
     private EdgeInsetsGeometry ContentPadding => _decoration.ContentPadding;
 
@@ -545,7 +545,7 @@ internal sealed class RenderDecoration : RenderBox, ISlottedRenderObjectContaine
                                + (_label is null ? 0.0 : _decoration.FloatingLabelHeight)
                                + inputMaxHeight
                                + PaddingBottom
-                               + DensityOffset.Y;
+                               + DensityOffset.Dy;
         double containerHeight = Math.Max(
             Math.Max(iconHeight, contentHeight),
             Math.Max(prefixIconHeight, suffixIconHeight));
@@ -562,7 +562,7 @@ internal sealed class RenderDecoration : RenderBox, ISlottedRenderObjectContaine
             return 0.0;
         }
 
-        return ParentDataOf(_input).offset.Y
+        return ParentDataOf(_input).offset.Dy
                + (_input.GetDistanceToActualBaseline(baseline) ?? _input.Size.Height);
     }
 
@@ -710,7 +710,7 @@ internal sealed class RenderDecoration : RenderBox, ISlottedRenderObjectContaine
 
         double bottomHeight = subtextSize?.BottomHeight ?? 0.0;
         BoxConstraints inputConstraints = boxConstraints
-            .Deflate(EdgeInsets.FromLTRB(0, PaddingVertical + topHeight + bottomHeight + DensityOffset.Y, 0, 0))
+            .Deflate(EdgeInsets.FromLTRB(0, PaddingVertical + topHeight + bottomHeight + DensityOffset.Dy, 0, 0))
             .Tighten(width: inputWidth);
 
         Size inputSize = _input is null ? default : layoutChild(_input, inputConstraints);
@@ -737,7 +737,7 @@ internal sealed class RenderDecoration : RenderBox, ISlottedRenderObjectContaine
         double contentHeight = Math.Max(
             fixIconHeight,
             topHeight + PaddingTop + fixAboveInput + inputHeight + fixBelowInput + PaddingBottom
-            + DensityOffset.Y);
+            + DensityOffset.Dy);
         double minContainerHeight = _decoration.IsDense || _decoration.IsCollapsed || _expands
             ? inputHeight
             : MinInteractiveDimension;
@@ -755,8 +755,8 @@ internal sealed class RenderDecoration : RenderBox, ISlottedRenderObjectContaine
         double baselineAdjustment = fixAboveInput - (overflow * (1.0 - textAlignVerticalFactor));
 
         double topInputBaseline = PaddingTop + topHeight + inputInternalBaseline
-                                  + baselineAdjustment + interactiveAdjustment + (DensityOffset.Y / 2.0);
-        double maxContentHeight = containerHeight - PaddingVertical - topHeight - DensityOffset.Y;
+                                  + baselineAdjustment + interactiveAdjustment + (DensityOffset.Dy / 2.0);
+        double maxContentHeight = containerHeight - PaddingVertical - topHeight - DensityOffset.Dy;
         double alignableHeight = fixAboveInput + inputHeight + fixBelowInput;
         double maxVerticalOffset = maxContentHeight - alignableHeight;
 
@@ -817,14 +817,14 @@ internal sealed class RenderDecoration : RenderBox, ISlottedRenderObjectContaine
                     height: layout.ContainerHeight),
                 parentUsesSize: true);
             double containerX = IsRtl ? 0.0 : BoxSize(_icon).Width;
-            ParentDataOf(_container).offset = new Point(containerX, 0.0);
+            ParentDataOf(_container).offset = new Offset(containerX, 0.0);
         }
 
         double height = layout.ContainerHeight;
 
         double CenterLayout(RenderBox box, double x)
         {
-            ParentDataOf(box).offset = new Point(x, (height - box.Size.Height) / 2.0);
+            ParentDataOf(box).offset = new Offset(x, (height - box.Size.Height) / 2.0);
             return box.Size.Width;
         }
 
@@ -851,14 +851,14 @@ internal sealed class RenderDecoration : RenderBox, ISlottedRenderObjectContaine
             end = PaddingEnd;
             if (_helperError is not null)
             {
-                ParentDataOf(_helperError).offset = new Point(
+                ParentDataOf(_helperError).offset = new Offset(
                     start - _helperError.Size.Width - _decoration.InputGap,
                     subtextBaseline - helperErrorBaseline);
             }
 
             if (_counter is not null)
             {
-                ParentDataOf(_counter).offset = new Point(
+                ParentDataOf(_counter).offset = new Offset(
                     end + _decoration.InputGap,
                     subtextBaseline - counterBaseline);
             }
@@ -869,14 +869,14 @@ internal sealed class RenderDecoration : RenderBox, ISlottedRenderObjectContaine
             end = overallWidth - PaddingEnd;
             if (_helperError is not null)
             {
-                ParentDataOf(_helperError).offset = new Point(
+                ParentDataOf(_helperError).offset = new Offset(
                     start + _decoration.InputGap,
                     subtextBaseline - helperErrorBaseline);
             }
 
             if (_counter is not null)
             {
-                ParentDataOf(_counter).offset = new Point(
+                ParentDataOf(_counter).offset = new Offset(
                     end - _counter.Size.Width - _decoration.InputGap,
                     subtextBaseline - counterBaseline);
             }
@@ -889,7 +889,7 @@ internal sealed class RenderDecoration : RenderBox, ISlottedRenderObjectContaine
             double childBaseline =
                 box.GetDistanceToBaseline(Plumix.UI.TextBaseline.Alphabetic, onlyReal: true)
                 ?? box.Size.Height;
-            ParentDataOf(box).offset = new Point(x, baseline - childBaseline);
+            ParentDataOf(box).offset = new Offset(x, baseline - childBaseline);
             return box.Size.Width;
         }
 
@@ -1008,7 +1008,7 @@ internal sealed class RenderDecoration : RenderBox, ISlottedRenderObjectContaine
 
         if (_label is not null)
         {
-            double labelX = ParentDataOf(_label).offset.X;
+            double labelX = ParentDataOf(_label).offset.Dx;
             double floatAlign = _decoration.FloatingLabelAlignment == FloatingLabelAlignment.Center ? 1.0 : 0.0;
             double floatWidth = BoxSize(_label).Width * FinalLabelScale;
             double offsetToPrefixIcon = 0.0;
@@ -1048,13 +1048,13 @@ internal sealed class RenderDecoration : RenderBox, ISlottedRenderObjectContaine
 
     // ---- paint ------------------------------------------------------------------------------
 
-    public override void Paint(PaintingContext context, Point offset)
+    public override void Paint(PaintingContext context, Offset offset)
     {
         PaintSlot(context, _container, offset);
 
         if (_label is not null)
         {
-            Point labelOffset = ParentDataOf(_label).offset;
+            Offset labelOffset = ParentDataOf(_label).offset;
             double labelHeight = BoxSize(_label).Height;
             double labelWidth = BoxSize(_label).Width;
             double floatAlign = _decoration.FloatingLabelAlignment == FloatingLabelAlignment.Center ? 1.0 : 0.0;
@@ -1065,9 +1065,9 @@ internal sealed class RenderDecoration : RenderBox, ISlottedRenderObjectContaine
             double outlinedFloatingY = (-labelHeight * FinalLabelScale / 2.0) - (borderSide.StrokeOffset / 2.0);
             double floatingY = isOutlineBorder
                 ? outlinedFloatingY
-                : PaddingTop + (DensityOffset.Y / 2.0);
+                : PaddingTop + (DensityOffset.Dy / 2.0);
             double scale = Lerp(1.0, FinalLabelScale, t);
-            double centeredFloatX = ParentDataOf(_container!).offset.X
+            double centeredFloatX = ParentDataOf(_container!).offset.Dx
                                     + (BoxSize(_container).Width / 2.0)
                                     - (floatWidth / 2.0);
 
@@ -1075,7 +1075,7 @@ internal sealed class RenderDecoration : RenderBox, ISlottedRenderObjectContaine
             double floatStartX;
             if (IsRtl)
             {
-                startX = labelOffset.X + (labelWidth * (1.0 - scale));
+                startX = labelOffset.Dx + (labelWidth * (1.0 - scale));
                 floatStartX = startX;
                 if (_prefixIcon is not null && !_decoration.AlignLabelWithHint && isOutlineBorder && _material3)
                 {
@@ -1084,7 +1084,7 @@ internal sealed class RenderDecoration : RenderBox, ISlottedRenderObjectContaine
             }
             else
             {
-                startX = labelOffset.X;
+                startX = labelOffset.Dx;
                 floatStartX = startX;
                 if (_prefixIcon is not null && !_decoration.AlignLabelWithHint && isOutlineBorder && _material3)
                 {
@@ -1094,11 +1094,11 @@ internal sealed class RenderDecoration : RenderBox, ISlottedRenderObjectContaine
 
             double floatEndX = Lerp(floatStartX, centeredFloatX, floatAlign);
             double dx = Lerp(startX, floatEndX, t);
-            double dy = Lerp(0.0, floatingY - labelOffset.Y, t);
+            double dy = Lerp(0.0, floatingY - labelOffset.Dy, t);
 
             // Records where the label was painted, in this render object's own coordinate space so
             // that ApplyPaintTransform can hand the same matrix to the geometry protocol.
-            Matrix4 labelPaintTransform = Matrix4.TranslationValues(dx, labelOffset.Y + dy, 0.0);
+            Matrix4 labelPaintTransform = Matrix4.TranslationValues(dx, labelOffset.Dy + dy, 0.0);
             labelPaintTransform.ScaleByDouble(scale, scale, 1.0, 1);
             _labelTransform = labelPaintTransform;
             context.PushTransform(
@@ -1127,7 +1127,7 @@ internal sealed class RenderDecoration : RenderBox, ISlottedRenderObjectContaine
         PaintSlot(context, _counter, offset);
     }
 
-    private static void PaintSlot(PaintingContext context, RenderBox? child, Point offset)
+    private static void PaintSlot(PaintingContext context, RenderBox? child, Offset offset)
     {
         if (child is not null)
         {
@@ -1143,15 +1143,15 @@ internal sealed class RenderDecoration : RenderBox, ISlottedRenderObjectContaine
         {
             // The label is painted through _labelTransform, which already carries its absolute
             // position, so the offset the base implementation appended is cancelled out first.
-            Point labelOffset = ParentDataOf(_label!).offset;
-            transform.TranslateByDouble(-labelOffset.X, -labelOffset.Y, 0, 1);
+            Offset labelOffset = ParentDataOf(_label!).offset;
+            transform.TranslateByDouble(-labelOffset.Dx, -labelOffset.Dy, 0, 1);
             transform.Multiply(labelTransform);
         }
     }
 
-    protected override bool HitTestSelf(Point position) => true;
+    protected override bool HitTestSelf(Offset position) => true;
 
-    protected override bool HitTestChildren(BoxHitTestResult result, Point position)
+    protected override bool HitTestChildren(BoxHitTestResult result, Offset position)
     {
         foreach (RenderBox child in Children())
         {

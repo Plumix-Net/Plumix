@@ -561,8 +561,8 @@ public sealed class TextPainter : IDisposable
                 return null;
             }
 
-            Point offset = layout.PaintOffset;
-            if (!double.IsFinite(offset.X) || !double.IsFinite(offset.Y))
+            Offset offset = layout.PaintOffset;
+            if (!double.IsFinite(offset.Dx) || !double.IsFinite(offset.Dy))
             {
                 return [];
             }
@@ -826,7 +826,7 @@ public sealed class TextPainter : IDisposable
     ///
     /// Valid only after [Layout] has been called.
     /// <exception cref="InvalidOperationException">[Layout] has not been called.</exception>
-    public void Paint(Canvas canvas, Point offset)
+    public void Paint(Canvas canvas, Offset offset)
     {
         ArgumentNullException.ThrowIfNull(canvas);
         LayoutCacheWithOffset layoutCache = _layoutCache
@@ -835,7 +835,7 @@ public sealed class TextPainter : IDisposable
                                                 + "calculated.\nPlease call layout() before paint() to position "
                                                 + "the text before painting it.");
 
-        if (!double.IsFinite(layoutCache.PaintOffset.X) || !double.IsFinite(layoutCache.PaintOffset.Y))
+        if (!double.IsFinite(layoutCache.PaintOffset.Dx) || !double.IsFinite(layoutCache.PaintOffset.Dy))
         {
             return;
         }
@@ -866,18 +866,18 @@ public sealed class TextPainter : IDisposable
             DebugPaintCharacterLayoutBoxes(canvas, offset);
         }
 
-        Point paintOffset = layoutCache.PaintOffset;
-        canvas.DrawParagraph(layoutCache.Paragraph, new Point(offset.X + paintOffset.X, offset.Y + paintOffset.Y));
+        Offset paintOffset = layoutCache.PaintOffset;
+        canvas.DrawParagraph(layoutCache.Paragraph, new Offset(offset.Dx + paintOffset.Dx, offset.Dy + paintOffset.Dy));
     }
 
-    private void DebugPaintCharacterLayoutBoxes(Canvas canvas, Point offset)
+    private void DebugPaintCharacterLayoutBoxes(Canvas canvas, Offset offset)
     {
         var pen = new Pen(new SolidColorBrush(new Color(0xFF00FFFF)), 1.0);
         IReadOnlyList<TextBox> textBoxes = GetBoxesForSelection(new TextSelection(0, PlainText.Length));
         foreach (TextBox textBox in textBoxes)
         {
             Rect rect = textBox.ToRect();
-            canvas.DrawRectangle(null, pen, rect.Translate(new Vector(offset.X, offset.Y)));
+            canvas.DrawRectangle(null, pen, rect.Shift(new Offset(offset.Dx, offset.Dy)));
         }
     }
 
@@ -944,7 +944,7 @@ public sealed class TextPainter : IDisposable
     /// Returns the offset at which to paint the caret.
     ///
     /// Valid only after [Layout] has been called.
-    public Point GetOffsetForCaret(TextPosition position, Rect caretPrototype)
+    public Offset GetOffsetForCaret(TextPosition position, Rect caretPrototype)
     {
         DebugAssertTextLayoutIsValid();
         LayoutCacheWithOffset layoutCache = _layoutCache!;
@@ -956,18 +956,18 @@ public sealed class TextPainter : IDisposable
             // The full width is not (width - caretPrototype.width), because RenderEditable reserves
             // cursor width on the right. Ideally this should be handled by RenderEditable instead.
             double dx = paintOffsetAlignment == 0 ? 0 : paintOffsetAlignment * layoutCache.ContentWidth;
-            return new Point(dx, 0.0);
+            return new Offset(dx, 0.0);
         }
 
-        Point rawOffset = metrics.WritingDirection == UI.TextDirection.Ltr
+        Offset rawOffset = metrics.WritingDirection == UI.TextDirection.Ltr
             ? metrics.Offset
-            : new Point(metrics.Offset.X - caretPrototype.Width, metrics.Offset.Y);
+            : new Offset(metrics.Offset.Dx - caretPrototype.Width, metrics.Offset.Dy);
         // If offset.dx is outside of the advertised content area, then the associated glyph belongs to
         // a trailing whitespace character. Ideally the behavior should be handled by higher-level
         // implementations (for instance, RenderEditable reserves width for showing the caret, it's
         // best to handle the clamping there).
-        double adjustedDx = ClampDouble(rawOffset.X + layoutCache.PaintOffset.X, 0, layoutCache.ContentWidth);
-        return new Point(adjustedDx, rawOffset.Y + layoutCache.PaintOffset.Y);
+        double adjustedDx = ClampDouble(rawOffset.Dx + layoutCache.PaintOffset.Dx, 0, layoutCache.ContentWidth);
+        return new Offset(adjustedDx, rawOffset.Dy + layoutCache.PaintOffset.Dy);
     }
 
     /// Returns the strut bounded height of the glyph at the given `position`.
@@ -1046,7 +1046,7 @@ public sealed class TextPainter : IDisposable
             Paragraph template = GetOrCreateLayoutTemplate();
             DebugAssert(template.NumberOfLines == 1, "template.numberOfLines == 1");
             double baselineOffset = template.GetLineMetricsAt(0)!.Value.Baseline;
-            return cachedLayout.Layout.EndOfTextCaretMetrics.Shift(new Point(0.0, -baselineOffset));
+            return cachedLayout.Layout.EndOfTextCaretMetrics.Shift(new Offset(0.0, -baselineOffset));
         }
 
         TextRange graphemeRange = glyphInfo.GraphemeClusterCodeUnitRange;
@@ -1077,7 +1077,7 @@ public sealed class TextPainter : IDisposable
             : !anchorToLeadingEdge;
         TextBox box = anchorToLeft ? boxes[0] : boxes[^1];
         var metrics = new LineCaretMetrics(
-            new Point(anchorToLeft ? box.Left : box.Right, box.Top),
+            new Offset(anchorToLeft ? box.Left : box.Right, box.Top),
             box.Direction,
             box.Bottom - box.Top);
 
@@ -1110,8 +1110,8 @@ public sealed class TextPainter : IDisposable
         DebugAssert(selection.IsValid, "selection.isValid");
         DebugAssert(!_debugNeedsRelayout, "!_debugNeedsRelayout");
         LayoutCacheWithOffset cachedLayout = _layoutCache!;
-        Point offset = cachedLayout.PaintOffset;
-        if (!double.IsFinite(offset.X) || !double.IsFinite(offset.Y))
+        Offset offset = cachedLayout.PaintOffset;
+        if (!double.IsFinite(offset.Dx) || !double.IsFinite(offset.Dy))
         {
             return [];
         }
@@ -1126,34 +1126,34 @@ public sealed class TextPainter : IDisposable
 
     /// Returns the [GlyphInfo] of the glyph closest to the given `offset` in the paragraph
     /// coordinate system, or null if the text is empty, or is entirely clipped or ellipsized away.
-    public GlyphInfo? GetClosestGlyphForOffset(Point offset)
+    public GlyphInfo? GetClosestGlyphForOffset(Offset offset)
     {
         DebugAssertTextLayoutIsValid();
         DebugAssert(!_debugNeedsRelayout, "!_debugNeedsRelayout");
         LayoutCacheWithOffset cachedLayout = _layoutCache!;
-        Point paintOffset = cachedLayout.PaintOffset;
+        Offset paintOffset = cachedLayout.PaintOffset;
         GlyphInfo? rawGlyphInfo = cachedLayout.Paragraph.GetClosestGlyphInfoForOffset(
-            new Point(offset.X - paintOffset.X, offset.Y - paintOffset.Y));
+            new Offset(offset.Dx - paintOffset.Dx, offset.Dy - paintOffset.Dy));
         if (rawGlyphInfo is null || paintOffset == default)
         {
             return rawGlyphInfo;
         }
 
         return new GlyphInfo(
-            rawGlyphInfo.GraphemeClusterLayoutBounds.Translate(new Vector(paintOffset.X, paintOffset.Y)),
+            rawGlyphInfo.GraphemeClusterLayoutBounds.Shift(new Offset(paintOffset.Dx, paintOffset.Dy)),
             rawGlyphInfo.GraphemeClusterCodeUnitRange,
             rawGlyphInfo.WritingDirection);
     }
 
     /// Returns the position within the text for the given pixel offset.
-    public TextPosition GetPositionForOffset(Point offset)
+    public TextPosition GetPositionForOffset(Offset offset)
     {
         DebugAssertTextLayoutIsValid();
         DebugAssert(!_debugNeedsRelayout, "!_debugNeedsRelayout");
         LayoutCacheWithOffset cachedLayout = _layoutCache!;
-        Point paintOffset = cachedLayout.PaintOffset;
+        Offset paintOffset = cachedLayout.PaintOffset;
         return cachedLayout.Paragraph.GetPositionForOffset(
-            new Point(offset.X - paintOffset.X, offset.Y - paintOffset.Y));
+            new Offset(offset.Dx - paintOffset.Dx, offset.Dy - paintOffset.Dy));
     }
 
     /// Returns the text range of the word at the given offset. Characters not part of a word, such
@@ -1185,22 +1185,22 @@ public sealed class TextPainter : IDisposable
         return _layoutCache!.Paragraph.GetLineBoundary(position);
     }
 
-    private static LineMetrics ShiftLineMetrics(LineMetrics metrics, Point offset)
+    private static LineMetrics ShiftLineMetrics(LineMetrics metrics, Offset offset)
     {
-        DebugAssert(double.IsFinite(offset.X), "offset.dx.isFinite");
-        DebugAssert(double.IsFinite(offset.Y), "offset.dy.isFinite");
-        return metrics with { Left = metrics.Left + offset.X, Baseline = metrics.Baseline + offset.Y };
+        DebugAssert(double.IsFinite(offset.Dx), "offset.dx.isFinite");
+        DebugAssert(double.IsFinite(offset.Dy), "offset.dy.isFinite");
+        return metrics with { Left = metrics.Left + offset.Dx, Baseline = metrics.Baseline + offset.Dy };
     }
 
-    private static TextBox ShiftTextBox(TextBox box, Point offset)
+    private static TextBox ShiftTextBox(TextBox box, Offset offset)
     {
-        DebugAssert(double.IsFinite(offset.X), "offset.dx.isFinite");
-        DebugAssert(double.IsFinite(offset.Y), "offset.dy.isFinite");
+        DebugAssert(double.IsFinite(offset.Dx), "offset.dx.isFinite");
+        DebugAssert(double.IsFinite(offset.Dy), "offset.dy.isFinite");
         return TextBox.FromLTRBD(
-            box.Left + offset.X,
-            box.Top + offset.Y,
-            box.Right + offset.X,
-            box.Bottom + offset.Y,
+            box.Left + offset.Dx,
+            box.Top + offset.Dy,
+            box.Right + offset.Dx,
+            box.Bottom + offset.Dy,
             box.Direction);
     }
 
@@ -1219,8 +1219,8 @@ public sealed class TextPainter : IDisposable
         DebugAssertTextLayoutIsValid();
         DebugAssert(!_debugNeedsRelayout, "!_debugNeedsRelayout");
         LayoutCacheWithOffset layout = _layoutCache!;
-        Point offset = layout.PaintOffset;
-        if (!double.IsFinite(offset.X) || !double.IsFinite(offset.Y))
+        Offset offset = layout.PaintOffset;
+        if (!double.IsFinite(offset.Dx) || !double.IsFinite(offset.Dy))
         {
             return [];
         }
@@ -1411,7 +1411,7 @@ public sealed class TextPainter : IDisposable
             }
 
             // Anchor the caret to the baseline of the last line.
-            return new LineCaretMetrics(new Point(dx, baseline), WritingDirection, height);
+            return new LineCaretMetrics(new Offset(dx, baseline), WritingDirection, height);
         }
 
         public double ContentWidthFor(double minWidth, double maxWidth, TextWidthBasis widthBasis)
@@ -1463,7 +1463,7 @@ public sealed class TextPainter : IDisposable
         // The paintOffset of the paragraph in the TextPainter's canvas.
         //
         // It's coordinate values are guaranteed to not be NaN.
-        public Point PaintOffset
+        public Offset PaintOffset
         {
             get
             {
@@ -1474,12 +1474,12 @@ public sealed class TextPainter : IDisposable
 
                 if (!double.IsFinite(Paragraph.Width))
                 {
-                    return new Point(double.PositiveInfinity, 0.0);
+                    return new Offset(double.PositiveInfinity, 0.0);
                 }
 
                 double dx = TextAlignment * (ContentWidth - Paragraph.Width);
                 DebugAssert(!double.IsNaN(dx), "!dx.isNaN");
-                return new Point(dx, 0);
+                return new Offset(dx, 0);
             }
         }
 
@@ -1514,9 +1514,9 @@ public sealed class TextPainter : IDisposable
             // When the text is not left-aligned, the paragraph has infinite width and the layout is
             // laid out with double.infinity, the paint offset is infinite. Since minWidth is finite
             // here the paragraph has to be laid out again.
-            if (!double.IsFinite(PaintOffset.X) && !double.IsFinite(Paragraph.Width) && double.IsFinite(minWidth))
+            if (!double.IsFinite(PaintOffset.Dx) && !double.IsFinite(Paragraph.Width) && double.IsFinite(minWidth))
             {
-                DebugAssert(PaintOffset.X == double.PositiveInfinity, "paintOffset.dx == double.infinity");
+                DebugAssert(PaintOffset.Dx == double.PositiveInfinity, "paintOffset.dx == double.infinity");
                 DebugAssert(Paragraph.Width == double.PositiveInfinity, "paragraph.width == double.infinity");
                 return false;
             }
@@ -1550,13 +1550,13 @@ public sealed class TextPainter : IDisposable
     }
 
     /// The caret position and height of a text position within a line. Dart's `_LineCaretMetrics`.
-    private readonly record struct LineCaretMetrics(Point Offset, TextDirection WritingDirection, double Height)
+    private readonly record struct LineCaretMetrics(Offset Offset, TextDirection WritingDirection, double Height)
     {
-        public LineCaretMetrics Shift(Point offset)
+        public LineCaretMetrics Shift(Offset offset)
         {
             return offset == default
                 ? this
-                : this with { Offset = new Point(offset.X + Offset.X, offset.Y + Offset.Y) };
+                : this with { Offset = new Offset(offset.Dx + Offset.Dx, offset.Dy + Offset.Dy) };
         }
     }
 }

@@ -121,8 +121,8 @@ public sealed class CupertinoNavigationBarTests : IDisposable
         harness.Pump(new Size(800, 600));
 
         RenderParagraph title = FindParagraph(harness.RenderView, "Title")!;
-        Point center = title.LocalToGlobal(new Point(title.Size.Width / 2, title.Size.Height / 2));
-        Assert.Equal(400.0, center.X, 3);
+        Offset center = title.LocalToGlobal(new Offset(title.Size.Width / 2, title.Size.Height / 2));
+        Assert.Equal(400.0, center.Dx, 3);
     }
 
     [Fact]
@@ -291,9 +291,9 @@ public sealed class CupertinoNavigationBarTests : IDisposable
         {
             harness.Pump(new Size(400, 600));
             RenderParagraph leading = FindParagraph(harness.RenderView, "Cheese")!;
-            Assert.Equal(10.0, leading.LocalToGlobal(new Point(0, 0)).X, 3);
+            Assert.Equal(10.0, leading.LocalToGlobal(new Offset(0, 0)).Dx, 3);
             RenderParagraph trailing = FindParagraph(harness.RenderView, "Puzzle")!;
-            Assert.Equal(380.0, trailing.LocalToGlobal(new Point(trailing.Size.Width, 0)).X, 3);
+            Assert.Equal(380.0, trailing.LocalToGlobal(new Offset(trailing.Size.Width, 0)).Dx, 3);
         }
 
         // In RTL the start padding applies on the right.
@@ -307,7 +307,7 @@ public sealed class CupertinoNavigationBarTests : IDisposable
         {
             harness.Pump(new Size(400, 600));
             RenderParagraph leading = FindParagraph(harness.RenderView, "Cheese")!;
-            Assert.Equal(390.0, leading.LocalToGlobal(new Point(leading.Size.Width, 0)).X, 3);
+            Assert.Equal(390.0, leading.LocalToGlobal(new Offset(leading.Size.Width, 0)).Dx, 3);
         }
     }
 
@@ -437,9 +437,9 @@ public sealed class CupertinoNavigationBarTests : IDisposable
         Assert.Equal(44.0, header.MinExtent, 3);
 
         RenderParagraph largeTitle = FindParagraph(harness.RenderView, "Large")!;
-        Point titleOrigin = largeTitle.LocalToGlobal(new Point(0, 0));
-        Assert.Equal(16.0, titleOrigin.X, 3);
-        Assert.True(titleOrigin.Y > 44.0);
+        Offset titleOrigin = largeTitle.LocalToGlobal(new Offset(0, 0));
+        Assert.Equal(16.0, titleOrigin.Dx, 3);
+        Assert.True(titleOrigin.Dy > 44.0);
     }
 
     [Fact]

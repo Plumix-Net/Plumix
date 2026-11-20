@@ -22,7 +22,7 @@ internal sealed class MouseRegionDemoPageState : State
 {
     private readonly List<string> _log = [];
     private bool _opaque = true;
-    private Point? _hoverPosition;
+    private Offset? _hoverPosition;
 
     public override Widget Build(BuildContext context)
     {
@@ -43,7 +43,7 @@ internal sealed class MouseRegionDemoPageState : State
                 new Text(
                     _hoverPosition is null
                         ? "hover — outside"
-                        : $"hover — {Format(_hoverPosition.Value.X)}, {Format(_hoverPosition.Value.Y)}",
+                        : $"hover — {Format(_hoverPosition.Value.Dx)}, {Format(_hoverPosition.Value.Dy)}",
                     style: new TextStyle(FontSize: 13, Color: Colors.DimGray)),
                 new Text(
                     _log.Count == 0 ? "no enter/exit yet" : string.Join("  ", _log),

@@ -30,14 +30,14 @@ public sealed class PointerPanZoomTests
     public void PanZoomStartEvent_Transformed_MapsLocalPositionAndKeepsEveryOtherField()
     {
         var @event = new PointerPanZoomStartEvent(
-            pointer: 0, position: new Point(20, 30), timestampUtc: DateTime.UnixEpoch.AddSeconds(2));
+            pointer: 0, position: new Offset(20, 30), timestampUtc: DateTime.UnixEpoch.AddSeconds(2));
         Matrix4 transform = ScaleThenTranslate();
 
         var transformed = (PointerPanZoomStartEvent)@event.Transformed(transform);
 
         Assert.Same(@event, transformed.Original);
         Assert.Same(transform, transformed.Transform);
-        Assert.Equal(new Point(60, 100), transformed.LocalPosition);
+        Assert.Equal(new Offset(60, 100), transformed.LocalPosition);
         Assert.Equal(@event.LocalDelta, transformed.LocalDelta);
         Assert.Equal(@event.Position, transformed.Position);
         Assert.Equal(@event.Delta, transformed.Delta);
@@ -54,10 +54,10 @@ public sealed class PointerPanZoomTests
     {
         var @event = new PointerPanZoomUpdateEvent(
             pointer: 0,
-            position: new Point(20, 30),
+            position: new Offset(20, 30),
             timestampUtc: DateTime.UnixEpoch.AddSeconds(2),
-            pan: new Point(4, 6),
-            panDelta: new Point(1, 2),
+            pan: new Offset(4, 6),
+            panDelta: new Offset(1, 2),
             scale: 2.5,
             rotation: 0.75);
         Matrix4 transform = ScaleThenTranslate();
@@ -65,11 +65,11 @@ public sealed class PointerPanZoomTests
         var transformed = (PointerPanZoomUpdateEvent)@event.Transformed(transform);
 
         Assert.Same(@event, transformed.Original);
-        Assert.Equal(new Point(60, 100), transformed.LocalPosition);
+        Assert.Equal(new Offset(60, 100), transformed.LocalPosition);
         // `pan` is transformed as a point, so the translation applies: (4 + 10) * 2, (6 + 20) * 2.
-        Assert.Equal(new Point(28, 52), transformed.LocalPan);
+        Assert.Equal(new Offset(28, 52), transformed.LocalPan);
         // `panDelta` is a delta anchored on `pan`, so only the scale applies.
-        Assert.Equal(new Point(2, 4), transformed.LocalPanDelta);
+        Assert.Equal(new Offset(2, 4), transformed.LocalPanDelta);
         Assert.Equal(@event.Pan, transformed.Pan);
         Assert.Equal(@event.PanDelta, transformed.PanDelta);
         // Scale and rotation are never transformed.
@@ -81,22 +81,22 @@ public sealed class PointerPanZoomTests
     public void PanZoomEndEvent_Transformed_MapsLocalPosition()
     {
         var @event = new PointerPanZoomEndEvent(
-            pointer: 0, position: new Point(20, 30), timestampUtc: DateTime.UnixEpoch.AddSeconds(2));
+            pointer: 0, position: new Offset(20, 30), timestampUtc: DateTime.UnixEpoch.AddSeconds(2));
 
         var transformed = (PointerPanZoomEndEvent)@event.Transformed(ScaleThenTranslate());
 
         Assert.Same(@event, transformed.Original);
-        Assert.Equal(new Point(60, 100), transformed.LocalPosition);
+        Assert.Equal(new Offset(60, 100), transformed.LocalPosition);
         Assert.Equal(@event.Position, transformed.Position);
     }
 
     [Fact]
     public void PanZoomEvents_Untransformed_HaveNoOriginalAndLocalEqualsGlobal()
     {
-        var start = new PointerPanZoomStartEvent(0, new Point(20, 30), DateTime.UnixEpoch);
+        var start = new PointerPanZoomStartEvent(0, new Offset(20, 30), DateTime.UnixEpoch);
         var update = new PointerPanZoomUpdateEvent(
-            0, new Point(20, 30), DateTime.UnixEpoch, pan: new Point(4, 6), panDelta: new Point(1, 2));
-        var end = new PointerPanZoomEndEvent(0, new Point(20, 30), DateTime.UnixEpoch);
+            0, new Offset(20, 30), DateTime.UnixEpoch, pan: new Offset(4, 6), panDelta: new Offset(1, 2));
+        var end = new PointerPanZoomEndEvent(0, new Offset(20, 30), DateTime.UnixEpoch);
 
         foreach (PointerEvent @event in new PointerEvent[] { start, update, end })
         {
@@ -113,9 +113,9 @@ public sealed class PointerPanZoomTests
     [Fact]
     public void PanZoomEvents_CarryTheTrackpadKindAndOpenNoButtons()
     {
-        var start = new PointerPanZoomStartEvent(3, new Point(1, 2), DateTime.UnixEpoch);
-        var update = new PointerPanZoomUpdateEvent(3, new Point(1, 2), DateTime.UnixEpoch);
-        var end = new PointerPanZoomEndEvent(3, new Point(1, 2), DateTime.UnixEpoch);
+        var start = new PointerPanZoomStartEvent(3, new Offset(1, 2), DateTime.UnixEpoch);
+        var update = new PointerPanZoomUpdateEvent(3, new Offset(1, 2), DateTime.UnixEpoch);
+        var end = new PointerPanZoomEndEvent(3, new Offset(1, 2), DateTime.UnixEpoch);
 
         foreach (PointerEvent @event in new PointerEvent[] { start, update, end })
         {
@@ -135,7 +135,7 @@ public sealed class PointerPanZoomTests
     [Fact]
     public void TrackpadKind_IsRejectedByTheEventTypesThatCannotCarryIt()
     {
-        var position = new Point(1, 2);
+        var position = new Offset(1, 2);
         Assert.Throws<ArgumentOutOfRangeException>(() => new PointerDownEvent(
             1, PointerDeviceKind.Trackpad, position, PointerButtons.Primary, DateTime.UnixEpoch));
         Assert.Throws<ArgumentOutOfRangeException>(() => new PointerMoveEvent(
@@ -149,7 +149,7 @@ public sealed class PointerPanZoomTests
     [Fact]
     public void TrackpadKind_IsAcceptedByHoverAndSignalEvents()
     {
-        var position = new Point(1, 2);
+        var position = new Offset(1, 2);
         Assert.NotNull(new PointerHoverEvent(
             1, PointerDeviceKind.Trackpad, position, PointerButtons.None, DateTime.UnixEpoch));
         Assert.NotNull(new PointerScrollEvent(PointerDeviceKind.Trackpad, position, default, DateTime.UnixEpoch));
@@ -185,22 +185,22 @@ public sealed class PointerPanZoomTests
             var log = new List<string>();
             var listener = new RenderPointerListener(
                 onPointerPanZoomStart: _ => log.Add("start"),
-                onPointerPanZoomUpdate: e => log.Add($"update {e.Pan.X},{e.Pan.Y} x{e.Scale}"),
+                onPointerPanZoomUpdate: e => log.Add($"update {e.Pan.Dx},{e.Pan.Dy} x{e.Scale}"),
                 onPointerPanZoomEnd: _ => log.Add("end"),
                 behavior: HitTestBehavior.Opaque,
                 child: new FixedHitTestBox(new Size(80, 80), hitSelf: true));
             PipelineOwner pipeline = BuildPipeline(listener);
 
             binding.HandlePointerEvent(
-                pipeline.Root, new PointerPanZoomStartEvent(1, new Point(12, 12), DateTime.UnixEpoch));
+                pipeline.Root, new PointerPanZoomStartEvent(1, new Offset(12, 12), DateTime.UnixEpoch));
             // The update lands outside the listener; it must still reach the cached path, because a
             // pan/zoom gesture keeps the hit-test result it opened with.
             binding.HandlePointerEvent(
                 pipeline.Root,
                 new PointerPanZoomUpdateEvent(
-                    1, new Point(150, 150), DateTime.UnixEpoch, pan: new Point(4, 5), scale: 2.0));
+                    1, new Offset(150, 150), DateTime.UnixEpoch, pan: new Offset(4, 5), scale: 2.0));
             binding.HandlePointerEvent(
-                pipeline.Root, new PointerPanZoomEndEvent(1, new Point(150, 150), DateTime.UnixEpoch));
+                pipeline.Root, new PointerPanZoomEndEvent(1, new Offset(150, 150), DateTime.UnixEpoch));
 
             Assert.Equal(["start", "update 4,5 x2", "end"], log);
         }
@@ -228,26 +228,26 @@ public sealed class PointerPanZoomTests
             PipelineOwner pipeline = BuildPipeline(listener);
 
             binding.HandlePointerEvent(
-                pipeline.Root, new PointerPanZoomStartEvent(1, new Point(12, 12), DateTime.UnixEpoch));
+                pipeline.Root, new PointerPanZoomStartEvent(1, new Offset(12, 12), DateTime.UnixEpoch));
             binding.HandlePointerEvent(
                 pipeline.Root,
                 new PointerPanZoomUpdateEvent(
-                    1, new Point(12, 12), DateTime.UnixEpoch, pan: new Point(50, 0), panDelta: new Point(50, 0)));
+                    1, new Offset(12, 12), DateTime.UnixEpoch, pan: new Offset(50, 0), panDelta: new Offset(50, 0)));
 
             // Sole competitor: closing the arena on the start event let it win once it moved.
             Assert.Equal(1, starts);
 
             binding.HandlePointerEvent(
-                pipeline.Root, new PointerPanZoomEndEvent(1, new Point(12, 12), DateTime.UnixEpoch));
+                pipeline.Root, new PointerPanZoomEndEvent(1, new Offset(12, 12), DateTime.UnixEpoch));
 
             // The sweep on the end event drained the arena, so a second gesture with the same
             // pointer id starts clean rather than tripping the hit-test cache.
             binding.HandlePointerEvent(
-                pipeline.Root, new PointerPanZoomStartEvent(1, new Point(12, 12), DateTime.UnixEpoch));
+                pipeline.Root, new PointerPanZoomStartEvent(1, new Offset(12, 12), DateTime.UnixEpoch));
             binding.HandlePointerEvent(
                 pipeline.Root,
                 new PointerPanZoomUpdateEvent(
-                    1, new Point(12, 12), DateTime.UnixEpoch, pan: new Point(50, 0), panDelta: new Point(50, 0)));
+                    1, new Offset(12, 12), DateTime.UnixEpoch, pan: new Offset(50, 0), panDelta: new Offset(50, 0)));
 
             Assert.Equal(2, starts);
         }
@@ -278,12 +278,12 @@ public sealed class PointerPanZoomTests
             Size = Constraints.Constrain(size);
         }
 
-        protected override bool HitTestSelf(Point position)
+        protected override bool HitTestSelf(Offset position)
         {
             return hitSelf;
         }
 
-        public override void Paint(PaintingContext ctx, Point offset)
+        public override void Paint(PaintingContext ctx, Offset offset)
         {
         }
     }

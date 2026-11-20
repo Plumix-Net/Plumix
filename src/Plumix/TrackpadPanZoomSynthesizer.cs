@@ -39,8 +39,8 @@ public sealed class TrackpadPanZoomSynthesizer
 
     private Timer? _idleTimer;
     private int? _pointer;
-    private Point _position;
-    private Point _pan;
+    private Offset _position;
+    private Offset _pan;
     private double _scale = 1.0;
     private double _rotation;
 
@@ -55,7 +55,7 @@ public sealed class TrackpadPanZoomSynthesizer
     public bool IsActive => _pointer is not null;
 
     /// <summary>Reports a two-finger pan of <paramref name="panDelta"/> logical pixels.</summary>
-    public void Pan(Point position, Point panDelta, DateTime timestampUtc)
+    public void Pan(Offset position, Offset panDelta, DateTime timestampUtc)
     {
         Update(position, timestampUtc, panDelta: panDelta);
     }
@@ -65,13 +65,13 @@ public sealed class TrackpadPanZoomSynthesizer
     /// macOS reports <c>NSEvent.magnification</c>, an additive increment, so a host passes
     /// <c>1 + magnification</c>.
     /// </summary>
-    public void Zoom(Point position, double scaleFactor, DateTime timestampUtc)
+    public void Zoom(Offset position, double scaleFactor, DateTime timestampUtc)
     {
         Update(position, timestampUtc, scaleFactor: scaleFactor);
     }
 
     /// <summary>Reports a rotation of <paramref name="rotationDelta"/> radians, clockwise positive.</summary>
-    public void Rotate(Point position, double rotationDelta, DateTime timestampUtc)
+    public void Rotate(Offset position, double rotationDelta, DateTime timestampUtc)
     {
         Update(position, timestampUtc, rotationDelta: rotationDelta);
     }
@@ -97,9 +97,9 @@ public sealed class TrackpadPanZoomSynthesizer
     }
 
     private void Update(
-        Point position,
+        Offset position,
         DateTime timestampUtc,
-        Point panDelta = default,
+        Offset panDelta = default,
         double scaleFactor = 1.0,
         double rotationDelta = 0.0)
     {

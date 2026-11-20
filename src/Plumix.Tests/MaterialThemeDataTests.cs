@@ -78,9 +78,9 @@ public sealed class MaterialThemeDataTests
     [Fact]
     public void VisualDensity_BaseSizeAdjustment_IsFourLogicalPixelsPerUnit()
     {
-        Vector adjustment = new VisualDensity(horizontal: 3.0, vertical: -2.0).BaseSizeAdjustment;
-        Assert.Equal(12.0, adjustment.X);
-        Assert.Equal(-8.0, adjustment.Y);
+        Offset adjustment = new VisualDensity(horizontal: 3.0, vertical: -2.0).BaseSizeAdjustment;
+        Assert.Equal(12.0, adjustment.Dx);
+        Assert.Equal(-8.0, adjustment.Dy);
     }
 
     [Fact]

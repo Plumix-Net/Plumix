@@ -1013,7 +1013,7 @@ public sealed class Text : StatelessWidget
                     {
                         Rect firstBox = Selectables[index].BoundingBoxes[0];
                         contentStart = Paragraph
-                            .GetPositionForOffset(new Point(firstBox.Left, firstBox.Top + firstBox.Height / 2.0))
+                            .GetPositionForOffset(new Offset(firstBox.Left, firstBox.Top + firstBox.Height / 2.0))
                             .Offset;
                     }
 

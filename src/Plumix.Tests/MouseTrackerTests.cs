@@ -53,24 +53,24 @@ public sealed class MouseTrackerTests : IDisposable
 
         Assert.False(harness.MouseTracker.MouseIsConnected);
 
-        harness.SendPointer(MouseTrackingHarness.Added(new Point(10, 10)));
+        harness.SendPointer(MouseTrackingHarness.Added(new Offset(10, 10)));
         Assert.Equal(["enter:a"], _log);
         Assert.True(harness.MouseTracker.MouseIsConnected);
         Assert.Equal(1, notifications);
 
         _log.Clear();
-        harness.SendPointer(MouseTrackingHarness.Hover(new Point(20, 10)));
+        harness.SendPointer(MouseTrackingHarness.Hover(new Offset(20, 10)));
         Assert.Equal(["hover:a"], _log);
         Assert.Equal(1, notifications);
 
         _log.Clear();
-        harness.SendPointer(MouseTrackingHarness.Removed(new Point(20, 10)));
+        harness.SendPointer(MouseTrackingHarness.Removed(new Offset(20, 10)));
         Assert.Equal(["exit:a"], _log);
         Assert.False(harness.MouseTracker.MouseIsConnected);
         Assert.Equal(2, notifications);
 
         _log.Clear();
-        harness.SendPointer(MouseTrackingHarness.Added(new Point(30, 10)));
+        harness.SendPointer(MouseTrackingHarness.Added(new Offset(30, 10)));
         Assert.Equal(["enter:a"], _log);
         Assert.Equal(3, notifications);
     }
@@ -80,14 +80,14 @@ public sealed class MouseTrackerTests : IDisposable
     {
         using MouseTrackingHarness harness = Build(Region("a"));
 
-        harness.SendPointer(MouseTrackingHarness.Added(new Point(10, 10), kind: PointerDeviceKind.Stylus));
-        harness.SendPointer(MouseTrackingHarness.Hover(new Point(12, 10), kind: PointerDeviceKind.Stylus));
+        harness.SendPointer(MouseTrackingHarness.Added(new Offset(10, 10), kind: PointerDeviceKind.Stylus));
+        harness.SendPointer(MouseTrackingHarness.Hover(new Offset(12, 10), kind: PointerDeviceKind.Stylus));
         Assert.Equal(["enter:a", "hover:a"], _log);
 
         _log.Clear();
         // A touch pointer still routes its hover through the hit-test path, but the tracker ignores
         // it, so it produces no enter and no exit.
-        harness.SendPointer(MouseTrackingHarness.Hover(new Point(14, 10), device: 9, kind: PointerDeviceKind.Touch));
+        harness.SendPointer(MouseTrackingHarness.Hover(new Offset(14, 10), device: 9, kind: PointerDeviceKind.Touch));
         Assert.Equal(["hover:a"], _log);
     }
 
@@ -96,7 +96,7 @@ public sealed class MouseTrackerTests : IDisposable
     {
         using MouseTrackingHarness harness = Build(Region("a"));
 
-        harness.SendPointer(MouseTrackingHarness.Removed(new Point(10, 10), device: 42));
+        harness.SendPointer(MouseTrackingHarness.Removed(new Offset(10, 10), device: 42));
 
         Assert.Empty(_log);
         Assert.False(harness.MouseTracker.MouseIsConnected);
@@ -107,16 +107,16 @@ public sealed class MouseTrackerTests : IDisposable
     {
         using MouseTrackingHarness harness = Build(Region("a"));
 
-        harness.SendPointer(MouseTrackingHarness.Added(new Point(10, 10), device: 1));
-        harness.SendPointer(MouseTrackingHarness.Added(new Point(12, 10), device: 2));
+        harness.SendPointer(MouseTrackingHarness.Added(new Offset(10, 10), device: 1));
+        harness.SendPointer(MouseTrackingHarness.Added(new Offset(12, 10), device: 2));
         Assert.Equal(["enter:a", "enter:a"], _log);
 
         _log.Clear();
-        harness.SendPointer(MouseTrackingHarness.Removed(new Point(10, 10), device: 1));
+        harness.SendPointer(MouseTrackingHarness.Removed(new Offset(10, 10), device: 1));
         Assert.Equal(["exit:a"], _log);
         Assert.True(harness.MouseTracker.MouseIsConnected);
 
-        harness.SendPointer(MouseTrackingHarness.Removed(new Point(12, 10), device: 2));
+        harness.SendPointer(MouseTrackingHarness.Removed(new Offset(12, 10), device: 2));
         Assert.False(harness.MouseTracker.MouseIsConnected);
     }
 
@@ -129,8 +129,8 @@ public sealed class MouseTrackerTests : IDisposable
         using MouseTrackingHarness second = Build(
             Region("B", cursor: SystemMouseCursors.Click),
             viewId: 1102);
-        first.SendPointer(MouseTrackingHarness.Added(new Point(10, 10), device: 1, viewId: 1101));
-        second.SendPointer(MouseTrackingHarness.Added(new Point(10, 10), device: 2, viewId: 1102));
+        first.SendPointer(MouseTrackingHarness.Added(new Offset(10, 10), device: 1, viewId: 1101));
+        second.SendPointer(MouseTrackingHarness.Added(new Offset(10, 10), device: 2, viewId: 1102));
         Assert.Equal(["enter:A", "enter:B"], _log);
 
         _log.Clear();
@@ -143,10 +143,10 @@ public sealed class MouseTrackerTests : IDisposable
     public void DownMoveAndUp_ProduceNoEnterOrExitWhileThePositionIsUnchanged()
     {
         using MouseTrackingHarness harness = Build(Region("a"));
-        harness.SendPointer(MouseTrackingHarness.Added(new Point(10, 10)));
+        harness.SendPointer(MouseTrackingHarness.Added(new Offset(10, 10)));
         _log.Clear();
 
-        var position = new Point(10, 10);
+        var position = new Offset(10, 10);
         harness.SendPointer(new PointerDownEvent(1, PointerDeviceKind.Mouse, position, PointerButtons.Primary,
             DateTime.UtcNow));
         harness.SendPointer(new PointerMoveEvent(1, PointerDeviceKind.Mouse, position, PointerButtons.Primary,
@@ -161,7 +161,7 @@ public sealed class MouseTrackerTests : IDisposable
     public void AnnotationAppearingAndDisappearingUnderAStillPointer_FiresOnTheNextFrame()
     {
         using MouseTrackingHarness harness = Build(new SizedBox(width: 200, height: 200));
-        harness.SendPointer(MouseTrackingHarness.Added(new Point(10, 10)));
+        harness.SendPointer(MouseTrackingHarness.Added(new Offset(10, 10)));
         Assert.Empty(_log);
 
         harness.Update(Region("a"));
@@ -178,7 +178,7 @@ public sealed class MouseTrackerTests : IDisposable
     public void AnnotationMovingOutFromUnderAStillPointer_FiresExitOnTheNextFrame()
     {
         using MouseTrackingHarness harness = Build(Padding(0, Region("a")));
-        harness.SendPointer(MouseTrackingHarness.Added(new Point(10, 10)));
+        harness.SendPointer(MouseTrackingHarness.Added(new Offset(10, 10)));
         Assert.Equal(["enter:a"], _log);
 
         _log.Clear();
@@ -193,8 +193,8 @@ public sealed class MouseTrackerTests : IDisposable
     [Fact]
     public void SynthesizedEnterAndExit_CarryTheAnnotationTransform()
     {
-        Point? enterLocal = null;
-        Point? exitLocal = null;
+        Offset? enterLocal = null;
+        Offset? exitLocal = null;
         Widget Tree(double inset) => Padding(
             inset,
             new MouseRegion(
@@ -203,11 +203,11 @@ public sealed class MouseTrackerTests : IDisposable
                 child: new SizedBox(width: 50, height: 50)));
 
         using MouseTrackingHarness harness = Build(Tree(10));
-        harness.SendPointer(MouseTrackingHarness.Added(new Point(30, 25)));
-        Assert.Equal(new Point(20, 15), enterLocal);
+        harness.SendPointer(MouseTrackingHarness.Added(new Offset(30, 25)));
+        Assert.Equal(new Offset(20, 15), enterLocal);
 
-        harness.SendPointer(MouseTrackingHarness.Removed(new Point(30, 25)));
-        Assert.Equal(new Point(20, 15), exitLocal);
+        harness.SendPointer(MouseTrackingHarness.Removed(new Offset(30, 25)));
+        Assert.Equal(new Offset(20, 15), exitLocal);
     }
 
     [Fact]
@@ -226,11 +226,11 @@ public sealed class MouseTrackerTests : IDisposable
                         onExit: _ => _log.Add("exitB"),
                         child: new SizedBox(width: 50, height: 50)))));
 
-        harness.SendPointer(MouseTrackingHarness.Hover(new Point(30, 30)));
+        harness.SendPointer(MouseTrackingHarness.Hover(new Offset(30, 30)));
         Assert.Equal(["enterA", "enterB", "hoverB", "hoverA"], _log);
 
         _log.Clear();
-        harness.SendPointer(MouseTrackingHarness.Hover(new Point(400, 400)));
+        harness.SendPointer(MouseTrackingHarness.Hover(new Offset(400, 400)));
         Assert.Equal(["exitB", "exitA"], _log);
     }
 
@@ -251,15 +251,15 @@ public sealed class MouseTrackerTests : IDisposable
                         child: Region("B", size: 40)),
                 ]));
 
-        harness.SendPointer(MouseTrackingHarness.Hover(new Point(10, 10)));
+        harness.SendPointer(MouseTrackingHarness.Hover(new Offset(10, 10)));
         Assert.Equal(["enter:A", "hover:A"], _log);
 
         _log.Clear();
-        harness.SendPointer(MouseTrackingHarness.Hover(new Point(110, 10)));
+        harness.SendPointer(MouseTrackingHarness.Hover(new Offset(110, 10)));
         Assert.Equal(["exit:A", "enter:B", "hover:B"], _log);
 
         _log.Clear();
-        harness.SendPointer(MouseTrackingHarness.Hover(new Point(10, 10)));
+        harness.SendPointer(MouseTrackingHarness.Hover(new Offset(10, 10)));
         Assert.Equal(["exit:B", "enter:A", "hover:A"], _log);
     }
 
@@ -267,7 +267,7 @@ public sealed class MouseTrackerTests : IDisposable
     public void ValidForMouseTracker_FollowsAttachmentSoADetachedRegionIsSkipped()
     {
         using MouseTrackingHarness harness = Build(Region("a"));
-        harness.SendPointer(MouseTrackingHarness.Added(new Point(10, 10)));
+        harness.SendPointer(MouseTrackingHarness.Added(new Offset(10, 10)));
 
         RenderMouseRegion mounted = Assert.IsType<RenderMouseRegion>(
             FindDescendant<RenderMouseRegion>(harness.RenderView));
@@ -294,11 +294,11 @@ public sealed class MouseTrackerTests : IDisposable
                         cursor: MouseCursor.Defer,
                         child: new SizedBox(width: 50, height: 50)))));
 
-        harness.SendPointer(MouseTrackingHarness.Added(new Point(30, 30)));
+        harness.SendPointer(MouseTrackingHarness.Added(new Offset(30, 30)));
         // The inner region defers, so the outer region's cursor wins.
         Assert.Equal(SystemMouseCursors.Forbidden, harness.MouseTracker.DebugDeviceActiveCursor(1));
 
-        harness.SendPointer(MouseTrackingHarness.Hover(new Point(400, 400)));
+        harness.SendPointer(MouseTrackingHarness.Hover(new Offset(400, 400)));
         Assert.Equal(SystemMouseCursors.Basic, harness.MouseTracker.DebugDeviceActiveCursor(1));
     }
 
@@ -307,21 +307,21 @@ public sealed class MouseTrackerTests : IDisposable
     {
         using MouseTrackingHarness harness = Build(Region("a", cursor: SystemMouseCursors.Grabbing));
 
-        harness.SendPointer(MouseTrackingHarness.Added(new Point(10, 10)));
+        harness.SendPointer(MouseTrackingHarness.Added(new Offset(10, 10)));
         Assert.Equal(
             [Call(1, "grabbing")],
             _cursorCalls);
 
         // Moving within the same region changes nothing, so no platform call is made.
-        harness.SendPointer(MouseTrackingHarness.Hover(new Point(12, 10)));
+        harness.SendPointer(MouseTrackingHarness.Hover(new Offset(12, 10)));
         Assert.Single(_cursorCalls);
 
-        harness.SendPointer(MouseTrackingHarness.Hover(new Point(400, 400)));
+        harness.SendPointer(MouseTrackingHarness.Hover(new Offset(400, 400)));
         Assert.Equal([Call(1, "grabbing"), Call(1, "basic")], _cursorCalls);
 
         // A removal drops the session without activating anything.
         _cursorCalls.Clear();
-        harness.SendPointer(MouseTrackingHarness.Removed(new Point(400, 400)));
+        harness.SendPointer(MouseTrackingHarness.Removed(new Offset(400, 400)));
         Assert.Empty(_cursorCalls);
         Assert.Null(harness.MouseTracker.DebugDeviceActiveCursor(1));
     }
@@ -337,8 +337,8 @@ public sealed class MouseTrackerTests : IDisposable
                     new Positioned(left: 100, top: 0, child: Region("B", size: 40, cursor: SystemMouseCursors.Click)),
                 ]));
 
-        harness.SendPointer(MouseTrackingHarness.Added(new Point(10, 10), device: 1));
-        harness.SendPointer(MouseTrackingHarness.Added(new Point(110, 10), device: 2));
+        harness.SendPointer(MouseTrackingHarness.Added(new Offset(10, 10), device: 1));
+        harness.SendPointer(MouseTrackingHarness.Added(new Offset(110, 10), device: 2));
 
         Assert.Equal(SystemMouseCursors.Text, harness.MouseTracker.DebugDeviceActiveCursor(1));
         Assert.Equal(SystemMouseCursors.Click, harness.MouseTracker.DebugDeviceActiveCursor(2));

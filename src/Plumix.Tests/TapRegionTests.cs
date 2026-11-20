@@ -89,13 +89,13 @@ public sealed class TapRegionTests
         harness.Dispatch(new PointerDownEvent(
             1,
             PointerDeviceKind.Mouse,
-            new Point(10, 10),
+            new Offset(10, 10),
             PointerButtons.Primary,
             now));
         harness.Dispatch(new PointerUpEvent(
             1,
             PointerDeviceKind.Mouse,
-            new Point(10, 10),
+            new Offset(10, 10),
             PointerButtons.None,
             now.AddMilliseconds(20)));
 
@@ -157,13 +157,13 @@ public sealed class TapRegionTests
         harness.Dispatch(new PointerDownEvent(
             2,
             PointerDeviceKind.Mouse,
-            new Point(90, 10),
+            new Offset(90, 10),
             PointerButtons.Primary,
             now));
         harness.Dispatch(new PointerUpEvent(
             2,
             PointerDeviceKind.Mouse,
-            new Point(90, 10),
+            new Offset(90, 10),
             PointerButtons.None,
             now.AddMilliseconds(20)));
 
@@ -213,7 +213,7 @@ public sealed class TapRegionTests
         harness.Dispatch(new PointerDownEvent(
             3,
             PointerDeviceKind.Mouse,
-            new Point(90, 10),
+            new Offset(90, 10),
             PointerButtons.Primary,
             DateTime.UtcNow));
 

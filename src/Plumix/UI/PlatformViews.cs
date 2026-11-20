@@ -9,7 +9,7 @@ namespace Plumix.UI;
 /// <summary>Converts a given point from the global coordinate system in logical pixels to the local
 /// coordinate system for a box.</summary>
 /// <remarks>Flutter's <c>PointTransformer</c>.</remarks>
-public delegate Point PointTransformer(Point position);
+public delegate Offset PointTransformer(Offset position);
 
 /// <summary>Callback signature for when a platform view was created.</summary>
 /// <remarks>Flutter's <c>PlatformViewCreatedCallback</c>; <paramref name="id"/> is the platform view's
@@ -587,7 +587,7 @@ internal sealed class AndroidMotionEventConverter
 
     internal void UpdatePointerPositions(PointerEvent @event)
     {
-        Point position = PointTransformer(@event.Position);
+        Offset position = PointTransformer(@event.Position);
         PointerPositions[@event.Pointer] = new AndroidPointerCoords(
             orientation: @event.Orientation,
             pressure: @event.Pressure,
@@ -596,8 +596,8 @@ internal sealed class AndroidMotionEventConverter
             toolMinor: @event.RadiusMinor,
             touchMajor: @event.RadiusMajor,
             touchMinor: @event.RadiusMinor,
-            x: position.X,
-            y: position.Y);
+            x: position.Dx,
+            y: position.Dy);
     }
 
     private void Remove(int pointer)
@@ -838,7 +838,7 @@ public abstract class AndroidViewController : PlatformViewController
     /// <summary>Sends the message to create the platform view with an initial
     /// <paramref name="size"/>.</summary>
     /// <remarks>If <see cref="CreateRequiresSize"/> is true, <paramref name="size"/> is non-null.</remarks>
-    private protected abstract Task SendCreateMessage(Size? size, Point? position = null);
+    private protected abstract Task SendCreateMessage(Size? size, Offset? position = null);
 
     /// <summary>Sends the message to resize the platform view to <paramref name="size"/>.</summary>
     private protected abstract Task<Size> SendResizeMessage(Size size);
@@ -851,7 +851,7 @@ public abstract class AndroidViewController : PlatformViewController
     public override bool AwaitingCreation => State == AndroidPlatformViewState.WaitingForSize;
 
     /// <inheritdoc />
-    public override async Task Create(Size? size = null, Point? position = null)
+    public override async Task Create(Size? size = null, Offset? position = null)
     {
         Debug.Assert(State != AndroidPlatformViewState.Disposed, "trying to create a disposed Android view");
         Debug.Assert(
@@ -900,7 +900,7 @@ public abstract class AndroidViewController : PlatformViewController
     /// Android native view to draw the a11y highlights in the same location on the screen as the
     /// platform view widget in the Flutter framework.
     /// </remarks>
-    public abstract Task SetOffset(Point off);
+    public abstract Task SetOffset(Offset off);
 
     /// <summary>Returns the texture entry id that the Android view is rendering into.</summary>
     /// <remarks>Returns null if the Android view has not been successfully created, if it has been
@@ -1067,7 +1067,7 @@ public class SurfaceAndroidViewController : AndroidViewController
 
     private protected override bool CreateRequiresSize => true;
 
-    private protected override async Task SendCreateMessage(Size? size, Point? position = null)
+    private protected override async Task SendCreateMessage(Size? size, Offset? position = null)
     {
         Debug.Assert(
             !size!.Value.IsEmpty,
@@ -1105,7 +1105,7 @@ public class SurfaceAndroidViewController : AndroidViewController
         _internals.SetSize(size, viewId: ViewId, viewState: State);
 
     /// <inheritdoc />
-    public override Task SetOffset(Point off) => _internals.SetOffset(off, viewId: ViewId, viewState: State);
+    public override Task SetOffset(Offset off) => _internals.SetOffset(off, viewId: ViewId, viewState: State);
 }
 
 /// <summary>Controls an Android view that is composed using the Android view hierarchy.</summary>
@@ -1129,7 +1129,7 @@ public class ExpensiveAndroidViewController : AndroidViewController
 
     private protected override bool CreateRequiresSize => false;
 
-    private protected override async Task SendCreateMessage(Size? size, Point? position = null)
+    private protected override async Task SendCreateMessage(Size? size, Offset? position = null)
     {
         await AndroidViewControllerInternals.SendCreateMessage(
             viewId: ViewId,
@@ -1152,7 +1152,7 @@ public class ExpensiveAndroidViewController : AndroidViewController
         _internals.SetSize(size, viewId: ViewId, viewState: State);
 
     /// <inheritdoc />
-    public override Task SetOffset(Point off) => _internals.SetOffset(off, viewId: ViewId, viewState: State);
+    public override Task SetOffset(Offset off) => _internals.SetOffset(off, viewId: ViewId, viewState: State);
 }
 
 /// <summary>Controls an Android view that is composed using Hybrid Composition++ (HCPP).</summary>
@@ -1181,7 +1181,7 @@ public class HybridAndroidViewController : AndroidViewController
 
     private protected override bool CreateRequiresSize => false;
 
-    private protected override async Task SendCreateMessage(Size? size, Point? position = null)
+    private protected override async Task SendCreateMessage(Size? size, Offset? position = null)
     {
         await AndroidViewControllerInternals.SendCreateMessage(
             viewId: ViewId,
@@ -1205,7 +1205,7 @@ public class HybridAndroidViewController : AndroidViewController
         _internals.SetSize(size, viewId: ViewId, viewState: State);
 
     /// <inheritdoc />
-    public override Task SetOffset(Point off) => _internals.SetOffset(off, viewId: ViewId, viewState: State);
+    public override Task SetOffset(Offset off) => _internals.SetOffset(off, viewId: ViewId, viewState: State);
 
     /// <inheritdoc />
     public override async Task SendMotionEvent(AndroidMotionEvent @event)
@@ -1237,7 +1237,7 @@ public class TextureAndroidViewController : AndroidViewController
 
     private protected override bool CreateRequiresSize => true;
 
-    private protected override async Task SendCreateMessage(Size? size, Point? position = null)
+    private protected override async Task SendCreateMessage(Size? size, Offset? position = null)
     {
         Debug.Assert(
             !size!.Value.IsEmpty,
@@ -1282,7 +1282,7 @@ public class TextureAndroidViewController : AndroidViewController
     }
 
     /// <inheritdoc />
-    public override Task SetOffset(Point off)
+    public override Task SetOffset(Offset off)
     {
         if (RequiresViewComposition)
         {
@@ -1312,7 +1312,7 @@ internal abstract class AndroidViewControllerInternals
         bool useNewController = false,
         CreationParams? creationParams = null,
         Size? size = null,
-        Point? position = null)
+        Offset? position = null)
     {
         var args = new Dictionary<string, object?>
         {
@@ -1340,8 +1340,8 @@ internal abstract class AndroidViewControllerInternals
 
         if (position is { } positionValue)
         {
-            args["left"] = positionValue.X;
-            args["top"] = positionValue.Y;
+            args["left"] = positionValue.Dx;
+            args["top"] = positionValue.Dy;
         }
 
         if (creationParams is not null)
@@ -1363,7 +1363,7 @@ internal abstract class AndroidViewControllerInternals
 
     internal abstract Task<Size> SetSize(Size size, int viewId, AndroidPlatformViewState viewState);
 
-    internal abstract Task SetOffset(Point offset, int viewId, AndroidPlatformViewState viewState);
+    internal abstract Task SetOffset(Offset offset, int viewId, AndroidPlatformViewState viewState);
 
     internal abstract Task SendDisposeMessage(int viewId);
 }
@@ -1375,7 +1375,7 @@ internal abstract class AndroidViewControllerInternals
 internal sealed class TextureAndroidViewControllerInternals : AndroidViewControllerInternals
 {
     // The current offset of the platform view.
-    private Point _offset = default;
+    private Offset _offset = default;
 
     internal int? TextureIdValue { get; set; }
 
@@ -1404,7 +1404,7 @@ internal sealed class TextureAndroidViewControllerInternals : AndroidViewControl
         return new Size((double)meta["width"]!, (double)meta["height"]!);
     }
 
-    internal override async Task SetOffset(Point offset, int viewId, AndroidPlatformViewState viewState)
+    internal override async Task SetOffset(Offset offset, int viewId, AndroidPlatformViewState viewState)
     {
         if (offset == _offset)
         {
@@ -1426,8 +1426,8 @@ internal sealed class TextureAndroidViewControllerInternals : AndroidViewControl
             new Dictionary<string, object?>
             {
                 ["id"] = viewId,
-                ["top"] = offset.Y,
-                ["left"] = offset.X,
+                ["top"] = offset.Dy,
+                ["left"] = offset.Dx,
             });
     }
 
@@ -1455,7 +1455,7 @@ internal sealed class HybridAndroidViewControllerInternals : AndroidViewControll
         throw new NotImplementedException("Not supported for hybrid composition.");
     }
 
-    internal override Task SetOffset(Point offset, int viewId, AndroidPlatformViewState viewState)
+    internal override Task SetOffset(Offset offset, int viewId, AndroidPlatformViewState viewState)
     {
         throw new NotImplementedException("Not supported for hybrid composition.");
     }
@@ -1481,7 +1481,7 @@ internal sealed class Hybrid2AndroidViewControllerInternals : AndroidViewControl
         throw new NotImplementedException("Not supported for hybrid composition.");
     }
 
-    internal override Task SetOffset(Point offset, int viewId, AndroidPlatformViewState viewState)
+    internal override Task SetOffset(Offset offset, int viewId, AndroidPlatformViewState viewState)
     {
         throw new NotImplementedException("Not supported for hybrid composition.");
     }
@@ -1648,7 +1648,7 @@ public abstract class PlatformViewController
     /// <summary>Creates the platform view with the initial <paramref name="size"/>.</summary>
     /// <remarks><paramref name="size"/> is the view's initial size in logical pixel.
     /// <paramref name="position"/> is the view's initial position in logical pixels.</remarks>
-    public virtual Task Create(Size? size = null, Point? position = null) => Task.CompletedTask;
+    public virtual Task Create(Size? size = null, Offset? position = null) => Task.CompletedTask;
 
     /// <summary>Disposes the platform view.</summary>
     /// <remarks>The <see cref="PlatformViewController"/> is unusable after calling dispose.</remarks>

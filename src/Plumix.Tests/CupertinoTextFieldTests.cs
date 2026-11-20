@@ -100,7 +100,7 @@ public sealed class CupertinoTextFieldTests : IDisposable
         EditableText editable = Assert.Single(harness.FindWidgets<EditableText>());
         Assert.Equal(2.0, editable.CursorWidth);
         Assert.Equal(Radius.Circular(2.0), editable.CursorRadius);
-        Assert.Equal(new Point(-2.0, 0.0), editable.CursorOffset);
+        Assert.Equal(new Offset(-2.0, 0.0), editable.CursorOffset);
         Assert.True(editable.PaintCursorAboveText);
         Assert.True(editable.RendererIgnoresPointer);
         Assert.Equal(brightness, editable.KeyboardAppearance);
@@ -179,7 +179,7 @@ public sealed class CupertinoTextFieldTests : IDisposable
 
         RenderParagraph prefix = Assert.Single(FindAll<RenderParagraph>(harness.RenderView), p => p.PlainText == "Prefix");
         RenderParagraph suffix = Assert.Single(FindAll<RenderParagraph>(harness.RenderView), p => p.PlainText == "Suffix");
-        Assert.Equal(prefixAfterSuffix, prefix.LocalToGlobal(default).X > suffix.LocalToGlobal(default).X);
+        Assert.Equal(prefixAfterSuffix, prefix.LocalToGlobal(default).Dx > suffix.LocalToGlobal(default).Dx);
         Assert.Single(FindAll<RenderCupertinoBaselineAlignedStack>(harness.RenderView));
     }
 

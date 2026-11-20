@@ -194,30 +194,30 @@ public sealed class SelectionRegistrant
 public static class SelectionUtils
 {
     /// Determines [SelectionResult] purely based on the target rectangle.
-    public static SelectionResult GetResultBasedOnRect(Rect targetRect, Point point)
+    public static SelectionResult GetResultBasedOnRect(Rect targetRect, Offset point)
     {
         if (RectContains(targetRect, point))
         {
             return SelectionResult.End;
         }
 
-        if (point.Y < targetRect.Top)
+        if (point.Dy < targetRect.Top)
         {
             return SelectionResult.Previous;
         }
 
-        if (point.Y > targetRect.Bottom)
+        if (point.Dy > targetRect.Bottom)
         {
             return SelectionResult.Next;
         }
 
-        return point.X >= targetRect.Right ? SelectionResult.Next : SelectionResult.Previous;
+        return point.Dx >= targetRect.Right ? SelectionResult.Next : SelectionResult.Previous;
     }
 
     /// Adjusts the drag position to be within the target rect.
-    public static Point AdjustDragOffset(
+    public static Offset AdjustDragOffset(
         Rect targetRect,
-        Point point,
+        Offset point,
         TextDirection direction = TextDirection.Ltr)
     {
         if (RectContains(targetRect, point))
@@ -225,7 +225,7 @@ public static class SelectionUtils
             return point;
         }
 
-        if (point.Y <= targetRect.Top || (point.Y <= targetRect.Bottom && point.X <= targetRect.Left))
+        if (point.Dy <= targetRect.Top || (point.Dy <= targetRect.Bottom && point.Dx <= targetRect.Left))
         {
             // Area 1.
             return direction == TextDirection.Ltr ? targetRect.TopLeft : targetRect.TopRight;
@@ -237,9 +237,9 @@ public static class SelectionUtils
 
     /// Dart's `Rect.contains` is half-open on the right and bottom edges;
     /// Avalonia's `Rect.Contains` is closed, so the predicate is reimplemented.
-    internal static bool RectContains(Rect rect, Point point)
+    internal static bool RectContains(Rect rect, Offset point)
     {
-        return point.X >= rect.Left && point.X < rect.Right && point.Y >= rect.Top && point.Y < rect.Bottom;
+        return point.Dx >= rect.Left && point.Dx < rect.Right && point.Dy >= rect.Top && point.Dy < rect.Bottom;
     }
 }
 
@@ -337,19 +337,19 @@ public sealed class ClearSelectionEvent : SelectionEvent
 /// Selects the whole word at the location.
 public sealed class SelectWordSelectionEvent : SelectionEvent
 {
-    public SelectWordSelectionEvent(Point globalPosition) : base(SelectionEventType.SelectWord)
+    public SelectWordSelectionEvent(Offset globalPosition) : base(SelectionEventType.SelectWord)
     {
         GlobalPosition = globalPosition;
     }
 
     /// The position in global coordinates to select word at.
-    public Point GlobalPosition { get; }
+    public Offset GlobalPosition { get; }
 }
 
 /// Selects the whole paragraph at the location.
 public sealed class SelectParagraphSelectionEvent : SelectionEvent
 {
-    public SelectParagraphSelectionEvent(Point globalPosition, bool absorb = false)
+    public SelectParagraphSelectionEvent(Offset globalPosition, bool absorb = false)
         : base(SelectionEventType.SelectParagraph)
     {
         GlobalPosition = globalPosition;
@@ -357,7 +357,7 @@ public sealed class SelectParagraphSelectionEvent : SelectionEvent
     }
 
     /// The position in global coordinates to select the paragraph at.
-    public Point GlobalPosition { get; }
+    public Offset GlobalPosition { get; }
 
     /// Whether the selectable receiving the event should be absorbed into an
     /// encompassing paragraph.
@@ -369,7 +369,7 @@ public sealed class SelectionEdgeUpdateEvent : SelectionEvent
 {
     private SelectionEdgeUpdateEvent(
         SelectionEventType type,
-        Point globalPosition,
+        Offset globalPosition,
         TextGranularity? granularity)
         : base(type)
     {
@@ -379,7 +379,7 @@ public sealed class SelectionEdgeUpdateEvent : SelectionEvent
 
     /// Creates a selection start edge update event.
     public static SelectionEdgeUpdateEvent ForStart(
-        Point globalPosition,
+        Offset globalPosition,
         TextGranularity? granularity = null)
     {
         return new SelectionEdgeUpdateEvent(SelectionEventType.StartEdgeUpdate, globalPosition, granularity);
@@ -387,14 +387,14 @@ public sealed class SelectionEdgeUpdateEvent : SelectionEvent
 
     /// Creates a selection end edge update event.
     public static SelectionEdgeUpdateEvent ForEnd(
-        Point globalPosition,
+        Offset globalPosition,
         TextGranularity? granularity = null)
     {
         return new SelectionEdgeUpdateEvent(SelectionEventType.EndEdgeUpdate, globalPosition, granularity);
     }
 
     /// The new location of the selection edge, in global coordinates.
-    public Point GlobalPosition { get; }
+    public Offset GlobalPosition { get; }
 
     /// The granularity for which the selection moves.
     public TextGranularity Granularity { get; }
@@ -574,7 +574,7 @@ public sealed class SelectionGeometry : IEquatable<SelectionGeometry>
 /// The geometry information of a selection point.
 public sealed class SelectionPoint : IEquatable<SelectionPoint>
 {
-    public SelectionPoint(Point localPosition, double lineHeight, TextSelectionHandleType handleType)
+    public SelectionPoint(Offset localPosition, double lineHeight, TextSelectionHandleType handleType)
     {
         LocalPosition = localPosition;
         LineHeight = lineHeight;
@@ -583,7 +583,7 @@ public sealed class SelectionPoint : IEquatable<SelectionPoint>
 
     /// The position of the selection point in the local coordinates of the
     /// containing [ISelectable].
-    public Point LocalPosition { get; }
+    public Offset LocalPosition { get; }
 
     /// The line height at the selection point.
     public double LineHeight { get; }

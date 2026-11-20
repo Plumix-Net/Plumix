@@ -146,7 +146,7 @@ internal sealed class MinimumTapTargetGuideline(Size size, string link) : Access
             current = current.Parent;
         }
 
-        var viewRect = new Rect(new Point(0, 0), view.PhysicalSize);
+        var viewRect = DartGeometry.RectFromOffsetAndSize(new Offset(0, 0), view.PhysicalSize);
         if (IsAtBoundary(paintBounds, viewRect))
         {
             return result;

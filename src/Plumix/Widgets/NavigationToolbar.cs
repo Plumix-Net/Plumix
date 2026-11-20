@@ -90,7 +90,7 @@ public sealed class NavigationToolbar : StatelessWidget
                 double leadingX = TextDirection == TextDirection.Rtl
                     ? size.Width - leadingWidth
                     : 0.0;
-                PositionChild(ToolbarSlot.Leading, new Point(leadingX, 0.0));
+                PositionChild(ToolbarSlot.Leading, new Offset(leadingX, 0.0));
             }
 
             if (HasChild(ToolbarSlot.Trailing))
@@ -101,7 +101,7 @@ public sealed class NavigationToolbar : StatelessWidget
                     : size.Width - trailingSize.Width;
                 double trailingY = (size.Height - trailingSize.Height) / 2.0;
                 trailingWidth = trailingSize.Width;
-                PositionChild(ToolbarSlot.Trailing, new Point(trailingX, trailingY));
+                PositionChild(ToolbarSlot.Trailing, new Offset(trailingX, trailingY));
             }
 
             if (!HasChild(ToolbarSlot.Middle))
@@ -136,7 +136,7 @@ public sealed class NavigationToolbar : StatelessWidget
             double middleX = TextDirection == TextDirection.Rtl
                 ? size.Width - middleSize.Width - middleStart
                 : middleStart;
-            PositionChild(ToolbarSlot.Middle, new Point(middleX, middleY));
+            PositionChild(ToolbarSlot.Middle, new Offset(middleX, middleY));
         }
 
         public override bool ShouldRelayout(MultiChildLayoutDelegate oldDelegate)

@@ -751,7 +751,7 @@ internal sealed class RenderDayPeriodInputPadding : RenderShiftedBox
         Size = Constraints.Constrain(new Size(
             Math.Max(Child.Size.Width, MinSize.Width),
             Math.Max(Child.Size.Height, MinSize.Height)));
-        ((BoxParentData)Child.parentData!).offset = new Point(
+        ((BoxParentData)Child.parentData!).offset = new Offset(
             (Size.Width - Child.Size.Width) / 2.0,
             (Size.Height - Child.Size.Height) / 2.0);
     }
@@ -766,25 +766,25 @@ internal sealed class RenderDayPeriodInputPadding : RenderShiftedBox
         return childBaseline.Value + ((outerSize.Height - childSize.Height) / 2.0);
     }
 
-    public override bool HitTest(BoxHitTestResult result, Point position)
+    public override bool HitTest(BoxHitTestResult result, Offset position)
     {
         if (base.HitTest(result, position)) return true;
         if (Child is null) return false;
-        if (position.X < 0
-            || position.X > Math.Max(Child.Size.Width, MinSize.Width)
-            || position.Y < 0
-            || position.Y > Math.Max(Child.Size.Height, MinSize.Height))
+        if (position.Dx < 0
+            || position.Dx > Math.Max(Child.Size.Width, MinSize.Width)
+            || position.Dy < 0
+            || position.Dy > Math.Max(Child.Size.Height, MinSize.Height))
         {
             return false;
         }
 
-        var center = new Point(Child.Size.Width / 2.0, Child.Size.Height / 2.0);
+        var center = new Offset(Child.Size.Width / 2.0, Child.Size.Height / 2.0);
         var newPosition = Orientation switch
         {
-            Orientation.Portrait when position.Y > center.Y => new Point(center.X, center.Y + 1),
-            Orientation.Portrait => new Point(center.X, center.Y - 1),
-            _ when position.X > center.X => new Point(center.X + 1, center.Y),
-            _ => new Point(center.X - 1, center.Y),
+            Orientation.Portrait when position.Dy > center.Dy => new Offset(center.Dx, center.Dy + 1),
+            Orientation.Portrait => new Offset(center.Dx, center.Dy - 1),
+            _ when position.Dx > center.Dx => new Offset(center.Dx + 1, center.Dy),
+            _ => new Offset(center.Dx - 1, center.Dy),
         };
         return result.AddWithRawTransform(
             MatrixUtils.ForceToPoint(newPosition),
@@ -1424,13 +1424,13 @@ internal sealed class TimeDialPainter : CustomPainter
         double handleRadius = Math.Max(
             labelRadius - ((Radius < 0.5 ? 1 : 0) * (labelRadius - innerLabelRadius)),
             TimePickerConstants.DialMinRadius);
-        var center = new Point(size.Width / 2, size.Height / 2);
-        Point centerPoint = center;
+        var center = new Offset(size.Width / 2, size.Height / 2);
+        Offset centerPoint = center;
         canvas.DrawCircle(new SolidColorBrush(BackgroundColor), null, centerPoint, dialRadius);
 
-        Point GetOffsetForTheta(double theta, double radius) => new(
-            center.X + (radius * Math.Cos(theta)),
-            center.Y - (radius * Math.Sin(theta)));
+        Offset GetOffsetForTheta(double theta, double radius) => new(
+            center.Dx + (radius * Math.Cos(theta)),
+            center.Dy - (radius * Math.Sin(theta)));
 
         void PaintLabels(List<TappableLabel> labels, double radius)
         {
@@ -1445,7 +1445,7 @@ internal sealed class TimeDialPainter : CustomPainter
             foreach (TappableLabel label in labels)
             {
                 TextPainter labelPainter = label.Painter;
-                var labelOffset = new Vector(-labelPainter.Width / 2, -labelPainter.Height / 2);
+                var labelOffset = new Offset(-labelPainter.Width / 2, -labelPainter.Height / 2);
                 labelPainter.Paint(canvas, GetOffsetForTheta(labelTheta, radius) + labelOffset);
                 labelTheta += labelThetaIncrement;
             }
@@ -1465,7 +1465,7 @@ internal sealed class TimeDialPainter : CustomPainter
         PaintInnerOuterLabels(PrimaryLabels);
 
         var selectorPaint = new SolidColorBrush(HandColor);
-        Point focusedPoint = GetOffsetForTheta(Theta, handleRadius);
+        Offset focusedPoint = GetOffsetForTheta(Theta, handleRadius);
         canvas.DrawCircle(selectorPaint, null, centerPoint, CenterRadius);
         canvas.DrawCircle(selectorPaint, null, focusedPoint, DotRadius);
         canvas.DrawLine(new Pen(selectorPaint, HandWidth), centerPoint, focusedPoint);
@@ -1480,9 +1480,9 @@ internal sealed class TimeDialPainter : CustomPainter
             canvas.DrawCircle(new SolidColorBrush(DotColor), null, focusedPoint, 2);
         }
 
-        Rect focusedRect = new Rect(
-            focusedPoint.X - DotRadius,
-            focusedPoint.Y - DotRadius,
+        Rect focusedRect = DartGeometry.RectFromLTWH(
+            focusedPoint.Dx - DotRadius,
+            focusedPoint.Dy - DotRadius,
             DotRadius * 2,
             DotRadius * 2);
         var clip = new Plumix.UI.Path();
@@ -1545,8 +1545,8 @@ internal sealed class DialState : State<Dial>
     private Animation<double>? _theta;
     private Animation<double>? _radius;
     private bool _dragging;
-    private Point _position;
-    private Point _center;
+    private Offset _position;
+    private Offset _center;
     private Size _dialSize;
     private TimeDialPainter? _painter;
 
@@ -1677,13 +1677,13 @@ internal sealed class DialState : State<Dial>
     {
         SetState(() =>
         {
-            var offset = new Point(_position.X - _center.X, _position.Y - _center.Y);
+            var offset = new Offset(_position.Dx - _center.Dx, _position.Dy - _center.Dy);
             double labelRadius = (Math.Min(_dialSize.Width, _dialSize.Height) / 2) - TimePickerConstants.DialPadding;
             double innerRadius = labelRadius - TimePickerConstants.InnerDialOffset;
             double angle = Modulo(
-                Math.Atan2(offset.X, offset.Y) - (Math.PI / 2),
+                Math.Atan2(offset.Dx, offset.Dy) - (Math.PI / 2),
                 TimePickerConstants.TwoPi);
-            double distance = Math.Sqrt((offset.X * offset.X) + (offset.Y * offset.Y));
+            double distance = Math.Sqrt((offset.Dx * offset.Dx) + (offset.Dy * offset.Dy));
             double radius = Math.Clamp(
                 (distance - innerRadius) / TimePickerConstants.InnerDialOffset,
                 0,
@@ -1714,14 +1714,14 @@ internal sealed class DialState : State<Dial>
         var box = (RenderBox)Context.FindRenderObject()!;
         _position = box.GlobalToLocal(details.GlobalPosition);
         _dialSize = box.Size;
-        _center = new Point(_dialSize.Width / 2, _dialSize.Height / 2);
+        _center = new Offset(_dialSize.Width / 2, _dialSize.Height / 2);
         UpdateThetaForPan();
         NotifyOnChangedIfNeeded();
     }
 
     private void HandlePanUpdate(DragUpdateDetails details)
     {
-        _position = new Point(_position.X + details.Delta.X, _position.Y + details.Delta.Y);
+        _position = new Offset(_position.Dx + details.Delta.Dx, _position.Dy + details.Delta.Dy);
         UpdateThetaForPan();
         NotifyOnChangedIfNeeded();
     }
@@ -1736,12 +1736,12 @@ internal sealed class DialState : State<Dial>
         if (Current.HourMinuteMode == HourMinuteMode.Hour) Current.OnHourSelected?.Invoke();
     }
 
-    private void HandleTapUp(Point globalPosition)
+    private void HandleTapUp(Offset globalPosition)
     {
         var box = (RenderBox)Context.FindRenderObject()!;
         _position = box.GlobalToLocal(globalPosition);
         _dialSize = box.Size;
-        _center = new Point(_dialSize.Width / 2, _dialSize.Height / 2);
+        _center = new Offset(_dialSize.Width / 2, _dialSize.Height / 2);
         UpdateThetaForPan(roundMinutes: true);
         NotifyOnChangedIfNeeded(roundMinutes: true);
         if (Current.HourMinuteMode == HourMinuteMode.Hour) Current.OnHourSelected?.Invoke();
@@ -2574,7 +2574,7 @@ public static class MaterialTimePickers
         Icon? switchToInputEntryModeIcon = null,
         Icon? switchToTimerEntryModeIcon = null,
         bool emptyInitialInput = false,
-        Point? anchorPoint = null)
+        Offset? anchorPoint = null)
     {
         DebugAssertions.Assert(MaterialDebug.DebugCheckHasMaterialLocalizations(context));
         Widget dialog = new TimePickerDialog(

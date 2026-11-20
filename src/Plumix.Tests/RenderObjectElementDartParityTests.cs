@@ -36,15 +36,15 @@ public sealed class RenderObjectElementDartParityTests
         Assert.Contains(true, swapper.InsertSlots);
         Assert.Empty(swapper.MoveSlots);
         Assert.Empty(swapper.RemoveSlots);
-        Assert.Equal(new Point(0, 300), ParentDataFor(redBox).offset);
-        Assert.Equal(new Point(0, 0), ParentDataFor(blueBox).offset);
+        Assert.Equal(new Offset(0, 300), ParentDataFor(redBox).offset);
+        Assert.Equal(new Offset(0, 0), ParentDataFor(blueBox).offset);
         tester.PumpWidget(BuildWidget());
         Assert.Equal(2, swapper.InsertSlots.Count);
         Assert.Single(swapper.MoveSlots);
         Assert.Contains(new Pair<bool>(true, false), swapper.MoveSlots);
         Assert.Empty(swapper.RemoveSlots);
-        Assert.Equal(new Point(0, 0), ParentDataFor(redBox).offset);
-        Assert.Equal(new Point(0, 300), ParentDataFor(blueBox).offset);
+        Assert.Equal(new Offset(0, 0), ParentDataFor(redBox).offset);
+        Assert.Equal(new Offset(0, 300), ParentDataFor(blueBox).offset);
         tester.PumpWidget(new SwapperWithProperOverrides());
         Assert.False(redBox.Attached);
         Assert.False(blueBox.Attached);
@@ -267,8 +267,8 @@ public sealed class RenderObjectElementDartParityTests
             Assert.True(Constraints.HasBoundedWidth);
             Assert.True(Constraints.HasTightHeight);
             Size = Constraints.Biggest;
-            var topOffset = new Point(0, 0);
-            var bottomOffset = new Point(0, Size.Height / 2);
+            var topOffset = new Offset(0, 0);
+            var bottomOffset = new Offset(0, Size.Height / 2);
             BoxConstraints childConstraints = Constraints.CopyWith(
                 minHeight: Constraints.MinHeight / 2,
                 maxHeight: Constraints.MaxHeight / 2);
@@ -287,7 +287,7 @@ public sealed class RenderObjectElementDartParityTests
             }
         }
 
-        public override void Paint(PaintingContext ctx, Point offset)
+        public override void Paint(PaintingContext ctx, Offset offset)
         {
             VisitChildren(child =>
             {

@@ -318,7 +318,7 @@ internal sealed class CupertinoSlidingSegmentedControlState<T>
             return;
         }
 
-        T segment = SegmentForXPosition(details.LocalPosition.X);
+        T segment = SegmentForXPosition(details.LocalPosition.Dx);
         SetState(() => _pressed = default);
         if (Current.DisabledChildren.Contains(segment))
         {
@@ -334,7 +334,7 @@ internal sealed class CupertinoSlidingSegmentedControlState<T>
 
     private void HandleDragDown(DragDownDetails details)
     {
-        T segment = SegmentForXPosition(details.LocalPosition.X);
+        T segment = SegmentForXPosition(details.LocalPosition.Dx);
         _startedOnSelectedSegment = ValuesEqual(segment, _highlighted);
         _startedOnDisabledSegment = Current.DisabledChildren.Contains(segment);
         if (_startedOnDisabledSegment)
@@ -356,7 +356,7 @@ internal sealed class CupertinoSlidingSegmentedControlState<T>
             return;
         }
 
-        T segment = SegmentForXPosition(details.LocalPosition.X);
+        T segment = SegmentForXPosition(details.LocalPosition.Dx);
         if (Current.DisabledChildren.Contains(segment))
         {
             return;
@@ -438,7 +438,7 @@ internal sealed class CupertinoSlidingSegmentedControlState<T>
         CurrentRenderObject?.ClearThumbAnimatable();
     }
 
-    private bool HasDraggedTooFar(Point position)
+    private bool HasDraggedTooFar(Offset position)
     {
         RenderCupertinoSlidingSegmentedControl<T>? render = CurrentRenderObject;
         if (render is null || !render.HasSize)
@@ -446,10 +446,10 @@ internal sealed class CupertinoSlidingSegmentedControlState<T>
             return false;
         }
 
-        double xDistance = Math.Max(0.0, Math.Abs(position.X - (render.Size.Width / 2.0)) - (render.Size.Width / 2.0));
+        double xDistance = Math.Max(0.0, Math.Abs(position.Dx - (render.Size.Width / 2.0)) - (render.Size.Width / 2.0));
         double yDistance = Math.Max(
             0.0,
-            Math.Abs(position.Y - (render.Size.Height / 2.0)) - (render.Size.Height / 2.0));
+            Math.Abs(position.Dy - (render.Size.Height / 2.0)) - (render.Size.Height / 2.0));
         return (xDistance * xDistance) + (yDistance * yDistance) > 2500.0;
     }
 
@@ -883,11 +883,11 @@ internal sealed class RenderCupertinoSlidingSegmentedControl<T> : RenderBox,
     [
         new BoxShadow(
             color: new Color(0x1F000000),
-            offset: new Point(0.0, 3.0),
+            offset: new Offset(0.0, 3.0),
             blurRadius: 8.0),
         new BoxShadow(
             color: new Color(0x0A000000),
-            offset: new Point(0.0, 3.0),
+            offset: new Offset(0.0, 3.0),
             blurRadius: 1.0),
     ];
 
@@ -1090,7 +1090,7 @@ internal sealed class RenderCupertinoSlidingSegmentedControl<T> : RenderBox,
                     : separatorConstraints,
                 parentUsesSize: true);
             var data = (CupertinoSlidingSegmentedControlParentData)child.parentData!;
-            data.offset = new Point(start, 0.0);
+            data.offset = new Offset(start, 0.0);
             start += child.Size.Width;
         }
 
@@ -1114,7 +1114,7 @@ internal sealed class RenderCupertinoSlidingSegmentedControl<T> : RenderBox,
         }
     }
 
-    public override void Paint(PaintingContext context, Point offset)
+    public override void Paint(PaintingContext context, Offset offset)
     {
         PaintChildrenByParity(context, offset, even: false);
         PaintThumb(context, offset);
@@ -1130,12 +1130,12 @@ internal sealed class RenderCupertinoSlidingSegmentedControl<T> : RenderBox,
         }
     }
 
-    protected override bool HitTestChildren(BoxHitTestResult result, Point position)
+    protected override bool HitTestChildren(BoxHitTestResult result, Offset position)
     {
         for (RenderBox? child = LastChild; child is not null; child = ChildBefore(child))
         {
             var data = (CupertinoSlidingSegmentedControlParentData)child.parentData!;
-            Rect childRect = new(data.offset, child.Size);
+            Rect childRect = DartGeometry.RectFromOffsetAndSize(data.offset, child.Size);
             if (!childRect.Contains(position))
             {
                 continue;
@@ -1164,7 +1164,7 @@ internal sealed class RenderCupertinoSlidingSegmentedControl<T> : RenderBox,
 
             lastSegment = child;
             var data = (CupertinoSlidingSegmentedControlParentData)child.parentData!;
-            if (dx <= data.offset.X + child.Size.Width)
+            if (dx <= data.offset.Dx + child.Size.Width)
             {
                 return segmentIndex;
             }
@@ -1189,9 +1189,9 @@ internal sealed class RenderCupertinoSlidingSegmentedControl<T> : RenderBox,
 
     public RenderBox? ChildAfter(RenderBox child) => _children.ChildAfter(child);
 
-    public void DefaultPaint(PaintingContext context, Point offset) => _children.DefaultPaint(context, offset);
+    public void DefaultPaint(PaintingContext context, Offset offset) => _children.DefaultPaint(context, offset);
 
-    public bool DefaultHitTestChildren(BoxHitTestResult result, Point position) =>
+    public bool DefaultHitTestChildren(BoxHitTestResult result, Offset position) =>
         _children.DefaultHitTestChildren(result, position);
 
     public override void VisitChildren(Action<RenderObject> visitor)
@@ -1313,7 +1313,7 @@ internal sealed class RenderCupertinoSlidingSegmentedControl<T> : RenderBox,
 
     private double TotalSeparatorWidth => ChildCount / 2;
 
-    private void PaintChildrenByParity(PaintingContext context, Point offset, bool even)
+    private void PaintChildrenByParity(PaintingContext context, Offset offset, bool even)
     {
         int childIndex = 0;
         for (RenderBox? child = FirstChild; child is not null; child = ChildAfter(child), childIndex++)
@@ -1324,11 +1324,11 @@ internal sealed class RenderCupertinoSlidingSegmentedControl<T> : RenderBox,
             }
 
             var data = (CupertinoSlidingSegmentedControlParentData)child.parentData!;
-            context.PaintChild(child, offset + (Vector)data.offset);
+            context.PaintChild(child, offset + (Offset)data.offset);
         }
     }
 
-    private void PaintThumb(PaintingContext context, Point offset)
+    private void PaintThumb(PaintingContext context, Offset offset)
     {
         if (!HighlightedIndex.HasValue)
         {
@@ -1352,7 +1352,7 @@ internal sealed class RenderCupertinoSlidingSegmentedControl<T> : RenderBox,
         CurrentThumbRect = unscaled;
         Rect thumbRect = ScaleThumbRect(unscaled, HighlightedIndex.Value, ThumbScale);
         RSuperellipse shape = RSuperellipse.FromRectAndRadius(
-            new Rect(thumbRect.Position + (Vector)offset, thumbRect.Size),
+            DartGeometry.RectFromOffsetAndSize(thumbRect.TopLeft + (Offset)offset, thumbRect.Size),
             Radius.Circular(7.0));
         foreach (BoxShadow shadow in ThumbShadows)
         {
@@ -1417,7 +1417,7 @@ internal sealed class RenderCupertinoSlidingSegmentedControl<T> : RenderBox,
             }
 
             var data = (CupertinoSlidingSegmentedControlParentData)child.parentData!;
-            return new Rect(data.offset, child.Size);
+            return DartGeometry.RectFromOffsetAndSize(data.offset, child.Size);
         }
 
         return null;
@@ -1436,7 +1436,7 @@ internal sealed class RenderCupertinoSlidingSegmentedControl<T> : RenderBox,
         double maximumRight = last.Value.Right + 1.0;
         double left = Math.Clamp(rect.Left, minimumLeft, maximumRight);
         double right = Math.Clamp(rect.Right, minimumLeft, maximumRight);
-        return new Rect(
+        return DartGeometry.RectFromLTWH(
             left,
             first.Value.Top,
             Math.Max(0.0, right - left),
@@ -1451,16 +1451,16 @@ internal sealed class RenderCupertinoSlidingSegmentedControl<T> : RenderBox,
         {
             0 => rect.Left,
             _ when highlightedIndex == SegmentCount - 1 => rect.Right - width,
-            _ => rect.Center.X - (width / 2.0),
+            _ => rect.Center.Dx - (width / 2.0),
         };
-        return new Rect(
+        return DartGeometry.RectFromLTWH(
             left,
-            rect.Center.Y - (height / 2.0),
+            rect.Center.Dy - (height / 2.0),
             width,
             height);
     }
 
-    private static Rect InflateHorizontally(Rect rect, double amount) => new(
+    private static Rect InflateHorizontally(Rect rect, double amount) => DartGeometry.RectFromLTWH(
         rect.Left - amount,
         rect.Top,
         rect.Width + (amount * 2.0),

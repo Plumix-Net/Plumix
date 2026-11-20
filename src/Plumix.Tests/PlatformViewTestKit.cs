@@ -62,14 +62,14 @@ internal static class PlatformViewTestKit
     }
 
     /// <summary>flutter_test's <c>tester.tapAt</c>.</summary>
-    public static void TapAt(FrameworkDartTester tester, Point location)
+    public static void TapAt(FrameworkDartTester tester, Offset location)
     {
         TestGesture gesture = tester.StartGesture(location, PointerDeviceKind.Touch);
         gesture.Up();
     }
 
     /// <summary>flutter_test's <c>tester.longPressAt</c>: down, wait out the long-press timeout, up.</summary>
-    public static void LongPressAt(FrameworkDartTester tester, Point location)
+    public static void LongPressAt(FrameworkDartTester tester, Offset location)
     {
         TestGesture gesture = tester.StartGesture(location, PointerDeviceKind.Touch);
         tester.Pump(TimeSpan.FromSeconds(1));
@@ -150,7 +150,7 @@ internal static class PlatformViewTestKit
     {
         SemanticsNode node = renderObject.DebugSemantics!;
         Assert.Equal(platformViewId, node.PlatformViewId);
-        Assert.Equal(new Rect(0, 0, 200, 100), node.Rect);
+        Assert.Equal(DartGeometry.RectFromLTWH(0, 0, 200, 100), node.Rect);
         Assert.Equal(Matrix4.TranslationValues(600, 500, 0), node.Transform);
         Assert.Empty(node.Children);
     }

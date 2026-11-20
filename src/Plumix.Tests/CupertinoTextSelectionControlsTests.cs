@@ -32,9 +32,9 @@ public sealed class CupertinoTextSelectionControlsTests : IDisposable
 
         Assert.Equal(new Size(12.0, 20.5), controls.GetHandleSize(10.0));
         Assert.Equal(new Size(12.0, 60.5), controls.GetHandleSize(50.0));
-        Assert.Equal(new Point(6.0, 20.5), controls.GetHandleAnchor(TextSelectionHandleType.Left, 10.0));
-        Assert.Equal(new Point(6.0, 10.0), controls.GetHandleAnchor(TextSelectionHandleType.Right, 10.0));
-        Assert.Equal(new Point(6.0, 15.25), controls.GetHandleAnchor(TextSelectionHandleType.Collapsed, 10.0));
+        Assert.Equal(new Offset(6.0, 20.5), controls.GetHandleAnchor(TextSelectionHandleType.Left, 10.0));
+        Assert.Equal(new Offset(6.0, 10.0), controls.GetHandleAnchor(TextSelectionHandleType.Right, 10.0));
+        Assert.Equal(new Offset(6.0, 15.25), controls.GetHandleAnchor(TextSelectionHandleType.Collapsed, 10.0));
     }
 
     [Fact]
@@ -90,8 +90,8 @@ public sealed class CupertinoTextSelectionControlsTests : IDisposable
             CupertinoTextSelectionHandlePainter.BuildPath(new Size(12.0, 20.5)));
 
         Assert.Equal(GeometryCombineMode.Union, geometry.GeometryCombineMode);
-        Assert.Equal(new Rect(0.0, 0.0, 12.0, 12.0), Assert.IsType<EllipseGeometry>(geometry.Geometry1).Rect);
-        Assert.Equal(new Rect(5.0, 10.5, 2.0, 10.0), Assert.IsType<RectangleGeometry>(geometry.Geometry2).Rect);
+        Assert.Equal(DartGeometry.RectFromLTWH(0.0, 0.0, 12.0, 12.0), Assert.IsType<EllipseGeometry>(geometry.Geometry1).Rect);
+        Assert.Equal(DartGeometry.RectFromLTWH(5.0, 10.5, 2.0, 10.0), Assert.IsType<RectangleGeometry>(geometry.Geometry2).Rect);
 
         var root = new ContainerLayer();
         var context = new PaintingContext(root);
@@ -143,8 +143,8 @@ public sealed class CupertinoTextSelectionControlsTests : IDisposable
         harness.Pump(new Size(320.0, 240.0));
 
         CupertinoTextSelectionToolbar toolbar = Assert.Single(harness.FindWidgets<CupertinoTextSelectionToolbar>());
-        Assert.Equal(new Point(287.0, 56.0), toolbar.AnchorAbove);
-        Assert.Equal(new Point(287.0, 82.0), toolbar.AnchorBelow);
+        Assert.Equal(new Offset(287.0, 56.0), toolbar.AnchorAbove);
+        Assert.Equal(new Offset(287.0, 82.0), toolbar.AnchorBelow);
         Assert.Equal(["Cut", "Copy", "Paste"], MobileToolbarLabels(harness));
         Assert.Equal(2, toolbar.Children.OfType<SizedBox>().Count(divider => divider.Width == 0.5));
     }
@@ -207,17 +207,17 @@ public sealed class CupertinoTextSelectionControlsTests : IDisposable
     {
         var clipboard = new ClipboardStatusNotifier(ClipboardStatus.Pasteable);
         var @delegate = new FakeSelectionDelegate(new TextEditingValue("hello", new TextSelection(1, 3)));
-        using var secondary = BuildDesktopToolbarHarness(@delegate, clipboard, new Point(240.0, 180.0));
+        using var secondary = BuildDesktopToolbarHarness(@delegate, clipboard, new Offset(240.0, 180.0));
         secondary.Pump(new Size(320.0, 240.0));
         Assert.Equal(
-            new Point(240.0, 180.0),
+            new Offset(240.0, 180.0),
             Assert.Single(secondary.FindWidgets<CupertinoDesktopTextSelectionToolbar>()).Anchor);
         Assert.Equal(["Cut", "Copy", "Paste"], DesktopToolbarLabels(secondary));
 
         using var midpoint = BuildDesktopToolbarHarness(@delegate, clipboard, lastSecondaryTap: null);
         midpoint.Pump(new Size(320.0, 240.0));
         Assert.Equal(
-            new Point(308.0, 40.0),
+            new Offset(308.0, 40.0),
             Assert.Single(midpoint.FindWidgets<CupertinoDesktopTextSelectionToolbar>()).Anchor);
     }
 
@@ -309,13 +309,13 @@ public sealed class CupertinoTextSelectionControlsTests : IDisposable
         return new WidgetRenderHarness(Wrap(new Builder(context =>
             CupertinoTextSelectionControls.Instance.BuildToolbar(
                 context,
-                globalEditableRegion: new Rect(10.0, 40.0, 200.0, 60.0),
+                globalEditableRegion: DartGeometry.RectFromLTWH(10.0, 40.0, 200.0, 60.0),
                 textLineHeight: 14.0,
-                selectionMidpoint: new Point(400.0, 0.0),
+                selectionMidpoint: new Offset(400.0, 0.0),
                 endpoints:
                 [
-                    new TextSelectionPoint(new Point(4.0, 30.0), null),
-                    new TextSelectionPoint(new Point(60.0, 42.0), null),
+                    new TextSelectionPoint(new Offset(4.0, 30.0), null),
+                    new TextSelectionPoint(new Offset(60.0, 42.0), null),
                 ],
                 @delegate: @delegate,
                 clipboardStatus: clipboardStatus,
@@ -330,19 +330,19 @@ public sealed class CupertinoTextSelectionControlsTests : IDisposable
     private static WidgetRenderHarness BuildDesktopToolbarHarness(
         ITextSelectionDelegate @delegate,
         ClipboardStatusNotifier clipboardStatus,
-        Point? lastSecondaryTap)
+        Offset? lastSecondaryTap)
     {
 #pragma warning disable CS0618 // Exercises Flutter's deprecated legacy selection-controls surface.
         return new WidgetRenderHarness(Wrap(new Builder(context =>
             CupertinoDesktopTextSelectionControls.Instance.BuildToolbar(
                 context,
-                globalEditableRegion: new Rect(10.0, 40.0, 200.0, 60.0),
+                globalEditableRegion: DartGeometry.RectFromLTWH(10.0, 40.0, 200.0, 60.0),
                 textLineHeight: 14.0,
-                selectionMidpoint: new Point(400.0, 80.0),
+                selectionMidpoint: new Offset(400.0, 80.0),
                 endpoints:
                 [
-                    new TextSelectionPoint(new Point(4.0, 30.0), null),
-                    new TextSelectionPoint(new Point(60.0, 42.0), null),
+                    new TextSelectionPoint(new Offset(4.0, 30.0), null),
+                    new TextSelectionPoint(new Offset(60.0, 42.0), null),
                 ],
                 @delegate: @delegate,
                 clipboardStatus: clipboardStatus,

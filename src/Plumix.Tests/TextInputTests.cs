@@ -92,7 +92,7 @@ public sealed class TextInputTests : IDisposable
 
         Assert.True(HostTextInput.InsertText("a"));
         var result = new BoxHitTestResult();
-        tester.RenderView.HitTest(result, new Avalonia.Point(10, 10));
+        tester.RenderView.HitTest(result, new Offset(10, 10));
 
         Assert.Contains(result.Path, entry => entry.Target is RenderEditable);
     }

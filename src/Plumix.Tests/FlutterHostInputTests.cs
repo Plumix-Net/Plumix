@@ -33,13 +33,13 @@ public sealed class PlumixHostInputTests : IDisposable
         // otherwise hit-test the drawn content, which misses native draws such as exact solid paths,
         // so wheel and press events over them fell through to the controls behind the host.
         var host = new PlumixHost();
-        host.Measure(new Avalonia.Size(100, 50));
-        host.Arrange(new Avalonia.Rect(0, 0, 100, 50));
+        host.Measure(new Size(100, 50));
+        host.Arrange(DartGeometry.RectFromLTWH(0, 0, 100, 50));
         ICustomHitTest hitTest = Assert.IsAssignableFrom<ICustomHitTest>(host);
-        Assert.True(hitTest.HitTest(new Avalonia.Point(0, 0)));
-        Assert.True(hitTest.HitTest(new Avalonia.Point(50, 25)));
-        Assert.False(hitTest.HitTest(new Avalonia.Point(101, 25)));
-        Assert.False(hitTest.HitTest(new Avalonia.Point(50, -1)));
+        Assert.True(hitTest.HitTest(new Offset(0, 0)));
+        Assert.True(hitTest.HitTest(new Offset(50, 25)));
+        Assert.False(hitTest.HitTest(new Offset(101, 25)));
+        Assert.False(hitTest.HitTest(new Offset(50, -1)));
     }
 
     [Fact]

@@ -101,13 +101,13 @@ public sealed class CupertinoContextMenuTests : IDisposable
         using var harness = new CupertinoThemeTestHarness(WrapPlain(action));
         harness.Pump(ViewSize);
 
-        SendDown(harness.RenderView, new Point(30.0, 20.0), 41);
+        SendDown(harness.RenderView, new Offset(30.0, 20.0), 41);
         harness.Pump(ViewSize);
         ColorMatchers.AssertSameColorAs(
             new Color(0xFFDDDDDD),
             Assert.Single(harness.FindWidgets<ColoredBox>()).Color);
 
-        SendUp(harness.RenderView, new Point(30.0, 20.0), 41);
+        SendUp(harness.RenderView, new Offset(30.0, 20.0), 41);
         harness.Pump(ViewSize);
         Assert.Equal(1, presses);
         ColorMatchers.AssertSameColorAs(
@@ -117,7 +117,7 @@ public sealed class CupertinoContextMenuTests : IDisposable
         using var disabled = new CupertinoThemeTestHarness(WrapPlain(
             new CupertinoContextMenuAction(new Text("Disabled"))));
         disabled.Pump(ViewSize);
-        SendDown(disabled.RenderView, new Point(30.0, 20.0), 42);
+        SendDown(disabled.RenderView, new Offset(30.0, 20.0), 42);
         disabled.Pump(ViewSize);
         ColorMatchers.AssertSameColorAs(
             new Color(0xFFDDDDDD),
@@ -165,7 +165,7 @@ public sealed class CupertinoContextMenuTests : IDisposable
         NavigatorState navigator = harness.FindState<NavigatorState>();
         int initialEntries = navigator.Overlay!.Entries.Count;
 
-        SendDown(harness.RenderView, new Point(200.0, 300.0), 77);
+        SendDown(harness.RenderView, new Offset(200.0, 300.0), 77);
         harness.Pump(ViewSize);
         Assert.Equal(initialEntries + 1, navigator.Overlay.Entries.Count);
 
@@ -249,7 +249,7 @@ public sealed class CupertinoContextMenuTests : IDisposable
         return result;
     }
 
-    private static void SendDown(RenderView view, Point position, int pointer)
+    private static void SendDown(RenderView view, Offset position, int pointer)
     {
         GestureBinding.Instance.HandlePointerEvent(
             view,
@@ -261,7 +261,7 @@ public sealed class CupertinoContextMenuTests : IDisposable
                 DateTime.UtcNow));
     }
 
-    private static void SendUp(RenderView view, Point position, int pointer)
+    private static void SendUp(RenderView view, Offset position, int pointer)
     {
         GestureBinding.Instance.HandlePointerEvent(
             view,

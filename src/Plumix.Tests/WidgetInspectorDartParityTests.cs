@@ -232,9 +232,9 @@ public sealed class WidgetInspectorDartParityTests : IDisposable
 
         void PanAndVerifyWidgetSelection(Finder startAt, Finder endAt, GlobalKey widgetKey)
         {
-            Point start = tester.GetCenter(startAt);
-            Point end = tester.GetCenter(endAt);
-            tester.DragFrom(start, new Vector(end.X - start.X, end.Y - start.Y));
+            Offset start = tester.GetCenter(startAt);
+            Offset end = tester.GetCenter(endAt);
+            tester.DragFrom(start, new Offset(end.Dx - start.Dx, end.Dy - start.Dy));
             tester.Pump();
             Assert.Contains(
                 tester.FirstElement(Find.ByKey(widgetKey)).RenderObject,
@@ -332,19 +332,19 @@ public sealed class WidgetInspectorDartParityTests : IDisposable
             child: new ListView(
                 dragStartBehavior: DragStartBehavior.Down,
                 children: [new Container(key: childKey, height: 5000.0)]))));
-        Assert.Equal(0.0, tester.GetTopLeft(Find.ByKey(childKey)).Y);
+        Assert.Equal(0.0, tester.GetTopLeft(Find.ByKey(childKey)).Dy);
 
-        tester.Fling(Find.ByType(typeof(ListView)), new Vector(0.0, -200.0), 200.0);
+        tester.Fling(Find.ByType(typeof(ListView)), new Offset(0.0, -200.0), 200.0);
         tester.Pump();
 
         // Fling does nothing as are in inspect mode.
-        Assert.Equal(0.0, tester.GetTopLeft(Find.ByKey(childKey)).Y);
+        Assert.Equal(0.0, tester.GetTopLeft(Find.ByKey(childKey)).Dy);
 
-        tester.Fling(Find.ByType(typeof(ListView)), new Vector(200.0, 0.0), 200.0);
+        tester.Fling(Find.ByType(typeof(ListView)), new Offset(200.0, 0.0), 200.0);
         tester.Pump();
 
         // Fling still does nothing as are in inspect mode.
-        Assert.Equal(0.0, tester.GetTopLeft(Find.ByKey(childKey)).Y);
+        Assert.Equal(0.0, tester.GetTopLeft(Find.ByKey(childKey)).Dy);
 
         tester.Tap(Find.ByType(typeof(ListView)));
         tester.Pump();
@@ -354,15 +354,15 @@ public sealed class WidgetInspectorDartParityTests : IDisposable
         tester.Tap(Find.ByKey(exitWidgetSelectionButtonKey!));
         tester.Pump();
 
-        tester.Fling(Find.ByType(typeof(ListView)), new Vector(0.0, -200.0), 200.0);
+        tester.Fling(Find.ByType(typeof(ListView)), new Offset(0.0, -200.0), 200.0);
         tester.Pump();
 
-        Assert.Equal(-200.0, tester.GetTopLeft(Find.ByKey(childKey)).Y);
+        Assert.Equal(-200.0, tester.GetTopLeft(Find.ByKey(childKey)).Dy);
 
-        tester.Fling(Find.ByType(typeof(ListView)), new Vector(0.0, 200.0), 200.0);
+        tester.Fling(Find.ByType(typeof(ListView)), new Offset(0.0, 200.0), 200.0);
         tester.Pump();
 
-        Assert.Equal(0.0, tester.GetTopLeft(Find.ByKey(childKey)).Y);
+        Assert.Equal(0.0, tester.GetTopLeft(Find.ByKey(childKey)).Dy);
     }
 
     [DebugOnlyFact]
@@ -486,7 +486,7 @@ public sealed class WidgetInspectorDartParityTests : IDisposable
             .FirstElement(Find.ByType(typeof(InspectorOverlay)))
             .FindRenderObject()!;
         var layer = new InspectorOverlayLayer(
-            new Rect(overlay.Size),
+            DartGeometry.RectFromSize(overlay.Size),
             WidgetInspectorService.Instance.Selection,
             overlay.Parent);
         layer.AddToScene(new SceneBuilder());
@@ -497,7 +497,7 @@ public sealed class WidgetInspectorDartParityTests : IDisposable
         Assert.Equal(new Color(0x80404080), rects[1].Color);
         Assert.All(rects[2..^1], rect => Assert.Equal(new Color(0x80404080), rect.Color));
         Assert.Equal(new Color(0xE63C3C3C), rects[^1].Color);
-        Assert.Equal(new Rect(0.5, 0.5, 49.0, 99.0), rects[0].Rect);
+        Assert.Equal(DartGeometry.RectFromLTWH(0.5, 0.5, 49.0, 99.0), rects[0].Rect);
         layer.Dispose();
     }
 
@@ -633,14 +633,14 @@ public sealed class WidgetInspectorDartParityTests : IDisposable
                     child: new Text(selectionOnTapEnabled ? "SELECTION ON TAP" : "APP INTERACTION ON TAP")),
             child: new Row(children: [new Text("Child 1"), new Text("Child 2")]))));
 
-        double initialX = tester.GetCenter(Find.Text("EXIT SELECT MODE")).X;
+        double initialX = tester.GetCenter(Find.Text("EXIT SELECT MODE")).Dx;
         tester.Tap(Find.Text("MOVE RIGHT"));
         tester.Pump();
         Assert.Single(tester.ElementList(Find.Text("MOVE LEFT")));
-        Assert.True(initialX < tester.GetCenter(Find.Text("EXIT SELECT MODE")).X);
+        Assert.True(initialX < tester.GetCenter(Find.Text("EXIT SELECT MODE")).Dx);
         tester.Tap(Find.Text("MOVE LEFT"));
         tester.Pump();
-        Assert.Equal(initialX, tester.GetCenter(Find.Text("EXIT SELECT MODE")).X);
+        Assert.Equal(initialX, tester.GetCenter(Find.Text("EXIT SELECT MODE")).Dx);
 
         tester.Tap(Find.Text("Child 1"));
         tester.Pump();
@@ -689,13 +689,13 @@ public sealed class WidgetInspectorDartParityTests : IDisposable
                 tapBehaviorButtonBuilder: null,
                 child: new Text("APP"))));
 
-        double initialX = tester.GetCenter(Find.Text("EXIT SELECT MODE")).X;
+        double initialX = tester.GetCenter(Find.Text("EXIT SELECT MODE")).Dx;
         tester.Tap(Find.Text("MOVE RIGHT"));
         tester.Pump();
-        Assert.True(initialX > tester.GetCenter(Find.Text("EXIT SELECT MODE")).X);
+        Assert.True(initialX > tester.GetCenter(Find.Text("EXIT SELECT MODE")).Dx);
         tester.Tap(Find.Text("MOVE LEFT"));
         tester.Pump();
-        Assert.Equal(initialX, tester.GetCenter(Find.Text("EXIT SELECT MODE")).X);
+        Assert.Equal(initialX, tester.GetCenter(Find.Text("EXIT SELECT MODE")).Dx);
     }
 
     [DebugOnlyFact]

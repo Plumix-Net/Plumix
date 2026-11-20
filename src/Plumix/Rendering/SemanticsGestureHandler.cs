@@ -194,7 +194,7 @@ public class RenderSemanticsGestureHandler : RenderProxyBoxWithHitTestBehavior
         if (OnHorizontalDragUpdate != null)
         {
             double primaryDelta = Size.Width * -ScrollFactor;
-            OnHorizontalDragUpdate(CreateScrollDetails(new Point(primaryDelta, 0.0), primaryDelta));
+            OnHorizontalDragUpdate(CreateScrollDetails(new Offset(primaryDelta, 0.0), primaryDelta));
         }
     }
 
@@ -203,7 +203,7 @@ public class RenderSemanticsGestureHandler : RenderProxyBoxWithHitTestBehavior
         if (OnHorizontalDragUpdate != null)
         {
             double primaryDelta = Size.Width * ScrollFactor;
-            OnHorizontalDragUpdate(CreateScrollDetails(new Point(primaryDelta, 0.0), primaryDelta));
+            OnHorizontalDragUpdate(CreateScrollDetails(new Offset(primaryDelta, 0.0), primaryDelta));
         }
     }
 
@@ -212,7 +212,7 @@ public class RenderSemanticsGestureHandler : RenderProxyBoxWithHitTestBehavior
         if (OnVerticalDragUpdate != null)
         {
             double primaryDelta = Size.Height * -ScrollFactor;
-            OnVerticalDragUpdate(CreateScrollDetails(new Point(0.0, primaryDelta), primaryDelta));
+            OnVerticalDragUpdate(CreateScrollDetails(new Offset(0.0, primaryDelta), primaryDelta));
         }
     }
 
@@ -221,7 +221,7 @@ public class RenderSemanticsGestureHandler : RenderProxyBoxWithHitTestBehavior
         if (OnVerticalDragUpdate != null)
         {
             double primaryDelta = Size.Height * ScrollFactor;
-            OnVerticalDragUpdate(CreateScrollDetails(new Point(0.0, primaryDelta), primaryDelta));
+            OnVerticalDragUpdate(CreateScrollDetails(new Offset(0.0, primaryDelta), primaryDelta));
         }
     }
 
@@ -229,9 +229,9 @@ public class RenderSemanticsGestureHandler : RenderProxyBoxWithHitTestBehavior
     /// Dart's <c>DragUpdateDetails(delta:, primaryDelta:, globalPosition: localToGlobal(size.center(Offset.zero)))</c>;
     /// its <c>localPosition</c> defaults to <c>globalPosition</c>.
     /// </remarks>
-    private DragUpdateDetails CreateScrollDetails(Point delta, double primaryDelta)
+    private DragUpdateDetails CreateScrollDetails(Offset delta, double primaryDelta)
     {
-        Point globalPosition = LocalToGlobal(new Point(Size.Width / 2.0, Size.Height / 2.0));
+        Offset globalPosition = LocalToGlobal(new Offset(Size.Width / 2.0, Size.Height / 2.0));
         return new DragUpdateDetails(
             GlobalPosition: globalPosition,
             LocalPosition: globalPosition,

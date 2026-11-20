@@ -44,12 +44,12 @@ internal sealed class MatrixTransformPart(Matrix4 matrix) : TransformPart
     public override Matrix4 Multiply(Matrix4 rhs) => matrix.Multiplied(rhs);
 }
 
-internal sealed class OffsetTransformPart(Point offset) : TransformPart
+internal sealed class OffsetTransformPart(Offset offset) : TransformPart
 {
     public override Matrix4 Multiply(Matrix4 rhs)
     {
         Matrix4 clone = rhs.Clone();
-        clone.LeftTranslateByDouble(offset.X, offset.Y, 0, 1);
+        clone.LeftTranslateByDouble(offset.Dx, offset.Dy, 0, 1);
         return clone;
     }
 }
@@ -122,7 +122,7 @@ public class HitTestResult
     /// Pushes a translation applied to every entry added until the matching <see cref="PopTransform"/>.
     /// Faster than <see cref="PushTransform"/> for the translation-only case.
     /// </summary>
-    protected void PushOffset(Point offset)
+    protected void PushOffset(Offset offset)
     {
         _localTransforms.Add(new OffsetTransformPart(offset));
     }
@@ -202,7 +202,7 @@ public class HitTestResult
 }
 
 /// <summary>Signature for the nested hit test that <c>BoxHitTestResult.AddWith*</c> runs.</summary>
-public delegate bool BoxHitTest(BoxHitTestResult result, Point position);
+public delegate bool BoxHitTest(BoxHitTestResult result, Offset position);
 
 /// <summary>
 /// Signature for the nested hit test that <see cref="BoxHitTestResult.AddWithOutOfBandPosition"/> runs.
@@ -227,7 +227,7 @@ public class BoxHitTestResult : HitTestResult
     /// Runs <paramref name="hitTest"/> with <paramref name="position"/> mapped through the inverse of
     /// a paint transform, returning <c>false</c> without testing when the transform is not invertible.
     /// </summary>
-    public bool AddWithPaintTransform(Matrix4? transform, Point position, BoxHitTest hitTest)
+    public bool AddWithPaintTransform(Matrix4? transform, Offset position, BoxHitTest hitTest)
     {
         if (transform is not null)
         {
@@ -242,12 +242,12 @@ public class BoxHitTestResult : HitTestResult
     }
 
     /// <summary>Runs <paramref name="hitTest"/> with <paramref name="position"/> shifted by an offset.</summary>
-    public bool AddWithPaintOffset(Point? offset, Point position, BoxHitTest hitTest)
+    public bool AddWithPaintOffset(Offset? offset, Offset position, BoxHitTest hitTest)
     {
-        Point transformedPosition = offset is { } value ? position - value : position;
+        Offset transformedPosition = offset is { } value ? position - value : position;
         if (offset is { } pushed)
         {
-            PushOffset(new Point(-pushed.X, -pushed.Y));
+            PushOffset(new Offset(-pushed.Dx, -pushed.Dy));
         }
 
         bool isHit = hitTest(this, transformedPosition);
@@ -260,9 +260,9 @@ public class BoxHitTestResult : HitTestResult
     }
 
     /// <summary>Runs <paramref name="hitTest"/> with <paramref name="position"/> mapped through a matrix.</summary>
-    public bool AddWithRawTransform(Matrix4? transform, Point position, BoxHitTest hitTest)
+    public bool AddWithRawTransform(Matrix4? transform, Offset position, BoxHitTest hitTest)
     {
-        Point transformedPosition = transform is null
+        Offset transformedPosition = transform is null
             ? position
             : MatrixUtils.TransformPoint(transform, position);
         if (transform is not null)
@@ -285,7 +285,7 @@ public class BoxHitTestResult : HitTestResult
     /// </summary>
     public bool AddWithOutOfBandPosition(
         BoxHitTestWithOutOfBandPosition hitTest,
-        Point? paintOffset = null,
+        Offset? paintOffset = null,
         Matrix4? paintTransform = null,
         Matrix4? rawTransform = null)
     {
@@ -299,7 +299,7 @@ public class BoxHitTestResult : HitTestResult
 
         if (paintOffset is { } offset)
         {
-            PushOffset(new Point(-offset.X, -offset.Y));
+            PushOffset(new Offset(-offset.Dx, -offset.Dy));
         }
         else if (rawTransform is not null)
         {
@@ -323,10 +323,10 @@ public class BoxHitTestResult : HitTestResult
     }
 }
 
-public sealed class BoxHitTestEntry(RenderBox target, Point localPosition) : HitTestEntry(target)
+public sealed class BoxHitTestEntry(RenderBox target, Offset localPosition) : HitTestEntry(target)
 {
     /// <summary>The position of the hit test in the local coordinates of the target.</summary>
-    public Point LocalPosition { get; } = localPosition;
+    public Offset LocalPosition { get; } = localPosition;
 
     public override string ToString() => $"{Diagnostics.DescribeIdentity(Target)}@{DartFormat.Offset(LocalPosition)}";
 }

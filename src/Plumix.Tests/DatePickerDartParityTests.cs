@@ -411,7 +411,7 @@ public sealed class DatePickerDartParityTests : IDisposable
         tester.PumpWidget(BuildFrame(TextDirection.Ltr));
         tester.Tap(Find.Text("X"));
         tester.PumpAndSettle();
-        double ltrOkRight = tester.GetBottomRight(Find.Text("OK")).X;
+        double ltrOkRight = tester.GetBottomRight(Find.Text("OK")).Dx;
 
         tester.Tap(Find.Text("OK")); // Dismiss the dialog.
         tester.PumpAndSettle();
@@ -424,7 +424,7 @@ public sealed class DatePickerDartParityTests : IDisposable
         // We expect the left edge of the 'OK' button in the RTL
         // layout to match the gap between right edge of the 'OK'
         // button and the right edge of the 800 wide view.
-        Assert.Equal(800 - ltrOkRight, tester.GetBottomLeft(Find.Text("OK")).X, 1e-10);
+        Assert.Equal(800 - ltrOkRight, tester.GetBottomLeft(Find.Text("OK")).Dx, 1e-10);
     }
 
     // ---- group('Barrier dismissible') ----
@@ -460,7 +460,7 @@ public sealed class DatePickerDartParityTests : IDisposable
         Assert.Equal(1, rootObserver.DatePickerCount);
 
         // Tap on the barrier.
-        tester.TapAt(new Point(10.0, 10.0));
+        tester.TapAt(new Offset(10.0, 10.0));
         tester.PumpAndSettle();
         Assert.Equal(0, rootObserver.DatePickerCount);
     }
@@ -480,7 +480,7 @@ public sealed class DatePickerDartParityTests : IDisposable
         Assert.Equal(1, rootObserver.DatePickerCount);
 
         // Tap on the barrier, which shouldn't do anything this time.
-        tester.TapAt(new Point(10.0, 10.0));
+        tester.TapAt(new Offset(10.0, 10.0));
         tester.PumpAndSettle();
         Assert.Equal(1, rootObserver.DatePickerCount);
     }
@@ -498,7 +498,7 @@ public sealed class DatePickerDartParityTests : IDisposable
         Assert.Equal(MaterialColors.Black54, tester.Widget<ModalBarrier>(Find.ByType<ModalBarrier>().Last).Color);
 
         // Dismiss the dialog.
-        tester.TapAt(new Point(10.0, 10.0));
+        tester.TapAt(new Offset(10.0, 10.0));
 
         tester.PumpWidget(BarrierApp(rootObserver: null, barrierColor: MaterialColors.Pink));
 
@@ -613,18 +613,18 @@ public sealed class DatePickerDartParityTests : IDisposable
             tester.PumpWidget(BuildFrame(TextDirection.Ltr));
             tester.Tap(Find.Text("X"));
             tester.PumpAndSettle();
-            Assert.Equal(622, tester.GetBottomRight(Find.Text("OK")).X);
-            Assert.Equal(594, tester.GetBottomLeft(Find.Text("OK")).X);
-            Assert.Equal(560, tester.GetBottomRight(Find.Text("CANCEL")).X);
+            Assert.Equal(622, tester.GetBottomRight(Find.Text("OK")).Dx);
+            Assert.Equal(594, tester.GetBottomLeft(Find.Text("OK")).Dx);
+            Assert.Equal(560, tester.GetBottomRight(Find.Text("CANCEL")).Dx);
             tester.Tap(Find.Text("OK"));
             tester.PumpAndSettle();
 
             tester.PumpWidget(BuildFrame(TextDirection.Rtl));
             tester.Tap(Find.Text("X"));
             tester.PumpAndSettle();
-            Assert.Equal(206, tester.GetBottomRight(Find.Text("OK")).X);
-            Assert.Equal(178, tester.GetBottomLeft(Find.Text("OK")).X);
-            Assert.Equal(324, tester.GetBottomRight(Find.Text("CANCEL")).X);
+            Assert.Equal(206, tester.GetBottomRight(Find.Text("OK")).Dx);
+            Assert.Equal(178, tester.GetBottomLeft(Find.Text("OK")).Dx);
+            Assert.Equal(324, tester.GetBottomRight(Find.Text("CANCEL")).Dx);
             tester.Tap(Find.Text("OK"));
             tester.PumpAndSettle();
 
@@ -635,18 +635,18 @@ public sealed class DatePickerDartParityTests : IDisposable
             tester.PumpWidget(BuildFrame(TextDirection.Ltr));
             tester.Tap(Find.Text("X"));
             tester.PumpAndSettle();
-            Assert.Equal(258, tester.GetBottomRight(Find.Text("OK")).X);
-            Assert.Equal(230, tester.GetBottomLeft(Find.Text("OK")).X);
-            Assert.Equal(196, tester.GetBottomRight(Find.Text("CANCEL")).X);
+            Assert.Equal(258, tester.GetBottomRight(Find.Text("OK")).Dx);
+            Assert.Equal(230, tester.GetBottomLeft(Find.Text("OK")).Dx);
+            Assert.Equal(196, tester.GetBottomRight(Find.Text("CANCEL")).Dx);
             tester.Tap(Find.Text("OK"));
             tester.PumpAndSettle();
 
             tester.PumpWidget(BuildFrame(TextDirection.Rtl));
             tester.Tap(Find.Text("X"));
             tester.PumpAndSettle();
-            Assert.Equal(70, tester.GetBottomRight(Find.Text("OK")).X);
-            Assert.Equal(42, tester.GetBottomLeft(Find.Text("OK")).X);
-            Assert.Equal(188, tester.GetBottomRight(Find.Text("CANCEL")).X);
+            Assert.Equal(70, tester.GetBottomRight(Find.Text("OK")).Dx);
+            Assert.Equal(42, tester.GetBottomLeft(Find.Text("OK")).Dx);
+            Assert.Equal(188, tester.GetBottomRight(Find.Text("CANCEL")).Dx);
             tester.Tap(Find.Text("OK"));
             tester.PumpAndSettle();
         }
@@ -770,75 +770,75 @@ public sealed class DatePickerDartParityTests : IDisposable
             Finds.OneWidget(okButtonText);
 
             // Test help text position.
-            Point dialogTopLeft = tester.GetTopLeft(Find.ByType<AnimatedContainer>());
-            Point helpTextTopLeft = tester.GetTopLeft(helpText);
+            Offset dialogTopLeft = tester.GetTopLeft(Find.ByType<AnimatedContainer>());
+            Offset helpTextTopLeft = tester.GetTopLeft(helpText);
             double insetHorizontal = insetPadding.Left + insetPadding.Right;
-            Assert.Equal(dialogTopLeft.X + (insetHorizontal / 2), helpTextTopLeft.X);
-            Assert.Equal(dialogTopLeft.Y + 16.0, helpTextTopLeft.Y);
+            Assert.Equal(dialogTopLeft.Dx + (insetHorizontal / 2), helpTextTopLeft.Dx);
+            Assert.Equal(dialogTopLeft.Dy + 16.0, helpTextTopLeft.Dy);
 
             // Test header text position.
-            Point headerTextTopLeft = tester.GetTopLeft(headerText);
-            Point helpTextBottomLeft = tester.GetBottomLeft(helpText);
-            Assert.Equal(dialogTopLeft.X + (insetHorizontal / 2), headerTextTopLeft.X);
-            Assert.Equal(helpTextBottomLeft.Y + 16.0, headerTextTopLeft.Y);
+            Offset headerTextTopLeft = tester.GetTopLeft(headerText);
+            Offset helpTextBottomLeft = tester.GetBottomLeft(helpText);
+            Assert.Equal(dialogTopLeft.Dx + (insetHorizontal / 2), headerTextTopLeft.Dx);
+            Assert.Equal(helpTextBottomLeft.Dy + 16.0, headerTextTopLeft.Dy);
 
             // Test switch button position.
             Finder switchButtonM3 = Find.WidgetWithIcon<IconButton>(Icons.EditOutlined);
-            Point switchButtonTopLeft = tester.GetTopLeft(switchButtonM3);
-            Point switchButtonBottomLeft = tester.GetBottomLeft(switchButtonM3);
-            Point headerTextBottomLeft = tester.GetBottomLeft(headerText);
-            Point dialogBottomLeft = tester.GetBottomLeft(Find.ByType<AnimatedContainer>());
-            Assert.Equal(dialogTopLeft.X + 8.0, switchButtonTopLeft.X);
-            Assert.Equal(headerTextBottomLeft.Y, switchButtonTopLeft.Y);
-            Assert.Equal(dialogTopLeft.X + 8.0, switchButtonBottomLeft.X);
-            Assert.Equal(dialogBottomLeft.Y - 6.0, switchButtonBottomLeft.Y);
+            Offset switchButtonTopLeft = tester.GetTopLeft(switchButtonM3);
+            Offset switchButtonBottomLeft = tester.GetBottomLeft(switchButtonM3);
+            Offset headerTextBottomLeft = tester.GetBottomLeft(headerText);
+            Offset dialogBottomLeft = tester.GetBottomLeft(Find.ByType<AnimatedContainer>());
+            Assert.Equal(dialogTopLeft.Dx + 8.0, switchButtonTopLeft.Dx);
+            Assert.Equal(headerTextBottomLeft.Dy, switchButtonTopLeft.Dy);
+            Assert.Equal(dialogTopLeft.Dx + 8.0, switchButtonBottomLeft.Dx);
+            Assert.Equal(dialogBottomLeft.Dy - 6.0, switchButtonBottomLeft.Dy);
 
             // Test vertical divider position.
             Finder divider = Find.ByType<VerticalDivider>();
-            Point dividerTopLeft = tester.GetTopLeft(divider);
-            Point headerTextTopRight = tester.GetTopRight(headerText);
-            Assert.Equal(headerTextTopRight.X + 16.0, dividerTopLeft.X);
-            Assert.Equal(dialogTopLeft.Y, dividerTopLeft.Y);
+            Offset dividerTopLeft = tester.GetTopLeft(divider);
+            Offset headerTextTopRight = tester.GetTopRight(headerText);
+            Assert.Equal(headerTextTopRight.Dx + 16.0, dividerTopLeft.Dx);
+            Assert.Equal(dialogTopLeft.Dy, dividerTopLeft.Dy);
 
             // Test sub header text position.
-            Point subHeaderTextTopLeft = tester.GetTopLeft(subHeaderText);
-            Point dividerTopRight = tester.GetTopRight(divider);
-            Assert.Equal(dividerTopRight.X + 24.0, subHeaderTextTopLeft.X);
-            Assert.Equal(dialogTopLeft.Y + 16.0, subHeaderTextTopLeft.Y);
+            Offset subHeaderTextTopLeft = tester.GetTopLeft(subHeaderText);
+            Offset dividerTopRight = tester.GetTopRight(divider);
+            Assert.Equal(dividerTopRight.Dx + 24.0, subHeaderTextTopLeft.Dx);
+            Assert.Equal(dialogTopLeft.Dy + 16.0, subHeaderTextTopLeft.Dy);
 
             // Test sub header icon position.
             Finder subHeaderIcon = Find.ByIcon(Icons.ArrowDropDown);
-            Point subHeaderIconTopLeft = tester.GetTopLeft(subHeaderIcon);
-            Point subHeaderTextTopRight = tester.GetTopRight(subHeaderText);
-            Assert.Equal(subHeaderTextTopRight.X, subHeaderIconTopLeft.X);
-            Assert.Equal(dialogTopLeft.Y + 14.0, subHeaderIconTopLeft.Y);
+            Offset subHeaderIconTopLeft = tester.GetTopLeft(subHeaderIcon);
+            Offset subHeaderTextTopRight = tester.GetTopRight(subHeaderText);
+            Assert.Equal(subHeaderTextTopRight.Dx, subHeaderIconTopLeft.Dx);
+            Assert.Equal(dialogTopLeft.Dy + 14.0, subHeaderIconTopLeft.Dy);
 
             // Test calendar page view position.
             Finder calendarPageView = Find.ByType<PageView>();
-            Point calendarPageViewTopLeft = tester.GetTopLeft(calendarPageView);
-            Point subHeaderTextBottomLeft = tester.GetBottomLeft(subHeaderText);
-            Assert.Equal(dividerTopRight.X, calendarPageViewTopLeft.X);
-            Assert.Equal(subHeaderTextBottomLeft.Y + 16.0, calendarPageViewTopLeft.Y);
+            Offset calendarPageViewTopLeft = tester.GetTopLeft(calendarPageView);
+            Offset subHeaderTextBottomLeft = tester.GetBottomLeft(subHeaderText);
+            Assert.Equal(dividerTopRight.Dx, calendarPageViewTopLeft.Dx);
+            Assert.Equal(subHeaderTextBottomLeft.Dy + 16.0, calendarPageViewTopLeft.Dy);
 
             // Test month navigation icons position.
             Finder previousMonthButton = Find.WidgetWithIcon<IconButton>(Icons.ChevronLeft);
             Finder nextMonthButton = Find.WidgetWithIcon<IconButton>(Icons.ChevronRight);
-            Point previousMonthButtonTopRight = tester.GetTopRight(previousMonthButton);
-            Point nextMonthButtonTopRight = tester.GetTopRight(nextMonthButton);
-            Point dialogTopRight = tester.GetTopRight(Find.ByType<AnimatedContainer>());
-            Assert.Equal(dialogTopRight.X - 4.0, nextMonthButtonTopRight.X);
-            Assert.Equal(dialogTopRight.Y + 2.0, nextMonthButtonTopRight.Y);
-            Assert.Equal(nextMonthButtonTopRight.X - 48.0, previousMonthButtonTopRight.X);
+            Offset previousMonthButtonTopRight = tester.GetTopRight(previousMonthButton);
+            Offset nextMonthButtonTopRight = tester.GetTopRight(nextMonthButton);
+            Offset dialogTopRight = tester.GetTopRight(Find.ByType<AnimatedContainer>());
+            Assert.Equal(dialogTopRight.Dx - 4.0, nextMonthButtonTopRight.Dx);
+            Assert.Equal(dialogTopRight.Dy + 2.0, nextMonthButtonTopRight.Dy);
+            Assert.Equal(nextMonthButtonTopRight.Dx - 48.0, previousMonthButtonTopRight.Dx);
 
             // Test action buttons position.
-            Point dialogBottomRight = tester.GetBottomRight(Find.ByType<AnimatedContainer>());
-            Point okButtonTopRight = tester.GetTopRight(Find.WidgetWithText<TextButton>("OK"));
-            Point cancelButtonTopRight = tester.GetTopRight(Find.WidgetWithText<TextButton>("Cancel"));
-            Point calendarPageViewBottomRight = tester.GetBottomRight(calendarPageView);
-            Assert.Equal(dialogBottomRight.X - 8, okButtonTopRight.X);
-            Assert.Equal(calendarPageViewBottomRight.Y + 2, okButtonTopRight.Y);
-            Point okButtonTopLeft = tester.GetTopLeft(Find.WidgetWithText<TextButton>("OK"));
-            Assert.Equal(okButtonTopLeft.X - 8, cancelButtonTopRight.X);
+            Offset dialogBottomRight = tester.GetBottomRight(Find.ByType<AnimatedContainer>());
+            Offset okButtonTopRight = tester.GetTopRight(Find.WidgetWithText<TextButton>("OK"));
+            Offset cancelButtonTopRight = tester.GetTopRight(Find.WidgetWithText<TextButton>("Cancel"));
+            Offset calendarPageViewBottomRight = tester.GetBottomRight(calendarPageView);
+            Assert.Equal(dialogBottomRight.Dx - 8, okButtonTopRight.Dx);
+            Assert.Equal(calendarPageViewBottomRight.Dy + 2, okButtonTopRight.Dy);
+            Offset okButtonTopLeft = tester.GetTopLeft(Find.WidgetWithText<TextButton>("OK"));
+            Assert.Equal(okButtonTopLeft.Dx - 8, cancelButtonTopRight.Dx);
         }
         finally
         {
@@ -874,69 +874,69 @@ public sealed class DatePickerDartParityTests : IDisposable
             Finds.OneWidget(okButtonText);
 
             // Test help text position.
-            Point dialogTopLeft = tester.GetTopLeft(Find.ByType<AnimatedContainer>());
-            Point helpTextTopLeft = tester.GetTopLeft(helpText);
-            Assert.Equal(dialogTopLeft.X + 24.0, helpTextTopLeft.X);
-            Assert.Equal(dialogTopLeft.Y + 16.0, helpTextTopLeft.Y);
+            Offset dialogTopLeft = tester.GetTopLeft(Find.ByType<AnimatedContainer>());
+            Offset helpTextTopLeft = tester.GetTopLeft(helpText);
+            Assert.Equal(dialogTopLeft.Dx + 24.0, helpTextTopLeft.Dx);
+            Assert.Equal(dialogTopLeft.Dy + 16.0, helpTextTopLeft.Dy);
 
             // Test header text position
-            Point headerTextTextTopLeft = tester.GetTopLeft(headerText);
-            Point helpTextBottomLeft = tester.GetBottomLeft(helpText);
-            Assert.Equal(dialogTopLeft.X + 24.0, headerTextTextTopLeft.X);
-            Assert.Equal(helpTextBottomLeft.Y + 28.0, headerTextTextTopLeft.Y);
+            Offset headerTextTextTopLeft = tester.GetTopLeft(headerText);
+            Offset helpTextBottomLeft = tester.GetBottomLeft(helpText);
+            Assert.Equal(dialogTopLeft.Dx + 24.0, headerTextTextTopLeft.Dx);
+            Assert.Equal(helpTextBottomLeft.Dy + 28.0, headerTextTextTopLeft.Dy);
 
             // Test switch button position.
             Finder switchButtonM3 = Find.WidgetWithIcon<IconButton>(Icons.EditOutlined);
-            Point switchButtonTopRight = tester.GetTopRight(switchButtonM3);
-            Point dialogTopRight = tester.GetTopRight(Find.ByType<AnimatedContainer>());
-            Assert.Equal(dialogTopRight.X - 12.0, switchButtonTopRight.X);
-            Assert.Equal(headerTextTextTopLeft.Y - 4.0, switchButtonTopRight.Y);
+            Offset switchButtonTopRight = tester.GetTopRight(switchButtonM3);
+            Offset dialogTopRight = tester.GetTopRight(Find.ByType<AnimatedContainer>());
+            Assert.Equal(dialogTopRight.Dx - 12.0, switchButtonTopRight.Dx);
+            Assert.Equal(headerTextTextTopLeft.Dy - 4.0, switchButtonTopRight.Dy);
 
             // Test horizontal divider position.
             Finder divider = Find.ByType<Divider>();
-            Point dividerTopLeft = tester.GetTopLeft(divider);
-            Point headerTextBottomLeft = tester.GetBottomLeft(headerText);
-            Assert.Equal(dialogTopLeft.X, dividerTopLeft.X);
-            Assert.Equal(headerTextBottomLeft.Y + 16.0, dividerTopLeft.Y);
+            Offset dividerTopLeft = tester.GetTopLeft(divider);
+            Offset headerTextBottomLeft = tester.GetBottomLeft(headerText);
+            Assert.Equal(dialogTopLeft.Dx, dividerTopLeft.Dx);
+            Assert.Equal(headerTextBottomLeft.Dy + 16.0, dividerTopLeft.Dy);
 
             // Test subHeaderText position.
-            Point subHeaderTextTopLeft = tester.GetTopLeft(subHeaderText);
-            Point dividerBottomLeft = tester.GetBottomLeft(divider);
-            Assert.Equal(dialogTopLeft.X + 24.0, subHeaderTextTopLeft.X);
-            Assert.Equal(dividerBottomLeft.Y + 16.0, subHeaderTextTopLeft.Y);
+            Offset subHeaderTextTopLeft = tester.GetTopLeft(subHeaderText);
+            Offset dividerBottomLeft = tester.GetBottomLeft(divider);
+            Assert.Equal(dialogTopLeft.Dx + 24.0, subHeaderTextTopLeft.Dx);
+            Assert.Equal(dividerBottomLeft.Dy + 16.0, subHeaderTextTopLeft.Dy);
 
             // Test sub header icon position.
             Finder subHeaderIcon = Find.ByIcon(Icons.ArrowDropDown);
-            Point subHeaderIconTopLeft = tester.GetTopLeft(subHeaderIcon);
-            Point subHeaderTextTopRight = tester.GetTopRight(subHeaderText);
-            Assert.Equal(subHeaderTextTopRight.X, subHeaderIconTopLeft.X);
-            Assert.Equal(dividerBottomLeft.Y + 14.0, subHeaderIconTopLeft.Y);
+            Offset subHeaderIconTopLeft = tester.GetTopLeft(subHeaderIcon);
+            Offset subHeaderTextTopRight = tester.GetTopRight(subHeaderText);
+            Assert.Equal(subHeaderTextTopRight.Dx, subHeaderIconTopLeft.Dx);
+            Assert.Equal(dividerBottomLeft.Dy + 14.0, subHeaderIconTopLeft.Dy);
 
             // Test month navigation icons position.
             Finder previousMonthButton = Find.WidgetWithIcon<IconButton>(Icons.ChevronLeft);
             Finder nextMonthButton = Find.WidgetWithIcon<IconButton>(Icons.ChevronRight);
-            Point previousMonthButtonTopRight = tester.GetTopRight(previousMonthButton);
-            Point nextMonthButtonTopRight = tester.GetTopRight(nextMonthButton);
-            Assert.Equal(dialogTopRight.X - 4.0, nextMonthButtonTopRight.X);
-            Assert.Equal(dividerBottomLeft.Y + 2.0, nextMonthButtonTopRight.Y);
-            Assert.Equal(nextMonthButtonTopRight.X - 48.0, previousMonthButtonTopRight.X);
+            Offset previousMonthButtonTopRight = tester.GetTopRight(previousMonthButton);
+            Offset nextMonthButtonTopRight = tester.GetTopRight(nextMonthButton);
+            Assert.Equal(dialogTopRight.Dx - 4.0, nextMonthButtonTopRight.Dx);
+            Assert.Equal(dividerBottomLeft.Dy + 2.0, nextMonthButtonTopRight.Dy);
+            Assert.Equal(nextMonthButtonTopRight.Dx - 48.0, previousMonthButtonTopRight.Dx);
 
             // Test calendar page view position.
             Finder calendarPageView = Find.ByType<PageView>();
-            Point calendarPageViewTopLeft = tester.GetTopLeft(calendarPageView);
-            Point subHeaderTextBottomLeft = tester.GetBottomLeft(subHeaderText);
-            Assert.Equal(dialogTopLeft.X, calendarPageViewTopLeft.X);
-            Assert.Equal(subHeaderTextBottomLeft.Y + 16.0, calendarPageViewTopLeft.Y);
+            Offset calendarPageViewTopLeft = tester.GetTopLeft(calendarPageView);
+            Offset subHeaderTextBottomLeft = tester.GetBottomLeft(subHeaderText);
+            Assert.Equal(dialogTopLeft.Dx, calendarPageViewTopLeft.Dx);
+            Assert.Equal(subHeaderTextBottomLeft.Dy + 16.0, calendarPageViewTopLeft.Dy);
 
             // Test action buttons position.
-            Point dialogBottomRight = tester.GetBottomRight(Find.ByType<AnimatedContainer>());
-            Point okButtonTopRight = tester.GetTopRight(Find.WidgetWithText<TextButton>("OK"));
-            Point cancelButtonTopRight = tester.GetTopRight(Find.WidgetWithText<TextButton>("Cancel"));
-            Point calendarPageViewBottomRight = tester.GetBottomRight(calendarPageView);
-            Point okButtonTopLeft = tester.GetTopLeft(Find.WidgetWithText<TextButton>("OK"));
-            Assert.Equal(dialogBottomRight.X - 8, okButtonTopRight.X);
-            Assert.Equal(calendarPageViewBottomRight.Y + 2, okButtonTopRight.Y);
-            Assert.Equal(okButtonTopLeft.X - 8, cancelButtonTopRight.X);
+            Offset dialogBottomRight = tester.GetBottomRight(Find.ByType<AnimatedContainer>());
+            Offset okButtonTopRight = tester.GetTopRight(Find.WidgetWithText<TextButton>("OK"));
+            Offset cancelButtonTopRight = tester.GetTopRight(Find.WidgetWithText<TextButton>("Cancel"));
+            Offset calendarPageViewBottomRight = tester.GetBottomRight(calendarPageView);
+            Offset okButtonTopLeft = tester.GetTopLeft(Find.WidgetWithText<TextButton>("OK"));
+            Assert.Equal(dialogBottomRight.Dx - 8, okButtonTopRight.Dx);
+            Assert.Equal(calendarPageViewBottomRight.Dy + 2, okButtonTopRight.Dy);
+            Assert.Equal(okButtonTopLeft.Dx - 8, cancelButtonTopRight.Dx);
         }
         finally
         {
@@ -1294,7 +1294,7 @@ public sealed class DatePickerDartParityTests : IDisposable
         var theme = new ThemeData();
         PrepareDatePicker(tester, _ => { }, theme: theme);
 
-        Point center = tester.GetCenter(Find.Text("30"));
+        Offset center = tester.GetCenter(Find.Text("30"));
         TestGesture gesture = tester.CreateGesture(kind: PointerDeviceKind.Mouse);
         gesture.AddPointer();
         try
@@ -1352,7 +1352,7 @@ public sealed class DatePickerDartParityTests : IDisposable
         var theme = new ThemeData();
         PrepareDatePicker(tester, _ => { }, theme: theme);
 
-        Point center = tester.GetCenter(Find.Text("30"));
+        Offset center = tester.GetCenter(Find.Text("30"));
         TestGesture gesture = tester.CreateGesture(kind: PointerDeviceKind.Mouse);
         gesture.AddPointer();
         try
@@ -1391,7 +1391,7 @@ public sealed class DatePickerDartParityTests : IDisposable
         ShapeDecoration day30Decoration = FindDayDecoration(tester, "30")!;
         Assert.Equal(theme.ColorScheme.Primary, day30Decoration.Color);
 
-        Point center = tester.GetCenter(Find.Text("30"));
+        Offset center = tester.GetCenter(Find.Text("30"));
         TestGesture gesture = tester.CreateGesture(kind: PointerDeviceKind.Mouse);
         gesture.AddPointer();
         try
@@ -1459,7 +1459,7 @@ public sealed class DatePickerDartParityTests : IDisposable
         ShapeDecoration day30Decoration = FindDayDecoration(tester, "30")!;
         Assert.Equal(theme.ColorScheme.Primary, day30Decoration.Color);
 
-        Point center = tester.GetCenter(Find.Text("30"));
+        Offset center = tester.GetCenter(Find.Text("30"));
         TestGesture gesture = tester.CreateGesture(kind: PointerDeviceKind.Mouse);
         gesture.AddPointer();
         try
@@ -2309,7 +2309,7 @@ public sealed class DatePickerDartParityTests : IDisposable
                 DisplayFeatures:
                 [
                     new DisplayFeature(
-                        Bounds: new Rect(new Point(390, 0), new Point(410, 600)),
+                        Bounds: DartGeometry.RectFromCorners(new Offset(390, 0), new Offset(410, 600)),
                         Type: DisplayFeatureType.Hinge,
                         State: DisplayFeatureState.Unknown),
                 ]),
@@ -2330,12 +2330,12 @@ public sealed class DatePickerDartParityTests : IDisposable
             initialDate: DateTime.Now,
             firstDate: new DateTime(2018, 1, 1),
             lastDate: new DateTime(2030, 1, 1),
-            anchorPoint: new Point(1000, 0));
+            anchorPoint: new Offset(1000, 0));
         tester.PumpAndSettle();
 
         // Should take the right side of the screen
-        Assert.Equal(new Point(410.0, 0.0), tester.GetTopLeft(Find.ByType<DatePickerDialog>()));
-        Assert.Equal(new Point(800.0, 600.0), tester.GetBottomRight(Find.ByType<DatePickerDialog>()));
+        Assert.Equal(new Offset(410.0, 0.0), tester.GetTopLeft(Find.ByType<DatePickerDialog>()));
+        Assert.Equal(new Offset(800.0, 600.0), tester.GetBottomRight(Find.ByType<DatePickerDialog>()));
     }
 
     // Flutter: 'date_picker_test.dart: showDatePicker avoids overlapping display features positioning with
@@ -2355,8 +2355,8 @@ public sealed class DatePickerDartParityTests : IDisposable
         tester.PumpAndSettle();
 
         // By default it should place the dialog on the right screen
-        Assert.Equal(new Point(410.0, 0.0), tester.GetTopLeft(Find.ByType<DatePickerDialog>()));
-        Assert.Equal(new Point(800.0, 600.0), tester.GetBottomRight(Find.ByType<DatePickerDialog>()));
+        Assert.Equal(new Offset(410.0, 0.0), tester.GetTopLeft(Find.ByType<DatePickerDialog>()));
+        Assert.Equal(new Offset(800.0, 600.0), tester.GetBottomRight(Find.ByType<DatePickerDialog>()));
     }
 
     // Flutter: 'date_picker_test.dart: showDatePicker avoids overlapping display features positioning with
@@ -2376,8 +2376,8 @@ public sealed class DatePickerDartParityTests : IDisposable
         tester.PumpAndSettle();
 
         // By default it should place the dialog on the left screen
-        Assert.Equal(new Point(0, 0), tester.GetTopLeft(Find.ByType<DatePickerDialog>()));
-        Assert.Equal(new Point(390.0, 600.0), tester.GetBottomRight(Find.ByType<DatePickerDialog>()));
+        Assert.Equal(new Offset(0, 0), tester.GetTopLeft(Find.ByType<DatePickerDialog>()));
+        Assert.Equal(new Offset(390.0, 600.0), tester.GetBottomRight(Find.ByType<DatePickerDialog>()));
     }
 
     // Flutter: 'date_picker_test.dart: DatePickerDialog is state restorable'
@@ -2405,7 +2405,7 @@ public sealed class DatePickerDartParityTests : IDisposable
         Finds.OneWidget(Find.ByType<DatePickerDialog>());
 
         // Tap on the barrier.
-        tester.TapAt(new Point(10.0, 10.0));
+        tester.TapAt(new Offset(10.0, 10.0));
         tester.PumpAndSettle();
 
         // The date picker should be closed, the text value updated to the
@@ -2467,7 +2467,7 @@ public sealed class DatePickerDartParityTests : IDisposable
         Finds.Nothing(Find.ByIcon(Icons.Edit));
 
         // Tap on the barrier.
-        tester.TapAt(new Point(10.0, 10.0));
+        tester.TapAt(new Offset(10.0, 10.0));
         tester.PumpAndSettle();
 
         // The date picker should be closed, the text value should be the same
@@ -2660,7 +2660,7 @@ public sealed class DatePickerDartParityTests : IDisposable
         var theme = new ThemeData(useMaterial3: false);
         PrepareDatePicker(tester, _ => { }, theme: theme);
 
-        Point center = tester.GetCenter(Find.Text("30"));
+        Offset center = tester.GetCenter(Find.Text("30"));
         TestGesture gesture = tester.CreateGesture(kind: PointerDeviceKind.Mouse);
         gesture.AddPointer();
         gesture.MoveTo(center);
@@ -2711,7 +2711,7 @@ public sealed class DatePickerDartParityTests : IDisposable
         var theme = new ThemeData(useMaterial3: false);
         PrepareDatePicker(tester, _ => { }, theme: theme);
 
-        Point center = tester.GetCenter(Find.Text("30"));
+        Offset center = tester.GetCenter(Find.Text("30"));
         TestGesture gesture = tester.CreateGesture(kind: PointerDeviceKind.Mouse);
         gesture.AddPointer();
         try
@@ -2749,7 +2749,7 @@ public sealed class DatePickerDartParityTests : IDisposable
         ShapeDecoration day30Decoration = FindDayDecoration(tester, "30")!;
         Assert.Equal(theme.ColorScheme.Primary, day30Decoration.Color);
 
-        Point center = tester.GetCenter(Find.Text("30"));
+        Offset center = tester.GetCenter(Find.Text("30"));
         TestGesture gesture = tester.CreateGesture(kind: PointerDeviceKind.Mouse);
         gesture.AddPointer();
         try
@@ -2815,7 +2815,7 @@ public sealed class DatePickerDartParityTests : IDisposable
         ShapeDecoration day30Decoration = FindDayDecoration(tester, "30")!;
         Assert.Equal(theme.ColorScheme.Primary, day30Decoration.Color);
 
-        Point center = tester.GetCenter(Find.Text("30"));
+        Offset center = tester.GetCenter(Find.Text("30"));
         TestGesture gesture = tester.CreateGesture(kind: PointerDeviceKind.Mouse);
         gesture.AddPointer();
         try

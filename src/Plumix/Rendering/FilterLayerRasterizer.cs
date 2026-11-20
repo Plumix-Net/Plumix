@@ -8,7 +8,7 @@ namespace Plumix.Rendering;
 
 internal static partial class FilterLayerRasterizer
 {
-    private static readonly Vector Dpi = new(96.0, 96.0);
+    private static readonly Offset Dpi = new(96.0, 96.0);
 
     internal static byte[] ApplyColorFilterForTests(
         IReadOnlyList<byte> pixels,
@@ -31,7 +31,7 @@ internal static partial class FilterLayerRasterizer
         }
 
         RasterFrame output = ApplyImageFilter(
-            new RasterFrame(pixels.ToArray(), width, height, new Rect(0.0, 0.0, width, height)),
+            new RasterFrame(pixels.ToArray(), width, height, DartGeometry.RectFromLTWH(0.0, 0.0, width, height)),
             imageFilter);
         return new FilterRasterResult(
             output.Pixels,
@@ -89,12 +89,12 @@ internal static partial class FilterLayerRasterizer
         DrawingContext context,
         Action<DrawingContext> drawChildren,
         ImageFilter imageFilter,
-        Point offset,
+        Offset offset,
         Rect bounds)
     {
         if (!CanRasterize(bounds))
         {
-            using (context.PushTransform(Matrix.CreateTranslation(offset.X, offset.Y)))
+            using (context.PushTransform(Matrix.CreateTranslation(offset.Dx, offset.Dy)))
             {
                 drawChildren(context);
             }
@@ -107,11 +107,11 @@ internal static partial class FilterLayerRasterizer
             RasterFrame frame = ApplyImageFilter(Rasterize(drawChildren, bounds), imageFilter);
             return DrawFrame(
                 context,
-                frame with { Bounds = new Rect(frame.Bounds.Position + offset, frame.Bounds.Size) });
+                frame with { Bounds = DartGeometry.RectFromOffsetAndSize(frame.Bounds.TopLeft + offset, frame.Bounds.Size) });
         }
         catch (InvalidOperationException)
         {
-            using (context.PushTransform(Matrix.CreateTranslation(offset.X, offset.Y)))
+            using (context.PushTransform(Matrix.CreateTranslation(offset.Dx, offset.Dy)))
             {
                 drawChildren(context);
             }
@@ -120,7 +120,7 @@ internal static partial class FilterLayerRasterizer
         }
         catch (NotSupportedException)
         {
-            using (context.PushTransform(Matrix.CreateTranslation(offset.X, offset.Y)))
+            using (context.PushTransform(Matrix.CreateTranslation(offset.Dx, offset.Dy)))
             {
                 drawChildren(context);
             }
@@ -198,8 +198,8 @@ internal static partial class FilterLayerRasterizer
     {
         return bounds.Width > 0.0
                && bounds.Height > 0.0
-               && double.IsFinite(bounds.X)
-               && double.IsFinite(bounds.Y)
+               && double.IsFinite(bounds.Left)
+               && double.IsFinite(bounds.Top)
                && double.IsFinite(bounds.Width)
                && double.IsFinite(bounds.Height);
     }
@@ -211,7 +211,7 @@ internal static partial class FilterLayerRasterizer
         var pixelSize = new PixelSize(width, height);
         using var target = new RenderTargetBitmap(pixelSize, Dpi);
         using (DrawingContext drawingContext = target.CreateDrawingContext())
-        using (drawingContext.PushTransform(Matrix.CreateTranslation(-bounds.X, -bounds.Y)))
+        using (drawingContext.PushTransform(Matrix.CreateTranslation(-bounds.Left, -bounds.Top)))
         {
             drawChildren(drawingContext);
         }
@@ -225,7 +225,7 @@ internal static partial class FilterLayerRasterizer
         {
             target.CopyPixels(framebuffer);
             byte[] pixels = CopyFromFramebuffer(framebuffer, width, height);
-            return new RasterFrame(pixels, width, height, new Rect(bounds.Position, new Size(width, height)));
+            return new RasterFrame(pixels, width, height, DartGeometry.RectFromOffsetAndSize(bounds.TopLeft, new Size(width, height)));
         }
     }
 
@@ -272,7 +272,7 @@ internal static partial class FilterLayerRasterizer
         {
             context.DrawImage(
                 bitmap,
-                new Rect(0.0, 0.0, frame.Width, frame.Height),
+                DartGeometry.RectFromLTWH(0.0, 0.0, frame.Width, frame.Height),
                 frame.Bounds);
         }
 
@@ -713,9 +713,9 @@ internal static partial class FilterLayerRasterizer
             output,
             width,
             height,
-            new Rect(
-                sourceFrame.Bounds.X - radiusX,
-                sourceFrame.Bounds.Y - radiusY,
+            DartGeometry.RectFromLTWH(
+                sourceFrame.Bounds.Left - radiusX,
+                sourceFrame.Bounds.Top - radiusY,
                 width,
                 height));
         return blur.Bounds.HasValue
@@ -764,9 +764,9 @@ internal static partial class FilterLayerRasterizer
             pixels,
             width,
             height,
-            new Rect(
-                frame.Bounds.X + sourceLeft,
-                frame.Bounds.Y + sourceTop,
+            DartGeometry.RectFromLTWH(
+                frame.Bounds.Left + sourceLeft,
+                frame.Bounds.Top + sourceTop,
                 width,
                 height));
     }
@@ -921,9 +921,9 @@ internal static partial class FilterLayerRasterizer
             output,
             width,
             height,
-            new Rect(
-                frame.Bounds.X - horizontalOffset,
-                frame.Bounds.Y - verticalOffset,
+            DartGeometry.RectFromLTWH(
+                frame.Bounds.Left - horizontalOffset,
+                frame.Bounds.Top - verticalOffset,
                 width,
                 height));
     }
@@ -948,19 +948,19 @@ internal static partial class FilterLayerRasterizer
 
         // The matrix is expressed in layer coordinates, like Dart's `ImageFilter.matrix`; the frame's
         // pixels start at its bounds' origin within the layer.
-        double frameX = frame.Bounds.X;
-        double frameY = frame.Bounds.Y;
-        Point[] corners =
+        double frameX = frame.Bounds.Left;
+        double frameY = frame.Bounds.Top;
+        Offset[] corners =
         [
-            transform.Transform(new Point(frameX, frameY)),
-            transform.Transform(new Point(frameX + frame.Width, frameY)),
-            transform.Transform(new Point(frameX, frameY + frame.Height)),
-            transform.Transform(new Point(frameX + frame.Width, frameY + frame.Height)),
+            transform.Transform(new Offset(frameX, frameY)),
+            transform.Transform(new Offset(frameX + frame.Width, frameY)),
+            transform.Transform(new Offset(frameX, frameY + frame.Height)),
+            transform.Transform(new Offset(frameX + frame.Width, frameY + frame.Height)),
         ];
-        double minimumX = corners.Min(static point => point.X);
-        double minimumY = corners.Min(static point => point.Y);
-        double maximumX = corners.Max(static point => point.X);
-        double maximumY = corners.Max(static point => point.Y);
+        double minimumX = corners.Min(static point => point.Dx);
+        double minimumY = corners.Min(static point => point.Dy);
+        double maximumX = corners.Max(static point => point.Dx);
+        double maximumY = corners.Max(static point => point.Dy);
         int width = Math.Max(1, (int)Math.Ceiling(maximumX - minimumX));
         int height = Math.Max(1, (int)Math.Ceiling(maximumY - minimumY));
         byte[] output = new byte[checked(width * height * 4)];
@@ -969,10 +969,10 @@ internal static partial class FilterLayerRasterizer
         {
             for (int x = 0; x < width; x++)
             {
-                Point source = inverse.Transform(new Point(x + minimumX + 0.5, y + minimumY + 0.5));
+                Offset source = inverse.Transform(new Offset(x + minimumX + 0.5, y + minimumY + 0.5));
                 int outputIndex = ((y * width) + x) * 4;
-                double sourceX = source.X - frameX - 0.5;
-                double sourceY = source.Y - frameY - 0.5;
+                double sourceX = source.Dx - frameX - 0.5;
+                double sourceY = source.Dy - frameY - 0.5;
                 if (interpolate)
                 {
                     SampleBilinear(frame, sourceX, sourceY, output, outputIndex);
@@ -988,7 +988,7 @@ internal static partial class FilterLayerRasterizer
             output,
             width,
             height,
-            new Rect(minimumX, minimumY, width, height));
+            DartGeometry.RectFromLTWH(minimumX, minimumY, width, height));
     }
 
     private static void SampleNearest(
@@ -1086,17 +1086,17 @@ internal static partial class FilterLayerRasterizer
         double M21,
         double M22)
     {
-        public Point Transform(Point point)
+        public Offset Transform(Offset point)
         {
-            double denominator = (M20 * point.X) + (M21 * point.Y) + M22;
+            double denominator = (M20 * point.Dx) + (M21 * point.Dy) + M22;
             if (Math.Abs(denominator) < 0.0000001)
             {
-                return new Point(double.NaN, double.NaN);
+                return new Offset(double.NaN, double.NaN);
             }
 
-            return new Point(
-                ((M00 * point.X) + (M01 * point.Y) + M02) / denominator,
-                ((M10 * point.X) + (M11 * point.Y) + M12) / denominator);
+            return new Offset(
+                ((M00 * point.Dx) + (M01 * point.Dy) + M02) / denominator,
+                ((M10 * point.Dx) + (M11 * point.Dy) + M12) / denominator);
         }
 
         public bool TryInvert(out Homography inverse)

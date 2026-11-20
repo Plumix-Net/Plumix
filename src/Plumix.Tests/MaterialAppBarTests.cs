@@ -135,8 +135,8 @@ public sealed class MaterialAppBarTests
         Assert.Equal(
             BoxConstraints.TightFor(height: 56).MaxHeight,
             layout.GetConstraintsForChild(new BoxConstraints(MaxWidth: 400, MaxHeight: 600)).MaxHeight);
-        Assert.Equal(new Point(0.0, -36.0), layout.GetPositionForChild(new Size(400, 20), new Size(400, 56)));
-        Assert.Equal(new Point(0.0, 0.0), layout.GetPositionForChild(new Size(400, 56), new Size(400, 56)));
+        Assert.Equal(new Offset(0.0, -36.0), layout.GetPositionForChild(new Size(400, 20), new Size(400, 56)));
+        Assert.Equal(new Offset(0.0, 0.0), layout.GetPositionForChild(new Size(400, 56), new Size(400, 56)));
         Assert.True(layout.ShouldRelayout(new ToolbarContainerLayout(64)));
         Assert.False(layout.ShouldRelayout(new ToolbarContainerLayout(56)));
     }
@@ -181,8 +181,8 @@ public sealed class MaterialAppBarTests
         RenderBox child = Assert.IsAssignableFrom<RenderBox>(titleBox.Child);
         Assert.Equal(60.0, child.Size.Height, 3);
         Assert.Equal(
-            titleBox.LocalToGlobal(default).Y + (titleBox.Size.Height / 2.0),
-            child.LocalToGlobal(default).Y + (child.Size.Height / 2.0),
+            titleBox.LocalToGlobal(default).Dy + (titleBox.Size.Height / 2.0),
+            child.LocalToGlobal(default).Dy + (child.Size.Height / 2.0),
             3);
     }
 

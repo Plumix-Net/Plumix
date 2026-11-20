@@ -90,7 +90,7 @@ public sealed class BottomSheetDemoPage : StatefulWidget
                 isScrollControlled: _scrollControlled,
                 showDragHandle: _showDragHandle,
                 useSafeArea: true,
-                anchorPoint: _anchorEnd ? new Avalonia.Point(double.MaxValue, 0) : null);
+                anchorPoint: _anchorEnd ? new Offset(double.MaxValue, 0) : null);
             if (Mounted) SetState(() => _lastResult = result ?? "dismissed");
         }
 

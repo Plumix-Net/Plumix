@@ -24,7 +24,7 @@ public sealed class HostPointerPacketEncoderTests
         var encoder = new HostPointerPacketEncoder();
 
         PointerData data = encoder.Encode(
-            new PointerDownEvent(3, PointerDeviceKind.Mouse, new Point(10, 20), PointerButtons.Primary), 5, Ratio);
+            new PointerDownEvent(3, PointerDeviceKind.Mouse, new Offset(10, 20), PointerButtons.Primary), 5, Ratio);
 
         Assert.Equal(PointerChange.Down, data.Change);
         Assert.Equal(5, data.ViewId);
@@ -40,11 +40,11 @@ public sealed class HostPointerPacketEncoderTests
     {
         var encoder = new HostPointerPacketEncoder();
         List<PointerEvent> events = RoundTrip(encoder,
-            new PointerDownEvent(7, PointerDeviceKind.Mouse, new Point(10, 10)),
-            new PointerMoveEvent(7, PointerDeviceKind.Mouse, new Point(11, 10)),
-            new PointerUpEvent(7, PointerDeviceKind.Mouse, new Point(11, 10)),
-            new PointerDownEvent(7, PointerDeviceKind.Mouse, new Point(10, 10)),
-            new PointerUpEvent(7, PointerDeviceKind.Mouse, new Point(10, 10)));
+            new PointerDownEvent(7, PointerDeviceKind.Mouse, new Offset(10, 10)),
+            new PointerMoveEvent(7, PointerDeviceKind.Mouse, new Offset(11, 10)),
+            new PointerUpEvent(7, PointerDeviceKind.Mouse, new Offset(11, 10)),
+            new PointerDownEvent(7, PointerDeviceKind.Mouse, new Offset(10, 10)),
+            new PointerUpEvent(7, PointerDeviceKind.Mouse, new Offset(10, 10)));
 
         Assert.All(events, @event => Assert.Equal(7, @event.Device));
         Assert.Equal(events[0].Pointer, events[1].Pointer);
@@ -60,14 +60,14 @@ public sealed class HostPointerPacketEncoderTests
 
         List<PointerEvent> events = RoundTrip(
             encoder,
-            new PointerHoverEvent(1, PointerDeviceKind.Mouse, new Point(4, 4)),
-            new PointerHoverEvent(1, PointerDeviceKind.Mouse, new Point(6, 5)),
-            new PointerDownEvent(1, PointerDeviceKind.Mouse, new Point(10, 10)),
-            new PointerMoveEvent(1, PointerDeviceKind.Mouse, new Point(13, 14)),
-            new PointerUpEvent(1, PointerDeviceKind.Mouse, new Point(20, 20)));
+            new PointerHoverEvent(1, PointerDeviceKind.Mouse, new Offset(4, 4)),
+            new PointerHoverEvent(1, PointerDeviceKind.Mouse, new Offset(6, 5)),
+            new PointerDownEvent(1, PointerDeviceKind.Mouse, new Offset(10, 10)),
+            new PointerMoveEvent(1, PointerDeviceKind.Mouse, new Offset(13, 14)),
+            new PointerUpEvent(1, PointerDeviceKind.Mouse, new Offset(20, 20)));
 
         Assert.Equal(
-            [default, new Point(2, 1), default, new Point(3, 4), default],
+            [default, new Offset(2, 1), default, new Offset(3, 4), default],
             events.Select(@event => @event.Delta));
         Assert.All(events, @event => Assert.Equal(5, @event.ViewId));
     }
@@ -79,9 +79,9 @@ public sealed class HostPointerPacketEncoderTests
 
         List<PointerEvent> events = RoundTrip(
             encoder,
-            new PointerHoverEvent(1, PointerDeviceKind.Mouse, new Point(4, 4)),
-            new PointerRemovedEvent(1, PointerDeviceKind.Mouse, new Point(4, 4)),
-            new PointerHoverEvent(1, PointerDeviceKind.Mouse, new Point(9, 9)));
+            new PointerHoverEvent(1, PointerDeviceKind.Mouse, new Offset(4, 4)),
+            new PointerRemovedEvent(1, PointerDeviceKind.Mouse, new Offset(4, 4)),
+            new PointerHoverEvent(1, PointerDeviceKind.Mouse, new Offset(9, 9)));
 
         Assert.Equal(default, events[2].Delta);
     }
@@ -92,8 +92,8 @@ public sealed class HostPointerPacketEncoderTests
         var encoder = new HostPointerPacketEncoder();
         bool? allowed = null;
         var scroll = new PointerScrollEvent(
-            position: new Point(1, 2),
-            scrollDelta: new Point(3, -4),
+            position: new Offset(1, 2),
+            scrollDelta: new Offset(3, -4),
             onRespond: allow => allowed = allow);
 
         PointerData data = encoder.Encode(scroll, 5, Ratio);
@@ -102,8 +102,8 @@ public sealed class HostPointerPacketEncoderTests
         back.Respond(allowPlatformDefault: true);
 
         Assert.Equal(PointerSignalKind.Scroll, data.SignalKind);
-        Assert.Equal(new Point(3, -4), back.ScrollDelta);
-        Assert.Equal(new Point(1, 2), back.Position);
+        Assert.Equal(new Offset(3, -4), back.ScrollDelta);
+        Assert.Equal(new Offset(1, 2), back.Position);
         Assert.True(allowed);
     }
 
@@ -114,15 +114,15 @@ public sealed class HostPointerPacketEncoderTests
 
         List<PointerEvent> events = RoundTrip(
             encoder,
-            new PointerPanZoomStartEvent(-1, new Point(5, 5)),
+            new PointerPanZoomStartEvent(-1, new Offset(5, 5)),
             new PointerPanZoomUpdateEvent(
-                -1, new Point(5, 5), pan: new Point(2, 3), panDelta: new Point(1, 1), scale: 1.5, rotation: 0.25),
-            new PointerPanZoomEndEvent(-1, new Point(5, 5)));
+                -1, new Offset(5, 5), pan: new Offset(2, 3), panDelta: new Offset(1, 1), scale: 1.5, rotation: 0.25),
+            new PointerPanZoomEndEvent(-1, new Offset(5, 5)));
 
         Assert.IsType<PointerPanZoomStartEvent>(events[0]);
         var update = Assert.IsType<PointerPanZoomUpdateEvent>(events[1]);
-        Assert.Equal(new Point(2, 3), update.Pan);
-        Assert.Equal(new Point(1, 1), update.PanDelta);
+        Assert.Equal(new Offset(2, 3), update.Pan);
+        Assert.Equal(new Offset(1, 1), update.PanDelta);
         Assert.Equal(1.5, update.Scale);
         Assert.Equal(0.25, update.Rotation);
         Assert.IsType<PointerPanZoomEndEvent>(events[2]);

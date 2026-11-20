@@ -99,10 +99,10 @@ internal sealed class DragTargetDemoContentState : State
             controller: _portalController,
             overlayChildBuilder: (_, info) =>
             {
-                Point origin = MatrixUtils.TransformPoint(info.ChildPaintTransform, new Point());
+                Offset origin = MatrixUtils.TransformPoint(info.ChildPaintTransform, new Offset());
                 return new Positioned(
-                    left: origin.X,
-                    top: origin.Y + info.ChildSize.Height + 8,
+                    left: origin.Dx,
+                    top: origin.Dy + info.ChildSize.Height + 8,
                     width: 220,
                     height: 72,
                     child: new TapRegion(
@@ -179,7 +179,7 @@ internal sealed class DragTargetDemoContentState : State
                 {
                     _acceptedCount += 1;
                     _status = $"{details.Data} dropped at "
-                              + $"({details.Offset.X:0}, {details.Offset.Y:0})";
+                              + $"({details.Offset.Dx:0}, {details.Offset.Dy:0})";
                 });
             },
             onLeave: data => SetStatus($"{data ?? "item"} left target"),

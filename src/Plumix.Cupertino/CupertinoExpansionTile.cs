@@ -186,10 +186,10 @@ public sealed class CupertinoExpansionTile : StatefulWidget
                 ?? throw new InvalidOperationException("The expansion-tile overlay is not mounted."));
             var headerBox = (RenderBox)(headerContext.FindRenderObject()
                 ?? throw new InvalidOperationException("The expansion-tile header has no render box."));
-            Point headerOffset = headerBox.LocalToGlobal(default, overlay);
+            Offset headerOffset = headerBox.LocalToGlobal(default, overlay);
             return new Positioned(
-                top: headerOffset.Y + 44.0,
-                left: headerOffset.X,
+                top: headerOffset.Dy + 44.0,
+                left: headerOffset.Dx,
                 child: new ConstrainedBox(
                     constraints: constraints,
                     child: new Visibility(

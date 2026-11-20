@@ -54,27 +54,27 @@ public sealed class MetaDataIndexedSemanticsTests
         metadata.Layout(BoxConstraints.TightFor(width: 40, height: 24));
 
         var deferred = new BoxHitTestResult();
-        Assert.False(metadata.HitTest(deferred, new Point(10, 10)));
+        Assert.False(metadata.HitTest(deferred, new Offset(10, 10)));
         Assert.Empty(deferred.Path);
 
         metadata.Behavior = HitTestBehavior.Translucent;
         var translucent = new BoxHitTestResult();
-        Assert.False(metadata.HitTest(translucent, new Point(10, 10)));
+        Assert.False(metadata.HitTest(translucent, new Offset(10, 10)));
         Assert.Same(metadata, Assert.Single(translucent.Path).Target);
 
         metadata.Behavior = HitTestBehavior.Opaque;
         var opaque = new BoxHitTestResult();
-        Assert.True(metadata.HitTest(opaque, new Point(10, 10)));
+        Assert.True(metadata.HitTest(opaque, new Offset(10, 10)));
         Assert.Same(metadata, Assert.Single(opaque.Path).Target);
 
         var outside = new BoxHitTestResult();
-        Assert.False(metadata.HitTest(outside, new Point(41, 10)));
+        Assert.False(metadata.HitTest(outside, new Offset(41, 10)));
         Assert.Empty(outside.Path);
 
         child.HitSelf = true;
         metadata.Behavior = HitTestBehavior.DeferToChild;
         var childHit = new BoxHitTestResult();
-        Assert.True(metadata.HitTest(childHit, new Point(10, 10)));
+        Assert.True(metadata.HitTest(childHit, new Offset(10, 10)));
         Assert.Collection(
             childHit.Path,
             entry => Assert.Same(child, entry.Target),
@@ -180,12 +180,12 @@ public sealed class MetaDataIndexedSemanticsTests
             Size = Constraints.Constrain(_size);
         }
 
-        protected override bool HitTestSelf(Point position)
+        protected override bool HitTestSelf(Offset position)
         {
             return HitSelf;
         }
 
-        public override void Paint(PaintingContext ctx, Point offset)
+        public override void Paint(PaintingContext ctx, Offset offset)
         {
         }
     }
@@ -206,7 +206,7 @@ public sealed class MetaDataIndexedSemanticsTests
             Size = Constraints.Constrain(_size);
         }
 
-        public override void Paint(PaintingContext ctx, Point offset)
+        public override void Paint(PaintingContext ctx, Offset offset)
         {
         }
 

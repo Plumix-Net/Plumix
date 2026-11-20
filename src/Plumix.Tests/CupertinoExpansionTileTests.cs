@@ -88,7 +88,7 @@ public sealed class CupertinoExpansionTileTests : IDisposable
             controller: controller)));
         harness.Pump(ViewSize);
 
-        Tap(harness.RenderView, new Point(160.0, 22.0), 811);
+        Tap(harness.RenderView, new Offset(160.0, 22.0), 811);
         harness.Pump(ViewSize);
         Assert.True(controller.IsExpanded);
         Assert.Equal(2, FindParagraphs(harness.RenderView, "Content").Count);
@@ -120,7 +120,7 @@ public sealed class CupertinoExpansionTileTests : IDisposable
             transitionMode: ExpansionTileTransitionMode.Scroll)));
         harness.Pump(ViewSize);
 
-        Tap(harness.RenderView, new Point(160.0, 22.0), 812);
+        Tap(harness.RenderView, new Offset(160.0, 22.0), 812);
         double now = AnimationPump.CurrentSeconds;
         AnimationPump.Prime();
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.125));
@@ -316,7 +316,7 @@ public sealed class CupertinoExpansionTileTests : IDisposable
         return null;
     }
 
-    private static void Tap(RenderView renderView, Point position, int pointer)
+    private static void Tap(RenderView renderView, Offset position, int pointer)
     {
         DateTime timestamp = DateTime.UtcNow;
         GestureBinding.Instance.HandlePointerEvent(

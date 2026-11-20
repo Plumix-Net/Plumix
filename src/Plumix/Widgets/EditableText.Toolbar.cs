@@ -745,7 +745,7 @@ public sealed partial class EditableText
         /// <summary>Shows the magnifier at <paramref name="positionToShow"/> if no magnifier
         /// exists, or moves the existing one there. Does nothing without a selection overlay.
         /// </summary>
-        public void ShowMagnifier(Point positionToShow)
+        public void ShowMagnifier(Offset positionToShow)
         {
             if (_selectionOverlay is null)
             {

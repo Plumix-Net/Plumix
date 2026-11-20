@@ -388,21 +388,21 @@ public sealed class CompositingLayerTests
         pipeline.FlushLayout(new Size(300, 200));
 
         Assert.Equal(new Size(32, 32), transform.Size);
-        var center = new Point(16, 16);
-        Point mappedCenter = MatrixUtils.TransformPoint(transform.DebugEffectiveTransform(), center);
-        Assert.Equal(center.X, mappedCenter.X, 6);
-        Assert.Equal(center.Y, mappedCenter.Y, 6);
+        var center = new Offset(16, 16);
+        Offset mappedCenter = MatrixUtils.TransformPoint(transform.DebugEffectiveTransform(), center);
+        Assert.Equal(center.Dx, mappedCenter.Dx, 6);
+        Assert.Equal(center.Dy, mappedCenter.Dy, 6);
 
-        Point mappedTopLeft = MatrixUtils.TransformPoint(transform.DebugEffectiveTransform(), new Point(0, 0));
-        Assert.Equal(32.0, mappedTopLeft.X, 6);
-        Assert.Equal(0.0, mappedTopLeft.Y, 6);
+        Offset mappedTopLeft = MatrixUtils.TransformPoint(transform.DebugEffectiveTransform(), new Offset(0, 0));
+        Assert.Equal(32.0, mappedTopLeft.Dx, 6);
+        Assert.Equal(0.0, mappedTopLeft.Dy, 6);
     }
 
     [Fact]
     public void RenderClipRect_ReusesItsClipLayer_AcrossPaints()
     {
         var leaf = new CompositingLeafRenderBox();
-        var clipper = new FixedRectClipper(new Rect(0, 0, 32, 32));
+        var clipper = new FixedRectClipper(DartGeometry.RectFromLTWH(0, 0, 32, 32));
         var clipRect = new RenderClipRect(leaf, clipper: clipper);
         var root = new RenderView(new FlutterView(new Size(800, 600)))
         {
@@ -419,9 +419,9 @@ public sealed class CompositingLayerTests
 
         Assert.Equal(1, leaf.PaintCount);
         var clipLayer = Assert.IsType<ClipRectLayer>(Assert.Single(pipeline.RootLayer.Children));
-        Assert.Equal(new Rect(0, 0, 32, 32), clipLayer.ClipRect);
+        Assert.Equal(DartGeometry.RectFromLTWH(0, 0, 32, 32), clipLayer.ClipRect);
 
-        clipper.Rect = new Rect(3, 5, 20, 12);
+        clipper.Rect = DartGeometry.RectFromLTWH(3, 5, 20, 12);
         pipeline.FlushCompositingBits();
         pipeline.FlushPaint();
         pipeline.CompositeFrame();
@@ -429,7 +429,7 @@ public sealed class CompositingLayerTests
         var updatedLayer = Assert.IsType<ClipRectLayer>(Assert.Single(pipeline.RootLayer.Children));
         Assert.Same(clipLayer, updatedLayer);
         Assert.Equal(2, leaf.PaintCount);
-        Assert.Equal(new Rect(3, 5, 20, 12), clipLayer.ClipRect);
+        Assert.Equal(DartGeometry.RectFromLTWH(3, 5, 20, 12), clipLayer.ClipRect);
     }
 
     [Fact]
@@ -578,10 +578,10 @@ public sealed class CompositingLayerTests
             Size = Constraints.Constrain(new Size(32, 32));
         }
 
-        public override void Paint(PaintingContext ctx, Point offset)
+        public override void Paint(PaintingContext ctx, Offset offset)
         {
             PaintCount += 1;
-            ctx.Canvas.DrawRectangle(Brushes.CadetBlue, null, new Rect(offset, Size));
+            ctx.Canvas.DrawRectangle(Brushes.CadetBlue, null, DartGeometry.RectFromOffsetAndSize(offset, Size));
         }
     }
 
@@ -597,10 +597,10 @@ public sealed class CompositingLayerTests
             Size = Constraints.Constrain(new Size(32, 32));
         }
 
-        public override void Paint(PaintingContext ctx, Point offset)
+        public override void Paint(PaintingContext ctx, Offset offset)
         {
             PaintCount += 1;
-            ctx.Canvas.DrawRectangle(Brushes.CadetBlue, null, new Rect(offset, Size));
+            ctx.Canvas.DrawRectangle(Brushes.CadetBlue, null, DartGeometry.RectFromOffsetAndSize(offset, Size));
         }
     }
 
@@ -613,7 +613,7 @@ public sealed class CompositingLayerTests
             Size = Constraints.Constrain(new Size(32, 32));
         }
 
-        public override void Paint(PaintingContext ctx, Point offset)
+        public override void Paint(PaintingContext ctx, Offset offset)
         {
         }
     }
@@ -634,7 +634,7 @@ public sealed class CompositingLayerTests
             MarkNeedsPaint();
         }
 
-        public override void Paint(PaintingContext ctx, Point offset)
+        public override void Paint(PaintingContext ctx, Offset offset)
         {
             PaintCount += 1;
             base.Paint(ctx, offset);
@@ -655,10 +655,10 @@ public sealed class CompositingLayerTests
             MarkNeedsPaint();
         }
 
-        public override void Paint(PaintingContext ctx, Point offset)
+        public override void Paint(PaintingContext ctx, Offset offset)
         {
             PaintCount += 1;
-            ctx.Canvas.DrawRectangle(Brushes.Transparent, null, new Rect(offset, Size));
+            ctx.Canvas.DrawRectangle(Brushes.Transparent, null, DartGeometry.RectFromOffsetAndSize(offset, Size));
             base.Paint(ctx, offset);
         }
     }
@@ -694,7 +694,7 @@ public sealed class CompositingLayerTests
             layer.DebugCreator = LayerUpdateCount;
         }
 
-        public override void Paint(PaintingContext ctx, Point offset)
+        public override void Paint(PaintingContext ctx, Offset offset)
         {
             PaintCount += 1;
             base.Paint(ctx, offset);
@@ -730,7 +730,7 @@ public sealed class CompositingLayerTests
 
         public override bool IsRepaintBoundary => _isBoundary;
 
-        public override void Paint(PaintingContext ctx, Point offset)
+        public override void Paint(PaintingContext ctx, Offset offset)
         {
             PaintCount += 1;
             base.Paint(ctx, offset);

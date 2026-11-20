@@ -194,7 +194,7 @@ public sealed class Dismissible : StatefulWidget
 
         private readonly AnimationController _moveController = new(duration: DefaultMovementDuration);
         private readonly LabeledGlobalKey<State> _contentKey = new("Dismissible");
-        private Animation<Vector> _moveAnimation = null!;
+        private Animation<Offset> _moveAnimation = null!;
         private AnimationController? _resizeController;
         private MappedDoubleAnimation? _resizeAnimation;
         private double _dragExtent;
@@ -424,8 +424,8 @@ public sealed class Dismissible : StatefulWidget
             }
 
             double flingVelocity = DirectionIsXAxis
-                ? details.Velocity.PixelsPerSecond.X
-                : details.Velocity.PixelsPerSecond.Y;
+                ? details.Velocity.PixelsPerSecond.Dx
+                : details.Velocity.PixelsPerSecond.Dy;
             switch (DescribeFlingGesture(details.Velocity))
             {
                 case FlingGestureKind.Forward:
@@ -465,8 +465,8 @@ public sealed class Dismissible : StatefulWidget
                 return FlingGestureKind.None;
             }
 
-            double velocityX = velocity.PixelsPerSecond.X;
-            double velocityY = velocity.PixelsPerSecond.Y;
+            double velocityX = velocity.PixelsPerSecond.Dx;
+            double velocityY = velocity.PixelsPerSecond.Dy;
             DismissDirection flingDirection;
             if (DirectionIsXAxis)
             {
@@ -625,16 +625,16 @@ public sealed class Dismissible : StatefulWidget
         private void UpdateMoveAnimation()
         {
             double end = Math.Sign(_dragExtent);
-            Vector target = DirectionIsXAxis
-                ? new Vector(end, CurrentWidget.CrossAxisEndOffset)
-                : new Vector(CurrentWidget.CrossAxisEndOffset, end);
+            Offset target = DirectionIsXAxis
+                ? new Offset(end, CurrentWidget.CrossAxisEndOffset)
+                : new Offset(CurrentWidget.CrossAxisEndOffset, end);
             _moveAnimation = new DismissibleMoveAnimation(_moveController, target);
         }
     }
 
-    private sealed class DismissibleMoveAnimation(AnimationController parent, Vector end) : Animation<Vector>
+    private sealed class DismissibleMoveAnimation(AnimationController parent, Offset end) : Animation<Offset>
     {
-        public override Vector Value => new(end.X * parent.Value, end.Y * parent.Value);
+        public override Offset Value => new(end.Dx * parent.Value, end.Dy * parent.Value);
 
         public override AnimationStatus Status => parent.Status;
 
@@ -652,7 +652,7 @@ public sealed class Dismissible : StatefulWidget
 
     private sealed class DismissibleClipper : CustomClipper<Rect>
     {
-        public DismissibleClipper(Axis axis, Animation<Vector> moveAnimation) : base(moveAnimation)
+        public DismissibleClipper(Axis axis, Animation<Offset> moveAnimation) : base(moveAnimation)
         {
             Axis = axis;
             MoveAnimation = moveAnimation;
@@ -660,22 +660,22 @@ public sealed class Dismissible : StatefulWidget
 
         public Axis Axis { get; }
 
-        public Animation<Vector> MoveAnimation { get; }
+        public Animation<Offset> MoveAnimation { get; }
 
         public override Rect GetClip(Size size)
         {
             if (Axis == Axis.Horizontal)
             {
-                double offset = MoveAnimation.Value.X * size.Width;
+                double offset = MoveAnimation.Value.Dx * size.Width;
                 return offset < 0.0
-                    ? new Rect(size.Width + offset, 0.0, -offset, size.Height)
-                    : new Rect(0.0, 0.0, offset, size.Height);
+                    ? DartGeometry.RectFromLTWH(size.Width + offset, 0.0, -offset, size.Height)
+                    : DartGeometry.RectFromLTWH(0.0, 0.0, offset, size.Height);
             }
 
-            double verticalOffset = MoveAnimation.Value.Y * size.Height;
+            double verticalOffset = MoveAnimation.Value.Dy * size.Height;
             return verticalOffset < 0.0
-                ? new Rect(0.0, size.Height + verticalOffset, size.Width, -verticalOffset)
-                : new Rect(0.0, 0.0, size.Width, verticalOffset);
+                ? DartGeometry.RectFromLTWH(0.0, size.Height + verticalOffset, size.Width, -verticalOffset)
+                : DartGeometry.RectFromLTWH(0.0, 0.0, size.Width, verticalOffset);
         }
 
         public override Rect GetApproximateClipRect(Size size) => GetClip(size);

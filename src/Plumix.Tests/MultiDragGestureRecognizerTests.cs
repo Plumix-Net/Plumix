@@ -60,10 +60,10 @@ public sealed class MultiDragGestureRecognizerTests
                          })
                 {
                     binding.HandlePointerEvent(pipeline.Root, new PointerDownEvent(
-                        pointer, kind, new Point(20, 20), buttons, DateTime.UtcNow));
+                        pointer, kind, new Offset(20, 20), buttons, DateTime.UtcNow));
                     timers.Elapse(TimeSpan.FromMilliseconds(500));
                     binding.HandlePointerEvent(pipeline.Root, new PointerUpEvent(
-                        pointer++, kind, new Point(20, 20), PointerButtons.None, DateTime.UtcNow));
+                        pointer++, kind, new Offset(20, 20), PointerButtons.None, DateTime.UtcNow));
                 }
             }
 
@@ -90,16 +90,16 @@ public sealed class MultiDragGestureRecognizerTests
         try
         {
             DateTime now = DateTime.UtcNow;
-            Down(binding, pipeline, 11, new Point(10, 10), now);
-            Move(binding, pipeline, 11, new Point(20, 20), now);
-            Up(binding, pipeline, 11, new Point(20, 20), now);
+            Down(binding, pipeline, 11, new Offset(10, 10), now);
+            Move(binding, pipeline, 11, new Offset(20, 20), now);
+            Up(binding, pipeline, 11, new Offset(20, 20), now);
             Assert.Null(drag);
-            Down(binding, pipeline, 12, new Point(10, 10), now);
+            Down(binding, pipeline, 12, new Offset(10, 10), now);
             Assert.NotNull(drag);
             Assert.Null(drag.Updates[0].PrimaryDelta);
             Assert.Null(drag.Updates[0].Kind);
             binding.HandlePointerEvent(pipeline.Root, new PointerCancelEvent(
-                12, PointerDeviceKind.Touch, new Point(10, 10), PointerButtons.None, now));
+                12, PointerDeviceKind.Touch, new Offset(10, 10), PointerButtons.None, now));
             Assert.Equal(1, drag.Cancels);
             Assert.Equal(0, drag.Ends);
         }
@@ -134,19 +134,19 @@ public sealed class MultiDragGestureRecognizerTests
             var pipeline = BuildPipeline(listener);
             DateTime now = DateTime.UtcNow;
 
-            Down(binding, pipeline, pointer: 1, new Point(10, 10), now);
-            Down(binding, pipeline, pointer: 2, new Point(20, 20), now);
+            Down(binding, pipeline, pointer: 1, new Offset(10, 10), now);
+            Down(binding, pipeline, pointer: 2, new Offset(20, 20), now);
             Assert.Equal(2, drags.Count);
-            Assert.Equal(new Point(10, 10), drags[0].StartPosition);
-            Assert.Equal(new Point(20, 20), drags[1].StartPosition);
-            Assert.Equal(default(Point), drags[0].Updates.Single().Delta);
+            Assert.Equal(new Offset(10, 10), drags[0].StartPosition);
+            Assert.Equal(new Offset(20, 20), drags[1].StartPosition);
+            Assert.Equal(default(Offset), drags[0].Updates.Single().Delta);
 
-            Move(binding, pipeline, pointer: 1, new Point(16, 14), now);
-            Assert.Equal(new Point(6, 4), drags[0].Updates[1].Delta);
+            Move(binding, pipeline, pointer: 1, new Offset(16, 14), now);
+            Assert.Equal(new Offset(6, 4), drags[0].Updates[1].Delta);
             Assert.Single(drags[1].Updates);
 
-            Up(binding, pipeline, pointer: 1, new Point(16, 14), now);
-            Up(binding, pipeline, pointer: 2, new Point(20, 20), now);
+            Up(binding, pipeline, pointer: 1, new Offset(16, 14), now);
+            Up(binding, pipeline, pointer: 2, new Offset(20, 20), now);
             Assert.Equal(1, drags[0].Ends);
             Assert.Equal(1, drags[1].Ends);
             Assert.Equal(0, drags.Sum(drag => drag.Cancels));
@@ -197,24 +197,24 @@ public sealed class MultiDragGestureRecognizerTests
             var pipeline = BuildPipeline(listener);
             DateTime now = DateTime.UtcNow;
 
-            Down(binding, pipeline, pointer: 1, new Point(10, 10), now);
+            Down(binding, pipeline, pointer: 1, new Offset(10, 10), now);
             Assert.Empty(horizontalDrags);
             Assert.Empty(verticalDrags);
 
-            Move(binding, pipeline, pointer: 1, new Point(14, 40), now);
+            Move(binding, pipeline, pointer: 1, new Offset(14, 40), now);
             RecordingDrag verticalDrag = Assert.Single(verticalDrags);
             Assert.Empty(horizontalDrags);
-            Assert.Equal(new Point(10, 10), verticalDrag.StartPosition);
-            Assert.Equal(new Point(4, 30), verticalDrag.Updates.Single().Delta);
-            Up(binding, pipeline, pointer: 1, new Point(14, 40), now);
+            Assert.Equal(new Offset(10, 10), verticalDrag.StartPosition);
+            Assert.Equal(new Offset(4, 30), verticalDrag.Updates.Single().Delta);
+            Up(binding, pipeline, pointer: 1, new Offset(14, 40), now);
             Assert.Equal(1, verticalDrag.Ends);
 
-            Down(binding, pipeline, pointer: 2, new Point(10, 10), now);
-            Move(binding, pipeline, pointer: 2, new Point(40, 14), now);
+            Down(binding, pipeline, pointer: 2, new Offset(10, 10), now);
+            Move(binding, pipeline, pointer: 2, new Offset(40, 14), now);
             RecordingDrag horizontalDrag = Assert.Single(horizontalDrags);
             Assert.Single(verticalDrags);
-            Assert.Equal(new Point(30, 4), horizontalDrag.Updates.Single().Delta);
-            Up(binding, pipeline, pointer: 2, new Point(40, 14), now);
+            Assert.Equal(new Offset(30, 4), horizontalDrag.Updates.Single().Delta);
+            Up(binding, pipeline, pointer: 2, new Offset(40, 14), now);
             Assert.Equal(1, horizontalDrag.Ends);
         }
         finally
@@ -250,10 +250,10 @@ public sealed class MultiDragGestureRecognizerTests
             var pipeline = BuildPipeline(listener);
             DateTime now = DateTime.UtcNow;
 
-            Down(binding, pipeline, pointer: 3, new Point(10, 10), now);
-            Move(binding, pipeline, pointer: 3, new Point(40, 10), now);
+            Down(binding, pipeline, pointer: 3, new Offset(10, 10), now);
+            Move(binding, pipeline, pointer: 3, new Offset(40, 10), now);
             timers.Elapse(TimeSpan.FromSeconds(2));
-            Up(binding, pipeline, pointer: 3, new Point(40, 10), now);
+            Up(binding, pipeline, pointer: 3, new Offset(40, 10), now);
 
             Assert.Equal(0, starts);
         }
@@ -290,18 +290,18 @@ public sealed class MultiDragGestureRecognizerTests
             var pipeline = BuildPipeline(listener);
             DateTime now = DateTime.UtcNow;
 
-            Down(binding, pipeline, pointer: 4, new Point(10, 10), now);
-            Move(binding, pipeline, pointer: 4, new Point(15, 10), now);
+            Down(binding, pipeline, pointer: 4, new Offset(10, 10), now);
+            Move(binding, pipeline, pointer: 4, new Offset(15, 10), now);
             Assert.Empty(drags);
 
             timers.Elapse(TimeSpan.FromSeconds(1));
             Assert.Single(drags);
-            Assert.Equal(new Point(10, 10), drags[0].StartPosition);
-            Assert.Equal(new Point(5, 0), drags[0].Updates.Single().Delta);
+            Assert.Equal(new Offset(10, 10), drags[0].StartPosition);
+            Assert.Equal(new Offset(5, 0), drags[0].Updates.Single().Delta);
 
-            Move(binding, pipeline, pointer: 4, new Point(45, 10), now);
-            Assert.Equal(new Point(30, 0), drags[0].Updates[1].Delta);
-            Up(binding, pipeline, pointer: 4, new Point(45, 10), now);
+            Move(binding, pipeline, pointer: 4, new Offset(45, 10), now);
+            Assert.Equal(new Offset(30, 0), drags[0].Updates[1].Delta);
+            Up(binding, pipeline, pointer: 4, new Offset(45, 10), now);
             Assert.Equal(1, drags[0].Ends);
         }
         finally
@@ -315,7 +315,7 @@ public sealed class MultiDragGestureRecognizerTests
         GestureBinding binding,
         TestPipeline pipeline,
         int pointer,
-        Point position,
+        Offset position,
         DateTime timestamp) => binding.HandlePointerEvent(
             pipeline.Root,
             new PointerDownEvent(
@@ -329,7 +329,7 @@ public sealed class MultiDragGestureRecognizerTests
         GestureBinding binding,
         TestPipeline pipeline,
         int pointer,
-        Point position,
+        Offset position,
         DateTime timestamp) => binding.HandlePointerEvent(
             pipeline.Root,
             new PointerMoveEvent(
@@ -343,7 +343,7 @@ public sealed class MultiDragGestureRecognizerTests
         GestureBinding binding,
         TestPipeline pipeline,
         int pointer,
-        Point position,
+        Offset position,
         DateTime timestamp) => binding.HandlePointerEvent(
             pipeline.Root,
             new PointerUpEvent(
@@ -367,12 +367,12 @@ public sealed class MultiDragGestureRecognizerTests
 
     private sealed class RecordingDrag : Drag
     {
-        public RecordingDrag(Point startPosition)
+        public RecordingDrag(Offset startPosition)
         {
             StartPosition = startPosition;
         }
 
-        public Point StartPosition { get; }
+        public Offset StartPosition { get; }
 
         public List<DragUpdateDetails> Updates { get; } = [];
 
@@ -403,9 +403,9 @@ public sealed class MultiDragGestureRecognizerTests
             Size = Constraints.Constrain(_desiredSize);
         }
 
-        protected override bool HitTestSelf(Point position) => _hitSelf;
+        protected override bool HitTestSelf(Offset position) => _hitSelf;
 
-        public override void Paint(PaintingContext context, Point offset)
+        public override void Paint(PaintingContext context, Offset offset)
         {
         }
     }

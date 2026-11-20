@@ -734,14 +734,14 @@ internal sealed class AvaloniaAnchoredWindow
     public BaseWindowController Parent => _parent;
 
     /// <summary>The window's top-left corner in the parent's client area, in logical pixels.</summary>
-    public Point OffsetFromParent
+    public Offset OffsetFromParent
     {
         get
         {
-            PixelPoint parentOrigin = _parentWindow.PointToScreen(new Point(0, 0));
+            PixelPoint parentOrigin = _parentWindow.PointToScreen(new Offset(0, 0));
             PixelPoint position = _native.Window.Position;
             double ratio = _parentWindow.RenderScaling;
-            return new Point((position.X - parentOrigin.X) / ratio, (position.Y - parentOrigin.Y) / ratio);
+            return new Offset((position.X - parentOrigin.X) / ratio, (position.Y - parentOrigin.Y) / ratio);
         }
     }
 
@@ -765,28 +765,28 @@ internal sealed class AvaloniaAnchoredWindow
         }
 
         double ratio = _parentWindow.RenderScaling;
-        PixelPoint parentOrigin = _parentWindow.PointToScreen(new Point(0, 0));
+        PixelPoint parentOrigin = _parentWindow.PointToScreen(new Offset(0, 0));
         Size parentClient = _parentWindow.ClientSize;
-        var parentRect = new Rect(
+        var parentRect = DartGeometry.RectFromLTWH(
             parentOrigin.X,
             parentOrigin.Y,
             parentClient.Width * ratio,
             parentClient.Height * ratio);
         Screen? screen = _parentWindow.Screens.ScreenFromWindow(_parentWindow);
         Rect displayRect = screen is null
-            ? new Rect(-1e9, -1e9, 2e9, 2e9)
-            : new Rect(
+            ? DartGeometry.RectFromLTWH(-1e9, -1e9, 2e9, 2e9)
+            : DartGeometry.RectFromLTWH(
                 screen.WorkingArea.X,
                 screen.WorkingArea.Y,
                 screen.WorkingArea.Width,
                 screen.WorkingArea.Height);
-        var anchorRect = new Rect(
+        var anchorRect = DartGeometry.RectFromLTWH(
             parentRect.Left + _anchorRect.Left * ratio,
             parentRect.Top + _anchorRect.Top * ratio,
             _anchorRect.Width * ratio,
             _anchorRect.Height * ratio);
         WindowPositioner positioner = _positioner.CopyWith(
-            offset: new Point(_positioner.Offset.X * ratio, _positioner.Offset.Y * ratio));
+            offset: new Offset(_positioner.Offset.Dx * ratio, _positioner.Offset.Dy * ratio));
         Size childClient = _native.ContentSize;
         var childSize = new Size(childClient.Width * ratio, childClient.Height * ratio);
         Rect placed = positioner.PlaceWindow(
@@ -904,7 +904,7 @@ internal sealed class AvaloniaPopupWindowController : PopupWindowController, IAv
         }
     }
 
-    public override Point OffsetFromParent
+    public override Offset OffsetFromParent
     {
         get
         {

@@ -18,7 +18,7 @@ internal sealed class FixedSizeSlidingTransition : AnimatedWidget
 {
     public FixedSizeSlidingTransition(
         bool isLtr,
-        Animation<Point> offsetAnimation,
+        Animation<Offset> offsetAnimation,
         double width,
         double height,
         Widget child) : base(offsetAnimation)
@@ -41,16 +41,16 @@ internal sealed class FixedSizeSlidingTransition : AnimatedWidget
     /// The animated offset from the top-leading corner of the stack. When <see cref="IsLtr"/> is
     /// false, the x-axis runs right to left starting at the stack's top right corner.
     /// </summary>
-    public Animation<Point> OffsetAnimation { get; }
+    public Animation<Offset> OffsetAnimation { get; }
 
     public Widget Child { get; }
 
     public override Widget Build(BuildContext context)
     {
         return new Positioned(
-            top: OffsetAnimation.Value.Y,
-            left: IsLtr ? OffsetAnimation.Value.X : null,
-            right: IsLtr ? null : OffsetAnimation.Value.X,
+            top: OffsetAnimation.Value.Dy,
+            left: IsLtr ? OffsetAnimation.Value.Dx : null,
+            right: IsLtr ? null : OffsetAnimation.Value.Dx,
             width: Width,
             height: Height,
             child: Child);
@@ -321,20 +321,20 @@ internal sealed class NavigationBarComponentsTransition
 
     private static Rect ExpandToInclude(Rect a, Rect b)
     {
-        double left = Math.Min(a.X, b.X);
-        double top = Math.Min(a.Y, b.Y);
+        double left = Math.Min(a.Left, b.Left);
+        double top = Math.Min(a.Top, b.Top);
         double right = Math.Max(a.Right, b.Right);
         double bottom = Math.Max(a.Bottom, b.Bottom);
-        return new Rect(left, top, right - left, bottom - top);
+        return DartGeometry.RectFromLTWH(left, top, right - left, bottom - top);
     }
 
-    private static RelativeRect Shift(RelativeRect rect, Point offset)
+    private static RelativeRect Shift(RelativeRect rect, Offset offset)
     {
         return new RelativeRect(
-            rect.Left + offset.X,
-            rect.Top + offset.Y,
-            rect.Right - offset.X,
-            rect.Bottom - offset.Y);
+            rect.Left + offset.Dx,
+            rect.Top + offset.Dy,
+            rect.Right - offset.Dx,
+            rect.Bottom - offset.Dy);
     }
 
     /// <summary>
@@ -345,7 +345,7 @@ internal sealed class NavigationBarComponentsTransition
     {
         var componentBox = (RenderBox)key.CurrentContext!.FindRenderObject()!;
         return RelativeRect.FromRect(
-            new Rect(componentBox.LocalToGlobal(new Point(0.0, 0.0), ancestor: from), componentBox.Size),
+            DartGeometry.RectFromOffsetAndSize(componentBox.LocalToGlobal(new Offset(0.0, 0.0), ancestor: from), componentBox.Size),
             TransitionBox);
     }
 
@@ -370,23 +370,23 @@ internal sealed class NavigationBarComponentsTransition
 
         // The animation moves the fromBox so its anchor (left-center or right-center depending on
         // the writing direction) aligns with toBox's anchor.
-        var fromAnchorLocal = new Point(isLtr ? 0.0 : fromBox.Size.Width, fromBox.Size.Height / 2);
-        var toAnchorLocal = new Point(isLtr ? 0.0 : toBox.Size.Width, toBox.Size.Height / 2);
-        Point fromAnchorInFromBox = fromBox.LocalToGlobal(fromAnchorLocal, ancestor: fromNavBarBox);
-        Point toAnchorInToBox = toBox.LocalToGlobal(toAnchorLocal, ancestor: toNavBarBox);
+        var fromAnchorLocal = new Offset(isLtr ? 0.0 : fromBox.Size.Width, fromBox.Size.Height / 2);
+        var toAnchorLocal = new Offset(isLtr ? 0.0 : toBox.Size.Width, toBox.Size.Height / 2);
+        Offset fromAnchorInFromBox = fromBox.LocalToGlobal(fromAnchorLocal, ancestor: fromNavBarBox);
+        Offset toAnchorInToBox = toBox.LocalToGlobal(toAnchorLocal, ancestor: toNavBarBox);
 
         // The offset to move fromAnchor to toAnchor, in transitionBox's top-leading coordinates.
-        Point translation = isLtr
+        Offset translation = isLtr
             ? toAnchorInToBox - fromAnchorInFromBox
-            : new Point(toNavBarBox.Size.Width - toAnchorInToBox.X, toAnchorInToBox.Y)
-              - new Point(fromNavBarBox.Size.Width - fromAnchorInFromBox.X, fromAnchorInFromBox.Y);
+            : new Offset(toNavBarBox.Size.Width - toAnchorInToBox.Dx, toAnchorInToBox.Dy)
+              - new Offset(fromNavBarBox.Size.Width - fromAnchorInFromBox.Dx, fromAnchorInFromBox.Dy);
 
         RelativeRect fromBoxMargin = PositionInTransitionBox(fromKey, from: fromNavBarBox);
-        var fromOriginInTransitionBox = new Point(
+        var fromOriginInTransitionBox = new Offset(
             isLtr ? fromBoxMargin.Left : fromBoxMargin.Right,
             fromBoxMargin.Top);
 
-        var anchorMovementInTransitionBox = new Plumix.Tween<Point>(
+        var anchorMovementInTransitionBox = new Plumix.Tween<Offset>(
             begin: fromOriginInTransitionBox,
             end: fromOriginInTransitionBox + translation);
 
@@ -433,7 +433,7 @@ internal sealed class NavigationBarComponentsTransition
 
             var positionTween = new RelativeRectTween(
                 begin: from,
-                end: Shift(from, new Point(ForwardDirection * -BottomNavBarBox.Size.Width, 0.0)));
+                end: Shift(from, new Offset(ForwardDirection * -BottomNavBarBox.Size.Width, 0.0)));
 
             return new PositionedTransition(
                 rect: pageTransitionAnimation.Drive(positionTween),
@@ -499,7 +499,7 @@ internal sealed class NavigationBarComponentsTransition
             // Transition away by sliding horizontally to the leading edge off of the screen.
             var positionTween = new RelativeRectTween(
                 begin: from,
-                end: Shift(from, new Point(ForwardDirection * (-BottomNavBarBox.Size.Width / 2.0), 0.0)));
+                end: Shift(from, new Offset(ForwardDirection * (-BottomNavBarBox.Size.Width / 2.0), 0.0)));
 
             return new PositionedTransition(
                 rect: Animation.Drive(positionTween),
@@ -608,7 +608,7 @@ internal sealed class NavigationBarComponentsTransition
 
             var positionTween = new RelativeRectTween(
                 begin: from,
-                end: Shift(from, new Point(ForwardDirection * BottomNavBarBox.Size.Width / 4.0, 0.0)));
+                end: Shift(from, new Offset(ForwardDirection * BottomNavBarBox.Size.Width / 4.0, 0.0)));
 
             // Just shift slightly towards the trailing edge instead of moving to the back label
             // position.
@@ -653,7 +653,7 @@ internal sealed class NavigationBarComponentsTransition
             // Shift in from the leading edge of the screen.
             var positionTween = new RelativeRectTween(
                 begin: from,
-                end: Shift(from, new Point(ForwardDirection * -BottomNavBarBox.Size.Width, 0.0)));
+                end: Shift(from, new Offset(ForwardDirection * -BottomNavBarBox.Size.Width, 0.0)));
 
             Widget child = bottomNavBarBottom.Child;
             Curve animationCurve = Animation.Status == AnimationStatus.Forward
@@ -695,7 +695,7 @@ internal sealed class NavigationBarComponentsTransition
             RelativeRect to = PositionInTransitionBox(TopComponents.NavBarBoxKey, from: TopNavBarBox);
 
             var positionTween = new RelativeRectTween(
-                begin: Shift(to, new Point(ForwardDirection * TopNavBarBox.Size.Width, 0.0)),
+                begin: Shift(to, new Offset(ForwardDirection * TopNavBarBox.Size.Width, 0.0)),
                 end: to);
 
             return new PositionedTransition(
@@ -763,7 +763,7 @@ internal sealed class NavigationBarComponentsTransition
                     (RenderBox)TopComponents.BackChevronKey.CurrentContext!.FindRenderObject()!;
                 from = Shift(
                     to,
-                    new Point(ForwardDirection * topBackChevronBox.Size.Width * 2.0, 0.0));
+                    new Offset(ForwardDirection * topBackChevronBox.Size.Width * 2.0, 0.0));
                 child = new ScaleTransition(
                     scale: RouteAnimation.Drive(new CurveTween(effectiveScaleCurve)),
                     child: child);
@@ -879,11 +879,11 @@ internal sealed class NavigationBarComponentsTransition
 
             // Anchor is the top-leading point of toBox, in transition box's top-leading coordinate
             // space.
-            var toAnchorInTransitionBox = new Point(isLtr ? to.Left : to.Right, to.Top);
+            var toAnchorInTransitionBox = new Offset(isLtr ? to.Left : to.Right, to.Top);
 
             // Shift in from the trailing edge of the screen.
-            var anchorMovementInTransitionBox = new Plumix.Tween<Point>(
-                begin: new Point(
+            var anchorMovementInTransitionBox = new Plumix.Tween<Offset>(
+                begin: new Offset(
                     // The "width / 2" here makes the middle widget's horizontal center on the
                     // trailing edge of the top nav bar.
                     TopNavBarBox.Size.Width - (toBox.Size.Width / 2),
@@ -931,7 +931,7 @@ internal sealed class NavigationBarComponentsTransition
 
             // Shift in from the trailing edge of the screen.
             var positionTween = new RelativeRectTween(
-                begin: Shift(to, new Point(ForwardDirection * TopNavBarBox.Size.Width, 0.0)),
+                begin: Shift(to, new Offset(ForwardDirection * TopNavBarBox.Size.Width, 0.0)),
                 end: to);
 
             Curve animationCurve = Animation.Status == AnimationStatus.Forward
@@ -966,7 +966,7 @@ internal sealed class NavigationBarComponentsTransition
             RelativeRect to = PositionInTransitionBox(TopComponents.NavBarBottomKey, from: TopNavBarBox);
             // Shift in from the trailing edge of the screen.
             var positionTween = new RelativeRectTween(
-                begin: Shift(to, new Point(ForwardDirection * TopNavBarBox.Size.Width, 0.0)),
+                begin: Shift(to, new Offset(ForwardDirection * TopNavBarBox.Size.Width, 0.0)),
                 end: to);
 
             Widget child = topNavBarBottom.Child;
@@ -1005,8 +1005,8 @@ internal static class NavBarTransitions
             Math.Max(begin!.Value.Size.Width, end!.Value.Size.Width),
             Math.Max(begin.Value.Size.Height, end.Value.Size.Height));
         return new Plumix.RectTween(
-            begin: new Rect(begin.Value.TopLeft, largestSize),
-            end: new Rect(end.Value.TopLeft, largestSize));
+            begin: DartGeometry.RectFromOffsetAndSize(begin.Value.TopLeft, largestSize),
+            end: DartGeometry.RectFromOffsetAndSize(end.Value.TopLeft, largestSize));
     }
 
     /// <summary>Dart's `_navBarHeroLaunchPadBuilder`.</summary>

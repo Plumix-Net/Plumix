@@ -82,7 +82,7 @@ internal sealed class DropdownMenuPainter : CustomPainter
         double clamped = Math.Clamp(resize, 0.0, 1.0);
         double topValue = top.Transform(clamped);
         double bottomValue = bottom.Transform(clamped);
-        return new Rect(0.0, topValue, size.Width, Math.Max(0.0, bottomValue - topValue));
+        return DartGeometry.RectFromLTWH(0.0, topValue, size.Width, Math.Max(0.0, bottomValue - topValue));
     }
 
     public override bool ShouldRepaint(CustomPainter oldDelegate)
@@ -430,13 +430,13 @@ internal sealed class DropdownMenuRouteLayout<T> : SingleChildLayoutDelegate
         return new BoxConstraints(MinWidth: width, MaxWidth: width, MaxHeight: maxHeight);
     }
 
-    public override Point GetPositionForChild(Size size, Size childSize)
+    public override Offset GetPositionForChild(Size size, Size childSize)
     {
         DropdownMenuLimits menuLimits = Route.GetMenuLimits(ButtonRect, size.Height, Route.SelectedIndex);
         double left = TextDirection == UI.TextDirection.Rtl
             ? Math.Clamp(ButtonRect.Right, 0.0, size.Width) - childSize.Width
             : Math.Clamp(ButtonRect.Left, 0.0, Math.Max(0.0, size.Width - childSize.Width));
-        return new Point(left, menuLimits.Top);
+        return new Offset(left, menuLimits.Top);
     }
 
     public override bool ShouldRelayout(SingleChildLayoutDelegate oldDelegate)
@@ -1458,8 +1458,8 @@ internal sealed class DropdownButtonState<T> : State<DropdownButton<T>>
             return;
         }
 
-        Point itemOrigin = itemBox.LocalToGlobal(default, navigator.Context.FindRenderObject());
-        var itemRect = new Rect(itemOrigin, itemBox.Size);
+        Offset itemOrigin = itemBox.LocalToGlobal(default, navigator.Context.FindRenderObject());
+        var itemRect = DartGeometry.RectFromOffsetAndSize(itemOrigin, itemBox.Size);
         var route = new DropdownRoute<T>(
             items: menuItems,
             buttonRect: menuMargin.Resolve(textDirection ?? TextDirection.Ltr).InflateRect(itemRect),

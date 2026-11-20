@@ -28,7 +28,7 @@ public sealed class OverflowBoxTests
 
         Assert.Equal(new Size(100, 60), overflow.Size);
         Assert.Equal(new Size(140, 70), child.Size);
-        Assert.Equal(new Point(-20, -5), ((BoxParentData)child.parentData!).offset);
+        Assert.Equal(new Offset(-20, -5), ((BoxParentData)child.parentData!).offset);
     }
 
     [Fact]
@@ -52,7 +52,7 @@ public sealed class OverflowBoxTests
 
         Assert.Equal(new Size(72, 44), overflow.Size);
         Assert.Equal(new Size(72, 44), child.Size);
-        Assert.Equal(new Point(0, 0), ((BoxParentData)child.parentData!).offset);
+        Assert.Equal(new Offset(0, 0), ((BoxParentData)child.parentData!).offset);
     }
 
     [Fact]
@@ -74,7 +74,7 @@ public sealed class OverflowBoxTests
 
         Assert.Equal(new Size(90, 44), sizedOverflow.Size);
         Assert.Equal(new Size(120, 92), child.Size);
-        Assert.Equal(new Point(-15, -24), ((BoxParentData)child.parentData!).offset);
+        Assert.Equal(new Offset(-15, -24), ((BoxParentData)child.parentData!).offset);
     }
 
     [Fact]
@@ -174,7 +174,7 @@ public sealed class OverflowBoxTests
             Size = Constraints.Constrain(_size);
         }
 
-        public override void Paint(PaintingContext ctx, Point offset)
+        public override void Paint(PaintingContext ctx, Offset offset)
         {
         }
     }

@@ -506,7 +506,7 @@ public class SceneBuilder
     /// </remarks>
     public virtual OpacityEngineLayer PushOpacity(
         int alpha,
-        Point offset = default,
+        Offset offset = default,
         OpacityEngineLayer? oldLayer = null)
     {
         DebugCheckCanBeUsedAsOldLayer(oldLayer, "pushOpacity");
@@ -542,7 +542,7 @@ public class SceneBuilder
     /// <remarks>Dart's <c>pushImageFilter</c>.</remarks>
     public virtual ImageFilterEngineLayer PushImageFilter(
         ImageFilter filter,
-        Point offset = default,
+        Offset offset = default,
         ImageFilterEngineLayer? oldLayer = null)
     {
         return PushImageFilter(filter, offset, bounds: null, oldLayer);
@@ -554,7 +554,7 @@ public class SceneBuilder
     /// </summary>
     internal ImageFilterEngineLayer PushImageFilter(
         ImageFilter filter,
-        Point offset,
+        Offset offset,
         Rect? bounds,
         ImageFilterEngineLayer? oldLayer)
     {
@@ -613,7 +613,7 @@ public class SceneBuilder
     /// <summary>Plumix-only: pushes the backend-geometry clip of a <see cref="Rendering.ClipGeometryLayer"/>.</summary>
     internal ClipGeometryEngineLayer PushClipGeometry(
         Geometry geometry,
-        Point geometryOffset,
+        Offset geometryOffset,
         Clip clipBehavior,
         ClipGeometryEngineLayer? oldLayer)
     {
@@ -684,7 +684,7 @@ public class SceneBuilder
     /// <summary>Adds a <see cref="Picture"/> to the scene, drawn at <paramref name="offset"/>.</summary>
     /// <remarks>Dart's <c>addPicture</c>; the raster-cache hints are recorded and otherwise unused.</remarks>
     public virtual void AddPicture(
-        Point offset,
+        Offset offset,
         Picture picture,
         bool isComplexHint = false,
         bool willChangeHint = false)
@@ -705,7 +705,7 @@ public class SceneBuilder
     /// </remarks>
     public virtual void AddTexture(
         int textureId,
-        Point offset = default,
+        Offset offset = default,
         double width = 0.0,
         double height = 0.0,
         bool freeze = false,
@@ -723,7 +723,7 @@ public class SceneBuilder
     /// <remarks>Dart's <c>addPlatformView</c>; no Plumix host embeds platform views (docs/ai/DIVERGENCES.md).</remarks>
     public virtual void AddPlatformView(
         int viewId,
-        Point offset = default,
+        Offset offset = default,
         double width = 0.0,
         double height = 0.0)
     {

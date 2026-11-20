@@ -103,12 +103,12 @@ public sealed class ColoredBoxTests
         coloredBox.Layout(BoxConstraints.Tight(new Size(20.0, 10.0)));
 
         var inside = new BoxHitTestResult();
-        Assert.True(coloredBox.HitTest(inside, new Point(0.0, 0.0)));
+        Assert.True(coloredBox.HitTest(inside, new Offset(0.0, 0.0)));
         Assert.Contains(inside.Path, entry => ReferenceEquals(entry.Target, coloredBox));
-        Assert.True(coloredBox.HitTest(new BoxHitTestResult(), new Point(19.999, 9.999)));
-        Assert.False(coloredBox.HitTest(new BoxHitTestResult(), new Point(20.0, 5.0)));
-        Assert.False(coloredBox.HitTest(new BoxHitTestResult(), new Point(5.0, 10.0)));
-        Assert.False(coloredBox.HitTest(new BoxHitTestResult(), new Point(-0.001, 5.0)));
+        Assert.True(coloredBox.HitTest(new BoxHitTestResult(), new Offset(19.999, 9.999)));
+        Assert.False(coloredBox.HitTest(new BoxHitTestResult(), new Offset(20.0, 5.0)));
+        Assert.False(coloredBox.HitTest(new BoxHitTestResult(), new Offset(5.0, 10.0)));
+        Assert.False(coloredBox.HitTest(new BoxHitTestResult(), new Offset(-0.001, 5.0)));
     }
 
     private static OffsetLayer Paint(RenderBox root, Size size)
@@ -139,7 +139,7 @@ public sealed class ColoredBoxTests
             Size = Constraints.Constrain(_desiredSize);
         }
 
-        public override void Paint(PaintingContext context, Point offset)
+        public override void Paint(PaintingContext context, Offset offset)
         {
             PaintCount += 1;
         }

@@ -117,11 +117,11 @@ public sealed class MaterialAnimatedIconTests
         var data = Assert.IsType<AnimatedIconDataImpl>(AnimatedIcons.MenuArrow);
         var move = Assert.IsType<PathMoveTo>(data.Paths[0].Commands[0]);
 
-        Assert.Equal(new Point(6, 26), move.Interpolate(0.0));
-        Point midpoint = move.Interpolate(0.5);
-        Assert.Equal(36.23501636298456, midpoint.X, 10);
-        Assert.Equal(12.973675163618006, midpoint.Y, 10);
-        Assert.Equal(new Point(39.94921875, 22), move.Interpolate(1.0));
+        Assert.Equal(new Offset(6, 26), move.Interpolate(0.0));
+        Offset midpoint = move.Interpolate(0.5);
+        Assert.Equal(36.23501636298456, midpoint.Dx, 10);
+        Assert.Equal(12.973675163618006, midpoint.Dy, 10);
+        Assert.Equal(new Offset(39.94921875, 22), move.Interpolate(1.0));
     }
 
     [Fact]

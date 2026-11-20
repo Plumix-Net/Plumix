@@ -318,7 +318,7 @@ public sealed class TooltipState : State<Tooltip>
         return new ConstrainedBox(constraints, bubble);
     }
 
-    private Point ResolvePosition(TooltipPositionContext context)
+    private Offset ResolvePosition(TooltipPositionContext context)
     {
         double verticalOffset = CurrentWidget.VerticalOffset
                                 ?? _tooltipTheme.VerticalOffset

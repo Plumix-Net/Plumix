@@ -117,11 +117,11 @@ public class RenderPerformanceOverlay : RenderBox
         return constraints.Constrain(new Size(double.PositiveInfinity, IntrinsicHeight));
     }
 
-    public override void Paint(PaintingContext context, Point offset)
+    public override void Paint(PaintingContext context, Offset offset)
     {
         System.Diagnostics.Debug.Assert(NeedsCompositing);
         context.AddLayer(new PerformanceOverlayLayer(
-            overlayRect: new Rect(offset.X, offset.Y, Size.Width, Size.Height),
+            overlayRect: DartGeometry.RectFromLTWH(offset.Dx, offset.Dy, Size.Width, Size.Height),
             optionsMask: OptionsMask));
     }
 }

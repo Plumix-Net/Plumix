@@ -25,7 +25,7 @@ public sealed class OffstageTests
         Assert.Equal(new Size(50, 30), child.Size);
 
         var result = new BoxHitTestResult();
-        Assert.False(offstage.HitTest(result, new Point(0, 0)));
+        Assert.False(offstage.HitTest(result, new Offset(0, 0)));
     }
 
     [Fact]
@@ -49,7 +49,7 @@ public sealed class OffstageTests
         Assert.IsType<ParentData>(child.parentData);
 
         var result = new BoxHitTestResult();
-        Assert.True(offstage.HitTest(result, new Point(10, 10)));
+        Assert.True(offstage.HitTest(result, new Offset(10, 10)));
     }
 
     [Fact]
@@ -119,12 +119,12 @@ public sealed class OffstageTests
             Size = Constraints.Constrain(_size);
         }
 
-        protected override bool HitTestSelf(Point position)
+        protected override bool HitTestSelf(Offset position)
         {
             return true;
         }
 
-        public override void Paint(PaintingContext ctx, Point offset)
+        public override void Paint(PaintingContext ctx, Offset offset)
         {
         }
     }

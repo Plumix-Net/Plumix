@@ -67,7 +67,7 @@ internal static class ShaderDrawing
     }
 
     internal static void DrawEllipse(
-        DrawingContext context, IBrush? brush, IPen? pen, Point center, double radiusX, double radiusY)
+        DrawingContext context, IBrush? brush, IPen? pen, Offset center, double radiusX, double radiusY)
     {
         if (brush is not INativeShader && pen?.Brush is not INativeShader)
         {
@@ -75,17 +75,17 @@ internal static class ShaderDrawing
             return;
         }
 
-        DrawGeometry(context, brush, pen, new EllipseGeometry(new Rect(
-            center.X - radiusX, center.Y - radiusY, radiusX * 2.0, radiusY * 2.0)));
+        DrawGeometry(context, brush, pen, new EllipseGeometry(DartGeometry.RectFromLTWH(
+            center.Dx - radiusX, center.Dy - radiusY, radiusX * 2.0, radiusY * 2.0)));
     }
 
-    internal static void DrawLine(DrawingContext context, IPen pen, Point start, Point end)
+    internal static void DrawLine(DrawingContext context, IPen pen, Offset start, Offset end)
     {
         if (pen.Brush is INativeShader shader)
         {
             var path = new Path();
-            path.MoveTo(start.X, start.Y);
-            path.LineTo(end.X, end.Y);
+            path.MoveTo(start.Dx, start.Dy);
+            path.LineTo(end.Dx, end.Dy);
             var paint = new Paint
             {
                 Shader = (IBrush)shader,
@@ -120,7 +120,7 @@ internal static class ShaderDrawing
         : ICustomDrawOperation
     {
         public Rect Bounds => bounds;
-        public bool HitTest(Point point) => false;
+        public bool HitTest(Offset point) => false;
         public bool Equals(ICustomDrawOperation? other) => ReferenceEquals(this, other);
         public void Dispose() { }
 

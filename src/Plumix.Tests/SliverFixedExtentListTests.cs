@@ -318,9 +318,9 @@ public sealed class SliverFixedExtentListTests
             Size = Constraints.Constrain(_size);
         }
 
-        protected override bool HitTestSelf(Point position) => true;
+        protected override bool HitTestSelf(Offset position) => true;
 
-        public override void Paint(PaintingContext ctx, Point offset)
+        public override void Paint(PaintingContext ctx, Offset offset)
         {
         }
     }

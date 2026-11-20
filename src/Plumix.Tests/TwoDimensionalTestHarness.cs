@@ -351,7 +351,7 @@ internal sealed class RenderSimpleBuilderTableViewport : RenderTwoDimensionalVie
 
                 if (SetLayoutOffset && child != null)
                 {
-                    ParentDataOf(child).LayoutOffset = new Point(xLayoutOffset, yLayoutOffset);
+                    ParentDataOf(child).LayoutOffset = new Offset(xLayoutOffset, yLayoutOffset);
                 }
 
                 yLayoutOffset += TwoDimensionalHarness.CellExtent;
@@ -519,7 +519,7 @@ internal sealed class RenderSimpleListTableViewport : RenderTwoDimensionalViewpo
                         width: TwoDimensionalHarness.CellExtent,
                         height: TwoDimensionalHarness.CellExtent),
                     parentUsesSize: true);
-                ParentDataOf(child).LayoutOffset = new Point(xLayoutOffset, yLayoutOffset);
+                ParentDataOf(child).LayoutOffset = new Offset(xLayoutOffset, yLayoutOffset);
                 yLayoutOffset += TwoDimensionalHarness.CellExtent;
             }
 

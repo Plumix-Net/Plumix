@@ -266,12 +266,12 @@ public sealed class ImageProviderDecorationTests : IDisposable
             matchTextDirection: true).CreatePainter(() => repaint.TrySetResult(true));
         var canvas = new Canvas(new PictureRecorder());
 
-        painter.Paint(canvas, new Rect(0, 0, 40, 20), null, new ImageConfiguration(TextDirection: TextDirection.Rtl));
+        painter.Paint(canvas, DartGeometry.RectFromLTWH(0, 0, 40, 20), null, new ImageConfiguration(TextDirection: TextDirection.Rtl));
         Assert.Empty(canvas.DebugCalls);
 
         completion.SetResult(new ImageInfo(image));
         await EventLoopPump.WaitFor(repaint.Task);
-        painter.Paint(canvas, new Rect(0, 0, 40, 20), null, new ImageConfiguration(TextDirection: TextDirection.Rtl));
+        painter.Paint(canvas, DartGeometry.RectFromLTWH(0, 0, 40, 20), null, new ImageConfiguration(TextDirection: TextDirection.Rtl));
 
         Assert.Contains(canvas.DebugCalls, call => call.Method == "drawImageRect");
         Assert.Contains(canvas.DebugCalls, call => call.Method == "scale" && call.Dx == -1.0);
@@ -286,7 +286,7 @@ public sealed class ImageProviderDecorationTests : IDisposable
             new BoxDecoration(Image: new DecorationImage(first)),
             configuration: new ImageConfiguration(TextDirection: TextDirection.Ltr));
         render.Layout(BoxConstraints.Tight(new Size(20, 20)));
-        render.Paint(new PaintingContext(new ContainerLayer()), new Point());
+        render.Paint(new PaintingContext(new ContainerLayer()), new Offset());
         Assert.True(EventLoopPump.SpinUntil(() => first.LastCompleter?.HasListeners == true));
 
         render.Decoration = new BoxDecoration(Image: new DecorationImage(second));

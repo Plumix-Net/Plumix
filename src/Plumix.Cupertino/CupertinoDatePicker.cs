@@ -418,7 +418,7 @@ internal sealed class DatePickerLayoutDelegate : MultiChildLayoutDelegate
             LayoutChild(
                 logicalIndex,
                 BoxConstraints.Tight(new Size(Math.Max(0.0, childWidth), size.Height)));
-            PositionChild(logicalIndex, new Point(horizontalOffset, 0.0));
+            PositionChild(logicalIndex, new Offset(horizontalOffset, 0.0));
             horizontalOffset += childWidth;
         }
     }

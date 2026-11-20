@@ -87,9 +87,9 @@ public sealed class MaterialScrollbarTests
         ScrollbarPainter painter = RequirePainter(harness);
         var geometry = Assert.IsType<ScrollbarGeometry>(painter.Geometry);
         Assert.Equal(Axis.Vertical, geometry.Axis);
-        Assert.Equal(new Rect(194, 0, 6, 240), geometry.TrackRect);
+        Assert.Equal(DartGeometry.RectFromLTWH(194, 0, 6, 240), geometry.TrackRect);
         Assert.Equal(72, geometry.ThumbRect.Height, precision: 3);
-        Assert.Equal(0, geometry.ThumbRect.Y, precision: 3);
+        Assert.Equal(0, geometry.ThumbRect.Top, precision: 3);
         Assert.Equal(6, painter.Thickness);
         Assert.Equal(1, painter.FadeoutOpacityAnimation.Value);
     }
@@ -118,9 +118,9 @@ public sealed class MaterialScrollbarTests
         var geometry = Assert.IsType<ScrollbarGeometry>(painter.Geometry);
         Assert.Equal(Axis.Horizontal, geometry.Axis);
         // Flutter's track rect spans the padded viewport; only the thumb is inset by mainAxisMargin.
-        Assert.Equal(7, geometry.TrackRect.X);
+        Assert.Equal(7, geometry.TrackRect.Left);
         Assert.Equal(280, geometry.TrackRect.Width);
-        Assert.Equal(89, geometry.TrackRect.Y);
+        Assert.Equal(89, geometry.TrackRect.Top);
         Assert.Equal(14, geometry.TrackRect.Height);
         Assert.Equal(12, geometry.TrackMainAxisStart);
         Assert.Equal(270, geometry.TrackMainAxisExtent);
@@ -142,7 +142,7 @@ public sealed class MaterialScrollbarTests
         Settle(harness);
 
         ScrollbarGeometry geometry = RequirePainter(harness).Geometry!.Value;
-        Assert.Equal(0, geometry.TrackRect.X);
+        Assert.Equal(0, geometry.TrackRect.Left);
     }
 
     [Fact]
@@ -160,7 +160,7 @@ public sealed class MaterialScrollbarTests
         AdvanceAndPump(harness, 0.4);
 
         Assert.Equal(1, RequirePainter(harness).FadeoutOpacityAnimation.Value);
-        Assert.True(RequirePainter(harness).Geometry!.Value.ThumbRect.Y > 0);
+        Assert.True(RequirePainter(harness).Geometry!.Value.ThumbRect.Top > 0);
     }
 
     // Flutter: "Scrollbar will fade back in when hovering over known track area".
@@ -177,13 +177,13 @@ public sealed class MaterialScrollbarTests
 
         ScrollbarGeometry geometry = RequirePainter(harness).Geometry!.Value;
         Dispatch(harness, new PointerHoverEvent(
-            8, PointerDeviceKind.Mouse, new Point(100, geometry.ThumbRect.Center.Y),
+            8, PointerDeviceKind.Mouse, new Offset(100, geometry.ThumbRect.Center.Dy),
             PointerButtons.None, PressTime));
         AdvanceAndPump(harness, 0.4);
         Assert.Equal(0, RequirePainter(harness).FadeoutOpacityAnimation.Value);
 
         // Inside the 48-logical-pixel proximity rect Flutter grows around the thumb for hovering.
-        var proximityPoint = new Point(geometry.ThumbRect.Center.X - 23, geometry.ThumbRect.Center.Y);
+        var proximityPoint = new Offset(geometry.ThumbRect.Center.Dx - 23, geometry.ThumbRect.Center.Dy);
         Dispatch(harness, new PointerHoverEvent(
             8, PointerDeviceKind.Mouse, proximityPoint, PointerButtons.None, PressTime.AddMilliseconds(20)));
         AdvanceAndPump(harness, 0.4);
@@ -212,7 +212,7 @@ public sealed class MaterialScrollbarTests
                 addAutomaticKeepAlives: false)));
         Settle(harness);
 
-        var point = new Point(100, 100);
+        var point = new Offset(100, 100);
         Dispatch(harness, new PointerDownEvent(
             18, PointerDeviceKind.Mouse, point, PointerButtons.Primary, PressTime));
         Dispatch(harness, new PointerUpEvent(
@@ -270,14 +270,14 @@ public sealed class MaterialScrollbarTests
         Settle(harness);
 
         ScrollbarGeometry geometry = RequirePainter(harness).Geometry!.Value;
-        double x = geometry.ThumbRect.Center.X;
-        double downY = geometry.ThumbRect.Center.Y;
+        double x = geometry.ThumbRect.Center.Dx;
+        double downY = geometry.ThumbRect.Center.Dy;
         Dispatch(harness, new PointerDownEvent(
-            9, PointerDeviceKind.Mouse, new Point(x, downY), PointerButtons.Primary, PressTime));
+            9, PointerDeviceKind.Mouse, new Offset(x, downY), PointerButtons.Primary, PressTime));
         Dispatch(harness, new PointerMoveEvent(
-            9, PointerDeviceKind.Mouse, new Point(x, 235), PointerButtons.Primary, PressTime.AddMilliseconds(20)));
+            9, PointerDeviceKind.Mouse, new Offset(x, 235), PointerButtons.Primary, PressTime.AddMilliseconds(20)));
         Dispatch(harness, new PointerUpEvent(
-            9, PointerDeviceKind.Mouse, new Point(x, 235), PointerButtons.None,
+            9, PointerDeviceKind.Mouse, new Offset(x, 235), PointerButtons.None,
             PressTime.AddMilliseconds(30)));
 
         Assert.True(controller.Offset > controller.PrimaryPosition!.MaxScrollExtent * 0.9);
@@ -298,13 +298,13 @@ public sealed class MaterialScrollbarTests
         Settle(harness);
 
         ScrollbarGeometry geometry = RequirePainter(harness).Geometry!.Value;
-        Point start = geometry.ThumbRect.Center;
+        Offset start = geometry.ThumbRect.Center;
         Dispatch(harness, new PointerDownEvent(
             11, PointerDeviceKind.Touch, start, PointerButtons.Primary, PressTime));
         Dispatch(harness, new PointerMoveEvent(
             11,
             PointerDeviceKind.Touch,
-            new Point(start.X, start.Y + 2),
+            new Offset(start.Dx, start.Dy + 2),
             PointerButtons.Primary,
             PressTime.AddMilliseconds(16)));
 
@@ -324,13 +324,13 @@ public sealed class MaterialScrollbarTests
             child: BuildVerticalList(controller, 30)));
         Settle(harness);
 
-        Point start = RequirePainter(harness).Geometry!.Value.ThumbRect.Center;
+        Offset start = RequirePainter(harness).Geometry!.Value.ThumbRect.Center;
         Dispatch(harness, new PointerDownEvent(
             12, PointerDeviceKind.Touch, start, PointerButtons.Primary, PressTime));
         Dispatch(harness, new PointerMoveEvent(
             12,
             PointerDeviceKind.Touch,
-            new Point(start.X, start.Y - 40),
+            new Offset(start.Dx, start.Dy - 40),
             PointerButtons.Primary,
             PressTime.AddMilliseconds(16)));
 
@@ -357,18 +357,18 @@ public sealed class MaterialScrollbarTests
         Settle(harness);
 
         ScrollbarGeometry geometry = RequirePainter(harness).Geometry!.Value;
-        Point start = geometry.ThumbRect.Center;
+        Offset start = geometry.ThumbRect.Center;
         Dispatch(harness, new PointerDownEvent(
             13, PointerDeviceKind.Touch, start, PointerButtons.Primary, PressTime));
         Dispatch(harness, new PointerMoveEvent(
             13,
             PointerDeviceKind.Touch,
-            new Point(start.X, start.Y + 40),
+            new Offset(start.Dx, start.Dy + 40),
             PointerButtons.Primary,
             PressTime.AddMilliseconds(16)));
         Assert.Equal(0, controller.Offset);
 
-        var trackPoint = new Point(geometry.TrackRect.Center.X, geometry.TrackRect.Bottom - 2);
+        var trackPoint = new Offset(geometry.TrackRect.Center.Dx, geometry.TrackRect.Bottom - 2);
         Dispatch(harness, new PointerDownEvent(
             14, PointerDeviceKind.Mouse, trackPoint, PointerButtons.Primary, PressTime));
         AdvanceAndPump(harness, 0.2);
@@ -389,7 +389,7 @@ public sealed class MaterialScrollbarTests
         Settle(harness);
 
         ScrollbarGeometry geometry = RequirePainter(harness).Geometry!.Value;
-        var point = new Point(geometry.TrackRect.Center.X, geometry.TrackRect.Bottom - 2);
+        var point = new Offset(geometry.TrackRect.Center.Dx, geometry.TrackRect.Bottom - 2);
         Dispatch(harness, new PointerDownEvent(
             10, PointerDeviceKind.Mouse, point, PointerButtons.Primary, PressTime));
         AdvanceAndPump(harness, 0.2);
@@ -412,13 +412,13 @@ public sealed class MaterialScrollbarTests
             child: BuildVerticalList(controller, 30)));
         Settle(harness);
 
-        Point start = RequirePainter(harness).Geometry!.Value.ThumbRect.Center;
+        Offset start = RequirePainter(harness).Geometry!.Value.ThumbRect.Center;
         Dispatch(harness, new PointerDownEvent(
             21, PointerDeviceKind.Touch, start, PointerButtons.Primary, PressTime));
         Dispatch(harness, new PointerMoveEvent(
             21,
             PointerDeviceKind.Touch,
-            new Point(start.X, 235),
+            new Offset(start.Dx, 235),
             PointerButtons.Primary,
             PressTime.AddMilliseconds(16)));
 
@@ -472,7 +472,7 @@ public sealed class MaterialScrollbarTests
 
         ScrollbarPainter painter = RequirePainter(harness);
         ScrollbarGeometry geometry = painter.Geometry!.Value;
-        var justOutside = new Point(geometry.ThumbRect.Left - 8, geometry.ThumbRect.Center.Y);
+        var justOutside = new Offset(geometry.ThumbRect.Left - 8, geometry.ThumbRect.Center.Dy);
 
         Assert.True(painter.HitTestOnlyThumbInteractive(justOutside, PointerDeviceKind.Touch));
         Assert.False(painter.HitTestOnlyThumbInteractive(justOutside, PointerDeviceKind.Mouse));
@@ -482,7 +482,7 @@ public sealed class MaterialScrollbarTests
         Dispatch(harness, new PointerDownEvent(
             15, PointerDeviceKind.Touch, justOutside, PointerButtons.Primary, PressTime));
         Dispatch(harness, new PointerMoveEvent(
-            15, PointerDeviceKind.Touch, new Point(justOutside.X, justOutside.Y + 8),
+            15, PointerDeviceKind.Touch, new Offset(justOutside.Dx, justOutside.Dy + 8),
             PointerButtons.Primary, PressTime.AddMilliseconds(16)));
         Assert.True(controller.Offset > 0);
     }
@@ -560,7 +560,7 @@ public sealed class MaterialScrollbarTests
         Assert.Equal(Colors.DarkCyan, painter.Color);
         Assert.Equal(Color.FromARGB(0, 0, 0, 0), painter.TrackColor);
 
-        Point point = painter.Geometry!.Value.ThumbRect.Center;
+        Offset point = painter.Geometry!.Value.ThumbRect.Center;
         Dispatch(harness, new PointerHoverEvent(
             33, PointerDeviceKind.Mouse, point, PointerButtons.None, PressTime));
         AdvanceAndPump(harness, 0.3);
@@ -801,7 +801,7 @@ public sealed class MaterialScrollbarTests
         Color hovered = WithOpacity(ThemeData.Light.ColorScheme.OnSurface, 0.50);
         Assert.Equal(idle, RequirePainter(harness).Color);
 
-        Point point = RequirePainter(harness).Geometry!.Value.ThumbRect.Center;
+        Offset point = RequirePainter(harness).Geometry!.Value.ThumbRect.Center;
         Dispatch(harness, new PointerHoverEvent(
             41, PointerDeviceKind.Mouse, point, PointerButtons.None, PressTime));
         harness.Pump(ViewportSize);
@@ -835,13 +835,13 @@ public sealed class MaterialScrollbarTests
         harness.Pump(ViewportSize);
 
         ScrollbarGeometry geometry = Assert.IsType<ScrollbarGeometry>(painter.Geometry);
-        Assert.Equal(new Rect(188, 0, 12, 240), geometry.TrackRect);
-        Assert.Equal(new Rect(190, 0, 8, 72), geometry.ThumbRect);
+        Assert.Equal(DartGeometry.RectFromLTWH(188, 0, 12, 240), geometry.TrackRect);
+        Assert.Equal(DartGeometry.RectFromLTWH(190, 0, 8, 72), geometry.ThumbRect);
         Assert.True(painter.HitTestOnlyThumbInteractive(
-            new Point(geometry.ThumbRect.Left - 20, geometry.ThumbRect.Center.Y),
+            new Offset(geometry.ThumbRect.Left - 20, geometry.ThumbRect.Center.Dy),
             PointerDeviceKind.Touch));
         Assert.False(painter.HitTestOnlyThumbInteractive(
-            new Point(geometry.ThumbRect.Left - 30, geometry.ThumbRect.Center.Y),
+            new Offset(geometry.ThumbRect.Left - 30, geometry.ThumbRect.Center.Dy),
             PointerDeviceKind.Mouse));
         // `getTrackToScroll` maps a *delta* along the thumb track onto a scroll delta.
         Assert.Equal(560, painter.GetTrackToScroll(geometry.MaxThumbTravel), precision: 3);
@@ -897,8 +897,8 @@ public sealed class MaterialScrollbarTests
         Settle(harness, new Size(800, 600));
 
         ScrollbarGeometry geometry = RequirePainter(harness).Geometry!.Value;
-        Assert.Equal(explicitPadding ? new Rect(694, 100, 6, 400) : new Rect(744, 50, 6, 500), geometry.TrackRect);
-        Assert.Equal(explicitPadding ? new Rect(694, 100, 6, 21) : new Rect(744, 50, 6, 21), geometry.ThumbRect);
+        Assert.Equal(explicitPadding ? DartGeometry.RectFromLTWH(694, 100, 6, 400) : DartGeometry.RectFromLTWH(744, 50, 6, 500), geometry.TrackRect);
+        Assert.Equal(explicitPadding ? DartGeometry.RectFromLTWH(694, 100, 6, 21) : DartGeometry.RectFromLTWH(744, 50, 6, 21), geometry.ThumbRect);
     }
 
     [Fact]
@@ -920,7 +920,7 @@ public sealed class MaterialScrollbarTests
         Settle(harness);
 
         Assert.Same(painter, RequirePainter(harness));
-        Assert.Equal(new Rect(181, 11, 6, 212), painter.Geometry!.Value.TrackRect);
+        Assert.Equal(DartGeometry.RectFromLTWH(181, 11, 6, 212), painter.Geometry!.Value.TrackRect);
         Assert.Equal(80, controller.Offset);
         Assert.Equal(240, controller.Position.ViewportDimension);
     }
@@ -963,10 +963,10 @@ public sealed class MaterialScrollbarTests
             padding: EdgeInsetsGeometry.DirectionalOnly(start: 1, top: 2, end: 3, bottom: 4));
         painter.Update(TestScrollMetrics(0, 0, 340, 80), AxisDirection.Down);
         painter.Paint(new PaintingContext(new OffsetLayer()), new Size(60, 80));
-        Assert.Equal(new Rect(51, 2, 6, 74), painter.Geometry!.Value.TrackRect);
+        Assert.Equal(DartGeometry.RectFromLTWH(51, 2, 6, 74), painter.Geometry!.Value.TrackRect);
         painter.TextDirection = TextDirection.Rtl;
         painter.Paint(new PaintingContext(new OffsetLayer()), new Size(60, 80));
-        Assert.Equal(new Rect(3, 2, 6, 74), painter.Geometry!.Value.TrackRect);
+        Assert.Equal(DartGeometry.RectFromLTWH(3, 2, 6, 74), painter.Geometry!.Value.TrackRect);
         painter.Padding = EdgeInsetsGeometry.DirectionalOnly(start: 5, end: 9);
         painter.Paint(new PaintingContext(new OffsetLayer()), new Size(60, 80));
         Assert.Equal(9, painter.Geometry!.Value.TrackRect.Left);
@@ -1066,7 +1066,7 @@ public sealed class MaterialScrollbarTests
         painter.Update(TestScrollMetrics(0, 0, 560, 240), AxisDirection.Down);
         painter.Paint(new PaintingContext(new OffsetLayer()), ViewportSize);
         Assert.Equal(preferInterior ? new[] { "interior", "border" } : new[] { "path", "border" }, shape.Calls);
-        Assert.Equal(new Rect(194, 0, 6, 72), shape.PaintedRect);
+        Assert.Equal(DartGeometry.RectFromLTWH(194, 0, 6, 72), shape.PaintedRect);
         if (preferInterior)
         {
             Assert.Equal(128, shape.InteriorColor!.Alpha);
@@ -1119,8 +1119,8 @@ public sealed class MaterialScrollbarTests
                 controller: controller, scrollDirection: horizontal ? Axis.Horizontal : Axis.Vertical,
                 child: new SizedBox(width: 1000, height: 1000))));
         Settle(harness);
-        var position = new Point(100, 100);
-        Point delta = horizontal ? new Point(-30, 0) : new Point(0, -30);
+        var position = new Offset(100, 100);
+        Offset delta = horizontal ? new Offset(-30, 0) : new Offset(0, -30);
         Dispatch(harness, new PointerPanZoomStartEvent(91, position, PressTime));
         Dispatch(harness, new PointerPanZoomUpdateEvent(91, position, PressTime.AddMilliseconds(20),
             pan: delta, panDelta: delta));
@@ -1145,15 +1145,15 @@ public sealed class MaterialScrollbarTests
                 child: new SizedBox(width: 1000, height: 1000))));
         Settle(harness);
         Rect before = RequirePainter(harness).Geometry!.Value.ThumbRect;
-        Point start = before.Center;
-        Point end = start + (horizontal ? new Point(-10, 0) : new Point(0, -10));
+        Offset start = before.Center;
+        Offset end = start + (horizontal ? new Offset(-10, 0) : new Offset(0, -10));
         Dispatch(harness, new PointerDownEvent(92, PointerDeviceKind.Mouse, start, PointerButtons.Primary, PressTime));
         Dispatch(harness, new PointerMoveEvent(
             92, PointerDeviceKind.Mouse, end, PointerButtons.Primary,
             timestampUtc: PressTime.AddMilliseconds(20)));
         harness.Pump(ViewportSize);
         Rect after = RequirePainter(harness).Geometry!.Value.ThumbRect;
-        Assert.Equal(horizontal ? before.X - 10 : before.Y - 10, horizontal ? after.X : after.Y, precision: 3);
+        Assert.Equal(horizontal ? before.Left - 10 : before.Top - 10, horizontal ? after.Left : after.Top, precision: 3);
         Assert.True(controller.Offset > 10);
         Dispatch(harness, new PointerUpEvent(
             92, PointerDeviceKind.Mouse, end, PointerButtons.None, PressTime.AddMilliseconds(40)));
@@ -1178,8 +1178,8 @@ public sealed class MaterialScrollbarTests
         Assert.True(controller.Position.MaxScrollExtent <= 0);
         var detector = Assert.IsType<RawGestureDetector>(FindWidgetObject<RawGestureDetector>(harness.RootElement));
         Assert.Equal(2, detector.Gestures.Count);
-        Point start = RequirePainter(harness).Geometry!.Value.ThumbRect.Center;
-        Point end = start - new Point(0, 10);
+        Offset start = RequirePainter(harness).Geometry!.Value.ThumbRect.Center;
+        Offset end = start - new Offset(0, 10);
         Dispatch(harness, new PointerDownEvent(93, PointerDeviceKind.Mouse, start, PointerButtons.Primary, PressTime));
         Dispatch(harness, new PointerMoveEvent(
             93, PointerDeviceKind.Mouse, end, PointerButtons.Primary,
@@ -1258,10 +1258,10 @@ public sealed class MaterialScrollbarTests
         using var painter = new ScrollbarPainter(
             Colors.Crimson, new ConstantAnimation<double>(1), textDirection: TextDirection.Ltr);
         painter.Update(TestScrollMetrics(0, 0, 560, 240), AxisDirection.Down);
-        Assert.Null(painter.HitTest(new Point(197, 30)));
-        Assert.False(painter.HitTestInteractive(new Point(197, 30), PointerDeviceKind.Mouse));
+        Assert.Null(painter.HitTest(new Offset(197, 30)));
+        Assert.False(painter.HitTestInteractive(new Offset(197, 30), PointerDeviceKind.Mouse));
         painter.Paint(new PaintingContext(new OffsetLayer()), ViewportSize);
-        Assert.True(painter.HitTest(new Point(197, 30)));
+        Assert.True(painter.HitTest(new Offset(197, 30)));
     }
 
     [Theory]
@@ -1279,7 +1279,7 @@ public sealed class MaterialScrollbarTests
         painter.Update(TestScrollMetrics(-overscroll, 0, 49400, 600), AxisDirection.Down);
         painter.Paint(new PaintingContext(new OffsetLayer()), new Size(800, 600));
         Assert.Equal(expectedLength, painter.Geometry!.Value.ThumbRect.Height, precision: 3);
-        Assert.Equal(0, painter.Geometry!.Value.ThumbRect.Y);
+        Assert.Equal(0, painter.Geometry!.Value.ThumbRect.Top);
     }
 
     [Fact]

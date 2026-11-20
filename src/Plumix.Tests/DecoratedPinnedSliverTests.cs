@@ -48,7 +48,7 @@ public sealed class DecoratedPinnedSliverTests
         string expectedOrder)
     {
         var order = new List<string>();
-        var calls = new List<(Point Offset, Size Size)>();
+        var calls = new List<(Offset Offset, Size Size)>();
         var decoration = new RecordingDecoration(order, calls);
         var child = new PaintTrackingSliver(order, scrollExtent: 120.0);
         var decorated = new RenderDecoratedSliver(decoration, position, sliver: child);
@@ -64,8 +64,8 @@ public sealed class DecoratedPinnedSliverTests
         pipeline.CompositeFrame();
 
         Assert.Equal(expectedOrder.Split(','), order);
-        (Point offset, Size size) = Assert.Single(calls);
-        Assert.Equal(new Point(0, -30), offset);
+        (Offset offset, Size size) = Assert.Single(calls);
+        Assert.Equal(new Offset(0, -30), offset);
         Assert.Equal(new Size(100, 120), size);
         Assert.Equal(child.Geometry, decorated.Geometry);
     }
@@ -73,7 +73,7 @@ public sealed class DecoratedPinnedSliverTests
     [Fact]
     public void RenderDecoratedSliver_InfiniteExtentPaintsThroughCacheExtent()
     {
-        var calls = new List<(Point Offset, Size Size)>();
+        var calls = new List<(Offset Offset, Size Size)>();
         var decoration = new RecordingDecoration([], calls);
         var child = new PaintTrackingSliver([], double.PositiveInfinity);
         var decorated = new RenderDecoratedSliver(decoration, sliver: child);
@@ -90,8 +90,8 @@ public sealed class DecoratedPinnedSliverTests
         pipeline.FlushPaint();
         pipeline.CompositeFrame();
 
-        (Point offset, Size size) = Assert.Single(calls);
-        Assert.Equal(new Point(0, -40), offset);
+        (Offset offset, Size size) = Assert.Single(calls);
+        Assert.Equal(new Offset(0, -40), offset);
         Assert.Equal(150, size.Height, precision: 3);
     }
 
@@ -209,8 +209,8 @@ public sealed class DecoratedPinnedSliverTests
         Assert.Equal(0, header.Geometry!.LayoutExtent);
         Assert.Equal(60, header.Geometry!.PaintExtent);
         Assert.Equal(60, body.Constraints.Overlap);
-        Assert.Equal(new Point(0, 0), ((SliverPhysicalParentData)body.parentData!).PaintOffset);
-        Assert.Equal(new Point(0, -20), ((SliverPhysicalParentData)bodyBox.parentData!).PaintOffset);
+        Assert.Equal(new Offset(0, 0), ((SliverPhysicalParentData)body.parentData!).PaintOffset);
+        Assert.Equal(new Offset(0, -20), ((SliverPhysicalParentData)bodyBox.parentData!).PaintOffset);
     }
 
     private static void Mount(TestRootElement root, BuildOwner owner)
@@ -229,7 +229,7 @@ public sealed class DecoratedPinnedSliverTests
 
     private sealed record RecordingDecoration(
         List<string> Order,
-        List<(Point Offset, Size Size)> Calls) : Decoration
+        List<(Offset Offset, Size Size)> Calls) : Decoration
     {
         public override BoxPainter CreateBoxPainter(Action? onChanged = null)
         {
@@ -239,12 +239,12 @@ public sealed class DecoratedPinnedSliverTests
 
     private sealed class RecordingBoxPainter(
         List<string> order,
-        List<(Point Offset, Size Size)> calls,
+        List<(Offset Offset, Size Size)> calls,
         Action? onChanged) : BoxPainter(onChanged)
     {
         public override void Paint(
             PaintingContext context,
-            Point offset,
+            Offset offset,
             ImageConfiguration configuration)
         {
             order.Add("decoration");
@@ -273,7 +273,7 @@ public sealed class DecoratedPinnedSliverTests
                 CacheExtent: cacheExtent);
         }
 
-        public override void Paint(PaintingContext ctx, Point offset)
+        public override void Paint(PaintingContext ctx, Offset offset)
         {
             order.Add("child");
         }
@@ -286,7 +286,7 @@ public sealed class DecoratedPinnedSliverTests
             Size = Constraints.Constrain(size);
         }
 
-        public override void Paint(PaintingContext ctx, Point offset)
+        public override void Paint(PaintingContext ctx, Offset offset)
         {
         }
     }
@@ -311,7 +311,7 @@ public sealed class DecoratedPinnedSliverTests
             Size = Constraints.Constrain(_size);
         }
 
-        public override void Paint(PaintingContext ctx, Point offset)
+        public override void Paint(PaintingContext ctx, Offset offset)
         {
         }
     }

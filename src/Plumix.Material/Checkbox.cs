@@ -345,10 +345,10 @@ public sealed class Checkbox : StatefulWidget
             double baseSize = tapTargetSize == Plumix.Material.MaterialTapTargetSize.Padded
                 ? 48.0
                 : 40.0;
-            Vector densityAdjustment = visualDensity.BaseSizeAdjustment;
+            Offset densityAdjustment = visualDensity.BaseSizeAdjustment;
             var size = new Size(
-                Math.Max(0.0, baseSize + densityAdjustment.X),
-                Math.Max(0.0, baseSize + densityAdjustment.Y));
+                Math.Max(0.0, baseSize + densityAdjustment.Dx),
+                Math.Max(0.0, baseSize + densityAdjustment.Dy));
             MouseCursor mouseCursor = ResolveMouseCursor(checkboxTheme, states);
 
             Widget toggleable = BuildToggleable(
@@ -747,7 +747,7 @@ internal sealed class CheckboxPainter : ToggleablePainter
         Color inactiveReactionColor,
         Color hoverColor,
         Color focusColor,
-        Point? downPosition,
+        Offset? downPosition,
         bool isFocused,
         bool isHovered)
     {
@@ -772,12 +772,12 @@ internal sealed class CheckboxPainter : ToggleablePainter
 
     public override void Paint(PaintingContext context, Size size)
     {
-        var center = new Point(size.Width / 2.0, size.Height / 2.0);
+        var center = new Offset(size.Width / 2.0, size.Height / 2.0);
         PaintRadialReaction(context, center);
 
-        var origin = new Point(
-            center.X - (EdgeSize / 2.0),
-            center.Y - (EdgeSize / 2.0));
+        var origin = new Offset(
+            center.Dx - (EdgeSize / 2.0),
+            center.Dy - (EdgeSize / 2.0));
         double normalized = Position.Status is AnimationStatus.Forward or AnimationStatus.Completed
             ? Position.Value
             : 1.0 - Position.Value;
@@ -842,7 +842,7 @@ internal sealed class CheckboxPainter : ToggleablePainter
 
     private void DrawBox(
         PaintingContext context,
-        Point origin,
+        Offset origin,
         double t,
         BorderSide? side)
     {
@@ -864,13 +864,13 @@ internal sealed class CheckboxPainter : ToggleablePainter
         }
     }
 
-    private Rect OuterRectAt(Point origin, double t)
+    private Rect OuterRectAt(Offset origin, double t)
     {
         double inset = 1.0 - (Math.Abs(t - 0.5) * 2.0);
         double size = EdgeSize - (inset * 2.0);
-        return new Rect(
-            origin.X + inset,
-            origin.Y + inset,
+        return DartGeometry.RectFromLTWH(
+            origin.Dx + inset,
+            origin.Dy + inset,
             size,
             size);
     }
@@ -891,48 +891,48 @@ internal sealed class CheckboxPainter : ToggleablePainter
     };
 
     // Dart's `_drawCheck`: both strokes are one path, so they meet in a miter join.
-    private void DrawCheck(PaintingContext context, Point origin, double t)
+    private void DrawCheck(PaintingContext context, Offset origin, double t)
     {
-        var start = new Point(EdgeSize * 0.15, EdgeSize * 0.45);
-        var middle = new Point(EdgeSize * 0.40, EdgeSize * 0.70);
-        var end = new Point(EdgeSize * 0.85, EdgeSize * 0.25);
+        var start = new Offset(EdgeSize * 0.15, EdgeSize * 0.45);
+        var middle = new Offset(EdgeSize * 0.40, EdgeSize * 0.70);
+        var end = new Offset(EdgeSize * 0.85, EdgeSize * 0.25);
         var path = new Plumix.UI.Path();
         if (t < 0.5)
         {
-            Point drawMiddle = LerpPoint(start, middle, t * 2.0);
-            path.MoveTo(origin.X + start.X, origin.Y + start.Y);
-            path.LineTo(origin.X + drawMiddle.X, origin.Y + drawMiddle.Y);
+            Offset drawMiddle = LerpPoint(start, middle, t * 2.0);
+            path.MoveTo(origin.Dx + start.Dx, origin.Dy + start.Dy);
+            path.LineTo(origin.Dx + drawMiddle.Dx, origin.Dy + drawMiddle.Dy);
         }
         else
         {
-            Point drawEnd = LerpPoint(middle, end, (t - 0.5) * 2.0);
-            path.MoveTo(origin.X + start.X, origin.Y + start.Y);
-            path.LineTo(origin.X + middle.X, origin.Y + middle.Y);
-            path.LineTo(origin.X + drawEnd.X, origin.Y + drawEnd.Y);
+            Offset drawEnd = LerpPoint(middle, end, (t - 0.5) * 2.0);
+            path.MoveTo(origin.Dx + start.Dx, origin.Dy + start.Dy);
+            path.LineTo(origin.Dx + middle.Dx, origin.Dy + middle.Dy);
+            path.LineTo(origin.Dx + drawEnd.Dx, origin.Dy + drawEnd.Dy);
         }
 
         context.Canvas.DrawPath(path, CreateStrokePaint());
     }
 
     // Dart's `_drawDash`.
-    private void DrawDash(PaintingContext context, Point origin, double t)
+    private void DrawDash(PaintingContext context, Offset origin, double t)
     {
-        var start = new Point(EdgeSize * 0.20, EdgeSize * 0.50);
-        var middle = new Point(EdgeSize * 0.50, EdgeSize * 0.50);
-        var end = new Point(EdgeSize * 0.80, EdgeSize * 0.50);
-        Point drawStart = LerpPoint(start, middle, 1.0 - t);
-        Point drawEnd = LerpPoint(middle, end, t);
+        var start = new Offset(EdgeSize * 0.20, EdgeSize * 0.50);
+        var middle = new Offset(EdgeSize * 0.50, EdgeSize * 0.50);
+        var end = new Offset(EdgeSize * 0.80, EdgeSize * 0.50);
+        Offset drawStart = LerpPoint(start, middle, 1.0 - t);
+        Offset drawEnd = LerpPoint(middle, end, t);
         context.Canvas.DrawLine(
-            origin + (Vector)drawStart,
-            origin + (Vector)drawEnd,
+            origin + (Offset)drawStart,
+            origin + (Offset)drawEnd,
             CreateStrokePaint());
     }
 
-    private static Point LerpPoint(Point from, Point to, double t)
+    private static Offset LerpPoint(Offset from, Offset to, double t)
     {
         double clampedT = Math.Clamp(t, 0.0, 1.0);
-        return new Point(
-            from.X + ((to.X - from.X) * clampedT),
-            from.Y + ((to.Y - from.Y) * clampedT));
+        return new Offset(
+            from.Dx + ((to.Dx - from.Dx) * clampedT),
+            from.Dy + ((to.Dy - from.Dy) * clampedT));
     }
 }

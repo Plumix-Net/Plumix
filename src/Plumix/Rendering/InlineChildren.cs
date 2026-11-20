@@ -14,7 +14,7 @@ public sealed class TextParentData : ContainerBoxParentData<RenderBox>
     /// A `null` value indicates this child is not currently laid out, typically
     /// because it was truncated away by an ellipsis. Such a child is skipped when
     /// painting, hit testing and building semantics.
-    public Point? InlineOffset { get; internal set; }
+    public Offset? InlineOffset { get; internal set; }
 
     /// The [PlaceholderSpan] associated with this render child.
     ///
@@ -130,7 +130,7 @@ public static class RenderInlineChildrenContainerDefaults
         int index = 0;
         for (; index < boxes.Count; index += 1)
         {
-            RequireParentData(children[index]).InlineOffset = boxes[index].Position;
+            RequireParentData(children[index]).InlineOffset = boxes[index].TopLeft;
         }
 
         for (; index < children.Count; index += 1)
@@ -144,11 +144,11 @@ public static class RenderInlineChildrenContainerDefaults
     public static void PaintInlineChildren(
         IReadOnlyList<RenderBox> children,
         PaintingContext context,
-        Point offset)
+        Offset offset)
     {
         foreach (RenderBox child in children)
         {
-            Point? childOffset = RequireParentData(child).InlineOffset;
+            Offset? childOffset = RequireParentData(child).InlineOffset;
             if (childOffset is null)
             {
                 return;
@@ -163,11 +163,11 @@ public static class RenderInlineChildrenContainerDefaults
     public static bool HitTestInlineChildren(
         IReadOnlyList<RenderBox> children,
         BoxHitTestResult result,
-        Point position)
+        Offset position)
     {
         foreach (RenderBox child in children)
         {
-            Point? childOffset = RequireParentData(child).InlineOffset;
+            Offset? childOffset = RequireParentData(child).InlineOffset;
             if (childOffset is null)
             {
                 return false;
@@ -193,14 +193,14 @@ public static class RenderInlineChildrenContainerDefaults
     /// Dart's `RenderInlineChildrenContainerDefaults.defaultApplyPaintTransform`.
     public static void DefaultApplyPaintTransform(RenderBox child, Matrix4 transform)
     {
-        Point? offset = RequireParentData(child).InlineOffset;
+        Offset? offset = RequireParentData(child).InlineOffset;
         if (offset is null)
         {
             transform.SetZero();
         }
         else
         {
-            transform.TranslateByDouble(offset.Value.X, offset.Value.Y, 0.0, 1.0);
+            transform.TranslateByDouble(offset.Value.Dx, offset.Value.Dy, 0.0, 1.0);
         }
     }
 

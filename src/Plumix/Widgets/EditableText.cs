@@ -87,8 +87,8 @@ public sealed partial class EditableText
                     double interactiveHandleHeight = Math.Max(
                         handleHeight,
                         WidgetConstants.MinInteractiveDimension);
-                    Point anchor = controls.GetHandleAnchor(TextSelectionHandleType.Collapsed, lineHeight);
-                    double handleCenter = handleHeight / 2 - anchor.Y;
+                    Offset anchor = controls.GetHandleAnchor(TextSelectionHandleType.Collapsed, lineHeight);
+                    double handleCenter = handleHeight / 2 - anchor.Dy;
                     bottomSpacing = Math.Max(handleCenter + interactiveHandleHeight / 2, bottomSpacing);
                 }
 
@@ -149,26 +149,26 @@ public sealed partial class EditableText
             RenderEditable renderEditable = RenderEditable!;
             Size editableSize = renderEditable.Size;
             double additionalOffset;
-            Vector unitOffset;
+            Offset unitOffset;
             if (!IsMultiline)
             {
                 additionalOffset = rect.Width >= editableSize.Width
-                    ? editableSize.Width / 2 - rect.Center.X
+                    ? editableSize.Width / 2 - rect.Center.Dx
                     : ClampDouble(0.0, rect.Right - editableSize.Width, rect.Left);
-                unitOffset = new Vector(1, 0);
+                unitOffset = new Offset(1, 0);
             }
             else
             {
                 double expandedHeight = Math.Max(rect.Height, renderEditable.PreferredLineHeight);
-                Rect expandedRect = new(
-                    rect.Center.X - rect.Width / 2,
-                    rect.Center.Y - expandedHeight / 2,
+                Rect expandedRect = DartGeometry.RectFromLTWH(
+                    rect.Center.Dx - rect.Width / 2,
+                    rect.Center.Dy - expandedHeight / 2,
                     rect.Width,
                     expandedHeight);
                 additionalOffset = expandedRect.Height >= editableSize.Height
-                    ? editableSize.Height / 2 - expandedRect.Center.Y
+                    ? editableSize.Height / 2 - expandedRect.Center.Dy
                     : ClampDouble(0.0, expandedRect.Bottom - editableSize.Height, expandedRect.Top);
-                unitOffset = new Vector(0, 1);
+                unitOffset = new Offset(0, 1);
             }
 
             double targetOffset = ClampDouble(
@@ -176,7 +176,7 @@ public sealed partial class EditableText
                 scrollController.Position.MinScrollExtent,
                 scrollController.Position.MaxScrollExtent);
             double offsetDelta = scrollController.Offset - targetOffset;
-            return new RevealedOffset(targetOffset, rect.Translate(unitOffset * offsetDelta));
+            return new RevealedOffset(targetOffset, rect.Shift(unitOffset * offsetDelta));
         }
 
         /// Dart's `clampDouble`: <paramref name="value"/> clamped into [min, max], asserting nothing
@@ -394,7 +394,7 @@ public sealed partial class EditableText
         // ---------------------------------------------------------- floating cursor
 
         /// Dart's `_floatingCursorOffset`: the floating cursor is positioned by its vertical center.
-        private Point FloatingCursorOffset => new(0, RenderEditable!.PreferredLineHeight / 2);
+        private Offset FloatingCursorOffset => new(0, RenderEditable!.PreferredLineHeight / 2);
 
         /// <inheritdoc/>
         /// <remarks>Dart's <c>EditableTextState.updateFloatingCursor</c>.</remarks>
@@ -420,7 +420,7 @@ public sealed partial class EditableText
                     StopCursorBlink(resetCharTicks: false);
                     CursorBlinkOpacityController.SetValue(1.0);
                     _pointOffsetOrigin = point.Offset;
-                    Point startCaretCenter;
+                    Offset startCaretCenter;
                     TextPosition currentTextPosition;
                     bool shouldResetOrigin;
                     if (point.StartLocation is { } startLocation)
@@ -446,8 +446,8 @@ public sealed partial class EditableText
                 }
                 case FloatingCursorDragState.Update:
                 {
-                    Point centeredPoint = point.Offset!.Value - _pointOffsetOrigin!.Value;
-                    Point rawCursorOffset = _startCaretCenter!.Value + centeredPoint - FloatingCursorOffset;
+                    Offset centeredPoint = point.Offset!.Value - _pointOffsetOrigin!.Value;
+                    Offset rawCursorOffset = _startCaretCenter!.Value + centeredPoint - FloatingCursorOffset;
                     _lastBoundedOffset = renderEditable.CalculateBoundedFloatingCursorOffset(rawCursorOffset);
                     _lastTextPosition = renderEditable.GetPositionForPoint(
                         renderEditable.LocalToGlobal(_lastBoundedOffset.Value + FloatingCursorOffset));
@@ -480,7 +480,7 @@ public sealed partial class EditableText
         {
             RenderEditable renderEditable = RenderEditable!;
             Rect caretRect = renderEditable.GetLocalRectForCaret(_lastTextPosition!.Value);
-            Point finalPosition = new Point(caretRect.Left, caretRect.Center.Y) - FloatingCursorOffset;
+            Offset finalPosition = new Offset(caretRect.Left, caretRect.Center.Dy) - FloatingCursorOffset;
             if (_floatingCursorResetController!.Status.IsCompleted())
             {
                 renderEditable.SetFloatingCursor(FloatingCursorDragState.End, finalPosition, _lastTextPosition.Value);
@@ -501,12 +501,12 @@ public sealed partial class EditableText
             else
             {
                 double lerpValue = _floatingCursorResetController.Value;
-                Point lastBoundedOffset = _lastBoundedOffset!.Value;
-                double lerpX = lastBoundedOffset.X + (finalPosition.X - lastBoundedOffset.X) * lerpValue;
-                double lerpY = lastBoundedOffset.Y + (finalPosition.Y - lastBoundedOffset.Y) * lerpValue;
+                Offset lastBoundedOffset = _lastBoundedOffset!.Value;
+                double lerpX = lastBoundedOffset.Dx + (finalPosition.Dx - lastBoundedOffset.Dx) * lerpValue;
+                double lerpY = lastBoundedOffset.Dy + (finalPosition.Dy - lastBoundedOffset.Dy) * lerpValue;
                 renderEditable.SetFloatingCursor(
                     FloatingCursorDragState.Update,
-                    new Point(lerpX, lerpY),
+                    new Offset(lerpX, lerpY),
                     _lastTextPosition.Value,
                     resetLerpValue: lerpValue);
             }
@@ -772,7 +772,7 @@ public sealed partial class EditableText
             double obscuredVertical =
                 (view.Padding.Top + view.Padding.Bottom + view.ViewInsets.Bottom) / devicePixelRatio;
             double obscuredHorizontal = (view.Padding.Left + view.Padding.Right) / devicePixelRatio;
-            return new Rect(
+            return DartGeometry.RectFromLTWH(
                 view.Padding.Left / devicePixelRatio,
                 view.Padding.Top / devicePixelRatio,
                 screenSize.Width - obscuredHorizontal,
@@ -801,7 +801,7 @@ public sealed partial class EditableText
         }
 
         private static bool HasNaN(Rect rect) =>
-            double.IsNaN(rect.X) || double.IsNaN(rect.Y) || double.IsNaN(rect.Width) || double.IsNaN(rect.Height);
+            double.IsNaN(rect.Left) || double.IsNaN(rect.Top) || double.IsNaN(rect.Width) || double.IsNaN(rect.Height);
 
         /// Dart's `Rect.overlaps`: edges that only touch do not overlap.
         private static bool Overlaps(Rect a, Rect b) =>
@@ -812,7 +812,7 @@ public sealed partial class EditableText
         {
             double left = Math.Min(a.Left, b.Left);
             double top = Math.Min(a.Top, b.Top);
-            return new Rect(left, top, Math.Max(a.Right, b.Right) - left, Math.Max(a.Bottom, b.Bottom) - top);
+            return DartGeometry.RectFromLTWH(left, top, Math.Max(a.Right, b.Right) - left, Math.Max(a.Bottom, b.Bottom) - top);
         }
     }
 }
@@ -890,7 +890,7 @@ internal sealed class RenderEditableTextCompositionCallback(CompositionCallback 
         }
     }
 
-    public override void Paint(PaintingContext context, Point offset)
+    public override void Paint(PaintingContext context, Offset offset)
     {
         if (Enabled)
         {

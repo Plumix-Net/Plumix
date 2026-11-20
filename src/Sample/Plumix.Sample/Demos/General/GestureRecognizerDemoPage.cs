@@ -40,9 +40,9 @@ public sealed class GestureRecognizerDemoPageState : State
     private double _baseScale = 1.0;
     private double _rotation;
     private double _baseRotation;
-    private Point _translation;
-    private Point _baseTranslation;
-    private Point _startFocalPoint;
+    private Offset _translation;
+    private Offset _baseTranslation;
+    private Offset _startFocalPoint;
 
     public override Widget Build(BuildContext context)
     {
@@ -146,7 +146,7 @@ public sealed class GestureRecognizerDemoPageState : State
                         instance.OnDown = _ => Log(_dragLog, "down");
                         instance.OnStart = details => Log(
                             _dragLog,
-                            $"start at {details.GlobalPosition.X:F0}");
+                            $"start at {details.GlobalPosition.Dx:F0}");
                         instance.OnUpdate = details => SetState(() =>
                         {
                             _offset = Math.Clamp(_offset + (details.PrimaryDelta ?? 0.0), 0.0, 220.0);
@@ -187,7 +187,7 @@ public sealed class GestureRecognizerDemoPageState : State
             onLongPress: () => Log(_longPressLog, "primary long press"),
             onLongPressMoveUpdate: details => Log(
                 _longPressLog,
-                $"primary move {details.OffsetFromOrigin.X:F0}, {details.OffsetFromOrigin.Y:F0}"),
+                $"primary move {details.OffsetFromOrigin.Dx:F0}, {details.OffsetFromOrigin.Dy:F0}"),
             onLongPressEnd: _ => Log(_longPressLog, "primary end"),
             onSecondaryLongPressDown: _ => Log(_longPressLog, "secondary down"),
             onSecondaryLongPress: () => Log(_longPressLog, "secondary long press"),
@@ -221,10 +221,10 @@ public sealed class GestureRecognizerDemoPageState : State
             {
                 _scale = Math.Clamp(_baseScale * details.Scale, 0.5, 4.0);
                 _rotation = _baseRotation + details.Rotation;
-                Point moved = details.FocalPoint - _startFocalPoint;
-                _translation = new Point(
-                    Math.Clamp(_baseTranslation.X + moved.X, -96.0, 96.0),
-                    Math.Clamp(_baseTranslation.Y + moved.Y, -40.0, 40.0));
+                Offset moved = details.FocalPoint - _startFocalPoint;
+                _translation = new Offset(
+                    Math.Clamp(_baseTranslation.Dx + moved.Dx, -96.0, 96.0),
+                    Math.Clamp(_baseTranslation.Dy + moved.Dy, -40.0, 40.0));
                 AppendLog(
                     _scaleLog,
                     $"scale {details.Scale:F2}, rotation {details.Rotation:F2}, {details.PointerCount} pointer(s)");

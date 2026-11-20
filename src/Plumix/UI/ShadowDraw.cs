@@ -39,7 +39,7 @@ internal sealed class ShadowDraw(Path path, Color color, double elevation, bool 
 
     public Rect Bounds { get; } = ComputeShadowBounds(path.GetBounds(), elevation, dpr);
 
-    public bool HitTest(Point point) => false;
+    public bool HitTest(Offset point) => false;
 
     public bool Equals(ICustomDrawOperation? other) => ReferenceEquals(this, other);
 
@@ -58,8 +58,8 @@ internal sealed class ShadowDraw(Path path, Color color, double elevation, bool 
         ShadowMetrics.GetDirectionalParams(occluderZ, 0, -1, 1, LightRadius / LightHeight,
             out float spotBlur, out _, out ShadowPoint spotOffset);
         Rect ambient = pathBounds.Inflate(ambientBlur);
-        Rect spot = pathBounds.Translate(new Vector(spotOffset.X, spotOffset.Y)).Inflate(spotBlur);
-        return ambient.Union(spot).Inflate(1.0);
+        Rect spot = pathBounds.Shift(new Offset(spotOffset.X, spotOffset.Y)).Inflate(spotBlur);
+        return ambient.ExpandToInclude(spot).Inflate(1.0);
     }
 
     /// <summary>SkShadowUtils::ComputeTonalColors: a greyscale ambient colour and a tonal spot colour.</summary>

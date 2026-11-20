@@ -27,13 +27,13 @@ public sealed class PointerEventResamplerTests
 
         resampler.Sample(start.AddMilliseconds(20), start.AddMilliseconds(30), events.Add);
         resampler.Sample(start.AddMilliseconds(25), start.AddMilliseconds(35), events.Add);
-        Assert.Equal(10.0, Assert.IsType<PointerMoveEvent>(events[2]).Position.X);
-        Assert.Equal(15.0, Assert.IsType<PointerMoveEvent>(events[3]).Position.X);
-        Assert.Equal(5.0, events[3].Delta.X);
+        Assert.Equal(10.0, Assert.IsType<PointerMoveEvent>(events[2]).Position.Dx);
+        Assert.Equal(15.0, Assert.IsType<PointerMoveEvent>(events[3]).Position.Dx);
+        Assert.Equal(5.0, events[3].Delta.Dx);
         Assert.True(resampler.HasPendingEvents);
 
         resampler.Stop(events.Add);
-        Assert.Equal(20.0, Assert.IsType<PointerMoveEvent>(events[4]).Position.X);
+        Assert.Equal(20.0, Assert.IsType<PointerMoveEvent>(events[4]).Position.Dx);
         Assert.False(resampler.HasPendingEvents);
         Assert.False(resampler.IsDown);
     }
@@ -74,17 +74,17 @@ public sealed class PointerEventResamplerTests
         resampler.AddEvent(Move(10, start.AddMilliseconds(2)));
         resampler.AddEvent(Move(20, start.AddMilliseconds(3)));
         resampler.AddEvent(new PointerUpEvent(
-            7, PointerDeviceKind.Touch, new Point(20, 0),
+            7, PointerDeviceKind.Touch, new Offset(20, 0),
             PointerButtons.None, start.AddMilliseconds(3)));
         var events = new List<PointerEvent>();
 
         resampler.Sample(start.AddMilliseconds(0.5), start.AddMilliseconds(1.5), events.Add);
         Assert.Empty(events);
         resampler.Sample(start.AddMilliseconds(1.5), start.AddMilliseconds(2.5), events.Add);
-        Assert.Equal(5.0, Assert.IsType<PointerDownEvent>(events[1]).Position.X);
+        Assert.Equal(5.0, Assert.IsType<PointerDownEvent>(events[1]).Position.Dx);
         resampler.Sample(start.AddMilliseconds(2.5), start.AddMilliseconds(3.5), events.Add);
-        Assert.Equal(15.0, Assert.IsType<PointerMoveEvent>(events[2]).Position.X);
-        Assert.Equal(15.0, Assert.IsType<PointerUpEvent>(events[3]).Position.X);
+        Assert.Equal(15.0, Assert.IsType<PointerMoveEvent>(events[2]).Position.Dx);
+        Assert.Equal(15.0, Assert.IsType<PointerUpEvent>(events[3]).Position.Dx);
         Assert.Equal(start.AddMilliseconds(2.5), events[3].TimestampUtc);
         Assert.False(resampler.IsDown);
     }
@@ -99,7 +99,7 @@ public sealed class PointerEventResamplerTests
         resampler.AddEvent(Down(start.AddMilliseconds(2)));
         resampler.AddEvent(Move(10, start.AddMilliseconds(3)));
         resampler.AddEvent(new PointerUpEvent(
-            7, PointerDeviceKind.Touch, new Point(10, 0),
+            7, PointerDeviceKind.Touch, new Offset(10, 0),
             PointerButtons.None, start.AddMilliseconds(4)));
         var events = new List<PointerEvent>();
 
@@ -107,7 +107,7 @@ public sealed class PointerEventResamplerTests
         resampler.Sample(start.AddMilliseconds(5), start.AddMilliseconds(6), events.Add);
 
         Assert.Equal(4, events.Count);
-        Assert.Equal(10.0, Assert.IsType<PointerMoveEvent>(events[2]).Delta.X);
+        Assert.Equal(10.0, Assert.IsType<PointerMoveEvent>(events[2]).Delta.Dx);
         Assert.IsType<PointerUpEvent>(events[3]);
         Assert.All(events.Skip(2), @event => Assert.Equal(start.AddMilliseconds(5), @event.TimestampUtc));
     }
@@ -116,5 +116,5 @@ public sealed class PointerEventResamplerTests
         new(7, PointerDeviceKind.Touch, default, PointerButtons.Primary, timestamp);
 
     private static PointerMoveEvent Move(double x, DateTime timestamp) =>
-        new(7, PointerDeviceKind.Touch, new Point(x, 0), PointerButtons.Primary, timestamp);
+        new(7, PointerDeviceKind.Touch, new Offset(x, 0), PointerButtons.Primary, timestamp);
 }

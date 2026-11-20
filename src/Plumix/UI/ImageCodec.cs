@@ -261,7 +261,7 @@ public enum ImageByteFormat
 /// <summary>dart:ui's <c>Image.toByteData</c> over the Avalonia bitmaps that stand in for <c>ui.Image</c>.</summary>
 public static class ImageByteData
 {
-    private static readonly Vector Dpi = new(96.0, 96.0);
+    private static readonly Offset Dpi = new(96.0, 96.0);
 
     /// <summary>Converts <paramref name="image"/> into a byte array.</summary>
     /// <remarks>

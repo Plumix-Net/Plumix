@@ -191,15 +191,15 @@ public sealed class SelectableRegionState
     private SelectedContent? _lastSelectedContent;
     private FocusNode? _localFocusNode;
     private FocusNode? _attachedFocusNode;
-    private Point? _lastSecondaryTapDownPosition;
+    private Offset? _lastSecondaryTapDownPosition;
     private PointerDeviceKind? _lastPointerDeviceKind;
-    private Point? _doubleTapOffset;
-    private Point? _selectionStartPosition;
-    private Point? _selectionEndPosition;
+    private Offset? _doubleTapOffset;
+    private Offset? _selectionStartPosition;
+    private Offset? _selectionEndPosition;
     private bool _scheduledSelectionStartEdgeUpdate;
     private bool _scheduledSelectionEndEdgeUpdate;
-    private Point _selectionStartHandleDragPosition;
-    private Point _selectionEndHandleDragPosition;
+    private Offset _selectionStartHandleDragPosition;
+    private Offset _selectionEndHandleDragPosition;
     private Orientation? _lastOrientation;
     private bool _isShiftPressed;
     private IReadOnlyDictionary<Type, FlutterAction>? _actions;
@@ -244,9 +244,9 @@ public sealed class SelectableRegionState
                 return [];
             }
 
-            Point startLocalPosition = start?.LocalPosition ?? end!.LocalPosition;
-            Point endLocalPosition = end?.LocalPosition ?? start!.LocalPosition;
-            return startLocalPosition.Y > endLocalPosition.Y
+            Offset startLocalPosition = start?.LocalPosition ?? end!.LocalPosition;
+            Offset endLocalPosition = end?.LocalPosition ?? start!.LocalPosition;
+            return startLocalPosition.Dy > endLocalPosition.Dy
                 ?
                 [
                     new TextSelectionPoint(endLocalPosition, TextDirection.Ltr),
@@ -537,7 +537,7 @@ public sealed class SelectableRegionState
     }
 
     /// Shows the context menu for the current selection.
-    public bool ShowToolbar(Point? location = null)
+    public bool ShowToolbar(Offset? location = null)
     {
         if (!HasSelectionOverlayGeometry && _selectionOverlay is null)
         {
@@ -628,7 +628,7 @@ public sealed class SelectableRegionState
 
     // -- Selection primitives ---------------------------------------------------
 
-    private void SelectStartTo(Point offset, bool continuous = false, TextGranularity? granularity = null)
+    private void SelectStartTo(Offset offset, bool continuous = false, TextGranularity? granularity = null)
     {
         if (!continuous)
         {
@@ -643,7 +643,7 @@ public sealed class SelectableRegionState
         }
     }
 
-    private void SelectEndTo(Point offset, bool continuous = false, TextGranularity? granularity = null)
+    private void SelectEndTo(Offset offset, bool continuous = false, TextGranularity? granularity = null)
     {
         if (!continuous)
         {
@@ -718,26 +718,26 @@ public sealed class SelectableRegionState
         _selectionStartPosition = null;
     }
 
-    private void CollapseSelectionAt(Point offset)
+    private void CollapseSelectionAt(Offset offset)
     {
         FinalizeSelection();
         SelectStartTo(offset);
         SelectEndTo(offset);
     }
 
-    private void SelectWordAt(Point offset)
+    private void SelectWordAt(Offset offset)
     {
         FinalizeSelection();
         _selectable?.DispatchSelectionEvent(new SelectWordSelectionEvent(offset));
     }
 
-    private void SelectParagraphAt(Point offset)
+    private void SelectParagraphAt(Offset offset)
     {
         FinalizeSelection();
         _selectable?.DispatchSelectionEvent(new SelectParagraphSelectionEvent(offset));
     }
 
-    private bool PositionIsOnActiveSelection(Point globalPosition)
+    private bool PositionIsOnActiveSelection(Offset globalPosition)
     {
         if (_selectable is null)
         {
@@ -858,17 +858,17 @@ public sealed class SelectableRegionState
         overlay.SelectionEndpoints = SelectionEndpoints;
     }
 
-    private MagnifierInfo BuildInfoForMagnifier(Point globalGesturePosition, SelectionPoint selectionPoint)
+    private MagnifierInfo BuildInfoForMagnifier(Offset globalGesturePosition, SelectionPoint selectionPoint)
     {
         Matrix4 transform = _selectable!.GetTransformTo(null);
-        var globalTransformAsOffset = new Point(transform[12], transform[13]);
-        Point position = selectionPoint.LocalPosition + globalTransformAsOffset;
-        var caretRect = new Rect(
-            position.X,
-            position.Y - selectionPoint.LineHeight,
+        var globalTransformAsOffset = new Offset(transform[12], transform[13]);
+        Offset position = selectionPoint.LocalPosition + globalTransformAsOffset;
+        var caretRect = DartGeometry.RectFromLTWH(
+            position.Dx,
+            position.Dy - selectionPoint.LineHeight,
             0.0,
             selectionPoint.LineHeight);
-        var fieldBounds = new Rect(globalTransformAsOffset, _selectable.Size);
+        var fieldBounds = DartGeometry.RectFromOffsetAndSize(globalTransformAsOffset, _selectable.Size);
         return new MagnifierInfo(
             GlobalGesturePosition: globalGesturePosition,
             CaretRect: caretRect,
@@ -891,7 +891,7 @@ public sealed class SelectableRegionState
         SelectionPoint startPoint = _selectionDelegate.Value.StartSelectionPoint!;
         _selectionStartHandleDragPosition += details.Delta;
         // The handle anchors at the paint origin; the selection edge sits at the line's centre.
-        _selectionStartPosition = _selectionStartHandleDragPosition - new Point(0, startPoint.LineHeight / 2);
+        _selectionStartPosition = _selectionStartHandleDragPosition - new Offset(0, startPoint.LineHeight / 2);
         TriggerSelectionStartEdgeUpdate();
         _selectionOverlay!.UpdateMagnifier(BuildInfoForMagnifier(
             details.GlobalPosition, _selectionDelegate.Value.StartSelectionPoint!));
@@ -913,7 +913,7 @@ public sealed class SelectableRegionState
     {
         SelectionPoint endPoint = _selectionDelegate.Value.EndSelectionPoint!;
         _selectionEndHandleDragPosition += details.Delta;
-        _selectionEndPosition = _selectionEndHandleDragPosition - new Point(0, endPoint.LineHeight / 2);
+        _selectionEndPosition = _selectionEndHandleDragPosition - new Offset(0, endPoint.LineHeight / 2);
         TriggerSelectionEndEdgeUpdate();
         _selectionOverlay!.UpdateMagnifier(BuildInfoForMagnifier(
             details.GlobalPosition, _selectionDelegate.Value.EndSelectionPoint!));
@@ -1354,7 +1354,7 @@ public sealed class SelectableRegionState
 
     private void HandleRightClickDown(TapDownDetails details)
     {
-        Point? previousSecondaryTapDownPosition = _lastSecondaryTapDownPosition;
+        Offset? previousSecondaryTapDownPosition = _lastSecondaryTapDownPosition;
         bool toolbarIsVisible = ContextMenuIsVisible;
         _lastSecondaryTapDownPosition = details.GlobalPosition;
         FocusNode.RequestFocus();
@@ -1422,17 +1422,17 @@ public sealed class SelectableRegionState
         SelectionPoint start = _selectionDelegate.Value.StartSelectionPoint!;
         SelectionPoint end = _selectionDelegate.Value.EndSelectionPoint!;
         bool isReversed;
-        if (start.LocalPosition.Y > end.LocalPosition.Y)
+        if (start.LocalPosition.Dy > end.LocalPosition.Dy)
         {
             isReversed = true;
         }
-        else if (start.LocalPosition.Y < end.LocalPosition.Y)
+        else if (start.LocalPosition.Dy < end.LocalPosition.Dy)
         {
             isReversed = false;
         }
         else
         {
-            isReversed = start.LocalPosition.X > end.LocalPosition.X;
+            isReversed = start.LocalPosition.Dx > end.LocalPosition.Dx;
         }
 
         _adjustingSelectionEnd = forward != isReversed;
@@ -1466,14 +1466,14 @@ public sealed class SelectableRegionState
         SelectionPoint baseLinePoint = adjustingSelectionExtend
             ? _selectionDelegate.Value.EndSelectionPoint!
             : _selectionDelegate.Value.StartSelectionPoint!;
-        _directionalHorizontalBaseline ??= baseLinePoint.LocalPosition.X;
-        Point globalSelectionPointOffset = Context.FindRenderObject() is { } renderObject
+        _directionalHorizontalBaseline ??= baseLinePoint.LocalPosition.Dx;
+        Offset globalSelectionPointOffset = Context.FindRenderObject() is { } renderObject
             ? MatrixUtils.TransformPoint(
                 renderObject.GetTransformTo(null),
-                new Point(_directionalHorizontalBaseline.Value, 0))
-            : new Point(_directionalHorizontalBaseline.Value, 0);
+                new Offset(_directionalHorizontalBaseline.Value, 0))
+            : new Offset(_directionalHorizontalBaseline.Value, 0);
         _selectable?.DispatchSelectionEvent(new DirectionallyExtendSelectionEvent(
-            globalSelectionPointOffset.X,
+            globalSelectionPointOffset.Dx,
             _adjustingSelectionEnd!.Value,
             forward ? SelectionExtendDirection.NextLine : SelectionExtendDirection.PreviousLine));
         UpdateSelectedContentIfNeeded();

@@ -117,14 +117,14 @@ public sealed class CupertinoSegmentedControlTests : IDisposable
             onValueChanged: value => reported = value)));
         harness.Pump(ViewSize);
 
-        Tap(harness.RenderView, new Point(91.0, 14.0), pointer: 10);
+        Tap(harness.RenderView, new Offset(91.0, 14.0), pointer: 10);
         harness.Pump(ViewSize);
 
         Assert.Equal("two", reported);
         Assert.Equal([0xFF007AFFu, 0xFFFFFFFFu], ColorsOf(FindRender(harness)));
 
         reported = null;
-        Tap(harness.RenderView, new Point(41.0, 14.0), pointer: 11);
+        Tap(harness.RenderView, new Offset(41.0, 14.0), pointer: 11);
         Assert.Null(reported);
     }
 
@@ -134,14 +134,14 @@ public sealed class CupertinoSegmentedControlTests : IDisposable
         using var harness = new CupertinoThemeTestHarness(Wrap(Control(groupValue: "one")));
         harness.Pump(ViewSize);
 
-        PointerDown(harness.RenderView, new Point(91.0, 14.0), pointer: 20);
+        PointerDown(harness.RenderView, new Offset(91.0, 14.0), pointer: 20);
         harness.Pump(ViewSize);
         Assert.Equal([0xFF007AFFu, 0x33007AFFu], ColorsOf(FindRender(harness)));
 
-        PointerDown(harness.RenderView, new Point(41.0, 14.0), pointer: 21);
+        PointerDown(harness.RenderView, new Offset(41.0, 14.0), pointer: 21);
         harness.Pump(ViewSize);
         Assert.Equal([0xFF007AFFu, 0x33007AFFu], ColorsOf(FindRender(harness)));
-        PointerCancel(harness.RenderView, new Point(91.0, 14.0), pointer: 20);
+        PointerCancel(harness.RenderView, new Offset(91.0, 14.0), pointer: 20);
 
         using var disabled = new CupertinoThemeTestHarness(Wrap(new CupertinoSegmentedControl<string>(
             Children(),
@@ -149,7 +149,7 @@ public sealed class CupertinoSegmentedControlTests : IDisposable
             groupValue: "one",
             disabledChildren: new HashSet<string> { "two" })));
         disabled.Pump(ViewSize);
-        PointerDown(disabled.RenderView, new Point(91.0, 14.0), pointer: 22);
+        PointerDown(disabled.RenderView, new Offset(91.0, 14.0), pointer: 22);
         disabled.Pump(ViewSize);
         Assert.Equal([0xFF007AFFu, 0xFFFFFFFFu], ColorsOf(FindRender(disabled)));
     }
@@ -204,8 +204,8 @@ public sealed class CupertinoSegmentedControlTests : IDisposable
         Assert.Equal(new Size(300.0, 80.0), ltrRender.Size);
         IReadOnlyList<RenderBox> ltrChildren = DirectChildren(ltrRender);
         Assert.All(ltrChildren, child => Assert.Equal(new Size(100.0, 80.0), child.Size));
-        Assert.Equal(0.0, ParentData(ltrChildren[0]).offset.X);
-        Assert.Equal(200.0, ParentData(ltrChildren[2]).offset.X);
+        Assert.Equal(0.0, ParentData(ltrChildren[0]).offset.Dx);
+        Assert.Equal(200.0, ParentData(ltrChildren[2]).offset.Dx);
         Assert.Equal(Radius.Circular(3.0), ParentData(ltrChildren[0]).SurroundingRect.TopLeft);
         Assert.Equal(Radius.Circular(3.0), ParentData(ltrChildren[2]).SurroundingRect.TopRight);
 
@@ -216,8 +216,8 @@ public sealed class CupertinoSegmentedControlTests : IDisposable
             direction: TextDirection.Rtl));
         rtl.Pump(new Size(640.0, 160.0));
         IReadOnlyList<RenderBox> rtlChildren = DirectChildren(FindRender(rtl));
-        Assert.Equal(200.0, ParentData(rtlChildren[0]).offset.X);
-        Assert.Equal(0.0, ParentData(rtlChildren[2]).offset.X);
+        Assert.Equal(200.0, ParentData(rtlChildren[0]).offset.Dx);
+        Assert.Equal(0.0, ParentData(rtlChildren[2]).offset.Dx);
     }
 
     [Fact]
@@ -256,7 +256,7 @@ public sealed class CupertinoSegmentedControlTests : IDisposable
             groupValue: "one",
             disabledChildren: new HashSet<string> { "two" })));
         harness.Pump(ViewSize);
-        Tap(harness.RenderView, new Point(41.0, 14.0), pointer: 30);
+        Tap(harness.RenderView, new Offset(41.0, 14.0), pointer: 30);
         EventLoop.FlushMicrotasks();
 
         Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowRight)));
@@ -291,15 +291,15 @@ public sealed class CupertinoSegmentedControlTests : IDisposable
     public void RSuperellipsePrimitivePreservesBoundsShiftRadiiAndExactPath()
     {
         var shape = RSuperellipse.FromRectAndCorners(
-            new Rect(10.0, 20.0, 100.0, 40.0),
+            DartGeometry.RectFromLTWH(10.0, 20.0, 100.0, 40.0),
             topLeft: Radius.Circular(12.0),
             bottomRight: Radius.Elliptical(8.0, 6.0));
 
         Assert.Equal(shape.Rect, shape.OuterRect);
-        Assert.Equal(new Rect(15.0, 27.0, 100.0, 40.0), shape.Shift(new Point(5.0, 7.0)).OuterRect);
+        Assert.Equal(DartGeometry.RectFromLTWH(15.0, 27.0, 100.0, 40.0), shape.Shift(new Offset(5.0, 7.0)).OuterRect);
         Assert.Equal(shape.OuterRect, shape.ToPath().GetBounds());
-        Assert.True(shape.Contains(new Point(60.0, 40.0)));
-        Assert.False(shape.Contains(new Point(10.0, 20.0)));
+        Assert.True(shape.Contains(new Offset(60.0, 40.0)));
+        Assert.False(shape.Contains(new Offset(10.0, 20.0)));
     }
 
     private static CupertinoSegmentedControl<string> Control(
@@ -378,7 +378,7 @@ public sealed class CupertinoSegmentedControlTests : IDisposable
         return result;
     }
 
-    private static void Tap(RenderView view, Point position, int pointer)
+    private static void Tap(RenderView view, Offset position, int pointer)
     {
         PointerDown(view, position, pointer);
         GestureBinding.Instance.HandlePointerEvent(
@@ -391,7 +391,7 @@ public sealed class CupertinoSegmentedControlTests : IDisposable
                 DateTime.UtcNow.AddMilliseconds(16.0)));
     }
 
-    private static void PointerDown(RenderView view, Point position, int pointer)
+    private static void PointerDown(RenderView view, Offset position, int pointer)
     {
         GestureBinding.Instance.HandlePointerEvent(
             view,
@@ -403,7 +403,7 @@ public sealed class CupertinoSegmentedControlTests : IDisposable
                 DateTime.UtcNow));
     }
 
-    private static void PointerCancel(RenderView view, Point position, int pointer)
+    private static void PointerCancel(RenderView view, Offset position, int pointer)
     {
         GestureBinding.Instance.HandlePointerEvent(
             view,

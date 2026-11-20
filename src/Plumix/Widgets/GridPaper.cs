@@ -34,13 +34,13 @@ internal sealed class GridPaperPainter : CustomPainter
         for (double x = 0.0; x <= size.Width; x += step)
         {
             var pen = new Pen(brush, StrokeWidthAt(x));
-            context.Canvas.DrawLine(pen, new Point(x, 0.0), new Point(x, size.Height));
+            context.Canvas.DrawLine(pen, new Offset(x, 0.0), new Offset(x, size.Height));
         }
 
         for (double y = 0.0; y <= size.Height; y += step)
         {
             var pen = new Pen(brush, StrokeWidthAt(y));
-            context.Canvas.DrawLine(pen, new Point(0.0, y), new Point(size.Width, y));
+            context.Canvas.DrawLine(pen, new Offset(0.0, y), new Offset(size.Width, y));
         }
     }
 
@@ -53,7 +53,7 @@ internal sealed class GridPaperPainter : CustomPainter
                || oldPainter.Subdivisions != Subdivisions;
     }
 
-    public override bool? HitTest(Point position) => false;
+    public override bool? HitTest(Offset position) => false;
 
     internal double StrokeWidthAt(double coordinate)
     {

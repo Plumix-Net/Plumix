@@ -386,7 +386,7 @@ public sealed class UserAccountsDrawerHeader : StatefulWidget
                 : new Size(size.Width - iconSize.Value.Width, size.Height);
             iconSize ??= new Size(56.0, 56.0);
             Size bottomLineSize = LayoutChild(bottomLine, BoxConstraints.Loose(constraintSize));
-            Point bottomLineOffset = OffsetForBottomLine(size, iconSize.Value, bottomLineSize);
+            Offset bottomLineOffset = OffsetForBottomLine(size, iconSize.Value, bottomLineSize);
             PositionChild(bottomLine, bottomLineOffset);
 
             if (bottomLine == AccountEmailId
@@ -403,27 +403,27 @@ public sealed class UserAccountsDrawerHeader : StatefulWidget
 
         public override bool ShouldRelayout(MultiChildLayoutDelegate oldDelegate) => true;
 
-        private Point OffsetForIcon(Size size, Size iconSize)
+        private Offset OffsetForIcon(Size size, Size iconSize)
         {
             return textDirection == TextDirection.Ltr
-                ? new Point(size.Width - iconSize.Width, size.Height - iconSize.Height)
-                : new Point(0.0, size.Height - iconSize.Height);
+                ? new Offset(size.Width - iconSize.Width, size.Height - iconSize.Height)
+                : new Offset(0.0, size.Height - iconSize.Height);
         }
 
-        private Point OffsetForBottomLine(Size size, Size iconSize, Size bottomLineSize)
+        private Offset OffsetForBottomLine(Size size, Size iconSize, Size bottomLineSize)
         {
             double y = size.Height - (0.5 * iconSize.Height) - (0.5 * bottomLineSize.Height);
             return textDirection == TextDirection.Ltr
-                ? new Point(0.0, y)
-                : new Point(size.Width - bottomLineSize.Width, y);
+                ? new Offset(0.0, y)
+                : new Offset(size.Width - bottomLineSize.Width, y);
         }
 
-        private Point OffsetForName(Size size, Size nameSize, Point bottomLineOffset)
+        private Offset OffsetForName(Size size, Size nameSize, Offset bottomLineOffset)
         {
-            double y = bottomLineOffset.Y - nameSize.Height;
+            double y = bottomLineOffset.Dy - nameSize.Height;
             return textDirection == TextDirection.Ltr
-                ? new Point(0.0, y)
-                : new Point(size.Width - nameSize.Width, y);
+                ? new Offset(0.0, y)
+                : new Offset(size.Width - nameSize.Width, y);
         }
     }
 }

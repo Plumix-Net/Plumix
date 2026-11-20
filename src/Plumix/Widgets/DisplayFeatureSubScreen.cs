@@ -15,7 +15,7 @@ public sealed class DisplayFeatureSubScreen : StatelessWidget
 {
     public DisplayFeatureSubScreen(
         Widget child,
-        Point? anchorPoint = null,
+        Offset? anchorPoint = null,
         Key? key = null) : base(key)
     {
         Child = child ?? throw new ArgumentNullException(nameof(child));
@@ -24,14 +24,14 @@ public sealed class DisplayFeatureSubScreen : StatelessWidget
 
     public Widget Child { get; }
 
-    public Point? AnchorPoint { get; }
+    public Offset? AnchorPoint { get; }
 
     public override Widget Build(BuildContext context)
     {
         var mediaQuery = MediaQuery.Of(context);
         Size parentSize = mediaQuery.Size;
-        var wantedBounds = new Rect(default, parentSize);
-        Point resolvedAnchorPoint = CapOffset(AnchorPoint ?? FallbackAnchorPoint(context), parentSize);
+        var wantedBounds = DartGeometry.RectFromOffsetAndSize(default, parentSize);
+        Offset resolvedAnchorPoint = CapOffset(AnchorPoint ?? FallbackAnchorPoint(context), parentSize);
         List<Rect> subScreens = SubScreensInBounds(wantedBounds, AvoidBounds(mediaQuery));
         Rect closestSubScreen = ClosestToAnchorPoint(subScreens, resolvedAnchorPoint);
 
@@ -66,10 +66,10 @@ public sealed class DisplayFeatureSubScreen : StatelessWidget
         return bounds;
     }
 
-    private static Point FallbackAnchorPoint(BuildContext context)
+    private static Offset FallbackAnchorPoint(BuildContext context)
     {
         return Directionality.Of(context) == TextDirection.Rtl
-            ? new Point(double.MaxValue, 0.0)
+            ? new Offset(double.MaxValue, 0.0)
             : default;
     }
 
@@ -87,13 +87,13 @@ public sealed class DisplayFeatureSubScreen : StatelessWidget
                     // The display feature splits this sub-screen vertically.
                     if (screen.Left < bounds.Left)
                     {
-                        newSubScreens.Add(new Rect(screen.Left, screen.Top, bounds.Left - screen.Left, screen.Height));
+                        newSubScreens.Add(DartGeometry.RectFromLTWH(screen.Left, screen.Top, bounds.Left - screen.Left, screen.Height));
                     }
 
                     if (screen.Right > bounds.Right)
                     {
                         newSubScreens.Add(
-                            new Rect(bounds.Right, screen.Top, screen.Right - bounds.Right, screen.Height));
+                            DartGeometry.RectFromLTWH(bounds.Right, screen.Top, screen.Right - bounds.Right, screen.Height));
                     }
                 }
                 else if (screen.Left >= bounds.Left && screen.Right <= bounds.Right)
@@ -101,13 +101,13 @@ public sealed class DisplayFeatureSubScreen : StatelessWidget
                     // The display feature splits this sub-screen horizontally.
                     if (screen.Top < bounds.Top)
                     {
-                        newSubScreens.Add(new Rect(screen.Left, screen.Top, screen.Width, bounds.Top - screen.Top));
+                        newSubScreens.Add(DartGeometry.RectFromLTWH(screen.Left, screen.Top, screen.Width, bounds.Top - screen.Top));
                     }
 
                     if (screen.Bottom > bounds.Bottom)
                     {
                         newSubScreens.Add(
-                            new Rect(screen.Left, bounds.Bottom, screen.Width, screen.Bottom - bounds.Bottom));
+                            DartGeometry.RectFromLTWH(screen.Left, bounds.Bottom, screen.Width, screen.Bottom - bounds.Bottom));
                     }
                 }
                 else
@@ -122,7 +122,7 @@ public sealed class DisplayFeatureSubScreen : StatelessWidget
         return subScreens;
     }
 
-    private static Rect ClosestToAnchorPoint(List<Rect> subScreens, Point anchorPoint)
+    private static Rect ClosestToAnchorPoint(List<Rect> subScreens, Offset anchorPoint)
     {
         var closestScreen = default(Rect);
         double closestDistance = double.PositiveInfinity;
@@ -139,47 +139,47 @@ public sealed class DisplayFeatureSubScreen : StatelessWidget
         return closestScreen;
     }
 
-    private static double DistanceFromPointToRect(Point point, Rect rect)
+    private static double DistanceFromPointToRect(Offset point, Rect rect)
     {
-        if (point.X < rect.Left)
+        if (point.Dx < rect.Left)
         {
-            if (point.Y < rect.Top)
+            if (point.Dy < rect.Top)
             {
                 return Distance(point, rect.TopLeft);
             }
 
-            return point.Y > rect.Bottom ? Distance(point, rect.BottomLeft) : rect.Left - point.X;
+            return point.Dy > rect.Bottom ? Distance(point, rect.BottomLeft) : rect.Left - point.Dx;
         }
 
-        if (point.X > rect.Right)
+        if (point.Dx > rect.Right)
         {
-            if (point.Y < rect.Top)
+            if (point.Dy < rect.Top)
             {
                 return Distance(point, rect.TopRight);
             }
 
-            return point.Y > rect.Bottom ? Distance(point, rect.BottomRight) : point.X - rect.Right;
+            return point.Dy > rect.Bottom ? Distance(point, rect.BottomRight) : point.Dx - rect.Right;
         }
 
-        if (point.Y < rect.Top)
+        if (point.Dy < rect.Top)
         {
-            return rect.Top - point.Y;
+            return rect.Top - point.Dy;
         }
 
-        return point.Y > rect.Bottom ? point.Y - rect.Bottom : 0.0;
+        return point.Dy > rect.Bottom ? point.Dy - rect.Bottom : 0.0;
     }
 
-    private static double Distance(Point from, Point to)
+    private static double Distance(Offset from, Offset to)
     {
-        double dx = from.X - to.X;
-        double dy = from.Y - to.Y;
+        double dx = from.Dx - to.Dx;
+        double dy = from.Dy - to.Dy;
         return Math.Sqrt((dx * dx) + (dy * dy));
     }
 
-    private static Point CapOffset(Point offset, Size maximum)
+    private static Offset CapOffset(Offset offset, Size maximum)
     {
-        return new Point(
-            Math.Min(Math.Max(0.0, offset.X), maximum.Width),
-            Math.Min(Math.Max(0.0, offset.Y), maximum.Height));
+        return new Offset(
+            Math.Min(Math.Max(0.0, offset.Dx), maximum.Width),
+            Math.Min(Math.Max(0.0, offset.Dy), maximum.Height));
     }
 }

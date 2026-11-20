@@ -16,7 +16,7 @@ public sealed record BadgeThemeData(
     TextStyle? TextStyle = null,
     EdgeInsetsGeometry? Padding = null,
     AlignmentGeometry? Alignment = null,
-    Vector? Offset = null)
+    Offset? Offset = null)
 {
     public BadgeThemeData CopyWith(
         Color? backgroundColor = null,
@@ -26,7 +26,7 @@ public sealed record BadgeThemeData(
         TextStyle? textStyle = null,
         EdgeInsetsGeometry? padding = null,
         AlignmentGeometry? alignment = null,
-        Vector? offset = null)
+        Offset? offset = null)
     {
         return new BadgeThemeData(
             BackgroundColor: backgroundColor ?? BackgroundColor,
@@ -83,18 +83,18 @@ public sealed record BadgeThemeData(
     }
 
 
-    private static Vector? LerpVector(Vector? a, Vector? b, double t)
+    private static Offset? LerpVector(Offset? a, Offset? b, double t)
     {
         if (!a.HasValue && !b.HasValue)
         {
             return null;
         }
 
-        Vector from = a ?? default;
-        Vector to = b ?? default;
-        return new Vector(
-            from.X + ((to.X - from.X) * t),
-            from.Y + ((to.Y - from.Y) * t));
+        Offset from = a ?? default;
+        Offset to = b ?? default;
+        return new Offset(
+            from.Dx + ((to.Dx - from.Dx) * t),
+            from.Dy + ((to.Dy - from.Dy) * t));
     }
 }
 

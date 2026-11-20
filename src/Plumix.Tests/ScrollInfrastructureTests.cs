@@ -606,7 +606,7 @@ public sealed class ScrollInfrastructureTests
 
         var transform = Matrix4.Identity();
         viewport.ApplyPaintTransform(child, transform);
-        Assert.Equal(new Point(10, -110), MatrixUtils.TransformPoint(transform, new Point(10, 10)));
+        Assert.Equal(new Offset(10, -110), MatrixUtils.TransformPoint(transform, new Offset(10, 10)));
     }
 
     /// <remarks>
@@ -624,12 +624,12 @@ public sealed class ScrollInfrastructureTests
         viewport.Layout(BoxConstraints.Tight(new Size(80, 100)));
 
         var result = new BoxHitTestResult();
-        Assert.True(viewport.HitTest(result, new Point(10, 10)));
+        Assert.True(viewport.HitTest(result, new Offset(10, 10)));
 
         BoxHitTestEntry childEntry = result.Path
             .OfType<BoxHitTestEntry>()
             .First(entry => ReferenceEquals(entry.Target, child));
-        Assert.Equal(new Point(10, 130), childEntry.LocalPosition);
+        Assert.Equal(new Offset(10, 130), childEntry.LocalPosition);
     }
 
     /// <remarks>
@@ -667,9 +667,9 @@ public sealed class ScrollInfrastructureTests
 
         protected override void PerformLayout() => Size = Constraints.Constrain(_size);
 
-        protected override bool HitTestSelf(Point position) => true;
+        protected override bool HitTestSelf(Offset position) => true;
 
-        public override void Paint(PaintingContext context, Point offset)
+        public override void Paint(PaintingContext context, Offset offset)
         {
         }
     }

@@ -421,7 +421,7 @@ public sealed class ButtonStyleState : State<ButtonStyleButton>
         WidgetStateProperty<Color?> overlayColor = WidgetStateProperty<Color?>.ResolveWith(
             overlayStates => EffectiveClass<Color>(style => style?.OverlayColor?.Resolve(overlayStates)));
 
-        Vector densityAdjustment = resolvedVisualDensity.BaseSizeAdjustment;
+        Offset densityAdjustment = resolvedVisualDensity.BaseSizeAdjustment;
         BoxConstraints effectiveConstraints = resolvedVisualDensity.EffectiveConstraints(new BoxConstraints(
             MinWidth: resolvedMinimumSize.Width,
             MaxWidth: resolvedMaximumSize.Width,
@@ -451,8 +451,8 @@ public sealed class ButtonStyleState : State<ButtonStyleButton>
 
         // Per the Material Design team: the visual-density adjustment must never reduce the
         // left/right padding, or `VisualDensity.compact` (the desktop/web default) would zero it.
-        double verticalAdjustment = densityAdjustment.Y;
-        double horizontalAdjustment = Math.Max(0.0, densityAdjustment.X);
+        double verticalAdjustment = densityAdjustment.Dy;
+        double horizontalAdjustment = Math.Max(0.0, densityAdjustment.Dx);
         EdgeInsetsGeometry padding = resolvedPadding
             .Add(EdgeInsetsGeometry.FromLTRB(
                 horizontalAdjustment,
@@ -464,8 +464,8 @@ public sealed class ButtonStyleState : State<ButtonStyleButton>
         Size minSize = resolvedTapTargetSize switch
         {
             MaterialTapTargetSize.Padded => new Size(
-                WidgetConstants.MinInteractiveDimension + densityAdjustment.X,
-                WidgetConstants.MinInteractiveDimension + densityAdjustment.Y),
+                WidgetConstants.MinInteractiveDimension + densityAdjustment.Dx,
+                WidgetConstants.MinInteractiveDimension + densityAdjustment.Dy),
             _ => new Size(0.0, 0.0),
         };
 
@@ -710,12 +710,12 @@ internal sealed class RenderInputPadding : RenderShiftedBox
             return;
         }
 
-        ((BoxParentData)Child.parentData!).offset = new Point(
+        ((BoxParentData)Child.parentData!).offset = new Offset(
             (Size.Width - Child.Size.Width) / 2.0,
             (Size.Height - Child.Size.Height) / 2.0);
     }
 
-    public override bool HitTest(BoxHitTestResult result, Point position)
+    public override bool HitTest(BoxHitTestResult result, Offset position)
     {
         if (base.HitTest(result, position))
         {
@@ -727,11 +727,11 @@ internal sealed class RenderInputPadding : RenderShiftedBox
             return false;
         }
 
-        var center = new Point(Child.Size.Width / 2.0, Child.Size.Height / 2.0);
+        var center = new Offset(Child.Size.Width / 2.0, Child.Size.Height / 2.0);
         return result.AddWithRawTransform(
             MatrixUtils.ForceToPoint(center),
             center,
-            (BoxHitTestResult nested, Point nestedPosition) => Child.HitTest(nested, nestedPosition));
+            (BoxHitTestResult nested, Offset nestedPosition) => Child.HitTest(nested, nestedPosition));
     }
 
     private Size ComputeSize(BoxConstraints constraints, bool dry)

@@ -346,7 +346,7 @@ public class RenderStack : RenderBox,
         double y = childParentData.Top
                    ?? (childParentData.Bottom.HasValue
                        ? stackSize.Height - childParentData.Bottom.Value - childSize.Height
-                       : resolvedAlignment.AlongOffset(stackSize, childSize).Y);
+                       : resolvedAlignment.AlongOffset(stackSize, childSize).Dy);
         return childBaseline.Value + y;
     }
 
@@ -385,16 +385,16 @@ public class RenderStack : RenderBox,
         BoxConstraints childConstraints = childParentData.PositionedChildConstraints(size);
         child.Layout(childConstraints, parentUsesSize: true);
 
-        Point alignedOffset = alignment.AlongOffset(size, child.Size);
+        Offset alignedOffset = alignment.AlongOffset(size, child.Size);
         double x = childParentData.Left
                    ?? (childParentData.Right.HasValue
                        ? size.Width - childParentData.Right.Value - child.Size.Width
-                       : alignedOffset.X);
+                       : alignedOffset.Dx);
         double y = childParentData.Top
                    ?? (childParentData.Bottom.HasValue
                        ? size.Height - childParentData.Bottom.Value - child.Size.Height
-                       : alignedOffset.Y);
-        childParentData.offset = new Point(x, y);
+                       : alignedOffset.Dy);
+        childParentData.offset = new Offset(x, y);
         return x < 0.0
                || x + child.Size.Width > size.Width
                || y < 0.0
@@ -408,14 +408,14 @@ public class RenderStack : RenderBox,
         base.Dispose();
     }
 
-    public override void Paint(PaintingContext context, Point offset)
+    public override void Paint(PaintingContext context, Offset offset)
     {
         if (_hasVisualOverflow && ClipBehavior != Clip.None)
         {
             _clipRectLayer.Layer = context.PushClipRect(
                 NeedsCompositing,
                 offset,
-                new Rect(new Point(), Size),
+                DartGeometry.RectFromOffsetAndSize(new Offset(), Size),
                 PaintStack,
                 ClipBehavior,
                 _clipRectLayer.Layer);
@@ -426,13 +426,13 @@ public class RenderStack : RenderBox,
         PaintStack(context, offset);
     }
 
-    protected virtual void PaintStack(PaintingContext context, Point offset) => DefaultPaint(context, offset);
+    protected virtual void PaintStack(PaintingContext context, Offset offset) => DefaultPaint(context, offset);
 
-    protected override bool HitTestChildren(BoxHitTestResult result, Point position) =>
+    protected override bool HitTestChildren(BoxHitTestResult result, Offset position) =>
         DefaultHitTestChildren(result, position);
 
     protected override Rect? DescribeApproximatePaintClip(RenderObject? child) =>
-        _hasVisualOverflow && ClipBehavior != Clip.None ? new Rect(new Point(), Size) : null;
+        _hasVisualOverflow && ClipBehavior != Clip.None ? DartGeometry.RectFromOffsetAndSize(new Offset(), Size) : null;
 
     protected override Rect? DescribeSemanticsClip(RenderObject? child) => DescribeApproximatePaintClip(child);
 
@@ -452,9 +452,9 @@ public class RenderStack : RenderBox,
         }
     }
 
-    public void DefaultPaint(PaintingContext context, Point offset) => _container.DefaultPaint(context, offset);
+    public void DefaultPaint(PaintingContext context, Offset offset) => _container.DefaultPaint(context, offset);
 
-    public bool DefaultHitTestChildren(BoxHitTestResult result, Point position) =>
+    public bool DefaultHitTestChildren(BoxHitTestResult result, Offset position) =>
         _container.DefaultHitTestChildren(result, position);
 
     public void Insert(RenderBox child, RenderBox? after = null) => _container.Insert(child, after);

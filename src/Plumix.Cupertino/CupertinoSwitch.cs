@@ -148,7 +148,7 @@ public sealed class CupertinoSwitch : StatefulWidget
         private static readonly Color OffLabelHighContrastColor = CupertinoColors.White;
 
         private CupertinoSwitchPainter? _painter;
-        private Point? _dragStartPosition;
+        private Offset? _dragStartPosition;
         private double _dragDelta;
         private bool? _dragValue;
         private bool _needsPositionAnimation;
@@ -348,7 +348,7 @@ public sealed class CupertinoSwitch : StatefulWidget
             _dragValue = CurrentWidget.Value;
             if (CurrentWidget.DragStartBehavior == DragStartBehavior.Start && _dragStartPosition.HasValue)
             {
-                double delta = details.GlobalPosition.X - _dragStartPosition.Value.X;
+                double delta = details.GlobalPosition.Dx - _dragStartPosition.Value.Dx;
                 AddDragDelta(delta);
             }
         }
@@ -432,8 +432,8 @@ internal sealed class CupertinoSwitchPainter : ToggleablePainter
     // switch.dart `_kSwitchBoxShadows`.
     private static readonly IReadOnlyList<BoxShadow> SwitchBoxShadows =
     [
-        new BoxShadow(color: new Color(0x26000000), offset: new Point(0, 3), blurRadius: 8.0),
-        new BoxShadow(color: new Color(0x0F000000), offset: new Point(0, 3), blurRadius: 1.0),
+        new BoxShadow(color: new Color(0x26000000), offset: new Offset(0, 3), blurRadius: 8.0),
+        new BoxShadow(color: new Color(0x0F000000), offset: new Offset(0, 3), blurRadius: 1.0),
     ];
 
     private readonly AnimationController _positionController;
@@ -584,13 +584,13 @@ internal sealed class CupertinoSwitchPainter : ToggleablePainter
 
         double trackX = (size.Width - TrackWidth) / 2.0;
         double trackY = (size.Height - TrackHeight) / 2.0;
-        var trackRect = new Rect(trackX, trackY, TrackWidth, TrackHeight);
+        var trackRect = DartGeometry.RectFromLTWH(trackX, trackY, TrackWidth, TrackHeight);
         var trackRRect = RRect.FromRectAndRadius(trackRect, TrackRadius);
         double horizontalProgress = visualPosition * (20.0 - pressedExtension);
         double thumbX = trackX + TrackRadius + (pressedExtension / 2.0)
                         - (thumbSize.Width / 2.0) + horizontalProgress;
         double thumbY = trackY - ((thumbSize.Height / 2.0) - TrackRadius);
-        var thumbBounds = new Rect(thumbX, thumbY, thumbSize.Width, thumbSize.Height);
+        var thumbBounds = DartGeometry.RectFromLTWH(thumbX, thumbY, thumbSize.Width, thumbSize.Height);
 
         context.Canvas.DrawRRect(trackRRect, new SolidColorBrush(trackColor), null);
         if (outlineColor != null)
@@ -611,7 +611,7 @@ internal sealed class CupertinoSwitchPainter : ToggleablePainter
 
         context.PushClipRRect(
             false,
-            new Point(0, 0),
+            new Offset(0, 0),
             trackRect,
             RRect.FromRectAndRadius(trackRect, TrackRadius),
             (clippedContext, _) =>
@@ -675,17 +675,17 @@ internal sealed class CupertinoSwitchPainter : ToggleablePainter
         double reactionOpacity = 1.0 - Reaction.Value;
         double onOpacity = visualPosition * reactionOpacity;
         double offOpacity = (1.0 - visualPosition) * reactionOpacity;
-        Point onCenter;
-        Point offCenter;
+        Offset onCenter;
+        Offset offCenter;
         if (_textDirection == TextDirection.Ltr)
         {
-            onCenter = new Point(trackRect.Left + 11.0, trackRect.Center.Y);
-            offCenter = new Point(trackRect.Right - 12.0, trackRect.Center.Y);
+            onCenter = new Offset(trackRect.Left + 11.0, trackRect.Center.Dy);
+            offCenter = new Offset(trackRect.Right - 12.0, trackRect.Center.Dy);
         }
         else
         {
-            onCenter = new Point(trackRect.Right - 11.0, trackRect.Center.Y);
-            offCenter = new Point(trackRect.Left + 12.0, trackRect.Center.Y);
+            onCenter = new Offset(trackRect.Right - 11.0, trackRect.Center.Dy);
+            offCenter = new Offset(trackRect.Left + 12.0, trackRect.Center.Dy);
             (onOpacity, offOpacity) = (offOpacity, onOpacity);
         }
 
@@ -694,7 +694,7 @@ internal sealed class CupertinoSwitchPainter : ToggleablePainter
         context.Canvas.DrawRectangle(
             new SolidColorBrush(onColor),
             null,
-            new Rect(onCenter.X - 0.5, onCenter.Y - 5.0, 1.0, 10.0));
+            DartGeometry.RectFromLTWH(onCenter.Dx - 0.5, onCenter.Dy - 5.0, 1.0, 10.0));
         context.Canvas.DrawCircle(
             Brushes.Transparent,
             new Pen(new SolidColorBrush(offColor), 1.0),
@@ -729,10 +729,10 @@ internal sealed class CupertinoSwitchPainter : ToggleablePainter
             }
 
             BoxPainter thumbPainter = _thumbPainter;
-            PaintCupertinoThumbShadowAndBorder(context.Canvas, thumbBounds.Position, thumbBounds.Size);
+            PaintCupertinoThumbShadowAndBorder(context.Canvas, thumbBounds.TopLeft, thumbBounds.Size);
             thumbPainter.Paint(
                 context,
-                thumbBounds.Position,
+                thumbBounds.TopLeft,
                 _imageConfiguration.CopyWith(size: thumbBounds.Size));
         }
         finally
@@ -741,13 +741,13 @@ internal sealed class CupertinoSwitchPainter : ToggleablePainter
         }
     }
 
-    private static void PaintCupertinoThumbShadowAndBorder(Canvas canvas, Point thumbPaintOffset, Size thumbSize)
+    private static void PaintCupertinoThumbShadowAndBorder(Canvas canvas, Offset thumbPaintOffset, Size thumbSize)
     {
         RRect thumbBounds = RRect.FromLTRBR(
-            thumbPaintOffset.X,
-            thumbPaintOffset.Y,
-            thumbPaintOffset.X + thumbSize.Width,
-            thumbPaintOffset.Y + thumbSize.Height,
+            thumbPaintOffset.Dx,
+            thumbPaintOffset.Dy,
+            thumbPaintOffset.Dx + thumbSize.Width,
+            thumbPaintOffset.Dy + thumbSize.Height,
             Radius.Circular(thumbSize.Height / 2.0));
         foreach (BoxShadow shadow in SwitchBoxShadows)
         {
@@ -775,7 +775,7 @@ internal sealed class CupertinoSwitchPainter : ToggleablePainter
         _textPainter.TextDirection = _textDirection;
         _textPainter.Text = new TextSpan(char.ConvertFromUtf32(icon.IconData!.CodePoint), style: style);
         _textPainter.Layout();
-        Point offset = new(
+        Offset offset = new(
             thumbBounds.Left + ((thumbBounds.Width - iconSize) / 2.0),
             thumbBounds.Top + ((thumbBounds.Height - iconSize) / 2.0));
         _textPainter.Paint(context.Canvas, offset);

@@ -27,11 +27,11 @@ public abstract class SliderTickMarkShape
     /// the active segment; the start is on the left in LTR and on the right in RTL.</summary>
     public abstract void Paint(
         PaintingContext context,
-        Point center,
+        Offset center,
         RenderBox parentBox,
         SliderThemeData sliderTheme,
         Animation<double> enableAnimation,
-        Point thumbCenter,
+        Offset thumbCenter,
         bool isEnabled,
         TextDirection textDirection);
 
@@ -55,7 +55,7 @@ public abstract class SliderTrackShape
     public abstract Rect GetPreferredRect(
         RenderBox parentBox,
         SliderThemeData sliderTheme,
-        Point offset = default,
+        Offset offset = default,
         bool isEnabled = false,
         bool isDiscrete = false);
 
@@ -64,13 +64,13 @@ public abstract class SliderTrackShape
     /// divides the track into 2 segments, and a non-null <paramref name="secondaryOffset"/> into 3.</summary>
     public abstract void Paint(
         PaintingContext context,
-        Point offset,
+        Offset offset,
         RenderBox parentBox,
         SliderThemeData sliderTheme,
         Animation<double> enableAnimation,
-        Point thumbCenter,
+        Offset thumbCenter,
         TextDirection textDirection,
-        Point? secondaryOffset = null,
+        Offset? secondaryOffset = null,
         bool isEnabled = false,
         bool isDiscrete = false);
 
@@ -101,7 +101,7 @@ public abstract class BaseSliderTrackShape : SliderTrackShape
     public override Rect GetPreferredRect(
         RenderBox parentBox,
         SliderThemeData sliderTheme,
-        Point offset = default,
+        Offset offset = default,
         bool isEnabled = false,
         bool isDiscrete = false)
     {
@@ -122,8 +122,8 @@ public abstract class BaseSliderTrackShape : SliderTrackShape
         }
 
         double trackLeft =
-            offset.X + (sliderTheme.Padding == null ? Math.Max(overlayWidth / 2, thumbWidth / 2) : 0);
-        double trackTop = offset.Y + ((parentBox.Size.Height - trackHeight) / 2);
+            offset.Dx + (sliderTheme.Padding == null ? Math.Max(overlayWidth / 2, thumbWidth / 2) : 0);
+        double trackTop = offset.Dy + ((parentBox.Size.Height - trackHeight) / 2);
         double trackRight =
             trackLeft
             + parentBox.Size.Width
@@ -159,13 +159,13 @@ public class RectangularSliderTrackShape : BaseSliderTrackShape
 
     public override void Paint(
         PaintingContext context,
-        Point offset,
+        Offset offset,
         RenderBox parentBox,
         SliderThemeData sliderTheme,
         Animation<double> enableAnimation,
-        Point thumbCenter,
+        Offset thumbCenter,
         TextDirection textDirection,
-        Point? secondaryOffset = null,
+        Offset? secondaryOffset = null,
         bool isEnabled = false,
         bool isDiscrete = false)
     {
@@ -212,7 +212,7 @@ public class RectangularSliderTrackShape : BaseSliderTrackShape
         Rect leftTrackSegment = DartGeometry.RectFromLTRB(
             trackRect.Left,
             trackRect.Top,
-            thumbCenter.X,
+            thumbCenter.Dx,
             trackRect.Bottom);
         if (!DartGeometry.RectIsEmpty(leftTrackSegment))
         {
@@ -220,7 +220,7 @@ public class RectangularSliderTrackShape : BaseSliderTrackShape
         }
 
         Rect rightTrackSegment = DartGeometry.RectFromLTRB(
-            thumbCenter.X,
+            thumbCenter.Dx,
             trackRect.Top,
             trackRect.Right,
             trackRect.Bottom);
@@ -233,8 +233,8 @@ public class RectangularSliderTrackShape : BaseSliderTrackShape
             secondaryOffset != null
             && textDirection switch
             {
-                TextDirection.Rtl => secondaryOffset.Value.X < thumbCenter.X,
-                _ => secondaryOffset.Value.X > thumbCenter.X,
+                TextDirection.Rtl => secondaryOffset.Value.Dx < thumbCenter.Dx,
+                _ => secondaryOffset.Value.Dx > thumbCenter.Dx,
             };
 
         if (showSecondaryTrack)
@@ -247,14 +247,14 @@ public class RectangularSliderTrackShape : BaseSliderTrackShape
             Rect secondaryTrackSegment = textDirection switch
             {
                 TextDirection.Rtl => DartGeometry.RectFromLTRB(
-                    secondaryOffset!.Value.X,
+                    secondaryOffset!.Value.Dx,
                     trackRect.Top,
-                    thumbCenter.X,
+                    thumbCenter.Dx,
                     trackRect.Bottom),
                 _ => DartGeometry.RectFromLTRB(
-                    thumbCenter.X,
+                    thumbCenter.Dx,
                     trackRect.Top,
-                    secondaryOffset!.Value.X,
+                    secondaryOffset!.Value.Dx,
                     trackRect.Bottom),
             };
             if (!DartGeometry.RectIsEmpty(secondaryTrackSegment))
@@ -282,13 +282,13 @@ public class RoundedRectSliderTrackShape : BaseSliderTrackShape
     /// <summary>Paints the track with Dart's default <c>additionalActiveTrackHeight</c> of 2.</summary>
     public override void Paint(
         PaintingContext context,
-        Point offset,
+        Offset offset,
         RenderBox parentBox,
         SliderThemeData sliderTheme,
         Animation<double> enableAnimation,
-        Point thumbCenter,
+        Offset thumbCenter,
         TextDirection textDirection,
-        Point? secondaryOffset = null,
+        Offset? secondaryOffset = null,
         bool isEnabled = false,
         bool isDiscrete = false)
     {
@@ -310,13 +310,13 @@ public class RoundedRectSliderTrackShape : BaseSliderTrackShape
     /// <paramref name="additionalActiveTrackHeight"/>; C# overrides cannot add parameters.</summary>
     public void Paint(
         PaintingContext context,
-        Point offset,
+        Offset offset,
         RenderBox parentBox,
         SliderThemeData sliderTheme,
         Animation<double> enableAnimation,
-        Point thumbCenter,
+        Offset thumbCenter,
         TextDirection textDirection,
-        Point? secondaryOffset,
+        Offset? secondaryOffset,
         bool isEnabled,
         bool isDiscrete,
         double additionalActiveTrackHeight)
@@ -366,13 +366,13 @@ public class RoundedRectSliderTrackShape : BaseSliderTrackShape
         bool isRTL = textDirection == TextDirection.Rtl;
         double trackHeight = sliderTheme.TrackHeight.Value;
 
-        bool drawInactiveTrack = thumbCenter.X < (trackRect.Right - (trackHeight / 2));
+        bool drawInactiveTrack = thumbCenter.Dx < (trackRect.Right - (trackHeight / 2));
         if (drawInactiveTrack)
         {
             // Draw the inactive track segment.
             context.Canvas.DrawRRect(
                 RRect.FromLTRBR(
-                    thumbCenter.X - (trackHeight / 2),
+                    thumbCenter.Dx - (trackHeight / 2),
                     isRTL ? trackRect.Top - (additionalActiveTrackHeight / 2) : trackRect.Top,
                     trackRect.Right,
                     isRTL ? trackRect.Bottom + (additionalActiveTrackHeight / 2) : trackRect.Bottom,
@@ -381,7 +381,7 @@ public class RoundedRectSliderTrackShape : BaseSliderTrackShape
                 null);
         }
 
-        bool drawActiveTrack = thumbCenter.X > (trackRect.Left + (trackHeight / 2));
+        bool drawActiveTrack = thumbCenter.Dx > (trackRect.Left + (trackHeight / 2));
         if (drawActiveTrack)
         {
             // Draw the active track segment.
@@ -389,7 +389,7 @@ public class RoundedRectSliderTrackShape : BaseSliderTrackShape
                 RRect.FromLTRBR(
                     trackRect.Left,
                     isLTR ? trackRect.Top - (additionalActiveTrackHeight / 2) : trackRect.Top,
-                    thumbCenter.X + (trackHeight / 2),
+                    thumbCenter.Dx + (trackHeight / 2),
                     isLTR ? trackRect.Bottom + (additionalActiveTrackHeight / 2) : trackRect.Bottom,
                     isLTR ? activeTrackRadius : trackRadius),
                 leftTrackPaint,
@@ -398,7 +398,7 @@ public class RoundedRectSliderTrackShape : BaseSliderTrackShape
 
         bool showSecondaryTrack =
             secondaryOffset != null
-            && (isLTR ? (secondaryOffset.Value.X > thumbCenter.X) : (secondaryOffset.Value.X < thumbCenter.X));
+            && (isLTR ? (secondaryOffset.Value.Dx > thumbCenter.Dx) : (secondaryOffset.Value.Dx < thumbCenter.Dx));
 
         if (showSecondaryTrack)
         {
@@ -411,9 +411,9 @@ public class RoundedRectSliderTrackShape : BaseSliderTrackShape
             {
                 context.Canvas.DrawRRect(
                     RRect.FromLTRBAndCorners(
-                        thumbCenter.X,
+                        thumbCenter.Dx,
                         trackRect.Top,
-                        secondaryOffset!.Value.X,
+                        secondaryOffset!.Value.Dx,
                         trackRect.Bottom,
                         topRight: trackRadius,
                         bottomRight: trackRadius),
@@ -424,9 +424,9 @@ public class RoundedRectSliderTrackShape : BaseSliderTrackShape
             {
                 context.Canvas.DrawRRect(
                     RRect.FromLTRBAndCorners(
-                        secondaryOffset!.Value.X,
+                        secondaryOffset!.Value.Dx,
                         trackRect.Top,
-                        thumbCenter.X,
+                        thumbCenter.Dx,
                         trackRect.Bottom,
                         topLeft: trackRadius,
                         bottomLeft: trackRadius),
@@ -467,11 +467,11 @@ public class RoundSliderTickMarkShape : SliderTickMarkShape
 
     public override void Paint(
         PaintingContext context,
-        Point center,
+        Offset center,
         RenderBox parentBox,
         SliderThemeData sliderTheme,
         Animation<double> enableAnimation,
-        Point thumbCenter,
+        Offset thumbCenter,
         bool isEnabled,
         TextDirection textDirection)
     {
@@ -489,7 +489,7 @@ public class RoundSliderTickMarkShape : SliderTickMarkShape
             "sliderTheme.inactiveTickMarkColor != null");
         // The paint color of the tick mark depends on its position relative
         // to the thumb and the text direction.
-        double xOffset = center.X - thumbCenter.X;
+        double xOffset = center.Dx - thumbCenter.Dx;
         (Color? begin, Color? end) = textDirection switch
         {
             TextDirection.Ltr when xOffset > 0 => (
@@ -527,11 +527,11 @@ internal sealed class EmptySliderTickMarkShape : SliderTickMarkShape
 
     public override void Paint(
         PaintingContext context,
-        Point center,
+        Offset center,
         RenderBox parentBox,
         SliderThemeData sliderTheme,
         Animation<double> enableAnimation,
-        Point thumbCenter,
+        Offset thumbCenter,
         bool isEnabled,
         TextDirection textDirection)
     {
@@ -582,7 +582,7 @@ public class RoundSliderThumbShape : SliderComponentShape
 
     public override void Paint(
         PaintingContext context,
-        Point center,
+        Offset center,
         Animation<double> activationAnimation,
         Animation<double> enableAnimation,
         bool isDiscrete,
@@ -668,7 +668,7 @@ public class DropSliderValueIndicatorShape : SliderComponentShape
 
     public override void Paint(
         PaintingContext context,
-        Point center,
+        Offset center,
         Animation<double> activationAnimation,
         Animation<double> enableAnimation,
         bool isDiscrete,
@@ -719,7 +719,7 @@ internal sealed class DropSliderValueIndicatorPathPainter
 
     public double GetHorizontalShift(
         RenderBox parentBox,
-        Point center,
+        Offset center,
         TextPainter labelPainter,
         double textScaleFactor,
         Size sizeWithOverflow,
@@ -732,16 +732,16 @@ internal sealed class DropSliderValueIndicatorPathPainter
 
         // Value indicator draws on the Overlay and by using the global Offset
         // we are making sure we use the bounds of the Overlay instead of the Slider.
-        Point globalCenter = parentBox.LocalToGlobal(center);
+        Offset globalCenter = parentBox.LocalToGlobal(center);
 
         // The rectangle must be shifted towards the center so that it minimizes the
         // chance of it rendering outside the bounds of the render box. If the shift
         // is negative, then the lobe is shifted from right to left, and if it is
         // positive, then the lobe is shifted from left to right.
-        double overflowLeft = Math.Max(0, (rectangleWidth / 2) - globalCenter.X + edgePadding);
+        double overflowLeft = Math.Max(0, (rectangleWidth / 2) - globalCenter.Dx + edgePadding);
         double overflowRight = Math.Max(
             0,
-            (rectangleWidth / 2) - (sizeWithOverflow.Width - globalCenter.X - edgePadding));
+            (rectangleWidth / 2) - (sizeWithOverflow.Width - globalCenter.Dx - edgePadding));
 
         if (rectangleWidth < sizeWithOverflow.Width)
         {
@@ -775,7 +775,7 @@ internal sealed class DropSliderValueIndicatorPathPainter
     public void Paint(
         RenderBox parentBox,
         Canvas canvas,
-        Point center,
+        Offset center,
         double scale,
         TextPainter labelPainter,
         double textScaleFactor,
@@ -798,7 +798,7 @@ internal sealed class DropSliderValueIndicatorPathPainter
             textScaleFactor: textScaleFactor,
             sizeWithOverflow: sizeWithOverflow,
             scale: scale);
-        var upperRect = new Rect(
+        var upperRect = DartGeometry.RectFromLTWH(
             (-rectangleWidth / 2) + horizontalShift,
             -RectYOffset - MinRectHeight,
             rectangleWidth,
@@ -807,7 +807,7 @@ internal sealed class DropSliderValueIndicatorPathPainter
         var fillPaint = new SolidColorBrush(backgroundPaintColor);
 
         canvas.Save();
-        canvas.Translate(center.X, center.Y - BottomTipYOffset);
+        canvas.Translate(center.Dx, center.Dy - BottomTipYOffset);
         canvas.Scale(scale, scale);
 
         BorderRadius adjustedBorderRadius = AdjustBorderRadius(upperRect);
@@ -831,9 +831,9 @@ internal sealed class DropSliderValueIndicatorPathPainter
         // The label text is centered within the value indicator.
         double bottomTipToUpperRectTranslateY = (-PreferredHalfHeight / 2) - upperRect.Height;
         canvas.Translate(0, bottomTipToUpperRectTranslateY);
-        var boxCenter = new Point(horizontalShift, upperRect.Height / 1.75);
-        var halfLabelPainterOffset = new Point(labelPainter.Width / 2, labelPainter.Height / 2);
-        Point labelOffset = boxCenter - halfLabelPainterOffset;
+        var boxCenter = new Offset(horizontalShift, upperRect.Height / 1.75);
+        var halfLabelPainterOffset = new Offset(labelPainter.Width / 2, labelPainter.Height / 2);
+        Offset labelOffset = boxCenter - halfLabelPainterOffset;
         labelPainter.Paint(canvas, labelOffset);
         canvas.Restore();
     }
@@ -858,7 +858,7 @@ public class HandleThumbShape : SliderComponentShape
 
     public override void Paint(
         PaintingContext context,
-        Point center,
+        Offset center,
         Animation<double> activationAnimation,
         Animation<double> enableAnimation,
         bool isDiscrete,
@@ -905,13 +905,13 @@ public class GappedSliderTrackShape : BaseSliderTrackShape
     /// <summary>Paints the track with Dart's default <c>additionalActiveTrackHeight</c> of 2.</summary>
     public override void Paint(
         PaintingContext context,
-        Point offset,
+        Offset offset,
         RenderBox parentBox,
         SliderThemeData sliderTheme,
         Animation<double> enableAnimation,
-        Point thumbCenter,
+        Offset thumbCenter,
         TextDirection textDirection,
-        Point? secondaryOffset = null,
+        Offset? secondaryOffset = null,
         bool isEnabled = false,
         bool isDiscrete = false)
     {
@@ -933,13 +933,13 @@ public class GappedSliderTrackShape : BaseSliderTrackShape
     /// unused) <paramref name="additionalActiveTrackHeight"/>; C# overrides cannot add parameters.</summary>
     public void Paint(
         PaintingContext context,
-        Point offset,
+        Offset offset,
         RenderBox parentBox,
         SliderThemeData sliderTheme,
         Animation<double> enableAnimation,
-        Point thumbCenter,
+        Offset thumbCenter,
         TextDirection textDirection,
-        Point? secondaryOffset,
+        Offset? secondaryOffset,
         bool isEnabled,
         bool isDiscrete,
         double additionalActiveTrackHeight)
@@ -1013,7 +1013,7 @@ public class GappedSliderTrackShape : BaseSliderTrackShape
         RRect leftRRect = RRect.FromLTRBAndCorners(
             trackRect.Left,
             trackRect.Top,
-            Math.Max(trackRect.Left, thumbCenter.X - trackGap),
+            Math.Max(trackRect.Left, thumbCenter.Dx - trackGap),
             trackRect.Bottom,
             topLeft: trackCornerRadius,
             bottomLeft: trackCornerRadius,
@@ -1021,7 +1021,7 @@ public class GappedSliderTrackShape : BaseSliderTrackShape
             bottomRight: trackInsideCornerRadius);
 
         RRect rightRRect = RRect.FromLTRBAndCorners(
-            thumbCenter.X + trackGap,
+            thumbCenter.Dx + trackGap,
             trackRect.Top,
             trackRect.Right,
             trackRect.Bottom,
@@ -1032,8 +1032,8 @@ public class GappedSliderTrackShape : BaseSliderTrackShape
 
         context.Canvas.Save();
         context.Canvas.ClipRRect(trackRRect);
-        bool drawLeftTrack = thumbCenter.X > (leftRRect.Left + (trackHeight / 2));
-        bool drawRightTrack = thumbCenter.X < (rightRRect.Right - (trackHeight / 2));
+        bool drawLeftTrack = thumbCenter.Dx > (leftRRect.Left + (trackHeight / 2));
+        bool drawRightTrack = thumbCenter.Dx < (rightRRect.Right - (trackHeight / 2));
         if (drawLeftTrack)
         {
             context.Canvas.DrawRRect(leftRRect, leftTrackPaint, null);
@@ -1048,8 +1048,8 @@ public class GappedSliderTrackShape : BaseSliderTrackShape
         bool showSecondaryTrack =
             secondaryOffset != null
             && (isLTR
-                ? secondaryOffset.Value.X > thumbCenter.X + trackGap
-                : secondaryOffset.Value.X < thumbCenter.X - trackGap);
+                ? secondaryOffset.Value.Dx > thumbCenter.Dx + trackGap
+                : secondaryOffset.Value.Dx < thumbCenter.Dx - trackGap);
 
         if (showSecondaryTrack)
         {
@@ -1062,9 +1062,9 @@ public class GappedSliderTrackShape : BaseSliderTrackShape
             {
                 context.Canvas.DrawRRect(
                     RRect.FromLTRBAndCorners(
-                        thumbCenter.X + trackGap,
+                        thumbCenter.Dx + trackGap,
                         trackRect.Top,
-                        secondaryOffset!.Value.X,
+                        secondaryOffset!.Value.Dx,
                         trackRect.Bottom,
                         topLeft: trackInsideCornerRadius,
                         bottomLeft: trackInsideCornerRadius,
@@ -1077,9 +1077,9 @@ public class GappedSliderTrackShape : BaseSliderTrackShape
             {
                 context.Canvas.DrawRRect(
                     RRect.FromLTRBAndCorners(
-                        secondaryOffset!.Value.X - trackGap,
+                        secondaryOffset!.Value.Dx - trackGap,
                         trackRect.Top,
-                        thumbCenter.X,
+                        thumbCenter.Dx,
                         trackRect.Bottom,
                         topLeft: trackInsideCornerRadius,
                         bottomLeft: trackInsideCornerRadius,
@@ -1094,15 +1094,15 @@ public class GappedSliderTrackShape : BaseSliderTrackShape
 
         const double stopIndicatorRadius = 2.0;
         double stopIndicatorTrailingSpace = trackHeight / 2;
-        var stopIndicatorOffset = new Point(
+        var stopIndicatorOffset = new Offset(
             (textDirection == TextDirection.Ltr)
                 ? trackRect.Right - stopIndicatorTrailingSpace
                 : trackRect.Left + stopIndicatorTrailingSpace,
-            trackRect.Center.Y);
+            trackRect.Center.Dy);
 
         bool showStopIndicator = (textDirection == TextDirection.Ltr)
-            ? thumbCenter.X < stopIndicatorOffset.X
-            : thumbCenter.X > stopIndicatorOffset.X;
+            ? thumbCenter.Dx < stopIndicatorOffset.Dx
+            : thumbCenter.Dx > stopIndicatorOffset.Dx;
         if (showStopIndicator && !isDiscrete)
         {
             Rect stopIndicatorRect = DartGeometry.RectFromCenter(
@@ -1155,7 +1155,7 @@ public class RoundedRectSliderValueIndicatorShape : SliderComponentShape
 
     public override void Paint(
         PaintingContext context,
-        Point center,
+        Offset center,
         Animation<double> activationAnimation,
         Animation<double> enableAnimation,
         bool isDiscrete,
@@ -1203,7 +1203,7 @@ internal sealed class RoundedRectSliderValueIndicatorPathPainter
 
     public double GetHorizontalShift(
         RenderBox parentBox,
-        Point center,
+        Offset center,
         TextPainter labelPainter,
         double textScaleFactor,
         Size sizeWithOverflow,
@@ -1216,16 +1216,16 @@ internal sealed class RoundedRectSliderValueIndicatorPathPainter
 
         // Value indicator draws on the Overlay and by using the global Offset
         // we are making sure we use the bounds of the Overlay instead of the Slider.
-        Point globalCenter = parentBox.LocalToGlobal(center);
+        Offset globalCenter = parentBox.LocalToGlobal(center);
 
         // The rectangle must be shifted towards the center so that it minimizes the
         // chance of it rendering outside the bounds of the render box. If the shift
         // is negative, then the lobe is shifted from right to left, and if it is
         // positive, then the lobe is shifted from left to right.
-        double overflowLeft = Math.Max(0, (rectangleWidth / 2) - globalCenter.X + edgePadding);
+        double overflowLeft = Math.Max(0, (rectangleWidth / 2) - globalCenter.Dx + edgePadding);
         double overflowRight = Math.Max(
             0,
-            (rectangleWidth / 2) - (sizeWithOverflow.Width - globalCenter.X - edgePadding));
+            (rectangleWidth / 2) - (sizeWithOverflow.Width - globalCenter.Dx - edgePadding));
 
         if (rectangleWidth < sizeWithOverflow.Width)
         {
@@ -1250,7 +1250,7 @@ internal sealed class RoundedRectSliderValueIndicatorPathPainter
     public void Paint(
         RenderBox parentBox,
         Canvas canvas,
-        Point center,
+        Offset center,
         double scale,
         TextPainter labelPainter,
         double textScaleFactor,
@@ -1275,7 +1275,7 @@ internal sealed class RoundedRectSliderValueIndicatorPathPainter
             sizeWithOverflow: sizeWithOverflow,
             scale: scale);
 
-        var upperRect = new Rect(
+        var upperRect = DartGeometry.RectFromLTWH(
             (-rectangleWidth / 2) + horizontalShift,
             -RectYOffset - PreferredHeight,
             rectangleWidth,
@@ -1286,7 +1286,7 @@ internal sealed class RoundedRectSliderValueIndicatorPathPainter
         canvas.Save();
         // Prepare the canvas for the base of the tooltip, which is relative to the
         // center of the thumb.
-        canvas.Translate(center.X, center.Y - BottomTipYOffset);
+        canvas.Translate(center.Dx, center.Dy - BottomTipYOffset);
         canvas.Scale(scale, scale);
 
         RRect rrect = RRect.FromRectAndRadius(upperRect, Radius.Circular(upperRect.Height / 2));
@@ -1301,9 +1301,9 @@ internal sealed class RoundedRectSliderValueIndicatorPathPainter
         // The label text is centered within the value indicator.
         double bottomTipToUpperRectTranslateY = (-PreferredHalfHeight / 2) - upperRect.Height;
         canvas.Translate(0, bottomTipToUpperRectTranslateY);
-        var boxCenter = new Point(horizontalShift, upperRect.Height / 2.3);
-        var halfLabelPainterOffset = new Point(labelPainter.Width / 2, labelPainter.Height / 2);
-        Point labelOffset = boxCenter - halfLabelPainterOffset;
+        var boxCenter = new Offset(horizontalShift, upperRect.Height / 2.3);
+        var halfLabelPainterOffset = new Offset(labelPainter.Width / 2, labelPainter.Height / 2);
+        Offset labelOffset = boxCenter - halfLabelPainterOffset;
         labelPainter.Paint(canvas, labelOffset);
         canvas.Restore();
     }

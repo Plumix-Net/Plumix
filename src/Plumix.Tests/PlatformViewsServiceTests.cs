@@ -385,8 +385,8 @@ public sealed class PlatformViewsServiceTests
                 viewType: "web",
                 layoutDirection: TextDirection.Ltr);
             await viewController.Create(size: new Size(100.0, 100.0));
-            await viewController.SetOffset(new Point(10, 20));
-            Assert.Equal(new Dictionary<int, Point> { [7] = new Point(10, 20) }, _viewsController.Offsets);
+            await viewController.SetOffset(new Offset(10, 20));
+            Assert.Equal(new Dictionary<int, Offset> { [7] = new Offset(10, 20) }, _viewsController.Offsets);
         }
 
         [Fact]
@@ -397,7 +397,7 @@ public sealed class PlatformViewsServiceTests
                 id: 7,
                 viewType: "web",
                 layoutDirection: TextDirection.Ltr);
-            await viewController.SetOffset(new Point(10, 20));
+            await viewController.SetOffset(new Offset(10, 20));
             Assert.Empty(_viewsController.Offsets);
         }
 
@@ -469,11 +469,11 @@ public sealed class PlatformViewsServiceTests
                 id: 4,
                 viewType: "web",
                 layoutDirection: TextDirection.Ltr);
-            controller.PointTransformer = position => new Point(position.X - 5, position.Y - 5);
+            controller.PointTransformer = position => new Offset(position.Dx - 5, position.Dy - 5);
             await controller.DispatchPointerEvent(new PointerDownEvent(
                 pointer: 9,
                 kind: PointerDeviceKind.Mouse,
-                position: new Point(15, 25),
+                position: new Offset(15, 25),
                 embedderId: 42));
 
             MethodCall touch = Assert.Single(log, call => call.Method == "touch");
@@ -512,7 +512,7 @@ public sealed class PlatformViewsServiceTests
                     layoutDirection: TextDirection.Rtl,
                     creationParams: "params",
                     creationParamsCodec: new StringCodec())
-                .Create(size: new Size(10, 20), position: new Point(1, 2));
+                .Create(size: new Size(10, 20), position: new Offset(1, 2));
 
             var args = (IDictionary)Assert.Single(log).Arguments!;
             Assert.Equal(

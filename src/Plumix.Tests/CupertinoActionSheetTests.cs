@@ -131,9 +131,9 @@ public sealed class CupertinoActionSheetTests : IDisposable
             Sheet(title: new Text("Title"), message: new Text("Message"), actions: [Action("One")])));
         harness.Pump(PhoneSize);
 
-        double titleBottom = Paragraph(harness, "Title").GetPaintOffsetToRoot().Y
+        double titleBottom = Paragraph(harness, "Title").GetPaintOffsetToRoot().Dy
                              + Paragraph(harness, "Title").Size.Height;
-        double messageTop = Paragraph(harness, "Message").GetPaintOffsetToRoot().Y;
+        double messageTop = Paragraph(harness, "Message").GetPaintOffsetToRoot().Dy;
         // Title padding bottom 0 + 4.0 spacer + message padding top 0.
         Assert.Equal(4.0, messageTop - titleBottom, precision: 3);
     }
@@ -612,7 +612,7 @@ public sealed class CupertinoActionSheetTests : IDisposable
         {
             if (node is RenderMetaData metaData && metaData.MetaData is CupertinoActionSheetActionState)
             {
-                return metaData.GetPaintOffsetToRoot().Y + metaData.Size.Height;
+                return metaData.GetPaintOffsetToRoot().Dy + metaData.Size.Height;
             }
 
             node = node.Parent;
@@ -621,25 +621,25 @@ public sealed class CupertinoActionSheetTests : IDisposable
         throw new InvalidOperationException($"No action sheet action renders the label '{label}'.");
     }
 
-    private static void PointerDown(CupertinoThemeTestHarness harness, Point position) =>
+    private static void PointerDown(CupertinoThemeTestHarness harness, Offset position) =>
         harness.HandlePointerEvent(new PointerDownEvent(
             pointer: 1, kind: PointerDeviceKind.Touch, position: position,
             buttons: PointerButtons.Primary, timestampUtc: DateTime.UtcNow));
 
-    private static void PointerMove(CupertinoThemeTestHarness harness, Point position) =>
+    private static void PointerMove(CupertinoThemeTestHarness harness, Offset position) =>
         harness.HandlePointerEvent(new PointerMoveEvent(
             pointer: 1, kind: PointerDeviceKind.Touch, position: position,
             buttons: PointerButtons.Primary, timestampUtc: DateTime.UtcNow));
 
-    private static void PointerUp(CupertinoThemeTestHarness harness, Point position) =>
+    private static void PointerUp(CupertinoThemeTestHarness harness, Offset position) =>
         harness.HandlePointerEvent(new PointerUpEvent(
             pointer: 1, kind: PointerDeviceKind.Touch, position: position,
             buttons: PointerButtons.None, timestampUtc: DateTime.UtcNow));
 
-    private static Point CenterOf(RenderBox box)
+    private static Offset CenterOf(RenderBox box)
     {
-        Point origin = box.GetPaintOffsetToRoot();
-        return new Point(origin.X + (box.Size.Width / 2), origin.Y + (box.Size.Height / 2));
+        Offset origin = box.GetPaintOffsetToRoot();
+        return new Offset(origin.Dx + (box.Size.Width / 2), origin.Dy + (box.Size.Height / 2));
     }
 
     private static Color ParagraphColor(RenderParagraph paragraph) =>

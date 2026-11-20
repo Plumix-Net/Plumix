@@ -179,16 +179,16 @@ public sealed class SelectionListenerTests
         ISelectable selectable = registrar.Selectables.Single();
 
         // A collapsed selection reports a collapsed range, not null.
-        selectable.DispatchSelectionEvent(SelectionEdgeUpdateEvent.ForStart(new Point(1, 4)));
-        selectable.DispatchSelectionEvent(SelectionEdgeUpdateEvent.ForEnd(new Point(1, 4)));
+        selectable.DispatchSelectionEvent(SelectionEdgeUpdateEvent.ForStart(new Offset(1, 4)));
+        selectable.DispatchSelectionEvent(SelectionEdgeUpdateEvent.ForEnd(new Offset(1, 4)));
         Assert.Equal(SelectionStatus.Collapsed, notifier.Selection.Status);
         SelectedContentRange collapsed = Assert.IsType<SelectedContentRange>(notifier.Selection.Range);
         Assert.Equal(collapsed.StartOffset, collapsed.EndOffset);
 
         // A backwards selection reports startOffset > endOffset.
         selectable.DispatchSelectionEvent(new ClearSelectionEvent());
-        selectable.DispatchSelectionEvent(SelectionEdgeUpdateEvent.ForStart(new Point(390, 396)));
-        selectable.DispatchSelectionEvent(SelectionEdgeUpdateEvent.ForEnd(new Point(1, 4)));
+        selectable.DispatchSelectionEvent(SelectionEdgeUpdateEvent.ForStart(new Offset(390, 396)));
+        selectable.DispatchSelectionEvent(SelectionEdgeUpdateEvent.ForEnd(new Offset(1, 4)));
         Assert.Equal(SelectionStatus.Uncollapsed, notifier.Selection.Status);
         SelectedContentRange backwards = Assert.IsType<SelectedContentRange>(notifier.Selection.Range);
         Assert.True(

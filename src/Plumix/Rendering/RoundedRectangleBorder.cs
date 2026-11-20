@@ -329,13 +329,13 @@ internal sealed record RoundedRectangleToCircleBorder : OutlinedBorder
         {
             double partialDelta = (rect.Height - rect.Width) / 2.0;
             double delta = Circularity * partialDelta * (1.0 - Eccentricity);
-            return new Rect(rect.Left, rect.Top + delta, rect.Width, rect.Height - (delta * 2.0));
+            return DartGeometry.RectFromLTWH(rect.Left, rect.Top + delta, rect.Width, rect.Height - (delta * 2.0));
         }
         else
         {
             double partialDelta = (rect.Width - rect.Height) / 2.0;
             double delta = Circularity * partialDelta * (1.0 - Eccentricity);
-            return new Rect(rect.Left + delta, rect.Top, rect.Width - (delta * 2.0), rect.Height);
+            return DartGeometry.RectFromLTWH(rect.Left + delta, rect.Top, rect.Width - (delta * 2.0), rect.Height);
         }
     }
 

@@ -1297,7 +1297,7 @@ internal sealed class HelperError : StatefulWidget
                     child: new FadeTransition(
                         opacity: _controller,
                         child: new FractionalTranslation(
-                            translation: new Tween<Point>(new Point(0.0, -0.25), new Point(0.0, 0.0))
+                            translation: new Tween<Offset>(new Offset(0.0, -0.25), new Offset(0.0, 0.0))
                                 .Evaluate(_controller.View),
                             child:
                                 capturedError
@@ -1524,7 +1524,7 @@ internal sealed class InputBorderPainter : CustomPainter
 
     public override void Paint(PaintingContext context, Size size)
     {
-        var canvasRect = new Rect(size);
+        var canvasRect = DartGeometry.RectFromSize(size);
         Color blended = BlendedColor;
         if (blended.Alpha > 0)
         {

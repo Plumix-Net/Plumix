@@ -40,11 +40,11 @@ public sealed class EditableTextScribeDartParityTests : IDisposable
         return tester;
     }
 
-    private static Point FieldCenter(FrameworkDartTester tester)
+    private static Offset FieldCenter(FrameworkDartTester tester)
     {
         EditableText.EditableTextState state = tester.State<EditableText.EditableTextState>();
         RenderEditable editable = state.RenderEditableObject;
-        return editable.LocalToGlobal(new Point(20, editable.Size.Height / 2));
+        return editable.LocalToGlobal(new Offset(20, editable.Size.Height / 2));
     }
 
     private static MockMethodCallHandler MockScribe(bool isFeatureAvailable) =>

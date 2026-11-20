@@ -56,8 +56,8 @@ internal sealed class CupertinoMenuDividerPainter : CustomPainter
 
     public override void Paint(PaintingContext context, Size size)
     {
-        var start = new Point(0.0, size.Height / 2.0);
-        var end = new Point(size.Width, size.Height / 2.0);
+        var start = new Offset(0.0, size.Height / 2.0);
+        var end = new Offset(size.Width, size.Height / 2.0);
 
         // BlendMode.overlay is not supported on the web.
         if (!Constants.KIsWeb)
@@ -560,10 +560,10 @@ internal sealed class RenderCupertinoAlignMidpoint : RenderPositionedBox
     protected override void AlignChild()
     {
         RenderBox child = Child ?? throw new AssertionError("AlignChild requires a child.");
-        Point midpoint = ResolvedAlignment.AlongSize(Size);
-        double dx = Math.Clamp(midpoint.X - (child.Size.Width / 2.0), 0.0, Size.Width - child.Size.Width);
-        double dy = Math.Clamp(midpoint.Y - (child.Size.Height / 2.0), 0.0, Size.Height - child.Size.Height);
-        ((BoxParentData)child.parentData!).offset = new Point(dx, dy);
+        Offset midpoint = ResolvedAlignment.AlongSize(Size);
+        double dx = Math.Clamp(midpoint.Dx - (child.Size.Width / 2.0), 0.0, Size.Width - child.Size.Width);
+        double dy = Math.Clamp(midpoint.Dy - (child.Size.Height / 2.0), 0.0, Size.Height - child.Size.Height);
+        ((BoxParentData)child.parentData!).offset = new Offset(dx, dy);
     }
 }
 

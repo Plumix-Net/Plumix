@@ -2227,7 +2227,7 @@ public sealed class FrameworkDartParityTests
         }
 
         // Dart's RenderBox.paint is a no-op; Plumix declares it abstract.
-        public override void Paint(PaintingContext context, Point offset)
+        public override void Paint(PaintingContext context, Offset offset)
         {
         }
     }
@@ -2406,7 +2406,7 @@ public sealed class FrameworkDartParityTests
 
         public override bool IsRepaintBoundary => true;
 
-        public override void Paint(PaintingContext ctx, Point offset)
+        public override void Paint(PaintingContext ctx, Offset offset)
         {
             base.Paint(ctx, offset);
             if (_link != null)

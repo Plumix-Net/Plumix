@@ -37,7 +37,7 @@ public sealed class ScrollPipelineTests
             new PointerDownEvent(
                 700,
                 PointerDeviceKind.Touch,
-                new Point(80, 140),
+                new Offset(80, 140),
                 PointerButtons.Primary,
                 now));
         GestureBinding.Instance.HandlePointerEvent(
@@ -45,7 +45,7 @@ public sealed class ScrollPipelineTests
             new PointerMoveEvent(
                 700,
                 PointerDeviceKind.Touch,
-                new Point(80, 100),
+                new Offset(80, 100),
                 PointerButtons.Primary,
                 now.AddMilliseconds(16)));
         EventLoop.FlushMicrotasks();
@@ -56,7 +56,7 @@ public sealed class ScrollPipelineTests
             new PointerUpEvent(
                 700,
                 PointerDeviceKind.Touch,
-                new Point(80, 100),
+                new Offset(80, 100),
                 PointerButtons.None,
                 now.AddMilliseconds(32)));
         focusNode.Dispose();
@@ -149,7 +149,7 @@ public sealed class ScrollPipelineTests
         pipeline.FlushLayout(new Size(100, 200));
 
         var childParentData = (SliverPhysicalParentData)child.parentData!;
-        Assert.Equal(new Point(0, -50), childParentData.PaintOffset);
+        Assert.Equal(new Offset(0, -50), childParentData.PaintOffset);
         Assert.Equal(200, viewportOffset.ViewportDimension);
         Assert.Equal(0, viewportOffset.MinScrollExtent);
         Assert.Equal(400, viewportOffset.MaxScrollExtent);
@@ -175,8 +175,8 @@ public sealed class ScrollPipelineTests
 
         var firstBoxOffset = ((SliverPhysicalParentData)((RenderBox)first.Child!).parentData!).PaintOffset;
         var secondBoxOffset = ((SliverPhysicalParentData)((RenderBox)second.Child!).parentData!).PaintOffset;
-        Assert.Equal(new Point(0, -80), firstBoxOffset);
-        Assert.Equal(new Point(0, 0), secondBoxOffset);
+        Assert.Equal(new Offset(0, -80), firstBoxOffset);
+        Assert.Equal(new Offset(0, 0), secondBoxOffset);
     }
 
     [Fact]
@@ -236,7 +236,7 @@ public sealed class ScrollPipelineTests
 
         Assert.Equal(200, viewportOffset.MaxScrollExtent);
         var sliverParentData = (SliverPhysicalParentData)innerSliver.parentData!;
-        Assert.Equal(new Point(0, 0), sliverParentData.PaintOffset);
+        Assert.Equal(new Offset(0, 0), sliverParentData.PaintOffset);
 
         // Overscrolled past the leading edge: the offset survives layout and the content is pushed
         // down by exactly the overscroll, which is what makes the iOS rubber band visible.
@@ -244,7 +244,7 @@ public sealed class ScrollPipelineTests
         pipeline.FlushLayout(new Size(100, 100));
 
         Assert.Equal(-30, viewportOffset.Pixels);
-        Assert.Equal(new Point(0, 30), sliverParentData.PaintOffset);
+        Assert.Equal(new Offset(0, 30), sliverParentData.PaintOffset);
 
         // The leading sliver is told about the overscroll through a negative overlap, which is what
         // overscroll-aware slivers stretch into.
@@ -263,7 +263,7 @@ public sealed class ScrollPipelineTests
         pipeline.FlushLayout(new Size(100, 100));
 
         Assert.Equal(50, viewportOffset.Pixels);
-        Assert.Equal(new Point(0, 0), sliverParentData.PaintOffset);
+        Assert.Equal(new Offset(0, 0), sliverParentData.PaintOffset);
     }
 
     [Fact]
@@ -282,14 +282,14 @@ public sealed class ScrollPipelineTests
 
         Assert.Equal(50, viewportOffset.MaxScrollExtent);
         var sliverParentData = (SliverPhysicalParentData)innerSliver.parentData!;
-        Assert.Equal(new Point(0, 10), sliverParentData.PaintOffset);
+        Assert.Equal(new Offset(0, 10), sliverParentData.PaintOffset);
 
         viewportOffset.JumpTo(15);
         pipeline.FlushLayout(new Size(100, 100));
 
-        Assert.Equal(new Point(0, 0), sliverParentData.PaintOffset);
+        Assert.Equal(new Offset(0, 0), sliverParentData.PaintOffset);
         var innerBoxOffset = ((SliverPhysicalParentData)((RenderBox)innerSliver.Child!).parentData!).PaintOffset;
-        Assert.Equal(new Point(0, -5), innerBoxOffset);
+        Assert.Equal(new Offset(0, -5), innerBoxOffset);
     }
 
     [Fact]
@@ -307,11 +307,11 @@ public sealed class ScrollPipelineTests
 
         pipeline.FlushLayout(new Size(100, 200));
         var childParentData = (SliverPhysicalParentData)child.parentData!;
-        Assert.Equal(new Point(0, -400), childParentData.PaintOffset);
+        Assert.Equal(new Offset(0, -400), childParentData.PaintOffset);
 
         viewportOffset.JumpTo(400);
         pipeline.FlushLayout(new Size(100, 200));
-        Assert.Equal(new Point(0, 0), childParentData.PaintOffset);
+        Assert.Equal(new Offset(0, 0), childParentData.PaintOffset);
     }
 
     [Fact]
@@ -965,7 +965,7 @@ public sealed class ScrollPipelineTests
         {
             if (currentSliver.parentData is SliverPhysicalParentData parentData)
             {
-                offset += parentData.PaintOffset.Y;
+                offset += parentData.PaintOffset.Dy;
             }
 
             var parent = currentSliver.Parent;
@@ -999,7 +999,7 @@ public sealed class ScrollPipelineTests
         ScrollPosition position = controller.PrimaryPosition!;
         Assert.True(position.MaxScrollExtent > 0);
 
-        DragBy(harness, pointer: 810, from: new Point(80, 200), delta: -120);
+        DragBy(harness, pointer: 810, from: new Offset(80, 200), delta: -120);
         harness.Pump(viewport);
         Assert.Equal(0.0, position.Pixels);
 
@@ -1008,8 +1008,8 @@ public sealed class ScrollPipelineTests
             new PointerScrollEvent(
                 device: 811,
                 kind: PointerDeviceKind.Mouse,
-                position: new Point(80, 100),
-                scrollDelta: new Point(0, 60),
+                position: new Offset(80, 100),
+                scrollDelta: new Offset(0, 60),
                 timestampUtc: DateTime.UtcNow));
         Assert.Equal(0.0, position.Pixels);
 
@@ -1039,7 +1039,7 @@ public sealed class ScrollPipelineTests
 
         // Nothing to scroll to, yet the drag is accepted and rubber-bands the content.
         Assert.Equal(position.MinScrollExtent, position.MaxScrollExtent);
-        DragBy(harness, pointer: 812, from: new Point(80, 60), delta: 90);
+        DragBy(harness, pointer: 812, from: new Offset(80, 60), delta: 90);
         Assert.True(position.Pixels < 0.0, $"Expected overscroll, got {position.Pixels}.");
         GestureBinding.Instance.ResetForTests();
     }
@@ -1193,7 +1193,7 @@ public sealed class ScrollPipelineTests
             Assert.False(context.IgnorePointer);
 
             // A touch drag ignores them from the moment it is recognized ...
-            position.Drag(new DragStartDetails(new Point(0, 0), Kind: PointerDeviceKind.Touch));
+            position.Drag(new DragStartDetails(new Offset(0, 0), Kind: PointerDeviceKind.Touch));
             Assert.True(position.Activity.ShouldIgnorePointer);
             Assert.True(context.IgnorePointer);
 
@@ -1204,7 +1204,7 @@ public sealed class ScrollPipelineTests
             Assert.True(context.IgnorePointer);
 
             // A trackpad drag does not (Flutter's `_kind != PointerDeviceKind.trackpad`) ...
-            position.Drag(new DragStartDetails(new Point(0, 0), Kind: PointerDeviceKind.Trackpad));
+            position.Drag(new DragStartDetails(new Offset(0, 0), Kind: PointerDeviceKind.Trackpad));
             Assert.False(position.Activity.ShouldIgnorePointer);
             Assert.False(context.IgnorePointer);
             // ... and neither does the inertia following it: the ballistic activity inherits the
@@ -1243,7 +1243,7 @@ public sealed class ScrollPipelineTests
             position.ApplyContentDimensions(0, 1000);
 
             // Drag past the leading edge: the drag itself ignores pointers ...
-            position.Drag(new DragStartDetails(new Point(0, 0), Kind: PointerDeviceKind.Touch));
+            position.Drag(new DragStartDetails(new Offset(0, 0), Kind: PointerDeviceKind.Touch));
             Assert.True(context.IgnorePointer);
             position.ApplyUserOffset(80);
             Assert.True(position.OutOfRange);
@@ -1319,7 +1319,7 @@ public sealed class ScrollPipelineTests
                 initialPixels: 30);
             oldPosition.ApplyViewportDimension(100);
             oldPosition.ApplyContentDimensions(0, 1000);
-            oldPosition.Drag(new DragStartDetails(new Point(0, 0), Kind: PointerDeviceKind.Touch));
+            oldPosition.Drag(new DragStartDetails(new Offset(0, 0), Kind: PointerDeviceKind.Touch));
             oldPosition.GoBallistic(800);
             ScrollActivity ballistic = oldPosition.Activity;
             Assert.IsType<BallisticScrollActivity>(ballistic);
@@ -1392,14 +1392,14 @@ public sealed class ScrollPipelineTests
             GestureBinding.Instance.HandlePointerEvent(
                 harness.RenderView,
                 new PointerDownEvent(
-                    820, PointerDeviceKind.Touch, new Point(80, 100), PointerButtons.Primary, now));
+                    820, PointerDeviceKind.Touch, new Offset(80, 100), PointerButtons.Primary, now));
             Assert.IsType<HoldScrollActivity>(controller.PrimaryPosition!.Activity);
             Assert.False(ignorePointer.Ignoring);
 
             GestureBinding.Instance.HandlePointerEvent(
                 harness.RenderView,
                 new PointerUpEvent(
-                    820, PointerDeviceKind.Touch, new Point(80, 100), PointerButtons.None, now.AddMilliseconds(30)));
+                    820, PointerDeviceKind.Touch, new Offset(80, 100), PointerButtons.None, now.AddMilliseconds(30)));
             Assert.False(ignorePointer.Ignoring);
         }
         finally
@@ -1427,14 +1427,14 @@ public sealed class ScrollPipelineTests
             GestureBinding.Instance.HandlePointerEvent(
                 harness.RenderView,
                 new PointerDownEvent(
-                    821, PointerDeviceKind.Touch, new Point(80, 200), PointerButtons.Primary, now));
+                    821, PointerDeviceKind.Touch, new Offset(80, 200), PointerButtons.Primary, now));
             Assert.False(ignorePointer.Ignoring);
 
             // Starts ignoring when the drag is recognized.
             GestureBinding.Instance.HandlePointerEvent(
                 harness.RenderView,
                 new PointerMoveEvent(
-                    821, PointerDeviceKind.Touch, new Point(80, 170), PointerButtons.Primary, now.AddMilliseconds(16)));
+                    821, PointerDeviceKind.Touch, new Offset(80, 170), PointerButtons.Primary, now.AddMilliseconds(16)));
             Assert.IsType<DragScrollActivity>(controller.PrimaryPosition!.Activity);
             Assert.True(ignorePointer.Ignoring);
 
@@ -1446,7 +1446,7 @@ public sealed class ScrollPipelineTests
                     new PointerMoveEvent(
                         821,
                         PointerDeviceKind.Touch,
-                        new Point(80, 200 - (step * 30)),
+                        new Offset(80, 200 - (step * 30)),
                         PointerButtons.Primary,
                         now.AddMilliseconds(16 * step)));
             }
@@ -1454,7 +1454,7 @@ public sealed class ScrollPipelineTests
             GestureBinding.Instance.HandlePointerEvent(
                 harness.RenderView,
                 new PointerUpEvent(
-                    821, PointerDeviceKind.Touch, new Point(80, 80), PointerButtons.None, now.AddMilliseconds(80)));
+                    821, PointerDeviceKind.Touch, new Offset(80, 80), PointerButtons.None, now.AddMilliseconds(80)));
             Assert.IsType<BallisticScrollActivity>(controller.PrimaryPosition!.Activity);
             Assert.True(ignorePointer.Ignoring);
 
@@ -1638,7 +1638,7 @@ public sealed class ScrollPipelineTests
                 itemBuilder: (_, _) => new SizedBox(height: 40)));
         harness.Pump(new Size(200, 240));
 
-        DragBy(harness, pointer: pointer, from: new Point(80, 200), delta: -120, stepMilliseconds: 16);
+        DragBy(harness, pointer: pointer, from: new Offset(80, 200), delta: -120, stepMilliseconds: 16);
         return controller.PrimaryPosition!.Activity;
     }
 
@@ -1649,7 +1649,7 @@ public sealed class ScrollPipelineTests
     private static void DragBy(
         WidgetRenderHarness harness,
         int pointer,
-        Point from,
+        Offset from,
         double delta,
         int stepMilliseconds = 30)
     {
@@ -1658,10 +1658,10 @@ public sealed class ScrollPipelineTests
             harness.RenderView,
             new PointerDownEvent(pointer, PointerDeviceKind.Touch, from, PointerButtons.Primary, now));
 
-        Point position = from;
+        Offset position = from;
         for (int step = 1; step <= 4; step++)
         {
-            position = new Point(from.X, from.Y + (delta * step / 4.0));
+            position = new Offset(from.Dx, from.Dy + (delta * step / 4.0));
             GestureBinding.Instance.HandlePointerEvent(
                 harness.RenderView,
                 new PointerMoveEvent(
@@ -1877,12 +1877,12 @@ public sealed class ScrollPipelineTests
             Size = Constraints.Constrain(_size);
         }
 
-        protected override bool HitTestSelf(Point position)
+        protected override bool HitTestSelf(Offset position)
         {
             return true;
         }
 
-        public override void Paint(PaintingContext ctx, Point offset)
+        public override void Paint(PaintingContext ctx, Offset offset)
         {
         }
     }
@@ -1921,7 +1921,7 @@ public sealed class ScrollPipelineTests
                 HasVisualOverflow: constraints.ScrollOffset > 0 || remaining > constraints.RemainingPaintExtent);
         }
 
-        public override void Paint(PaintingContext ctx, Point offset)
+        public override void Paint(PaintingContext ctx, Offset offset)
         {
         }
     }
@@ -1938,7 +1938,7 @@ public sealed class ScrollPipelineTests
                 MaxPaintExtent: 50);
         }
 
-        public override void Paint(PaintingContext ctx, Point offset) => paintOrder.Add(name);
+        public override void Paint(PaintingContext ctx, Offset offset) => paintOrder.Add(name);
     }
 
     private sealed class ConstraintCapturingSliver : RenderSliver
@@ -1968,7 +1968,7 @@ public sealed class ScrollPipelineTests
                 HasVisualOverflow: constraints.ScrollOffset > 0 || remaining > constraints.RemainingPaintExtent);
         }
 
-        public override void Paint(PaintingContext ctx, Point offset)
+        public override void Paint(PaintingContext ctx, Offset offset)
         {
         }
     }

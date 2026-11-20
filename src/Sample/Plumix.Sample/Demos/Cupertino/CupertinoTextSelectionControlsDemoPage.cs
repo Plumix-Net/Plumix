@@ -53,8 +53,8 @@ public sealed class CupertinoTextSelectionControlsDemoPage : StatelessWidget
                 new SizedBox(
                     height: 150.0,
                     child: new CupertinoTextSelectionToolbar(
-                        anchorAbove: new Point(130.0, 80.0),
-                        anchorBelow: new Point(130.0, 100.0),
+                        anchorAbove: new Offset(130.0, 80.0),
+                        anchorBelow: new Offset(130.0, 100.0),
                         children:
                         [
                             CupertinoTextSelectionToolbarButton.TextButton(() => { }, "Copy"),

@@ -27,10 +27,10 @@ public sealed class ScrollableEnsureVisibleDartParityTests
         tester.ElementsWithKey(new ValueKey<ChildVicinity>(vicinity)).Single();
 
     // Dart's tester.getBottomLeft.
-    private static Point GetBottomLeft(FrameworkDartTester tester, Element element)
+    private static Offset GetBottomLeft(FrameworkDartTester tester, Element element)
     {
         var box = (RenderBox)element.FindRenderObject()!;
-        return box.LocalToGlobal(new Point(0.0, box.Size.Height));
+        return box.LocalToGlobal(new Offset(0.0, box.Size.Height));
     }
 
     private static void EnsureVisible(
@@ -147,24 +147,24 @@ public sealed class ScrollableEnsureVisibleDartParityTests
 
         EnsureVisible(tester, 3);
         tester.Pump();
-        Assert.Equal(100.0, tester.GetTopLeft(FindKey(tester, 3)).Y);
+        Assert.Equal(100.0, tester.GetTopLeft(FindKey(tester, 3)).Dy);
 
         EnsureVisible(tester, 6);
         tester.Pump();
-        Assert.Equal(300.0, tester.GetTopLeft(FindKey(tester, 6)).Y);
+        Assert.Equal(300.0, tester.GetTopLeft(FindKey(tester, 6)).Dy);
 
         EnsureVisible(tester, 4, alignment: 1.0);
         tester.Pump();
-        Assert.Equal(500.0, tester.GetBottomRight(FindKey(tester, 4)).Y);
+        Assert.Equal(500.0, tester.GetBottomRight(FindKey(tester, 4)).Dy);
 
         EnsureVisible(tester, 0, alignment: 1.0);
         tester.Pump();
-        Assert.Equal(100.0, tester.GetTopLeft(FindKey(tester, 0)).Y);
+        Assert.Equal(100.0, tester.GetTopLeft(FindKey(tester, 0)).Dy);
 
         EnsureVisible(tester, 3, duration: OneSecond);
         tester.Pump();
         tester.Pump(Settle);
-        Assert.Equal(100.0, tester.GetTopLeft(FindKey(tester, 3)).Y);
+        Assert.Equal(100.0, tester.GetTopLeft(FindKey(tester, 3)).Dy);
     }
 
     // Flutter: 'SingleChildScrollView SingleChildScrollView ensureVisible Axis.horizontal'
@@ -176,24 +176,24 @@ public sealed class ScrollableEnsureVisibleDartParityTests
 
         EnsureVisible(tester, 3);
         tester.Pump();
-        Assert.Equal(100.0, tester.GetTopLeft(FindKey(tester, 3)).X);
+        Assert.Equal(100.0, tester.GetTopLeft(FindKey(tester, 3)).Dx);
 
         EnsureVisible(tester, 6);
         tester.Pump();
-        Assert.Equal(500.0, tester.GetTopLeft(FindKey(tester, 6)).X);
+        Assert.Equal(500.0, tester.GetTopLeft(FindKey(tester, 6)).Dx);
 
         EnsureVisible(tester, 4, alignment: 1.0);
         tester.Pump();
-        Assert.Equal(700.0, tester.GetBottomRight(FindKey(tester, 4)).X);
+        Assert.Equal(700.0, tester.GetBottomRight(FindKey(tester, 4)).Dx);
 
         EnsureVisible(tester, 0, alignment: 1.0);
         tester.Pump();
-        Assert.Equal(100.0, tester.GetTopLeft(FindKey(tester, 0)).X);
+        Assert.Equal(100.0, tester.GetTopLeft(FindKey(tester, 0)).Dx);
 
         EnsureVisible(tester, 3, duration: OneSecond);
         tester.Pump();
         tester.Pump(Settle);
-        Assert.Equal(100.0, tester.GetTopLeft(FindKey(tester, 3)).X);
+        Assert.Equal(100.0, tester.GetTopLeft(FindKey(tester, 3)).Dx);
     }
 
     // Flutter: 'SingleChildScrollView SingleChildScrollView ensureVisible Axis.vertical reverse'
@@ -205,24 +205,24 @@ public sealed class ScrollableEnsureVisibleDartParityTests
 
         EnsureVisible(tester, 3);
         tester.Pump();
-        Assert.Equal(500.0, tester.GetBottomRight(FindKey(tester, 3)).Y);
+        Assert.Equal(500.0, tester.GetBottomRight(FindKey(tester, 3)).Dy);
 
         EnsureVisible(tester, 0);
         tester.Pump();
-        Assert.Equal(300.0, tester.GetBottomRight(FindKey(tester, 0)).Y);
+        Assert.Equal(300.0, tester.GetBottomRight(FindKey(tester, 0)).Dy);
 
         EnsureVisible(tester, 2, alignment: 1.0);
         tester.Pump();
-        Assert.Equal(100.0, tester.GetTopLeft(FindKey(tester, 2)).Y);
+        Assert.Equal(100.0, tester.GetTopLeft(FindKey(tester, 2)).Dy);
 
         EnsureVisible(tester, 6, alignment: 1.0);
         tester.Pump();
-        Assert.Equal(500.0, tester.GetBottomRight(FindKey(tester, 6)).Y);
+        Assert.Equal(500.0, tester.GetBottomRight(FindKey(tester, 6)).Dy);
 
         EnsureVisible(tester, 3, duration: OneSecond);
         tester.Pump();
         tester.Pump(Settle);
-        Assert.Equal(500.0, tester.GetBottomRight(FindKey(tester, 3)).Y);
+        Assert.Equal(500.0, tester.GetBottomRight(FindKey(tester, 3)).Dy);
 
         // Regression test for https://github.com/flutter/flutter/issues/128749
         // Reset to zero position.
@@ -230,28 +230,28 @@ public sealed class ScrollableEnsureVisibleDartParityTests
         tester.Pump();
         // 4 is not currently visible as the SingleChildScrollView is contained
         // within a centered SizedBox.
-        Assert.Equal(100.0, GetBottomLeft(tester, FindKey(tester, 4)).Y);
-        Assert.Equal(500.0, GetBottomLeft(tester, FindKey(tester, 6)).Y);
+        Assert.Equal(100.0, GetBottomLeft(tester, FindKey(tester, 4)).Dy);
+        Assert.Equal(500.0, GetBottomLeft(tester, FindKey(tester, 6)).Dy);
         EnsureVisible(tester, 6, alignmentPolicy: ScrollPositionAlignmentPolicy.KeepVisibleAtStart);
         tester.Pump();
         EnsureVisible(tester, 5, alignmentPolicy: ScrollPositionAlignmentPolicy.KeepVisibleAtStart);
         tester.Pump();
         // 5 and 6 are already visible beyond the top edge, so no change.
-        Assert.Equal(100.0, GetBottomLeft(tester, FindKey(tester, 4)).Y);
-        Assert.Equal(500.0, GetBottomLeft(tester, FindKey(tester, 6)).Y);
+        Assert.Equal(100.0, GetBottomLeft(tester, FindKey(tester, 4)).Dy);
+        Assert.Equal(500.0, GetBottomLeft(tester, FindKey(tester, 6)).Dy);
         EnsureVisible(tester, 4, alignmentPolicy: ScrollPositionAlignmentPolicy.KeepVisibleAtStart);
         tester.Pump();
         // Since it is reversed, 4 should have come into view at the top
         // edge of the scrollable, matching the alignment expectation.
-        Assert.Equal(300.0, GetBottomLeft(tester, FindKey(tester, 4)).Y);
-        Assert.Equal(700.0, GetBottomLeft(tester, FindKey(tester, 6)).Y);
+        Assert.Equal(300.0, GetBottomLeft(tester, FindKey(tester, 4)).Dy);
+        Assert.Equal(700.0, GetBottomLeft(tester, FindKey(tester, 6)).Dy);
 
         // Bring 6 back into view at the trailing edge, checking the other
         // alignment.
         EnsureVisible(tester, 6, alignmentPolicy: ScrollPositionAlignmentPolicy.KeepVisibleAtEnd);
         tester.Pump();
-        Assert.Equal(100.0, GetBottomLeft(tester, FindKey(tester, 4)).Y);
-        Assert.Equal(500.0, GetBottomLeft(tester, FindKey(tester, 6)).Y);
+        Assert.Equal(100.0, GetBottomLeft(tester, FindKey(tester, 4)).Dy);
+        Assert.Equal(500.0, GetBottomLeft(tester, FindKey(tester, 6)).Dy);
     }
 
     // Flutter: 'SingleChildScrollView SingleChildScrollView ensureVisible Axis.horizontal reverse'
@@ -263,24 +263,24 @@ public sealed class ScrollableEnsureVisibleDartParityTests
 
         EnsureVisible(tester, 3);
         tester.Pump();
-        Assert.Equal(700.0, tester.GetBottomRight(FindKey(tester, 3)).X);
+        Assert.Equal(700.0, tester.GetBottomRight(FindKey(tester, 3)).Dx);
 
         EnsureVisible(tester, 0);
         tester.Pump();
-        Assert.Equal(300.0, tester.GetBottomRight(FindKey(tester, 0)).X);
+        Assert.Equal(300.0, tester.GetBottomRight(FindKey(tester, 0)).Dx);
 
         EnsureVisible(tester, 2, alignment: 1.0);
         tester.Pump();
-        Assert.Equal(100.0, tester.GetTopLeft(FindKey(tester, 2)).X);
+        Assert.Equal(100.0, tester.GetTopLeft(FindKey(tester, 2)).Dx);
 
         EnsureVisible(tester, 6, alignment: 1.0);
         tester.Pump();
-        Assert.Equal(700.0, tester.GetBottomRight(FindKey(tester, 6)).X);
+        Assert.Equal(700.0, tester.GetBottomRight(FindKey(tester, 6)).Dx);
 
         EnsureVisible(tester, 3, duration: OneSecond);
         tester.Pump();
         tester.Pump(Settle);
-        Assert.Equal(700.0, tester.GetBottomRight(FindKey(tester, 3)).X);
+        Assert.Equal(700.0, tester.GetBottomRight(FindKey(tester, 3)).Dx);
 
         // Regression test for https://github.com/flutter/flutter/issues/128749
         // Reset to zero position.
@@ -288,8 +288,8 @@ public sealed class ScrollableEnsureVisibleDartParityTests
         tester.Pump();
         // 4 is not currently visible as the SingleChildScrollView is contained
         // within a centered SizedBox.
-        Assert.Equal(-100.0, GetBottomLeft(tester, FindKey(tester, 3)).X);
-        Assert.Equal(500.0, GetBottomLeft(tester, FindKey(tester, 6)).X);
+        Assert.Equal(-100.0, GetBottomLeft(tester, FindKey(tester, 3)).Dx);
+        Assert.Equal(500.0, GetBottomLeft(tester, FindKey(tester, 6)).Dx);
         EnsureVisible(tester, 6, alignmentPolicy: ScrollPositionAlignmentPolicy.KeepVisibleAtStart);
         tester.Pump();
         EnsureVisible(tester, 5, alignmentPolicy: ScrollPositionAlignmentPolicy.KeepVisibleAtStart);
@@ -297,21 +297,21 @@ public sealed class ScrollableEnsureVisibleDartParityTests
         EnsureVisible(tester, 4, alignmentPolicy: ScrollPositionAlignmentPolicy.KeepVisibleAtStart);
         tester.Pump();
         // 4, 5 and 6 are already visible beyond the left edge, so no change.
-        Assert.Equal(-100.0, GetBottomLeft(tester, FindKey(tester, 3)).X);
-        Assert.Equal(500.0, GetBottomLeft(tester, FindKey(tester, 6)).X);
+        Assert.Equal(-100.0, GetBottomLeft(tester, FindKey(tester, 3)).Dx);
+        Assert.Equal(500.0, GetBottomLeft(tester, FindKey(tester, 6)).Dx);
         EnsureVisible(tester, 3, alignmentPolicy: ScrollPositionAlignmentPolicy.KeepVisibleAtStart);
         tester.Pump();
         // Since it is reversed, 3 should have come into view at the leading
         // edge of the scrollable, matching the alignment expectation.
-        Assert.Equal(100.0, GetBottomLeft(tester, FindKey(tester, 3)).X);
-        Assert.Equal(700.0, GetBottomLeft(tester, FindKey(tester, 6)).X);
+        Assert.Equal(100.0, GetBottomLeft(tester, FindKey(tester, 3)).Dx);
+        Assert.Equal(700.0, GetBottomLeft(tester, FindKey(tester, 6)).Dx);
 
         // Bring 6 back into view at the trailing edge, checking the other
         // alignment.
         EnsureVisible(tester, 6, alignmentPolicy: ScrollPositionAlignmentPolicy.KeepVisibleAtEnd);
         tester.Pump();
-        Assert.Equal(-100.0, GetBottomLeft(tester, FindKey(tester, 3)).X);
-        Assert.Equal(500.0, GetBottomLeft(tester, FindKey(tester, 6)).X);
+        Assert.Equal(-100.0, GetBottomLeft(tester, FindKey(tester, 3)).Dx);
+        Assert.Equal(500.0, GetBottomLeft(tester, FindKey(tester, 6)).Dx);
     }
 
     // Flutter: 'SingleChildScrollView SingleChildScrollView ensureVisible rotated child'
@@ -328,11 +328,11 @@ public sealed class ScrollableEnsureVisibleDartParityTests
 
         EnsureVisible(tester, 0);
         tester.Pump();
-        Assert.InRange(tester.GetBottomRight(FindKey(tester, 0)).Y, 100.0 - 0.1, 100.0 + 0.1);
+        Assert.InRange(tester.GetBottomRight(FindKey(tester, 0)).Dy, 100.0 - 0.1, 100.0 + 0.1);
 
         EnsureVisible(tester, 0, alignment: 1.0);
         tester.Pump();
-        Assert.InRange(tester.GetTopLeft(FindKey(tester, 0)).Y, 500.0 - 0.1, 500.0 + 0.1);
+        Assert.InRange(tester.GetTopLeft(FindKey(tester, 0)).Dy, 500.0 - 0.1, 500.0 + 0.1);
     }
 
     // Flutter: 'SingleChildScrollView Nested SingleChildScrollView ensureVisible behavior test'
@@ -345,7 +345,7 @@ public sealed class ScrollableEnsureVisibleDartParityTests
         void EnsureVisibleAt(string coordinate, double alignment = 0.0) =>
             _ = Scrollable.EnsureVisible(FindKey(tester, coordinate), alignment: alignment);
 
-        Point TopLeft(string coordinate) => tester.GetTopLeft(FindKey(tester, coordinate));
+        Offset TopLeft(string coordinate) => tester.GetTopLeft(FindKey(tester, coordinate));
 
         var rows = new List<Widget>(7);
         for (int y = 0; y < 7; y++)
@@ -384,32 +384,32 @@ public sealed class ScrollableEnsureVisibleDartParityTests
 
         EnsureVisibleAt("0, 0");
         tester.Pump();
-        Assert.Equal(new Point(100.0, 100.0), TopLeft("0, 0"));
+        Assert.Equal(new Offset(100.0, 100.0), TopLeft("0, 0"));
 
         EnsureVisibleAt("3, 0");
         tester.Pump();
-        Assert.Equal(new Point(100.0, 100.0), TopLeft("3, 0"));
+        Assert.Equal(new Offset(100.0, 100.0), TopLeft("3, 0"));
 
         EnsureVisibleAt("3, 0", alignment: 0.5);
         tester.Pump();
-        Assert.Equal(new Point(300.0, 100.0), TopLeft("3, 0"));
+        Assert.Equal(new Offset(300.0, 100.0), TopLeft("3, 0"));
 
         EnsureVisibleAt("6, 0");
         tester.Pump();
-        Assert.Equal(new Point(500.0, 100.0), TopLeft("6, 0"));
+        Assert.Equal(new Offset(500.0, 100.0), TopLeft("6, 0"));
 
         EnsureVisibleAt("0, 2");
         tester.Pump();
-        Assert.Equal(new Point(100.0, 100.0), TopLeft("0, 2"));
+        Assert.Equal(new Offset(100.0, 100.0), TopLeft("0, 2"));
 
         EnsureVisibleAt("3, 2");
         tester.Pump();
-        Assert.Equal(new Point(100.0, 100.0), TopLeft("3, 2"));
+        Assert.Equal(new Offset(100.0, 100.0), TopLeft("3, 2"));
 
         // It should be at the center of the screen.
         EnsureVisibleAt("3, 2", alignment: 0.5);
         tester.Pump();
-        Assert.Equal(new Point(300.0, 200.0), TopLeft("3, 2"));
+        Assert.Equal(new Offset(300.0, 200.0), TopLeft("3, 2"));
     }
 
     private static void RunListViewEnsureVisibleAxisVertical(bool shrinkWrap)
@@ -420,28 +420,28 @@ public sealed class ScrollableEnsureVisibleDartParityTests
         Prepare(tester, 480.0);
         EnsureVisible(tester, 3);
         tester.Pump();
-        Assert.Equal(100.0, tester.GetTopLeft(FindKey(tester, 3)).Y);
+        Assert.Equal(100.0, tester.GetTopLeft(FindKey(tester, 3)).Dy);
 
         Prepare(tester, 1083.0);
         EnsureVisible(tester, 6);
         tester.Pump();
-        Assert.Equal(300.0, tester.GetTopLeft(FindKey(tester, 6)).Y);
+        Assert.Equal(300.0, tester.GetTopLeft(FindKey(tester, 6)).Dy);
 
         Prepare(tester, 735.0);
         EnsureVisible(tester, 4, alignment: 1.0);
         tester.Pump();
-        Assert.Equal(500.0, tester.GetBottomRight(FindKey(tester, 4)).Y);
+        Assert.Equal(500.0, tester.GetBottomRight(FindKey(tester, 4)).Dy);
 
         Prepare(tester, 123.0);
         EnsureVisible(tester, 0, alignment: 1.0);
         tester.Pump();
-        Assert.Equal(100.0, tester.GetTopLeft(FindKey(tester, 0)).Y);
+        Assert.Equal(100.0, tester.GetTopLeft(FindKey(tester, 0)).Dy);
 
         Prepare(tester, 523.0);
         EnsureVisible(tester, 3, duration: OneSecond);
         tester.Pump();
         tester.Pump(Settle);
-        Assert.Equal(100.0, tester.GetTopLeft(FindKey(tester, 3)).Y);
+        Assert.Equal(100.0, tester.GetTopLeft(FindKey(tester, 3)).Dy);
     }
 
     private static void RunListViewEnsureVisibleAxisHorizontal(bool shrinkWrap)
@@ -452,28 +452,28 @@ public sealed class ScrollableEnsureVisibleDartParityTests
         Prepare(tester, 23.0);
         EnsureVisible(tester, 3);
         tester.Pump();
-        Assert.Equal(100.0, tester.GetTopLeft(FindKey(tester, 3)).X);
+        Assert.Equal(100.0, tester.GetTopLeft(FindKey(tester, 3)).Dx);
 
         Prepare(tester, 843.0);
         EnsureVisible(tester, 6);
         tester.Pump();
-        Assert.Equal(500.0, tester.GetTopLeft(FindKey(tester, 6)).X);
+        Assert.Equal(500.0, tester.GetTopLeft(FindKey(tester, 6)).Dx);
 
         Prepare(tester, 415.0);
         EnsureVisible(tester, 4, alignment: 1.0);
         tester.Pump();
-        Assert.Equal(700.0, tester.GetBottomRight(FindKey(tester, 4)).X);
+        Assert.Equal(700.0, tester.GetBottomRight(FindKey(tester, 4)).Dx);
 
         Prepare(tester, 46.0);
         EnsureVisible(tester, 0, alignment: 1.0);
         tester.Pump();
-        Assert.Equal(100.0, tester.GetTopLeft(FindKey(tester, 0)).X);
+        Assert.Equal(100.0, tester.GetTopLeft(FindKey(tester, 0)).Dx);
 
         Prepare(tester, 211.0);
         EnsureVisible(tester, 3, duration: OneSecond);
         tester.Pump();
         tester.Pump(Settle);
-        Assert.Equal(100.0, tester.GetTopLeft(FindKey(tester, 3)).X);
+        Assert.Equal(100.0, tester.GetTopLeft(FindKey(tester, 3)).Dx);
     }
 
     private static void RunListViewEnsureVisibleAxisVerticalReverse(bool shrinkWrap)
@@ -484,56 +484,56 @@ public sealed class ScrollableEnsureVisibleDartParityTests
         Prepare(tester, 211.0);
         EnsureVisible(tester, 3);
         tester.Pump();
-        Assert.Equal(500.0, tester.GetBottomRight(FindKey(tester, 3)).Y);
+        Assert.Equal(500.0, tester.GetBottomRight(FindKey(tester, 3)).Dy);
 
         Prepare(tester, 23.0);
         EnsureVisible(tester, 0);
         tester.Pump();
-        Assert.Equal(500.0, tester.GetBottomRight(FindKey(tester, 0)).Y);
+        Assert.Equal(500.0, tester.GetBottomRight(FindKey(tester, 0)).Dy);
 
         Prepare(tester, 230.0);
         EnsureVisible(tester, 2, alignment: 1.0);
         tester.Pump();
-        Assert.Equal(100.0, tester.GetTopLeft(FindKey(tester, 2)).Y);
+        Assert.Equal(100.0, tester.GetTopLeft(FindKey(tester, 2)).Dy);
 
         Prepare(tester, 1083.0);
         EnsureVisible(tester, 6, alignment: 1.0);
         tester.Pump();
-        Assert.Equal(300.0, tester.GetBottomRight(FindKey(tester, 6)).Y);
+        Assert.Equal(300.0, tester.GetBottomRight(FindKey(tester, 6)).Dy);
 
         Prepare(tester, 345.0);
         EnsureVisible(tester, 3, duration: OneSecond);
         tester.Pump();
         tester.Pump(Settle);
-        Assert.Equal(500.0, tester.GetBottomRight(FindKey(tester, 3)).Y);
+        Assert.Equal(500.0, tester.GetBottomRight(FindKey(tester, 3)).Dy);
 
         // Regression test for https://github.com/flutter/flutter/issues/128749
         // Reset to zero position.
         Prepare(tester, 0.0);
         // 2 is not currently visible as the ListView is contained
         // within a centered SizedBox.
-        Assert.Equal(100.0, GetBottomLeft(tester, FindKey(tester, 2)).Y);
-        Assert.Equal(500.0, GetBottomLeft(tester, FindKey(tester, 0)).Y);
+        Assert.Equal(100.0, GetBottomLeft(tester, FindKey(tester, 2)).Dy);
+        Assert.Equal(500.0, GetBottomLeft(tester, FindKey(tester, 0)).Dy);
         EnsureVisible(tester, 0, alignmentPolicy: ScrollPositionAlignmentPolicy.KeepVisibleAtStart);
         tester.Pump();
         EnsureVisible(tester, 1, alignmentPolicy: ScrollPositionAlignmentPolicy.KeepVisibleAtStart);
         tester.Pump();
         // 0 and 1 are already visible beyond the top edge, so no change.
-        Assert.Equal(100.0, GetBottomLeft(tester, FindKey(tester, 2)).Y);
-        Assert.Equal(500.0, GetBottomLeft(tester, FindKey(tester, 0)).Y);
+        Assert.Equal(100.0, GetBottomLeft(tester, FindKey(tester, 2)).Dy);
+        Assert.Equal(500.0, GetBottomLeft(tester, FindKey(tester, 0)).Dy);
         EnsureVisible(tester, 2, alignmentPolicy: ScrollPositionAlignmentPolicy.KeepVisibleAtStart);
         tester.Pump();
         // Since it is reversed, 2 should have come into view at the top
         // edge of the scrollable, matching the alignment expectation.
-        Assert.Equal(300.0, GetBottomLeft(tester, FindKey(tester, 2)).Y);
-        Assert.Equal(700.0, GetBottomLeft(tester, FindKey(tester, 0)).Y);
+        Assert.Equal(300.0, GetBottomLeft(tester, FindKey(tester, 2)).Dy);
+        Assert.Equal(700.0, GetBottomLeft(tester, FindKey(tester, 0)).Dy);
 
         // Bring 0 back into view at the trailing edge, checking the other
         // alignment.
         EnsureVisible(tester, 0, alignmentPolicy: ScrollPositionAlignmentPolicy.KeepVisibleAtEnd);
         tester.Pump();
-        Assert.Equal(100.0, GetBottomLeft(tester, FindKey(tester, 2)).Y);
-        Assert.Equal(500.0, GetBottomLeft(tester, FindKey(tester, 0)).Y);
+        Assert.Equal(100.0, GetBottomLeft(tester, FindKey(tester, 2)).Dy);
+        Assert.Equal(500.0, GetBottomLeft(tester, FindKey(tester, 0)).Dy);
     }
 
     private static void RunListViewEnsureVisibleAxisHorizontalReverse(bool shrinkWrap)
@@ -544,36 +544,36 @@ public sealed class ScrollableEnsureVisibleDartParityTests
         Prepare(tester, 211.0);
         EnsureVisible(tester, 3);
         tester.Pump();
-        Assert.Equal(700.0, tester.GetBottomRight(FindKey(tester, 3)).X);
+        Assert.Equal(700.0, tester.GetBottomRight(FindKey(tester, 3)).Dx);
 
         Prepare(tester, 23.0);
         EnsureVisible(tester, 0);
         tester.Pump();
-        Assert.Equal(700.0, tester.GetBottomRight(FindKey(tester, 0)).X);
+        Assert.Equal(700.0, tester.GetBottomRight(FindKey(tester, 0)).Dx);
 
         Prepare(tester, 230.0);
         EnsureVisible(tester, 2, alignment: 1.0);
         tester.Pump();
-        Assert.Equal(100.0, tester.GetTopLeft(FindKey(tester, 2)).X);
+        Assert.Equal(100.0, tester.GetTopLeft(FindKey(tester, 2)).Dx);
 
         Prepare(tester, 1083.0);
         EnsureVisible(tester, 6, alignment: 1.0);
         tester.Pump();
-        Assert.Equal(300.0, tester.GetBottomRight(FindKey(tester, 6)).X);
+        Assert.Equal(300.0, tester.GetBottomRight(FindKey(tester, 6)).Dx);
 
         Prepare(tester, 345.0);
         EnsureVisible(tester, 3, duration: OneSecond);
         tester.Pump();
         tester.Pump(Settle);
-        Assert.Equal(700.0, tester.GetBottomRight(FindKey(tester, 3)).X);
+        Assert.Equal(700.0, tester.GetBottomRight(FindKey(tester, 3)).Dx);
 
         // Regression test for https://github.com/flutter/flutter/issues/128749
         // Reset to zero position.
         Prepare(tester, 0.0);
         // 3 is not currently visible as the ListView is contained
         // within a centered SizedBox.
-        Assert.Equal(-100.0, GetBottomLeft(tester, FindKey(tester, 3)).X);
-        Assert.Equal(500.0, GetBottomLeft(tester, FindKey(tester, 0)).X);
+        Assert.Equal(-100.0, GetBottomLeft(tester, FindKey(tester, 3)).Dx);
+        Assert.Equal(500.0, GetBottomLeft(tester, FindKey(tester, 0)).Dx);
         EnsureVisible(tester, 0, alignmentPolicy: ScrollPositionAlignmentPolicy.KeepVisibleAtStart);
         tester.Pump();
         EnsureVisible(tester, 1, alignmentPolicy: ScrollPositionAlignmentPolicy.KeepVisibleAtStart);
@@ -581,21 +581,21 @@ public sealed class ScrollableEnsureVisibleDartParityTests
         EnsureVisible(tester, 2, alignmentPolicy: ScrollPositionAlignmentPolicy.KeepVisibleAtStart);
         tester.Pump();
         // 0, 1 and 2 are already visible beyond the left edge, so no change.
-        Assert.Equal(-100.0, GetBottomLeft(tester, FindKey(tester, 3)).X);
-        Assert.Equal(500.0, GetBottomLeft(tester, FindKey(tester, 0)).X);
+        Assert.Equal(-100.0, GetBottomLeft(tester, FindKey(tester, 3)).Dx);
+        Assert.Equal(500.0, GetBottomLeft(tester, FindKey(tester, 0)).Dx);
         EnsureVisible(tester, 3, alignmentPolicy: ScrollPositionAlignmentPolicy.KeepVisibleAtStart);
         tester.Pump();
         // Since it is reversed, 3 should have come into view at the leading
         // edge of the scrollable, matching the alignment expectation.
-        Assert.Equal(100.0, GetBottomLeft(tester, FindKey(tester, 3)).X);
-        Assert.Equal(700.0, GetBottomLeft(tester, FindKey(tester, 0)).X);
+        Assert.Equal(100.0, GetBottomLeft(tester, FindKey(tester, 3)).Dx);
+        Assert.Equal(700.0, GetBottomLeft(tester, FindKey(tester, 0)).Dx);
 
         // Bring 0 back into view at the trailing edge, checking the other
         // alignment.
         EnsureVisible(tester, 0, alignmentPolicy: ScrollPositionAlignmentPolicy.KeepVisibleAtEnd);
         tester.Pump();
-        Assert.Equal(-100.0, GetBottomLeft(tester, FindKey(tester, 3)).X);
-        Assert.Equal(500.0, GetBottomLeft(tester, FindKey(tester, 0)).X);
+        Assert.Equal(-100.0, GetBottomLeft(tester, FindKey(tester, 3)).Dx);
+        Assert.Equal(500.0, GetBottomLeft(tester, FindKey(tester, 0)).Dx);
     }
 
     // Flutter: 'ListView ListView ensureVisible Axis.vertical'
@@ -677,11 +677,11 @@ public sealed class ScrollableEnsureVisibleDartParityTests
         Prepare(tester, 321.0);
         EnsureVisible(tester, 0);
         tester.Pump();
-        Assert.InRange(tester.GetBottomRight(FindKey(tester, 0)).Y, 100.0 - 0.1, 100.0 + 0.1);
+        Assert.InRange(tester.GetBottomRight(FindKey(tester, 0)).Dy, 100.0 - 0.1, 100.0 + 0.1);
 
         EnsureVisible(tester, 0, alignment: 1.0);
         tester.Pump();
-        Assert.InRange(tester.GetTopLeft(FindKey(tester, 0)).Y, 500.0 - 0.1, 500.0 + 0.1);
+        Assert.InRange(tester.GetTopLeft(FindKey(tester, 0)).Dy, 500.0 - 0.1, 500.0 + 0.1);
     }
 
     // Flutter: 'ListView shrinkWrap ListView ensureVisible Axis.vertical'
@@ -732,49 +732,49 @@ public sealed class ScrollableEnsureVisibleDartParityTests
         Prepare(tester, 480.0);
         EnsureVisible(tester, 3);
         tester.Pump();
-        Assert.Equal(100.0, tester.GetTopLeft(FindKey(tester, 3)).Y);
+        Assert.Equal(100.0, tester.GetTopLeft(FindKey(tester, 3)).Dy);
 
         Prepare(tester, 1083.0);
         EnsureVisible(tester, 6);
         tester.Pump();
-        Assert.Equal(300.0, tester.GetTopLeft(FindKey(tester, 6)).Y);
+        Assert.Equal(300.0, tester.GetTopLeft(FindKey(tester, 6)).Dy);
 
         Prepare(tester, 735.0);
         EnsureVisible(tester, 4, alignment: 1.0);
         tester.Pump();
-        Assert.Equal(500.0, tester.GetBottomRight(FindKey(tester, 4)).Y);
+        Assert.Equal(500.0, tester.GetBottomRight(FindKey(tester, 4)).Dy);
 
         Prepare(tester, 123.0);
         EnsureVisible(tester, 0, alignment: 1.0);
         tester.Pump();
-        Assert.Equal(500.0, tester.GetBottomRight(FindKey(tester, 0)).Y);
+        Assert.Equal(500.0, tester.GetBottomRight(FindKey(tester, 0)).Dy);
 
         Prepare(tester, 523.0);
         EnsureVisible(tester, 3, duration: OneSecond);
         tester.Pump();
         tester.Pump(Settle);
-        Assert.Equal(100.0, tester.GetTopLeft(FindKey(tester, 3)).Y);
+        Assert.Equal(100.0, tester.GetTopLeft(FindKey(tester, 3)).Dy);
 
         Prepare(tester, -480.0);
         EnsureVisible(tester, -3);
         tester.Pump();
-        Assert.Equal(100.0, tester.GetTopLeft(FindKey(tester, -3)).Y);
+        Assert.Equal(100.0, tester.GetTopLeft(FindKey(tester, -3)).Dy);
 
         Prepare(tester, -1083.0);
         EnsureVisible(tester, -6);
         tester.Pump();
-        Assert.Equal(100.0, tester.GetTopLeft(FindKey(tester, -6)).Y);
+        Assert.Equal(100.0, tester.GetTopLeft(FindKey(tester, -6)).Dy);
 
         Prepare(tester, -735.0);
         EnsureVisible(tester, -4, alignment: 1.0);
         tester.Pump();
-        Assert.Equal(500.0, tester.GetBottomRight(FindKey(tester, -4)).Y);
+        Assert.Equal(500.0, tester.GetBottomRight(FindKey(tester, -4)).Dy);
 
         Prepare(tester, -523.0);
         EnsureVisible(tester, -3, duration: OneSecond);
         tester.Pump();
         tester.Pump(Settle);
-        Assert.Equal(100.0, tester.GetTopLeft(FindKey(tester, -3)).Y);
+        Assert.Equal(100.0, tester.GetTopLeft(FindKey(tester, -3)).Dy);
     }
 
     private static void EnsureVisible(
@@ -790,7 +790,7 @@ public sealed class ScrollableEnsureVisibleDartParityTests
     }
 
     private static Rect Ltrb(double left, double top, double right, double bottom) =>
-        new(new Point(left, top), new Point(right, bottom));
+        DartGeometry.RectFromCorners(new Offset(left, top), new Offset(right, bottom));
 
     // Flutter: 'TwoDimensionalViewport ensureVisible Axis.vertical'
     [Fact]
@@ -801,18 +801,18 @@ public sealed class ScrollableEnsureVisibleDartParityTests
 
         EnsureVisible(tester, new ChildVicinity(xIndex: 0, yIndex: 0));
         tester.Pump();
-        Assert.Equal(0.0, tester.GetTopLeft(FindKey(tester, new ChildVicinity(xIndex: 0, yIndex: 0))).Y);
+        Assert.Equal(0.0, tester.GetTopLeft(FindKey(tester, new ChildVicinity(xIndex: 0, yIndex: 0))).Dy);
         // (0, 3) is in the cache extent, and will be brought into view next
-        Assert.Equal(600.0, tester.GetTopLeft(FindKey(tester, new ChildVicinity(xIndex: 0, yIndex: 3))).Y);
+        Assert.Equal(600.0, tester.GetTopLeft(FindKey(tester, new ChildVicinity(xIndex: 0, yIndex: 3))).Dy);
         EnsureVisible(tester, new ChildVicinity(xIndex: 0, yIndex: 3));
         tester.Pump();
         // Now in view at top edge of viewport
-        Assert.Equal(0.0, tester.GetTopLeft(FindKey(tester, new ChildVicinity(xIndex: 0, yIndex: 3))).Y);
+        Assert.Equal(0.0, tester.GetTopLeft(FindKey(tester, new ChildVicinity(xIndex: 0, yIndex: 3))).Dy);
 
         // If already visible, no change
         EnsureVisible(tester, new ChildVicinity(xIndex: 0, yIndex: 3));
         tester.Pump();
-        Assert.Equal(0.0, tester.GetTopLeft(FindKey(tester, new ChildVicinity(xIndex: 0, yIndex: 3))).Y);
+        Assert.Equal(0.0, tester.GetTopLeft(FindKey(tester, new ChildVicinity(xIndex: 0, yIndex: 3))).Dy);
     }
 
     // Flutter: 'TwoDimensionalViewport ensureVisible Axis.horizontal'
@@ -824,16 +824,16 @@ public sealed class ScrollableEnsureVisibleDartParityTests
 
         EnsureVisible(tester, new ChildVicinity(xIndex: 1, yIndex: 0));
         tester.Pump();
-        Assert.Equal(0.0, tester.GetTopLeft(FindKey(tester, new ChildVicinity(xIndex: 1, yIndex: 0))).X);
+        Assert.Equal(0.0, tester.GetTopLeft(FindKey(tester, new ChildVicinity(xIndex: 1, yIndex: 0))).Dx);
         // (5, 0) is now in the cache extent, and will be brought into view next
-        Assert.Equal(800.0, tester.GetTopLeft(FindKey(tester, new ChildVicinity(xIndex: 5, yIndex: 0))).X);
+        Assert.Equal(800.0, tester.GetTopLeft(FindKey(tester, new ChildVicinity(xIndex: 5, yIndex: 0))).Dx);
         EnsureVisible(
             tester,
             new ChildVicinity(xIndex: 5, yIndex: 0),
             alignmentPolicy: ScrollPositionAlignmentPolicy.KeepVisibleAtEnd);
         tester.Pump();
         // Now in view at trailing edge of viewport
-        Assert.Equal(600.0, tester.GetTopLeft(FindKey(tester, new ChildVicinity(xIndex: 5, yIndex: 0))).X);
+        Assert.Equal(600.0, tester.GetTopLeft(FindKey(tester, new ChildVicinity(xIndex: 5, yIndex: 0))).Dx);
 
         // If already in position, no change
         EnsureVisible(
@@ -841,7 +841,7 @@ public sealed class ScrollableEnsureVisibleDartParityTests
             new ChildVicinity(xIndex: 5, yIndex: 0),
             alignmentPolicy: ScrollPositionAlignmentPolicy.KeepVisibleAtEnd);
         tester.Pump();
-        Assert.Equal(600.0, tester.GetTopLeft(FindKey(tester, new ChildVicinity(xIndex: 5, yIndex: 0))).X);
+        Assert.Equal(600.0, tester.GetTopLeft(FindKey(tester, new ChildVicinity(xIndex: 5, yIndex: 0))).Dx);
     }
 
     // Flutter: 'TwoDimensionalViewport ensureVisible both axes'
@@ -888,22 +888,22 @@ public sealed class ScrollableEnsureVisibleDartParityTests
                 verticalDetails: ScrollableDetails.Vertical(reverse: true),
                 useCacheExtent: true));
 
-        Assert.Equal(400.0, tester.GetTopLeft(FindKey(tester, new ChildVicinity(xIndex: 0, yIndex: 0))).Y);
+        Assert.Equal(400.0, tester.GetTopLeft(FindKey(tester, new ChildVicinity(xIndex: 0, yIndex: 0))).Dy);
         EnsureVisible(tester, new ChildVicinity(xIndex: 0, yIndex: 0));
         tester.Pump();
         // Already visible so no change.
-        Assert.Equal(400.0, tester.GetTopLeft(FindKey(tester, new ChildVicinity(xIndex: 0, yIndex: 0))).Y);
+        Assert.Equal(400.0, tester.GetTopLeft(FindKey(tester, new ChildVicinity(xIndex: 0, yIndex: 0))).Dy);
         // (0, 3) is in the cache extent, and will be brought into view next
-        Assert.Equal(-200.0, tester.GetTopLeft(FindKey(tester, new ChildVicinity(xIndex: 0, yIndex: 3))).Y);
+        Assert.Equal(-200.0, tester.GetTopLeft(FindKey(tester, new ChildVicinity(xIndex: 0, yIndex: 3))).Dy);
         EnsureVisible(tester, new ChildVicinity(xIndex: 0, yIndex: 3));
         tester.Pump();
         // Now in view at bottom edge of viewport since we are reversed
-        Assert.Equal(400.0, tester.GetTopLeft(FindKey(tester, new ChildVicinity(xIndex: 0, yIndex: 3))).Y);
+        Assert.Equal(400.0, tester.GetTopLeft(FindKey(tester, new ChildVicinity(xIndex: 0, yIndex: 3))).Dy);
 
         // If already visible, no change
         EnsureVisible(tester, new ChildVicinity(xIndex: 0, yIndex: 3));
         tester.Pump();
-        Assert.Equal(400.0, tester.GetTopLeft(FindKey(tester, new ChildVicinity(xIndex: 0, yIndex: 3))).Y);
+        Assert.Equal(400.0, tester.GetTopLeft(FindKey(tester, new ChildVicinity(xIndex: 0, yIndex: 3))).Dy);
     }
 
     // Flutter: 'TwoDimensionalViewport ensureVisible Axis.horizontal reverse'
@@ -916,21 +916,21 @@ public sealed class ScrollableEnsureVisibleDartParityTests
                 horizontalDetails: ScrollableDetails.Horizontal(reverse: true),
                 useCacheExtent: true));
 
-        Assert.Equal(600.0, tester.GetTopLeft(FindKey(tester, new ChildVicinity(xIndex: 0, yIndex: 0))).X);
+        Assert.Equal(600.0, tester.GetTopLeft(FindKey(tester, new ChildVicinity(xIndex: 0, yIndex: 0))).Dx);
         EnsureVisible(tester, new ChildVicinity(xIndex: 0, yIndex: 0));
         tester.Pump();
         // Already visible so no change.
-        Assert.Equal(600.0, tester.GetTopLeft(FindKey(tester, new ChildVicinity(xIndex: 0, yIndex: 0))).X);
+        Assert.Equal(600.0, tester.GetTopLeft(FindKey(tester, new ChildVicinity(xIndex: 0, yIndex: 0))).Dx);
         // (4, 0) is in the cache extent, and will be brought into view next
-        Assert.Equal(-200.0, tester.GetTopLeft(FindKey(tester, new ChildVicinity(xIndex: 4, yIndex: 0))).X);
+        Assert.Equal(-200.0, tester.GetTopLeft(FindKey(tester, new ChildVicinity(xIndex: 4, yIndex: 0))).Dx);
         EnsureVisible(tester, new ChildVicinity(xIndex: 4, yIndex: 0));
         tester.Pump();
-        Assert.Equal(200.0, tester.GetTopLeft(FindKey(tester, new ChildVicinity(xIndex: 4, yIndex: 0))).X);
+        Assert.Equal(200.0, tester.GetTopLeft(FindKey(tester, new ChildVicinity(xIndex: 4, yIndex: 0))).Dx);
 
         // If already visible, no change
         EnsureVisible(tester, new ChildVicinity(xIndex: 4, yIndex: 0));
         tester.Pump();
-        Assert.Equal(200.0, tester.GetTopLeft(FindKey(tester, new ChildVicinity(xIndex: 4, yIndex: 0))).X);
+        Assert.Equal(200.0, tester.GetTopLeft(FindKey(tester, new ChildVicinity(xIndex: 4, yIndex: 0))).Dx);
     }
 
     // Flutter: 'TwoDimensionalViewport ensureVisible both axes reverse'

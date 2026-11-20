@@ -155,10 +155,10 @@ public sealed class CupertinoFormSectionTests
         RenderParagraph customParagraph = Assert.IsType<RenderParagraph>(
             FindParagraph(customHarness.RenderView, "Row"));
 
-        Point defaultPosition = defaultParagraph.LocalToGlobal(default);
-        Point customPosition = customParagraph.LocalToGlobal(default);
-        Assert.Equal(35.0, customPosition.X - defaultPosition.X, precision: 5);
-        Assert.Equal(35.0, customPosition.Y - defaultPosition.Y, precision: 5);
+        Offset defaultPosition = defaultParagraph.LocalToGlobal(default);
+        Offset customPosition = customParagraph.LocalToGlobal(default);
+        Assert.Equal(35.0, customPosition.Dx - defaultPosition.Dx, precision: 5);
+        Assert.Equal(35.0, customPosition.Dy - defaultPosition.Dy, precision: 5);
 
         using var zeroHarness = new CupertinoThemeTestHarness(Wrap(new SizedBox(
             width: 0.0,

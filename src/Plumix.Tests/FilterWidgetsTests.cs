@@ -70,7 +70,7 @@ public sealed class FilterWidgetsTests
     [Fact]
     public void ImageFilterConfig_ResolvesDirectBoundedAndComposedFilters()
     {
-        var bounds = new Rect(4.0, 5.0, 20.0, 10.0);
+        var bounds = DartGeometry.RectFromLTWH(4.0, 5.0, 20.0, 10.0);
         var context = new ImageFilterContext(bounds);
         var directFilter = new ImageFilter.Dilate(2.0, 3.0);
         var direct = new ImageFilterConfig(directFilter);
@@ -294,7 +294,7 @@ public sealed class FilterWidgetsTests
 
         var layer = Assert.IsType<ColorFilterLayer>(Assert.Single(pipeline.RootLayer.Children));
         Assert.Same(initialFilter, layer.ColorFilter);
-        Assert.Equal(new Rect(0.0, 0.0, 20.0, 10.0), layer.FilterBounds);
+        Assert.Equal(DartGeometry.RectFromLTWH(0.0, 0.0, 20.0, 10.0), layer.FilterBounds);
         Assert.IsType<PictureLayer>(Assert.Single(layer.Children));
         Assert.Equal(1, child.PaintCount);
 
@@ -323,7 +323,7 @@ public sealed class FilterWidgetsTests
 
         var layer = Assert.IsType<ImageFilterLayer>(Assert.Single(pipeline.RootLayer.Children));
         Assert.Same(initialFilter, layer.ImageFilter);
-        Assert.Equal(new Rect(0.0, 0.0, 20.0, 10.0), layer.FilterBounds);
+        Assert.Equal(DartGeometry.RectFromLTWH(0.0, 0.0, 20.0, 10.0), layer.FilterBounds);
         Assert.Equal(1, child.PaintCount);
 
         var updatedFilter = new ImageFilter.Dilate(2.0, 1.0);
@@ -396,9 +396,9 @@ public sealed class FilterWidgetsTests
 
         Pump(pipeline);
 
-        Assert.Equal(new Rect(0.0, 0.0, 20.0, 10.0), callbackBounds);
+        Assert.Equal(DartGeometry.RectFromLTWH(0.0, 0.0, 20.0, 10.0), callbackBounds);
         var layer = Assert.IsType<ShaderMaskLayer>(Assert.Single(pipeline.RootLayer.Children));
-        Assert.Equal(new Rect(7.0, 5.0, 20.0, 10.0), layer.MaskRect);
+        Assert.Equal(DartGeometry.RectFromLTWH(7.0, 5.0, 20.0, 10.0), layer.MaskRect);
         Assert.Equal(BlendMode.Modulate, layer.BlendMode);
         Assert.Same(Brushes.Red, layer.Shader);
         Assert.IsType<PictureLayer>(Assert.Single(layer.Children));
@@ -580,7 +580,7 @@ public sealed class FilterWidgetsTests
             imageFilter: new ImageFilter.Blur(1.0, 1.0, Plumix.Rendering.TileMode.Decal));
         Assert.Equal(7, blur.Width);
         Assert.Equal(7, blur.Height);
-        Assert.Equal(new Rect(-3.0, -3.0, 7.0, 7.0), blur.Bounds);
+        Assert.Equal(DartGeometry.RectFromLTWH(-3.0, -3.0, 7.0, 7.0), blur.Bounds);
         byte centerAlpha = blur.Pixels[(((3 * blur.Width) + 3) * 4) + 3];
         Assert.InRange(centerAlpha, (byte)1, (byte)254);
 
@@ -602,10 +602,10 @@ public sealed class FilterWidgetsTests
                 1.0,
                 1.0,
                 Plumix.Rendering.TileMode.Clamp,
-                new Rect(0.0, 0.0, 1.0, 1.0)));
+                DartGeometry.RectFromLTWH(0.0, 0.0, 1.0, 1.0)));
         Assert.Equal(1, boundedBlur.Width);
         Assert.Equal(1, boundedBlur.Height);
-        Assert.Equal(new Rect(0.0, 0.0, 1.0, 1.0), boundedBlur.Bounds);
+        Assert.Equal(DartGeometry.RectFromLTWH(0.0, 0.0, 1.0, 1.0), boundedBlur.Bounds);
         Assert.Equal([0, 0, 255, 255], boundedBlur.Pixels);
 
         var translated = FilterLayerRasterizer.ApplyImageFilterForTests(
@@ -622,7 +622,7 @@ public sealed class FilterWidgetsTests
             FilterQuality.None));
         Assert.Equal(1, translated.Width);
         Assert.Equal(1, translated.Height);
-        Assert.Equal(new Rect(2.0, 3.0, 1.0, 1.0), translated.Bounds);
+        Assert.Equal(DartGeometry.RectFromLTWH(2.0, 3.0, 1.0, 1.0), translated.Bounds);
         Assert.Equal([255, 0, 0, 255], translated.Pixels);
 
         var colorMatrix = FilterLayerRasterizer.ApplyImageFilterForTests(
@@ -637,7 +637,7 @@ public sealed class FilterWidgetsTests
             width: 1,
             height: 1,
             imageFilter: new ImageFilter.Dilate(1.0, 1.0));
-        Assert.Equal(new Rect(-1.0, -1.0, 3.0, 3.0), dilated.Bounds);
+        Assert.Equal(DartGeometry.RectFromLTWH(-1.0, -1.0, 3.0, 3.0), dilated.Bounds);
         for (int index = 3; index < dilated.Pixels.Length; index += 4)
         {
             Assert.Equal(byte.MaxValue, dilated.Pixels[index]);
@@ -652,7 +652,7 @@ public sealed class FilterWidgetsTests
             width: 3,
             height: 3,
             imageFilter: new ImageFilter.Erode(1.0, 1.0));
-        Assert.Equal(new Rect(0.0, 0.0, 3.0, 3.0), eroded.Bounds);
+        Assert.Equal(DartGeometry.RectFromLTWH(0.0, 0.0, 3.0, 3.0), eroded.Bounds);
         Assert.Equal(byte.MaxValue, eroded.Pixels[(((1 * eroded.Width) + 1) * 4) + 3]);
         Assert.Equal(byte.MinValue, eroded.Pixels[3]);
     }
@@ -706,11 +706,11 @@ public sealed class FilterWidgetsTests
         var drawing = new DrawingGroup();
         var image = new DrawingImage(drawing)
         {
-            Viewbox = new Rect(0.0, 0.0, 40.0, 30.0),
+            Viewbox = DartGeometry.RectFromLTWH(0.0, 0.0, 40.0, 30.0),
         };
         return new BackdropCapture(
             image,
-            new Rect(0.0, 0.0, 40.0, 30.0));
+            DartGeometry.RectFromLTWH(0.0, 0.0, 40.0, 30.0));
     }
 
     private static List<T> FindLayers<T>(Layer layer) where T : Layer
@@ -741,10 +741,10 @@ public sealed class FilterWidgetsTests
             Size = Constraints.Constrain(new Size(20.0, 10.0));
         }
 
-        public override void Paint(PaintingContext ctx, Point offset)
+        public override void Paint(PaintingContext ctx, Offset offset)
         {
             PaintCount++;
-            ctx.Canvas.DrawRectangle(Brushes.Red, null, new Rect(offset, Size));
+            ctx.Canvas.DrawRectangle(Brushes.Red, null, DartGeometry.RectFromOffsetAndSize(offset, Size));
         }
     }
 

@@ -13,7 +13,7 @@ namespace Plumix.Rendering;
 
 /// <summary>Signature for painting into a <see cref="PaintingContext"/>.</summary>
 /// <remarks>Flutter's <c>PaintingContextCallback</c>.</remarks>
-public delegate void PaintingContextCallback(PaintingContext context, Point offset);
+public delegate void PaintingContextCallback(PaintingContext context, Offset offset);
 
 /// <summary>A place to paint.</summary>
 public class PaintingContext : ClipContext
@@ -65,7 +65,7 @@ public class PaintingContext : ClipContext
         else
         {
             Debug.Assert(debugAlsoPaintedParent || childLayer.Attached);
-            Point debugOldOffset = childLayer.Offset;
+            Offset debugOldOffset = childLayer.Offset;
             childLayer.RemoveAllChildren();
             OffsetLayer updatedLayer = child.UpdateCompositedLayerForRepaint();
             if (!ReferenceEquals(updatedLayer, childLayer))
@@ -85,7 +85,7 @@ public class PaintingContext : ClipContext
         }
 
         childContext ??= new PaintingContext(childLayer, child.PaintBounds);
-        child._paintWithContext(childContext, new Point(0, 0));
+        child._paintWithContext(childContext, new Offset(0, 0));
         Debug.Assert(ReferenceEquals(childLayer, child._layer));
         childContext.StopRecordingIfNeeded();
     }
@@ -100,7 +100,7 @@ public class PaintingContext : ClipContext
         Debug.Assert(child._layer is not null);
 
         var childLayer = (OffsetLayer)child._layer!;
-        Point debugOldOffset = childLayer.Offset;
+        Offset debugOldOffset = childLayer.Offset;
         OffsetLayer updatedLayer = child.UpdateCompositedLayerForRepaint();
         if (!ReferenceEquals(updatedLayer, childLayer))
         {
@@ -127,7 +127,7 @@ public class PaintingContext : ClipContext
         RepaintCompositedChildInternal(child, debugAlsoPaintedParent, customContext);
     }
 
-    public virtual void PaintChild(RenderObject child, Point offset)
+    public virtual void PaintChild(RenderObject child, Offset offset)
     {
         ArgumentNullException.ThrowIfNull(child);
         if (Constants.KDebugMode)
@@ -153,7 +153,7 @@ public class PaintingContext : ClipContext
     }
 
     /// <remarks>Flutter's <c>PaintingContext._compositeChild</c>.</remarks>
-    private void CompositeChild(RenderObject child, Point offset)
+    private void CompositeChild(RenderObject child, Offset offset)
     {
         Debug.Assert(!IsRecording);
         Debug.Assert(child.IsRepaintBoundary);
@@ -322,7 +322,7 @@ public class PaintingContext : ClipContext
     public virtual void PushLayer(
         ContainerLayer childLayer,
         PaintingContextCallback painter,
-        Point offset,
+        Offset offset,
         Rect? childPaintBounds = null)
     {
         ArgumentNullException.ThrowIfNull(childLayer);
@@ -354,7 +354,7 @@ public class PaintingContext : ClipContext
     /// <remarks>Flutter's <c>PaintingContext.pushClipRect</c>.</remarks>
     public virtual ClipRectLayer? PushClipRect(
         bool needsCompositing,
-        Point offset,
+        Offset offset,
         Rect clipRect,
         PaintingContextCallback painter,
         Clip clipBehavior = Clip.HardEdge,
@@ -385,7 +385,7 @@ public class PaintingContext : ClipContext
     /// <remarks>Flutter's <c>PaintingContext.pushClipRRect</c>.</remarks>
     public ClipRRectLayer? PushClipRRect(
         bool needsCompositing,
-        Point offset,
+        Offset offset,
         Rect bounds,
         RRect clipRRect,
         PaintingContextCallback painter,
@@ -418,7 +418,7 @@ public class PaintingContext : ClipContext
     /// <remarks>Flutter's <c>PaintingContext.pushClipRSuperellipse</c>.</remarks>
     public ClipRSuperellipseLayer? PushClipRSuperellipse(
         bool needsCompositing,
-        Point offset,
+        Offset offset,
         Rect bounds,
         RSuperellipse clipRSuperellipse,
         PaintingContextCallback painter,
@@ -451,7 +451,7 @@ public class PaintingContext : ClipContext
     /// <remarks>Flutter's <c>PaintingContext.pushClipPath</c>.</remarks>
     public ClipPathLayer? PushClipPath(
         bool needsCompositing,
-        Point offset,
+        Offset offset,
         Rect bounds,
         Path clipPath,
         PaintingContextCallback painter,
@@ -489,7 +489,7 @@ public class PaintingContext : ClipContext
     /// </remarks>
     public ClipGeometryLayer? PushClipGeometry(
         bool needsCompositing,
-        Point offset,
+        Offset offset,
         Rect bounds,
         Geometry geometry,
         PaintingContextCallback painter,
@@ -522,7 +522,7 @@ public class PaintingContext : ClipContext
     /// <summary>Blends the painting with a color filter, in its own composited layer.</summary>
     /// <remarks>Flutter's <c>PaintingContext.pushColorFilter</c>.</remarks>
     public ColorFilterLayer PushColorFilter(
-        Point offset,
+        Offset offset,
         ColorFilter colorFilter,
         PaintingContextCallback painter,
         ColorFilterLayer? oldLayer = null)
@@ -539,16 +539,16 @@ public class PaintingContext : ClipContext
     /// <remarks>Flutter's <c>PaintingContext.pushTransform</c>.</remarks>
     public TransformLayer? PushTransform(
         bool needsCompositing,
-        Point offset,
+        Offset offset,
         Matrix4 transform,
         PaintingContextCallback painter,
         TransformLayer? oldLayer = null)
     {
         ArgumentNullException.ThrowIfNull(transform);
         ArgumentNullException.ThrowIfNull(painter);
-        Matrix4 effectiveTransform = Matrix4.TranslationValues(offset.X, offset.Y, 0.0);
+        Matrix4 effectiveTransform = Matrix4.TranslationValues(offset.Dx, offset.Dy, 0.0);
         effectiveTransform.Multiply(transform);
-        effectiveTransform.TranslateByDouble(-offset.X, -offset.Y, 0.0, 1.0);
+        effectiveTransform.TranslateByDouble(-offset.Dx, -offset.Dy, 0.0, 1.0);
         if (needsCompositing)
         {
             TransformLayer layer = oldLayer ?? new TransformLayer();
@@ -571,7 +571,7 @@ public class PaintingContext : ClipContext
     /// <summary>Blends the painting with an alpha value, in its own composited layer.</summary>
     /// <remarks>Flutter's <c>PaintingContext.pushOpacity</c>.</remarks>
     public OpacityLayer PushOpacity(
-        Point offset,
+        Offset offset,
         int alpha,
         PaintingContextCallback painter,
         OpacityLayer? oldLayer = null)
@@ -580,14 +580,14 @@ public class PaintingContext : ClipContext
         OpacityLayer layer = oldLayer ?? new OpacityLayer();
         layer.Alpha = alpha;
         layer.Offset = offset;
-        PushLayer(layer, painter, new Point(0, 0));
+        PushLayer(layer, painter, new Offset(0, 0));
         return layer;
     }
 
     /// <summary>Plumix-only: paints through a magnifier layer, which has no Flutter counterpart.</summary>
     public MagnifierLayer PushMagnifier(
         Rect lensRect,
-        Point focalPointOffset,
+        Offset focalPointOffset,
         double magnificationScale,
         MagnifierDecoration decoration,
         Clip clipBehavior,
@@ -602,7 +602,7 @@ public class PaintingContext : ClipContext
         layer.MagnificationScale = magnificationScale;
         layer.Decoration = decoration;
         layer.ClipBehavior = clipBehavior;
-        PushLayer(layer, painter, new Point(0, 0));
+        PushLayer(layer, painter, new Offset(0, 0));
         return layer;
     }
 
@@ -611,14 +611,14 @@ public class PaintingContext : ClipContext
         $"PaintingContext#{GetHashCode()}(layer: {_containerLayer}, canvas bounds: {EstimatedBounds})";
 
     /// <remarks>Dart's <c>Rect.shift</c>.</remarks>
-    private static Rect ShiftRect(Rect rect, Point offset) => new(rect.Position + offset, rect.Size);
+    private static Rect ShiftRect(Rect rect, Offset offset) => DartGeometry.RectFromOffsetAndSize(rect.TopLeft + offset, rect.Size);
 
     /// <remarks>Dart's <c>Rect.deflate</c>.</remarks>
     private static Rect DeflateRect(Rect rect, double delta)
     {
-        return new Rect(
-            rect.X + delta,
-            rect.Y + delta,
+        return DartGeometry.RectFromLTWH(
+            rect.Left + delta,
+            rect.Top + delta,
             Math.Max(0.0, rect.Width - (delta * 2.0)),
             Math.Max(0.0, rect.Height - (delta * 2.0)));
     }

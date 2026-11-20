@@ -88,9 +88,9 @@ public sealed class SliverGroupTests
         Assert.Equal(100, first.LastConstraints!.Value.CrossAxisExtent, precision: 3);
         Assert.Equal(80, constrainedChild.LastConstraints!.Value.CrossAxisExtent, precision: 3);
         Assert.Equal(200, expanded.LastConstraints!.Value.CrossAxisExtent, precision: 3);
-        Assert.Equal(new Point(0, 0), ((SliverPhysicalParentData)first.parentData!).PaintOffset);
-        Assert.Equal(new Point(100, 0), ((SliverPhysicalParentData)constrained.parentData!).PaintOffset);
-        Assert.Equal(new Point(180, 0), ((SliverPhysicalParentData)expanded.parentData!).PaintOffset);
+        Assert.Equal(new Offset(0, 0), ((SliverPhysicalParentData)first.parentData!).PaintOffset);
+        Assert.Equal(new Offset(100, 0), ((SliverPhysicalParentData)constrained.parentData!).PaintOffset);
+        Assert.Equal(new Offset(180, 0), ((SliverPhysicalParentData)expanded.parentData!).PaintOffset);
         Assert.Equal(160, group.Geometry!.ScrollExtent);
     }
 
@@ -108,8 +108,8 @@ public sealed class SliverGroupTests
             remainingPaintExtent: 50,
             crossAxisExtent: 200), parentUsesSize: true);
 
-        Assert.Equal(new Point(0, -30), ((SliverPhysicalParentData)shortChild.parentData!).PaintOffset);
-        Assert.Equal(new Point(100, -30), ((SliverPhysicalParentData)longChild.parentData!).PaintOffset);
+        Assert.Equal(new Offset(0, -30), ((SliverPhysicalParentData)shortChild.parentData!).PaintOffset);
+        Assert.Equal(new Offset(100, -30), ((SliverPhysicalParentData)longChild.parentData!).PaintOffset);
     }
 
     [Fact]
@@ -148,8 +148,8 @@ public sealed class SliverGroupTests
         Assert.Equal(0, second.LastConstraints!.Value.ScrollOffset);
         Assert.Equal(30, first.LastConstraints!.Value.PrecedingScrollExtent);
         Assert.Equal(110, second.LastConstraints!.Value.PrecedingScrollExtent);
-        Assert.Equal(new Point(0, 0), ((SliverPhysicalParentData)first.parentData!).PaintOffset);
-        Assert.Equal(new Point(0, 30), ((SliverPhysicalParentData)second.parentData!).PaintOffset);
+        Assert.Equal(new Offset(0, 0), ((SliverPhysicalParentData)first.parentData!).PaintOffset);
+        Assert.Equal(new Offset(0, 30), ((SliverPhysicalParentData)second.parentData!).PaintOffset);
         Assert.Equal(200, group.Geometry!.ScrollExtent);
         Assert.Equal(150, group.Geometry!.PaintExtent);
         Assert.Equal(150, group.Geometry!.LayoutExtent);
@@ -175,7 +175,7 @@ public sealed class SliverGroupTests
 
         Assert.Equal(140, group.Geometry!.ScrollExtent);
         Assert.Equal(15, group.Geometry!.PaintExtent);
-        Assert.Equal(new Point(0, -40), ((SliverPhysicalParentData)pinned.parentData!).PaintOffset);
+        Assert.Equal(new Offset(0, -40), ((SliverPhysicalParentData)pinned.parentData!).PaintOffset);
         Assert.Equal(0, group.ChildScrollOffset(pinned));
         Assert.Equal(0, group.ChildScrollOffset(body));
     }
@@ -301,7 +301,7 @@ public sealed class SliverGroupTests
                 CrossAxisExtent: _requestedCrossAxisExtent);
         }
 
-        public override void Paint(PaintingContext ctx, Point offset)
+        public override void Paint(PaintingContext ctx, Offset offset)
         {
             if (_paintOrder != null && _name != null)
             {

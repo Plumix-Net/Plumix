@@ -64,7 +64,7 @@ public static partial class MaterialDatePickers
         string? fieldHintText = null,
         string? fieldLabelText = null,
         TextInputType? keyboardType = null,
-        Point? anchorPoint = null,
+        Offset? anchorPoint = null,
         Action<DatePickerEntryMode>? onDatePickerModeChange = null,
         Icon? switchToInputEntryModeIcon = null,
         Icon? switchToCalendarEntryModeIcon = null,

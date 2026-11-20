@@ -321,11 +321,11 @@ public class TextInputConnection
 
     private static Rect SanitizeRect(Rect rect)
     {
-        bool isFinite = double.IsFinite(rect.X)
-                        && double.IsFinite(rect.Y)
+        bool isFinite = double.IsFinite(rect.Left)
+                        && double.IsFinite(rect.Top)
                         && double.IsFinite(rect.Right)
                         && double.IsFinite(rect.Bottom);
-        return isFinite ? rect : new Rect(0.0, 0.0, -1.0, -1.0);
+        return isFinite ? rect : DartGeometry.RectFromLTWH(0.0, 0.0, -1.0, -1.0);
     }
 
     private static void Require(bool condition)
@@ -617,7 +617,7 @@ public static class TextInput
                 if (ScribbleClientRegistry.TryGetValue(identifier, out IScribbleClient? scribbleClient))
                 {
                     scribbleClient.OnScribbleFocus(
-                        new Point(Convert.ToDouble(arguments[1]), Convert.ToDouble(arguments[2])));
+                        new Offset(Convert.ToDouble(arguments[1]), Convert.ToDouble(arguments[2])));
                 }
 
                 return Task.FromResult<object?>(null);
@@ -625,7 +625,7 @@ public static class TextInput
 
             case "TextInputClient.requestElementsInRect":
             {
-                var rect = new Rect(
+                var rect = DartGeometry.RectFromLTWH(
                     Convert.ToDouble(arguments![0]),
                     Convert.ToDouble(arguments[1]),
                     Convert.ToDouble(arguments[2]),
@@ -648,8 +648,8 @@ public static class TextInput
                         new List<object?>
                         {
                             client.ElementIdentifier,
-                            bounds.X,
-                            bounds.Y,
+                            bounds.Left,
+                            bounds.Top,
                             bounds.Width,
                             bounds.Height,
                         });
@@ -819,11 +819,11 @@ public static class TextInput
     private const int DebugAnyClientId = -1;
 
     private static bool HasNaN(Rect rect) =>
-        double.IsNaN(rect.X) || double.IsNaN(rect.Y) || double.IsNaN(rect.Width) || double.IsNaN(rect.Height);
+        double.IsNaN(rect.Left) || double.IsNaN(rect.Top) || double.IsNaN(rect.Width) || double.IsNaN(rect.Height);
 
     private static bool IsInfinite(Rect rect) =>
-        double.IsInfinity(rect.X)
-        || double.IsInfinity(rect.Y)
+        double.IsInfinity(rect.Left)
+        || double.IsInfinity(rect.Top)
         || double.IsInfinity(rect.Width)
         || double.IsInfinity(rect.Height);
 
@@ -841,8 +841,8 @@ public static class TextInput
     private static RawFloatingCursorPoint ToTextPoint(FloatingCursorDragState state, IDictionary encoded)
     {
         var offset = state == FloatingCursorDragState.Update
-            ? new Point(Convert.ToDouble(encoded["X"]), Convert.ToDouble(encoded["Y"]))
-            : default(Point);
+            ? new Offset(Convert.ToDouble(encoded["X"]), Convert.ToDouble(encoded["Y"]))
+            : default(Offset);
         return new RawFloatingCursorPoint(state, offset);
     }
 
@@ -902,8 +902,8 @@ public static class TextInput
                 selectionRects
                     .Select(rect => new List<object?>
                     {
-                        rect.Bounds.X,
-                        rect.Bounds.Y,
+                        rect.Bounds.Left,
+                        rect.Bounds.Top,
                         rect.Bounds.Width,
                         rect.Bounds.Height,
                         rect.Position,
@@ -948,8 +948,8 @@ public static class TextInput
             {
                 ["width"] = rect.Width,
                 ["height"] = rect.Height,
-                ["x"] = rect.X,
-                ["y"] = rect.Y,
+                ["x"] = rect.Left,
+                ["y"] = rect.Top,
             };
 
         private static void Invoke(string method, object? arguments, string context)

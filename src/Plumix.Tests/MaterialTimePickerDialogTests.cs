@@ -454,11 +454,11 @@ public sealed partial class MaterialTimePickerDialogTests : IDisposable
         Assert.Equal(new Size(52, 96), padding.Size);
 
         var topResult = new BoxHitTestResult();
-        Assert.True(padding.HitTest(topResult, new Point(26, 2)));
+        Assert.True(padding.HitTest(topResult, new Offset(26, 2)));
         var bottomResult = new BoxHitTestResult();
-        Assert.True(padding.HitTest(bottomResult, new Point(26, 94)));
+        Assert.True(padding.HitTest(bottomResult, new Offset(26, 94)));
         var outsideResult = new BoxHitTestResult();
-        Assert.False(padding.HitTest(outsideResult, new Point(26, 200)));
+        Assert.False(padding.HitTest(outsideResult, new Offset(26, 200)));
     }
 
     // ---- Semantics ----------------------------------------------------------------------
@@ -868,7 +868,7 @@ public sealed partial class MaterialTimePickerDialogTests : IDisposable
     {
         using var harness = CreateHarness(DialogRoute(new TimePickerDialog(new TimeOfDay(7, 0))));
         harness.Pump(ViewSize);
-        DragDial(harness, new Point(0, 50), new Point(-50, 0));
+        DragDial(harness, new Offset(0, 50), new Offset(-50, 0));
         harness.Pump(ViewSize);
         var semantics = harness.PumpAndGetSemantics(ViewSize);
         Assert.NotNull(FindSemantics(semantics, node => node.Value == "Select hours 9"));
@@ -955,31 +955,31 @@ public sealed partial class MaterialTimePickerDialogTests : IDisposable
         DispatchPointerUp(binding, harness.RenderView, 1, point);
     }
 
-    private static void DragDial(WidgetRenderHarness harness, Point start, Point end)
+    private static void DragDial(WidgetRenderHarness harness, Offset start, Offset end)
     {
-        var from = DialPoint(harness, start.X, start.Y);
-        var to = DialPoint(harness, end.X, end.Y);
+        var from = DialPoint(harness, start.Dx, start.Dy);
+        var to = DialPoint(harness, end.Dx, end.Dy);
         var binding = GestureBinding.Instance;
         DispatchPointerDown(binding, harness.RenderView, 2, from);
         for (int step = 1; step <= 4; step++)
         {
-            DispatchPointerMove(binding, harness.RenderView, 2, new Point(
-                from.X + ((to.X - from.X) * step / 4.0),
-                from.Y + ((to.Y - from.Y) * step / 4.0)));
+            DispatchPointerMove(binding, harness.RenderView, 2, new Offset(
+                from.Dx + ((to.Dx - from.Dx) * step / 4.0),
+                from.Dy + ((to.Dy - from.Dy) * step / 4.0)));
         }
 
         DispatchPointerUp(binding, harness.RenderView, 2, to);
     }
 
-    private static Point DialPoint(WidgetRenderHarness harness, double dx, double dy)
+    private static Offset DialPoint(WidgetRenderHarness harness, double dx, double dy)
     {
         var dial = FindDescendants<RenderCustomPaint>(harness.RenderView)
             .First(paint => paint.Painter is TimeDialPainter);
         var origin = dial.GetPaintOffsetToRoot();
-        return new Point(origin.X + (dial.Size.Width / 2) + dx, origin.Y + (dial.Size.Height / 2) + dy);
+        return new Offset(origin.Dx + (dial.Size.Width / 2) + dx, origin.Dy + (dial.Size.Height / 2) + dy);
     }
 
-    private static void DispatchPointerDown(GestureBinding binding, RenderView view, int pointer, Point position) =>
+    private static void DispatchPointerDown(GestureBinding binding, RenderView view, int pointer, Offset position) =>
         binding.HandlePointerEvent(view, new PointerDownEvent(
             pointer: pointer,
             kind: PointerDeviceKind.Touch,
@@ -987,7 +987,7 @@ public sealed partial class MaterialTimePickerDialogTests : IDisposable
             buttons: PointerButtons.Primary,
             timestampUtc: DateTime.UtcNow));
 
-    private static void DispatchPointerMove(GestureBinding binding, RenderView view, int pointer, Point position) =>
+    private static void DispatchPointerMove(GestureBinding binding, RenderView view, int pointer, Offset position) =>
         binding.HandlePointerEvent(view, new PointerMoveEvent(
             pointer: pointer,
             kind: PointerDeviceKind.Touch,
@@ -995,7 +995,7 @@ public sealed partial class MaterialTimePickerDialogTests : IDisposable
             buttons: PointerButtons.Primary,
             timestampUtc: DateTime.UtcNow));
 
-    private static void DispatchPointerUp(GestureBinding binding, RenderView view, int pointer, Point position) =>
+    private static void DispatchPointerUp(GestureBinding binding, RenderView view, int pointer, Offset position) =>
         binding.HandlePointerEvent(view, new PointerUpEvent(
             pointer: pointer,
             kind: PointerDeviceKind.Touch,

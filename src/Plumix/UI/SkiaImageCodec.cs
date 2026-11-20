@@ -65,7 +65,7 @@ internal sealed class SkiaImageCodec : Codec
         }
 
         using var bitmap = new Bitmap(PixelFormat.Rgba8888, AlphaFormat.Premul,
-            pixels.GetPixels(), new PixelSize(info.Width, info.Height), new Vector(96, 96), pixels.RowBytes);
+            pixels.GetPixels(), new PixelSize(info.Width, info.Height), new Offset(96, 96), pixels.RowBytes);
         Bitmap image = bitmap.CreateScaledBitmap(_targetSize, BitmapInterpolationMode.HighQuality);
         TimeSpan duration = _frames.Length > _nextFrame
             ? TimeSpan.FromMilliseconds(_frames[_nextFrame].Duration)

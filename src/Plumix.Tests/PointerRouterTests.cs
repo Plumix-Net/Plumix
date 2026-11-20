@@ -11,7 +11,7 @@ namespace Plumix.Tests;
 /// <summary>Ports the behaviors Flutter's own `pointer_router_test.dart` asserts.</summary>
 public sealed class PointerRouterTests
 {
-    private static PointerDownEvent Down(int pointer = 1, Point position = default)
+    private static PointerDownEvent Down(int pointer = 1, Offset position = default)
     {
         return new PointerDownEvent(
             pointer, PointerDeviceKind.Touch, position, PointerButtons.Primary, DateTime.UnixEpoch);
@@ -141,15 +141,15 @@ public sealed class PointerRouterTests
     public void Route_AppliesThePerRouteTransformToTheEvent()
     {
         var router = new PointerRouter();
-        Point? localPosition = null;
+        Offset? localPosition = null;
         Matrix4 transform = Matrix4.Translation(new Vector3(-10.0, -20.0, 0.0));
         router.AddRoute(1, @event => localPosition = @event.LocalPosition, transform);
 
-        router.Route(Down(position: new Point(30.0, 50.0)));
+        router.Route(Down(position: new Offset(30.0, 50.0)));
 
         Assert.NotNull(localPosition);
-        Assert.Equal(20.0, localPosition!.Value.X, 6);
-        Assert.Equal(30.0, localPosition!.Value.Y, 6);
+        Assert.Equal(20.0, localPosition!.Value.Dx, 6);
+        Assert.Equal(30.0, localPosition!.Value.Dy, 6);
     }
 
     [Fact]

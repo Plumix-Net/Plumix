@@ -83,12 +83,12 @@ public sealed record UnderlineTabIndicator : Decoration
     internal Rect IndicatorRectFor(Rect rect, TextDirection textDirection)
     {
         EdgeInsets resolved = Insets.Resolve(textDirection);
-        var indicator = new Rect(
+        var indicator = DartGeometry.RectFromLTWH(
             rect.Left + resolved.Left,
             rect.Top + resolved.Top,
             Math.Max(0.0, rect.Width - resolved.Left - resolved.Right),
             Math.Max(0.0, rect.Height - resolved.Top - resolved.Bottom));
-        return new Rect(
+        return DartGeometry.RectFromLTWH(
             indicator.Left,
             indicator.Bottom - BorderSide.Width,
             indicator.Width,
@@ -111,13 +111,13 @@ internal sealed class UnderlinePainter : BoxPainter
         _borderRadius = borderRadius;
     }
 
-    public override void Paint(PaintingContext context, Point offset, ImageConfiguration configuration)
+    public override void Paint(PaintingContext context, Offset offset, ImageConfiguration configuration)
     {
         Size size = configuration.Size
             ?? throw new InvalidOperationException("UnderlineTabIndicator requires a configured size.");
         TextDirection textDirection = configuration.TextDirection
             ?? throw new InvalidOperationException("UnderlineTabIndicator requires a text direction.");
-        var rect = new Rect(offset, size);
+        var rect = DartGeometry.RectFromOffsetAndSize(offset, size);
         if (_borderRadius is { } borderRadius)
         {
             Rect rounded = _decoration.IndicatorRectFor(rect, textDirection);
@@ -143,7 +143,7 @@ internal sealed class UnderlinePainter : BoxPainter
                 new SolidColorBrush(_decoration.BorderSide.Color),
                 width,
                 lineCap: PenLineCap.Square),
-            new Point(strip.Left + (width / 2.0), y),
-            new Point(strip.Right - (width / 2.0), y));
+            new Offset(strip.Left + (width / 2.0), y),
+            new Offset(strip.Right - (width / 2.0), y));
     }
 }

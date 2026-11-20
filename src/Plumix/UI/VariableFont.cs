@@ -96,7 +96,7 @@ internal sealed class VariableFont : IDisposable
                 (ushort)glyphs[index].Codepoint,
                 (int)glyphs[index].Cluster - start,
                 positions[index].XAdvance * _scale,
-                new Vector(positions[index].XOffset * _scale, -positions[index].YOffset * _scale));
+                new Offset(positions[index].XOffset * _scale, -positions[index].YOffset * _scale));
         }
 
         return result;
@@ -121,7 +121,7 @@ internal sealed class VariableFont : IDisposable
             double x = 0.0;
             foreach (RunGlyph glyph in run.GlyphInfos)
             {
-                target.Origin = new Point(x + glyph.GlyphOffset.X, glyph.GlyphOffset.Y + run.BaselineOrigin.Y);
+                target.Origin = new Offset(x + glyph.GlyphOffset.X, glyph.GlyphOffset.Y + run.BaselineOrigin.Dy);
                 DrawGlyph(_font.Handle, glyph.GlyphIndex, DrawFunctions.Value, GCHandle.ToIntPtr(handle));
                 target.Close();
                 x += glyph.GlyphAdvance;
@@ -154,9 +154,9 @@ internal sealed class VariableFont : IDisposable
 
     private sealed class OutlineTarget(StreamGeometryContext context, double scale)
     {
-        internal Point Origin;
+        internal Offset Origin;
         private bool _open;
-        internal Point Point(float x, float y) => new(Origin.X + x * scale, Origin.Y - y * scale);
+        internal Offset Point(float x, float y) => new(Origin.Dx + x * scale, Origin.Dy - y * scale);
         internal void Move(float x, float y)
         {
             Close();

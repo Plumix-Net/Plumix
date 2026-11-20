@@ -1084,7 +1084,7 @@ internal sealed class PlatformLayerBasedAndroidViewSurface : PlatformViewSurface
 
 /// <summary>A callback used to notify the size of the platform view placeholder.</summary>
 /// <remarks>Dart's private <c>_OnLayoutCallback</c>.</remarks>
-internal delegate void PlatformViewOnLayoutCallback(Size size, Point position);
+internal delegate void PlatformViewOnLayoutCallback(Size size, Offset position);
 
 /// <summary>A <see cref="RenderBox"/> that notifies its size to the owner after a layout.</summary>
 internal sealed class PlatformViewPlaceholderBox : RenderConstrainedBox

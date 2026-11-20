@@ -78,11 +78,11 @@ public sealed class DartStopwatchTests
             DateTime origin = FrameworkDartTester.EventTimeOrigin;
             for (int i = 0; i < 10; i += 1)
             {
-                tracker.AddPosition(origin.AddMilliseconds(8 * i), new Point(0, 10 * i));
+                tracker.AddPosition(origin.AddMilliseconds(8 * i), new Offset(0, 10 * i));
             }
 
             // However long the machine takes, the sample is fresh until the sampling clock moves.
-            Assert.True(tracker.GetVelocity().PixelsPerSecond.Y > 1000.0);
+            Assert.True(tracker.GetVelocity().PixelsPerSecond.Dy > 1000.0);
 
             clock.Time += TimeSpan.FromMilliseconds(41);
             Assert.Equal(Velocity.Zero, tracker.GetVelocity());

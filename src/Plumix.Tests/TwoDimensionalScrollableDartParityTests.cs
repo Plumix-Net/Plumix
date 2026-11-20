@@ -419,35 +419,35 @@ public sealed class TwoDimensionalScrollableDartParityTests
 
             Assert.Equal(0.0, verticalController.Position.Pixels);
             Assert.Equal(0.0, horizontalController.Position.Pixels);
-            tester.Drag(FindScrollable(), new Vector(0.0, -100.0));
+            tester.Drag(FindScrollable(), new Offset(0.0, -100.0));
             tester.PumpAndSettle();
             Assert.Equal(80.0, verticalController.Position.Pixels);
             Assert.Equal(0.0, horizontalController.Position.Pixels);
-            tester.Drag(FindScrollable(), new Vector(-100.0, 0.0));
+            tester.Drag(FindScrollable(), new Offset(-100.0, 0.0));
             tester.PumpAndSettle();
             Assert.Equal(80.0, verticalController.Position.Pixels);
             Assert.Equal(80.0, horizontalController.Position.Pixels);
             // Drag with and x and y offset, only vertical will accept the gesture
             // since the x is < kTouchSlop
-            tester.Drag(FindScrollable(), new Vector(-10.0, -50.0));
+            tester.Drag(FindScrollable(), new Offset(-10.0, -50.0));
             tester.PumpAndSettle();
             Assert.Equal(110.0, verticalController.Position.Pixels);
             Assert.Equal(80.0, horizontalController.Position.Pixels);
             // Drag with and x and y offset, only horizontal will accept the gesture
             // since the y is < kTouchSlop
-            tester.Drag(FindScrollable(), new Vector(-50.0, -10.0));
+            tester.Drag(FindScrollable(), new Offset(-50.0, -10.0));
             tester.PumpAndSettle();
             Assert.Equal(110.0, verticalController.Position.Pixels);
             Assert.Equal(110.0, horizontalController.Position.Pixels);
             // Drag with and x and y offset, only vertical will accept the gesture
             //  x is > kTouchSlop, larger offset wins
-            tester.Drag(FindScrollable(), new Vector(-20.0, -50.0));
+            tester.Drag(FindScrollable(), new Offset(-20.0, -50.0));
             tester.PumpAndSettle();
             Assert.Equal(140.0, verticalController.Position.Pixels);
             Assert.Equal(110.0, horizontalController.Position.Pixels);
             // Drag with and x and y offset, only horizontal will accept the gesture
             //  y is > kTouchSlop, larger offset wins
-            tester.Drag(FindScrollable(), new Vector(-50.0, -20.0));
+            tester.Drag(FindScrollable(), new Offset(-50.0, -20.0));
             tester.PumpAndSettle();
             Assert.Equal(140.0, verticalController.Position.Pixels);
             Assert.Equal(140.0, horizontalController.Position.Pixels);
@@ -484,13 +484,13 @@ public sealed class TwoDimensionalScrollableDartParityTests
             Assert.Equal(0.0, horizontalController.Position.Pixels);
             TestGesture gesture = tester.StartGesture(tester.GetCenter(FindScrollable()), PointerDeviceKind.Touch);
             // In this case, the vertical axis clearly wins.
-            Point secondLocation = tester.GetCenter(FindScrollable()) + new Vector(0.0, -50.0);
+            Offset secondLocation = tester.GetCenter(FindScrollable()) + new Offset(0.0, -50.0);
             gesture.MoveTo(secondLocation);
             tester.PumpAndSettle();
             Assert.Equal(50.0, verticalController.Position.Pixels);
             Assert.Equal(0.0, horizontalController.Position.Pixels);
             // Gesture has not ended yet, move with horizontal diff
-            Point thirdLocation = secondLocation + new Vector(-30, -15);
+            Offset thirdLocation = secondLocation + new Offset(-30, -15);
             gesture.MoveTo(thirdLocation);
             tester.PumpAndSettle();
             // Only vertical diff applied
@@ -507,13 +507,13 @@ public sealed class TwoDimensionalScrollableDartParityTests
             Assert.Equal(0.0, horizontalController.Position.Pixels);
             gesture = tester.StartGesture(tester.GetCenter(FindScrollable()), PointerDeviceKind.Touch);
             // In this case, the no one clearly wins, so it moves diagonally.
-            secondLocation = tester.GetCenter(FindScrollable()) + new Vector(-50.0, -50.0);
+            secondLocation = tester.GetCenter(FindScrollable()) + new Offset(-50.0, -50.0);
             gesture.MoveTo(secondLocation);
             tester.PumpAndSettle();
             Assert.Equal(50.0, verticalController.Position.Pixels);
             Assert.Equal(50.0, horizontalController.Position.Pixels);
             // Gesture has not ended yet, move clearly indicating vertical
-            thirdLocation = secondLocation + new Vector(-20, -50);
+            thirdLocation = secondLocation + new Offset(-20, -50);
             gesture.MoveTo(thirdLocation);
             tester.PumpAndSettle();
             // Only vertical diff applied
@@ -521,7 +521,7 @@ public sealed class TwoDimensionalScrollableDartParityTests
             Assert.Equal(50.0, horizontalController.Position.Pixels);
             // Gesture has not ended yet, and vertical axis has won for the gesture
             // continue only vertical scrolling.
-            Point fourthLocation = thirdLocation + new Vector(-30, -30);
+            Offset fourthLocation = thirdLocation + new Offset(-30, -30);
             gesture.MoveTo(fourthLocation);
             tester.PumpAndSettle();
             // Only vertical diff applied
@@ -538,13 +538,13 @@ public sealed class TwoDimensionalScrollableDartParityTests
             Assert.Equal(0.0, horizontalController.Position.Pixels);
             gesture = tester.StartGesture(tester.GetCenter(FindScrollable()), PointerDeviceKind.Touch);
             // In this case, the horizontal axis clearly wins.
-            secondLocation = tester.GetCenter(FindScrollable()) + new Vector(-50.0, 0.0);
+            secondLocation = tester.GetCenter(FindScrollable()) + new Offset(-50.0, 0.0);
             gesture.MoveTo(secondLocation);
             tester.PumpAndSettle();
             Assert.Equal(0.0, verticalController.Position.Pixels);
             Assert.Equal(50.0, horizontalController.Position.Pixels);
             // Gesture has not ended yet, move with vertical diff
-            thirdLocation = secondLocation + new Vector(-15, -30);
+            thirdLocation = secondLocation + new Offset(-15, -30);
             gesture.MoveTo(thirdLocation);
             tester.PumpAndSettle();
             // Only vertical diff applied
@@ -561,13 +561,13 @@ public sealed class TwoDimensionalScrollableDartParityTests
             Assert.Equal(0.0, horizontalController.Position.Pixels);
             gesture = tester.StartGesture(tester.GetCenter(FindScrollable()), PointerDeviceKind.Touch);
             // In this case, the no one clearly wins, so it moves diagonally.
-            secondLocation = tester.GetCenter(FindScrollable()) + new Vector(-50.0, -50.0);
+            secondLocation = tester.GetCenter(FindScrollable()) + new Offset(-50.0, -50.0);
             gesture.MoveTo(secondLocation);
             tester.PumpAndSettle();
             Assert.Equal(50.0, verticalController.Position.Pixels);
             Assert.Equal(50.0, horizontalController.Position.Pixels);
             // Gesture has not ended yet, move clearly indicating horizontal
-            thirdLocation = secondLocation + new Vector(-50, -20);
+            thirdLocation = secondLocation + new Offset(-50, -20);
             gesture.MoveTo(thirdLocation);
             tester.PumpAndSettle();
             // Only horizontal diff applied
@@ -575,7 +575,7 @@ public sealed class TwoDimensionalScrollableDartParityTests
             Assert.Equal(100.0, horizontalController.Position.Pixels);
             // Gesture has not ended yet, and horizontal axis has won for the gesture
             // continue only horizontal scrolling.
-            fourthLocation = thirdLocation + new Vector(-30, -30);
+            fourthLocation = thirdLocation + new Offset(-30, -30);
             gesture.MoveTo(fourthLocation);
             tester.PumpAndSettle();
             // Only horizontal diff applied
@@ -619,14 +619,14 @@ public sealed class TwoDimensionalScrollableDartParityTests
             Assert.Equal(0.0, horizontalController.Position.Pixels);
             TestGesture gesture = tester.StartGesture(tester.GetCenter(FindScrollable()), PointerDeviceKind.Touch);
             // In this case, the vertical axis clearly wins.
-            Point secondLocation = tester.GetCenter(FindScrollable()) + new Vector(0.0, -50.0);
+            Offset secondLocation = tester.GetCenter(FindScrollable()) + new Offset(0.0, -50.0);
             gesture.MoveTo(secondLocation);
             tester.PumpAndSettle();
             Assert.Equal(50.0, verticalController.Position.Pixels);
             Assert.Equal(0.0, horizontalController.Position.Pixels);
             // Gesture has not ended yet, move with horizontal diff, but still
             // dominant vertical
-            Point thirdLocation = secondLocation + new Vector(-15, -50);
+            Offset thirdLocation = secondLocation + new Offset(-15, -50);
             gesture.MoveTo(thirdLocation);
             tester.PumpAndSettle();
             // Only vertical diff applied since kTouchSlop was not exceeded in the
@@ -634,7 +634,7 @@ public sealed class TwoDimensionalScrollableDartParityTests
             Assert.Equal(100.0, verticalController.Position.Pixels);
             Assert.Equal(0.0, horizontalController.Position.Pixels);
             // Gesture has not ended yet, move with unlocking horizontal diff
-            Point fourthLocation = thirdLocation + new Vector(-50, -15);
+            Offset fourthLocation = thirdLocation + new Offset(-50, -15);
             gesture.MoveTo(fourthLocation);
             tester.PumpAndSettle();
             // Only horizontal diff applied
@@ -642,7 +642,7 @@ public sealed class TwoDimensionalScrollableDartParityTests
             Assert.Equal(50.0, horizontalController.Position.Pixels);
             // Gesture has not ended yet, move with unlocking diff that results in
             // diagonal move since neither wins.
-            Point fifthLocation = fourthLocation + new Vector(-50, -50);
+            Offset fifthLocation = fourthLocation + new Offset(-50, -50);
             gesture.MoveTo(fifthLocation);
             tester.PumpAndSettle();
             // Only horizontal diff applied
@@ -674,22 +674,22 @@ public sealed class TwoDimensionalScrollableDartParityTests
         Assert.Equal(0.0, verticalController.Position.Pixels);
         Assert.Equal(0.0, horizontalController.Position.Pixels);
         TestGesture gesture = tester.StartGesture(tester.GetCenter(FindScrollable()), PointerDeviceKind.Touch);
-        Point secondLocation = tester.GetCenter(FindScrollable()) + new Vector(0.0, -50.0);
+        Offset secondLocation = tester.GetCenter(FindScrollable()) + new Offset(0.0, -50.0);
         gesture.MoveTo(secondLocation);
         tester.PumpAndSettle();
         Assert.Equal(50.0, verticalController.Position.Pixels);
         Assert.Equal(0.0, horizontalController.Position.Pixels);
-        Point thirdLocation = secondLocation + new Vector(-15, -50);
+        Offset thirdLocation = secondLocation + new Offset(-15, -50);
         gesture.MoveTo(thirdLocation);
         tester.PumpAndSettle();
         Assert.Equal(100.0, verticalController.Position.Pixels);
         Assert.Equal(15.0, horizontalController.Position.Pixels);
-        Point fourthLocation = thirdLocation + new Vector(-50, -15);
+        Offset fourthLocation = thirdLocation + new Offset(-50, -15);
         gesture.MoveTo(fourthLocation);
         tester.PumpAndSettle();
         Assert.Equal(115.0, verticalController.Position.Pixels);
         Assert.Equal(65.0, horizontalController.Position.Pixels);
-        Point fifthLocation = fourthLocation + new Vector(-50, -50);
+        Offset fifthLocation = fourthLocation + new Offset(-50, -50);
         gesture.MoveTo(fifthLocation);
         tester.PumpAndSettle();
         Assert.Equal(165.0, verticalController.Position.Pixels);
@@ -1133,7 +1133,7 @@ public sealed class TwoDimensionalScrollableDartParityTests
             Assert.Equal(0.0, horizontalController.Position.Activity.Velocity);
 
             // Fling the scrollview to get it scrolling, verify that no tap occurs.
-            tester.Fling(FindScrollable(), new Vector(0.0, -200.0), 2000.0);
+            tester.Fling(FindScrollable(), new Offset(0.0, -200.0), 2000.0);
             tester.Pump(TimeSpan.FromMilliseconds(50));
             Assert.Equal(new List<string> { "Tapped: (xIndex: 0, yIndex: 0)" }, log);
             Assert.True(verticalController.Position.Pixels > 170.0);
@@ -1192,7 +1192,7 @@ public sealed class TwoDimensionalScrollableDartParityTests
             Assert.Equal(0.0, horizontalController.Position.Activity.Velocity);
 
             // Fling the scrollview to get it scrolling, verify that no tap occurs.
-            tester.Fling(FindScrollable(), new Vector(-200.0, 0.0), 2000.0);
+            tester.Fling(FindScrollable(), new Offset(-200.0, 0.0), 2000.0);
             tester.Pump(TimeSpan.FromMilliseconds(50));
             Assert.Equal(new List<string> { "Tapped: (xIndex: 0, yIndex: 0)" }, log);
             Assert.True(horizontalController.Position.Pixels > 170.0);
@@ -1274,7 +1274,7 @@ public sealed class TwoDimensionalScrollableDartParityTests
         Assert.Equal(0.0, horizontalController.Position.Activity.Velocity);
 
         // Fling the scrollview to get it scrolling, verify that no tap occurs.
-        tester.Fling(FindScrollable(), new Vector(0.0, -200.0), 2000.0);
+        tester.Fling(FindScrollable(), new Offset(0.0, -200.0), 2000.0);
         tester.Pump(TimeSpan.FromMilliseconds(50));
         Assert.Equal(new List<string> { "Tapped: (xIndex: 0, yIndex: 0)" }, log);
         Assert.True(verticalController.Position.Pixels > 170.0);
@@ -1392,7 +1392,7 @@ public sealed class TwoDimensionalScrollableDartParityTests
         EventLoop.FlushMicrotasks();
         Assert.True(testTextInput.IsVisible);
 
-        tester.Drag(tester.ElementsOfType<SimpleBuilderTableView>().First(), new Vector(-40.0, -40.0));
+        tester.Drag(tester.ElementsOfType<SimpleBuilderTableView>().First(), new Offset(-40.0, -40.0));
         tester.PumpAndSettle();
 
         Assert.False(testTextInput.IsVisible);
@@ -1438,7 +1438,7 @@ public sealed class TwoDimensionalScrollableDartParityTests
     }
 
     /// <summary>Dart's <c>tester.tapAt</c>.</summary>
-    private static void TapAt(FrameworkDartTester tester, Point location)
+    private static void TapAt(FrameworkDartTester tester, Offset location)
     {
         int pointer = tester.StartGesture(location);
         tester.Up(pointer, location);
@@ -1537,12 +1537,12 @@ public sealed class TwoDimensionalScrollableDartParityTests
         Assert.Equal(0.0, verticalController.Position.MaxScrollExtent);
         Assert.Equal(3400.0, horizontalController.Position.MaxScrollExtent);
         // Fling vertically, nothing should happen.
-        tester.Fling(tester.ElementOfType<TwoDimensionalScrollable>(), new Vector(0.0, -200.0), 2000.0);
+        tester.Fling(tester.ElementOfType<TwoDimensionalScrollable>(), new Offset(0.0, -200.0), 2000.0);
         tester.PumpAndSettle();
         Assert.Equal(0.0, verticalController.Position.Pixels);
         Assert.Equal(0.0, horizontalController.Position.Pixels);
         // Fling horizontally, the horizontal position should change.
-        tester.Fling(tester.ElementOfType<TwoDimensionalScrollable>(), new Vector(-200.0, 0.0), 2000.0);
+        tester.Fling(tester.ElementOfType<TwoDimensionalScrollable>(), new Offset(-200.0, 0.0), 2000.0);
         tester.PumpAndSettle();
         Assert.Equal(0.0, verticalController.Position.Pixels);
         Assert.True(horizontalController.Position.Pixels > 840.0);
@@ -1572,12 +1572,12 @@ public sealed class TwoDimensionalScrollableDartParityTests
         Assert.Equal(3600.0, verticalController.Position.MaxScrollExtent);
         Assert.Equal(0.0, horizontalController.Position.MaxScrollExtent);
         // Fling horizontally, nothing should happen.
-        tester.Fling(tester.ElementOfType<TwoDimensionalScrollable>(), new Vector(-200.0, 0.0), 2000.0);
+        tester.Fling(tester.ElementOfType<TwoDimensionalScrollable>(), new Offset(-200.0, 0.0), 2000.0);
         tester.PumpAndSettle();
         Assert.Equal(0.0, verticalController.Position.Pixels);
         Assert.Equal(0.0, horizontalController.Position.Pixels);
         // Fling vertically, the vertical position should change.
-        tester.Fling(tester.ElementOfType<TwoDimensionalScrollable>(), new Vector(0.0, -200.0), 2000.0);
+        tester.Fling(tester.ElementOfType<TwoDimensionalScrollable>(), new Offset(0.0, -200.0), 2000.0);
         tester.PumpAndSettle();
         Assert.True(verticalController.Position.Pixels > 840.0);
         Assert.Equal(0.0, horizontalController.Position.Pixels);

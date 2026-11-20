@@ -599,7 +599,7 @@ public abstract class PrimaryPointerGestureRecognizer : OneSequenceGestureRecogn
 /// A pair of positions for the same point: one in the global (root) coordinate space and one in the
 /// receiving render object's local space.
 /// </summary>
-public readonly record struct OffsetPair(Point Local, Point Global)
+public readonly record struct OffsetPair(Offset Local, Offset Global)
 {
     public static OffsetPair Zero { get; } = new(default, default);
 
@@ -626,16 +626,16 @@ public readonly record struct OffsetPair(Point Local, Point Global)
     }
 
     public override string ToString() => FormattableString.Invariant(
-        $"OffsetPair(local: Offset({Local.X:0.0}, {Local.Y:0.0}), global: Offset({Global.X:0.0}, {Global.Y:0.0}))");
+        $"OffsetPair(local: Offset({Local.Dx:0.0}, {Local.Dy:0.0}), global: Offset({Global.Dx:0.0}, {Global.Dy:0.0}))");
 }
 
 public readonly record struct DragDownDetails(
-    Point GlobalPosition,
-    Point LocalPosition = default) : IPositionedGestureDetails;
+    Offset GlobalPosition,
+    Offset LocalPosition = default) : IPositionedGestureDetails;
 
 public readonly record struct DragStartDetails(
-    Point GlobalPosition,
-    Point LocalPosition = default,
+    Offset GlobalPosition,
+    Offset LocalPosition = default,
     DateTime? SourceTimeStampUtc = null,
     PointerDeviceKind? Kind = null) : IPositionedGestureDetails;
 
@@ -644,14 +644,14 @@ public readonly record struct DragStartDetails(
 /// recognizer has no primary axis (`PanGestureRecognizer`), matching Dart.
 /// </summary>
 public readonly record struct DragUpdateDetails(
-    Point GlobalPosition,
-    Point LocalPosition,
-    Point Delta,
+    Offset GlobalPosition,
+    Offset LocalPosition,
+    Offset Delta,
     double? PrimaryDelta,
     DateTime? SourceTimeStampUtc = null,
     PointerDeviceKind? Kind = null) : IPositionedGestureDetails;
 
-public readonly record struct Velocity(Vector PixelsPerSecond)
+public readonly record struct Velocity(Offset PixelsPerSecond)
 {
     public static Velocity Zero { get; } = new(default);
 
@@ -675,7 +675,7 @@ public readonly record struct Velocity(Vector PixelsPerSecond)
             throw new ArgumentOutOfRangeException(nameof(maximumValue));
         }
 
-        double magnitude = PixelsPerSecond.Length;
+        double magnitude = PixelsPerSecond.DartDistance;
         if (magnitude > maximumValue)
         {
             return new Velocity(PixelsPerSecond / magnitude * maximumValue);
@@ -693,7 +693,7 @@ public readonly record struct Velocity(Vector PixelsPerSecond)
 public readonly record struct DragEndDetails : IPositionedGestureDetails
 {
     public DragEndDetails(double primaryVelocity) : this(
-        velocity: new Velocity(new Vector(primaryVelocity, 0)),
+        velocity: new Velocity(new Offset(primaryVelocity, 0)),
         primaryVelocity: primaryVelocity)
     {
     }
@@ -701,8 +701,8 @@ public readonly record struct DragEndDetails : IPositionedGestureDetails
     public DragEndDetails(
         Velocity velocity,
         double? primaryVelocity,
-        Point globalPosition = default,
-        Point localPosition = default)
+        Offset globalPosition = default,
+        Offset localPosition = default)
     {
         Velocity = velocity;
         PrimaryVelocity = primaryVelocity;
@@ -720,8 +720,8 @@ public readonly record struct DragEndDetails : IPositionedGestureDetails
     public double? PrimaryVelocity { get; }
 
     /// <summary>The global position the pointer was at when it stopped contacting the screen.</summary>
-    public Point GlobalPosition { get; }
+    public Offset GlobalPosition { get; }
 
     /// <summary>The local position in the receiving object's coordinate system.</summary>
-    public Point LocalPosition { get; }
+    public Offset LocalPosition { get; }
 }

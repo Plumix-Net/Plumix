@@ -86,7 +86,7 @@ public abstract class ClipContext
     /// </remarks>
     public void ClipGeometryAndPaint(
         Avalonia.Media.Geometry geometry,
-        Point geometryOffset,
+        Offset geometryOffset,
         Clip clipBehavior,
         Rect bounds,
         Action painter)

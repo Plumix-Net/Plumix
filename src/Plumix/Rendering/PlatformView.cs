@@ -256,7 +256,7 @@ public class RenderAndroidView : PlatformViewRenderBox
         }
     }
 
-    public override void Paint(PaintingContext context, Point offset)
+    public override void Paint(PaintingContext context, Offset offset)
     {
         if ((_viewController.TextureId is null && !_viewController.RequiresViewComposition)
             || _currentTextureSize is null)
@@ -275,7 +275,7 @@ public class RenderAndroidView : PlatformViewRenderBox
             _clipRectLayer.Layer = context.PushClipRect(
                 true,
                 offset,
-                new Rect(offset, Size),
+                DartGeometry.RectFromOffsetAndSize(offset, Size),
                 PaintTexture,
                 clipBehavior: ClipBehavior,
                 oldLayer: _clipRectLayer.Layer);
@@ -294,7 +294,7 @@ public class RenderAndroidView : PlatformViewRenderBox
         base.Dispose();
     }
 
-    private void PaintTexture(PaintingContext context, Point offset)
+    private void PaintTexture(PaintingContext context, Offset offset)
     {
         if (_currentTextureSize is not { } textureSize)
         {
@@ -304,13 +304,13 @@ public class RenderAndroidView : PlatformViewRenderBox
         if (_viewController.RequiresViewComposition)
         {
             context.AddLayer(new PlatformViewLayer(
-                rect: new Rect(offset, textureSize),
+                rect: DartGeometry.RectFromOffsetAndSize(offset, textureSize),
                 viewId: _viewController.ViewId));
         }
         else
         {
             context.AddLayer(new TextureLayer(
-                rect: new Rect(offset, textureSize),
+                rect: DartGeometry.RectFromOffsetAndSize(offset, textureSize),
                 textureId: _viewController.TextureId!.Value));
         }
     }
@@ -394,12 +394,12 @@ public abstract class RenderDarwinPlatformView<T> : RenderBox
         return constraints.Biggest;
     }
 
-    public override void Paint(PaintingContext context, Point offset)
+    public override void Paint(PaintingContext context, Offset offset)
     {
-        context.AddLayer(new PlatformViewLayer(rect: new Rect(offset, Size), viewId: _viewController.Id));
+        context.AddLayer(new PlatformViewLayer(rect: DartGeometry.RectFromOffsetAndSize(offset, Size), viewId: _viewController.Id));
     }
 
-    public override bool HitTest(BoxHitTestResult result, Point position)
+    public override bool HitTest(BoxHitTestResult result, Offset position)
     {
         if (HitTestBehavior == PlatformViewHitTestBehavior.Transparent || !Size.Contains(position))
         {
@@ -410,7 +410,7 @@ public abstract class RenderDarwinPlatformView<T> : RenderBox
         return HitTestBehavior == PlatformViewHitTestBehavior.Opaque;
     }
 
-    protected override bool HitTestSelf(Point position) =>
+    protected override bool HitTestSelf(Offset position) =>
         HitTestBehavior != PlatformViewHitTestBehavior.Transparent;
 
     protected override void OnAttach()
@@ -815,9 +815,9 @@ public class PlatformViewRenderBox : RenderBox, IMouseTrackerAnnotation
         return constraints.Biggest;
     }
 
-    public override void Paint(PaintingContext context, Point offset)
+    public override void Paint(PaintingContext context, Offset offset)
     {
-        context.AddLayer(new PlatformViewLayer(rect: new Rect(offset, Size), viewId: _controller.ViewId));
+        context.AddLayer(new PlatformViewLayer(rect: DartGeometry.RectFromOffsetAndSize(offset, Size), viewId: _controller.ViewId));
     }
 
     protected override void DescribeSemanticsConfiguration(SemanticsConfiguration configuration)
@@ -870,7 +870,7 @@ public class PlatformViewRenderBox : RenderBox, IMouseTrackerAnnotation
         _handlePointerEvent = handlePointerEvent;
     }
 
-    public override bool HitTest(BoxHitTestResult result, Point position)
+    public override bool HitTest(BoxHitTestResult result, Offset position)
     {
         if (_hitTestBehavior == PlatformViewHitTestBehavior.Transparent || !Size.Contains(position))
         {
@@ -881,7 +881,7 @@ public class PlatformViewRenderBox : RenderBox, IMouseTrackerAnnotation
         return _hitTestBehavior == PlatformViewHitTestBehavior.Opaque;
     }
 
-    protected override bool HitTestSelf(Point position) =>
+    protected override bool HitTestSelf(Offset position) =>
         _hitTestBehavior != PlatformViewHitTestBehavior.Transparent;
 
     /// <inheritdoc />

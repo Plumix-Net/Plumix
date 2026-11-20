@@ -11,7 +11,7 @@ namespace Plumix.Rendering;
 /// <summary>Applies a transformation before painting its child.</summary>
 public class RenderTransform : RenderProxyBox
 {
-    private Point? _origin;
+    private Offset? _origin;
     private AlignmentGeometry? _alignment;
     private TextDirection? _textDirection;
     private Matrix4? _transform;
@@ -20,7 +20,7 @@ public class RenderTransform : RenderProxyBox
     /// <summary>Creates a render object that transforms its child.</summary>
     public RenderTransform(
         Matrix4 transform,
-        Point? origin = null,
+        Offset? origin = null,
         AlignmentGeometry? alignment = null,
         TextDirection? textDirection = null,
         bool transformHitTests = true,
@@ -39,7 +39,7 @@ public class RenderTransform : RenderProxyBox
     /// The origin of the coordinate system (relative to the upper left corner of this render object)
     /// in which to apply the matrix.
     /// </summary>
-    public Point? Origin
+    public Offset? Origin
     {
         get => _origin;
         set
@@ -203,25 +203,25 @@ public class RenderTransform : RenderProxyBox
             Matrix4 result = Matrix4.Identity();
             if (_origin != null)
             {
-                result.TranslateByDouble(_origin.Value.X, _origin.Value.Y, 0, 1);
+                result.TranslateByDouble(_origin.Value.Dx, _origin.Value.Dy, 0, 1);
             }
 
-            Point? translation = null;
+            Offset? translation = null;
             if (resolvedAlignment != null)
             {
                 translation = resolvedAlignment.Value.AlongSize(Size);
-                result.TranslateByDouble(translation.Value.X, translation.Value.Y, 0, 1);
+                result.TranslateByDouble(translation.Value.Dx, translation.Value.Dy, 0, 1);
             }
 
             result.Multiply(_transform!);
             if (resolvedAlignment != null)
             {
-                result.TranslateByDouble(-translation!.Value.X, -translation.Value.Y, 0, 1);
+                result.TranslateByDouble(-translation!.Value.Dx, -translation.Value.Dy, 0, 1);
             }
 
             if (_origin != null)
             {
-                result.TranslateByDouble(-_origin.Value.X, -_origin.Value.Y, 0, 1);
+                result.TranslateByDouble(-_origin.Value.Dx, -_origin.Value.Dy, 0, 1);
             }
 
             return result;
@@ -229,7 +229,7 @@ public class RenderTransform : RenderProxyBox
     }
 
     /// <inheritdoc />
-    public override bool HitTest(BoxHitTestResult result, Point position)
+    public override bool HitTest(BoxHitTestResult result, Offset position)
     {
         // RenderTransform objects don't check if they are themselves hit, because it's confusing to
         // think about how the untransformed size and the child's transformed position interact.
@@ -237,7 +237,7 @@ public class RenderTransform : RenderProxyBox
     }
 
     /// <inheritdoc />
-    protected override bool HitTestChildren(BoxHitTestResult result, Point position)
+    protected override bool HitTestChildren(BoxHitTestResult result, Offset position)
     {
         Debug.Assert(!TransformHitTests || EffectiveTransform != null);
         return result.AddWithPaintTransform(
@@ -247,14 +247,14 @@ public class RenderTransform : RenderProxyBox
     }
 
     /// <inheritdoc />
-    public override void Paint(PaintingContext context, Point offset)
+    public override void Paint(PaintingContext context, Offset offset)
     {
         if (Child != null)
         {
             Matrix4 transform = EffectiveTransform!;
             if (FilterQuality == null)
             {
-                Point? childOffset = MatrixUtils.GetAsTranslation(transform);
+                Offset? childOffset = MatrixUtils.GetAsTranslation(transform);
                 if (childOffset == null)
                 {
                     // If the transform has a singular value, then no layer will be created and the
@@ -281,9 +281,9 @@ public class RenderTransform : RenderProxyBox
             }
             else
             {
-                Matrix4 effectiveTransform = Matrix4.TranslationValues(offset.X, offset.Y, 0.0);
+                Matrix4 effectiveTransform = Matrix4.TranslationValues(offset.Dx, offset.Dy, 0.0);
                 effectiveTransform.Multiply(transform);
-                effectiveTransform.TranslateByDouble(-offset.X, -offset.Y, 0, 1);
+                effectiveTransform.TranslateByDouble(-offset.Dx, -offset.Dy, 0, 1);
                 var filter = new ImageFilter.Matrix(effectiveTransform.Storage, filterQuality: FilterQuality.Value);
                 if (Layer is ImageFilterLayer filterLayer)
                 {
@@ -296,7 +296,7 @@ public class RenderTransform : RenderProxyBox
 
                 var imageFilterLayer = (ImageFilterLayer)Layer;
                 // Plumix-only: the CPU rasterizer needs the region the child paints into.
-                imageFilterLayer.FilterBounds = new Rect(offset, Size);
+                imageFilterLayer.FilterBounds = DartGeometry.RectFromOffsetAndSize(offset, Size);
                 context.PushLayer(imageFilterLayer, base.Paint, offset);
                 if (Constants.KDebugMode)
                 {
@@ -317,7 +317,7 @@ public class RenderTransform : RenderProxyBox
     {
         base.DebugFillProperties(properties);
         properties.Add(new TransformProperty("transform matrix", _transform));
-        properties.Add(new DiagnosticsProperty<Point?>("origin", Origin));
+        properties.Add(new DiagnosticsProperty<Offset?>("origin", Origin));
         properties.Add(new DiagnosticsProperty<AlignmentGeometry?>("alignment", Alignment));
         properties.Add(new EnumProperty<TextDirection>("textDirection", TextDirection, defaultValue: null));
         properties.Add(new DiagnosticsProperty<bool>("transformHitTests", TransformHitTests));
@@ -530,8 +530,8 @@ public class RenderFittedBox : RenderProxyBox
             FittedSizes sizes = BoxFitUtils.ApplyBoxFit(_fit, childSize, Size);
             double scaleX = sizes.Destination.Width / sizes.Source.Width;
             double scaleY = sizes.Destination.Height / sizes.Source.Height;
-            Rect sourceRect = resolvedAlignment.Inscribe(sizes.Source, new Rect(new Point(0, 0), childSize));
-            Rect destinationRect = resolvedAlignment.Inscribe(sizes.Destination, new Rect(new Point(0, 0), Size));
+            Rect sourceRect = resolvedAlignment.Inscribe(sizes.Source, DartGeometry.RectFromOffsetAndSize(new Offset(0, 0), childSize));
+            Rect destinationRect = resolvedAlignment.Inscribe(sizes.Destination, DartGeometry.RectFromOffsetAndSize(new Offset(0, 0), Size));
             _hasVisualOverflow = sourceRect.Width < childSize.Width || sourceRect.Height < childSize.Height;
             Debug.Assert(double.IsFinite(scaleX) && double.IsFinite(scaleY));
             _transform = Matrix4.TranslationValues(destinationRect.Left, destinationRect.Top, 0.0);
@@ -541,9 +541,9 @@ public class RenderFittedBox : RenderProxyBox
         }
     }
 
-    private TransformLayer? PaintChildWithTransform(PaintingContext context, Point offset)
+    private TransformLayer? PaintChildWithTransform(PaintingContext context, Offset offset)
     {
-        Point? childOffset = MatrixUtils.GetAsTranslation(_transform!);
+        Offset? childOffset = MatrixUtils.GetAsTranslation(_transform!);
         if (childOffset == null)
         {
             return context.PushTransform(
@@ -559,7 +559,7 @@ public class RenderFittedBox : RenderProxyBox
     }
 
     /// <inheritdoc />
-    public override void Paint(PaintingContext context, Point offset)
+    public override void Paint(PaintingContext context, Offset offset)
     {
         if (Child == null || Size.IsEmpty || Child.Size.IsEmpty)
         {
@@ -573,7 +573,7 @@ public class RenderFittedBox : RenderProxyBox
             Layer = context.PushClipRect(
                 NeedsCompositing,
                 offset,
-                new Rect(new Point(0, 0), Size),
+                DartGeometry.RectFromOffsetAndSize(new Offset(0, 0), Size),
                 (clipContext, clipOffset) => PaintChildWithTransform(clipContext, clipOffset),
                 clipBehavior: ClipBehavior,
                 oldLayer: Layer as ClipRectLayer);
@@ -585,7 +585,7 @@ public class RenderFittedBox : RenderProxyBox
     }
 
     /// <inheritdoc />
-    protected override bool HitTestChildren(BoxHitTestResult result, Point position)
+    protected override bool HitTestChildren(BoxHitTestResult result, Offset position)
     {
         if (Size.IsEmpty || (Child?.Size.IsEmpty ?? false))
         {
@@ -635,11 +635,11 @@ public class RenderFittedBox : RenderProxyBox
 /// </remarks>
 public class RenderFractionalTranslation : RenderProxyBox
 {
-    private Point _translation;
+    private Offset _translation;
 
     /// <summary>Creates a render object that translates its child's painting.</summary>
     public RenderFractionalTranslation(
-        Point translation,
+        Offset translation,
         bool transformHitTests = true,
         RenderBox? child = null) : base(child)
     {
@@ -648,7 +648,7 @@ public class RenderFractionalTranslation : RenderProxyBox
     }
 
     /// <summary>The translation to apply to the child, scaled to the child's size.</summary>
-    public Point Translation
+    public Offset Translation
     {
         get => _translation;
         set
@@ -665,7 +665,7 @@ public class RenderFractionalTranslation : RenderProxyBox
     }
 
     /// <inheritdoc />
-    public override bool HitTest(BoxHitTestResult result, Point position)
+    public override bool HitTest(BoxHitTestResult result, Offset position)
     {
         // RenderFractionalTranslation objects don't check if they are themselves hit, because it's
         // confusing to think about how the untransformed size and the child's transformed position
@@ -680,42 +680,42 @@ public class RenderFractionalTranslation : RenderProxyBox
     public bool TransformHitTests { get; set; }
 
     /// <inheritdoc />
-    protected override bool HitTestChildren(BoxHitTestResult result, Point position)
+    protected override bool HitTestChildren(BoxHitTestResult result, Offset position)
     {
         Debug.Assert(!DebugNeedsLayout);
         return result.AddWithPaintOffset(
             TransformHitTests
-                ? new Point(Translation.X * Size.Width, Translation.Y * Size.Height)
+                ? new Offset(Translation.Dx * Size.Width, Translation.Dy * Size.Height)
                 : null,
             position,
             base.HitTestChildren);
     }
 
     /// <inheritdoc />
-    public override void Paint(PaintingContext context, Point offset)
+    public override void Paint(PaintingContext context, Offset offset)
     {
         Debug.Assert(!DebugNeedsLayout);
         if (Child != null)
         {
             base.Paint(
                 context,
-                new Point(
-                    offset.X + Translation.X * Size.Width,
-                    offset.Y + Translation.Y * Size.Height));
+                new Offset(
+                    offset.Dx + Translation.Dx * Size.Width,
+                    offset.Dy + Translation.Dy * Size.Height));
         }
     }
 
     /// <inheritdoc />
     public override void ApplyPaintTransform(RenderObject child, Matrix4 transform)
     {
-        transform.TranslateByDouble(Translation.X * Size.Width, Translation.Y * Size.Height, 0, 1);
+        transform.TranslateByDouble(Translation.Dx * Size.Width, Translation.Dy * Size.Height, 0, 1);
     }
 
     /// <inheritdoc />
     public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
     {
         base.DebugFillProperties(properties);
-        properties.Add(new DiagnosticsProperty<Point>("translation", Translation));
+        properties.Add(new DiagnosticsProperty<Offset>("translation", Translation));
         properties.Add(new DiagnosticsProperty<bool>("transformHitTests", TransformHitTests));
     }
 }

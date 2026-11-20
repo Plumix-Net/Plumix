@@ -149,7 +149,7 @@ public sealed class ProxyBoxClipParityTests
         var child = new RenderConstrainedBox(BoxConstraints.TightFor(width: 200, height: 200));
         var renderClipRect = new RenderClipRect(clipBehavior: Clip.None, child: child);
         LayoutRoot(renderClipRect, new Size(800, 600));
-        var bounds = new Rect(new Point(0, 0), renderClipRect.Size);
+        var bounds = DartGeometry.RectFromOffsetAndSize(new Offset(0, 0), renderClipRect.Size);
 
         Assert.Null(renderClipRect.InvokeDescribeApproximatePaintClip(child));
         renderClipRect.ClipBehavior = Clip.HardEdge;
@@ -290,7 +290,7 @@ public sealed class ProxyBoxClipParityTests
         LayoutRoot(box, new Size(20, 20));
 
         FlutterError error = Assert.Throws<FlutterError>(
-            () => box.Paint(new PaintingContext(new ContainerLayer()), new Point(0, 0)));
+            () => box.Paint(new PaintingContext(new ContainerLayer()), new Offset(0, 0)));
         string text = error.ToString();
         Assert.Contains("UnbalancedDecoration painter had mismatching save and restore calls.", text);
         Assert.Contains(
@@ -320,13 +320,13 @@ public sealed class ProxyBoxClipParityTests
     public void RenderClipRect_HitTestUsesDartsHalfOpenRectContains()
     {
         var child = new SizedRenderBox(new Size(80, 80), hitSelf: true);
-        var clip = new RenderClipRect(child: child, clipper: new ValueClipper<Rect>("a", new Rect(0, 0, 20, 20)));
+        var clip = new RenderClipRect(child: child, clipper: new ValueClipper<Rect>("a", DartGeometry.RectFromLTWH(0, 0, 20, 20)));
         LayoutRoot(clip, new Size(80, 80));
 
-        Assert.True(clip.HitTest(new BoxHitTestResult(), new Point(0, 0)));
-        Assert.True(clip.HitTest(new BoxHitTestResult(), new Point(19.9, 19.9)));
-        Assert.False(clip.HitTest(new BoxHitTestResult(), new Point(20, 10)));
-        Assert.False(clip.HitTest(new BoxHitTestResult(), new Point(10, 20)));
+        Assert.True(clip.HitTest(new BoxHitTestResult(), new Offset(0, 0)));
+        Assert.True(clip.HitTest(new BoxHitTestResult(), new Offset(19.9, 19.9)));
+        Assert.False(clip.HitTest(new BoxHitTestResult(), new Offset(20, 10)));
+        Assert.False(clip.HitTest(new BoxHitTestResult(), new Offset(10, 20)));
     }
 
     [Fact]
@@ -335,30 +335,30 @@ public sealed class ProxyBoxClipParityTests
         var child = new SizedRenderBox(new Size(80, 80), hitSelf: true);
         var clip = new RenderClipRRect(
             child: child,
-            clipper: new ValueClipper<RRect>("r", RRect.FromRectAndRadius(new Rect(0, 0, 40, 40), 10.0)));
+            clipper: new ValueClipper<RRect>("r", RRect.FromRectAndRadius(DartGeometry.RectFromLTWH(0, 0, 40, 40), 10.0)));
         LayoutRoot(clip, new Size(80, 80));
 
-        Assert.True(clip.HitTest(new BoxHitTestResult(), new Point(20, 20)));
-        Assert.False(clip.HitTest(new BoxHitTestResult(), new Point(1, 1)));
-        Assert.False(clip.HitTest(new BoxHitTestResult(), new Point(40, 20)));
+        Assert.True(clip.HitTest(new BoxHitTestResult(), new Offset(20, 20)));
+        Assert.False(clip.HitTest(new BoxHitTestResult(), new Offset(1, 1)));
+        Assert.False(clip.HitTest(new BoxHitTestResult(), new Offset(40, 20)));
     }
 
     [Fact]
     public void RRect_Contains_MatchesDartUi()
     {
-        RRect rrect = RRect.FromRectAndRadius(new Rect(10, 10, 100, 50), 20.0);
+        RRect rrect = RRect.FromRectAndRadius(DartGeometry.RectFromLTWH(10, 10, 100, 50), 20.0);
 
-        Assert.True(rrect.Contains(new Point(10, 35)));
-        Assert.True(rrect.Contains(new Point(60, 10)));
-        Assert.False(rrect.Contains(new Point(110, 35)));
-        Assert.False(rrect.Contains(new Point(60, 60)));
-        Assert.False(rrect.Contains(new Point(11, 11)));
-        Assert.True(rrect.Contains(new Point(30, 30)));
+        Assert.True(rrect.Contains(new Offset(10, 35)));
+        Assert.True(rrect.Contains(new Offset(60, 10)));
+        Assert.False(rrect.Contains(new Offset(110, 35)));
+        Assert.False(rrect.Contains(new Offset(60, 60)));
+        Assert.False(rrect.Contains(new Offset(11, 11)));
+        Assert.True(rrect.Contains(new Offset(30, 30)));
 
         // Radii that overflow the rect are scaled down first.
-        RRect overflowing = RRect.FromRectAndRadius(new Rect(0, 0, 10, 10), 100.0);
-        Assert.True(overflowing.Contains(new Point(5, 5)));
-        Assert.False(overflowing.Contains(new Point(0.5, 0.5)));
+        RRect overflowing = RRect.FromRectAndRadius(DartGeometry.RectFromLTWH(0, 0, 10, 10), 100.0);
+        Assert.True(overflowing.Contains(new Offset(5, 5)));
+        Assert.False(overflowing.Contains(new Offset(0.5, 0.5)));
     }
 
     [Fact]
@@ -391,7 +391,7 @@ public sealed class ProxyBoxClipParityTests
         var clip = new RenderClipPath(child: child, clipper: new NullPathClipper());
         LayoutRoot(clip, new Size(40, 40));
 
-        Assert.True(clip.HitTest(new BoxHitTestResult(), new Point(39, 39)));
+        Assert.True(clip.HitTest(new BoxHitTestResult(), new Offset(39, 39)));
     }
 
     [DebugOnlyFact]
@@ -466,11 +466,11 @@ public sealed class ProxyBoxClipParityTests
             child: new GestureDetector(behavior: HitTestBehavior.Opaque, onTap: () => log.Add("tap"))));
         Assert.Equal(["getClip"], log);
 
-        TapAt(tester, new Point(10.0, 10.0));
+        TapAt(tester, new Offset(10.0, 10.0));
         Assert.Equal(["getClip"], log);
         log.Clear();
 
-        TapAt(tester, new Point(100.0, 100.0));
+        TapAt(tester, new Offset(100.0, 100.0));
         Assert.Equal(["tap"], log);
         log.Clear();
     }
@@ -484,10 +484,10 @@ public sealed class ProxyBoxClipParityTests
             child: new GestureDetector(behavior: HitTestBehavior.Opaque, onTap: () => log.Add("tap"))));
         Assert.Empty(log);
 
-        TapAt(tester, new Point(10.0, 10.0));
+        TapAt(tester, new Offset(10.0, 10.0));
         Assert.Empty(log);
 
-        TapAt(tester, new Point(400.0, 300.0));
+        TapAt(tester, new Offset(400.0, 300.0));
         Assert.Equal(["tap"], log);
     }
 
@@ -502,10 +502,10 @@ public sealed class ProxyBoxClipParityTests
                 child: new GestureDetector(behavior: HitTestBehavior.Opaque, onTap: () => log.Add("tap")))));
         Assert.Empty(log);
 
-        TapAt(tester, new Point(10.0, 10.0));
+        TapAt(tester, new Offset(10.0, 10.0));
         Assert.Empty(log);
 
-        TapAt(tester, new Point(400.0, 300.0));
+        TapAt(tester, new Offset(400.0, 300.0));
         Assert.Equal(["tap"], log);
     }
 
@@ -522,34 +522,34 @@ public sealed class ProxyBoxClipParityTests
                     clipper: new ValueClipper<Rect>(message, rect, log),
                     child: new GestureDetector(behavior: HitTestBehavior.Opaque, onTap: () => log.Add("tap")))));
 
-        tester.PumpWidget(Build(100.0, "a", new Rect(5.0, 5.0, 10.0, 10.0)));
+        tester.PumpWidget(Build(100.0, "a", DartGeometry.RectFromLTWH(5.0, 5.0, 10.0, 10.0)));
         Assert.Equal(["a"], log);
 
-        TapAt(tester, new Point(10.0, 10.0));
+        TapAt(tester, new Offset(10.0, 10.0));
         Assert.Equal(["a", "tap"], log);
 
-        TapAt(tester, new Point(100.0, 100.0));
+        TapAt(tester, new Offset(100.0, 100.0));
         Assert.Equal(["a", "tap"], log);
 
-        tester.PumpWidget(Build(100.0, "a", new Rect(5.0, 5.0, 10.0, 10.0)));
+        tester.PumpWidget(Build(100.0, "a", DartGeometry.RectFromLTWH(5.0, 5.0, 10.0, 10.0)));
         Assert.Equal(["a", "tap"], log);
 
-        tester.PumpWidget(Build(200.0, "a", new Rect(5.0, 5.0, 10.0, 10.0)));
+        tester.PumpWidget(Build(200.0, "a", DartGeometry.RectFromLTWH(5.0, 5.0, 10.0, 10.0)));
         Assert.Equal(["a", "tap", "a"], log);
 
-        tester.PumpWidget(Build(200.0, "a", new Rect(5.0, 5.0, 10.0, 10.0)));
+        tester.PumpWidget(Build(200.0, "a", DartGeometry.RectFromLTWH(5.0, 5.0, 10.0, 10.0)));
         Assert.Equal(["a", "tap", "a"], log);
 
-        tester.PumpWidget(Build(200.0, "b", new Rect(5.0, 5.0, 10.0, 10.0)));
+        tester.PumpWidget(Build(200.0, "b", DartGeometry.RectFromLTWH(5.0, 5.0, 10.0, 10.0)));
         Assert.Equal(["a", "tap", "a", "b"], log);
 
-        tester.PumpWidget(Build(200.0, "c", new Rect(25.0, 25.0, 10.0, 10.0)));
+        tester.PumpWidget(Build(200.0, "c", DartGeometry.RectFromLTWH(25.0, 25.0, 10.0, 10.0)));
         Assert.Equal(["a", "tap", "a", "b", "c"], log);
 
-        TapAt(tester, new Point(30.0, 30.0));
+        TapAt(tester, new Offset(30.0, 30.0));
         Assert.Equal(["a", "tap", "a", "b", "c", "tap"], log);
 
-        TapAt(tester, new Point(100.0, 100.0));
+        TapAt(tester, new Offset(100.0, 100.0));
         Assert.Equal(["a", "tap", "a", "b", "c", "tap"], log);
     }
 
@@ -562,7 +562,7 @@ public sealed class ProxyBoxClipParityTests
 
         var root = new ContainerLayer();
         var context = new PaintingContext(root);
-        renderClip.DebugPaintSize(context, new Point(0, 0));
+        renderClip.DebugPaintSize(context, new Offset(0, 0));
         context.DebugStopRecordingIfNeeded();
 
         Assert.Equal(2, CountDraws(root));
@@ -571,7 +571,7 @@ public sealed class ProxyBoxClipParityTests
     [Fact]
     public void ClipRect_DoesNotCrashAtZeroArea()
     {
-        using var clip = new ValueNotifier<Rect>(new Rect(50.0, 50.0, 100.0, 100.0));
+        using var clip = new ValueNotifier<Rect>(DartGeometry.RectFromLTWH(50.0, 50.0, 100.0, 100.0));
         Assert.Equal(
             new Size(0, 0),
             ZeroAreaSize<ClipRect>(new ClipRect(clipper: new NotifyClipper<Rect>(clip))));
@@ -655,10 +655,10 @@ public sealed class ProxyBoxClipParityTests
 
         // The viewport is 800x600, the CircleBorder is centered and fits the shortest edge, so we get a
         // circle of radius 300, centered at (400, 300). Sample around the left-most point (100, 300).
-        Assert.False(Hits(tester, new Point(99.0, 300.0), renderPhysicalShape));
-        Assert.True(Hits(tester, new Point(100.0, 300.0), renderPhysicalShape));
-        Assert.False(Hits(tester, new Point(100.0, 299.0), renderPhysicalShape));
-        Assert.False(Hits(tester, new Point(100.0, 301.0), renderPhysicalShape));
+        Assert.False(Hits(tester, new Offset(99.0, 300.0), renderPhysicalShape));
+        Assert.True(Hits(tester, new Offset(100.0, 300.0), renderPhysicalShape));
+        Assert.False(Hits(tester, new Offset(100.0, 299.0), renderPhysicalShape));
+        Assert.False(Hits(tester, new Offset(100.0, 301.0), renderPhysicalShape));
     }
 
     // ---- backdrop_filter_test.dart --------------------------------------------------------------
@@ -759,8 +759,8 @@ public sealed class ProxyBoxClipParityTests
         LayoutRoot(renderBox, new Size(800, 600));
         var root = new ContainerLayer();
         var context = new PaintingContext(root);
-        renderBox.Paint(context, new Point(0, 0));
-        renderBox.DebugPaintSize(context, new Point(0, 0));
+        renderBox.Paint(context, new Offset(0, 0));
+        renderBox.DebugPaintSize(context, new Offset(0, 0));
         context.DebugStopRecordingIfNeeded();
         return CountDraws(root);
     }
@@ -820,13 +820,13 @@ public sealed class ProxyBoxClipParityTests
         return ((RenderBox)tester.ElementOfType<TWidget>().FindRenderObject()!).Size;
     }
 
-    private static void TapAt(FrameworkDartTester tester, Point location)
+    private static void TapAt(FrameworkDartTester tester, Offset location)
     {
         int pointer = tester.StartGesture(location);
         tester.Up(pointer, location);
     }
 
-    private static bool Hits(FrameworkDartTester tester, Point location, RenderObject target)
+    private static bool Hits(FrameworkDartTester tester, Offset location, RenderObject target)
     {
         var result = new BoxHitTestResult();
         tester.RenderView.HitTest(result, location);
@@ -864,9 +864,9 @@ public sealed class ProxyBoxClipParityTests
     {
         protected override void PerformLayout() => Size = Constraints.Constrain(size);
 
-        protected override bool HitTestSelf(Point position) => hitSelf;
+        protected override bool HitTestSelf(Offset position) => hitSelf;
 
-        public override void Paint(PaintingContext context, Point offset)
+        public override void Paint(PaintingContext context, Offset offset)
         {
         }
     }
@@ -894,7 +894,7 @@ public sealed class ProxyBoxClipParityTests
         public override Path GetClip(Size size)
         {
             var path = new Path();
-            path.AddRect(new Rect(50.0, 50.0, 100.0, 100.0));
+            path.AddRect(DartGeometry.RectFromLTWH(50.0, 50.0, 100.0, 100.0));
             return path;
         }
 
@@ -908,7 +908,7 @@ public sealed class ProxyBoxClipParityTests
         {
             log.Add("getClip");
             var path = new Path();
-            path.AddRect(new Rect(50.0, 50.0, 100.0, 100.0));
+            path.AddRect(DartGeometry.RectFromLTWH(50.0, 50.0, 100.0, 100.0));
             return path;
         }
 
@@ -950,7 +950,7 @@ public sealed class ProxyBoxClipParityTests
     {
         public int Id { get; } = id;
 
-        public override Rect GetClip(Size size) => new(0, 0, size.Width, size.Height);
+        public override Rect GetClip(Size size) => DartGeometry.RectFromLTWH(0, 0, size.Width, size.Height);
 
         public override bool ShouldReclip(CustomClipper<Rect> oldClipper) => true;
 
@@ -973,7 +973,7 @@ public sealed class ProxyBoxClipParityTests
 
     private sealed class UnbalancedPainter : BoxPainter
     {
-        public override void Paint(PaintingContext context, Point offset, ImageConfiguration configuration)
+        public override void Paint(PaintingContext context, Offset offset, ImageConfiguration configuration)
         {
             context.Canvas.Save();
         }

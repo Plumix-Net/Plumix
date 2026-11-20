@@ -12,7 +12,7 @@ internal sealed class InkRippleFactory : InteractiveInkFeatureFactory
     public override InteractiveInkFeature Create(
         MaterialInkController controller,
         RenderBox referenceBox,
-        Point position,
+        Offset position,
         Color color,
         TextDirection textDirection,
         bool containedInkWell = false,
@@ -57,7 +57,7 @@ public class InkRipple : InteractiveInkFeature
     private static readonly Animatable<double> FadeOutIntervalTween =
         new CurveTween(new Interval(FadeOutIntervalStart, 1.0));
 
-    private readonly Point _position;
+    private readonly Offset _position;
     private readonly BorderRadius _borderRadius;
     private readonly double _targetRadius;
     private readonly RectCallback? _clipCallback;
@@ -76,7 +76,7 @@ public class InkRipple : InteractiveInkFeature
     public InkRipple(
         MaterialInkController controller,
         RenderBox referenceBox,
-        Point position,
+        Offset position,
         Color color,
         TextDirection textDirection,
         bool containedInkWell = false,
@@ -167,7 +167,7 @@ public class InkRipple : InteractiveInkFeature
         var paint = new Paint { Color = Color.WithAlpha(alpha) };
         Rect? rect = _clipCallback?.Invoke();
         // Splash moves to the center of the reference box.
-        Point center = InkFeatureGeometry.LerpOffset(
+        Offset center = InkFeatureGeometry.LerpOffset(
             _position,
             rect is { } clip ? clip.Center : InkFeatureGeometry.SizeCenter(ReferenceBox.Size),
             Curves.Ease.Transform(_radiusController.Value))!.Value;
@@ -196,7 +196,7 @@ public class InkRipple : InteractiveInkFeature
 
         if (containedInkWell)
         {
-            return () => new Rect(referenceBox.Size);
+            return () => DartGeometry.RectFromSize(referenceBox.Size);
         }
 
         return null;
@@ -206,11 +206,11 @@ public class InkRipple : InteractiveInkFeature
         RenderBox referenceBox,
         bool containedInkWell,
         RectCallback? rectCallback,
-        Point position)
+        Offset position)
     {
         Size size = rectCallback is not null ? rectCallback().Size : referenceBox.Size;
-        double d1 = InkFeatureGeometry.Distance(new Point(size.Width, size.Height), new Point(0.0, 0.0));
-        double d2 = InkFeatureGeometry.Distance(new Point(size.Width, 0.0), new Point(0.0, size.Height));
+        double d1 = InkFeatureGeometry.Distance(new Offset(size.Width, size.Height), new Offset(0.0, 0.0));
+        double d2 = InkFeatureGeometry.Distance(new Offset(size.Width, 0.0), new Offset(0.0, size.Height));
         return Math.Max(d1, d2) / 2.0;
     }
 }
@@ -220,7 +220,7 @@ public class InkRipple : InteractiveInkFeature
 internal static class InkFeatureGeometry
 {
     // Dart's `Offset.lerp`, including its null cases.
-    public static Point? LerpOffset(Point? a, Point? b, double t)
+    public static Offset? LerpOffset(Offset? a, Offset? b, double t)
     {
         if (b is null)
         {
@@ -232,17 +232,17 @@ internal static class InkFeatureGeometry
             return b.Value * t;
         }
 
-        return new Point(
-            a.Value.X + ((b.Value.X - a.Value.X) * t),
-            a.Value.Y + ((b.Value.Y - a.Value.Y) * t));
+        return new Offset(
+            a.Value.Dx + ((b.Value.Dx - a.Value.Dx) * t),
+            a.Value.Dy + ((b.Value.Dy - a.Value.Dy) * t));
     }
 
-    public static Point SizeCenter(Size size) => new(size.Width / 2.0, size.Height / 2.0);
+    public static Offset SizeCenter(Size size) => new(size.Width / 2.0, size.Height / 2.0);
 
-    public static double Distance(Point a, Point b)
+    public static double Distance(Offset a, Offset b)
     {
-        double dx = a.X - b.X;
-        double dy = a.Y - b.Y;
+        double dx = a.Dx - b.Dx;
+        double dy = a.Dy - b.Dy;
         return Math.Sqrt((dx * dx) + (dy * dy));
     }
 }

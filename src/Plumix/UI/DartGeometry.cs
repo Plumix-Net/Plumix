@@ -2,26 +2,26 @@ using System.Globalization;
 using Avalonia;
 using Plumix.Foundation;
 
-namespace Plumix.UI;
+namespace Plumix;
 
 // Dart parity source: flutter/engine/src/flutter/lib/ui/geometry.dart (Offset, Size, Rect)
 // Public Avalonia carriers are retained. Factories and operations whose names conflict with
 // native members live on this companion; see DIVERGENCES.md for the edge-storage limitation.
 public static class DartGeometry
 {
-    public static Point OffsetZero => default;
-    public static Point OffsetInfinite => new(double.PositiveInfinity, double.PositiveInfinity);
+    public static Offset OffsetZero => default;
+    public static Offset OffsetInfinite => new(double.PositiveInfinity, double.PositiveInfinity);
     public static Size SizeZero => default;
-    public static Size SizeInfinite => Size.Infinity;
+    public static Size SizeInfinite => new(double.PositiveInfinity, double.PositiveInfinity);
     public static Rect RectZero => default;
     public static Rect RectLargest => RectFromLTRB(-1.0E+9, -1.0E+9, 1.0E+9, 1.0E+9);
 
-    public static Point OffsetFromDirection(double direction, double distance = 1.0) =>
+    public static Offset OffsetFromDirection(double direction, double distance = 1.0) =>
         new(distance * Math.Cos(direction), distance * Math.Sin(direction));
 
-    public static Point? OffsetLerp(Point? a, Point? b, double t) => b is null
+    public static Offset? OffsetLerp(Offset? a, Offset? b, double t) => b is null
         ? a * (1.0 - t)
-        : a is null ? b * t : new Point(LerpDouble(a.Value.X, b.Value.X, t), LerpDouble(a.Value.Y, b.Value.Y, t));
+        : a is null ? b * t : new Offset(LerpDouble(a.Value.Dx, b.Value.Dx, t), LerpDouble(a.Value.Dy, b.Value.Dy, t));
 
     public static Size SizeCopy(Size source) => source;
     public static Size SizeSquare(double dimension) => new(dimension, dimension);
@@ -38,15 +38,21 @@ public static class DartGeometry
         : size.Width > 0.0 ? double.PositiveInfinity : size.Width < 0.0 ? double.NegativeInfinity : 0.0;
 
     public static Rect RectFromLTRB(double left, double top, double right, double bottom) =>
-        new(left, top, right - left, bottom - top);
+        DartGeometry.RectFromLTWH(left, top, right - left, bottom - top);
     public static Rect RectFromLTWH(double left, double top, double width, double height) =>
-        new(left, top, width, height);
-    public static Rect RectFromCenter(Point center, double width, double height) => RectFromLTRB(
-        center.X - width / 2.0, center.Y - height / 2.0, center.X + width / 2.0, center.Y + height / 2.0);
-    public static Rect RectFromCircle(Point center, double radius) =>
+        new Rect(left, top, width, height);
+    // Migration helpers: Avalonia constructor shapes, removed with DartGeometry.
+    public static Rect RectFromOffsetAndSize(Offset offset, Size size) =>
+        DartGeometry.RectFromLTWH(offset.Dx, offset.Dy, size.Width, size.Height);
+    public static Rect RectFromCorners(Offset topLeft, Offset bottomRight) =>
+        RectFromLTRB(topLeft.Dx, topLeft.Dy, bottomRight.Dx, bottomRight.Dy);
+    public static Rect RectFromSize(Size size) => DartGeometry.RectFromLTWH(0.0, 0.0, size.Width, size.Height);
+    public static Rect RectFromCenter(Offset center, double width, double height) => RectFromLTRB(
+        center.Dx - width / 2.0, center.Dy - height / 2.0, center.Dx + width / 2.0, center.Dy + height / 2.0);
+    public static Rect RectFromCircle(Offset center, double radius) =>
         RectFromCenter(center, radius * 2.0, radius * 2.0);
-    public static Rect RectFromPoints(Point a, Point b) => RectFromLTRB(
-        Math.Min(a.X, b.X), Math.Min(a.Y, b.Y), Math.Max(a.X, b.X), Math.Max(a.Y, b.Y));
+    public static Rect RectFromPoints(Offset a, Offset b) => RectFromLTRB(
+        Math.Min(a.Dx, b.Dx), Math.Min(a.Dy, b.Dy), Math.Max(a.Dx, b.Dx), Math.Max(a.Dy, b.Dy));
     public static bool RectIsEmpty(Rect rect) => rect.Left >= rect.Right || rect.Top >= rect.Bottom;
     public static Rect RectIntersect(Rect a, Rect b) => RectFromLTRB(
         Math.Max(a.Left, b.Left), Math.Max(a.Top, b.Top), Math.Min(a.Right, b.Right), Math.Min(a.Bottom, b.Bottom));
@@ -81,27 +87,27 @@ public static class DartGeometry
     public static double LongestSide(Size size) => Math.Max(Math.Abs(size.Width), Math.Abs(size.Height));
 
     // OffsetBase's mixed Offset/Size comparisons, expressed with a shared pair of coordinates.
-    public static bool LessThan(Point a, Point b) => a.X < b.X && a.Y < b.Y;
-    public static bool LessThanOrEqual(Point a, Point b) => a.X <= b.X && a.Y <= b.Y;
-    public static bool GreaterThan(Point a, Point b) => a.X > b.X && a.Y > b.Y;
-    public static bool GreaterThanOrEqual(Point a, Point b) => a.X >= b.X && a.Y >= b.Y;
-    public static bool LessThan(Size a, Size b) => LessThan(new Point(a.Width, a.Height), new Point(b.Width, b.Height));
+    public static bool LessThan(Offset a, Offset b) => a.Dx < b.Dx && a.Dy < b.Dy;
+    public static bool LessThanOrEqual(Offset a, Offset b) => a.Dx <= b.Dx && a.Dy <= b.Dy;
+    public static bool GreaterThan(Offset a, Offset b) => a.Dx > b.Dx && a.Dy > b.Dy;
+    public static bool GreaterThanOrEqual(Offset a, Offset b) => a.Dx >= b.Dx && a.Dy >= b.Dy;
+    public static bool LessThan(Size a, Size b) => LessThan(new Offset(a.Width, a.Height), new Offset(b.Width, b.Height));
     public static bool LessThanOrEqual(Size a, Size b) =>
-        LessThanOrEqual(new Point(a.Width, a.Height), new Point(b.Width, b.Height));
+        LessThanOrEqual(new Offset(a.Width, a.Height), new Offset(b.Width, b.Height));
     public static bool GreaterThan(Size a, Size b) =>
-        GreaterThan(new Point(a.Width, a.Height), new Point(b.Width, b.Height));
+        GreaterThan(new Offset(a.Width, a.Height), new Offset(b.Width, b.Height));
     public static bool GreaterThanOrEqual(Size a, Size b) =>
-        GreaterThanOrEqual(new Point(a.Width, a.Height), new Point(b.Width, b.Height));
-    public static bool LessThan(Point a, Size b) => LessThan(a, new Point(b.Width, b.Height));
-    public static bool LessThan(Size a, Point b) => LessThan(new Point(a.Width, a.Height), b);
-    public static bool LessThanOrEqual(Point a, Size b) => LessThanOrEqual(a, new Point(b.Width, b.Height));
-    public static bool LessThanOrEqual(Size a, Point b) => LessThanOrEqual(new Point(a.Width, a.Height), b);
-    public static bool GreaterThan(Point a, Size b) => GreaterThan(a, new Point(b.Width, b.Height));
-    public static bool GreaterThan(Size a, Point b) => GreaterThan(new Point(a.Width, a.Height), b);
-    public static bool GreaterThanOrEqual(Point a, Size b) => GreaterThanOrEqual(a, new Point(b.Width, b.Height));
-    public static bool GreaterThanOrEqual(Size a, Point b) => GreaterThanOrEqual(new Point(a.Width, a.Height), b);
+        GreaterThanOrEqual(new Offset(a.Width, a.Height), new Offset(b.Width, b.Height));
+    public static bool LessThan(Offset a, Size b) => LessThan(a, new Offset(b.Width, b.Height));
+    public static bool LessThan(Size a, Offset b) => LessThan(new Offset(a.Width, a.Height), b);
+    public static bool LessThanOrEqual(Offset a, Size b) => LessThanOrEqual(a, new Offset(b.Width, b.Height));
+    public static bool LessThanOrEqual(Size a, Offset b) => LessThanOrEqual(new Offset(a.Width, a.Height), b);
+    public static bool GreaterThan(Offset a, Size b) => GreaterThan(a, new Offset(b.Width, b.Height));
+    public static bool GreaterThan(Size a, Offset b) => GreaterThan(new Offset(a.Width, a.Height), b);
+    public static bool GreaterThanOrEqual(Offset a, Size b) => GreaterThanOrEqual(a, new Offset(b.Width, b.Height));
+    public static bool GreaterThanOrEqual(Size a, Offset b) => GreaterThanOrEqual(new Offset(a.Width, a.Height), b);
 
-    public static string OffsetToString(Point point) => $"Offset({Fixed(point.X)}, {Fixed(point.Y)})";
+    public static string OffsetToString(Offset point) => $"Offset({Fixed(point.Dx)}, {Fixed(point.Dy)})";
     public static string SizeToString(Size size) => $"Size({Fixed(size.Width)}, {Fixed(size.Height)})";
     public static string RectToString(Rect rect) =>
         $"Rect.fromLTRB({Fixed(rect.Left)}, {Fixed(rect.Top)}, {Fixed(rect.Right)}, {Fixed(rect.Bottom)})";

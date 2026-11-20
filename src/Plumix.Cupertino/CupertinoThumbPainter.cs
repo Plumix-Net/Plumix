@@ -13,14 +13,14 @@ public sealed class CupertinoThumbPainter
     private static readonly Color ThumbBorderColor = new Color(0x0A000000);
     private static readonly IReadOnlyList<BoxShadow> SliderShadows =
     [
-        new(color: new Color(0x26000000), offset: new Point(0.0, 3.0), blurRadius: 8.0),
-        new(color: new Color(0x29000000), offset: new Point(0.0, 1.0), blurRadius: 1.0),
-        new(color: new Color(0x1A000000), offset: new Point(0.0, 3.0), blurRadius: 1.0),
+        new(color: new Color(0x26000000), offset: new Offset(0.0, 3.0), blurRadius: 8.0),
+        new(color: new Color(0x29000000), offset: new Offset(0.0, 1.0), blurRadius: 1.0),
+        new(color: new Color(0x1A000000), offset: new Offset(0.0, 3.0), blurRadius: 1.0),
     ];
     private static readonly IReadOnlyList<BoxShadow> SwitchShadows =
     [
-        new(color: new Color(0x26000000), offset: new Point(0.0, 3.0), blurRadius: 8.0),
-        new(color: new Color(0x0F000000), offset: new Point(0.0, 3.0), blurRadius: 1.0),
+        new(color: new Color(0x26000000), offset: new Offset(0.0, 3.0), blurRadius: 8.0),
+        new(color: new Color(0x0F000000), offset: new Offset(0.0, 3.0), blurRadius: 1.0),
     ];
 
     public CupertinoThumbPainter(Color? color = null, IReadOnlyList<BoxShadow>? shadows = null)

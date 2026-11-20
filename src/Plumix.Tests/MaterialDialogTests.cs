@@ -223,7 +223,7 @@ public sealed class MaterialDialogTests : IDisposable
         var overflow = Assert.Single(FindDescendants<RenderOverflowBar>(harness.RenderView));
         var firstOffset = ((OverflowBarParentData)overflow.FirstChild!.parentData!).offset;
         var secondOffset = ((OverflowBarParentData)overflow.LastChild!.parentData!).offset;
-        Assert.True(secondOffset.Y >= firstOffset.Y + overflow.FirstChild.Size.Height + 6);
+        Assert.True(secondOffset.Dy >= firstOffset.Dy + overflow.FirstChild.Size.Height + 6);
     }
 
     [Fact]

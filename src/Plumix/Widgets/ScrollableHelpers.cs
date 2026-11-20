@@ -219,9 +219,9 @@ public sealed class EdgeDraggingAutoScroller
             return;
         }
 
-        Point deltaToOrigin = _scrollable.DeltaToScrollOrigin;
+        Offset deltaToOrigin = _scrollable.DeltaToScrollOrigin;
         _dragTargetRelatedToScrollOrigin =
-            dragTarget.Translate(new Vector(deltaToOrigin.X, deltaToOrigin.Y));
+            dragTarget.Shift(new Offset(deltaToOrigin.Dx, deltaToOrigin.Dy));
         if (_scrolling)
         {
             // The change will be picked up in the next scroll.
@@ -247,7 +247,7 @@ public sealed class EdgeDraggingAutoScroller
         Matrix4 transform = scrollRenderBox.GetTransformTo(null);
         Rect globalRect = MatrixUtils.TransformRect(
             transform,
-            new Rect(0, 0, scrollRenderBox.Size.Width, scrollRenderBox.Size.Height));
+            DartGeometry.RectFromLTWH(0, 0, scrollRenderBox.Size.Width, scrollRenderBox.Size.Height));
         Rect transformedDragTarget = MatrixUtils.TransformRect(transform, _dragTargetRelatedToScrollOrigin);
         Debug.Assert(
             globalRect.Size.Width + Constants.PrecisionErrorTolerance >= transformedDragTarget.Width
@@ -260,8 +260,8 @@ public sealed class EdgeDraggingAutoScroller
         ScrollPosition position = _scrollable.Position;
         AxisDirection direction = _scrollable.AxisDirection;
         Axis scrollDirection = ScrollDirectionUtils.AxisDirectionToAxis(direction);
-        Point deltaToOrigin = _scrollable.DeltaToScrollOrigin;
-        Point viewportOrigin = globalRect.TopLeft + new Vector(deltaToOrigin.X, deltaToOrigin.Y);
+        Offset deltaToOrigin = _scrollable.DeltaToScrollOrigin;
+        Offset viewportOrigin = globalRect.TopLeft + new Offset(deltaToOrigin.Dx, deltaToOrigin.Dy);
         double viewportStart = OffsetExtent(viewportOrigin, scrollDirection);
         double viewportEnd = viewportStart + SizeExtent(globalRect.Size, scrollDirection);
 
@@ -315,8 +315,8 @@ public sealed class EdgeDraggingAutoScroller
         }
     }
 
-    private static double OffsetExtent(Point offset, Axis scrollDirection) =>
-        scrollDirection == Axis.Horizontal ? offset.X : offset.Y;
+    private static double OffsetExtent(Offset offset, Axis scrollDirection) =>
+        scrollDirection == Axis.Horizontal ? offset.Dx : offset.Dy;
 
     private static double SizeExtent(Size size, Axis scrollDirection) =>
         scrollDirection == Axis.Horizontal ? size.Width : size.Height;

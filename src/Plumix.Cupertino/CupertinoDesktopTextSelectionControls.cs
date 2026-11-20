@@ -22,11 +22,11 @@ public class CupertinoDesktopTextSelectionControls : TextSelectionControls
         BuildContext context,
         Rect globalEditableRegion,
         double textLineHeight,
-        Point selectionMidpoint,
+        Offset selectionMidpoint,
         IReadOnlyList<TextSelectionPoint> endpoints,
         ITextSelectionDelegate @delegate,
         IValueListenable<ClipboardStatus>? clipboardStatus,
-        Point? lastSecondaryTapDownPosition)
+        Offset? lastSecondaryTapDownPosition)
     {
         return new CupertinoDesktopTextSelectionControlsToolbar(
             clipboardStatus: clipboardStatus,
@@ -50,7 +50,7 @@ public class CupertinoDesktopTextSelectionControls : TextSelectionControls
         return new SizedBox();
     }
 
-    public override Point GetHandleAnchor(TextSelectionHandleType type, double textLineHeight) => default;
+    public override Offset GetHandleAnchor(TextSelectionHandleType type, double textLineHeight) => default;
 
     [Obsolete("Use a contextMenuBuilder instead. This feature was deprecated after Flutter v3.3.0-0.5.pre.")]
     public override void HandleSelectAll(ITextSelectionDelegate @delegate)
@@ -68,11 +68,11 @@ internal sealed class CupertinoDesktopTextSelectionHandleControls
         BuildContext context,
         Rect globalEditableRegion,
         double textLineHeight,
-        Point selectionMidpoint,
+        Offset selectionMidpoint,
         IReadOnlyList<TextSelectionPoint> endpoints,
         ITextSelectionDelegate @delegate,
         IValueListenable<ClipboardStatus>? clipboardStatus,
-        Point? lastSecondaryTapDownPosition)
+        Offset? lastSecondaryTapDownPosition)
     {
         return new SizedBox();
     }
@@ -120,8 +120,8 @@ internal sealed class CupertinoDesktopTextSelectionControlsToolbar : StatefulWid
         Action? handleCut,
         Action? handlePaste,
         Action? handleSelectAll,
-        Point? lastSecondaryTapDownPosition,
-        Point selectionMidpoint,
+        Offset? lastSecondaryTapDownPosition,
+        Offset selectionMidpoint,
         double textLineHeight,
         Key? key = null) : base(key)
     {
@@ -151,9 +151,9 @@ internal sealed class CupertinoDesktopTextSelectionControlsToolbar : StatefulWid
 
     internal Action? HandleSelectAll { get; }
 
-    internal Point? LastSecondaryTapDownPosition { get; }
+    internal Offset? LastSecondaryTapDownPosition { get; }
 
-    internal Point SelectionMidpoint { get; }
+    internal Offset SelectionMidpoint { get; }
 
     internal double TextLineHeight { get; }
 
@@ -200,12 +200,12 @@ internal sealed class CupertinoDesktopTextSelectionControlsToolbar : StatefulWid
 
             MediaQueryData mediaQuery = MediaQuery.Of(context);
             double midpointX = Math.Clamp(
-                widget.SelectionMidpoint.X - widget.GlobalEditableRegion.Left,
+                widget.SelectionMidpoint.Dx - widget.GlobalEditableRegion.Left,
                 mediaQuery.Padding.Left,
                 Math.Max(mediaQuery.Padding.Left, mediaQuery.Size.Width - mediaQuery.Padding.Right));
-            Point midpointAnchor = new(
+            Offset midpointAnchor = new(
                 midpointX,
-                widget.SelectionMidpoint.Y - widget.GlobalEditableRegion.Top);
+                widget.SelectionMidpoint.Dy - widget.GlobalEditableRegion.Top);
 
             CupertinoLocalizations localizations = CupertinoLocalizations.Of(context);
             var items = new List<Widget>();

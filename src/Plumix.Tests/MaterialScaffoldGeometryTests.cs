@@ -58,8 +58,8 @@ public sealed class MaterialScaffoldGeometryTests
         Assert.NotNull(area);
 
         // endFloat: x = width - kFloatingActionButtonMargin - fabWidth, y = contentBottom - fabHeight - margin.
-        Assert.Equal(new Rect(new Point(728, 528), new Size(56, 56)), area!.Value);
-        Assert.Equal(area.Value.Position, ((MultiChildLayoutParentData)slot.parentData!).offset);
+        Assert.Equal(DartGeometry.RectFromOffsetAndSize(new Offset(728, 528), new Size(56, 56)), area!.Value);
+        Assert.Equal(area.Value.TopLeft, ((MultiChildLayoutParentData)slot.parentData!).offset);
     }
 
     [Fact]
@@ -95,8 +95,8 @@ public sealed class MaterialScaffoldGeometryTests
         harness.SettleFloatingActionButton();
         Rect settled = RequireGeometry(context).FloatingActionButtonArea!.Value;
         Assert.Equal(56.0, settled.Width, 6);
-        Assert.Equal(settled.Center.X, entering.Value.Center.X, 6);
-        Assert.Equal(settled.Center.Y, entering.Value.Center.Y, 6);
+        Assert.Equal(settled.Center.Dx, entering.Value.Center.Dx, 6);
+        Assert.Equal(settled.Center.Dy, entering.Value.Center.Dy, 6);
     }
 
     [Fact]
@@ -223,7 +223,7 @@ public sealed class MaterialScaffoldGeometryTests
         extended.Pump(Viewport);
         Assert.Equal(
             0.0,
-            ((MultiChildLayoutParentData)extended.RequireSlot(ScaffoldSlot.Body).parentData!).offset.Y);
+            ((MultiChildLayoutParentData)extended.RequireSlot(ScaffoldSlot.Body).parentData!).offset.Dy);
 
         using var normal = new Harness(Wrap(new Scaffold(
             appBar: new AppBar(title: new Text("Demo")),
@@ -233,7 +233,7 @@ public sealed class MaterialScaffoldGeometryTests
         Assert.True(appBarHeight > 0.0);
         Assert.Equal(
             appBarHeight,
-            ((MultiChildLayoutParentData)normal.RequireSlot(ScaffoldSlot.Body).parentData!).offset.Y);
+            ((MultiChildLayoutParentData)normal.RequireSlot(ScaffoldSlot.Body).parentData!).offset.Dy);
     }
 
     [Fact]
@@ -292,14 +292,14 @@ public sealed class MaterialScaffoldGeometryTests
         Assert.Equal(
             728.0,
             ((MultiChildLayoutParentData)harness.RequireSlot(ScaffoldSlot.FloatingActionButton).parentData!)
-            .offset.X);
+            .offset.Dx);
 
         harness.Tick(0.25);
         harness.Pump(Viewport);
         Assert.Equal(
             372.0,
             ((MultiChildLayoutParentData)harness.RequireSlot(ScaffoldSlot.FloatingActionButton).parentData!)
-            .offset.X);
+            .offset.Dx);
     }
 
     [Fact]
@@ -379,7 +379,7 @@ public sealed class MaterialScaffoldGeometryTests
         harness.Pump(Viewport);
 
         Assert.Equal(
-            new Rect(new Point(728, 528), new Size(56, 56)),
+            DartGeometry.RectFromOffsetAndSize(new Offset(728, 528), new Size(56, 56)),
             RequireGeometry(context).FloatingActionButtonArea!.Value);
     }
 
@@ -397,7 +397,7 @@ public sealed class MaterialScaffoldGeometryTests
         // 90 plus the 8 top and bottom padding of the footer's EdgeInsets.all(8), plus the 1pt top
         // border the footer's decoration contributes through Container's paddingIncludingDecoration.
         Assert.Equal(107.0, footer.Size.Height);
-        Assert.Equal(new Point(0, 493), SlotOffset(footer));
+        Assert.Equal(new Offset(0, 493), SlotOffset(footer));
         Assert.Equal(493.0, body.Size.Height);
     }
 
@@ -421,7 +421,7 @@ public sealed class MaterialScaffoldGeometryTests
 
         RenderBox button = harness.RequireRender<RenderConstrainedBox>(
             box => box.AdditionalConstraints.MaxWidth == 100.0);
-        Assert.Equal(expectedLeft, button.GetPaintOffsetToRoot().X);
+        Assert.Equal(expectedLeft, button.GetPaintOffsetToRoot().Dx);
     }
 
     [Fact]
@@ -438,13 +438,13 @@ public sealed class MaterialScaffoldGeometryTests
 
         RenderBox footer = harness.RequireSlot(ScaffoldSlot.PersistentFooter);
         RenderBox overflowBar = harness.RequireRender<RenderOverflowBar>();
-        Point topLeft = overflowBar.GetPaintOffsetToRoot();
+        Offset topLeft = overflowBar.GetPaintOffsetToRoot();
 
         // The footer's SafeArea keeps the left, right and bottom padding; only the top one is removed, so
         // the 107pt button row grows by the 40pt bottom inset and the buttons stay inside the safe area.
         Assert.Equal(147.0, footer.Size.Height);
-        Assert.Equal(800.0 - 30.0 - 8.0, topLeft.X + overflowBar.Size.Width);
-        Assert.Equal(600.0 - 40.0 - 8.0, topLeft.Y + overflowBar.Size.Height);
+        Assert.Equal(800.0 - 30.0 - 8.0, topLeft.Dx + overflowBar.Size.Width);
+        Assert.Equal(600.0 - 40.0 - 8.0, topLeft.Dy + overflowBar.Size.Height);
     }
 
     [Fact]
@@ -465,7 +465,7 @@ public sealed class MaterialScaffoldGeometryTests
 
         // removeBottomPadding: the bottom navigation bar already covers the safe area.
         Assert.Equal(107.0, footer.Size.Height);
-        Assert.Equal(new Point(0, 600 - 60 - 107), SlotOffset(footer));
+        Assert.Equal(new Offset(0, 600 - 60 - 107), SlotOffset(footer));
     }
 
     [Fact]
@@ -627,7 +627,7 @@ public sealed class MaterialScaffoldGeometryTests
         {
             RenderBox drawer = harness.RequireSlot(slot);
             Assert.Equal(Viewport, drawer.Size);
-            Assert.Equal(new Point(0, 0), SlotOffset(drawer));
+            Assert.Equal(new Offset(0, 0), SlotOffset(drawer));
         }
     }
 
@@ -748,7 +748,7 @@ public sealed class MaterialScaffoldGeometryTests
 
         RenderBox statusBar = harness.RequireSlot(ScaffoldSlot.StatusBar);
         Assert.Equal(new Size(800, 25), statusBar.Size);
-        Assert.Equal(new Point(0, 0), SlotOffset(statusBar));
+        Assert.Equal(new Offset(0, 0), SlotOffset(statusBar));
     }
 
     [Fact]
@@ -826,7 +826,7 @@ public sealed class MaterialScaffoldGeometryTests
     private static Widget Filling() =>
         new SizedBox(width: double.PositiveInfinity, height: double.PositiveInfinity);
 
-    private static Point SlotOffset(RenderBox slot) =>
+    private static Offset SlotOffset(RenderBox slot) =>
         ((MultiChildLayoutParentData)slot.parentData!).offset;
 
     private static ScaffoldGeometry RequireGeometry(BuildContext? context)

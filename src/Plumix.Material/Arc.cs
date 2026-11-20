@@ -14,15 +14,15 @@ internal static class ArcConstants
 /// <summary>
 /// Dart's `MaterialPointArcTween`: a tween that interpolates an <see cref="Point"/> along a circular arc.
 /// </summary>
-public class MaterialPointArcTween : Tween<Point>
+public class MaterialPointArcTween : Tween<Offset>
 {
     private bool _dirty = true;
-    private Point? _center;
+    private Offset? _center;
     private double? _radius;
     private double? _beginAngle;
     private double? _endAngle;
 
-    public MaterialPointArcTween(Point? begin = null, Point? end = null)
+    public MaterialPointArcTween(Offset? begin = null, Offset? end = null)
     {
         if (begin.HasValue)
         {
@@ -36,7 +36,7 @@ public class MaterialPointArcTween : Tween<Point>
     }
 
     /// <summary>The center of the circular arc, null if <see cref="Begin"/> and <see cref="End"/> are on-axis.</summary>
-    public Point? Center
+    public Offset? Center
     {
         get
         {
@@ -113,7 +113,7 @@ public class MaterialPointArcTween : Tween<Point>
         }
     }
 
-    public new virtual Point? Begin
+    public new virtual Offset? Begin
     {
         get => HasBeginValue ? GetBeginValue() : null;
         set
@@ -134,7 +134,7 @@ public class MaterialPointArcTween : Tween<Point>
         }
     }
 
-    public new virtual Point? End
+    public new virtual Offset? End
     {
         get => HasEndValue ? GetEndValue() : null;
         set
@@ -155,15 +155,15 @@ public class MaterialPointArcTween : Tween<Point>
         }
     }
 
-    public override Point Lerp(double t)
+    public override Offset Lerp(double t)
     {
         if (_dirty)
         {
             Initialize();
         }
 
-        Point begin = GetBeginValue();
-        Point end = GetEndValue();
+        Offset begin = GetBeginValue();
+        Offset end = GetEndValue();
         if (t == 0.0)
         {
             return begin;
@@ -176,15 +176,15 @@ public class MaterialPointArcTween : Tween<Point>
 
         if (_beginAngle is null || _endAngle is null)
         {
-            return new Point(
-                (begin.X * (1.0 - t)) + (end.X * t),
-                (begin.Y * (1.0 - t)) + (end.Y * t));
+            return new Offset(
+                (begin.Dx * (1.0 - t)) + (end.Dx * t),
+                (begin.Dy * (1.0 - t)) + (end.Dy * t));
         }
 
         double angle = (_beginAngle.Value * (1.0 - t)) + (_endAngle.Value * t);
         double x = Math.Cos(angle) * _radius!.Value;
         double y = Math.Sin(angle) * _radius!.Value;
-        return _center!.Value + new Vector(x, y);
+        return _center!.Value + new Offset(x, y);
     }
 
     public override string ToString()
@@ -195,13 +195,13 @@ public class MaterialPointArcTween : Tween<Point>
 
     private void Initialize()
     {
-        Point begin = GetBeginValue();
-        Point end = GetEndValue();
-        Point delta = end - begin;
-        double deltaX = Math.Abs(delta.X);
-        double deltaY = Math.Abs(delta.Y);
+        Offset begin = GetBeginValue();
+        Offset end = GetEndValue();
+        Offset delta = end - begin;
+        double deltaX = Math.Abs(delta.Dx);
+        double deltaY = Math.Abs(delta.Dy);
         double distanceFromAtoB = ArcGeometry.Distance(delta);
-        var c = new Point(end.X, begin.Y);
+        var c = new Offset(end.Dx, begin.Dy);
 
         double SweepAngle() => 2.0 * Math.Asin(distanceFromAtoB / (2.0 * _radius!.Value));
 
@@ -210,31 +210,31 @@ public class MaterialPointArcTween : Tween<Point>
             if (deltaX < deltaY)
             {
                 _radius = distanceFromAtoB * distanceFromAtoB / ArcGeometry.Distance(c - begin) / 2.0;
-                _center = new Point(end.X + (_radius.Value * ArcMath.Sign(begin.X - end.X)), end.Y);
-                if (begin.X < end.X)
+                _center = new Offset(end.Dx + (_radius.Value * ArcMath.Sign(begin.Dx - end.Dx)), end.Dy);
+                if (begin.Dx < end.Dx)
                 {
-                    _beginAngle = SweepAngle() * ArcMath.Sign(begin.Y - end.Y);
+                    _beginAngle = SweepAngle() * ArcMath.Sign(begin.Dy - end.Dy);
                     _endAngle = 0.0;
                 }
                 else
                 {
-                    _beginAngle = Math.PI + (SweepAngle() * ArcMath.Sign(end.Y - begin.Y));
+                    _beginAngle = Math.PI + (SweepAngle() * ArcMath.Sign(end.Dy - begin.Dy));
                     _endAngle = Math.PI;
                 }
             }
             else
             {
                 _radius = distanceFromAtoB * distanceFromAtoB / ArcGeometry.Distance(c - end) / 2.0;
-                _center = new Point(begin.X, begin.Y + (ArcMath.Sign(end.Y - begin.Y) * _radius.Value));
-                if (begin.Y < end.Y)
+                _center = new Offset(begin.Dx, begin.Dy + (ArcMath.Sign(end.Dy - begin.Dy) * _radius.Value));
+                if (begin.Dy < end.Dy)
                 {
                     _beginAngle = -Math.PI / 2.0;
-                    _endAngle = _beginAngle.Value + (SweepAngle() * ArcMath.Sign(end.X - begin.X));
+                    _endAngle = _beginAngle.Value + (SweepAngle() * ArcMath.Sign(end.Dx - begin.Dx));
                 }
                 else
                 {
                     _beginAngle = Math.PI / 2.0;
-                    _endAngle = _beginAngle.Value + (SweepAngle() * ArcMath.Sign(begin.X - end.X));
+                    _endAngle = _beginAngle.Value + (SweepAngle() * ArcMath.Sign(begin.Dx - end.Dx));
                 }
             }
         }
@@ -409,7 +409,7 @@ public class MaterialRectArcTween : RectTween
         return $"MaterialRectArcTween({Begin} → {End}; beginArc={BeginArc}, endArc={EndArc})";
     }
 
-    private static Point CornerFor(Rect rect, CornerId id)
+    private static Offset CornerFor(Rect rect, CornerId id)
     {
         return id switch
         {
@@ -424,7 +424,7 @@ public class MaterialRectArcTween : RectTween
     {
         Rect begin = Begin!.Value;
         Rect end = End!.Value;
-        Point centersVector = end.Center - begin.Center;
+        Offset centersVector = end.Center - begin.Center;
         Diagonal diagonal = AllDiagonals[0];
         double? maxKey = null;
         foreach (Diagonal candidate in AllDiagonals)
@@ -446,11 +446,11 @@ public class MaterialRectArcTween : RectTween
         _dirty = false;
     }
 
-    private static double DiagonalSupport(Rect begin, Point centersVector, Diagonal diagonal)
+    private static double DiagonalSupport(Rect begin, Offset centersVector, Diagonal diagonal)
     {
-        Point delta = CornerFor(begin, diagonal.EndId) - CornerFor(begin, diagonal.BeginId);
+        Offset delta = CornerFor(begin, diagonal.EndId) - CornerFor(begin, diagonal.BeginId);
         double length = ArcGeometry.Distance(delta);
-        return (centersVector.X * delta.X / length) + (centersVector.Y * delta.Y / length);
+        return (centersVector.Dx * delta.Dx / length) + (centersVector.Dy * delta.Dy / length);
     }
 }
 
@@ -532,10 +532,10 @@ public class MaterialRectCenterArcTween : RectTween
             return end;
         }
 
-        Point center = _centerArc.Lerp(t);
+        Offset center = _centerArc.Lerp(t);
         double width = (begin.Width * (1.0 - t)) + (end.Width * t);
         double height = (begin.Height * (1.0 - t)) + (end.Height * t);
-        return new Rect(center.X - (width / 2.0), center.Y - (height / 2.0), width, height);
+        return DartGeometry.RectFromLTWH(center.Dx - (width / 2.0), center.Dy - (height / 2.0), width, height);
     }
 
     public override string ToString()
@@ -553,14 +553,14 @@ public class MaterialRectCenterArcTween : RectTween
 /// <summary>Dart's `Rect.fromPoints`, which normalizes the two corners.</summary>
 internal static class ArcGeometry
 {
-    public static double Distance(Point delta) => Math.Sqrt((delta.X * delta.X) + (delta.Y * delta.Y));
+    public static double Distance(Offset delta) => Math.Sqrt((delta.Dx * delta.Dx) + (delta.Dy * delta.Dy));
 
-    public static Rect RectFromPoints(Point a, Point b)
+    public static Rect RectFromPoints(Offset a, Offset b)
     {
-        return new Rect(
-            Math.Min(a.X, b.X),
-            Math.Min(a.Y, b.Y),
-            Math.Abs(a.X - b.X),
-            Math.Abs(a.Y - b.Y));
+        return DartGeometry.RectFromLTWH(
+            Math.Min(a.Dx, b.Dx),
+            Math.Min(a.Dy, b.Dy),
+            Math.Abs(a.Dx - b.Dx),
+            Math.Abs(a.Dy - b.Dy));
     }
 }

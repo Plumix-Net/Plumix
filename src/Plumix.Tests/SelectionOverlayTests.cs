@@ -85,7 +85,7 @@ public sealed class SelectionOverlayTests : IDisposable
 
         // A collapsed end handle stays suppressed while the start handle is the one being dragged,
         // so exactly one handle is still built.
-        handle.OnSelectionHandleDragStart!(TouchDragStart(new Point(4, 4)));
+        handle.OnSelectionHandleDragStart!(TouchDragStart(new Offset(4, 4)));
         overlay.MarkNeedsBuild();
         fixture.Pump();
 
@@ -163,13 +163,13 @@ public sealed class SelectionOverlayTests : IDisposable
         fixture.Pump();
         SelectionHandleOverlay startHandle = fixture.FindWidgets<SelectionHandleOverlay>()[0];
 
-        startHandle.OnSelectionHandleDragStart!(TouchDragStart(new Point(30, 40)));
+        startHandle.OnSelectionHandleDragStart!(TouchDragStart(new Offset(30, 40)));
         Assert.True(overlay.IsDraggingStartHandle);
-        Assert.Equal(new Point(30, 40), Assert.Single(starts).GlobalPosition);
+        Assert.Equal(new Offset(30, 40), Assert.Single(starts).GlobalPosition);
 
-        startHandle.OnSelectionHandleDragUpdate!(TouchDragUpdate(new Point(20, 20)));
+        startHandle.OnSelectionHandleDragUpdate!(TouchDragUpdate(new Offset(20, 20)));
         Assert.Single(starts);
-        Assert.Equal(new Point(20, 20), Assert.Single(updates).GlobalPosition);
+        Assert.Equal(new Offset(20, 20), Assert.Single(updates).GlobalPosition);
 
         startHandle.OnSelectionHandleDragEnd!(new DragEndDetails(0.0));
         Assert.False(overlay.IsDraggingStartHandle);
@@ -193,17 +193,17 @@ public sealed class SelectionOverlayTests : IDisposable
         SelectionHandleOverlay startHandle = fixture.FindWidgets<SelectionHandleOverlay>()[0];
 
         startHandle.OnSelectionHandleDragStart!(new DragStartDetails(
-            GlobalPosition: new Point(5, 5),
+            GlobalPosition: new Offset(5, 5),
             Kind: PointerDeviceKind.Mouse));
         startHandle.OnSelectionHandleDragUpdate!(new DragUpdateDetails(
-            GlobalPosition: new Point(9, 9),
-            LocalPosition: new Point(1, 1),
-            Delta: new Point(4, 4),
+            GlobalPosition: new Offset(9, 9),
+            LocalPosition: new Offset(1, 1),
+            Delta: new Offset(4, 4),
             PrimaryDelta: 0.0,
             Kind: PointerDeviceKind.Mouse));
 
         Assert.Equal(2, starts.Count);
-        Assert.Equal(new Point(9, 9), starts[1].GlobalPosition);
+        Assert.Equal(new Offset(9, 9), starts[1].GlobalPosition);
 
         overlay.Dispose();
     }
@@ -223,7 +223,7 @@ public sealed class SelectionOverlayTests : IDisposable
         SelectionHandleOverlay startHandle = fixture.FindWidgets<SelectionHandleOverlay>()[0];
         overlay.HideHandles();
 
-        startHandle.OnSelectionHandleDragStart!(TouchDragStart(new Point(1, 1)));
+        startHandle.OnSelectionHandleDragStart!(TouchDragStart(new Offset(1, 1)));
 
         Assert.Equal(0, starts);
         Assert.False(overlay.IsDraggingStartHandle);
@@ -253,12 +253,12 @@ public sealed class SelectionOverlayTests : IDisposable
 
             overlay.ShowHandles();
             fixture.Pump();
-            overlay.SelectionEndpoints = [new TextSelectionPoint(new Point(1, 2), null)];
+            overlay.SelectionEndpoints = [new TextSelectionPoint(new Offset(1, 2), null)];
             Assert.Empty(channel.Log);
 
             SelectionHandleOverlay startHandle = fixture.FindWidgets<SelectionHandleOverlay>()[0];
-            startHandle.OnSelectionHandleDragStart!(TouchDragStart(new Point(3, 3)));
-            overlay.SelectionEndpoints = [new TextSelectionPoint(new Point(7, 9), null)];
+            startHandle.OnSelectionHandleDragStart!(TouchDragStart(new Offset(3, 3)));
+            overlay.SelectionEndpoints = [new TextSelectionPoint(new Offset(7, 9), null)];
 
             if (platform == TargetPlatform.Android)
             {
@@ -272,7 +272,7 @@ public sealed class SelectionOverlayTests : IDisposable
             }
 
             // Equal endpoints neither rebuild nor click.
-            overlay.SelectionEndpoints = [new TextSelectionPoint(new Point(7, 9), null)];
+            overlay.SelectionEndpoints = [new TextSelectionPoint(new Offset(7, 9), null)];
             Assert.True(channel.Log.Count <= 1);
 
             overlay.Dispose();
@@ -300,10 +300,10 @@ public sealed class SelectionOverlayTests : IDisposable
                 shouldDisplayHandlesInMagnifier: false));
 
         var initial = new MagnifierInfo(
-            GlobalGesturePosition: new Point(4, 5),
-            CaretRect: new Rect(0, 0, 2, 12),
-            FieldBounds: new Rect(0, 0, 100, 20),
-            CurrentLineBoundaries: new Rect(0, 0, 100, 12));
+            GlobalGesturePosition: new Offset(4, 5),
+            CaretRect: DartGeometry.RectFromLTWH(0, 0, 2, 12),
+            FieldBounds: DartGeometry.RectFromLTWH(0, 0, 100, 20),
+            CurrentLineBoundaries: DartGeometry.RectFromLTWH(0, 0, 100, 12));
         overlay.ShowMagnifier(initial);
         fixture.Pump();
 
@@ -311,7 +311,7 @@ public sealed class SelectionOverlayTests : IDisposable
         Assert.True(overlay.MagnifierExists);
         Assert.Equal(initial, capturedInfo!.Value);
 
-        var moved = initial with { GlobalGesturePosition = new Point(40, 5) };
+        var moved = initial with { GlobalGesturePosition = new Offset(40, 5) };
         overlay.UpdateMagnifier(moved);
         Assert.Equal(moved, capturedInfo.Value);
 
@@ -380,7 +380,7 @@ public sealed class SelectionOverlayTests : IDisposable
 
         // 22x22 handle grown to the 48x48 minimum interactive size leaves 13px of padding per side,
         // and the follower backs that padding out of the anchor.
-        Assert.Equal(new Vector(-TestControls.HandleAnchor.X - 13, -TestControls.HandleAnchor.Y - 13),
+        Assert.Equal(new Offset(-TestControls.HandleAnchor.Dx - 13, -TestControls.HandleAnchor.Dy - 13),
             follower.Offset);
         Assert.False(follower.ShowWhenUnlinked);
 
@@ -533,12 +533,12 @@ public sealed class SelectionOverlayTests : IDisposable
         notifier.Dispose();
     }
 
-    private static DragStartDetails TouchDragStart(Point position)
+    private static DragStartDetails TouchDragStart(Offset position)
     {
         return new DragStartDetails(GlobalPosition: position, Kind: PointerDeviceKind.Touch);
     }
 
-    private static DragUpdateDetails TouchDragUpdate(Point position)
+    private static DragUpdateDetails TouchDragUpdate(Offset position)
     {
         return new DragUpdateDetails(
             GlobalPosition: position,
@@ -573,11 +573,11 @@ public sealed class SelectionOverlayTests : IDisposable
     /// <summary>A stand-in for the platform controls that exposes what the overlay asked it to build.</summary>
     private sealed class TestControls : TextSelectionControls
     {
-        public static Point HandleAnchor { get; } = new(3, 5);
+        public static Offset HandleAnchor { get; } = new(3, 5);
 
         public override Size GetHandleSize(double textLineHeight) => new(22, 22);
 
-        public override Point GetHandleAnchor(TextSelectionHandleType type, double textLineHeight)
+        public override Offset GetHandleAnchor(TextSelectionHandleType type, double textLineHeight)
         {
             return HandleAnchor;
         }
@@ -596,11 +596,11 @@ public sealed class SelectionOverlayTests : IDisposable
             BuildContext context,
             Rect globalEditableRegion,
             double textLineHeight,
-            Point selectionMidpoint,
+            Offset selectionMidpoint,
             IReadOnlyList<TextSelectionPoint> endpoints,
             ITextSelectionDelegate @delegate,
             IValueListenable<ClipboardStatus>? clipboardStatus,
-            Point? lastSecondaryTapDownPosition)
+            Offset? lastSecondaryTapDownPosition)
         {
             return new SizedBox(width: 60, height: 20);
         }
@@ -727,7 +727,7 @@ public sealed class SelectionOverlayTests : IDisposable
                 lineHeightAtStart: lineHeightAtStart,
                 endHandleType: endHandleType,
                 lineHeightAtEnd: lineHeightAtEnd,
-                selectionEndpoints: [new TextSelectionPoint(new Point(0, 14), null)],
+                selectionEndpoints: [new TextSelectionPoint(new Offset(0, 14), null)],
                 selectionControls: selectionControls ?? new TestControls(),
                 selectionDelegate: new FakeSelectionDelegate(new TextEditingValue("hello")),
                 clipboardStatus: new ClipboardStatusNotifier(),

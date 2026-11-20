@@ -165,7 +165,7 @@ internal sealed class RenderCupertinoSliverRefresh : RenderSliverSingleBoxAdapte
             LayoutExtent: Math.Max(layoutExtent - constraints.ScrollOffset, 0.0));
     }
 
-    public override void Paint(PaintingContext context, Point offset)
+    public override void Paint(PaintingContext context, Offset offset)
     {
         if (Child == null)
         {

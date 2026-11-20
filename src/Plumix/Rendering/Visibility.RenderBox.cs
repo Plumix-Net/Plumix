@@ -60,7 +60,7 @@ internal sealed class RenderVisibility : RenderProxyBox
         }
     }
 
-    public override void Paint(PaintingContext ctx, Point offset)
+    public override void Paint(PaintingContext ctx, Offset offset)
     {
         if (_visible)
         {

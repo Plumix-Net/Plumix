@@ -21,7 +21,7 @@ public sealed class CircularNotchedRectangle : NotchedShape
 
     public override Geometry GetOuterPath(Rect host, Rect? guest)
     {
-        if (!guest.HasValue || !host.Intersects(guest.Value))
+        if (!guest.HasValue || !host.Overlaps(guest.Value))
         {
             return new RectangleGeometry(host);
         }
@@ -32,7 +32,7 @@ public sealed class CircularNotchedRectangle : NotchedShape
         const double s1 = 15.0;
         const double s2 = 1.0;
         double a = -radius - s2;
-        double b = (Inverted ? host.Bottom : host.Top) - guestRect.Center.Y;
+        double b = (Inverted ? host.Bottom : host.Top) - guestRect.Center.Dy;
         double radicand = b * b * radius * radius * (a * a + b * b - radius * radius);
         double n2 = Math.Sqrt(Math.Max(0, radicand));
         double denominator = a * a + b * b;
@@ -47,17 +47,17 @@ public sealed class CircularNotchedRectangle : NotchedShape
         double p2yB = Math.Sqrt(Math.Max(0, radius * radius - p2xB * p2xB)) * invertMultiplier;
         double compare = b < 0 ? -1.0 : 1.0;
         var p2 = compare * p2yA > compare * p2yB
-            ? new Point(p2xA, p2yA)
-            : new Point(p2xB, p2yB);
+            ? new Offset(p2xA, p2yA)
+            : new Offset(p2xB, p2yB);
         var center = guestRect.Center;
         var points = new[]
         {
-            new Point(a - s1, b) + center,
-            new Point(a, b) + center,
+            new Offset(a - s1, b) + center,
+            new Offset(a, b) + center,
             p2 + center,
-            new Point(-p2.X, p2.Y) + center,
-            new Point(-a, b) + center,
-            new Point(-(a - s1), b) + center,
+            new Offset(-p2.Dx, p2.Dy) + center,
+            new Offset(-a, b) + center,
+            new Offset(-(a - s1), b) + center,
         };
 
         var geometry = new StreamGeometry();

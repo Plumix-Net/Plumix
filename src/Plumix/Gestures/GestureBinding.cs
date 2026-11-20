@@ -34,7 +34,7 @@ public sealed class GestureBinding : IHitTestTarget
     public static GestureBinding Instance { get; } = new();
 
     private readonly Dictionary<int, HitTestResult> _hitTests = [];
-    private readonly Dictionary<int, Point> _lastPositions = [];
+    private readonly Dictionary<int, Offset> _lastPositions = [];
     private readonly Dictionary<int, (RenderView? Root, int ViewId)> _pointerRoots = [];
     private readonly LinkedList<QueuedPointerEvent> _pendingPointerEvents = [];
     private readonly Dictionary<int, PointerEventResampler> _resamplers = [];
@@ -405,7 +405,7 @@ public sealed class GestureBinding : IHitTestTarget
         GestureArena.FlushDefaultResolutions();
     }
 
-    private HitTestResult HitTestInView(RenderView root, Point position)
+    private HitTestResult HitTestInView(RenderView root, Offset position)
     {
         var result = new HitTestResult();
         root.HitTest(result, position);
@@ -505,7 +505,7 @@ public sealed class GestureBinding : IHitTestTarget
     /// <c>GestureBinding._handlePointerEventImmediately</c> and the native hit-test query do it;
     /// the renderer binding fills the result and adds this binding as the final entry.
     /// </remarks>
-    public HitTestResult HitTestInView(Point position, int viewId)
+    public HitTestResult HitTestInView(Offset position, int viewId)
     {
         var result = new HitTestResult();
         RendererBinding.Instance.HitTestInView(result, position, viewId);
@@ -566,7 +566,7 @@ public sealed class GestureBinding : IHitTestTarget
             return @event;
         }
 
-        Point delta = _lastPositions.TryGetValue(pointer, out Point previousPosition)
+        Offset delta = _lastPositions.TryGetValue(pointer, out Offset previousPosition)
             ? @event.Position - previousPosition
             : default;
         _lastPositions[pointer] = @event.Position;

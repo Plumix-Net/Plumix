@@ -27,12 +27,12 @@ public sealed class ShiftedBoxTests
 
         padding.Layout(BoxConstraints.Unbounded);
         Assert.Equal(new Size(22, 10), padding.Size);
-        Assert.Equal(new Point(4, 0), ((BoxParentData)child.parentData!).offset);
+        Assert.Equal(new Offset(4, 0), ((BoxParentData)child.parentData!).offset);
 
         padding.TextDirection = TextDirection.Rtl;
         padding.Layout(BoxConstraints.Unbounded);
         Assert.Equal(new Size(22, 10), padding.Size);
-        Assert.Equal(new Point(8, 0), ((BoxParentData)child.parentData!).offset);
+        Assert.Equal(new Offset(8, 0), ((BoxParentData)child.parentData!).offset);
 
         // The widget-facing property keeps the unresolved geometry, as Dart's `padding` field does.
         Assert.Equal(EdgeInsetsGeometry.DirectionalOnly(start: 4, end: 8), padding.Padding);
@@ -66,11 +66,11 @@ public sealed class ShiftedBoxTests
             textDirection: TextDirection.Ltr);
 
         box.Layout(BoxConstraints.Tight(new Size(100, 50)));
-        Assert.Equal(new Point(80, 0), ((BoxParentData)child.parentData!).offset);
+        Assert.Equal(new Offset(80, 0), ((BoxParentData)child.parentData!).offset);
 
         box.TextDirection = TextDirection.Rtl;
         box.Layout(BoxConstraints.Tight(new Size(100, 50)));
-        Assert.Equal(new Point(0, 0), ((BoxParentData)child.parentData!).offset);
+        Assert.Equal(new Offset(0, 0), ((BoxParentData)child.parentData!).offset);
     }
 
     [Fact]
@@ -123,7 +123,7 @@ public sealed class ShiftedBoxTests
             textDirection: TextDirection.Rtl);
 
         box.Layout(BoxConstraints.Tight(new Size(100, 60)));
-        Assert.Equal(new Point(60, 40), ((BoxParentData)child.parentData!).offset);
+        Assert.Equal(new Offset(60, 40), ((BoxParentData)child.parentData!).offset);
     }
 
     [Fact]
@@ -156,7 +156,7 @@ public sealed class ShiftedBoxTests
         Assert.Equal(new Size(20, 10), box.Size);
         Assert.Equal(20.0, box.GetMinIntrinsicWidth(double.PositiveInfinity));
         Assert.Equal(10.0, box.GetMaxIntrinsicHeight(double.PositiveInfinity));
-        Assert.Equal(new Point(-60, -30), ((BoxParentData)child.parentData!).offset);
+        Assert.Equal(new Offset(-60, -30), ((BoxParentData)child.parentData!).offset);
     }
 
     [Fact]
@@ -241,7 +241,7 @@ public sealed class ShiftedBoxTests
             Size = Constraints.Constrain(_size);
         }
 
-        public override void Paint(PaintingContext ctx, Point offset)
+        public override void Paint(PaintingContext ctx, Offset offset)
         {
         }
     }
@@ -290,7 +290,7 @@ public sealed class ShiftedBoxTests
             return _size.Height;
         }
 
-        public override void Paint(PaintingContext ctx, Point offset)
+        public override void Paint(PaintingContext ctx, Offset offset)
         {
         }
     }

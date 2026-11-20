@@ -268,30 +268,30 @@ internal sealed class CyclicDiagnostic(string name) : DiagnosticableTree
 /// <summary>Dart's <c>RenderRepaintBoundaryWithDebugPaint</c>.</summary>
 internal sealed class RenderRepaintBoundaryWithDebugPaint : RenderRepaintBoundary
 {
-    protected internal override void DebugPaintSize(PaintingContext context, Point offset)
+    protected internal override void DebugPaintSize(PaintingContext context, Offset offset)
     {
         base.DebugPaintSize(context, offset);
         var paint = new Paint { Style = PaintingStyle.Stroke, StrokeWidth = 1.0, Color = new Color(0xFFFF0000) };
         var first = new OffsetLayer(offset);
-        first.Append(PictureLayerWithCircle(new Point(0, 0), paint));
+        first.Append(PictureLayerWithCircle(new Offset(0, 0), paint));
         context.AddLayer(first);
-        context.Canvas.DrawLine(offset, new Point(offset.X + Size.Width, offset.Y + Size.Height), paint);
+        context.Canvas.DrawLine(offset, new Offset(offset.Dx + Size.Width, offset.Dy + Size.Height), paint);
         var second = new OffsetLayer(offset);
-        second.Append(PictureLayerWithCircle(new Point(20.0, 20.0), paint));
+        second.Append(PictureLayerWithCircle(new Offset(20.0, 20.0), paint));
         context.AddLayer(second);
         var bluePaint = new Paint { Style = PaintingStyle.Stroke, StrokeWidth = 1.0, Color = new Color(0xFF0000FF) };
         context.Canvas.DrawLine(
             offset,
-            new Point(offset.X + Size.Width * 0.5, offset.Y + Size.Height * 0.5),
+            new Offset(offset.Dx + Size.Width * 0.5, offset.Dy + Size.Height * 0.5),
             bluePaint);
     }
 
-    private PictureLayer PictureLayerWithCircle(Point center, Paint paint)
+    private PictureLayer PictureLayerWithCircle(Offset center, Paint paint)
     {
         var recorder = new PictureRecorder();
         var canvas = new Plumix.UI.Canvas(recorder);
         canvas.DrawCircle(center, 20.0, paint);
-        return new PictureLayer(new Rect(Size)) { Picture = recorder.EndRecording() };
+        return new PictureLayer(DartGeometry.RectFromSize(Size)) { Picture = recorder.EndRecording() };
     }
 }
 

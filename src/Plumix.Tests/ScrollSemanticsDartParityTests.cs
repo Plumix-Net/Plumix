@@ -64,7 +64,7 @@ public sealed class ScrollSemanticsDartParityTests
         int scrollableId = semantics.NodesWith(actions: ScrollUp | ScrollToOffset).Single().Id;
 
         Assert.Equal(0.0, controller.Offset);
-        semanticsOwner.PerformAction(scrollableId, SemanticsActions.ScrollToOffset, new Point(123.0, 456.0));
+        semanticsOwner.PerformAction(scrollableId, SemanticsActions.ScrollToOffset, new Offset(123.0, 456.0));
         Assert.Equal(456.0, controller.Offset);
         controller.Dispose();
     }
@@ -89,7 +89,7 @@ public sealed class ScrollSemanticsDartParityTests
             .Id;
 
         Assert.Equal(0.0, controller.Offset);
-        semanticsOwner.PerformAction(scrollableId, SemanticsActions.ScrollToOffset, new Point(123.0, 456.0));
+        semanticsOwner.PerformAction(scrollableId, SemanticsActions.ScrollToOffset, new Offset(123.0, 456.0));
         Assert.Equal(123.0, controller.Offset);
         controller.Dispose();
     }
@@ -223,7 +223,7 @@ public sealed class ScrollSemanticsDartParityTests
             semantics.Owner.PerformAction(firstContainerId, SemanticsActions.ShowOnScreen);
             tester.Pump();
             tester.Pump(TimeSpan.FromSeconds(5));
-            Assert.Equal(kExpandedAppBarHeight, tester.GetTopLeft(tester.ElementOfWidget(containers[0])).Y);
+            Assert.Equal(kExpandedAppBarHeight, tester.GetTopLeft(tester.ElementOfWidget(containers[0])).Dy);
         }
         finally
         {
@@ -282,7 +282,7 @@ public sealed class ScrollSemanticsDartParityTests
             tester.Pump(TimeSpan.FromSeconds(5));
             Assert.Equal(
                 MaterialConstants.ToolbarHeight,
-                tester.GetTopLeft(tester.ElementOfWidget(children[0])).Y);
+                tester.GetTopLeft(tester.ElementOfWidget(children[0])).Dy);
         }
         finally
         {
@@ -378,7 +378,7 @@ public sealed class ScrollSemanticsDartParityTests
         TestGesture gesture = tester.StartGesture(
             tester.GetCenter(tester.ElementOfType<ListView>()),
             PointerDeviceKind.Touch);
-        gesture.MoveBy(new Vector(0.0, -40.0));
+        gesture.MoveBy(new Offset(0.0, -40.0));
         tester.Pump();
 
         semantics.ExpectIncludesNodeWith(label: "Item 1");
@@ -1009,12 +1009,12 @@ public sealed class ScrollSemanticsDartParityTests
     private static PipelineOwner ViewPipelineOwner(FrameworkDartTester tester) => tester.RenderView.Owner!;
 
     private static void FlingUp(FrameworkDartTester tester, int repetitions = 1) =>
-        Fling(tester, new Vector(0.0, -200.0), repetitions);
+        Fling(tester, new Offset(0.0, -200.0), repetitions);
 
     private static void FlingDown(FrameworkDartTester tester, int repetitions = 1) =>
-        Fling(tester, new Vector(0.0, 200.0), repetitions);
+        Fling(tester, new Offset(0.0, 200.0), repetitions);
 
-    private static void Fling(FrameworkDartTester tester, Vector offset, int repetitions)
+    private static void Fling(FrameworkDartTester tester, Offset offset, int repetitions)
     {
         while (repetitions-- > 0)
         {

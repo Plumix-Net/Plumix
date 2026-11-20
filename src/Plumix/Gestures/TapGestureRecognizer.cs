@@ -10,8 +10,8 @@ namespace Plumix.Gestures;
 public sealed class TapDownDetails : Diagnosticable, IPositionedGestureDetails
 {
     public TapDownDetails(
-        Point globalPosition = default,
-        Point? localPosition = null,
+        Offset globalPosition = default,
+        Offset? localPosition = null,
         PointerDeviceKind? kind = null)
     {
         GlobalPosition = globalPosition;
@@ -19,9 +19,9 @@ public sealed class TapDownDetails : Diagnosticable, IPositionedGestureDetails
         Kind = kind;
     }
 
-    public Point GlobalPosition { get; }
+    public Offset GlobalPosition { get; }
 
-    public Point LocalPosition { get; }
+    public Offset LocalPosition { get; }
 
     /// <summary>The kind of the device that initiated the event.</summary>
     public PointerDeviceKind? Kind { get; }
@@ -40,17 +40,17 @@ public sealed class TapUpDetails : Diagnosticable, IPositionedGestureDetails
 {
     public TapUpDetails(
         PointerDeviceKind kind,
-        Point globalPosition = default,
-        Point? localPosition = null)
+        Offset globalPosition = default,
+        Offset? localPosition = null)
     {
         Kind = kind;
         GlobalPosition = globalPosition;
         LocalPosition = localPosition ?? globalPosition;
     }
 
-    public Point GlobalPosition { get; }
+    public Offset GlobalPosition { get; }
 
-    public Point LocalPosition { get; }
+    public Offset LocalPosition { get; }
 
     /// <summary>The kind of the device that initiated the event. Required and non-null in Dart.</summary>
     public PointerDeviceKind Kind { get; }
@@ -69,9 +69,9 @@ public sealed class TapMoveDetails
 {
     public TapMoveDetails(
         PointerDeviceKind kind,
-        Point globalPosition = default,
-        Point delta = default,
-        Point? localPosition = null)
+        Offset globalPosition = default,
+        Offset delta = default,
+        Offset? localPosition = null)
     {
         Kind = kind;
         GlobalPosition = globalPosition;
@@ -79,9 +79,9 @@ public sealed class TapMoveDetails
         LocalPosition = localPosition ?? globalPosition;
     }
 
-    public Point GlobalPosition { get; }
+    public Offset GlobalPosition { get; }
 
-    public Point LocalPosition { get; }
+    public Offset LocalPosition { get; }
 
     /// <summary>The kind of the device that initiated the event.</summary>
     public PointerDeviceKind Kind { get; }
@@ -90,7 +90,7 @@ public sealed class TapMoveDetails
     /// The amount the pointer has moved in the coordinate space of the event receiver since the
     /// previous update.
     /// </summary>
-    public Point Delta { get; }
+    public Offset Delta { get; }
 }
 
 /// <summary>

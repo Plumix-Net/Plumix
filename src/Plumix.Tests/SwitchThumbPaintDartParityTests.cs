@@ -73,7 +73,7 @@ public sealed class SwitchThumbPaintDartParityTests : IDisposable
                 .RRect(color: new Color(0x1f000000))
                 .RRect(color: Plumix.Material.Colors.Grey.Shade50));
 
-        tester.Drag(Find.ByType<Switch>(), new Vector(-30.0, 0.0));
+        tester.Drag(Find.ByType<Switch>(), new Offset(-30.0, 0.0));
         tester.Pump();
 
         PaintAssert.Paints(

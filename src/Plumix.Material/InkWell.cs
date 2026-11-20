@@ -88,7 +88,7 @@ public abstract class InteractiveInkFeature : InkFeature
         Canvas canvas,
         Matrix4 transform,
         Paint paint,
-        Point center,
+        Offset center,
         double radius,
         TextDirection? textDirection = null,
         ShapeBorder? customBorder = null,
@@ -96,7 +96,7 @@ public abstract class InteractiveInkFeature : InkFeature
         RectCallback? clipCallback = null)
     {
         BorderRadius resolvedBorderRadius = borderRadius ?? BorderRadius.Zero;
-        Point? originOffset = MatrixUtils.GetAsTranslation(transform);
+        Offset? originOffset = MatrixUtils.GetAsTranslation(transform);
         canvas.Save();
         if (originOffset is null)
         {
@@ -104,7 +104,7 @@ public abstract class InteractiveInkFeature : InkFeature
         }
         else
         {
-            canvas.Translate(originOffset.Value.X, originOffset.Value.Y);
+            canvas.Translate(originOffset.Value.Dx, originOffset.Value.Dy);
         }
 
         if (clipCallback is not null)
@@ -138,7 +138,7 @@ public abstract class InteractiveInkFeatureFactory
     public abstract InteractiveInkFeature Create(
         MaterialInkController controller,
         RenderBox referenceBox,
-        Point position,
+        Offset position,
         Color color,
         TextDirection textDirection,
         bool containedInkWell = false,
@@ -900,11 +900,11 @@ internal sealed class InkResponseState
         }
     }
 
-    private InteractiveInkFeature CreateSplash(Point globalPosition)
+    private InteractiveInkFeature CreateSplash(Offset globalPosition)
     {
         MaterialInkController inkController = Material.Of(Context);
         var referenceBox = (RenderBox)Context.FindRenderObject()!;
-        Point position = referenceBox.GlobalToLocal(globalPosition);
+        Offset position = referenceBox.GlobalToLocal(globalPosition);
         Color color = Widget.OverlayColor?.Resolve(StatesController.Value)
                       ?? Widget.SplashColor
                       ?? Theme.Of(Context).SplashColor;
@@ -1018,7 +1018,7 @@ internal sealed class InkResponseState
     {
         DebugAssertions.Assert(details is not null || context is not null);
 
-        Point globalPosition;
+        Offset globalPosition;
         if (context is not null)
         {
             var referenceBox = (RenderBox)context.FindRenderObject()!;

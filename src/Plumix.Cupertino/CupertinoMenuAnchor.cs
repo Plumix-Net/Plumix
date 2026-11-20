@@ -68,10 +68,10 @@ internal static class CupertinoMenuMetrics
     }
 
     /// <summary>Dart parity source: <c>_computeSquaredDistanceToRect</c>.</summary>
-    internal static double ComputeSquaredDistanceToRect(Point point, Rect rect)
+    internal static double ComputeSquaredDistanceToRect(Offset point, Rect rect)
     {
-        double dx = point.X - Math.Clamp(point.X, rect.Left, rect.Right);
-        double dy = point.Y - Math.Clamp(point.Y, rect.Top, rect.Bottom);
+        double dx = point.Dx - Math.Clamp(point.Dx, rect.Left, rect.Right);
+        double dy = point.Dy - Math.Clamp(point.Dy, rect.Top, rect.Bottom);
         return (dx * dx) + (dy * dy);
     }
 
@@ -600,7 +600,7 @@ public sealed class CupertinoMenuAnchorState : State<CupertinoMenuAnchor>
         MenuController.Open();
     }
 
-    private void HandleOpenRequested(Vector? position, Action showOverlay)
+    private void HandleOpenRequested(Offset? position, Action showOverlay)
     {
         showOverlay();
         if (_animationStatus is AnimationStatus.Completed or AnimationStatus.Forward)

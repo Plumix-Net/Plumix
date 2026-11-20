@@ -176,7 +176,7 @@ public sealed class VisibilityTests
         Assert.Equal(new Size(40, 30), visibility.Size);
         Assert.False(visibility.Visible);
         Assert.False(visibility.MaintainSemantics);
-        Assert.False(visibility.HitTest(new BoxHitTestResult(), new Point(10, 10)));
+        Assert.False(visibility.HitTest(new BoxHitTestResult(), new Offset(10, 10)));
 
         int semanticsVisits = 0;
         visibility.VisitChildrenForSemantics(_ => semanticsVisits++);
@@ -190,7 +190,7 @@ public sealed class VisibilityTests
         visibility = RequireRenderObject<RenderVisibility>(root.ChildElement);
         visibility.Layout(new BoxConstraints(MaxWidth: 100, MaxHeight: 100));
         Assert.True(visibility.MaintainSemantics);
-        Assert.True(visibility.HitTest(new BoxHitTestResult(), new Point(10, 10)));
+        Assert.True(visibility.HitTest(new BoxHitTestResult(), new Offset(10, 10)));
         visibility.VisitChildrenForSemantics(_ => semanticsVisits++);
         Assert.Equal(1, semanticsVisits);
         root.UnmountRoot();
@@ -297,7 +297,7 @@ public sealed class VisibilityTests
         offstage.Offstage = false;
         pipeline.FlushLayout(new Size(100, 60));
         Assert.Equal(child.Geometry, offstage.Geometry);
-        offstage.Paint(new PaintingContext(new OffsetLayer()), new Point(0, 0));
+        offstage.Paint(new PaintingContext(new OffsetLayer()), new Offset(0, 0));
         Assert.Equal(1, box.PaintCount);
         Assert.True(offstage.HitTest(new SliverHitTestResult(), mainAxisPosition: 10, crossAxisPosition: 10));
         offstage.VisitChildrenForSemantics(_ => semanticsVisits++);
@@ -500,9 +500,9 @@ public sealed class VisibilityTests
             Size = Constraints.Constrain(_size);
         }
 
-        protected override bool HitTestSelf(Point position) => true;
+        protected override bool HitTestSelf(Offset position) => true;
 
-        public override void Paint(PaintingContext ctx, Point offset)
+        public override void Paint(PaintingContext ctx, Offset offset)
         {
             PaintCount++;
         }

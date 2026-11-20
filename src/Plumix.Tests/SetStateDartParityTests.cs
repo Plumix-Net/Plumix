@@ -23,7 +23,7 @@ public sealed class SetStateDartParityTests
     {
         using var tester = new FrameworkDartTester();
         tester.PumpWidget(new Outside());
-        Point location = tester.GetCenter(tester.ElementsWithText("INSIDE").Single());
+        Offset location = tester.GetCenter(tester.ElementsWithText("INSIDE").Single());
         TestGesture gesture = tester.StartGesture(location, PointerDeviceKind.Touch);
         tester.Pump();
         gesture.Up();

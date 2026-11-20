@@ -95,10 +95,10 @@ public sealed class MaterialExpansionPanelTests : IDisposable
                 ])));
 
         harness.Pump(new Size(360, 160));
-        Tap(harness.RenderView, new Point(80, 24), pointer: 811);
+        Tap(harness.RenderView, new Offset(80, 24), pointer: 811);
         Assert.Equal(0, calls);
 
-        Tap(harness.RenderView, new Point(286, 24), pointer: 812);
+        Tap(harness.RenderView, new Offset(286, 24), pointer: 812);
         Assert.Equal(1, calls);
     }
 
@@ -285,7 +285,7 @@ public sealed class MaterialExpansionPanelTests : IDisposable
             child: new SizedBox(width: 320, child: child));
     }
 
-    private static void Tap(RenderView renderView, Point position, int pointer)
+    private static void Tap(RenderView renderView, Offset position, int pointer)
     {
         var timestamp = DateTime.UtcNow;
         GestureBinding.Instance.HandlePointerEvent(
@@ -310,24 +310,24 @@ public sealed class MaterialExpansionPanelTests : IDisposable
     {
         var paragraph = FindParagraphByText(renderView, text)
                         ?? throw new InvalidOperationException($"Paragraph '{text}' was not found.");
-        Point offset = GlobalOffsetOf(paragraph);
+        Offset offset = GlobalOffsetOf(paragraph);
         Tap(
             renderView,
-            new Point(offset.X + (paragraph.Size.Width / 2.0), offset.Y + (paragraph.Size.Height / 2.0)),
+            new Offset(offset.Dx + (paragraph.Size.Width / 2.0), offset.Dy + (paragraph.Size.Height / 2.0)),
             pointer);
     }
 
-    private static Point GlobalOffsetOf(RenderObject renderObject)
+    private static Offset GlobalOffsetOf(RenderObject renderObject)
     {
-        var result = new Point();
+        var result = new Offset();
         RenderObject? current = renderObject;
         while (current is not null)
         {
             if (current.parentData is BoxParentData parentData)
             {
-                result = new Point(
-                    result.X + parentData.offset.X,
-                    result.Y + parentData.offset.Y);
+                result = new Offset(
+                    result.Dx + parentData.offset.Dx,
+                    result.Dy + parentData.offset.Dy);
             }
 
             current = current.Parent;

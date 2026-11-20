@@ -104,8 +104,8 @@ public abstract class PointerEvent : Diagnosticable
         int pointer = 0,
         PointerDeviceKind kind = PointerDeviceKind.Touch,
         int? device = null,
-        Point position = default,
-        Point delta = default,
+        Offset position = default,
+        Offset delta = default,
         PointerButtons buttons = PointerButtons.None,
         bool down = false,
         bool obscured = false,
@@ -193,25 +193,25 @@ public abstract class PointerEvent : Diagnosticable
     public int Device { get; }
 
     /// <summary>Coordinate of the position of the pointer, in logical pixels in the global space.</summary>
-    public Point Position { get; }
+    public Offset Position { get; }
 
     /// <summary>
     /// <see cref="Position"/> transformed into the event receiver's local coordinate system
     /// according to <see cref="Transform"/>; equal to <see cref="Position"/> when untransformed.
     /// </summary>
-    public Point LocalPosition { get; private set; }
+    public Offset LocalPosition { get; private set; }
 
     /// <summary>
     /// Distance in logical pixels that the pointer moved since the last move or hover event. Always
     /// zero for down, up and cancel events.
     /// </summary>
-    public Point Delta { get; private set; }
+    public Offset Delta { get; private set; }
 
     /// <summary>
     /// <see cref="Delta"/> transformed into the event receiver's local coordinate system according
     /// to <see cref="Transform"/>; equal to <see cref="Delta"/> when untransformed.
     /// </summary>
-    public Point LocalDelta { get; private set; }
+    public Offset LocalDelta { get; private set; }
 
     /// <summary>Bit field using the <see cref="PointerButtons"/> constants. Dart's <c>buttons</c>.</summary>
     public PointerButtons Buttons { get; }
@@ -369,8 +369,8 @@ public abstract class PointerEvent : Diagnosticable
         int? pointer = null,
         PointerDeviceKind? kind = null,
         int? device = null,
-        Point? position = null,
-        Point? delta = null,
+        Offset? position = null,
+        Offset? delta = null,
         PointerButtons? buttons = null,
         bool? obscured = null,
         double? pressure = null,
@@ -402,7 +402,7 @@ public abstract class PointerEvent : Diagnosticable
     /// described by <paramref name="transform"/>, with the perspective divide. Dart's static
     /// <c>PointerEvent.transformPosition</c>.
     /// </summary>
-    public static Point TransformPosition(Matrix4? transform, Point position)
+    public static Offset TransformPosition(Matrix4? transform, Offset position)
     {
         if (transform is null)
         {
@@ -418,19 +418,19 @@ public abstract class PointerEvent : Diagnosticable
     /// more precise than applying the matrix to the delta. Dart's static
     /// <c>PointerEvent.transformDeltaViaPositions</c>.
     /// </summary>
-    public static Point TransformDeltaViaPositions(
-        Point untransformedEndPosition,
-        Point untransformedDelta,
+    public static Offset TransformDeltaViaPositions(
+        Offset untransformedEndPosition,
+        Offset untransformedDelta,
         Matrix4? transform,
-        Point? transformedEndPosition = null)
+        Offset? transformedEndPosition = null)
     {
         if (transform is null)
         {
             return untransformedDelta;
         }
 
-        Point end = transformedEndPosition ?? TransformPosition(transform, untransformedEndPosition);
-        Point start = TransformPosition(transform, untransformedEndPosition - untransformedDelta);
+        Offset end = transformedEndPosition ?? TransformPosition(transform, untransformedEndPosition);
+        Offset start = TransformPosition(transform, untransformedEndPosition - untransformedDelta);
         return end - start;
     }
 
@@ -464,18 +464,18 @@ public abstract class PointerEvent : Diagnosticable
     public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
     {
         base.DebugFillProperties(properties);
-        properties.Add(new DiagnosticsProperty<Point>("position", Position));
-        properties.Add(new DiagnosticsProperty<Point>(
+        properties.Add(new DiagnosticsProperty<Offset>("position", Position));
+        properties.Add(new DiagnosticsProperty<Offset>(
             "localPosition",
             LocalPosition,
             defaultValue: Position,
             level: DiagnosticLevel.Debug));
-        properties.Add(new DiagnosticsProperty<Point>(
+        properties.Add(new DiagnosticsProperty<Offset>(
             "delta",
             Delta,
-            defaultValue: default(Point),
+            defaultValue: default(Offset),
             level: DiagnosticLevel.Debug));
-        properties.Add(new DiagnosticsProperty<Point>(
+        properties.Add(new DiagnosticsProperty<Offset>(
             "localDelta",
             LocalDelta,
             defaultValue: Delta,
@@ -565,7 +565,7 @@ public abstract class PointerEvent : Diagnosticable
     /// report logical events without deltas, so <see cref="Plumix.Gestures.GestureBinding"/> computes
     /// them the way Flutter's engine does before the event reaches <c>PointerEventConverter</c>.
     /// </summary>
-    internal PointerEvent WithDelta(Point delta)
+    internal PointerEvent WithDelta(Offset delta)
     {
         if (Transform is not null)
         {
@@ -612,7 +612,7 @@ public sealed class PointerAddedEvent : PointerEvent
     public PointerAddedEvent(
         int pointer = 0,
         PointerDeviceKind kind = PointerDeviceKind.Touch,
-        Point position = default,
+        Offset position = default,
         DateTime timestampUtc = default,
         int viewId = 0,
         int? device = null,
@@ -655,8 +655,8 @@ public sealed class PointerAddedEvent : PointerEvent
         int? pointer = null,
         PointerDeviceKind? kind = null,
         int? device = null,
-        Point? position = null,
-        Point? delta = null,
+        Offset? position = null,
+        Offset? delta = null,
         PointerButtons? buttons = null,
         bool? obscured = null,
         double? pressure = null,
@@ -702,7 +702,7 @@ public sealed class PointerRemovedEvent : PointerEvent
     public PointerRemovedEvent(
         int pointer = 0,
         PointerDeviceKind kind = PointerDeviceKind.Touch,
-        Point position = default,
+        Offset position = default,
         DateTime timestampUtc = default,
         int viewId = 0,
         int? device = null,
@@ -743,8 +743,8 @@ public sealed class PointerRemovedEvent : PointerEvent
         int? pointer = null,
         PointerDeviceKind? kind = null,
         int? device = null,
-        Point? position = null,
-        Point? delta = null,
+        Offset? position = null,
+        Offset? delta = null,
         PointerButtons? buttons = null,
         bool? obscured = null,
         double? pressure = null,
@@ -787,12 +787,12 @@ public sealed class PointerHoverEvent : PointerEvent
     public PointerHoverEvent(
         int pointer = 0,
         PointerDeviceKind kind = PointerDeviceKind.Touch,
-        Point position = default,
+        Offset position = default,
         PointerButtons buttons = PointerButtons.None,
         DateTime timestampUtc = default,
         int viewId = 0,
         int? device = null,
-        Point delta = default,
+        Offset delta = default,
         bool obscured = false,
         double pressureMin = 1.0,
         double pressureMax = 1.0,
@@ -843,8 +843,8 @@ public sealed class PointerHoverEvent : PointerEvent
         int? pointer = null,
         PointerDeviceKind? kind = null,
         int? device = null,
-        Point? position = null,
-        Point? delta = null,
+        Offset? position = null,
+        Offset? delta = null,
         PointerButtons? buttons = null,
         bool? obscured = null,
         double? pressure = null,
@@ -897,13 +897,13 @@ public sealed class PointerEnterEvent : PointerEvent
     public PointerEnterEvent(
         int pointer = 0,
         PointerDeviceKind kind = PointerDeviceKind.Touch,
-        Point position = default,
+        Offset position = default,
         PointerButtons buttons = PointerButtons.None,
         DateTime timestampUtc = default,
         bool down = false,
         int viewId = 0,
         int? device = null,
-        Point delta = default,
+        Offset delta = default,
         bool obscured = false,
         double pressureMin = 1.0,
         double pressureMax = 1.0,
@@ -990,8 +990,8 @@ public sealed class PointerEnterEvent : PointerEvent
         int? pointer = null,
         PointerDeviceKind? kind = null,
         int? device = null,
-        Point? position = null,
-        Point? delta = null,
+        Offset? position = null,
+        Offset? delta = null,
         PointerButtons? buttons = null,
         bool? obscured = null,
         double? pressure = null,
@@ -1043,13 +1043,13 @@ public sealed class PointerExitEvent : PointerEvent
     public PointerExitEvent(
         int pointer = 0,
         PointerDeviceKind kind = PointerDeviceKind.Touch,
-        Point position = default,
+        Offset position = default,
         PointerButtons buttons = PointerButtons.None,
         DateTime timestampUtc = default,
         bool down = false,
         int viewId = 0,
         int? device = null,
-        Point delta = default,
+        Offset delta = default,
         bool obscured = false,
         double pressureMin = 1.0,
         double pressureMax = 1.0,
@@ -1135,8 +1135,8 @@ public sealed class PointerExitEvent : PointerEvent
         int? pointer = null,
         PointerDeviceKind? kind = null,
         int? device = null,
-        Point? position = null,
-        Point? delta = null,
+        Offset? position = null,
+        Offset? delta = null,
         PointerButtons? buttons = null,
         bool? obscured = null,
         double? pressure = null,
@@ -1188,7 +1188,7 @@ public sealed class PointerDownEvent : PointerEvent
     public PointerDownEvent(
         int pointer = 0,
         PointerDeviceKind kind = PointerDeviceKind.Touch,
-        Point position = default,
+        Offset position = default,
         PointerButtons buttons = PointerButtons.Primary,
         DateTime timestampUtc = default,
         int viewId = 0,
@@ -1243,8 +1243,8 @@ public sealed class PointerDownEvent : PointerEvent
         int? pointer = null,
         PointerDeviceKind? kind = null,
         int? device = null,
-        Point? position = null,
-        Point? delta = null,
+        Offset? position = null,
+        Offset? delta = null,
         PointerButtons? buttons = null,
         bool? obscured = null,
         double? pressure = null,
@@ -1295,12 +1295,12 @@ public sealed class PointerMoveEvent : PointerEvent
     public PointerMoveEvent(
         int pointer = 0,
         PointerDeviceKind kind = PointerDeviceKind.Touch,
-        Point position = default,
+        Offset position = default,
         PointerButtons buttons = PointerButtons.Primary,
         DateTime timestampUtc = default,
         int viewId = 0,
         int? device = null,
-        Point delta = default,
+        Offset delta = default,
         bool obscured = false,
         double pressure = 1.0,
         double pressureMin = 1.0,
@@ -1356,8 +1356,8 @@ public sealed class PointerMoveEvent : PointerEvent
         int? pointer = null,
         PointerDeviceKind? kind = null,
         int? device = null,
-        Point? position = null,
-        Point? delta = null,
+        Offset? position = null,
+        Offset? delta = null,
         PointerButtons? buttons = null,
         bool? obscured = null,
         double? pressure = null,
@@ -1410,7 +1410,7 @@ public sealed class PointerUpEvent : PointerEvent
     public PointerUpEvent(
         int pointer = 0,
         PointerDeviceKind kind = PointerDeviceKind.Touch,
-        Point position = default,
+        Offset position = default,
         PointerButtons buttons = PointerButtons.None,
         DateTime timestampUtc = default,
         int viewId = 0,
@@ -1462,8 +1462,8 @@ public sealed class PointerUpEvent : PointerEvent
         int? pointer = null,
         PointerDeviceKind? kind = null,
         int? device = null,
-        Point? position = null,
-        Point? delta = null,
+        Offset? position = null,
+        Offset? delta = null,
         PointerButtons? buttons = null,
         bool? obscured = null,
         double? pressure = null,
@@ -1518,9 +1518,9 @@ public sealed class PointerUpEvent : PointerEvent
         int? pointer = null,
         PointerDeviceKind? kind = null,
         int? device = null,
-        Point? position = null,
-        Point? localPosition = null,
-        Point? delta = null,
+        Offset? position = null,
+        Offset? localPosition = null,
+        Offset? delta = null,
         PointerButtons? buttons = null,
         bool? obscured = null,
         double? pressure = null,
@@ -1577,7 +1577,7 @@ public abstract class PointerSignalEvent : PointerEvent
         int pointer = 0,
         PointerDeviceKind kind = PointerDeviceKind.Mouse,
         int? device = null,
-        Point position = default,
+        Offset position = default,
         int embedderId = 0)
         : base(
             viewId: viewId,
@@ -1611,8 +1611,8 @@ public sealed class PointerScrollEvent : PointerSignalEvent
 
     public PointerScrollEvent(
         PointerDeviceKind kind = PointerDeviceKind.Mouse,
-        Point position = default,
-        Point scrollDelta = default,
+        Offset position = default,
+        Offset scrollDelta = default,
         DateTime timestampUtc = default,
         RespondPointerEventCallback? onRespond = null,
         int viewId = 0,
@@ -1631,7 +1631,7 @@ public sealed class PointerScrollEvent : PointerSignalEvent
     }
 
     /// <summary>The amount to scroll, in logical pixels.</summary>
-    public Point ScrollDelta { get; }
+    public Offset ScrollDelta { get; }
 
     /// <inheritdoc />
     public override void Respond(bool allowPlatformDefault)
@@ -1646,8 +1646,8 @@ public sealed class PointerScrollEvent : PointerSignalEvent
         int? pointer = null,
         PointerDeviceKind? kind = null,
         int? device = null,
-        Point? position = null,
-        Point? delta = null,
+        Offset? position = null,
+        Offset? delta = null,
         PointerButtons? buttons = null,
         bool? obscured = null,
         double? pressure = null,
@@ -1685,7 +1685,7 @@ public sealed class PointerScrollEvent : PointerSignalEvent
         DateTime? timestampUtc = null,
         PointerDeviceKind? kind = null,
         int? device = null,
-        Point? position = null,
+        Offset? position = null,
         int? embedderId = null,
         RespondPointerEventCallback? onRespond = null)
     {
@@ -1704,7 +1704,7 @@ public sealed class PointerScrollEvent : PointerSignalEvent
     public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
     {
         base.DebugFillProperties(properties);
-        properties.Add(new DiagnosticsProperty<Point>("scrollDelta", ScrollDelta));
+        properties.Add(new DiagnosticsProperty<Offset>("scrollDelta", ScrollDelta));
     }
 }
 
@@ -1716,7 +1716,7 @@ public sealed class PointerScrollInertiaCancelEvent : PointerSignalEvent
 {
     public PointerScrollInertiaCancelEvent(
         PointerDeviceKind kind = PointerDeviceKind.Mouse,
-        Point position = default,
+        Offset position = default,
         DateTime timestampUtc = default,
         int viewId = 0,
         int? device = null,
@@ -1738,8 +1738,8 @@ public sealed class PointerScrollInertiaCancelEvent : PointerSignalEvent
         int? pointer = null,
         PointerDeviceKind? kind = null,
         int? device = null,
-        Point? position = null,
-        Point? delta = null,
+        Offset? position = null,
+        Offset? delta = null,
         PointerButtons? buttons = null,
         bool? obscured = null,
         double? pressure = null,
@@ -1775,7 +1775,7 @@ public sealed class PointerScaleEvent : PointerSignalEvent
 {
     public PointerScaleEvent(
         PointerDeviceKind kind = PointerDeviceKind.Mouse,
-        Point position = default,
+        Offset position = default,
         DateTime timestampUtc = default,
         int viewId = 0,
         int? device = null,
@@ -1802,8 +1802,8 @@ public sealed class PointerScaleEvent : PointerSignalEvent
         int? pointer = null,
         PointerDeviceKind? kind = null,
         int? device = null,
-        Point? position = null,
-        Point? delta = null,
+        Offset? position = null,
+        Offset? delta = null,
         PointerButtons? buttons = null,
         bool? obscured = null,
         double? pressure = null,
@@ -1830,7 +1830,7 @@ public sealed class PointerScaleEvent : PointerSignalEvent
         DateTime? timestampUtc = null,
         PointerDeviceKind? kind = null,
         int? device = null,
-        Point? position = null,
+        Offset? position = null,
         int? embedderId = null,
         double? scale = null)
     {
@@ -1859,7 +1859,7 @@ public sealed class PointerPanZoomStartEvent : PointerEvent
 {
     public PointerPanZoomStartEvent(
         int pointer = 0,
-        Point position = default,
+        Offset position = default,
         DateTime timestampUtc = default,
         int viewId = 0,
         int? device = null,
@@ -1888,8 +1888,8 @@ public sealed class PointerPanZoomStartEvent : PointerEvent
         int? pointer = null,
         PointerDeviceKind? kind = null,
         int? device = null,
-        Point? position = null,
-        Point? delta = null,
+        Offset? position = null,
+        Offset? delta = null,
         PointerButtons? buttons = null,
         bool? obscured = null,
         double? pressure = null,
@@ -1925,10 +1925,10 @@ public sealed class PointerPanZoomUpdateEvent : PointerEvent
 {
     public PointerPanZoomUpdateEvent(
         int pointer = 0,
-        Point position = default,
+        Offset position = default,
         DateTime timestampUtc = default,
-        Point pan = default,
-        Point panDelta = default,
+        Offset pan = default,
+        Offset panDelta = default,
         double scale = 1.0,
         double rotation = 0.0,
         int viewId = 0,
@@ -1954,16 +1954,16 @@ public sealed class PointerPanZoomUpdateEvent : PointerEvent
     }
 
     /// <summary>The total pan offset of the pan/zoom since it started.</summary>
-    public Point Pan { get; }
+    public Offset Pan { get; }
 
     /// <summary><see cref="Pan"/> transformed into the event receiver's local coordinate system.</summary>
-    public Point LocalPan { get; private set; }
+    public Offset LocalPan { get; private set; }
 
     /// <summary>The amount the pan offset changed since the last event.</summary>
-    public Point PanDelta { get; }
+    public Offset PanDelta { get; }
 
     /// <summary><see cref="PanDelta"/> transformed into the event receiver's local coordinate system.</summary>
-    public Point LocalPanDelta { get; private set; }
+    public Offset LocalPanDelta { get; private set; }
 
     /// <summary>The scale (zoom factor) of the pan/zoom; 1.0 means no zoom.</summary>
     public double Scale { get; }
@@ -1978,8 +1978,8 @@ public sealed class PointerPanZoomUpdateEvent : PointerEvent
         int? pointer = null,
         PointerDeviceKind? kind = null,
         int? device = null,
-        Point? position = null,
-        Point? delta = null,
+        Offset? position = null,
+        Offset? delta = null,
         PointerButtons? buttons = null,
         bool? obscured = null,
         double? pressure = null,
@@ -2022,12 +2022,12 @@ public sealed class PointerPanZoomUpdateEvent : PointerEvent
         DateTime? timestampUtc = null,
         PointerDeviceKind? kind = null,
         int? device = null,
-        Point? position = null,
+        Offset? position = null,
         int? embedderId = null,
-        Point? pan = null,
-        Point? localPan = null,
-        Point? panDelta = null,
-        Point? localPanDelta = null,
+        Offset? pan = null,
+        Offset? localPan = null,
+        Offset? panDelta = null,
+        Offset? localPanDelta = null,
         double? scale = null,
         double? rotation = null)
     {
@@ -2071,7 +2071,7 @@ public sealed class PointerPanZoomEndEvent : PointerEvent
 {
     public PointerPanZoomEndEvent(
         int pointer = 0,
-        Point position = default,
+        Offset position = default,
         DateTime timestampUtc = default,
         int viewId = 0,
         int? device = null,
@@ -2100,8 +2100,8 @@ public sealed class PointerPanZoomEndEvent : PointerEvent
         int? pointer = null,
         PointerDeviceKind? kind = null,
         int? device = null,
-        Point? position = null,
-        Point? delta = null,
+        Offset? position = null,
+        Offset? delta = null,
         PointerButtons? buttons = null,
         bool? obscured = null,
         double? pressure = null,
@@ -2138,7 +2138,7 @@ public sealed class PointerCancelEvent : PointerEvent
     public PointerCancelEvent(
         int pointer = 0,
         PointerDeviceKind kind = PointerDeviceKind.Touch,
-        Point position = default,
+        Offset position = default,
         PointerButtons buttons = PointerButtons.None,
         DateTime timestampUtc = default,
         int viewId = 0,
@@ -2189,8 +2189,8 @@ public sealed class PointerCancelEvent : PointerEvent
         int? pointer = null,
         PointerDeviceKind? kind = null,
         int? device = null,
-        Point? position = null,
-        Point? delta = null,
+        Offset? position = null,
+        Offset? delta = null,
         PointerButtons? buttons = null,
         bool? obscured = null,
         double? pressure = null,

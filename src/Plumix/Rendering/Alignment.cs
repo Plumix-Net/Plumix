@@ -50,43 +50,36 @@ public readonly record struct Alignment(double X, double Y)
         return new Alignment(from.X + ((to.X - from.X) * t), from.Y + ((to.Y - from.Y) * t));
     }
 
-    public Point AlongOffset(Vector other)
+    public Offset AlongOffset(Offset other)
     {
-        double centerX = other.X / 2.0;
-        double centerY = other.Y / 2.0;
-        return new Point(centerX + (X * centerX), centerY + (Y * centerY));
+        double centerX = other.Dx / 2.0;
+        double centerY = other.Dy / 2.0;
+        return new Offset(centerX + (X * centerX), centerY + (Y * centerY));
     }
 
-    public Point AlongOffset(Point other)
-    {
-        double centerX = other.X / 2.0;
-        double centerY = other.Y / 2.0;
-        return new Point(centerX + (X * centerX), centerY + (Y * centerY));
-    }
-
-    public Point AlongOffset(Size parentSize, Size childSize)
+    public Offset AlongOffset(Size parentSize, Size childSize)
     {
         double freeWidth = parentSize.Width - childSize.Width;
         double freeHeight = parentSize.Height - childSize.Height;
-        return new Point(
+        return new Offset(
             freeWidth * (X + 1) / 2.0,
             freeHeight * (Y + 1) / 2.0);
     }
 
     /// <summary>The offset that is this fraction within a rect of the given size.</summary>
-    public Point AlongSize(Size other)
+    public Offset AlongSize(Size other)
     {
         double centerX = other.Width / 2.0;
         double centerY = other.Height / 2.0;
-        return new Point(centerX + (X * centerX), centerY + (Y * centerY));
+        return new Offset(centerX + (X * centerX), centerY + (Y * centerY));
     }
 
     /// <summary>The point that is this fraction within the given rect.</summary>
-    public Point WithinRect(Rect rect)
+    public Offset WithinRect(Rect rect)
     {
         double halfWidth = rect.Width / 2.0;
         double halfHeight = rect.Height / 2.0;
-        return new Point(
+        return new Offset(
             rect.Left + halfWidth + (X * halfWidth),
             rect.Top + halfHeight + (Y * halfHeight));
     }
@@ -113,7 +106,7 @@ public readonly record struct Alignment(double X, double Y)
     {
         double halfWidthDelta = (rect.Width - size.Width) / 2.0;
         double halfHeightDelta = (rect.Height - size.Height) / 2.0;
-        return new Rect(
+        return DartGeometry.RectFromLTWH(
             rect.Left + halfWidthDelta + (X * halfWidthDelta),
             rect.Top + halfHeightDelta + (Y * halfHeightDelta),
             size.Width,

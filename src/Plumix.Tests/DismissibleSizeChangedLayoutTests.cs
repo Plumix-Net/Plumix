@@ -104,12 +104,12 @@ public sealed class DismissibleSizeChangedLayoutTests : IDisposable
             harness.RenderView,
             pointer: 11,
             start,
-            [new Point(35, 20), new Point(65, 20), new Point(85, 20)]);
+            [new Offset(35, 20), new Offset(65, 20), new Offset(85, 20)]);
         harness.Pump(viewport);
 
         var translation = Assert.Single(FindDescendants<RenderFractionalTranslation>(harness.RenderView));
-        Assert.Equal(0.75, translation.Translation.X, precision: 6);
-        Assert.Equal(0.0, translation.Translation.Y);
+        Assert.Equal(0.75, translation.Translation.Dx, precision: 6);
+        Assert.Equal(0.0, translation.Translation.Dy);
         Assert.Contains(updates, details =>
             details.Direction == DismissDirection.StartToEnd
             && details.Reached
@@ -122,7 +122,7 @@ public sealed class DismissibleSizeChangedLayoutTests : IDisposable
             new PointerUpEvent(
                 pointer: 11,
                 kind: PointerDeviceKind.Mouse,
-                position: new Point(85, 20),
+                position: new Offset(85, 20),
                 buttons: PointerButtons.None,
                 timestampUtc: start.AddMilliseconds(600)));
 
@@ -166,17 +166,17 @@ public sealed class DismissibleSizeChangedLayoutTests : IDisposable
             harness.RenderView,
             pointer: 21,
             start,
-            [new Point(35, 20), new Point(65, 20), new Point(85, 20)]);
+            [new Offset(35, 20), new Offset(65, 20), new Offset(85, 20)]);
         harness.Pump(viewport);
         var translation = Assert.Single(FindDescendants<RenderFractionalTranslation>(harness.RenderView));
-        Assert.Equal(0.0, translation.Translation.X);
+        Assert.Equal(0.0, translation.Translation.Dx);
 
         GestureBinding.Instance.HandlePointerEvent(
             harness.RenderView,
             new PointerCancelEvent(
                 pointer: 21,
                 kind: PointerDeviceKind.Mouse,
-                position: new Point(85, 20),
+                position: new Offset(85, 20),
                 buttons: PointerButtons.None,
                 timestampUtc: start.AddMilliseconds(500)));
 
@@ -185,17 +185,17 @@ public sealed class DismissibleSizeChangedLayoutTests : IDisposable
             harness.RenderView,
             pointer: 22,
             secondStart,
-            [new Point(-15, 20), new Point(-45, 20), new Point(-65, 20)]);
+            [new Offset(-15, 20), new Offset(-45, 20), new Offset(-65, 20)]);
         harness.Pump(viewport);
         translation = Assert.Single(FindDescendants<RenderFractionalTranslation>(harness.RenderView));
-        Assert.True(translation.Translation.X < -0.4);
+        Assert.True(translation.Translation.Dx < -0.4);
 
         GestureBinding.Instance.HandlePointerEvent(
             harness.RenderView,
             new PointerUpEvent(
                 pointer: 22,
                 kind: PointerDeviceKind.Mouse,
-                position: new Point(-65, 20),
+                position: new Offset(-65, 20),
                 buttons: PointerButtons.None,
                 timestampUtc: secondStart.AddMilliseconds(600)));
         PumpAnimation(harness, viewport, 0.2);
@@ -203,7 +203,7 @@ public sealed class DismissibleSizeChangedLayoutTests : IDisposable
         PumpAnimation(harness, viewport, 0.2);
 
         translation = Assert.Single(FindDescendants<RenderFractionalTranslation>(harness.RenderView));
-        Assert.Equal(0.0, translation.Translation.X, precision: 6);
+        Assert.Equal(0.0, translation.Translation.Dx, precision: 6);
         Assert.Equal(1, confirmations);
         Assert.Equal(0, dismissals);
     }
@@ -244,7 +244,7 @@ public sealed class DismissibleSizeChangedLayoutTests : IDisposable
     [Fact]
     public void DragRecognizer_ReportsAxisProjectedFlingVelocityAndHonorsDragStartBehavior()
     {
-        Point? startPosition = null;
+        Offset? startPosition = null;
         Velocity? velocity = null;
         double? primaryVelocity = null;
         var recognizer = new HorizontalDragGestureRecognizer
@@ -270,41 +270,41 @@ public sealed class DismissibleSizeChangedLayoutTests : IDisposable
             GestureBinding.Instance.HandlePointerEvent(renderView, new PointerDownEvent(
                 31,
                 PointerDeviceKind.Mouse,
-                new Point(10, 10),
+                new Offset(10, 10),
                 PointerButtons.Primary,
                 start));
             GestureBinding.Instance.HandlePointerEvent(renderView, new PointerMoveEvent(
                 31,
                 PointerDeviceKind.Mouse,
-                new Point(19, 11.5),
+                new Offset(19, 11.5),
                 PointerButtons.Primary,
                 start.AddMilliseconds(30)));
             GestureBinding.Instance.HandlePointerEvent(renderView, new PointerMoveEvent(
                 31,
                 PointerDeviceKind.Mouse,
-                new Point(28, 13),
+                new Offset(28, 13),
                 PointerButtons.Primary,
                 start.AddMilliseconds(60)));
             GestureBinding.Instance.HandlePointerEvent(renderView, new PointerMoveEvent(
                 31,
                 PointerDeviceKind.Mouse,
-                new Point(37, 14.5),
+                new Offset(37, 14.5),
                 PointerButtons.Primary,
                 start.AddMilliseconds(90)));
             GestureBinding.Instance.HandlePointerEvent(renderView, new PointerUpEvent(
                 31,
                 PointerDeviceKind.Mouse,
-                new Point(70, 20),
+                new Offset(70, 20),
                 PointerButtons.None,
                 start.AddMilliseconds(100)));
 
-            Assert.Equal(new Point(10, 10), startPosition);
+            Assert.Equal(new Offset(10, 10), startPosition);
             Assert.NotNull(velocity);
 
             // considerFling projects onto the recognizer's axis: the cross-axis component of the
             // estimate (50 px/s here) is dropped, and the primary velocity is the axis component.
-            Assert.Equal(300.0, velocity.Value.PixelsPerSecond.X, precision: 3);
-            Assert.Equal(0.0, velocity.Value.PixelsPerSecond.Y, precision: 3);
+            Assert.Equal(300.0, velocity.Value.PixelsPerSecond.Dx, precision: 3);
+            Assert.Equal(0.0, velocity.Value.PixelsPerSecond.Dy, precision: 3);
             Assert.Equal(300.0, primaryVelocity!.Value, precision: 3);
         }
         finally
@@ -348,12 +348,12 @@ public sealed class DismissibleSizeChangedLayoutTests : IDisposable
         RenderView renderView,
         int pointer,
         DateTime start,
-        IReadOnlyList<Point> positions)
+        IReadOnlyList<Offset> positions)
     {
         GestureBinding.Instance.HandlePointerEvent(renderView, new PointerDownEvent(
             pointer,
             PointerDeviceKind.Mouse,
-            new Point(10, 20),
+            new Offset(10, 20),
             PointerButtons.Primary,
             start));
         for (int index = 0; index < positions.Count; index++)
@@ -435,9 +435,9 @@ public sealed class DismissibleSizeChangedLayoutTests : IDisposable
             Size = Constraints.Constrain(desiredSize);
         }
 
-        protected override bool HitTestSelf(Point position) => true;
+        protected override bool HitTestSelf(Offset position) => true;
 
-        public override void Paint(PaintingContext context, Point offset)
+        public override void Paint(PaintingContext context, Offset offset)
         {
         }
     }

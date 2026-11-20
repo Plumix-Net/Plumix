@@ -58,8 +58,8 @@ public sealed class CupertinoTextSelectionToolbarTests : IDisposable
     {
         using var harness = CreateHarness(
             new CupertinoTextSelectionToolbar(
-                anchorAbove: new Point(100000.0, 0.0),
-                anchorBelow: new Point(-100000.0, 500.0),
+                anchorAbove: new Offset(100000.0, 0.0),
+                anchorBelow: new Offset(-100000.0, 500.0),
                 children: [Child(), Child(), Child()]),
             padding: EdgeInsets.FromLTRB(0.0, 12.0, 0.0, 0.0));
         harness.Pump(new Size(800.0, 600.0));
@@ -68,12 +68,12 @@ public sealed class CupertinoTextSelectionToolbarTests : IDisposable
         var toolbarDelegate = Assert.IsType<TextSelectionToolbarLayoutDelegate>(layout.LayoutDelegate);
 
         // paddingAbove = padding.top + kToolbarScreenPadding.
-        Assert.Equal(500.0 + 8.0 - 20.0, toolbarDelegate.AnchorBelow.Y);
-        Assert.Equal(0.0 - 8.0 - 20.0, toolbarDelegate.AnchorAbove.Y);
+        Assert.Equal(500.0 + 8.0 - 20.0, toolbarDelegate.AnchorBelow.Dy);
+        Assert.Equal(0.0 - 8.0 - 20.0, toolbarDelegate.AnchorAbove.Dy);
 
         // Both anchors clamp into [_kArrowScreenPadding, width - _kArrowScreenPadding].
-        Assert.Equal(800.0 - 26.0, toolbarDelegate.AnchorAbove.X);
-        Assert.Equal(26.0, toolbarDelegate.AnchorBelow.X);
+        Assert.Equal(800.0 - 26.0, toolbarDelegate.AnchorAbove.Dx);
+        Assert.Equal(26.0, toolbarDelegate.AnchorBelow.Dx);
     }
 
     [Fact]
@@ -82,28 +82,28 @@ public sealed class CupertinoTextSelectionToolbarTests : IDisposable
         // Barely doesn't fit above.
         using (var below = CreateHarness(
                    new CupertinoTextSelectionToolbar(
-                       anchorAbove: new Point(100.0, 70.0),
-                       anchorBelow: new Point(100.0, 500.0),
+                       anchorAbove: new Offset(100.0, 70.0),
+                       anchorBelow: new Offset(100.0, 500.0),
                        children: [Child(50.0, 50.0), Child(50.0, 50.0), Child(50.0, 50.0)]),
                    padding: EdgeInsets.FromLTRB(0.0, 12.0, 0.0, 0.0)))
         {
             below.Pump(new Size(800.0, 600.0));
             RenderBox shape = Assert.Single(
                 FindDescendants<RenderCupertinoTextSelectionToolbarShape>(below.RenderView));
-            Assert.Equal(500.0 + 8.0, shape.LocalToGlobal(new Point(0.0, 0.0)).Y);
+            Assert.Equal(500.0 + 8.0, shape.LocalToGlobal(new Offset(0.0, 0.0)).Dy);
         }
 
         // Fits above: the toolbar bottom lands one arrow height below the anchor.
         using var above = CreateHarness(
             new CupertinoTextSelectionToolbar(
-                anchorAbove: new Point(100.0, 80.0),
-                anchorBelow: new Point(100.0, 500.0),
+                anchorAbove: new Offset(100.0, 80.0),
+                anchorBelow: new Offset(100.0, 500.0),
                 children: [Child(50.0, 50.0), Child(50.0, 50.0), Child(50.0, 50.0)]),
             padding: EdgeInsets.FromLTRB(0.0, 12.0, 0.0, 0.0));
         above.Pump(new Size(800.0, 600.0));
         RenderBox aboveShape = Assert.Single(
             FindDescendants<RenderCupertinoTextSelectionToolbarShape>(above.RenderView));
-        Assert.Equal(80.0 - 50.0 + 7.0 - 8.0, aboveShape.LocalToGlobal(new Point(0.0, 0.0)).Y);
+        Assert.Equal(80.0 - 50.0 + 7.0 - 8.0, aboveShape.LocalToGlobal(new Offset(0.0, 0.0)).Dy);
     }
 
     [Fact]
@@ -111,8 +111,8 @@ public sealed class CupertinoTextSelectionToolbarTests : IDisposable
     {
         using var harness = CreateHarness(
             new CupertinoTextSelectionToolbar(
-                anchorAbove: new Point(400.0, 100.0),
-                anchorBelow: new Point(400.0, 140.0),
+                anchorAbove: new Offset(400.0, 100.0),
+                anchorBelow: new Offset(400.0, 140.0),
                 children: Enumerable.Range(0, 15).Select(_ => Child()).ToList()));
         harness.Pump(new Size(800.0, 600.0));
 
@@ -143,8 +143,8 @@ public sealed class CupertinoTextSelectionToolbarTests : IDisposable
     {
         using var harness = CreateHarness(
             new CupertinoTextSelectionToolbar(
-                anchorAbove: new Point(400.0, 100.0),
-                anchorBelow: new Point(400.0, 140.0),
+                anchorAbove: new Offset(400.0, 100.0),
+                anchorBelow: new Offset(400.0, 140.0),
                 children: Enumerable.Range(0, 8).Select(_ => Child()).ToList()));
         harness.Pump(new Size(800.0, 600.0));
 
@@ -171,8 +171,8 @@ public sealed class CupertinoTextSelectionToolbarTests : IDisposable
     {
         using var harness = CreateHarness(
             new CupertinoTextSelectionToolbar(
-                anchorAbove: new Point(400.0, 100.0),
-                anchorBelow: new Point(400.0, 140.0),
+                anchorAbove: new Offset(400.0, 100.0),
+                anchorBelow: new Offset(400.0, 140.0),
                 children: Enumerable.Range(0, 14).Select(_ => Child()).ToList()));
         harness.Pump(new Size(800.0, 600.0));
         Assert.Equal(7, VisibleItemCount(harness));
@@ -229,8 +229,8 @@ public sealed class CupertinoTextSelectionToolbarTests : IDisposable
         Assert.True(items.HasPreviousPage);
 
         // Later pages start after the back button plus a divider.
-        Assert.Equal(new Point(49.0, 0.0), Offset(third));
-        Assert.Equal(new Point(150.0, 0.0), Offset(fourth));
+        Assert.Equal(new Offset(49.0, 0.0), Offset(third));
+        Assert.Equal(new Offset(150.0, 0.0), Offset(fourth));
         Assert.True(ShouldPaint(back));
         Assert.False(ShouldPaint(next));
         Assert.Equal(default, Offset(back));
@@ -273,7 +273,7 @@ public sealed class CupertinoTextSelectionToolbarTests : IDisposable
 
         Assert.True(ShouldPaint(first));
         Assert.False(ShouldPaint(second));
-        Assert.True(items.HitTest(new BoxHitTestResult(), new Point(10.0, 10.0)));
+        Assert.True(items.HitTest(new BoxHitTestResult(), new Offset(10.0, 10.0)));
 
         var semanticsChildren = new List<RenderObject>();
         items.VisitChildrenForSemantics(semanticsChildren.Add);
@@ -298,15 +298,15 @@ public sealed class CupertinoTextSelectionToolbarTests : IDisposable
         CanvasCall divider = Assert.Single(PaintRecording.Record(items), call => call.Method == "drawLine");
         Assert.Equal(0.0, divider.StrokeWidth);
         Assert.Equal(Colors.Red, divider.Color);
-        Assert.Equal(new Point(ChildWidth, 0), divider.Offset);
-        Assert.Equal(new Point(ChildWidth, ChildHeight), divider.EndOffset);
+        Assert.Equal(new Offset(ChildWidth, 0), divider.Offset);
+        Assert.Equal(new Offset(ChildWidth, ChildHeight), divider.EndOffset);
         Assert.Equal((ChildWidth * 2.0) + (1.0 / pixelRatio), items.Size.Width, 8);
 
         var layer = new OffsetLayer();
         var context = new PaintingContext(layer);
         items.Paint(context, default);
         context.DebugStopRecordingIfNeeded();
-        using var image = layer.ToImageSync(new Rect(items.Size), pixelRatio);
+        using var image = layer.ToImageSync(DartGeometry.RectFromSize(items.Size), pixelRatio);
         int y = (int)(ChildHeight * pixelRatio / 2.0);
         double coverage = 0.0;
         for (int x = (int)(ChildWidth * pixelRatio) - 2; x <= (ChildWidth * pixelRatio) + 2; x++)
@@ -355,8 +355,8 @@ public sealed class CupertinoTextSelectionToolbarTests : IDisposable
     public void ToolbarShape_SizesToTheChildMinusOneArrowAndOffsetsWhenAbove()
     {
         var above = new RenderCupertinoTextSelectionToolbarShape(
-            anchorAbove: new Point(50.0, 100.0),
-            anchorBelow: new Point(50.0, 120.0),
+            anchorAbove: new Offset(50.0, 100.0),
+            anchorBelow: new Offset(50.0, 120.0),
             shadowColor: Colors.Black)
         {
             Child = new FixedHitRenderBox(new Size(100.0, 51.0)),
@@ -364,16 +364,16 @@ public sealed class CupertinoTextSelectionToolbarTests : IDisposable
         above.Layout(BoxConstraints.Loose(new Size(200.0, 200.0)));
 
         Assert.Equal(new Size(100.0, 44.0), above.Size);
-        Assert.Equal(new Point(0.0, -7.0), ((BoxParentData)above.Child!.parentData!).offset);
+        Assert.Equal(new Offset(0.0, -7.0), ((BoxParentData)above.Child!.parentData!).offset);
         Assert.True(above.IsRepaintBoundary);
 
         // The arrow band is not hit-testable; the rounded body is.
-        Assert.False(above.HitTest(new BoxHitTestResult(), new Point(50.0, 43.0)));
-        Assert.True(above.HitTest(new BoxHitTestResult(), new Point(50.0, 20.0)));
+        Assert.False(above.HitTest(new BoxHitTestResult(), new Offset(50.0, 43.0)));
+        Assert.True(above.HitTest(new BoxHitTestResult(), new Offset(50.0, 20.0)));
 
         var below = new RenderCupertinoTextSelectionToolbarShape(
-            anchorAbove: new Point(50.0, 10.0),
-            anchorBelow: new Point(50.0, 40.0),
+            anchorAbove: new Offset(50.0, 10.0),
+            anchorBelow: new Offset(50.0, 40.0),
             shadowColor: null)
         {
             Child = new FixedHitRenderBox(new Size(100.0, 51.0)),
@@ -390,8 +390,8 @@ public sealed class CupertinoTextSelectionToolbarTests : IDisposable
         // over the body plus the arrow band, before the clipped child; the light toolbar has a shadow.
         using var harness = CreateHarness(
             new CupertinoTextSelectionToolbar(
-                anchorAbove: new Point(400.0, 100.0),
-                anchorBelow: new Point(400.0, 140.0),
+                anchorAbove: new Offset(400.0, 100.0),
+                anchorBelow: new Offset(400.0, 140.0),
                 children: [Child(), Child()]));
         harness.Pump(new Size(800.0, 600.0));
         var shape = Assert.Single(FindDescendants<RenderCupertinoTextSelectionToolbarShape>(harness.RenderView));
@@ -411,8 +411,8 @@ public sealed class CupertinoTextSelectionToolbarTests : IDisposable
     public void ToolbarShape_EnforcesAMinimumWidthThatFitsTheArrowAndCorners()
     {
         var shape = new RenderCupertinoTextSelectionToolbarShape(
-            anchorAbove: new Point(5.0, 5.0),
-            anchorBelow: new Point(5.0, 40.0),
+            anchorAbove: new Offset(5.0, 5.0),
+            anchorBelow: new Offset(5.0, 40.0),
             shadowColor: null)
         {
             Child = new FixedHitRenderBox(new Size(4.0, 30.0)),
@@ -427,21 +427,21 @@ public sealed class CupertinoTextSelectionToolbarTests : IDisposable
     {
         using var harness = CreateHarness(
             new CupertinoTextSelectionToolbar(
-                anchorAbove: new Point(400.0, 400.0),
-                anchorBelow: new Point(400.0, 590.0),
+                anchorAbove: new Offset(400.0, 400.0),
+                anchorBelow: new Offset(400.0, 590.0),
                 children: [Child(100.0, 50.0)]));
         harness.Pump(new Size(800.0, 600.0));
 
         RenderCupertinoTextSelectionToolbarShape shape = Shape(harness);
         RenderBox child = shape.Child!;
-        Assert.Equal(new Point(0.0, -7.0), ((BoxParentData)child.parentData!).offset);
+        Assert.Equal(new Offset(0.0, -7.0), ((BoxParentData)child.parentData!).offset);
         Plumix.UI.Path path = shape.ClipPath(child, shape.ShapeRRect(child));
-        double arrowTipX = shape.GlobalToLocal(new Point(400.0, 0.0)).X;
+        double arrowTipX = shape.GlobalToLocal(new Offset(400.0, 0.0)).Dx;
 
         // The arrow sits at the bottom, pointing down at the anchor; the top strip is clipped away.
-        Assert.True(path.Contains(new Point(arrowTipX, child.Size.Height - 1.0)));
-        Assert.False(path.Contains(new Point(arrowTipX, 2.0)));
-        Assert.False(path.Contains(new Point(2.0, child.Size.Height - 1.0)));
+        Assert.True(path.Contains(new Offset(arrowTipX, child.Size.Height - 1.0)));
+        Assert.False(path.Contains(new Offset(arrowTipX, 2.0)));
+        Assert.False(path.Contains(new Offset(2.0, child.Size.Height - 1.0)));
     }
 
     [Fact]
@@ -449,29 +449,29 @@ public sealed class CupertinoTextSelectionToolbarTests : IDisposable
     {
         using var harness = CreateHarness(
             new CupertinoTextSelectionToolbar(
-                anchorAbove: new Point(400.0, 20.0),
-                anchorBelow: new Point(400.0, 40.0),
+                anchorAbove: new Offset(400.0, 20.0),
+                anchorBelow: new Offset(400.0, 40.0),
                 children: [Child(100.0, 50.0)]));
         harness.Pump(new Size(800.0, 600.0));
 
         RenderCupertinoTextSelectionToolbarShape shape = Shape(harness);
         RenderBox child = shape.Child!;
         Assert.Equal(default, ((BoxParentData)child.parentData!).offset);
-        Assert.Equal(new Rect(0.0, 7.0, 100.0, 36.0), shape.ShapeRRect(child).Rect);
+        Assert.Equal(DartGeometry.RectFromLTWH(0.0, 7.0, 100.0, 36.0), shape.ShapeRRect(child).Rect);
 
         Plumix.UI.Path path = shape.ClipPath(child, shape.ShapeRRect(child));
-        double arrowTipX = shape.GlobalToLocal(new Point(400.0, 0.0)).X;
-        Assert.True(path.Contains(new Point(arrowTipX, 2.0)));
-        Assert.False(path.Contains(new Point(arrowTipX, child.Size.Height - 1.0)));
-        Assert.False(path.Contains(new Point(2.0, 2.0)));
+        double arrowTipX = shape.GlobalToLocal(new Offset(400.0, 0.0)).Dx;
+        Assert.True(path.Contains(new Offset(arrowTipX, 2.0)));
+        Assert.False(path.Contains(new Offset(arrowTipX, child.Size.Height - 1.0)));
+        Assert.False(path.Contains(new Offset(2.0, 2.0)));
     }
 
     [Fact]
     public void ToolbarShape_DropsTheArrowWhenTheToolbarIsTooNarrow()
     {
         var shape = new RenderCupertinoTextSelectionToolbarShape(
-            anchorAbove: new Point(15.0, 100.0),
-            anchorBelow: new Point(15.0, 140.0),
+            anchorAbove: new Offset(15.0, 100.0),
+            anchorBelow: new Offset(15.0, 140.0),
             shadowColor: null)
         {
             Child = new FixedHitRenderBox(new Size(60.0, 56.0)),
@@ -492,10 +492,10 @@ public sealed class CupertinoTextSelectionToolbarTests : IDisposable
         Assert.False(right.IsLeft);
 
         Assert.Equal(
-            (new Point(7.5, 0.0), new Point(2.5, 5.0), new Point(7.5, 10.0)),
+            (new Offset(7.5, 0.0), new Offset(2.5, 5.0), new Offset(7.5, 10.0)),
             left.ChevronPoints(new Size(10.0, 10.0)));
         Assert.Equal(
-            (new Point(2.5, 0.0), new Point(7.5, 5.0), new Point(2.5, 10.0)),
+            (new Offset(2.5, 0.0), new Offset(7.5, 5.0), new Offset(2.5, 10.0)),
             right.ChevronPoints(new Size(10.0, 10.0)));
 
         Assert.True(left.ShouldRepaint(new LeftCupertinoChevronPainter(Colors.White)));
@@ -509,8 +509,8 @@ public sealed class CupertinoTextSelectionToolbarTests : IDisposable
     {
         using var harness = CreateHarness(
             new CupertinoTextSelectionToolbar(
-                anchorAbove: new Point(400.0, 100.0),
-                anchorBelow: new Point(400.0, 140.0),
+                anchorAbove: new Offset(400.0, 100.0),
+                anchorBelow: new Offset(400.0, 140.0),
                 children: Enumerable.Range(0, 15).Select(_ => Child()).ToList()));
         harness.Pump(new Size(800.0, 600.0));
 
@@ -540,8 +540,8 @@ public sealed class CupertinoTextSelectionToolbarTests : IDisposable
         List<Widget> first = Enumerable.Range(0, 15).Select(_ => Child()).ToList();
         using var harness = CreateHarness(
             new CupertinoTextSelectionToolbar(
-                anchorAbove: new Point(400.0, 100.0),
-                anchorBelow: new Point(400.0, 140.0),
+                anchorAbove: new Offset(400.0, 100.0),
+                anchorBelow: new Offset(400.0, 140.0),
                 children: first));
         harness.Pump(new Size(800.0, 600.0));
 
@@ -550,8 +550,8 @@ public sealed class CupertinoTextSelectionToolbarTests : IDisposable
         Assert.True(Items(harness).HasPreviousPage);
 
         harness.PumpWidget(WrapForHarness(new CupertinoTextSelectionToolbar(
-            anchorAbove: new Point(400.0, 100.0),
-            anchorBelow: new Point(400.0, 140.0),
+            anchorAbove: new Offset(400.0, 100.0),
+            anchorBelow: new Offset(400.0, 140.0),
             children: Enumerable.Range(0, 15).Select(_ => Child()).ToList())));
         harness.Pump(new Size(800.0, 600.0));
 
@@ -563,8 +563,8 @@ public sealed class CupertinoTextSelectionToolbarTests : IDisposable
     {
         using var light = CreateHarness(
             new CupertinoTextSelectionToolbar(
-                anchorAbove: new Point(400.0, 100.0),
-                anchorBelow: new Point(400.0, 140.0),
+                anchorAbove: new Offset(400.0, 100.0),
+                anchorBelow: new Offset(400.0, 140.0),
                 children: [Child()]));
         light.Pump(new Size(800.0, 600.0));
         ColorMatchers.AssertSameColorAs(
@@ -578,8 +578,8 @@ public sealed class CupertinoTextSelectionToolbarTests : IDisposable
 
         using var dark = CreateHarness(
             new CupertinoTextSelectionToolbar(
-                anchorAbove: new Point(400.0, 100.0),
-                anchorBelow: new Point(400.0, 140.0),
+                anchorAbove: new Offset(400.0, 100.0),
+                anchorBelow: new Offset(400.0, 140.0),
                 children: [Child()]),
             brightness: Brightness.Dark);
         dark.Pump(new Size(800.0, 600.0));
@@ -598,8 +598,8 @@ public sealed class CupertinoTextSelectionToolbarTests : IDisposable
         int builderCalls = 0;
         using var harness = CreateHarness(
             new CupertinoTextSelectionToolbar(
-                anchorAbove: new Point(400.0, 100.0),
-                anchorBelow: new Point(400.0, 140.0),
+                anchorAbove: new Offset(400.0, 100.0),
+                anchorBelow: new Offset(400.0, 140.0),
                 children: [Child()],
                 toolbarBuilder: (context, anchorAbove, anchorBelow, child) =>
                 {
@@ -628,7 +628,7 @@ public sealed class CupertinoTextSelectionToolbarTests : IDisposable
         return ((ToolbarItemsParentData)child.parentData!).ShouldPaint;
     }
 
-    private static Point Offset(RenderBox child)
+    private static Offset Offset(RenderBox child)
     {
         return ((ToolbarItemsParentData)child.parentData!).offset;
     }
@@ -752,10 +752,10 @@ public sealed class CupertinoTextSelectionToolbarTests : IDisposable
             Size = Constraints.Constrain(_preferredSize);
         }
 
-        public override void Paint(PaintingContext context, Point offset)
+        public override void Paint(PaintingContext context, Offset offset)
         {
         }
 
-        protected override bool HitTestSelf(Point position) => true;
+        protected override bool HitTestSelf(Offset position) => true;
     }
 }

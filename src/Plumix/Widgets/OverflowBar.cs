@@ -274,7 +274,7 @@ public sealed class RenderOverflowBar : RenderBox,
         for (int index = 0; index < children.Count; index++)
         {
             var child = children[index];
-            ((OverflowBarParentData)child.parentData!).offset = new Point(
+            ((OverflowBarParentData)child.parentData!).offset = new Offset(
                 x,
                 (Size.Height - child.Size.Height) / 2);
             if (!rtl)
@@ -299,7 +299,7 @@ public sealed class RenderOverflowBar : RenderBox,
         {
             if (OverflowDirection == VerticalDirection.Up) y -= child.Size.Height;
             double x = ResolveOverflowX(child.Size.Width);
-            ((OverflowBarParentData)child.parentData!).offset = new Point(x, y);
+            ((OverflowBarParentData)child.parentData!).offset = new Offset(x, y);
             y += OverflowDirection == VerticalDirection.Down
                 ? child.Size.Height + OverflowSpacing
                 : -OverflowSpacing;
@@ -314,10 +314,10 @@ public sealed class RenderOverflowBar : RenderBox,
         return OverflowAlignment == OverflowBarAlignment.Start ? start : end;
     }
 
-    public override void Paint(PaintingContext ctx, Point offset) => DefaultPaint(ctx, offset);
-    protected override bool HitTestChildren(BoxHitTestResult result, Point position) => DefaultHitTestChildren(result, position);
-    public void DefaultPaint(PaintingContext ctx, Point offset) => _container.DefaultPaint(ctx, offset);
-    public bool DefaultHitTestChildren(BoxHitTestResult result, Point position) => _container.DefaultHitTestChildren(result, position);
+    public override void Paint(PaintingContext ctx, Offset offset) => DefaultPaint(ctx, offset);
+    protected override bool HitTestChildren(BoxHitTestResult result, Offset position) => DefaultHitTestChildren(result, position);
+    public void DefaultPaint(PaintingContext ctx, Offset offset) => _container.DefaultPaint(ctx, offset);
+    public bool DefaultHitTestChildren(BoxHitTestResult result, Offset position) => _container.DefaultHitTestChildren(result, position);
     public override void VisitChildren(Action<RenderObject> visitor) { for (var child = FirstChild; child is not null; child = ChildAfter(child)) visitor(child); }
     public override void VisitChildrenForSemantics(Action<RenderObject> visitor)
     {

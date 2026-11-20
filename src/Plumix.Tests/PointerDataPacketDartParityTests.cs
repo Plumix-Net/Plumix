@@ -273,8 +273,8 @@ public sealed class PointerDataPacketDartParityTests : IDisposable
 
         var @event = Assert.IsType<PointerScrollEvent>(Assert.Single(Expand([datum])));
 
-        Assert.Equal(new Point(10, 20), @event.Position);
-        Assert.Equal(new Point(2, -4), @event.ScrollDelta);
+        Assert.Equal(new Offset(10, 20), @event.Position);
+        Assert.Equal(new Offset(2, -4), @event.ScrollDelta);
         @event.Respond(allowPlatformDefault: true);
         Assert.True(allowed);
     }
@@ -315,8 +315,8 @@ public sealed class PointerDataPacketDartParityTests : IDisposable
 
         var @event = Assert.IsType<PointerMoveEvent>(Assert.Single(Expand([datum])));
 
-        Assert.Equal(new Point(20, 10), @event.Position);
-        Assert.Equal(new Point(2, 4), @event.Delta);
+        Assert.Equal(new Offset(20, 10), @event.Position);
+        Assert.Equal(new Offset(2, 4), @event.Delta);
         Assert.Equal(2, @event.RadiusMajor);
         Assert.Equal(4, @event.RadiusMinor);
         Assert.Equal(1, @event.RadiusMin);
@@ -348,7 +348,7 @@ public sealed class PointerDataPacketDartParityTests : IDisposable
         Assert.Equal(PointerButtons.Primary, events[3].Buttons);
         Assert.IsType<PointerUpEvent>(events[4]);
         Assert.Equal(PointerButtons.None, events[4].Buttons);
-        Assert.All(events, @event => Assert.Equal(new Point(10, 10), @event.Position));
+        Assert.All(events, @event => Assert.Equal(new Offset(10, 10), @event.Position));
     }
 
     [Fact]
@@ -478,8 +478,8 @@ public sealed class PointerDataPacketDartParityTests : IDisposable
 
         var @event = Assert.IsType<PointerPanZoomUpdateEvent>(Assert.Single(Expand([datum])));
 
-        Assert.Equal(new Point(10, 20), @event.Pan);
-        Assert.Equal(new Point(2, 4), @event.PanDelta);
+        Assert.Equal(new Offset(10, 20), @event.Pan);
+        Assert.Equal(new Offset(2, 4), @event.PanDelta);
         Assert.Equal(2, @event.Scale);
         Assert.Equal(0.5, @event.Rotation);
     }
@@ -609,7 +609,7 @@ public sealed class PointerDataPacketDartParityTests : IDisposable
     {
         Task locked = SchedulerBinding.Instance.LockEvents(() =>
         {
-            _binding.HandlePointerEvent(_root, new PointerHoverEvent(1, PointerDeviceKind.Mouse, new Point(4, 4)));
+            _binding.HandlePointerEvent(_root, new PointerHoverEvent(1, PointerDeviceKind.Mouse, new Offset(4, 4)));
             Assert.Empty(_handled);
             return Task.CompletedTask;
         });
@@ -641,7 +641,7 @@ public sealed class PointerDataPacketDartParityTests : IDisposable
                     physicalDeltaY: 10),
             ]));
 
-            Assert.Equal([default, new Point(5, 10)], received.Select(@event => @event.Delta));
+            Assert.Equal([default, new Offset(5, 10)], received.Select(@event => @event.Delta));
         }
         finally
         {

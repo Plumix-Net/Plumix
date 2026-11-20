@@ -91,7 +91,7 @@ internal sealed class BadgeTooltipDemoPageState : State
                                 backgroundColor: new Color(0xFF00695C),
                                 textColor: Colors.White,
                                 largeSize: 20,
-                                offset: new Vector(7, -7),
+                                offset: new Offset(7, -7),
                                 label: new Text("NEW"),
                                 isLabelVisible: _isLabelVisible,
                                 child: new Icon(Icons.Check, size: 32))),
@@ -152,9 +152,9 @@ internal sealed class BadgeTooltipDemoPageState : State
                                         child: new Text("Above + delay"))),
                                 new Tooltip(
                                     message: "Custom right tooltip",
-                                    positionDelegate: position => new Point(
-                                        position.Target.X + (position.TargetSize.Width / 2.0) + 8,
-                                        position.Target.Y - (position.TooltipSize.Height / 2.0)),
+                                    positionDelegate: position => new Offset(
+                                        position.Target.Dx + (position.TargetSize.Width / 2.0) + 8,
+                                        position.Target.Dy - (position.TooltipSize.Height / 2.0)),
                                     child: new OutlinedButton(
                                         onPressed: () => { },
                                         child: new Text("Custom right"))),

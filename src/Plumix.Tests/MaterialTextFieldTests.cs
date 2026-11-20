@@ -167,19 +167,19 @@ public sealed class MaterialTextFieldTests : IDisposable
         binding.HandlePointerEvent(harness.RenderView, new PointerDownEvent(
             211,
             PointerDeviceKind.Mouse,
-            new Point(2, 10),
+            new Offset(2, 10),
             PointerButtons.Primary,
             now));
         binding.HandlePointerEvent(harness.RenderView, new PointerMoveEvent(
             211,
             PointerDeviceKind.Mouse,
-            new Point(90, 10),
+            new Offset(90, 10),
             PointerButtons.Primary,
             now.AddMilliseconds(16)));
         binding.HandlePointerEvent(harness.RenderView, new PointerUpEvent(
             211,
             PointerDeviceKind.Mouse,
-            new Point(90, 10),
+            new Offset(90, 10),
             PointerButtons.None,
             now.AddMilliseconds(32)));
 
@@ -207,13 +207,13 @@ public sealed class MaterialTextFieldTests : IDisposable
         binding.HandlePointerEvent(harness.RenderView, new PointerDownEvent(
             212,
             PointerDeviceKind.Mouse,
-            new Point(170, 44),
+            new Offset(170, 44),
             PointerButtons.Primary,
             now));
         binding.HandlePointerEvent(harness.RenderView, new PointerUpEvent(
             212,
             PointerDeviceKind.Mouse,
-            new Point(170, 44),
+            new Offset(170, 44),
             PointerButtons.None,
             now.AddMilliseconds(16)));
         harness.Pump(new Size(360, 120));
@@ -242,13 +242,13 @@ public sealed class MaterialTextFieldTests : IDisposable
         binding.HandlePointerEvent(harness.RenderView, new PointerDownEvent(
             213,
             PointerDeviceKind.Mouse,
-            new Point(170, 44),
+            new Offset(170, 44),
             PointerButtons.Primary,
             now));
         binding.HandlePointerEvent(harness.RenderView, new PointerUpEvent(
             213,
             PointerDeviceKind.Mouse,
-            new Point(170, 44),
+            new Offset(170, 44),
             PointerButtons.None,
             now.AddMilliseconds(16)));
         harness.Pump(new Size(360, 120));

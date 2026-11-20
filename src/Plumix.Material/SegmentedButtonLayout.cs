@@ -281,7 +281,7 @@ internal sealed class RenderSegmentedButton : RenderBox,
             }
 
             var data = (SegmentedButtonParentData)child.parentData!;
-            double positionedBaseline = data.offset.Y + childBaseline.Value;
+            double positionedBaseline = data.offset.Dy + childBaseline.Value;
             result = !result.HasValue ? positionedBaseline : Math.Min(result.Value, positionedBaseline);
         }
         return result;
@@ -311,14 +311,14 @@ internal sealed class RenderSegmentedButton : RenderBox,
         {
             var data = (SegmentedButtonParentData)child.parentData!;
             data.offset = Direction == Axis.Horizontal
-                ? new Point(position, 0.0)
-                : new Point(0.0, position);
-            data.SurroundingRect = new Rect(data.offset, childSize);
+                ? new Offset(position, 0.0)
+                : new Offset(0.0, position);
+            data.SurroundingRect = DartGeometry.RectFromOffsetAndSize(data.offset, childSize);
             position += Direction == Axis.Horizontal ? childSize.Width : childSize.Height;
         }
     }
 
-    public override void Paint(PaintingContext context, Point offset)
+    public override void Paint(PaintingContext context, Offset offset)
     {
         if (ChildCount == 0 || Size.Width <= 0.0 || Size.Height <= 0.0)
         {
@@ -336,14 +336,14 @@ internal sealed class RenderSegmentedButton : RenderBox,
                 offset,
                 borderRect,
                 innerPath,
-                (clipped, clippedOffset) => clipped.PaintChild(localChild, clippedOffset + (Vector)data.offset));
+                (clipped, clippedOffset) => clipped.PaintChild(localChild, clippedOffset + (Offset)data.offset));
         }
 
         PaintDividers(context, offset, borderRect);
         PaintOuterBorder(context, offset, borderRect);
     }
 
-    protected override bool HitTestChildren(BoxHitTestResult result, Point position)
+    protected override bool HitTestChildren(BoxHitTestResult result, Offset position)
     {
         for (RenderBox? child = LastChild; child is not null; child = ChildBefore(child))
         {
@@ -370,8 +370,8 @@ internal sealed class RenderSegmentedButton : RenderBox,
     public void RemoveAll() => _children.RemoveAll();
     public RenderBox? ChildBefore(RenderBox child) => _children.ChildBefore(child);
     public RenderBox? ChildAfter(RenderBox child) => _children.ChildAfter(child);
-    public void DefaultPaint(PaintingContext context, Point offset) => _children.DefaultPaint(context, offset);
-    public bool DefaultHitTestChildren(BoxHitTestResult result, Point position) =>
+    public void DefaultPaint(PaintingContext context, Offset offset) => _children.DefaultPaint(context, offset);
+    public bool DefaultHitTestChildren(BoxHitTestResult result, Offset position) =>
         _children.DefaultHitTestChildren(result, position);
 
     public override void VisitChildren(Action<RenderObject> visitor)
@@ -400,8 +400,8 @@ internal sealed class RenderSegmentedButton : RenderBox,
         Move((RenderBox)child, after as RenderBox);
     void IRenderObjectContainer.Remove(RenderObject child) => Remove((RenderBox)child);
 
-    private Rect LocalBorderRect => new(
-        new Point(0.0, TapTargetVerticalPadding / 2.0),
+    private Rect LocalBorderRect => DartGeometry.RectFromOffsetAndSize(
+        new Offset(0.0, TapTargetVerticalPadding / 2.0),
         new Size(Size.Width, Math.Max(0.0, Size.Height - TapTargetVerticalPadding)));
 
     private double MaximumIntrinsic(Func<RenderBox, double, double> getter, double extent)
@@ -472,7 +472,7 @@ internal sealed class RenderSegmentedButton : RenderBox,
         }
     }
 
-    private void PaintDividers(PaintingContext context, Point offset, Rect borderRect)
+    private void PaintDividers(PaintingContext context, Offset offset, Rect borderRect)
     {
         List<RenderBox> children = Children().ToList();
         for (int index = 0; index < children.Count - 1; index++)
@@ -494,8 +494,8 @@ internal sealed class RenderSegmentedButton : RenderBox,
                     : data.SurroundingRect.Left;
                 context.Canvas.DrawLine(
                     pen,
-                    offset + new Vector(x, borderRect.Top),
-                    offset + new Vector(x, borderRect.Bottom));
+                    offset + new Offset(x, borderRect.Top),
+                    offset + new Offset(x, borderRect.Bottom));
                 continue;
             }
 
@@ -507,17 +507,17 @@ internal sealed class RenderSegmentedButton : RenderBox,
             context.Canvas.ClipPath(clipPath.Shift(offset));
             context.Canvas.DrawLine(
                 pen,
-                offset + new Vector(borderRect.Left, y),
-                offset + new Vector(borderRect.Right, y));
+                offset + new Offset(borderRect.Left, y),
+                offset + new Offset(borderRect.Right, y));
             context.Canvas.Restore();
         }
     }
 
-    private void PaintOuterBorder(PaintingContext context, Point offset, Rect borderRect)
+    private void PaintOuterBorder(PaintingContext context, Offset offset, Rect borderRect)
     {
         bool allEnabled = SegmentEnabled.All(static enabled => enabled);
         bool allDisabled = SegmentEnabled.All(static enabled => !enabled);
-        Rect paintedRect = new(offset + (Vector)borderRect.Position, borderRect.Size);
+        Rect paintedRect = DartGeometry.RectFromOffsetAndSize(offset + (Offset)borderRect.TopLeft, borderRect.Size);
         if (allEnabled)
         {
             EnabledBorder.Paint(context, paintedRect, TextDirection);
@@ -535,17 +535,17 @@ internal sealed class RenderSegmentedButton : RenderBox,
         {
             var data = (SegmentedButtonParentData)children[index].parentData!;
             Rect localClip = Direction == Axis.Horizontal
-                ? new Rect(
+                ? DartGeometry.RectFromLTWH(
                     data.SurroundingRect.Left,
                     borderRect.Top,
                     data.SurroundingRect.Width,
                     borderRect.Height)
-                : new Rect(
+                : DartGeometry.RectFromLTWH(
                     borderRect.Left,
                     data.SurroundingRect.Top,
                     borderRect.Width,
                     data.SurroundingRect.Height);
-            Rect clipRect = new Rect(offset + (Vector)localClip.Position, localClip.Size).Inflate(outset);
+            Rect clipRect = DartGeometry.RectFromOffsetAndSize(offset + (Offset)localClip.TopLeft, localClip.Size).Inflate(outset);
             OutlinedBorder border = SegmentEnabled[index] ? EnabledBorder : DisabledBorder;
             context.Canvas.Save();
             context.Canvas.ClipRect(clipRect, doAntiAlias: false);

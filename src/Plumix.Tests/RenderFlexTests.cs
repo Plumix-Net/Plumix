@@ -466,7 +466,7 @@ public sealed class RenderFlexTests
         Layout(flex, BoxConstraints.Loose(new Size(100, 100)));
 
         Assert.True(flex._hasOverflow);
-        Assert.Equal(new Rect(new Point(), flex.Size), flex.InvokeDescribeApproximatePaintClip(fixedChild));
+        Assert.Equal(DartGeometry.RectFromOffsetAndSize(new Offset(), flex.Size), flex.InvokeDescribeApproximatePaintClip(fixedChild));
 
         flex.ClipBehavior = Clip.None;
         Assert.Null(flex.InvokeDescribeApproximatePaintClip(fixedChild));
@@ -528,11 +528,11 @@ public sealed class RenderFlexTests
             mainAxisAlignment: MainAxisAlignment.SpaceEvenly);
 
         Layout(flex, new BoxConstraints(MaxWidth: 500, MaxHeight: 400));
-        Assert.Equal([50.0, 200.0, 350.0], children.Select(c => Offset(c).X));
+        Assert.Equal([50.0, 200.0, 350.0], children.Select(c => Offset(c).Dx));
 
         flex.Direction = Axis.Vertical;
         Layout(flex, new BoxConstraints(MaxWidth: 500, MaxHeight: 400));
-        Assert.Equal([25.0, 150.0, 275.0], children.Select(c => Offset(c).Y));
+        Assert.Equal([25.0, 150.0, 275.0], children.Select(c => Offset(c).Dy));
     }
 
     [Theory]
@@ -553,11 +553,11 @@ public sealed class RenderFlexTests
             spacing: 14.0);
 
         Layout(flex, new BoxConstraints(MaxWidth: 500, MaxHeight: 400));
-        Assert.Equal(horizontal, children.Select(c => Offset(c).X));
+        Assert.Equal(horizontal, children.Select(c => Offset(c).Dx));
 
         flex.Direction = Axis.Vertical;
         Layout(flex, new BoxConstraints(MaxWidth: 500, MaxHeight: 400));
-        Assert.Equal(vertical, children.Select(c => Offset(c).Y));
+        Assert.Equal(vertical, children.Select(c => Offset(c).Dy));
     }
 
     [Fact]
@@ -571,11 +571,11 @@ public sealed class RenderFlexTests
             spacing: 14.0);
 
         Layout(flex, new BoxConstraints(MaxWidth: 500, MaxHeight: 400));
-        Assert.Equal([43.0, 200.0, 357.0], children.Select(c => Offset(c).X));
+        Assert.Equal([43.0, 200.0, 357.0], children.Select(c => Offset(c).Dx));
 
         flex.Direction = Axis.Vertical;
         Layout(flex, new BoxConstraints(MaxWidth: 500, MaxHeight: 400));
-        Assert.Equal([18.0, 150.0, 282.0], children.Select(c => Offset(c).Y));
+        Assert.Equal([18.0, 150.0, 282.0], children.Select(c => Offset(c).Dy));
     }
 
     [Fact]
@@ -590,13 +590,13 @@ public sealed class RenderFlexTests
 
         Layout(flex, new BoxConstraints(MaxWidth: 500, MaxHeight: 400));
         // free = 500 - (300 + 2 * 14) = 172; leading = 172 / 3 / 2, between = 172 / 3 + 14.
-        Assert.Equal(172.0 / 3.0 / 2.0, Offset(children[0]).X, 9);
-        Assert.Equal(200.0, Offset(children[1]).X, 9);
-        Assert.Equal(500.0 - 100.0 - 172.0 / 3.0 / 2.0, Offset(children[2]).X, 9);
+        Assert.Equal(172.0 / 3.0 / 2.0, Offset(children[0]).Dx, 9);
+        Assert.Equal(200.0, Offset(children[1]).Dx, 9);
+        Assert.Equal(500.0 - 100.0 - 172.0 / 3.0 / 2.0, Offset(children[2]).Dx, 9);
 
         flex.Direction = Axis.Vertical;
         Layout(flex, new BoxConstraints(MaxWidth: 500, MaxHeight: 400));
-        Assert.Equal([12.0, 150.0, 288.0], children.Select(c => Offset(c).Y));
+        Assert.Equal([12.0, 150.0, 288.0], children.Select(c => Offset(c).Dy));
     }
 
     // ---------- Flexible fits ----------
@@ -613,19 +613,19 @@ public sealed class RenderFlexTests
             mainAxisAlignment: MainAxisAlignment.SpaceBetween);
 
         Layout(flex, new BoxConstraints(MaxWidth: 500, MaxHeight: 400));
-        Assert.Equal([0.0, 200.0, 400.0], new[] { first, second, third }.Select(c => Offset(c).X));
+        Assert.Equal([0.0, 200.0, 400.0], new[] { first, second, third }.Select(c => Offset(c).Dx));
 
         SetFlex(first, 1, FlexFit.Loose);
         Layout(flex, new BoxConstraints(MaxWidth: 500, MaxHeight: 400));
         Assert.Equal(100.0, first.Size.Width);
-        Assert.Equal([0.0, 200.0, 400.0], new[] { first, second, third }.Select(c => Offset(c).X));
+        Assert.Equal([0.0, 200.0, 400.0], new[] { first, second, third }.Select(c => Offset(c).Dx));
 
         ((FixedSizeBox)first).PreferredSize = new Size(1000, 100);
         Layout(flex, new BoxConstraints(MaxWidth: 500, MaxHeight: 400));
         Assert.Equal(300.0, first.Size.Width);
-        Assert.Equal(0.0, Offset(first).X);
-        Assert.Equal(300.0, Offset(second).X);
-        Assert.Equal(400.0, Offset(third).X);
+        Assert.Equal(0.0, Offset(first).Dx);
+        Assert.Equal(300.0, Offset(second).Dx);
+        Assert.Equal(400.0, Offset(third).Dx);
     }
 
     [Fact]
@@ -641,18 +641,18 @@ public sealed class RenderFlexTests
             mainAxisAlignment: MainAxisAlignment.SpaceBetween);
 
         Layout(flex, new BoxConstraints(MaxWidth: 500, MaxHeight: 400));
-        Assert.Equal([0.0, 100.0, 200.0], new[] { first, second, third }.Select(c => Offset(c).X));
+        Assert.Equal([0.0, 100.0, 200.0], new[] { first, second, third }.Select(c => Offset(c).Dx));
         Assert.Equal(300.0, flex.Size.Width);
 
         SetFlex(first, 1, FlexFit.Tight);
         Layout(flex, new BoxConstraints(MaxWidth: 500, MaxHeight: 400));
-        Assert.Equal([0.0, 300.0, 400.0], new[] { first, second, third }.Select(c => Offset(c).X));
+        Assert.Equal([0.0, 300.0, 400.0], new[] { first, second, third }.Select(c => Offset(c).Dx));
         Assert.Equal(300.0, first.Size.Width);
         Assert.Equal(500.0, flex.Size.Width);
 
         SetFlex(first, 1, FlexFit.Loose);
         Layout(flex, new BoxConstraints(MaxWidth: 500, MaxHeight: 400));
-        Assert.Equal([0.0, 100.0, 200.0], new[] { first, second, third }.Select(c => Offset(c).X));
+        Assert.Equal([0.0, 100.0, 200.0], new[] { first, second, third }.Select(c => Offset(c).Dx));
         Assert.Equal(100.0, first.Size.Width);
         Assert.Equal(300.0, flex.Size.Width);
     }
@@ -670,7 +670,7 @@ public sealed class RenderFlexTests
         {
             Layout(flex, constraints);
             Assert.Equal(
-                expected.Select(e => new Point(e.X, e.Y)).ToArray(),
+                expected.Select(e => new Offset(e.X, e.Y)).ToArray(),
                 children.Select(Offset).ToArray());
         }
 
@@ -705,16 +705,16 @@ public sealed class RenderFlexTests
 
         flex.CrossAxisAlignment = CrossAxisAlignment.Stretch;
         Layout(flex, constraints);
-        Assert.Equal([new Point(0, 500), new Point(0, 400), new Point(0, 300)], children.Select(Offset));
+        Assert.Equal([new Offset(0, 500), new Offset(0, 400), new Offset(0, 300)], children.Select(Offset));
         Assert.All(children, child => Assert.Equal(new Size(800, 100), child.Size));
 
         flex.TextDirection = TextDirection.Ltr;
         Layout(flex, constraints);
-        Assert.Equal([new Point(0, 500), new Point(0, 400), new Point(0, 300)], children.Select(Offset));
+        Assert.Equal([new Offset(0, 500), new Offset(0, 400), new Offset(0, 300)], children.Select(Offset));
 
         flex.CrossAxisAlignment = CrossAxisAlignment.Start;
         Layout(flex, constraints);
-        Assert.Equal([new Point(0, 500), new Point(0, 400), new Point(0, 300)], children.Select(Offset));
+        Assert.Equal([new Offset(0, 500), new Offset(0, 400), new Offset(0, 300)], children.Select(Offset));
         Assert.All(children, child => Assert.Equal(new Size(100, 100), child.Size));
 
         flex.CrossAxisAlignment = CrossAxisAlignment.End;
@@ -745,8 +745,8 @@ public sealed class RenderFlexTests
 
         // ascent = max(20, 10) = 20, descent = max(10, 30) = 30 => cross extent 50.
         Assert.Equal(new Size(100, 50), flex.Size);
-        Assert.Equal(0.0, Offset(first).Y);
-        Assert.Equal(10.0, Offset(second).Y);
+        Assert.Equal(0.0, Offset(first).Dy);
+        Assert.Equal(10.0, Offset(second).Dy);
         Assert.Equal(20.0, flex.GetDryBaseline(BoxConstraints.Loose(new Size(400, 400)), TextBaseline.Alphabetic));
     }
 
@@ -764,11 +764,11 @@ public sealed class RenderFlexTests
             verticalDirection: VerticalDirection.Up);
 
         Layout(flex, BoxConstraints.Loose(new Size(400, 400)));
-        Assert.Equal(0.0, Offset(withoutBaseline).Y);
+        Assert.Equal(0.0, Offset(withoutBaseline).Dy);
 
         flex.VerticalDirection = VerticalDirection.Down;
         Layout(flex, BoxConstraints.Loose(new Size(400, 400)));
-        Assert.Equal(0.0, Offset(withoutBaseline).Y);
+        Assert.Equal(0.0, Offset(withoutBaseline).Dy);
     }
 
     [Fact]
@@ -1036,7 +1036,7 @@ public sealed class RenderFlexTests
 
         var row = (RenderFlex)harness.RenderView.Child!;
         Assert.Equal(new Size(800, 100), row.Size);
-        Assert.Equal(expected, Children(row).Select(c => Offset(c).X));
+        Assert.Equal(expected, Children(row).Select(c => Offset(c).Dx));
     }
 
     [Fact]
@@ -1055,7 +1055,7 @@ public sealed class RenderFlexTests
 
         var row = (RenderFlex)harness.RenderView.Child!;
         List<RenderBox> children = Children(row);
-        Assert.Equal([0.0, 100.0, 700.0], children.Select(c => Offset(c).X));
+        Assert.Equal([0.0, 100.0, 700.0], children.Select(c => Offset(c).Dx));
         Assert.Equal(600.0, children[1].Size.Width);
     }
 
@@ -1087,7 +1087,7 @@ public sealed class RenderFlexTests
         harness.Pump(new Size(800, 600));
 
         var column = (RenderFlex)harness.RenderView.Child!;
-        Assert.Equal([25.0, 175.0, 325.0, 475.0], Children(column).Select(c => Offset(c).Y));
+        Assert.Equal([25.0, 175.0, 325.0, 475.0], Children(column).Select(c => Offset(c).Dy));
     }
 
     [Fact]
@@ -1102,7 +1102,7 @@ public sealed class RenderFlexTests
         harness.Pump(new Size(800, 600));
 
         var column = (RenderFlex)harness.RenderView.Child!;
-        Assert.Equal([500.0, 400.0, 300.0], Children(column).Select(c => Offset(c).Y));
+        Assert.Equal([500.0, 400.0, 300.0], Children(column).Select(c => Offset(c).Dy));
     }
 
     [Fact]
@@ -1187,7 +1187,7 @@ public sealed class RenderFlexTests
         return result;
     }
 
-    private static Point Offset(RenderBox child) => ((FlexParentData)child.parentData!).offset;
+    private static Offset Offset(RenderBox child) => ((FlexParentData)child.parentData!).offset;
 
     private static void SetFlex(RenderBox child, int flex, FlexFit fit)
     {
@@ -1249,7 +1249,7 @@ public sealed class RenderFlexTests
             Size = Constraints.Constrain(Child.Size);
         }
 
-        public override void Paint(PaintingContext ctx, Point offset)
+        public override void Paint(PaintingContext ctx, Offset offset)
         {
         }
     }
@@ -1302,7 +1302,7 @@ public sealed class RenderFlexTests
             Size = Constraints.Constrain(PreferredSize);
         }
 
-        public override void Paint(PaintingContext ctx, Point offset)
+        public override void Paint(PaintingContext ctx, Offset offset)
         {
         }
     }
@@ -1341,7 +1341,7 @@ public sealed class RenderFlexTests
             Size = ComputeDryLayout(Constraints);
         }
 
-        public override void Paint(PaintingContext ctx, Point offset)
+        public override void Paint(PaintingContext ctx, Offset offset)
         {
         }
 

@@ -19,7 +19,7 @@ public sealed class PointerEventsTests
 {
     private static readonly DateTime OneDay = DateTime.UnixEpoch.AddDays(1);
     private static readonly DateTime TwoSeconds = DateTime.UnixEpoch.AddSeconds(2);
-    private static readonly Point Position = new(20, 30);
+    private static readonly Offset Position = new(20, 30);
 
     private static readonly PointerDeviceKind[] ImpreciseKinds =
     [
@@ -65,8 +65,8 @@ public sealed class PointerEventsTests
     public void DebugFillProperties_FollowsThePointerEventDescriptionOrderAndLevels()
     {
         var @event = new PointerMoveEvent(
-            position: new Point(1, 2),
-            delta: new Point(3, 4),
+            position: new Offset(1, 2),
+            delta: new Offset(3, 4),
             obscured: true,
             synthesized: true);
         var builder = new DiagnosticPropertiesBuilder();
@@ -93,7 +93,7 @@ public sealed class PointerEventsTests
     [DebugOnlyFact]
     public void ScrollEvent_AddsScrollDeltaAtTheInfoLevel()
     {
-        var @event = new PointerScrollEvent(scrollDelta: new Point(0, 20));
+        var @event = new PointerScrollEvent(scrollDelta: new Offset(0, 20));
 
         Assert.EndsWith(
             "(position: Offset(0.0, 0.0), scrollDelta: Offset(0.0, 20.0))",
@@ -200,7 +200,7 @@ public sealed class PointerEventsTests
             timestampUtc: OneDay,
             kind: PointerDeviceKind.Unknown,
             device: 10,
-            position: new Point(101.0, 202.0),
+            position: new Offset(101.0, 202.0),
             buttons: (PointerButtons)7,
             obscured: true,
             pressureMax: 2.1,
@@ -234,7 +234,7 @@ public sealed class PointerEventsTests
             timestampUtc: OneDay,
             kind: PointerDeviceKind.Unknown,
             device: 10,
-            position: new Point(101.0, 202.0),
+            position: new Offset(101.0, 202.0),
             buttons: (PointerButtons)7,
             obscured: true,
             pressureMax: 2.1,
@@ -265,7 +265,7 @@ public sealed class PointerEventsTests
     {
         Matrix4 transform = Matrix4.TranslationValues(5, 6, 0);
         PointerEvent move = new PointerMoveEvent(
-            position: new Point(1, 2),
+            position: new Offset(1, 2),
             platformData: 9,
             embedderId: 12).Transformed(transform);
 
@@ -274,7 +274,7 @@ public sealed class PointerEventsTests
         Assert.Equal(0, enter.EmbedderId);
         Assert.Equal(0, enter.PlatformData);
         Assert.Same(transform, enter.Transform);
-        Assert.Equal(new Point(6, 8), enter.LocalPosition);
+        Assert.Equal(new Offset(6, 8), enter.LocalPosition);
         Assert.IsType<PointerEnterEvent>(enter.Original);
     }
 
@@ -345,11 +345,11 @@ public sealed class PointerEventsTests
     [Fact]
     public void TransformPosition()
     {
-        var position = new Point(20, 30);
+        var position = new Offset(20, 30);
 
         Assert.Equal(position, PointerEvent.TransformPosition(null, position));
         Assert.Equal(position, PointerEvent.TransformPosition(Matrix4.Identity(), position));
-        Assert.Equal(new Point(30, 50), PointerEvent.TransformPosition(Matrix4.TranslationValues(10, 20, 0), position));
+        Assert.Equal(new Offset(30, 50), PointerEvent.TransformPosition(Matrix4.TranslationValues(10, 20, 0), position));
     }
 
     [Fact]
@@ -359,10 +359,10 @@ public sealed class PointerEventsTests
         transform.SetEntry(3, 0, 0.01);
 
         // w = 0.01 * 20 + 1 = 1.2.
-        Point result = PointerEvent.TransformPosition(transform, new Point(20, 30));
+        Offset result = PointerEvent.TransformPosition(transform, new Offset(20, 30));
 
-        Assert.Equal(20 / 1.2, result.X, 10);
-        Assert.Equal(30 / 1.2, result.Y, 10);
+        Assert.Equal(20 / 1.2, result.Dx, 10);
+        Assert.Equal(30 / 1.2, result.Dy, 10);
     }
 
     [Fact]
@@ -372,23 +372,23 @@ public sealed class PointerEventsTests
         transform.ScaleByDouble(2.0, 2.0, 1.0, 1.0);
 
         Assert.Equal(
-            new Point(10, 10),
+            new Offset(10, 10),
             PointerEvent.TransformDeltaViaPositions(
-                untransformedEndPosition: new Point(20, 30),
-                untransformedDelta: new Point(5, 5),
+                untransformedEndPosition: new Offset(20, 30),
+                untransformedDelta: new Offset(5, 5),
                 transform: transform));
         Assert.Equal(
-            new Point(10, 10),
+            new Offset(10, 10),
             PointerEvent.TransformDeltaViaPositions(
-                untransformedEndPosition: new Point(20, 30),
-                transformedEndPosition: new Point(40, 60),
-                untransformedDelta: new Point(5, 5),
+                untransformedEndPosition: new Offset(20, 30),
+                transformedEndPosition: new Offset(40, 60),
+                untransformedDelta: new Offset(5, 5),
                 transform: transform));
         Assert.Equal(
-            new Point(5, 5),
+            new Offset(5, 5),
             PointerEvent.TransformDeltaViaPositions(
-                untransformedEndPosition: new Point(20, 30),
-                untransformedDelta: new Point(5, 5),
+                untransformedEndPosition: new Offset(20, 30),
+                untransformedDelta: new Offset(5, 5),
                 transform: null));
     }
 
@@ -406,8 +406,8 @@ public sealed class PointerEventsTests
         Matrix4 scale = Matrix4.Identity();
         scale.ScaleByDouble(2.0, 2.0, 1.0, 1.0);
         Matrix4 transform = scale.Multiplied(Matrix4.TranslationValues(10.0, 20.0, 0.0));
-        Point localPosition = new(60, 100);
-        Point? localDelta = @event.Delta == new Point(5, 5) ? new Point(10, 10) : null;
+        Offset localPosition = new(60, 100);
+        Offset? localDelta = @event.Delta == new Offset(5, 5) ? new Offset(10, 10) : null;
 
         Assert.Equal(@event.Position, @event.LocalPosition);
         Assert.Equal(@event.Delta, @event.LocalDelta);
@@ -470,7 +470,7 @@ public sealed class PointerEventsTests
         // Transforms are not composed: the second replaces the first.
         Assert.Same(down, twice.Original);
         Assert.Same(second, twice.Transform);
-        Assert.Equal(new Point(20, 40), twice.LocalPosition);
+        Assert.Equal(new Offset(20, 40), twice.LocalPosition);
         // A null transform on a transformed event returns the original itself.
         Assert.Same(down, once.Transformed(null));
         // The same matrix on a transformed event still builds a new transformed event.
@@ -482,16 +482,16 @@ public sealed class PointerEventsTests
     [Fact]
     public void RemovedEvent_WithAnOriginal_TransformsThatOriginal()
     {
-        var original = new PointerRemovedEvent(position: new Point(1, 1), device: 3);
-        var removed = new PointerRemovedEvent(position: new Point(9, 9), original: original);
+        var original = new PointerRemovedEvent(position: new Offset(1, 1), device: 3);
+        var removed = new PointerRemovedEvent(position: new Offset(9, 9), original: original);
         Matrix4 transform = Matrix4.TranslationValues(1, 1, 0);
 
         PointerEvent transformed = removed.Transformed(transform);
 
         Assert.Same(original, removed.Original);
         Assert.Same(original, transformed.Original);
-        Assert.Equal(new Point(1, 1), transformed.Position);
-        Assert.Equal(new Point(2, 2), transformed.LocalPosition);
+        Assert.Equal(new Offset(1, 1), transformed.Position);
+        Assert.Equal(new Offset(2, 2), transformed.LocalPosition);
         Assert.Equal(3, transformed.Device);
     }
 
@@ -502,7 +502,7 @@ public sealed class PointerEventsTests
             timestampUtc: OneDay,
             kind: PointerDeviceKind.Unknown,
             device: 10,
-            position: new Point(101.0, 202.0),
+            position: new Offset(101.0, 202.0),
             obscured: true,
             pressureMax: 2.1,
             pressureMin: 1.1,
@@ -514,7 +514,7 @@ public sealed class PointerEventsTests
             tilt: 1.1);
         var empty = new PointerAddedEvent();
 
-        PointerAddedEvent copy = added.CopyWith(position: default(Point), timestampUtc: OneDay.AddDays(1));
+        PointerAddedEvent copy = added.CopyWith(position: default(Offset), timestampUtc: OneDay.AddDays(1));
 
         AssertCopied(added, copy);
         AssertKept(added, copy, "kind", "device", "buttons", "obscured", "pressureMin", "pressureMax",
@@ -531,7 +531,7 @@ public sealed class PointerEventsTests
             kind: PointerDeviceKind.Unknown,
             pointer: 1,
             device: 10,
-            position: new Point(101.0, 202.0),
+            position: new Offset(101.0, 202.0),
             buttons: (PointerButtons)7,
             obscured: true,
             pressureMax: 2.1,
@@ -548,7 +548,7 @@ public sealed class PointerEventsTests
             synthesized: true);
         var empty = new PointerHoverEvent();
 
-        PointerHoverEvent copy = hover.CopyWith(position: default(Point), timestampUtc: OneDay.AddDays(1));
+        PointerHoverEvent copy = hover.CopyWith(position: default(Offset), timestampUtc: OneDay.AddDays(1));
 
         AssertCopied(hover, copy);
         AssertKept(hover, copy, "kind", "device", "buttons", "obscured", "pressureMin", "pressureMax",
@@ -565,7 +565,7 @@ public sealed class PointerEventsTests
             kind: PointerDeviceKind.Unknown,
             pointer: 1,
             device: 10,
-            position: new Point(101.0, 202.0),
+            position: new Offset(101.0, 202.0),
             buttons: (PointerButtons)7,
             obscured: true,
             pressureMax: 2.1,
@@ -580,7 +580,7 @@ public sealed class PointerEventsTests
             tilt: 1.1);
         var empty = new PointerDownEvent();
 
-        PointerDownEvent copy = down.CopyWith(position: default(Point), timestampUtc: OneDay.AddDays(1));
+        PointerDownEvent copy = down.CopyWith(position: default(Offset), timestampUtc: OneDay.AddDays(1));
 
         AssertCopied(down, copy);
         AssertKept(down, copy, "pointer", "kind", "device", "buttons", "obscured", "pressureMin",
@@ -597,8 +597,8 @@ public sealed class PointerEventsTests
             kind: PointerDeviceKind.Unknown,
             pointer: 1,
             device: 10,
-            position: new Point(101.0, 202.0),
-            delta: new Point(1.0, 2.0),
+            position: new Offset(101.0, 202.0),
+            delta: new Offset(1.0, 2.0),
             buttons: (PointerButtons)7,
             obscured: true,
             pressureMax: 2.1,
@@ -615,7 +615,7 @@ public sealed class PointerEventsTests
             synthesized: true);
         var empty = new PointerMoveEvent();
 
-        PointerMoveEvent copy = move.CopyWith(position: default(Point), timestampUtc: OneDay.AddDays(1));
+        PointerMoveEvent copy = move.CopyWith(position: default(Offset), timestampUtc: OneDay.AddDays(1));
 
         AssertCopied(move, copy);
         AssertKept(move, copy, "pointer", "kind", "device", "delta", "buttons", "down", "obscured",
@@ -632,7 +632,7 @@ public sealed class PointerEventsTests
             kind: PointerDeviceKind.Unknown,
             pointer: 1,
             device: 10,
-            position: new Point(101.0, 202.0),
+            position: new Offset(101.0, 202.0),
             buttons: (PointerButtons)7,
             obscured: true,
             pressureMax: 2.1,
@@ -648,7 +648,7 @@ public sealed class PointerEventsTests
             tilt: 1.1);
         var empty = new PointerUpEvent();
 
-        PointerUpEvent copy = up.CopyWith(position: default(Point), timestampUtc: OneDay.AddDays(1));
+        PointerUpEvent copy = up.CopyWith(position: default(Offset), timestampUtc: OneDay.AddDays(1));
 
         AssertCopied(up, copy);
         AssertKept(up, copy, "pointer", "kind", "device", "delta", "buttons", "obscured", "pressureMin",
@@ -656,7 +656,7 @@ public sealed class PointerEventsTests
             "radiusMax", "orientation", "tilt");
         AssertKept(empty, copy, "down", "pressure", "synthesized");
         // Dart's up `copyWith` accepts a `localPosition` and ignores it.
-        Assert.Equal(up.Position, up.CopyWith(localPosition: new Point(7, 7)).LocalPosition);
+        Assert.Equal(up.Position, up.CopyWith(localPosition: new Offset(7, 7)).LocalPosition);
     }
 
     [Fact]
@@ -667,7 +667,7 @@ public sealed class PointerEventsTests
             kind: PointerDeviceKind.Unknown,
             pointer: 1,
             device: 10,
-            position: new Point(101.0, 202.0),
+            position: new Offset(101.0, 202.0),
             obscured: true,
             pressureMax: 2.1,
             pressureMin: 1.1,
@@ -676,7 +676,7 @@ public sealed class PointerEventsTests
             radiusMax: 22);
         var empty = new PointerRemovedEvent();
 
-        PointerRemovedEvent copy = removed.CopyWith(position: default(Point), timestampUtc: OneDay.AddDays(1));
+        PointerRemovedEvent copy = removed.CopyWith(position: default(Offset), timestampUtc: OneDay.AddDays(1));
 
         AssertCopied(removed, copy);
         AssertKept(removed, copy, "kind", "device", "buttons", "obscured", "pressureMin", "pressureMax",
@@ -709,14 +709,14 @@ public sealed class PointerEventsTests
         Matrix4 transform = Matrix4.TranslationValues(10, 20, 0);
         PointerEvent transformed = down.Transformed(transform);
 
-        PointerEvent copy = transformed.CopyWith(position: new Point(1, 1));
+        PointerEvent copy = transformed.CopyWith(position: new Offset(1, 1));
 
         Assert.IsType<PointerDownEvent>(copy);
         Assert.Same(transform, copy.Transform);
         Assert.NotNull(copy.Original);
         Assert.NotSame(down, copy.Original);
-        Assert.Equal(new Point(1, 1), copy.Position);
-        Assert.Equal(new Point(11, 21), copy.LocalPosition);
+        Assert.Equal(new Offset(1, 1), copy.Position);
+        Assert.Equal(new Offset(11, 21), copy.LocalPosition);
         Assert.Equal(2, copy.Pointer);
     }
 
@@ -726,17 +726,17 @@ public sealed class PointerEventsTests
         var responses = new List<bool>();
         var scroll = new PointerScrollEvent(
             position: Position,
-            scrollDelta: new Point(0, 20),
+            scrollDelta: new Offset(0, 20),
             onRespond: allow => responses.Add(allow),
             device: 3);
 
-        PointerScrollEvent copy = scroll.CopyWith(position: new Point(1, 1));
+        PointerScrollEvent copy = scroll.CopyWith(position: new Offset(1, 1));
         copy.Respond(allowPlatformDefault: false);
         PointerScrollEvent overridden = scroll.CopyWith(onRespond: allow => responses.Add(!allow));
         overridden.Respond(allowPlatformDefault: false);
         PointerEvent baseCopy = ((PointerEvent)scroll).CopyWith(pointer: 9, buttons: PointerButtons.Primary);
 
-        Assert.Equal(new Point(0, 20), copy.ScrollDelta);
+        Assert.Equal(new Offset(0, 20), copy.ScrollDelta);
         Assert.Equal(3, copy.Device);
         Assert.Equal([false, true], responses);
         Assert.Equal(0, baseCopy.Pointer);
@@ -765,9 +765,9 @@ public sealed class PointerEventsTests
         var transformed = (PointerScaleEvent)scale.Transformed(Matrix4.TranslationValues(1, 1, 0));
 
         Assert.Equal(2.0, copy.Scale);
-        Assert.Equal(1.5, scale.CopyWith(position: new Point(1, 1)).Scale);
+        Assert.Equal(1.5, scale.CopyWith(position: new Offset(1, 1)).Scale);
         Assert.Equal(1.5, transformed.Scale);
-        Assert.Equal(new Point(21, 31), transformed.LocalPosition);
+        Assert.Equal(new Offset(21, 31), transformed.LocalPosition);
         // Scale is a signal; `respond` is the inherited no-op.
         transformed.Respond(allowPlatformDefault: false);
         Assert.IsAssignableFrom<PointerSignalEvent>(scale);
@@ -782,12 +782,12 @@ public sealed class PointerEventsTests
             device: 5,
             embedderId: 6);
 
-        PointerScrollInertiaCancelEvent copy = cancel.CopyWith(position: new Point(1, 1));
+        PointerScrollInertiaCancelEvent copy = cancel.CopyWith(position: new Offset(1, 1));
 
         Assert.Equal(PointerDeviceKind.Trackpad, copy.Kind);
         Assert.Equal(5, copy.Device);
         Assert.Equal(6, copy.EmbedderId);
-        Assert.Equal(new Point(1, 1), copy.Position);
+        Assert.Equal(new Offset(1, 1), copy.Position);
     }
 
     [Fact]
@@ -797,8 +797,8 @@ public sealed class PointerEventsTests
         var update = new PointerPanZoomUpdateEvent(
             pointer: 3,
             position: Position,
-            pan: new Point(4, 6),
-            panDelta: new Point(1, 2),
+            pan: new Offset(4, 6),
+            panDelta: new Offset(1, 2),
             scale: 2.5,
             rotation: 0.75,
             device: 1,
@@ -806,16 +806,16 @@ public sealed class PointerEventsTests
         var end = new PointerPanZoomEndEvent(pointer: 3, position: Position, device: 1, synthesized: true);
 
         PointerPanZoomStartEvent startCopy = start.CopyWith(kind: PointerDeviceKind.Trackpad);
-        PointerPanZoomUpdateEvent updateCopy = update.CopyWith(scale: 3.0, localPan: new Point(99, 99));
+        PointerPanZoomUpdateEvent updateCopy = update.CopyWith(scale: 3.0, localPan: new Offset(99, 99));
         PointerPanZoomEndEvent endCopy = end.CopyWith();
 
         Assert.Equal(0, startCopy.Pointer);
         Assert.False(startCopy.Synthesized);
         Assert.Equal(1, startCopy.Device);
         Assert.Equal(3.0, updateCopy.Scale);
-        Assert.Equal(new Point(4, 6), updateCopy.Pan);
-        Assert.Equal(new Point(4, 6), updateCopy.LocalPan);
-        Assert.Equal(new Point(1, 2), updateCopy.PanDelta);
+        Assert.Equal(new Offset(4, 6), updateCopy.Pan);
+        Assert.Equal(new Offset(4, 6), updateCopy.LocalPan);
+        Assert.Equal(new Offset(1, 2), updateCopy.PanDelta);
         Assert.Equal(0.75, updateCopy.Rotation);
         Assert.Equal(0, updateCopy.Pointer);
         Assert.Equal(0, endCopy.Pointer);
@@ -907,7 +907,7 @@ public sealed class PointerEventsTests
                 kind: PointerDeviceKind.Mouse,
                 device: 1,
                 position: Position,
-                delta: new Point(5, 5),
+                delta: new Offset(5, 5),
                 buttons: (PointerButtons)4,
                 obscured: true,
                 pressureMin: 10,
@@ -927,7 +927,7 @@ public sealed class PointerEventsTests
                 kind: PointerDeviceKind.Mouse,
                 device: 1,
                 position: Position,
-                delta: new Point(5, 5),
+                delta: new Offset(5, 5),
                 buttons: (PointerButtons)4,
                 obscured: true,
                 pressureMin: 10,
@@ -947,7 +947,7 @@ public sealed class PointerEventsTests
                 kind: PointerDeviceKind.Mouse,
                 device: 1,
                 position: Position,
-                delta: new Point(5, 5),
+                delta: new Offset(5, 5),
                 buttons: (PointerButtons)4,
                 obscured: true,
                 pressureMin: 10,
@@ -968,7 +968,7 @@ public sealed class PointerEventsTests
                 kind: PointerDeviceKind.Mouse,
                 device: 1,
                 position: Position,
-                delta: new Point(5, 5),
+                delta: new Offset(5, 5),
                 buttons: (PointerButtons)4,
                 obscured: true,
                 pressure: 34,

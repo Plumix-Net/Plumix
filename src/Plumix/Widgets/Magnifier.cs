@@ -13,7 +13,7 @@ public delegate Widget? MagnifierBuilder(
     ValueNotifier<MagnifierInfo> magnifierInfo);
 
 public sealed record MagnifierInfo(
-    Point GlobalGesturePosition,
+    Offset GlobalGesturePosition,
     Rect CaretRect,
     Rect FieldBounds,
     Rect CurrentLineBoundaries)
@@ -144,7 +144,7 @@ public sealed class MagnifierController
             : rect.Bottom > bounds.Bottom
                 ? bounds.Bottom - rect.Bottom
                 : 0;
-        return new Rect(rect.Position + new Point(dx, dy), rect.Size);
+        return DartGeometry.RectFromOffsetAndSize(rect.TopLeft + new Offset(dx, dy), rect.Size);
     }
 
     private static Task WaitForStatus(AnimationController controller, AnimationStatus target)
@@ -178,7 +178,7 @@ public sealed class RawMagnifier : SingleChildRenderObjectWidget
         Widget? child = null,
         MagnifierDecoration? decoration = null,
         Clip clipBehavior = Clip.None,
-        Point focalPointOffset = default,
+        Offset focalPointOffset = default,
         double magnificationScale = 1.0,
         Key? key = null) : base(child, key)
     {
@@ -206,7 +206,7 @@ public sealed class RawMagnifier : SingleChildRenderObjectWidget
 
     public Clip ClipBehavior { get; }
 
-    public Point FocalPointOffset { get; }
+    public Offset FocalPointOffset { get; }
 
     public double MagnificationScale { get; }
 

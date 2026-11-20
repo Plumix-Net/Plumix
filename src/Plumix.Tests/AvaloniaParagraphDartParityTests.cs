@@ -285,7 +285,7 @@ public sealed class AvaloniaParagraphDartParityTests
 
         int OpaquePixels(RunGlyph[] glyphs)
         {
-            var run = new GlyphRun(typeface, 40, new string('H', glyphs.Length).AsMemory(), glyphs, new Point(0, 40));
+            var run = new GlyphRun(typeface, 40, new string('H', glyphs.Length).AsMemory(), glyphs, new Offset(0, 40));
             var recorder = new PictureRecorder();
             new Canvas(recorder).DrawTextGeometry(
                 variable.Outline(run), new Paint { Color = new Plumix.UI.Color(0xFF000000) });
@@ -302,7 +302,7 @@ public sealed class AvaloniaParagraphDartParityTests
     public void Shadows_PaintUnderGlyphsAtTheirOffset()
     {
         using AvaloniaParagraph paragraph = Build("A", style: new ParagraphTextStyle(Color: new Color(0xFFFF0000),
-            Shadows: [new Shadow(new Color(0xFF0000FF), new Point(30, 0))]));
+            Shadows: [new Shadow(new Color(0xFF0000FF), new Offset(30, 0))]));
         paragraph.Layout(new ParagraphConstraints(100));
         using Bitmap image = Render(paragraph);
         Assert.Equal(((byte)255, (byte)0, (byte)0, (byte)255), RasterBackend.PixelAt(image, 10, 10));
@@ -327,7 +327,7 @@ public sealed class AvaloniaParagraphDartParityTests
         erase.Layout(new ParagraphConstraints(100));
         var recorder = new PictureRecorder();
         var canvas = new Canvas(recorder);
-        canvas.DrawRect(new Rect(0, 0, 100, 100), new Paint { Color = new Color(0xFFFF0000) });
+        canvas.DrawRect(DartGeometry.RectFromLTWH(0, 0, 100, 100), new Paint { Color = new Color(0xFFFF0000) });
         canvas.DrawParagraph(erase, default);
         using Bitmap erased = recorder.EndRecording().ToImageSync(100, 100);
         Assert.Equal(0, RasterBackend.PixelAt(erased, 10, 10).A);
@@ -364,8 +364,8 @@ public sealed class AvaloniaParagraphDartParityTests
         using AvaloniaParagraph paragraph = Build("A\nB",
             new ParagraphStyle(FontFamily: Ahem, FontSize: 10, Height: 4));
         paragraph.Layout(new ParagraphConstraints(100));
-        Assert.Equal(2, paragraph.GetPositionForOffset(new Point(0, 45)).Offset);
-        GlyphInfo glyph = paragraph.GetClosestGlyphInfoForOffset(new Point(1000, 1000))!;
+        Assert.Equal(2, paragraph.GetPositionForOffset(new Offset(0, 45)).Offset);
+        GlyphInfo glyph = paragraph.GetClosestGlyphInfoForOffset(new Offset(1000, 1000))!;
         Assert.Equal(new TextRange(2, 3), glyph.GraphemeClusterCodeUnitRange);
         Assert.Equal(64, glyph.GraphemeClusterLayoutBounds.Top, 5);
     }
@@ -454,7 +454,7 @@ public sealed class AvaloniaParagraphDartParityTests
         ResolvedTextStyle defaults = ResolvedTextStyle.FromParagraphStyle(paragraphStyle);
         ResolvedTextStyle first = defaults.Merge(new ParagraphTextStyle(Color: new Color(0xFFFF0000)));
         ResolvedTextStyle second = defaults.Merge(new ParagraphTextStyle(Color: new Color(0xFF0000FF),
-            Shadows: [new Shadow(new Color(0xFF00FF00), new Point(-20, 0))]));
+            Shadows: [new Shadow(new Color(0xFF00FF00), new Offset(-20, 0))]));
         using AvaloniaParagraph paragraph = Build("AA", paragraphStyle,
             runs: [new StyledRange(0, 1, first), new StyledRange(1, 2, second)]);
         paragraph.Layout(new ParagraphConstraints(100));

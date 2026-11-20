@@ -23,12 +23,12 @@ internal sealed class TestRecordingPaintingContext() : PaintingContext(new Offse
     /// <summary>The recorded calls, in order.</summary>
     public IReadOnlyList<CanvasCall> Calls => _canvas.DebugCalls;
 
-    public override void PaintChild(RenderObject child, Point offset) => child.Paint(this, offset);
+    public override void PaintChild(RenderObject child, Offset offset) => child.Paint(this, offset);
 
     public override void PushLayer(
         ContainerLayer childLayer,
         PaintingContextCallback painter,
-        Point offset,
+        Offset offset,
         Rect? childPaintBounds = null)
     {
         painter(this, offset);
@@ -36,13 +36,13 @@ internal sealed class TestRecordingPaintingContext() : PaintingContext(new Offse
 
     public override ClipRectLayer? PushClipRect(
         bool needsCompositing,
-        Point offset,
+        Offset offset,
         Rect clipRect,
         PaintingContextCallback painter,
         Clip clipBehavior = Clip.HardEdge,
         ClipRectLayer? oldLayer = null)
     {
-        Rect shifted = clipRect.Translate(new Vector(offset.X, offset.Y));
+        Rect shifted = clipRect.Shift(new Offset(offset.Dx, offset.Dy));
         ClipRectAndPaint(shifted, clipBehavior, shifted, () => painter(this, offset));
         return null;
     }
@@ -134,22 +134,22 @@ internal sealed class PaintPattern
         double? strokeWidth = null) => Add(
         "drawCircle",
         call => Check(call, color, style, strokeWidth)
-                ?? (x is { } ex && call.Center!.Value.X != ex ? $"x {call.Center!.Value.X} != {ex}" : null)
-                ?? (y is { } ey && call.Center!.Value.Y != ey ? $"y {call.Center!.Value.Y} != {ey}" : null)
+                ?? (x is { } ex && call.Center!.Value.Dx != ex ? $"x {call.Center!.Value.Dx} != {ex}" : null)
+                ?? (y is { } ey && call.Center!.Value.Dy != ey ? $"y {call.Center!.Value.Dy} != {ey}" : null)
                 ?? (radius is { } er && call.Radius != er ? $"radius {call.Radius} != {er}" : null));
 
     public PaintPattern Path(
         Color? color = null,
-        IEnumerable<Point>? includes = null,
-        IEnumerable<Point>? excludes = null,
+        IEnumerable<Offset>? includes = null,
+        IEnumerable<Offset>? excludes = null,
         PaintingStyle? style = null,
         double? strokeWidth = null) => Add(
         "drawPath",
         call => Check(call, color, style, strokeWidth) ?? CheckPath(call.Path, includes, excludes));
 
     public PaintPattern Line(
-        Point? p1 = null,
-        Point? p2 = null,
+        Offset? p1 = null,
+        Offset? p2 = null,
         Color? color = null,
         double? strokeWidth = null) => Add(
         "drawLine",
@@ -157,7 +157,7 @@ internal sealed class PaintPattern
                 ?? (p1 is { } start && call.Offset != start ? $"p1 {call.Offset} != {start}" : null)
                 ?? (p2 is { } end && call.EndOffset != end ? $"p2 {call.EndOffset} != {end}" : null));
 
-    public PaintPattern Paragraph(Point? offset = null) => Add(
+    public PaintPattern Paragraph(Offset? offset = null) => Add(
         "drawParagraph",
         call => offset is { } expected && call.Offset != expected ? $"offset {call.Offset} != {expected}" : null);
 
@@ -377,14 +377,14 @@ internal sealed class PaintPattern
         return null;
     }
 
-    private static string? CheckPath(Plumix.UI.Path? path, IEnumerable<Point>? includes, IEnumerable<Point>? excludes)
+    private static string? CheckPath(Plumix.UI.Path? path, IEnumerable<Offset>? includes, IEnumerable<Offset>? excludes)
     {
         if (path is null)
         {
             return includes is null && excludes is null ? null : "the call recorded no path";
         }
 
-        foreach (Point point in includes ?? [])
+        foreach (Offset point in includes ?? [])
         {
             if (!path.Contains(point))
             {
@@ -392,7 +392,7 @@ internal sealed class PaintPattern
             }
         }
 
-        foreach (Point point in excludes ?? [])
+        foreach (Offset point in excludes ?? [])
         {
             if (path.Contains(point))
             {
@@ -475,13 +475,13 @@ internal static class PathMatchers
         {
             for (int j = 0; j < sampleSize; j += 1)
             {
-                var offset = new Point(i * stepX, j * stepY);
+                var offset = new Offset(i * stepX, j * stepY);
                 if (Sample(offset) is { } failure)
                 {
                     return failure;
                 }
 
-                var noise = new Vector(stepX * random.NextDouble(), stepY * random.NextDouble());
+                var noise = new Offset(stepX * random.NextDouble(), stepY * random.NextDouble());
                 if (Sample(offset + noise) is { } noisyFailure)
                 {
                     return noisyFailure;
@@ -491,7 +491,7 @@ internal static class PathMatchers
 
         return null;
 
-        string? Sample(Point point) => expected.Contains(point) == actual.Contains(point)
+        string? Sample(Offset point) => expected.Contains(point) == actual.Contains(point)
             ? null
             : $"expected path {(expected.Contains(point) ? "contains" : "does not contain")} {point}, actual "
               + $"{(actual.Contains(point) ? "does" : "does not")}";

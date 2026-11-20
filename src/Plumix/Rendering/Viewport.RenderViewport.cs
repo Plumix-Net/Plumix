@@ -485,7 +485,7 @@ public abstract class RenderViewportBase<TParentData> : RenderBox,
         GrowthDirection growthDirection);
 
     /// <summary>The offset at which the given child should be painted.</summary>
-    public abstract Point PaintOffsetOf(RenderSliver child);
+    public abstract Offset PaintOffsetOf(RenderSliver child);
 
     /// <summary>
     /// The scroll offset within the viewport at which the given point in the given child is located.
@@ -499,21 +499,21 @@ public abstract class RenderViewportBase<TParentData> : RenderBox,
     public abstract double ComputeChildMainAxisPosition(RenderSliver child, double parentMainAxisPosition);
 
     /// <summary>Converts a layout offset in the given growth direction into a paint offset.</summary>
-    protected Point ComputeAbsolutePaintOffset(
+    protected Offset ComputeAbsolutePaintOffset(
         RenderSliver child,
         double layoutOffset,
         GrowthDirection growthDirection)
     {
         return ScrollDirectionUtils.ApplyGrowthDirectionToAxisDirection(_axisDirection, growthDirection) switch
         {
-            AxisDirection.Up => new Point(0.0, Size.Height - layoutOffset - child.Geometry!.PaintExtent),
-            AxisDirection.Left => new Point(Size.Width - layoutOffset - child.Geometry!.PaintExtent, 0.0),
-            AxisDirection.Right => new Point(layoutOffset, 0.0),
-            _ => new Point(0.0, layoutOffset),
+            AxisDirection.Up => new Offset(0.0, Size.Height - layoutOffset - child.Geometry!.PaintExtent),
+            AxisDirection.Left => new Offset(Size.Width - layoutOffset - child.Geometry!.PaintExtent, 0.0),
+            AxisDirection.Right => new Offset(layoutOffset, 0.0),
+            _ => new Offset(0.0, layoutOffset),
         };
     }
 
-    public override void Paint(PaintingContext context, Point offset)
+    public override void Paint(PaintingContext context, Offset offset)
     {
         if (FirstChild is null)
         {
@@ -525,7 +525,7 @@ public abstract class RenderViewportBase<TParentData> : RenderBox,
             _clipRectLayer.Layer = context.PushClipRect(
                 NeedsCompositing,
                 offset,
-                new Rect(new Point(0, 0), Size),
+                DartGeometry.RectFromOffsetAndSize(new Offset(0, 0), Size),
                 PaintContents,
                 ClipBehavior,
                 _clipRectLayer.Layer);
@@ -548,7 +548,7 @@ public abstract class RenderViewportBase<TParentData> : RenderBox,
 
     /// <inheritdoc />
     /// <remarks>Flutter's <c>RenderViewportBase.debugPaintSize</c>.</remarks>
-    protected internal override void DebugPaintSize(PaintingContext context, Point offset)
+    protected internal override void DebugPaintSize(PaintingContext context, Offset offset)
     {
         ArgumentNullException.ThrowIfNull(context);
         base.DebugPaintSize(context, offset);
@@ -558,12 +558,12 @@ public abstract class RenderViewportBase<TParentData> : RenderBox,
             Size size = Axis == Axis.Vertical
                 ? new Size(child.Constraints.CrossAxisExtent, child.Geometry!.LayoutExtent)
                 : new Size(child.Geometry!.LayoutExtent, child.Constraints.CrossAxisExtent);
-            var rect = new Rect(offset + PaintOffsetOf(child), size);
+            var rect = DartGeometry.RectFromOffsetAndSize(offset + PaintOffsetOf(child), size);
             context.Canvas.DrawGeometry(null, pen, new RectangleGeometry(rect.Deflate(0.5)));
         }
     }
 
-    private void PaintContents(PaintingContext context, Point offset)
+    private void PaintContents(PaintingContext context, Offset offset)
     {
         foreach (RenderSliver child in ChildrenInPaintOrder)
         {
@@ -579,12 +579,12 @@ public abstract class RenderViewportBase<TParentData> : RenderBox,
     /// Flutter's <c>RenderViewportBase.hitTestChildren</c>: each visible sliver, in hit-test order, is
     /// hit tested through the sliver protocol under the inverse of its paint transform.
     /// </remarks>
-    protected override bool HitTestChildren(BoxHitTestResult result, Point position)
+    protected override bool HitTestChildren(BoxHitTestResult result, Offset position)
     {
         (double mainAxisPosition, double crossAxisPosition) = Axis switch
         {
-            Axis.Vertical => (position.Y, position.X),
-            _ => (position.X, position.Y),
+            Axis.Vertical => (position.Dy, position.Dx),
+            _ => (position.Dx, position.Dy),
         };
         var sliverResult = SliverHitTestResult.Wrap(result);
         foreach (RenderSliver child in ChildrenInHitTestOrder)
@@ -676,8 +676,8 @@ public abstract class RenderViewportBase<TParentData> : RenderBox,
             pivotExtent = targetSliver.Geometry!.ScrollExtent;
             double crossAxisExtent = targetSliver.Constraints.CrossAxisExtent;
             rect ??= effectiveAxis == Axis.Horizontal
-                ? new Rect(0.0, 0.0, targetSliver.Geometry!.ScrollExtent, crossAxisExtent)
-                : new Rect(0.0, 0.0, crossAxisExtent, targetSliver.Geometry!.ScrollExtent);
+                ? DartGeometry.RectFromLTWH(0.0, 0.0, targetSliver.Geometry!.ScrollExtent, crossAxisExtent)
+                : DartGeometry.RectFromLTWH(0.0, 0.0, crossAxisExtent, targetSliver.Geometry!.ScrollExtent);
             rectLocal = rect.Value;
         }
         else
@@ -747,7 +747,7 @@ public abstract class RenderViewportBase<TParentData> : RenderBox,
 
     private static Rect TranslateRect(Rect rect, double dx, double dy)
     {
-        return new Rect(rect.X + dx, rect.Y + dy, rect.Width, rect.Height);
+        return DartGeometry.RectFromLTWH(rect.Left + dx, rect.Top + dy, rect.Width, rect.Height);
     }
 
     public override void ShowOnScreen(
@@ -812,7 +812,7 @@ public abstract class RenderViewportBase<TParentData> : RenderBox,
             return null;
         }
 
-        var viewportClip = new Rect(new Point(0, 0), Size);
+        var viewportClip = DartGeometry.RectFromOffsetAndSize(new Offset(0, 0), Size);
         if (child is not RenderSliver clippedSliver)
         {
             return viewportClip;
@@ -850,7 +850,7 @@ public abstract class RenderViewportBase<TParentData> : RenderBox,
                 break;
         }
 
-        return new Rect(new Point(left, top), new Point(right, bottom));
+        return DartGeometry.RectFromCorners(new Offset(left, top), new Offset(right, bottom));
     }
 
     /// <summary>
@@ -865,19 +865,19 @@ public abstract class RenderViewportBase<TParentData> : RenderBox,
             return null;
         }
 
-        var semanticBounds = new Rect(new Point(0, 0), Size);
+        var semanticBounds = DartGeometry.RectFromOffsetAndSize(new Offset(0, 0), Size);
         if (CalculatedCacheExtent is not { } cacheExtent)
         {
             return semanticBounds;
         }
 
         return Axis == Axis.Vertical
-            ? new Rect(
-                new Point(semanticBounds.Left, semanticBounds.Top - cacheExtent),
-                new Point(semanticBounds.Right, semanticBounds.Bottom + cacheExtent))
-            : new Rect(
-                new Point(semanticBounds.Left - cacheExtent, semanticBounds.Top),
-                new Point(semanticBounds.Right + cacheExtent, semanticBounds.Bottom));
+            ? DartGeometry.RectFromCorners(
+                new Offset(semanticBounds.Left, semanticBounds.Top - cacheExtent),
+                new Offset(semanticBounds.Right, semanticBounds.Bottom + cacheExtent))
+            : DartGeometry.RectFromCorners(
+                new Offset(semanticBounds.Left - cacheExtent, semanticBounds.Top),
+                new Offset(semanticBounds.Right + cacheExtent, semanticBounds.Bottom));
     }
 
     public override void VisitChildrenForSemantics(Action<RenderObject> visitor)
@@ -1268,7 +1268,7 @@ public class RenderViewport : RenderViewportBase<SliverPhysicalContainerParentDa
         childParentData.PaintOffset = ComputeAbsolutePaintOffset(child, layoutOffset, growthDirection);
     }
 
-    public override Point PaintOffsetOf(RenderSliver child)
+    public override Offset PaintOffsetOf(RenderSliver child)
     {
         return ((SliverPhysicalParentData)child.parentData!).PaintOffset;
     }
@@ -1343,15 +1343,15 @@ public class RenderViewport : RenderViewportBase<SliverPhysicalContainerParentDa
 
     public override double ComputeChildMainAxisPosition(RenderSliver child, double parentMainAxisPosition)
     {
-        Point paintOffset = ((SliverPhysicalParentData)child.parentData!).PaintOffset;
+        Offset paintOffset = ((SliverPhysicalParentData)child.parentData!).PaintOffset;
         return ScrollDirectionUtils.ApplyGrowthDirectionToAxisDirection(
             child.Constraints.AxisDirection,
             child.Constraints.GrowthDirection) switch
         {
-            AxisDirection.Down => parentMainAxisPosition - paintOffset.Y,
-            AxisDirection.Right => parentMainAxisPosition - paintOffset.X,
-            AxisDirection.Up => child.Geometry!.PaintExtent - (parentMainAxisPosition - paintOffset.Y),
-            _ => child.Geometry!.PaintExtent - (parentMainAxisPosition - paintOffset.X),
+            AxisDirection.Down => parentMainAxisPosition - paintOffset.Dy,
+            AxisDirection.Right => parentMainAxisPosition - paintOffset.Dx,
+            AxisDirection.Up => child.Geometry!.PaintExtent - (parentMainAxisPosition - paintOffset.Dy),
+            _ => child.Geometry!.PaintExtent - (parentMainAxisPosition - paintOffset.Dx),
         };
     }
 
@@ -1556,7 +1556,7 @@ public class RenderShrinkWrappingViewport : RenderViewportBase<SliverLogicalCont
         childParentData.LayoutOffset = layoutOffset;
     }
 
-    public override Point PaintOffsetOf(RenderSliver child)
+    public override Offset PaintOffsetOf(RenderSliver child)
     {
         var childParentData = (SliverLogicalParentData)child.parentData!;
         return ComputeAbsolutePaintOffset(
@@ -1567,8 +1567,8 @@ public class RenderShrinkWrappingViewport : RenderViewportBase<SliverLogicalCont
 
     public override void ApplyPaintTransform(RenderObject child, Matrix4 transform)
     {
-        Point paintOffset = PaintOffsetOf((RenderSliver)child);
-        transform.TranslateByDouble(paintOffset.X, paintOffset.Y, 0, 1);
+        Offset paintOffset = PaintOffsetOf((RenderSliver)child);
+        transform.TranslateByDouble(paintOffset.Dx, paintOffset.Dy, 0, 1);
     }
 
     public override double ScrollOffsetOf(RenderSliver child, double scrollOffsetWithinChild)

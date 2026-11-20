@@ -31,7 +31,7 @@ public sealed partial class HeroNavigatorTests
             using var manifest = GeometryManifest(harness, route, route, hero, hero);
 
             Assert.True(manifest.IsValid);
-            Assert.Equal(new Rect(20, 60, width, height), manifest.ToHeroLocation);
+            Assert.Equal(DartGeometry.RectFromLTWH(20, 60, width, height), manifest.ToHeroLocation);
             Assert.Equal(manifest.ToHeroLocation, manifest.FromHeroLocation);
         }
         finally
@@ -87,7 +87,7 @@ public sealed partial class HeroNavigatorTests
             }
             else
             {
-                Assert.Equal(new Rect(60, 90, 44, 44), manifest.ToHeroLocation);
+                Assert.Equal(DartGeometry.RectFromLTWH(60, 90, 44, 44), manifest.ToHeroLocation);
             }
         }
         finally
@@ -124,7 +124,7 @@ public sealed partial class HeroNavigatorTests
             Assert.Equal(valid, manifest.IsValid);
             if (!unpaintableDestination)
             {
-                Assert.Equal(new Rect(100, 60, 44, 44), manifest.ToHeroLocation);
+                Assert.Equal(DartGeometry.RectFromLTWH(100, 60, 44, 44), manifest.ToHeroLocation);
             }
         }
         finally
@@ -325,10 +325,10 @@ public sealed partial class HeroNavigatorTests
     {
         using var flight = new FlightFixture();
         flight.Push();
-        flight.Tester.TapAt(flight.ChildBox.LocalToGlobal(new Point(20, 20)));
+        flight.Tester.TapAt(flight.ChildBox.LocalToGlobal(new Offset(20, 20)));
         Assert.Equal(0, flight.Taps);
         flight.Tester.PumpAndSettle();
-        flight.Tester.TapAt(flight.ChildBox.LocalToGlobal(new Point(20, 20)));
+        flight.Tester.TapAt(flight.ChildBox.LocalToGlobal(new Offset(20, 20)));
         Assert.Equal(1, flight.Taps);
     }
 
@@ -342,7 +342,7 @@ public sealed partial class HeroNavigatorTests
         flight.Tester.Pump();
         flight.Tester.Pump(TimeSpan.FromMilliseconds(100));
         flight.Tester.PumpAndSettle();
-        Assert.Equal(100, flight.ChildBox.LocalToGlobal(default).Y, 6);
+        Assert.Equal(100, flight.ChildBox.LocalToGlobal(default).Dy, 6);
         Assert.Equal(200, flight.ChildBox.Size.Height);
         Assert.Null(flight.Tester.TakeException());
     }

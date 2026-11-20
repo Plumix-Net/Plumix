@@ -107,13 +107,13 @@ public class ViewportPortTests
 
         // At the zero offset the center child sits at the leading edge and the reverse sliver is
         // entirely scrolled off the leading edge.
-        Assert.Equal(new Point(0, 0), viewport.PaintOffsetOf(center));
+        Assert.Equal(new Offset(0, 0), viewport.PaintOffsetOf(center));
         Assert.Equal(0.0, before.Geometry!.PaintExtent);
 
         offset.JumpTo(-120);
         Layout(viewport, new Size(100, 200));
         Assert.Equal(120.0, before.Geometry!.PaintExtent);
-        Assert.Equal(new Point(0, 120), viewport.PaintOffsetOf(center));
+        Assert.Equal(new Offset(0, 120), viewport.PaintOffsetOf(center));
     }
 
     [Fact]
@@ -238,7 +238,7 @@ public class ViewportPortTests
         RenderViewport viewport = BuildViewport(offset, [sliver]);
         Layout(viewport, new Size(100, 200));
 
-        Assert.Equal(new Rect(0, 0, 100, 200), viewport.InvokeDescribeApproximatePaintClip(sliver));
+        Assert.Equal(DartGeometry.RectFromLTWH(0, 0, 100, 200), viewport.InvokeDescribeApproximatePaintClip(sliver));
 
         viewport.ClipBehavior = Clip.None;
         Assert.Null(viewport.InvokeDescribeApproximatePaintClip(sliver));
@@ -315,15 +315,15 @@ public class ViewportPortTests
 
         RevealedOffset leading = viewport.GetOffsetToReveal(boxes[5], 0.0);
         Assert.Equal(500.0, leading.Offset);
-        Assert.Equal(new Rect(0, 0, 300, 100), leading.Rect);
+        Assert.Equal(DartGeometry.RectFromLTWH(0, 0, 300, 100), leading.Rect);
 
         RevealedOffset trailing = viewport.GetOffsetToReveal(boxes[5], 1.0);
         Assert.Equal(400.0, trailing.Offset);
-        Assert.Equal(new Rect(0, 100, 300, 100), trailing.Rect);
+        Assert.Equal(DartGeometry.RectFromLTWH(0, 100, 300, 100), trailing.Rect);
 
-        RevealedOffset partial = viewport.GetOffsetToReveal(boxes[5], 0.0, new Rect(40, 40, 10, 10));
+        RevealedOffset partial = viewport.GetOffsetToReveal(boxes[5], 0.0, DartGeometry.RectFromLTWH(40, 40, 10, 10));
         Assert.Equal(540.0, partial.Offset);
-        Assert.Equal(new Rect(40, 0, 10, 10), partial.Rect);
+        Assert.Equal(DartGeometry.RectFromLTWH(40, 0, 10, 10), partial.Rect);
     }
 
     [Fact]
@@ -415,8 +415,8 @@ public class ViewportPortTests
         pipeline.Attach(root);
         pipeline.FlushLayout(new Size(100, 600));
 
-        Assert.Equal(new Point(0, 0), viewport.PaintOffsetOf(first));
-        Assert.Equal(new Point(0, 60), viewport.PaintOffsetOf(second));
+        Assert.Equal(new Offset(0, 0), viewport.PaintOffsetOf(first));
+        Assert.Equal(new Offset(0, 60), viewport.PaintOffsetOf(second));
         Assert.IsType<SliverLogicalContainerParentData>(first.parentData);
     }
 
@@ -463,7 +463,7 @@ public class ViewportPortTests
             pipeline.FlushLayout(new Size(800, 600));
             for (int i = 0; i < boxes.Count; i += 1)
             {
-                Point origin = MatrixUtils.TransformPoint(boxes[i].GetTransformTo(viewport), default);
+                Offset origin = MatrixUtils.TransformPoint(boxes[i].GetTransformTo(viewport), default);
                 double expected = direction switch
                 {
                     AxisDirection.Up => 200 - i * 400 + pixels,
@@ -471,18 +471,18 @@ public class ViewportPortTests
                     _ => i * 400 - pixels,
                 };
                 Assert.Equal(direction is AxisDirection.Left or AxisDirection.Right
-                    ? new Point(expected, 0)
-                    : new Point(0, expected), origin);
+                    ? new Offset(expected, 0)
+                    : new Offset(0, expected), origin);
             }
 
             if (pixels == 900)
             {
-                Point position = direction switch
+                Offset position = direction switch
                 {
-                    AxisDirection.Up => new Point(150, 350),
-                    AxisDirection.Left => new Point(550, 150),
-                    AxisDirection.Right => new Point(150, 450),
-                    _ => new Point(130, 150),
+                    AxisDirection.Up => new Offset(150, 350),
+                    AxisDirection.Left => new Offset(550, 150),
+                    AxisDirection.Right => new Offset(150, 450),
+                    _ => new Offset(130, 150),
                 };
                 var result = new BoxHitTestResult();
                 Assert.True(viewport.HitTest(result, position));
@@ -527,14 +527,14 @@ public class ViewportPortTests
 
     private sealed class SizedRenderBox(Size size) : RenderBox
     {
-        protected override bool HitTestSelf(Point position) => true;
+        protected override bool HitTestSelf(Offset position) => true;
 
         protected override void PerformLayout()
         {
             Size = Constraints.Constrain(size);
         }
 
-        public override void Paint(PaintingContext context, Point offset)
+        public override void Paint(PaintingContext context, Offset offset)
         {
         }
     }
@@ -558,7 +558,7 @@ public class ViewportPortTests
                 HasVisualOverflow: scrollExtent > constraints.RemainingPaintExtent);
         }
 
-        public override void Paint(PaintingContext context, Point offset)
+        public override void Paint(PaintingContext context, Offset offset)
         {
             if (name != null)
             {
@@ -584,7 +584,7 @@ public class ViewportPortTests
                 CacheExtent: paintExtent);
         }
 
-        public override void Paint(PaintingContext context, Point offset)
+        public override void Paint(PaintingContext context, Offset offset)
         {
         }
     }
@@ -612,7 +612,7 @@ public class ViewportPortTests
                 MaxPaintExtent: scrollExtent);
         }
 
-        public override void Paint(PaintingContext context, Point offset)
+        public override void Paint(PaintingContext context, Offset offset)
         {
         }
     }

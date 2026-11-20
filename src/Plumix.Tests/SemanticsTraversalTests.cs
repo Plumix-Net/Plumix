@@ -20,9 +20,9 @@ public sealed class SemanticsTraversalTests
         SemanticsNode root = Compile(transform, new Size(220, 120));
 
         SemanticsNode moved = Assert.Single(root.Children);
-        Assert.Equal(new Rect(0, 0, 12, 8), moved.Rect);
+        Assert.Equal(DartGeometry.RectFromLTWH(0, 0, 12, 8), moved.Rect);
         Assert.Equal(Matrix4.TranslationValues(30, 12, 0.0), moved.Transform);
-        Assert.Equal(new Rect(30, 12, 12, 8), moved.GlobalRect);
+        Assert.Equal(DartGeometry.RectFromLTWH(30, 12, 12, 8), moved.GlobalRect);
     }
 
     [Fact]
@@ -32,7 +32,7 @@ public sealed class SemanticsTraversalTests
 
         SemanticsNode still = Assert.Single(root.Children);
         Assert.Null(still.Transform);
-        Assert.Equal(new Rect(0, 0, 12, 8), still.GlobalRect);
+        Assert.Equal(DartGeometry.RectFromLTWH(0, 0, 12, 8), still.GlobalRect);
     }
 
     [Fact]
@@ -51,8 +51,8 @@ public sealed class SemanticsTraversalTests
     [Fact]
     public void TraversalOrder_RightToLeftReversesTheHorizontalGroups()
     {
-        var left = new PositionedLabelBox("Left", new Rect(0, 0, 40, 20));
-        var right = new PositionedLabelBox("Right", new Rect(60, 0, 40, 20));
+        var left = new PositionedLabelBox("Left", DartGeometry.RectFromLTWH(0, 0, 40, 20));
+        var right = new PositionedLabelBox("Right", DartGeometry.RectFromLTWH(60, 0, 40, 20));
 
         SemanticsNode root = CompileDirectionalRow([left, right], TextDirection.Rtl);
 
@@ -64,8 +64,8 @@ public sealed class SemanticsTraversalTests
     [Fact]
     public void TraversalOrder_SortKeysTakePrecedenceOverGeometry()
     {
-        var first = new PositionedLabelBox("First", new Rect(0, 0, 40, 20), new OrdinalSortKey(1.0));
-        var second = new PositionedLabelBox("Second", new Rect(60, 0, 40, 20), new OrdinalSortKey(0.0));
+        var first = new PositionedLabelBox("First", DartGeometry.RectFromLTWH(0, 0, 40, 20), new OrdinalSortKey(1.0));
+        var second = new PositionedLabelBox("Second", DartGeometry.RectFromLTWH(60, 0, 40, 20), new OrdinalSortKey(0.0));
 
         SemanticsNode root = CompileDirectionalRow([first, second], TextDirection.Ltr);
 
@@ -137,7 +137,7 @@ public sealed class SemanticsTraversalTests
     {
         protected override void PerformLayout() => Size = Constraints.Constrain(size);
 
-        public override void Paint(PaintingContext ctx, Point offset)
+        public override void Paint(PaintingContext ctx, Offset offset)
         {
         }
 
@@ -153,7 +153,7 @@ public sealed class SemanticsTraversalTests
     {
         protected override void PerformLayout() => Size = Constraints.Constrain(size);
 
-        public override void Paint(PaintingContext ctx, Point offset)
+        public override void Paint(PaintingContext ctx, Offset offset)
         {
         }
 
@@ -170,7 +170,7 @@ public sealed class SemanticsTraversalTests
     {
         protected override void PerformLayout() => Size = Constraints.Constrain(rect.Size);
 
-        public override void Paint(PaintingContext ctx, Point offset)
+        public override void Paint(PaintingContext ctx, Offset offset)
         {
         }
 

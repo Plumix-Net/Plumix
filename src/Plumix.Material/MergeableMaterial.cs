@@ -652,7 +652,7 @@ internal sealed class RenderMergeableMaterialListBody : RenderListBody
             while (child is not null)
             {
                 child.Layout(childConstraints, parentUsesSize: true);
-                ((ListBodyParentData)child.parentData!).offset = new Point(mainAxisExtent, 0.0);
+                ((ListBodyParentData)child.parentData!).offset = new Offset(mainAxisExtent, 0.0);
                 mainAxisExtent += child.Size.Width;
                 child = ChildAfter(child);
             }
@@ -673,7 +673,7 @@ internal sealed class RenderMergeableMaterialListBody : RenderListBody
         while (child is not null)
         {
             child.Layout(verticalChildConstraints, parentUsesSize: true);
-            ((ListBodyParentData)child.parentData!).offset = new Point(0.0, mainAxisExtent);
+            ((ListBodyParentData)child.parentData!).offset = new Offset(0.0, mainAxisExtent);
             mainAxisExtent += child.Size.Height;
             child = ChildAfter(child);
         }
@@ -685,14 +685,14 @@ internal sealed class RenderMergeableMaterialListBody : RenderListBody
         }
     }
 
-    public override void Paint(PaintingContext context, Point offset)
+    public override void Paint(PaintingContext context, Offset offset)
     {
         RenderBox? child = FirstChild;
         int index = 0;
         while (child is not null)
         {
             var parentData = (ListBodyParentData)child.parentData!;
-            var rect = new Rect(parentData.offset + offset, child.Size);
+            var rect = DartGeometry.RectFromOffsetAndSize(parentData.offset + offset, child.Size);
             if (index % 2 == 0 && Elevation != 0.0)
             {
                 var shadowPath = new Plumix.UI.Path();
@@ -731,8 +731,8 @@ internal sealed class RenderMergeableMaterialListBody : RenderListBody
         {
             var parentData = (ListBodyParentData)child.parentData!;
             parentData.offset = horizontal
-                ? new Point(mainAxisExtent - parentData.offset.X - child.Size.Width, 0.0)
-                : new Point(0.0, mainAxisExtent - parentData.offset.Y - child.Size.Height);
+                ? new Offset(mainAxisExtent - parentData.offset.Dx - child.Size.Width, 0.0)
+                : new Offset(0.0, mainAxisExtent - parentData.offset.Dy - child.Size.Height);
         }
     }
 }

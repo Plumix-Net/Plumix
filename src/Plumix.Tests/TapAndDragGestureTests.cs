@@ -36,23 +36,23 @@ public sealed class TapAndDragGestureTests : IDisposable
         using var recognizer = CreatePanRecognizer();
         var pipeline = Attach(recognizer);
 
-        Tap(pipeline, 1, new Point(10, 10));
+        Tap(pipeline, 1, new Offset(10, 10));
         Assert.Equal(["down#1", "up#1"], _events);
 
         _events.Clear();
         _timers.Elapse(ConsecutiveTapDelay);
-        Tap(pipeline, 2, new Point(12, 12));
+        Tap(pipeline, 2, new Offset(12, 12));
         Assert.Equal(["down#2", "up#2"], _events);
 
         _events.Clear();
         _timers.Elapse(ConsecutiveTapDelay);
-        Tap(pipeline, 3, new Point(12, 12));
+        Tap(pipeline, 3, new Offset(12, 12));
         Assert.Equal(["down#3", "up#3"], _events);
 
         // A gap longer than kDoubleTapTimeout restarts the series.
         _events.Clear();
         _timers.Elapse(TimeSpan.FromMilliseconds(1000));
-        Tap(pipeline, 4, new Point(12, 12));
+        Tap(pipeline, 4, new Offset(12, 12));
         Assert.Equal(["down#1", "up#1"], _events);
     }
 
@@ -62,11 +62,11 @@ public sealed class TapAndDragGestureTests : IDisposable
         using var recognizer = CreatePanRecognizer();
         var pipeline = Attach(recognizer);
 
-        Tap(pipeline, 1, new Point(10, 10));
+        Tap(pipeline, 1, new Offset(10, 10));
         _events.Clear();
         _timers.Elapse(TimeSpan.FromMilliseconds(100));
         // (130,130) is ~169.7 logical pixels away, past the 100.0 kDoubleTapSlop.
-        Tap(pipeline, 2, new Point(130, 130));
+        Tap(pipeline, 2, new Offset(130, 130));
 
         Assert.Equal(["down#1", "up#1"], _events);
     }
@@ -77,11 +77,11 @@ public sealed class TapAndDragGestureTests : IDisposable
         using var recognizer = CreatePanRecognizer();
         var pipeline = Attach(recognizer);
 
-        Tap(pipeline, 1, new Point(10, 10));
-        Tap(pipeline, 2, new Point(10, 10));
-        Tap(pipeline, 3, new Point(10, 10));
+        Tap(pipeline, 1, new Offset(10, 10));
+        Tap(pipeline, 2, new Offset(10, 10));
+        Tap(pipeline, 3, new Offset(10, 10));
         _events.Clear();
-        Tap(pipeline, 4, new Point(10, 10));
+        Tap(pipeline, 4, new Offset(10, 10));
 
         Assert.Equal(["down#1", "up#1"], _events);
     }
@@ -92,15 +92,15 @@ public sealed class TapAndDragGestureTests : IDisposable
         using var recognizer = CreatePanRecognizer();
         var pipeline = Attach(recognizer);
 
-        Tap(pipeline, 1, new Point(10, 10));
+        Tap(pipeline, 1, new Offset(10, 10));
         _timers.Elapse(ConsecutiveTapDelay);
-        Tap(pipeline, 2, new Point(10, 10));
+        Tap(pipeline, 2, new Offset(10, 10));
         _events.Clear();
 
-        Down(pipeline, 3, new Point(10, 10));
+        Down(pipeline, 3, new Offset(10, 10));
         // |(30,35)| is ~46.1, past the 36.0 pan slop.
-        Move(pipeline, 3, new Point(40, 45));
-        Up(pipeline, 3, new Point(40, 45));
+        Move(pipeline, 3, new Offset(40, 45));
+        Up(pipeline, 3, new Offset(40, 45));
 
         Assert.Equal(["down#3", "panstart#3", "panupdate#3", "panend#3"], _events);
     }
@@ -111,16 +111,16 @@ public sealed class TapAndDragGestureTests : IDisposable
         using var recognizer = CreatePanRecognizer();
         var pipeline = Attach(recognizer);
 
-        Down(pipeline, 1, new Point(10, 10));
+        Down(pipeline, 1, new Offset(10, 10));
         // The move carries a zero delta, so the accumulated drag distance stays 0 while the
         // straight-line distance from the origin (21.2) passes the 18.0 hit slop.
         _binding.HandlePointerEvent(pipeline.Root, new PointerMoveEvent(
             pointer: 1,
             kind: PointerDeviceKind.Touch,
-            position: new Point(25, 25),
+            position: new Offset(25, 25),
             buttons: PointerButtons.Primary,
             timestampUtc: DateTime.UtcNow));
-        Up(pipeline, 1, new Point(25, 25));
+        Up(pipeline, 1, new Offset(25, 25));
 
         Assert.Equal(["down#1", "panstart#1", "panend#1"], _events);
     }
@@ -131,11 +131,11 @@ public sealed class TapAndDragGestureTests : IDisposable
         using var recognizer = CreateHorizontalRecognizer();
         var pipeline = Attach(recognizer);
 
-        Down(pipeline, 1, new Point(10, 10));
+        Down(pipeline, 1, new Offset(10, 10));
         // The horizontal component (15) stays under the 18.0 hit slop, but the two-axis distance
         // (~38.1) passes the 36.0 pan slop and the recognizer is alone in the arena.
-        Move(pipeline, 1, new Point(25, 45));
-        Up(pipeline, 1, new Point(25, 45));
+        Move(pipeline, 1, new Offset(25, 45));
+        Up(pipeline, 1, new Offset(25, 45));
 
         Assert.Equal(
             ["down#1", "horizontaldragstart#1", "horizontaldragupdate#1", "horizontaldragend#1"],
@@ -152,10 +152,10 @@ public sealed class TapAndDragGestureTests : IDisposable
 
         var pipeline = Attach(recognizer, taps);
 
-        Down(pipeline, 1, new Point(10, 10), PointerDeviceKind.Mouse);
+        Down(pipeline, 1, new Offset(10, 10), PointerDeviceKind.Mouse);
         // |(5,5)| is ~7.07, past the 2.0 precise-pointer pan slop.
-        Move(pipeline, 1, new Point(15, 15), PointerDeviceKind.Mouse);
-        Up(pipeline, 1, new Point(15, 15), PointerDeviceKind.Mouse);
+        Move(pipeline, 1, new Offset(15, 15), PointerDeviceKind.Mouse);
+        Up(pipeline, 1, new Offset(15, 15), PointerDeviceKind.Mouse);
 
         Assert.Equal(["down#1", "panstart#1", "panupdate#1", "panend#1"], _events);
         Assert.Equal(0, tapCount);
@@ -170,9 +170,9 @@ public sealed class TapAndDragGestureTests : IDisposable
 
         var pipeline = Attach(recognizer, competing);
 
-        Down(pipeline, 1, new Point(10, 10));
-        Move(pipeline, 1, new Point(40, 45));
-        Up(pipeline, 1, new Point(40, 45));
+        Down(pipeline, 1, new Offset(10, 10));
+        Move(pipeline, 1, new Offset(40, 45));
+        Up(pipeline, 1, new Offset(40, 45));
 
         Assert.Equal(["pancancel", "down#1", "panstart#1", "panupdate#1", "panend#1"], _events);
     }
@@ -188,9 +188,9 @@ public sealed class TapAndDragGestureTests : IDisposable
 
         var pipeline = Attach(recognizer, competing);
 
-        Down(pipeline, 1, new Point(10, 10));
-        Move(pipeline, 1, new Point(40, 45));
-        Up(pipeline, 1, new Point(40, 45));
+        Down(pipeline, 1, new Offset(10, 10));
+        Move(pipeline, 1, new Offset(40, 45));
+        Up(pipeline, 1, new Offset(40, 45));
 
         Assert.Equal(["panstart", "panend"], _events);
     }
@@ -201,11 +201,11 @@ public sealed class TapAndDragGestureTests : IDisposable
         using var recognizer = CreatePanRecognizer();
         var pipeline = Attach(recognizer);
 
-        Down(pipeline, 1, new Point(10, 10));
+        Down(pipeline, 1, new Offset(10, 10));
         _binding.HandlePointerEvent(pipeline.Root, new PointerCancelEvent(
             pointer: 1,
             kind: PointerDeviceKind.Touch,
-            position: new Point(10, 10),
+            position: new Offset(10, 10),
             buttons: PointerButtons.None,
             timestampUtc: DateTime.UtcNow));
 
@@ -214,7 +214,7 @@ public sealed class TapAndDragGestureTests : IDisposable
         // The cancelled tap does not count towards the next series.
         _events.Clear();
         _timers.Elapse(TimeSpan.FromMilliseconds(100));
-        Tap(pipeline, 2, new Point(12, 12));
+        Tap(pipeline, 2, new Offset(12, 12));
         Assert.Equal(["down#1", "up#1"], _events);
     }
 
@@ -227,14 +227,14 @@ public sealed class TapAndDragGestureTests : IDisposable
 
         var pipeline = Attach(recognizer);
 
-        Down(pipeline, 1, new Point(10, 10));
-        Move(pipeline, 1, new Point(50, 20));
-        Move(pipeline, 1, new Point(90, 30));
-        Move(pipeline, 1, new Point(120, 45));
-        Up(pipeline, 1, new Point(120, 45));
+        Down(pipeline, 1, new Offset(10, 10));
+        Move(pipeline, 1, new Offset(50, 20));
+        Move(pipeline, 1, new Offset(90, 30));
+        Move(pipeline, 1, new Offset(120, 45));
+        Up(pipeline, 1, new Offset(120, 45));
 
         Assert.NotNull(endDetails);
-        Assert.Equal(new Point(120, 45), endDetails!.GlobalPosition);
+        Assert.Equal(new Offset(120, 45), endDetails!.GlobalPosition);
         Assert.Equal(Velocity.Zero, endDetails.Velocity);
         Assert.Equal(0.0, endDetails.PrimaryVelocity);
     }
@@ -246,10 +246,10 @@ public sealed class TapAndDragGestureTests : IDisposable
         var pipeline = Attach(recognizer);
 
         // A single tap does not resolve the arena when the press deadline elapses.
-        Down(pipeline, 1, new Point(10, 10));
+        Down(pipeline, 1, new Offset(10, 10));
         _timers.Elapse(GestureConstants.PressTimeout);
         Assert.Equal(["down#1"], _events);
-        Up(pipeline, 1, new Point(10, 10));
+        Up(pipeline, 1, new Offset(10, 10));
 
         _events.Clear();
         _timers.Elapse(ConsecutiveTapDelay);
@@ -259,7 +259,7 @@ public sealed class TapAndDragGestureTests : IDisposable
         using var longPress = new LongPressGestureRecognizer();
         longPress.OnLongPress = () => _events.Add("longpress");
         var second = Attach(recognizer, longPress);
-        Down(second, 2, new Point(10, 10));
+        Down(second, 2, new Offset(10, 10));
         _timers.Elapse(GestureConstants.PressTimeout);
 
         Assert.Equal(["down#2"], _events);
@@ -271,10 +271,10 @@ public sealed class TapAndDragGestureTests : IDisposable
         using var recognizer = CreatePanRecognizer();
         var pipeline = Attach(recognizer);
 
-        Down(pipeline, 1, new Point(10, 10));
-        Down(pipeline, 2, new Point(12, 12));
-        Up(pipeline, 1, new Point(11, 9));
-        Up(pipeline, 2, new Point(13, 11));
+        Down(pipeline, 1, new Offset(10, 10));
+        Down(pipeline, 2, new Offset(12, 12));
+        Up(pipeline, 1, new Offset(11, 9));
+        Up(pipeline, 2, new Offset(13, 11));
 
         Assert.Equal(["down#1", "up#1"], _events);
     }
@@ -288,10 +288,10 @@ public sealed class TapAndDragGestureTests : IDisposable
         _binding.HandlePointerEvent(pipeline.Root, new PointerDownEvent(
             pointer: 1,
             kind: PointerDeviceKind.Mouse,
-            position: new Point(10, 10),
+            position: new Offset(10, 10),
             buttons: PointerButtons.Secondary,
             timestampUtc: DateTime.UtcNow));
-        Up(pipeline, 1, new Point(10, 10), PointerDeviceKind.Mouse);
+        Up(pipeline, 1, new Offset(10, 10), PointerDeviceKind.Mouse);
 
         Assert.Empty(_events);
     }
@@ -349,7 +349,7 @@ public sealed class TapAndDragGestureTests : IDisposable
         return pipeline;
     }
 
-    private void Tap(PipelineOwner pipeline, int pointer, Point position)
+    private void Tap(PipelineOwner pipeline, int pointer, Offset position)
     {
         Down(pipeline, pointer, position);
         Up(pipeline, pointer, position);
@@ -358,7 +358,7 @@ public sealed class TapAndDragGestureTests : IDisposable
     private void Down(
         PipelineOwner pipeline,
         int pointer,
-        Point position,
+        Offset position,
         PointerDeviceKind kind = PointerDeviceKind.Touch)
     {
         _binding.HandlePointerEvent(pipeline.Root, new PointerDownEvent(
@@ -372,7 +372,7 @@ public sealed class TapAndDragGestureTests : IDisposable
     private void Move(
         PipelineOwner pipeline,
         int pointer,
-        Point position,
+        Offset position,
         PointerDeviceKind kind = PointerDeviceKind.Touch)
     {
         _binding.HandlePointerEvent(pipeline.Root, new PointerMoveEvent(
@@ -386,7 +386,7 @@ public sealed class TapAndDragGestureTests : IDisposable
     private void Up(
         PipelineOwner pipeline,
         int pointer,
-        Point position,
+        Offset position,
         PointerDeviceKind kind = PointerDeviceKind.Touch)
     {
         _binding.HandlePointerEvent(pipeline.Root, new PointerUpEvent(
@@ -401,9 +401,9 @@ public sealed class TapAndDragGestureTests : IDisposable
     {
         protected override void PerformLayout() => Size = Constraints.Constrain(size);
 
-        protected override bool HitTestSelf(Point position) => true;
+        protected override bool HitTestSelf(Offset position) => true;
 
-        public override void Paint(PaintingContext ctx, Point offset)
+        public override void Paint(PaintingContext ctx, Offset offset)
         {
         }
     }

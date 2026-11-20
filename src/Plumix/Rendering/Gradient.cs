@@ -32,9 +32,9 @@ public sealed record GradientRotation(double Radians) : GradientTransform
     {
         double sinRadians = Math.Sin(Radians);
         double oneMinusCosRadians = 1 - Math.Cos(Radians);
-        Point center = bounds.Center;
-        double originX = (sinRadians * center.Y) + (oneMinusCosRadians * center.X);
-        double originY = (-sinRadians * center.X) + (oneMinusCosRadians * center.Y);
+        Offset center = bounds.Center;
+        double originX = (sinRadians * center.Dy) + (oneMinusCosRadians * center.Dx);
+        double originY = (-sinRadians * center.Dx) + (oneMinusCosRadians * center.Dy);
 
         // Dart composes `Matrix4.identity()..translate(originX, originY)..rotateZ(radians)`, which for a
         // column vector applies the rotation first; Avalonia's row-vector matrices reverse the order.

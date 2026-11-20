@@ -71,7 +71,7 @@ public sealed class ProxyBoxTransformParityTests : IDisposable
         Assert.Equal(Matrix4.Zero(), transform);
 
         var hitTestResult = new BoxHitTestResult();
-        Assert.False(fittedBox.InvokeHitTestChildren(hitTestResult, new Point(0, 0)));
+        Assert.False(fittedBox.InvokeHitTestChildren(hitTestResult, new Offset(0, 0)));
     }
 
     [Fact]
@@ -173,13 +173,13 @@ public sealed class ProxyBoxTransformParityTests : IDisposable
     [Fact]
     public void RenderFractionalTranslation_UpdatesItsSemanticsAfterItsTranslationValueIsSet()
     {
-        var box = new TestSemanticsUpdateRenderFractionalTranslation(translation: new Point(0.5, 0.5));
+        var box = new TestSemanticsUpdateRenderFractionalTranslation(translation: new Offset(0.5, 0.5));
         LayoutBox(box, constraints: BoxConstraints.Tight(new Size(200.0, 200.0)));
         int initialCount = box.MarkNeedsSemanticsUpdateCallCount;
         Assert.Equal(1, initialCount);
-        box.Translation = new Point(0.4, 0.4);
+        box.Translation = new Offset(0.4, 0.4);
         Assert.Equal(2, box.MarkNeedsSemanticsUpdateCallCount);
-        box.Translation = new Point(0.3, 0.3);
+        box.Translation = new Offset(0.3, 0.3);
         Assert.Equal(3, box.MarkNeedsSemanticsUpdateCallCount);
     }
 
@@ -194,14 +194,14 @@ public sealed class ProxyBoxTransformParityTests : IDisposable
         var sizer = new RenderTransform(Matrix4.Identity(), alignment: Alignment.Center, child: inner);
         LayoutBox(sizer, BoxConstraints.Tight(new Size(100.0, 100.0)), Alignment.TopLeft);
 
-        Assert.Equal(new Point(0, 0), inner.GlobalToLocal(new Point(0, 0)));
-        Assert.Equal(new Point(100.0, 100.0), inner.GlobalToLocal(new Point(100.0, 100.0)));
-        Assert.Equal(new Point(25.0, 75.0), inner.GlobalToLocal(new Point(25.0, 75.0)));
-        Assert.Equal(new Point(50.0, 50.0), inner.GlobalToLocal(new Point(50.0, 50.0)));
-        Assert.Equal(new Point(0, 0), inner.LocalToGlobal(new Point(0, 0)));
-        Assert.Equal(new Point(100.0, 100.0), inner.LocalToGlobal(new Point(100.0, 100.0)));
-        Assert.Equal(new Point(25.0, 75.0), inner.LocalToGlobal(new Point(25.0, 75.0)));
-        Assert.Equal(new Point(50.0, 50.0), inner.LocalToGlobal(new Point(50.0, 50.0)));
+        Assert.Equal(new Offset(0, 0), inner.GlobalToLocal(new Offset(0, 0)));
+        Assert.Equal(new Offset(100.0, 100.0), inner.GlobalToLocal(new Offset(100.0, 100.0)));
+        Assert.Equal(new Offset(25.0, 75.0), inner.GlobalToLocal(new Offset(25.0, 75.0)));
+        Assert.Equal(new Offset(50.0, 50.0), inner.GlobalToLocal(new Offset(50.0, 50.0)));
+        Assert.Equal(new Offset(0, 0), inner.LocalToGlobal(new Offset(0, 0)));
+        Assert.Equal(new Offset(100.0, 100.0), inner.LocalToGlobal(new Offset(100.0, 100.0)));
+        Assert.Equal(new Offset(25.0, 75.0), inner.LocalToGlobal(new Offset(25.0, 75.0)));
+        Assert.Equal(new Offset(50.0, 50.0), inner.LocalToGlobal(new Offset(50.0, 50.0)));
     }
 
     [Fact]
@@ -214,14 +214,14 @@ public sealed class ProxyBoxTransformParityTests : IDisposable
             child: new RenderPadding(EdgeInsets.Only(left: 20.0), child: inner));
         LayoutBox(sizer, BoxConstraints.Tight(new Size(100.0, 100.0)), Alignment.TopLeft);
 
-        Assert.Equal(new Point(-20.0, 0.0), inner.GlobalToLocal(new Point(0, 0)));
-        Assert.Equal(new Point(80.0, 100.0), inner.GlobalToLocal(new Point(100.0, 100.0)));
-        Assert.Equal(new Point(5.0, 75.0), inner.GlobalToLocal(new Point(25.0, 75.0)));
-        Assert.Equal(new Point(30.0, 50.0), inner.GlobalToLocal(new Point(50.0, 50.0)));
-        Assert.Equal(new Point(20.0, 0.0), inner.LocalToGlobal(new Point(0, 0)));
-        Assert.Equal(new Point(120.0, 100.0), inner.LocalToGlobal(new Point(100.0, 100.0)));
-        Assert.Equal(new Point(45.0, 75.0), inner.LocalToGlobal(new Point(25.0, 75.0)));
-        Assert.Equal(new Point(70.0, 50.0), inner.LocalToGlobal(new Point(50.0, 50.0)));
+        Assert.Equal(new Offset(-20.0, 0.0), inner.GlobalToLocal(new Offset(0, 0)));
+        Assert.Equal(new Offset(80.0, 100.0), inner.GlobalToLocal(new Offset(100.0, 100.0)));
+        Assert.Equal(new Offset(5.0, 75.0), inner.GlobalToLocal(new Offset(25.0, 75.0)));
+        Assert.Equal(new Offset(30.0, 50.0), inner.GlobalToLocal(new Offset(50.0, 50.0)));
+        Assert.Equal(new Offset(20.0, 0.0), inner.LocalToGlobal(new Offset(0, 0)));
+        Assert.Equal(new Offset(120.0, 100.0), inner.LocalToGlobal(new Offset(100.0, 100.0)));
+        Assert.Equal(new Offset(45.0, 75.0), inner.LocalToGlobal(new Offset(25.0, 75.0)));
+        Assert.Equal(new Offset(70.0, 50.0), inner.LocalToGlobal(new Offset(50.0, 50.0)));
     }
 
     [Fact]
@@ -234,14 +234,14 @@ public sealed class ProxyBoxTransformParityTests : IDisposable
             child: inner);
         LayoutBox(sizer, BoxConstraints.Tight(new Size(100.0, 100.0)), Alignment.TopLeft);
 
-        Assert.Equal(new Point(-50.0, -200.0), inner.GlobalToLocal(new Point(0, 0)));
-        Assert.Equal(new Point(50.0, -100.0), inner.GlobalToLocal(new Point(100.0, 100.0)));
-        Assert.Equal(new Point(-25.0, -125.0), inner.GlobalToLocal(new Point(25.0, 75.0)));
-        Assert.Equal(new Point(0.0, -150.0), inner.GlobalToLocal(new Point(50.0, 50.0)));
-        Assert.Equal(new Point(50.0, 200.0), inner.LocalToGlobal(new Point(0, 0)));
-        Assert.Equal(new Point(150.0, 300.0), inner.LocalToGlobal(new Point(100.0, 100.0)));
-        Assert.Equal(new Point(75.0, 275.0), inner.LocalToGlobal(new Point(25.0, 75.0)));
-        Assert.Equal(new Point(100.0, 250.0), inner.LocalToGlobal(new Point(50.0, 50.0)));
+        Assert.Equal(new Offset(-50.0, -200.0), inner.GlobalToLocal(new Offset(0, 0)));
+        Assert.Equal(new Offset(50.0, -100.0), inner.GlobalToLocal(new Offset(100.0, 100.0)));
+        Assert.Equal(new Offset(-25.0, -125.0), inner.GlobalToLocal(new Offset(25.0, 75.0)));
+        Assert.Equal(new Offset(0.0, -150.0), inner.GlobalToLocal(new Offset(50.0, 50.0)));
+        Assert.Equal(new Offset(50.0, 200.0), inner.LocalToGlobal(new Offset(0, 0)));
+        Assert.Equal(new Offset(150.0, 300.0), inner.LocalToGlobal(new Offset(100.0, 100.0)));
+        Assert.Equal(new Offset(75.0, 275.0), inner.LocalToGlobal(new Offset(25.0, 75.0)));
+        Assert.Equal(new Offset(100.0, 250.0), inner.LocalToGlobal(new Offset(50.0, 50.0)));
     }
 
     [Fact]
@@ -254,14 +254,14 @@ public sealed class ProxyBoxTransformParityTests : IDisposable
             child: new RenderPadding(EdgeInsets.Only(left: 20.0), child: inner));
         LayoutBox(sizer, BoxConstraints.Tight(new Size(100.0, 100.0)), Alignment.TopLeft);
 
-        Assert.Equal(new Point(-70.0, -200.0), inner.GlobalToLocal(new Point(0, 0)));
-        Assert.Equal(new Point(30.0, -100.0), inner.GlobalToLocal(new Point(100.0, 100.0)));
-        Assert.Equal(new Point(-45.0, -125.0), inner.GlobalToLocal(new Point(25.0, 75.0)));
-        Assert.Equal(new Point(-20.0, -150.0), inner.GlobalToLocal(new Point(50.0, 50.0)));
-        Assert.Equal(new Point(70.0, 200.0), inner.LocalToGlobal(new Point(0, 0)));
-        Assert.Equal(new Point(170.0, 300.0), inner.LocalToGlobal(new Point(100.0, 100.0)));
-        Assert.Equal(new Point(95.0, 275.0), inner.LocalToGlobal(new Point(25.0, 75.0)));
-        Assert.Equal(new Point(120.0, 250.0), inner.LocalToGlobal(new Point(50.0, 50.0)));
+        Assert.Equal(new Offset(-70.0, -200.0), inner.GlobalToLocal(new Offset(0, 0)));
+        Assert.Equal(new Offset(30.0, -100.0), inner.GlobalToLocal(new Offset(100.0, 100.0)));
+        Assert.Equal(new Offset(-45.0, -125.0), inner.GlobalToLocal(new Offset(25.0, 75.0)));
+        Assert.Equal(new Offset(-20.0, -150.0), inner.GlobalToLocal(new Offset(50.0, 50.0)));
+        Assert.Equal(new Offset(70.0, 200.0), inner.LocalToGlobal(new Offset(0, 0)));
+        Assert.Equal(new Offset(170.0, 300.0), inner.LocalToGlobal(new Offset(100.0, 100.0)));
+        Assert.Equal(new Offset(95.0, 275.0), inner.LocalToGlobal(new Offset(25.0, 75.0)));
+        Assert.Equal(new Offset(120.0, 250.0), inner.LocalToGlobal(new Offset(50.0, 50.0)));
     }
 
     [Fact]
@@ -271,14 +271,14 @@ public sealed class ProxyBoxTransformParityTests : IDisposable
         var sizer = new RenderTransform(Matrix4.RotationZ(Math.PI), alignment: Alignment.Center, child: inner);
         LayoutBox(sizer, BoxConstraints.Tight(new Size(100.0, 100.0)), Alignment.TopLeft);
 
-        Assert.Equal(new Point(100.0, 100.0), Round(inner.GlobalToLocal(new Point(0, 0))));
-        Assert.Equal(new Point(0, 0), Round(inner.GlobalToLocal(new Point(100.0, 100.0))));
-        Assert.Equal(new Point(75.0, 25.0), Round(inner.GlobalToLocal(new Point(25.0, 75.0))));
-        Assert.Equal(new Point(50.0, 50.0), Round(inner.GlobalToLocal(new Point(50.0, 50.0))));
-        Assert.Equal(new Point(100.0, 100.0), Round(inner.LocalToGlobal(new Point(0, 0))));
-        Assert.Equal(new Point(0, 0), Round(inner.LocalToGlobal(new Point(100.0, 100.0))));
-        Assert.Equal(new Point(75.0, 25.0), Round(inner.LocalToGlobal(new Point(25.0, 75.0))));
-        Assert.Equal(new Point(50.0, 50.0), Round(inner.LocalToGlobal(new Point(50.0, 50.0))));
+        Assert.Equal(new Offset(100.0, 100.0), Round(inner.GlobalToLocal(new Offset(0, 0))));
+        Assert.Equal(new Offset(0, 0), Round(inner.GlobalToLocal(new Offset(100.0, 100.0))));
+        Assert.Equal(new Offset(75.0, 25.0), Round(inner.GlobalToLocal(new Offset(25.0, 75.0))));
+        Assert.Equal(new Offset(50.0, 50.0), Round(inner.GlobalToLocal(new Offset(50.0, 50.0))));
+        Assert.Equal(new Offset(100.0, 100.0), Round(inner.LocalToGlobal(new Offset(0, 0))));
+        Assert.Equal(new Offset(0, 0), Round(inner.LocalToGlobal(new Offset(100.0, 100.0))));
+        Assert.Equal(new Offset(75.0, 25.0), Round(inner.LocalToGlobal(new Offset(25.0, 75.0))));
+        Assert.Equal(new Offset(50.0, 50.0), Round(inner.LocalToGlobal(new Offset(50.0, 50.0))));
     }
 
     [Fact]
@@ -291,14 +291,14 @@ public sealed class ProxyBoxTransformParityTests : IDisposable
             child: new RenderPadding(EdgeInsets.Only(left: 20.0), child: inner));
         LayoutBox(sizer, BoxConstraints.Tight(new Size(100.0, 100.0)), Alignment.TopLeft);
 
-        Assert.Equal(new Point(80.0, 100.0), Round(inner.GlobalToLocal(new Point(0, 0))));
-        Assert.Equal(new Point(-20.0, 0.0), Round(inner.GlobalToLocal(new Point(100.0, 100.0))));
-        Assert.Equal(new Point(55.0, 25.0), Round(inner.GlobalToLocal(new Point(25.0, 75.0))));
-        Assert.Equal(new Point(30.0, 50.0), Round(inner.GlobalToLocal(new Point(50.0, 50.0))));
-        Assert.Equal(new Point(80.0, 100.0), Round(inner.LocalToGlobal(new Point(0, 0))));
-        Assert.Equal(new Point(-20.0, 0.0), Round(inner.LocalToGlobal(new Point(100.0, 100.0))));
-        Assert.Equal(new Point(55.0, 25.0), Round(inner.LocalToGlobal(new Point(25.0, 75.0))));
-        Assert.Equal(new Point(30.0, 50.0), Round(inner.LocalToGlobal(new Point(50.0, 50.0))));
+        Assert.Equal(new Offset(80.0, 100.0), Round(inner.GlobalToLocal(new Offset(0, 0))));
+        Assert.Equal(new Offset(-20.0, 0.0), Round(inner.GlobalToLocal(new Offset(100.0, 100.0))));
+        Assert.Equal(new Offset(55.0, 25.0), Round(inner.GlobalToLocal(new Offset(25.0, 75.0))));
+        Assert.Equal(new Offset(30.0, 50.0), Round(inner.GlobalToLocal(new Offset(50.0, 50.0))));
+        Assert.Equal(new Offset(80.0, 100.0), Round(inner.LocalToGlobal(new Offset(0, 0))));
+        Assert.Equal(new Offset(-20.0, 0.0), Round(inner.LocalToGlobal(new Offset(100.0, 100.0))));
+        Assert.Equal(new Offset(55.0, 25.0), Round(inner.LocalToGlobal(new Offset(25.0, 75.0))));
+        Assert.Equal(new Offset(30.0, 50.0), Round(inner.LocalToGlobal(new Offset(50.0, 50.0))));
     }
 
     [Fact]
@@ -311,14 +311,14 @@ public sealed class ProxyBoxTransformParityTests : IDisposable
             child: inner);
         LayoutBox(sizer, BoxConstraints.Tight(new Size(100.0, 100.0)), Alignment.TopLeft);
 
-        Assert.Equal(new Point(25.0, 50.0), Round(inner.GlobalToLocal(new Point(25.0, 50.0))));
-        Assert.True(inner.GlobalToLocal(new Point(25.0, 17.0)).Y > 0.0);
-        Assert.True(inner.GlobalToLocal(new Point(25.0, 17.0)).Y < 10.0);
-        Assert.True(inner.GlobalToLocal(new Point(25.0, 83.0)).Y > 90.0);
-        Assert.True(inner.GlobalToLocal(new Point(25.0, 83.0)).Y < 100.0);
+        Assert.Equal(new Offset(25.0, 50.0), Round(inner.GlobalToLocal(new Offset(25.0, 50.0))));
+        Assert.True(inner.GlobalToLocal(new Offset(25.0, 17.0)).Dy > 0.0);
+        Assert.True(inner.GlobalToLocal(new Offset(25.0, 17.0)).Dy < 10.0);
+        Assert.True(inner.GlobalToLocal(new Offset(25.0, 83.0)).Dy > 90.0);
+        Assert.True(inner.GlobalToLocal(new Offset(25.0, 83.0)).Dy < 100.0);
         Assert.Equal(
-            100 - Round(inner.GlobalToLocal(new Point(25.0, 83.0))).Y,
-            Round(inner.GlobalToLocal(new Point(25.0, 17.0))).Y);
+            100 - Round(inner.GlobalToLocal(new Offset(25.0, 83.0))).Dy,
+            Round(inner.GlobalToLocal(new Offset(25.0, 17.0))).Dy);
     }
 
     [Fact]
@@ -331,7 +331,7 @@ public sealed class ProxyBoxTransformParityTests : IDisposable
             child: inner);
         LayoutBox(sizer, BoxConstraints.Tight(new Size(100.0, 100.0)), Alignment.TopLeft);
 
-        Assert.Equal(new Point(0, 0), inner.GlobalToLocal(new Point(25.0, 50.0)));
+        Assert.Equal(new Offset(0, 0), inner.GlobalToLocal(new Offset(25.0, 50.0)));
     }
 
     [Fact]
@@ -346,9 +346,9 @@ public sealed class ProxyBoxTransformParityTests : IDisposable
 
         // the inner widget has a height of about half a pixel at this rotation, so
         // everything should end up around the middle of the outer box.
-        Assert.Equal(new Point(25.0, 50.0), inner.LocalToGlobal(new Point(25.0, 50.0)));
-        Assert.Equal(new Point(25.0, 50.0), Round(inner.LocalToGlobal(new Point(25.0, 75.0))));
-        Assert.Equal(new Point(25.0, 50.0), Round(inner.LocalToGlobal(new Point(25.0, 100.0))));
+        Assert.Equal(new Offset(25.0, 50.0), inner.LocalToGlobal(new Offset(25.0, 50.0)));
+        Assert.Equal(new Offset(25.0, 50.0), Round(inner.LocalToGlobal(new Offset(25.0, 75.0))));
+        Assert.Equal(new Offset(25.0, 50.0), Round(inner.LocalToGlobal(new Offset(25.0, 100.0))));
     }
 
     // ---------------------------------------------------------------------------------------------
@@ -386,30 +386,30 @@ public sealed class ProxyBoxTransformParityTests : IDisposable
 
         tester.PumpWidget(BuildFrame(TextDirection.Ltr, AlignmentDirectional.CenterEnd));
         didReceiveTap = false;
-        TapAt(tester, new Point(110.0, 110.0));
+        TapAt(tester, new Offset(110.0, 110.0));
         Assert.False(didReceiveTap);
-        TapAt(tester, new Point(190.0, 150.0));
+        TapAt(tester, new Offset(190.0, 150.0));
         Assert.True(didReceiveTap);
 
         tester.PumpWidget(BuildFrame(TextDirection.Rtl, AlignmentDirectional.CenterStart));
         didReceiveTap = false;
-        TapAt(tester, new Point(110.0, 110.0));
+        TapAt(tester, new Offset(110.0, 110.0));
         Assert.False(didReceiveTap);
-        TapAt(tester, new Point(190.0, 150.0));
+        TapAt(tester, new Offset(190.0, 150.0));
         Assert.True(didReceiveTap);
 
         tester.PumpWidget(BuildFrame(TextDirection.Ltr, AlignmentDirectional.CenterStart));
         didReceiveTap = false;
-        TapAt(tester, new Point(190.0, 150.0));
+        TapAt(tester, new Offset(190.0, 150.0));
         Assert.False(didReceiveTap);
-        TapAt(tester, new Point(110.0, 150.0));
+        TapAt(tester, new Offset(110.0, 150.0));
         Assert.True(didReceiveTap);
 
         tester.PumpWidget(BuildFrame(TextDirection.Rtl, AlignmentDirectional.CenterEnd));
         didReceiveTap = false;
-        TapAt(tester, new Point(190.0, 150.0));
+        TapAt(tester, new Offset(190.0, 150.0));
         Assert.False(didReceiveTap);
-        TapAt(tester, new Point(110.0, 150.0));
+        TapAt(tester, new Offset(110.0, 150.0));
         Assert.True(didReceiveTap);
     }
 
@@ -460,7 +460,7 @@ public sealed class ProxyBoxTransformParityTests : IDisposable
                 EdgeInsets.Only(left: 30.0, top: 20.0, right: 50.0, bottom: 70.0),
                 child: new Transform(Matrix4.Diagonal3Values(2.0, 2.0, 2.0), child: new Placeholder())));
 
-        Assert.Equal(new Point(30.0, 20.0), GetTopLeft(tester.ElementOfType<Placeholder>()));
+        Assert.Equal(new Offset(30.0, 20.0), GetTopLeft(tester.ElementOfType<Placeholder>()));
     }
 
     [Fact]
@@ -468,11 +468,11 @@ public sealed class ProxyBoxTransformParityTests : IDisposable
     {
         using var tester = new FrameworkDartTester();
         tester.PumpWidget(
-            Transform.Translate(new Point(100.0, 50.0), child: new RepaintBoundary(child: new Container())));
+            Transform.Translate(new Offset(100.0, 50.0), child: new RepaintBoundary(child: new Container())));
 
         // This should not cause a transform layer to be inserted.
         Assert.Single(Layers(tester).OfType<TransformLayer>()); // only the render view
-        Assert.Equal(new Point(100.0, 50.0), GetTopLeft(tester.ElementOfType<Container>()));
+        Assert.Equal(new Offset(100.0, 50.0), GetTopLeft(tester.ElementOfType<Container>()));
     }
 
     [Fact]
@@ -561,9 +561,9 @@ public sealed class ProxyBoxTransformParityTests : IDisposable
         using var tester = new FrameworkDartTester();
         tester.PumpWidget(
             Transform.Translate(
-                new Point(100.0, 50.0),
+                new Offset(100.0, 50.0),
                 child: Transform.Translate(
-                    new Point(1000.0, 1000.0),
+                    new Offset(1000.0, 1000.0),
                     child: new Listener(
                         onPointerDown: _ => pointerDown = true,
                         child: new Container(key: key1, color: Black)))));
@@ -579,7 +579,7 @@ public sealed class ProxyBoxTransformParityTests : IDisposable
         using var tester = new FrameworkDartTester();
         tester.PumpWidget(
             Transform.Translate(
-                new Point(25.0, 25.0),
+                new Offset(25.0, 25.0),
                 filterQuality: FilterQuality.Low,
                 child: new SizedBox(width: 100, height: 100)));
 
@@ -701,10 +701,10 @@ public sealed class ProxyBoxTransformParityTests : IDisposable
         Assert.Equal(100.0, insideBox.Size.Width);
         Assert.Equal(50.0, insideBox.Size.Height);
 
-        Point insidePoint = insideBox.LocalToGlobal(new Point(100.0, 50.0));
-        Point outsidePoint = outsideBox.LocalToGlobal(new Point(200.0, 100.0));
+        Offset insidePoint = insideBox.LocalToGlobal(new Offset(100.0, 50.0));
+        Offset outsidePoint = outsideBox.LocalToGlobal(new Offset(200.0, 100.0));
 
-        Assert.Equal(new Point(500.0, 350.0), outsidePoint);
+        Assert.Equal(new Offset(500.0, 350.0), outsidePoint);
         Assert.Equal(outsidePoint, insidePoint);
     }
 
@@ -731,8 +731,8 @@ public sealed class ProxyBoxTransformParityTests : IDisposable
         Assert.Equal(100.0, insideBox.Size.Width);
         Assert.Equal(50.0, insideBox.Size.Height);
 
-        Point insidePoint = insideBox.LocalToGlobal(new Point(50.0, 25.0));
-        Point outsidePoint = outsideBox.LocalToGlobal(new Point(100.0, 100.0));
+        Offset insidePoint = insideBox.LocalToGlobal(new Offset(50.0, 25.0));
+        Offset outsidePoint = outsideBox.LocalToGlobal(new Offset(100.0, 100.0));
 
         Assert.Equal(outsidePoint, insidePoint);
     }
@@ -761,8 +761,8 @@ public sealed class ProxyBoxTransformParityTests : IDisposable
             BoxFit fit,
             AlignmentGeometry alignment,
             Size childSize,
-            Point outsideTopLeft,
-            Point outsideBottomRight)
+            Offset outsideTopLeft,
+            Offset outsideBottomRight)
         {
             tester.PumpWidget(
                 new Directionality(
@@ -786,10 +786,10 @@ public sealed class ProxyBoxTransformParityTests : IDisposable
             RenderBox insideBox = FirstRenderBox(tester, inside);
             Assert.Equal(childSize, insideBox.Size);
 
-            Assert.Equal(outsideBox.LocalToGlobal(outsideTopLeft), insideBox.LocalToGlobal(new Point(0, 0)));
+            Assert.Equal(outsideBox.LocalToGlobal(outsideTopLeft), insideBox.LocalToGlobal(new Offset(0, 0)));
             Assert.Equal(
                 outsideBox.LocalToGlobal(outsideBottomRight),
-                insideBox.LocalToGlobal(new Point(childSize.Width, childSize.Height)));
+                insideBox.LocalToGlobal(new Offset(childSize.Width, childSize.Height)));
         }
 
         // align RTL
@@ -798,8 +798,8 @@ public sealed class ProxyBoxTransformParityTests : IDisposable
             BoxFit.ScaleDown,
             AlignmentDirectional.BottomEnd,
             new Size(10.0, 10.0),
-            new Point(0.0, 90.0),
-            new Point(10.0, 100.0));
+            new Offset(0.0, 90.0),
+            new Offset(10.0, 100.0));
 
         // change direction
         Check(
@@ -807,8 +807,8 @@ public sealed class ProxyBoxTransformParityTests : IDisposable
             BoxFit.ScaleDown,
             AlignmentDirectional.BottomEnd,
             new Size(10.0, 10.0),
-            new Point(90.0, 90.0),
-            new Point(100.0, 100.0));
+            new Offset(90.0, 90.0),
+            new Offset(100.0, 100.0));
 
         // change alignment
         Check(
@@ -816,8 +816,8 @@ public sealed class ProxyBoxTransformParityTests : IDisposable
             BoxFit.ScaleDown,
             AlignmentDirectional.Center,
             new Size(10.0, 10.0),
-            new Point(45.0, 45.0),
-            new Point(55.0, 55.0));
+            new Offset(45.0, 45.0),
+            new Offset(55.0, 55.0));
 
         // change size
         Check(
@@ -825,8 +825,8 @@ public sealed class ProxyBoxTransformParityTests : IDisposable
             BoxFit.ScaleDown,
             AlignmentDirectional.Center,
             new Size(30.0, 10.0),
-            new Point(35.0, 45.0),
-            new Point(65.0, 55.0));
+            new Offset(35.0, 45.0),
+            new Offset(65.0, 55.0));
 
         // change fit
         Check(
@@ -834,8 +834,8 @@ public sealed class ProxyBoxTransformParityTests : IDisposable
             BoxFit.Fill,
             AlignmentDirectional.Center,
             new Size(30.0, 10.0),
-            new Point(0, 0),
-            new Point(100.0, 100.0));
+            new Offset(0, 0),
+            new Offset(100.0, 100.0));
     }
 
     [Fact]
@@ -999,9 +999,9 @@ public sealed class ProxyBoxTransformParityTests : IDisposable
         Assert.Equal(200.0, outsideBox.Size.Width);
         Assert.Equal(50.0, outsideBox.Size.Height);
 
-        Point outsidePoint = outsideBox.LocalToGlobal(new Point(0, 0));
-        Point insidePoint = insideBox.LocalToGlobal(new Point(0, 0));
-        Assert.Equal(new Point(50.0, 0.0), insidePoint - (Vector)outsidePoint);
+        Offset outsidePoint = outsideBox.LocalToGlobal(new Offset(0, 0));
+        Offset insidePoint = insideBox.LocalToGlobal(new Offset(0, 0));
+        Assert.Equal(new Offset(50.0, 0.0), insidePoint - (Offset)outsidePoint);
 
         // Scales down when child is bigger than constraints
         tester.PumpWidget(
@@ -1016,10 +1016,10 @@ public sealed class ProxyBoxTransformParityTests : IDisposable
         Assert.Equal(200.0, outsideBox.Size.Width);
         Assert.Equal(100.0, outsideBox.Size.Height);
 
-        outsidePoint = outsideBox.LocalToGlobal(new Point(0, 0));
-        insidePoint = insideBox.LocalToGlobal(new Point(0, 0));
+        outsidePoint = outsideBox.LocalToGlobal(new Offset(0, 0));
+        insidePoint = insideBox.LocalToGlobal(new Offset(0, 0));
 
-        Assert.Equal(new Point(0, 0), insidePoint - (Vector)outsidePoint);
+        Assert.Equal(new Offset(0, 0), insidePoint - (Offset)outsidePoint);
     }
 
     [Fact]
@@ -1082,7 +1082,7 @@ public sealed class ProxyBoxTransformParityTests : IDisposable
         tester.PumpWidget(
             new Center(
                 new FractionalTranslation(
-                    translation: new Point(dx, dy),
+                    translation: new Offset(dx, dy),
                     child: new Listener(
                         onPointerDown: _ => pointerDown = true,
                         child: new SizedBox(
@@ -1105,7 +1105,7 @@ public sealed class ProxyBoxTransformParityTests : IDisposable
         tester.PumpWidget(
             new Directionality(
                 TextDirection.Ltr,
-                new Center(new FractionalTranslation(translation: new Point(0, 0), child: new Placeholder()))));
+                new Center(new FractionalTranslation(translation: new Offset(0, 0), child: new Placeholder()))));
 
         Assert.Equal(new Size(0, 0), GetSize(tester.ElementOfType<FractionalTranslation>()));
     }
@@ -1151,10 +1151,10 @@ public sealed class ProxyBoxTransformParityTests : IDisposable
                         child: new Directionality(TextDirection.Ltr, new Text("X"))))));
 
         const int device = 7101;
-        Point center = tester.GetCenter(tester.ElementsWithKey(listenerKey).Single());
+        Offset center = tester.GetCenter(tester.ElementsWithKey(listenerKey).Single());
         Send(
             tester,
-            new PointerAddedEvent(device, PointerDeviceKind.Touch, new Point(0, 0), timestampUtc: DateTime.UtcNow));
+            new PointerAddedEvent(device, PointerDeviceKind.Touch, new Offset(0, 0), timestampUtc: DateTime.UtcNow));
         Send(
             tester,
             new PointerHoverEvent(device, PointerDeviceKind.Touch, center, PointerButtons.None, DateTime.UtcNow));
@@ -1170,18 +1170,18 @@ public sealed class ProxyBoxTransformParityTests : IDisposable
         using var tester = new FrameworkDartTester();
         tester.PumpWidget(new Center(RecordingListener(events, key)));
 
-        Point center = tester.GetCenter(tester.ElementsWithKey(key).Single());
-        Point topLeft = GetTopLeft(tester.ElementsWithKey(key).Single());
-        Matrix4 expectedTransform = Matrix4.TranslationValues(-topLeft.X, -topLeft.Y, 0);
+        Offset center = tester.GetCenter(tester.ElementsWithKey(key).Single());
+        Offset topLeft = GetTopLeft(tester.ElementsWithKey(key).Single());
+        Matrix4 expectedTransform = Matrix4.TranslationValues(-topLeft.Dx, -topLeft.Dy, 0);
 
-        Assert.NotEqual(new Point(50, 50), center);
+        Assert.NotEqual(new Offset(50, 50), center);
         CheckTransformedGesture(
             tester,
             events,
             center,
             expectedTransform,
-            localDownPosition: new Point(50, 50),
-            localDelta: new Point(20, 30));
+            localDownPosition: new Offset(50, 50),
+            localDelta: new Offset(20, 30));
     }
 
     [Fact]
@@ -1198,17 +1198,17 @@ public sealed class ProxyBoxTransformParityTests : IDisposable
                     Matrix4.Diagonal3Values(scaleFactor, scaleFactor, scaleFactor),
                     child: RecordingListener(events, key))));
 
-        Point center = tester.GetCenter(tester.ElementsWithKey(key).Single());
+        Offset center = tester.GetCenter(tester.ElementsWithKey(key).Single());
         Matrix4 expectedTransform = Matrix4.Diagonal3Values(1 / scaleFactor, 1 / scaleFactor, 1.0);
 
-        Assert.NotEqual(new Point(50, 50), center);
+        Assert.NotEqual(new Offset(50, 50), center);
         CheckTransformedGesture(
             tester,
             events,
             center,
             expectedTransform,
-            localDownPosition: new Point(50, 50),
-            localDelta: new Point(20 / scaleFactor, 30 / scaleFactor));
+            localDownPosition: new Offset(50, 50),
+            localDelta: new Offset(20 / scaleFactor, 30 / scaleFactor));
     }
 
     [Fact]
@@ -1224,19 +1224,19 @@ public sealed class ProxyBoxTransformParityTests : IDisposable
                     Matrix4.Diagonal3Values(scaleFactor, scaleFactor, scaleFactor),
                     child: RecordingListener(events, key))));
 
-        Point center = tester.GetCenter(tester.ElementsWithKey(key).Single());
-        Point topLeft = GetTopLeft(tester.ElementsWithKey(key).Single());
+        Offset center = tester.GetCenter(tester.ElementsWithKey(key).Single());
+        Offset topLeft = GetTopLeft(tester.ElementsWithKey(key).Single());
         Matrix4 expectedTransform = Matrix4.Diagonal3Values(1 / scaleFactor, 1 / scaleFactor, 1.0);
-        expectedTransform.TranslateByDouble(-topLeft.X, -topLeft.Y, 0, 1);
+        expectedTransform.TranslateByDouble(-topLeft.Dx, -topLeft.Dy, 0, 1);
 
-        Assert.NotEqual(new Point(50, 50), center);
+        Assert.NotEqual(new Offset(50, 50), center);
         CheckTransformedGesture(
             tester,
             events,
             center,
             expectedTransform,
-            localDownPosition: new Point(50, 50),
-            localDelta: new Point(20 / scaleFactor, 30 / scaleFactor));
+            localDownPosition: new Offset(50, 50),
+            localDelta: new Offset(20 / scaleFactor, 30 / scaleFactor));
     }
 
     [Fact]
@@ -1249,19 +1249,19 @@ public sealed class ProxyBoxTransformParityTests : IDisposable
         rotation.RotateZ(Math.PI / 2); // 90 degrees clockwise around Container origin
         tester.PumpWidget(new Center(new Transform(rotation, child: RecordingListener(events, key))));
 
-        Point downPosition = tester.GetCenter(tester.ElementsWithKey(key).Single()) + new Vector(10, 5);
-        var offset = new Point((800 - 100) / 2.0, (600 - 100) / 2.0);
+        Offset downPosition = tester.GetCenter(tester.ElementsWithKey(key).Single()) + new Offset(10, 5);
+        var offset = new Offset((800 - 100) / 2.0, (600 - 100) / 2.0);
         Matrix4 expectedTransform = Matrix4.Identity();
         expectedTransform.RotateZ(-Math.PI / 2);
-        expectedTransform.TranslateByDouble(-offset.X, -offset.Y, 0, 1);
+        expectedTransform.TranslateByDouble(-offset.Dx, -offset.Dy, 0, 1);
 
         CheckTransformedGesture(
             tester,
             events,
             downPosition,
             expectedTransform,
-            localDownPosition: new Point(50 + 5, 50 - 10),
-            localDelta: new Point(30, -20));
+            localDownPosition: new Offset(50 + 5, 50 - 10),
+            localDelta: new Offset(30, -20));
     }
 
     [DebugOnlyFact]
@@ -1319,15 +1319,15 @@ public sealed class ProxyBoxTransformParityTests : IDisposable
                     onExit: details => exit = details)),
             new Size(800, 600));
 
-        harness.SendPointer(MouseTrackingHarness.Added(new Point(0, 0), kind: PointerDeviceKind.Touch));
+        harness.SendPointer(MouseTrackingHarness.Added(new Offset(0, 0), kind: PointerDeviceKind.Touch));
         harness.PumpFrame();
         move = null;
         enter = null;
         exit = null;
-        harness.SendPointer(MouseTrackingHarness.Hover(new Point(400.0, 300.0), kind: PointerDeviceKind.Touch));
+        harness.SendPointer(MouseTrackingHarness.Hover(new Offset(400.0, 300.0), kind: PointerDeviceKind.Touch));
         Assert.NotNull(move);
-        Assert.Equal(new Point(400.0, 300.0), move.Position);
-        Assert.Equal(new Point(50.0, 50.0), move.LocalPosition);
+        Assert.Equal(new Offset(400.0, 300.0), move.Position);
+        Assert.Equal(new Offset(50.0, 50.0), move.LocalPosition);
         Assert.Null(enter);
         Assert.Null(exit);
     }
@@ -1351,11 +1351,11 @@ public sealed class ProxyBoxTransformParityTests : IDisposable
                 ]),
             new Size(800, 600));
 
-        harness.SendPointer(MouseTrackingHarness.Added(new Point(20, 20)));
+        harness.SendPointer(MouseTrackingHarness.Added(new Offset(20, 20)));
 
-        harness.SendPointer(MouseTrackingHarness.Hover(new Point(5, 5)));
+        harness.SendPointer(MouseTrackingHarness.Hover(new Offset(5, 5)));
         harness.PumpFrame();
-        harness.SendPointer(MouseTrackingHarness.Hover(new Point(20, 20)));
+        harness.SendPointer(MouseTrackingHarness.Hover(new Offset(20, 20)));
         harness.PumpFrame();
         Assert.False(bottomRegionIsHovered);
     }
@@ -1379,7 +1379,7 @@ public sealed class ProxyBoxTransformParityTests : IDisposable
     {
         int paintCount = 0;
         using var harness = new MouseTrackingHarness(new SizedBox());
-        harness.SendPointer(MouseTrackingHarness.Added(new Point(0, 0)));
+        harness.SendPointer(MouseTrackingHarness.Added(new Offset(0, 0)));
 
         harness.Update(
             new MouseRegion(
@@ -1403,9 +1403,9 @@ public sealed class ProxyBoxTransformParityTests : IDisposable
                     onHover: _ => { },
                     onExit: _ => { })));
         int viewId = tester.View.ViewId;
-        Send(tester, MouseTrackingHarness.Added(new Point(400.0, 300.0), device: 7201, viewId: viewId));
+        Send(tester, MouseTrackingHarness.Added(new Offset(400.0, 300.0), device: 7201, viewId: viewId));
         tester.PumpAndSettle();
-        Send(tester, MouseTrackingHarness.Hover(new Point(410.0, 310.0), device: 7201, viewId: viewId));
+        Send(tester, MouseTrackingHarness.Hover(new Offset(410.0, 310.0), device: 7201, viewId: viewId));
         Assert.False(SchedulerBinding.Instance.HasScheduledFrame);
     }
 
@@ -1497,9 +1497,9 @@ public sealed class ProxyBoxTransformParityTests : IDisposable
 
     private static RenderBox SizedLeaf(Size size) => new PaintLogBox(size);
 
-    private static Point Round(Point value) => new(
-        Math.Round(value.X, MidpointRounding.AwayFromZero),
-        Math.Round(value.Y, MidpointRounding.AwayFromZero));
+    private static Offset Round(Offset value) => new(
+        Math.Round(value.Dx, MidpointRounding.AwayFromZero),
+        Math.Round(value.Dy, MidpointRounding.AwayFromZero));
 
     private static Matrix4 RotateAroundXAxis(double a)
     {
@@ -1593,8 +1593,8 @@ public sealed class ProxyBoxTransformParityTests : IDisposable
     private static RenderBox FirstRenderBox(FrameworkDartTester tester, Key key) =>
         (RenderBox)tester.ElementsWithKey(key).Single().FindRenderObject()!;
 
-    private static Point GetTopLeft(Element element) =>
-        ((RenderBox)element.FindRenderObject()!).LocalToGlobal(new Point(0, 0));
+    private static Offset GetTopLeft(Element element) =>
+        ((RenderBox)element.FindRenderObject()!).LocalToGlobal(new Offset(0, 0));
 
     private static Size GetSize(Element element) => ((RenderBox)element.FindRenderObject()!).Size;
 
@@ -1615,7 +1615,7 @@ public sealed class ProxyBoxTransformParityTests : IDisposable
         return found;
     }
 
-    private static void TapAt(FrameworkDartTester tester, Point location)
+    private static void TapAt(FrameworkDartTester tester, Offset location)
     {
         int pointer = tester.StartGesture(location);
         tester.Up(pointer, location);
@@ -1635,12 +1635,12 @@ public sealed class ProxyBoxTransformParityTests : IDisposable
     private static void CheckTransformedGesture(
         FrameworkDartTester tester,
         List<PointerEvent> events,
-        Point downPosition,
+        Offset downPosition,
         Matrix4 expectedTransform,
-        Point localDownPosition,
-        Point localDelta)
+        Offset localDownPosition,
+        Offset localDelta)
     {
-        var moved = new Vector(20, 30);
+        var moved = new Offset(20, 30);
         int pointer = tester.StartGesture(downPosition);
         Send(tester, new PointerMoveEvent(
             pointer,
@@ -1654,24 +1654,24 @@ public sealed class ProxyBoxTransformParityTests : IDisposable
         var down = Assert.IsType<PointerDownEvent>(events[0]);
         var move = Assert.IsType<PointerMoveEvent>(events[1]);
         var up = Assert.IsType<PointerUpEvent>(events[2]);
-        Point localMovedPosition = localDownPosition + (Vector)localDelta;
+        Offset localMovedPosition = localDownPosition + (Offset)localDelta;
 
         AssertPoint(localDownPosition, down.LocalPosition);
         Assert.Equal(downPosition, down.Position);
-        Assert.Equal(new Point(0, 0), down.Delta);
-        Assert.Equal(new Point(0, 0), down.LocalDelta);
+        Assert.Equal(new Offset(0, 0), down.Delta);
+        Assert.Equal(new Offset(0, 0), down.LocalDelta);
         AssertStorage(expectedTransform.Storage, down.Transform!.Storage, precision: 10);
 
         AssertPoint(localMovedPosition, move.LocalPosition);
         Assert.Equal(downPosition + moved, move.Position);
-        Assert.Equal((Point)moved, move.Delta);
+        Assert.Equal((Offset)moved, move.Delta);
         AssertPoint(localDelta, move.LocalDelta);
         AssertStorage(expectedTransform.Storage, move.Transform!.Storage, precision: 10);
 
         AssertPoint(localMovedPosition, up.LocalPosition);
         Assert.Equal(downPosition + moved, up.Position);
-        Assert.Equal(new Point(0, 0), up.Delta);
-        Assert.Equal(new Point(0, 0), up.LocalDelta);
+        Assert.Equal(new Offset(0, 0), up.Delta);
+        Assert.Equal(new Offset(0, 0), up.LocalDelta);
         AssertStorage(expectedTransform.Storage, up.Transform!.Storage, precision: 10);
 
         events.Clear();
@@ -1683,21 +1683,21 @@ public sealed class ProxyBoxTransformParityTests : IDisposable
         Send(tester, new PointerScrollEvent(
             PointerDeviceKind.Mouse,
             downPosition,
-            new Point(0.0, 20.0),
+            new Offset(0.0, 20.0),
             DateTime.UtcNow,
             device: mouse));
         PointerEvent signal = Assert.Single(events);
         AssertPoint(localDownPosition, signal.LocalPosition);
         Assert.Equal(downPosition, signal.Position);
-        Assert.Equal(new Point(0, 0), signal.Delta);
-        Assert.Equal(new Point(0, 0), signal.LocalDelta);
+        Assert.Equal(new Offset(0, 0), signal.Delta);
+        Assert.Equal(new Offset(0, 0), signal.LocalDelta);
         AssertStorage(expectedTransform.Storage, signal.Transform!.Storage, precision: 10);
     }
 
-    private static void AssertPoint(Point expected, Point actual)
+    private static void AssertPoint(Offset expected, Offset actual)
     {
-        Assert.Equal(expected.X, actual.X, 3);
-        Assert.Equal(expected.Y, actual.Y, 3);
+        Assert.Equal(expected.Dx, actual.Dx, 3);
+        Assert.Equal(expected.Dy, actual.Dy, 3);
     }
 
     private static List<string> Describe(DiagnosticPropertiesBuilder builder) => builder.Properties
@@ -1707,12 +1707,12 @@ public sealed class ProxyBoxTransformParityTests : IDisposable
 
     private sealed class ProbeFittedBox(RenderBox? child) : RenderFittedBox(child: child)
     {
-        public bool InvokeHitTestChildren(BoxHitTestResult result, Point position) =>
+        public bool InvokeHitTestChildren(BoxHitTestResult result, Offset position) =>
             HitTestChildren(result, position);
     }
 
     /// <summary>proxy_box_test.dart's <c>_TestSemanticsUpdateRenderFractionalTranslation</c>.</summary>
-    private sealed class TestSemanticsUpdateRenderFractionalTranslation(Point translation)
+    private sealed class TestSemanticsUpdateRenderFractionalTranslation(Offset translation)
         : RenderFractionalTranslation(translation: translation)
     {
         public int MarkNeedsSemanticsUpdateCallCount { get; private set; }
@@ -1736,7 +1736,7 @@ public sealed class ProxyBoxTransformParityTests : IDisposable
 
         protected override Size ComputeDryLayout(BoxConstraints constraints) => constraints.Constrain(preferredSize);
 
-        public override void Paint(PaintingContext ctx, Point offset)
+        public override void Paint(PaintingContext ctx, Offset offset)
         {
             PaintCount++;
         }

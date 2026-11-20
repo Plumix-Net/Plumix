@@ -40,7 +40,7 @@ public abstract class DragGestureRecognizer : OneSequenceGestureRecognizer
     private readonly Dictionary<int, VelocityTracker> _velocityTrackers = [];
 
     /// <summary>Per-pointer local delta accumulated inside the current frame, Dart's `_moveDeltaBeforeFrame`.</summary>
-    private readonly Dictionary<int, Point> _moveDeltaBeforeFrame = [];
+    private readonly Dictionary<int, Offset> _moveDeltaBeforeFrame = [];
 
     /// <summary>Pointers this recognizer has been accepted for, in the order they were accepted.</summary>
     private readonly List<int> _acceptedActivePointers = [];
@@ -55,7 +55,7 @@ public abstract class DragGestureRecognizer : OneSequenceGestureRecognizer
     private double _globalDistanceMoved;
     private bool _hasDragThresholdBeenMet;
     private TimeSpan? _frameTimeStamp;
-    private Point _lastUpdatedDeltaForPan;
+    private Offset _lastUpdatedDeltaForPan;
     private int? _activePointer;
 
     protected DragGestureRecognizer(GestureBinding? binding) : this(binding, debugOwner: null)
@@ -163,10 +163,10 @@ public abstract class DragGestureRecognizer : OneSequenceGestureRecognizer
         double? deviceTouchSlop);
 
     /// <summary>Projects a delta onto the recognizer's axis. Dart's `_getDeltaForDetails`.</summary>
-    protected abstract Point GetDeltaForDetails(Point delta);
+    protected abstract Offset GetDeltaForDetails(Offset delta);
 
     /// <summary>The primary-axis component of an offset, or null for a free-axis recognizer.</summary>
-    protected abstract double? GetPrimaryValueFromOffset(Point value);
+    protected abstract double? GetPrimaryValueFromOffset(Offset value);
 
     /// <summary>The axis this recognizer drags along, or null for a free-axis recognizer.</summary>
     internal virtual DragDirection? GetPrimaryDragAxis() => null;
@@ -264,7 +264,7 @@ public abstract class DragGestureRecognizer : OneSequenceGestureRecognizer
         {
             // A pan/zoom gesture has a stationary contact position, so its velocity is tracked in
             // pan space: the start contributes the origin and every update its cumulative pan.
-            Point trackedPosition = @event switch
+            Offset trackedPosition = @event switch
             {
                 PointerPanZoomStartEvent => default,
                 PointerPanZoomUpdateEvent panZoomUpdate => panZoomUpdate.Pan,
@@ -283,14 +283,14 @@ public abstract class DragGestureRecognizer : OneSequenceGestureRecognizer
         if (@event is PointerMoveEvent or PointerPanZoomUpdateEvent && ShouldTrackMoveEvent(@event.Pointer))
         {
             var panZoom = @event as PointerPanZoomUpdateEvent;
-            Point delta = panZoom is null ? @event.Delta : panZoom.PanDelta;
-            Point localDelta = panZoom is null ? @event.LocalDelta : panZoom.LocalPanDelta;
-            Point position = panZoom is null ? @event.Position : @event.Position + panZoom.Pan;
-            Point localPosition = panZoom is null
+            Offset delta = panZoom is null ? @event.Delta : panZoom.PanDelta;
+            Offset localDelta = panZoom is null ? @event.LocalDelta : panZoom.LocalPanDelta;
+            Offset position = panZoom is null ? @event.Position : @event.Position + panZoom.Pan;
+            Offset localPosition = panZoom is null
                 ? @event.LocalPosition
                 : @event.LocalPosition + panZoom.LocalPan;
             _lastPosition = new OffsetPair(Local: localPosition, Global: position);
-            Point resolvedDelta = ResolveLocalDeltaForMultitouch(@event.Pointer, localDelta);
+            Offset resolvedDelta = ResolveLocalDeltaForMultitouch(@event.Pointer, localDelta);
 
             switch (_state)
             {
@@ -299,7 +299,7 @@ public abstract class DragGestureRecognizer : OneSequenceGestureRecognizer
                     _pendingDragOffset += new OffsetPair(Local: localDelta, Global: delta);
                     _lastPendingEventTimestamp = @event.TimestampUtc;
                     _lastTransform = @event.Transform;
-                    Point movedLocally = GetDeltaForDetails(localDelta);
+                    Offset movedLocally = GetDeltaForDetails(localDelta);
                     Matrix4? localToGlobalTransform = @event.Transform is null
                         ? null
                         : Matrix4.TryInvert(@event.Transform);
@@ -353,7 +353,7 @@ public abstract class DragGestureRecognizer : OneSequenceGestureRecognizer
         };
     }
 
-    private void RecordMoveDeltaForMultitouch(int pointer, Point localDelta)
+    private void RecordMoveDeltaForMultitouch(int pointer, Offset localDelta)
     {
         if (MultitouchDragStrategy != MultitouchDragStrategy.AverageBoundaryPointers)
         {
@@ -375,19 +375,19 @@ public abstract class DragGestureRecognizer : OneSequenceGestureRecognizer
             return;
         }
 
-        _moveDeltaBeforeFrame[pointer] = _moveDeltaBeforeFrame.TryGetValue(pointer, out Point existing)
+        _moveDeltaBeforeFrame[pointer] = _moveDeltaBeforeFrame.TryGetValue(pointer, out Offset existing)
             ? existing + localDelta
             : localDelta;
     }
 
     private double GetSumDelta(int pointer, bool positive, DragDirection axis)
     {
-        if (!_moveDeltaBeforeFrame.TryGetValue(pointer, out Point offset))
+        if (!_moveDeltaBeforeFrame.TryGetValue(pointer, out Offset offset))
         {
             return 0.0;
         }
 
-        double value = axis == DragDirection.Vertical ? offset.Y : offset.X;
+        double value = axis == DragDirection.Vertical ? offset.Dy : offset.Dx;
         return positive ? Math.Max(value, 0.0) : Math.Min(value, 0.0);
     }
 
@@ -420,7 +420,7 @@ public abstract class DragGestureRecognizer : OneSequenceGestureRecognizer
         return ret;
     }
 
-    private Point ResolveLocalDeltaForMultitouch(int pointer, Point localDelta)
+    private Offset ResolveLocalDeltaForMultitouch(int pointer, Offset localDelta)
     {
         if (MultitouchDragStrategy != MultitouchDragStrategy.AverageBoundaryPointers)
         {
@@ -455,7 +455,7 @@ public abstract class DragGestureRecognizer : OneSequenceGestureRecognizer
         {
             case DragDirection.Horizontal:
                 dx = ResolveDelta(pointer, DragDirection.Horizontal, localDelta);
-                if (Constants.KDebugMode && Math.Abs(dx) > Math.Abs(localDelta.X))
+                if (Constants.KDebugMode && Math.Abs(dx) > Math.Abs(localDelta.Dx))
                 {
                     throw new InvalidOperationException("Resolved horizontal movement exceeds the pointer delta.");
                 }
@@ -465,7 +465,7 @@ public abstract class DragGestureRecognizer : OneSequenceGestureRecognizer
             case DragDirection.Vertical:
                 dx = 0.0;
                 dy = ResolveDelta(pointer, DragDirection.Vertical, localDelta);
-                if (Constants.KDebugMode && Math.Abs(dy) > Math.Abs(localDelta.Y))
+                if (Constants.KDebugMode && Math.Abs(dy) > Math.Abs(localDelta.Dy))
                 {
                     throw new InvalidOperationException("Resolved vertical movement exceeds the pointer delta.");
                 }
@@ -474,21 +474,21 @@ public abstract class DragGestureRecognizer : OneSequenceGestureRecognizer
             default:
                 double averageX = ResolveDeltaForPanGesture(DragDirection.Horizontal, localDelta);
                 double averageY = ResolveDeltaForPanGesture(DragDirection.Vertical, localDelta);
-                var average = new Point(averageX, averageY);
-                Point updatedDelta = average - _lastUpdatedDeltaForPan;
+                var average = new Offset(averageX, averageY);
+                Offset updatedDelta = average - _lastUpdatedDeltaForPan;
                 _lastUpdatedDeltaForPan = average;
-                dx = updatedDelta.X;
-                dy = updatedDelta.Y;
+                dx = updatedDelta.Dx;
+                dy = updatedDelta.Dy;
                 break;
         }
 
-        return new Point(dx, dy);
+        return new Offset(dx, dy);
     }
 
-    private double ResolveDelta(int pointer, DragDirection axis, Point localDelta)
+    private double ResolveDelta(int pointer, DragDirection axis, Offset localDelta)
     {
-        bool positive = axis == DragDirection.Horizontal ? localDelta.X > 0 : localDelta.Y > 0;
-        double delta = axis == DragDirection.Horizontal ? localDelta.X : localDelta.Y;
+        bool positive = axis == DragDirection.Horizontal ? localDelta.Dx > 0 : localDelta.Dy > 0;
+        double delta = axis == DragDirection.Horizontal ? localDelta.Dx : localDelta.Dy;
         int? maxSumDeltaPointer = GetMaxSumDeltaPointer(positive, axis);
         if (Constants.KDebugMode && maxSumDeltaPointer is null)
         {
@@ -510,9 +510,9 @@ public abstract class DragGestureRecognizer : OneSequenceGestureRecognizer
         return curPointerSumDelta + delta < maxSumDelta ? curPointerSumDelta + delta - maxSumDelta : 0.0;
     }
 
-    private double ResolveDeltaForPanGesture(DragDirection axis, Point localDelta)
+    private double ResolveDeltaForPanGesture(DragDirection axis, Offset localDelta)
     {
-        double delta = axis == DragDirection.Horizontal ? localDelta.X : localDelta.Y;
+        double delta = axis == DragDirection.Horizontal ? localDelta.Dx : localDelta.Dy;
         int pointerCount = _acceptedActivePointers.Count;
         if (Constants.KDebugMode && pointerCount < 1)
         {
@@ -520,9 +520,9 @@ public abstract class DragGestureRecognizer : OneSequenceGestureRecognizer
         }
 
         double sum = delta;
-        foreach (Point offset in _moveDeltaBeforeFrame.Values)
+        foreach (Offset offset in _moveDeltaBeforeFrame.Values)
         {
-            sum += axis == DragDirection.Horizontal ? offset.X : offset.Y;
+            sum += axis == DragDirection.Horizontal ? offset.Dx : offset.Dy;
         }
 
         return sum / pointerCount;
@@ -615,7 +615,7 @@ public abstract class DragGestureRecognizer : OneSequenceGestureRecognizer
         OffsetPair delta = _pendingDragOffset;
         DateTime? timestamp = _lastPendingEventTimestamp;
         Matrix4? transform = _lastTransform;
-        Point localUpdateDelta;
+        Offset localUpdateDelta;
         switch (DragStartBehavior)
         {
             case DragStartBehavior.Start:
@@ -634,8 +634,8 @@ public abstract class DragGestureRecognizer : OneSequenceGestureRecognizer
         if (localUpdateDelta != default && OnUpdate is not null)
         {
             Matrix4? localToGlobal = transform is not null ? Matrix4.TryInvert(transform) : null;
-            Point correctedLocalPosition = _initialPosition.Local + localUpdateDelta;
-            Point globalUpdateDelta = PointerEvent.TransformDeltaViaPositions(
+            Offset correctedLocalPosition = _initialPosition.Local + localUpdateDelta;
+            Offset globalUpdateDelta = PointerEvent.TransformDeltaViaPositions(
                 untransformedEndPosition: correctedLocalPosition,
                 untransformedDelta: localUpdateDelta,
                 transform: localToGlobal);
@@ -670,10 +670,10 @@ public abstract class DragGestureRecognizer : OneSequenceGestureRecognizer
 
     private void CheckUpdate(
         DateTime? sourceTimeStampUtc,
-        Point delta,
+        Offset delta,
         double? primaryDelta,
-        Point globalPosition,
-        Point localPosition,
+        Offset globalPosition,
+        Offset localPosition,
         int pointer)
     {
         if (OnUpdate is null)
@@ -775,8 +775,8 @@ public class VerticalDragGestureRecognizer : DragGestureRecognizer
 
     public override bool IsFlingGesture(VelocityEstimate estimate, PointerDeviceKind kind)
     {
-        return Math.Abs(estimate.PixelsPerSecond.Y) > EffectiveMinFlingVelocity
-               && Math.Abs(estimate.Offset.Y) > EffectiveMinFlingDistance(kind);
+        return Math.Abs(estimate.PixelsPerSecond.Dy) > EffectiveMinFlingVelocity
+               && Math.Abs(estimate.Offset.Dy) > EffectiveMinFlingDistance(kind);
     }
 
     public override DragEndDetails? ConsiderFling(VelocityEstimate estimate, PointerDeviceKind kind)
@@ -787,9 +787,9 @@ public class VerticalDragGestureRecognizer : DragGestureRecognizer
         }
 
         double maxVelocity = EffectiveMaxFlingVelocity;
-        double dy = Math.Clamp(estimate.PixelsPerSecond.Y, -maxVelocity, maxVelocity);
+        double dy = Math.Clamp(estimate.PixelsPerSecond.Dy, -maxVelocity, maxVelocity);
         return new DragEndDetails(
-            velocity: new Velocity(new Vector(0.0, dy)),
+            velocity: new Velocity(new Offset(0.0, dy)),
             primaryVelocity: dy,
             globalPosition: LastPosition.Global,
             localPosition: LastPosition.Local);
@@ -803,9 +803,9 @@ public class VerticalDragGestureRecognizer : DragGestureRecognizer
                > PointerEventUtils.ComputeHitSlop(pointerDeviceKind, GestureSettings);
     }
 
-    protected override Point GetDeltaForDetails(Point delta) => new(0.0, delta.Y);
+    protected override Offset GetDeltaForDetails(Offset delta) => new(0.0, delta.Dy);
 
-    protected override double? GetPrimaryValueFromOffset(Point value) => value.Y;
+    protected override double? GetPrimaryValueFromOffset(Offset value) => value.Dy;
 
     internal override DragDirection? GetPrimaryDragAxis() => DragDirection.Vertical;
 }
@@ -833,8 +833,8 @@ public class HorizontalDragGestureRecognizer : DragGestureRecognizer
 
     public override bool IsFlingGesture(VelocityEstimate estimate, PointerDeviceKind kind)
     {
-        return Math.Abs(estimate.PixelsPerSecond.X) > EffectiveMinFlingVelocity
-               && Math.Abs(estimate.Offset.X) > EffectiveMinFlingDistance(kind);
+        return Math.Abs(estimate.PixelsPerSecond.Dx) > EffectiveMinFlingVelocity
+               && Math.Abs(estimate.Offset.Dx) > EffectiveMinFlingDistance(kind);
     }
 
     public override DragEndDetails? ConsiderFling(VelocityEstimate estimate, PointerDeviceKind kind)
@@ -845,9 +845,9 @@ public class HorizontalDragGestureRecognizer : DragGestureRecognizer
         }
 
         double maxVelocity = EffectiveMaxFlingVelocity;
-        double dx = Math.Clamp(estimate.PixelsPerSecond.X, -maxVelocity, maxVelocity);
+        double dx = Math.Clamp(estimate.PixelsPerSecond.Dx, -maxVelocity, maxVelocity);
         return new DragEndDetails(
-            velocity: new Velocity(new Vector(dx, 0.0)),
+            velocity: new Velocity(new Offset(dx, 0.0)),
             primaryVelocity: dx,
             globalPosition: LastPosition.Global,
             localPosition: LastPosition.Local);
@@ -861,9 +861,9 @@ public class HorizontalDragGestureRecognizer : DragGestureRecognizer
                > PointerEventUtils.ComputeHitSlop(pointerDeviceKind, GestureSettings);
     }
 
-    protected override Point GetDeltaForDetails(Point delta) => new(delta.X, 0.0);
+    protected override Offset GetDeltaForDetails(Offset delta) => new(delta.Dx, 0.0);
 
-    protected override double? GetPrimaryValueFromOffset(Point value) => value.X;
+    protected override double? GetPrimaryValueFromOffset(Offset value) => value.Dx;
 
     internal override DragDirection? GetPrimaryDragAxis() => DragDirection.Horizontal;
 }
@@ -893,8 +893,8 @@ public class PanGestureRecognizer : DragGestureRecognizer
     {
         double minVelocity = EffectiveMinFlingVelocity;
         double minDistance = EffectiveMinFlingDistance(kind);
-        return estimate.PixelsPerSecond.SquaredLength > minVelocity * minVelocity
-               && estimate.Offset.SquaredLength > minDistance * minDistance;
+        return estimate.PixelsPerSecond.DartDistanceSquared > minVelocity * minVelocity
+               && estimate.Offset.DartDistanceSquared > minDistance * minDistance;
     }
 
     public override DragEndDetails? ConsiderFling(VelocityEstimate estimate, PointerDeviceKind kind)
@@ -921,7 +921,7 @@ public class PanGestureRecognizer : DragGestureRecognizer
                > PointerEventUtils.ComputePanSlop(pointerDeviceKind, GestureSettings);
     }
 
-    protected override Point GetDeltaForDetails(Point delta) => delta;
+    protected override Offset GetDeltaForDetails(Offset delta) => delta;
 
-    protected override double? GetPrimaryValueFromOffset(Point value) => null;
+    protected override double? GetPrimaryValueFromOffset(Offset value) => null;
 }

@@ -1063,10 +1063,10 @@ internal sealed class BottomNavigationBarRadialPainter : CustomPainter
     // Computes the maximum radius attainable such that at least one of the bounding
     // rectangle's corners touches the edge of the circle. Drawing a circle larger than this radius
     // is not needed, since there is no perceivable difference within the cropped rectangle.
-    private static double MaxRadius(Point center, Size size)
+    private static double MaxRadius(Offset center, Size size)
     {
-        double maxX = Math.Max(center.X, size.Width - center.X);
-        double maxY = Math.Max(center.Y, size.Height - center.Y);
+        double maxX = Math.Max(center.Dx, size.Width - center.Dx);
+        double maxY = Math.Max(center.Dy, size.Height - center.Dy);
         return Math.Sqrt((maxX * maxX) + (maxY * maxY));
     }
 
@@ -1108,13 +1108,13 @@ internal sealed class BottomNavigationBarRadialPainter : CustomPainter
         foreach (BottomNavigationBarCircle circle in Circles)
         {
             var brush = new SolidColorBrush(circle.Color);
-            var rect = new Rect(0.0, 0.0, size.Width, size.Height);
+            var rect = DartGeometry.RectFromLTWH(0.0, 0.0, size.Width, size.Height);
             double leftFraction = TextDirection switch
             {
                 TextDirection.Rtl => 1.0 - circle.HorizontalLeadingOffset,
                 _ => circle.HorizontalLeadingOffset,
             };
-            var center = new Point(leftFraction * size.Width, size.Height / 2.0);
+            var center = new Offset(leftFraction * size.Width, size.Height / 2.0);
             double radius = new DoubleTween(begin: 0.0, end: MaxRadius(center, size))
                 .Transform(circle.Animation.Value);
             context.Canvas.Save();

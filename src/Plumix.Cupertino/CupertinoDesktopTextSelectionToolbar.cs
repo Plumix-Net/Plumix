@@ -27,7 +27,7 @@ public sealed class CupertinoDesktopTextSelectionToolbar : StatelessWidget
     [
         new(
             color: Color.FromARGB(60, 0, 0, 0),
-            offset: new Point(0.0, 4.0),
+            offset: new Offset(0.0, 4.0),
             blurRadius: 10.0,
             spreadRadius: 0.5),
     ];
@@ -43,7 +43,7 @@ public sealed class CupertinoDesktopTextSelectionToolbar : StatelessWidget
             new Color(0xB2303030));
 
     public CupertinoDesktopTextSelectionToolbar(
-        Point anchor,
+        Offset anchor,
         IReadOnlyList<Widget> children,
         Key? key = null) : base(key)
     {
@@ -57,14 +57,14 @@ public sealed class CupertinoDesktopTextSelectionToolbar : StatelessWidget
         Children = children;
     }
 
-    public Point Anchor { get; }
+    public Offset Anchor { get; }
 
     public IReadOnlyList<Widget> Children { get; }
 
     public override Widget Build(BuildContext context)
     {
         double paddingAbove = MediaQuery.PaddingOf(context).Top + ToolbarScreenPadding;
-        var localAdjustment = new Vector(ToolbarScreenPadding, paddingAbove);
+        var localAdjustment = new Offset(ToolbarScreenPadding, paddingAbove);
 
         return new Padding(
             EdgeInsets.FromLTRB(

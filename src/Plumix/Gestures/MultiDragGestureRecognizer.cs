@@ -19,7 +19,7 @@ public abstract class Drag : IDrag
 /// <summary>
 /// Signature for when <see cref="MultiDragGestureRecognizer"/> recognizes the start of a drag gesture.
 /// </summary>
-public delegate Drag? GestureMultiDragStartCallback(Point position);
+public delegate Drag? GestureMultiDragStartCallback(Offset position);
 
 /// <summary>Per-pointer state for a <see cref="MultiDragGestureRecognizer"/>.</summary>
 public abstract class MultiDragPointerState : IDisposable
@@ -30,7 +30,7 @@ public abstract class MultiDragPointerState : IDisposable
     private GestureArenaEntry? _arenaEntry;
 
     protected MultiDragPointerState(
-        Point initialPosition,
+        Offset initialPosition,
         PointerDeviceKind kind,
         DeviceGestureSettings? gestureSettings)
     {
@@ -48,7 +48,7 @@ public abstract class MultiDragPointerState : IDisposable
     public DeviceGestureSettings? GestureSettings { get; }
 
     /// <summary>The global coordinates of the pointer when the pointer contacted the screen.</summary>
-    public Point InitialPosition { get; }
+    public Offset InitialPosition { get; }
 
     /// <summary>The kind of pointer performing the multi-drag gesture.</summary>
     public PointerDeviceKind Kind { get; }
@@ -57,7 +57,7 @@ public abstract class MultiDragPointerState : IDisposable
     /// The offset the pointer has moved since it contacted the screen, while this state has neither
     /// been accepted nor rejected; null once a client is attached or the pointer sequence ends.
     /// </summary>
-    public Point? PendingDelta { get; private set; } = default(Point);
+    public Offset? PendingDelta { get; private set; } = default(Offset);
 
     internal void SetArenaEntry(GestureArenaEntry entry) => _arenaEntry = entry;
 
@@ -76,7 +76,7 @@ public abstract class MultiDragPointerState : IDisposable
             _velocityTracker.AddPosition(@event.TimestampUtc, @event.Position);
         }
 
-        Point delta = @event.Delta;
+        Offset delta = @event.Delta;
         if (_client is not null)
         {
             _client.Update(new DragUpdateDetails(
@@ -88,7 +88,7 @@ public abstract class MultiDragPointerState : IDisposable
         }
         else
         {
-            PendingDelta = new Point(PendingDelta!.Value.X + delta.X, PendingDelta.Value.Y + delta.Y);
+            PendingDelta = new Offset(PendingDelta!.Value.Dx + delta.Dx, PendingDelta.Value.Dy + delta.Dy);
             _lastPendingEventTimestampUtc = @event.TimestampUtc;
             CheckForResolutionAfterMove();
         }
@@ -173,8 +173,8 @@ public abstract class MultiDragPointerState : IDisposable
     }
 
     /// <summary>The Euclidean magnitude of a delta, like Dart's `Offset.distance`.</summary>
-    protected static double DeltaDistance(Point delta) =>
-        Math.Sqrt((delta.X * delta.X) + (delta.Y * delta.Y));
+    protected static double DeltaDistance(Offset delta) =>
+        Math.Sqrt((delta.Dx * delta.Dx) + (delta.Dy * delta.Dy));
 }
 
 /// <summary>Recognizes movement on a per-pointer basis, so multiple drags can run at the same time.</summary>
@@ -247,7 +247,7 @@ public abstract class MultiDragGestureRecognizer : GestureRecognizer
         state.Accepted(initialPosition => StartDrag(initialPosition, pointer));
     }
 
-    private Drag? StartDrag(Point initialPosition, int pointer)
+    private Drag? StartDrag(Offset initialPosition, int pointer)
     {
         MultiDragPointerState state = _pointers[pointer];
         Drag? drag = null;
@@ -302,7 +302,7 @@ public abstract class MultiDragGestureRecognizer : GestureRecognizer
 internal sealed class ImmediatePointerState : MultiDragPointerState
 {
     public ImmediatePointerState(
-        Point initialPosition,
+        Offset initialPosition,
         PointerDeviceKind kind,
         DeviceGestureSettings? gestureSettings) : base(initialPosition, kind, gestureSettings)
     {
@@ -341,7 +341,7 @@ public sealed class ImmediateMultiDragGestureRecognizer : MultiDragGestureRecogn
 internal sealed class HorizontalPointerState : MultiDragPointerState
 {
     public HorizontalPointerState(
-        Point initialPosition,
+        Offset initialPosition,
         PointerDeviceKind kind,
         DeviceGestureSettings? gestureSettings) : base(initialPosition, kind, gestureSettings)
     {
@@ -349,7 +349,7 @@ internal sealed class HorizontalPointerState : MultiDragPointerState
 
     protected override void CheckForResolutionAfterMove()
     {
-        if (Math.Abs(PendingDelta!.Value.X) > PointerEventUtils.ComputeHitSlop(Kind, GestureSettings))
+        if (Math.Abs(PendingDelta!.Value.Dx) > PointerEventUtils.ComputeHitSlop(Kind, GestureSettings))
         {
             Resolve(GestureDisposition.Accepted);
         }
@@ -380,7 +380,7 @@ public sealed class HorizontalMultiDragGestureRecognizer : MultiDragGestureRecog
 internal sealed class VerticalPointerState : MultiDragPointerState
 {
     public VerticalPointerState(
-        Point initialPosition,
+        Offset initialPosition,
         PointerDeviceKind kind,
         DeviceGestureSettings? gestureSettings) : base(initialPosition, kind, gestureSettings)
     {
@@ -388,7 +388,7 @@ internal sealed class VerticalPointerState : MultiDragPointerState
 
     protected override void CheckForResolutionAfterMove()
     {
-        if (Math.Abs(PendingDelta!.Value.Y) > PointerEventUtils.ComputeHitSlop(Kind, GestureSettings))
+        if (Math.Abs(PendingDelta!.Value.Dy) > PointerEventUtils.ComputeHitSlop(Kind, GestureSettings))
         {
             Resolve(GestureDisposition.Accepted);
         }
@@ -422,7 +422,7 @@ internal sealed class DelayedPointerState : MultiDragPointerState
     private GestureMultiDragStartCallback? _starter;
 
     public DelayedPointerState(
-        Point initialPosition,
+        Offset initialPosition,
         TimeSpan delay,
         PointerDeviceKind kind,
         DeviceGestureSettings? gestureSettings) : base(initialPosition, kind, gestureSettings)

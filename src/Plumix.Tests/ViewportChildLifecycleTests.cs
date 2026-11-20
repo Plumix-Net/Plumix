@@ -81,7 +81,7 @@ public sealed class ViewportChildLifecycleTests
         tester.Pump();
         Assert.Equal(2, Children(source).Count);
         Assert.Same(state, ((StatefulElement)tester.ElementsWithKey(key).Single()).State);
-        Assert.Equal(new Point(0, 0), tester.GetTopLeft(child));
+        Assert.Equal(new Offset(0, 0), tester.GetTopLeft(child));
     }
 
     [Fact]
@@ -103,7 +103,7 @@ public sealed class ViewportChildLifecycleTests
             Assert.Equal(order.Length, children.Count);
             for (int index = 0; index < order.Length; index++)
             {
-                Assert.Equal(new Point(0, offset), tester.GetTopLeft(children[index]));
+                Assert.Equal(new Offset(0, offset), tester.GetTopLeft(children[index]));
                 offset += order[index] == 'a' ? 251 : order[index] == 'b' ? 252 : 253;
             }
 
@@ -171,7 +171,7 @@ public sealed class ViewportChildLifecycleTests
         Assert.Same(oldParent, child.Parent);
         Assert.Same(state, ((StatefulElement)child).State);
         Assert.Same(child, Children(oldParent).Single());
-        Assert.Equal(new Point(0, 100), tester.GetTopLeft(child));
+        Assert.Equal(new Offset(0, 100), tester.GetTopLeft(child));
     }
 
     [Fact]

@@ -839,9 +839,9 @@ public sealed class SliverChildManagerTests
     {
         protected override void PerformLayout() => Size = Constraints.Constrain(size);
 
-        protected override bool HitTestSelf(Point position) => true;
+        protected override bool HitTestSelf(Offset position) => true;
 
-        public override void Paint(PaintingContext ctx, Point offset)
+        public override void Paint(PaintingContext ctx, Offset offset)
         {
         }
     }

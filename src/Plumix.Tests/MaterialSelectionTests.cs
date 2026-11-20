@@ -56,7 +56,7 @@ public sealed class MaterialSelectionTests
             [ContextMenuButtonType.Copy, ContextMenuButtonType.Share, ContextMenuButtonType.SelectAll],
             state.ContextMenuButtonItems.Select(item => item.Type));
         ContextMenuButtonItem copy = state.ContextMenuButtonItems[0];
-        Assert.True(double.IsFinite(state.ContextMenuAnchors.PrimaryAnchor.X));
+        Assert.True(double.IsFinite(state.ContextMenuAnchors.PrimaryAnchor.Dx));
         copy.OnPressed!.Invoke();
 
         Assert.True(EventLoopPump.SpinUntil(() => clipboard.Text == "copy me"));
@@ -221,14 +221,14 @@ public sealed class MaterialSelectionTests
                 onSelectionChanged: (_, nextCause) => cause = nextCause),
             ThemeData.Light));
         harness.Pump(new Size(320, 120));
-        Assert.True(FindEditables(harness.RenderView).Single().GetPositionForPoint(new Point(90, 8)).Offset > 0);
+        Assert.True(FindEditables(harness.RenderView).Single().GetPositionForPoint(new Offset(90, 8)).Offset > 0);
 
         var binding = GestureBinding.Instance;
         DateTime now = DateTime.UtcNow;
         binding.HandlePointerEvent(harness.RenderView, new PointerDownEvent(
             91,
             PointerDeviceKind.Mouse,
-            new Point(1, 8),
+            new Offset(1, 8),
             PointerButtons.Primary,
             now));
         // On Android a mouse press sets nothing yet: the selection starts with the drag.
@@ -236,13 +236,13 @@ public sealed class MaterialSelectionTests
         binding.HandlePointerEvent(harness.RenderView, new PointerMoveEvent(
             91,
             PointerDeviceKind.Mouse,
-            new Point(90, 8),
+            new Offset(90, 8),
             PointerButtons.Primary,
             now.AddMilliseconds(16)));
         binding.HandlePointerEvent(harness.RenderView, new PointerUpEvent(
             91,
             PointerDeviceKind.Mouse,
-            new Point(90, 8),
+            new Offset(90, 8),
             PointerButtons.None,
             now.AddMilliseconds(32)));
 
@@ -307,19 +307,19 @@ public sealed class MaterialSelectionTests
         binding.HandlePointerEvent(harness.RenderView, new PointerDownEvent(
             92,
             PointerDeviceKind.Mouse,
-            new Point(1, 8),
+            new Offset(1, 8),
             PointerButtons.Primary,
             now));
         binding.HandlePointerEvent(harness.RenderView, new PointerMoveEvent(
             92,
             PointerDeviceKind.Mouse,
-            new Point(80, 28),
+            new Offset(80, 28),
             PointerButtons.Primary,
             now.AddMilliseconds(16)));
         binding.HandlePointerEvent(harness.RenderView, new PointerUpEvent(
             92,
             PointerDeviceKind.Mouse,
-            new Point(80, 28),
+            new Offset(80, 28),
             PointerButtons.None,
             now.AddMilliseconds(32)));
 
@@ -438,7 +438,7 @@ public sealed class MaterialSelectionTests
             ThemeData.Light));
         harness.Pump(new Size(320, 160));
 
-        var position = new Point(2, 8);
+        var position = new Offset(2, 8);
         TapAt(harness, 71, position);
         TapAt(harness, 71, position);
 
@@ -461,7 +461,7 @@ public sealed class MaterialSelectionTests
                 ThemeData.Light));
             harness.Pump(new Size(320, 160));
 
-            var position = new Point(2, 8);
+            var position = new Offset(2, 8);
             TapAt(harness, 72, position);
             TapAt(harness, 72, position);
             TapAt(harness, 72, position);
@@ -486,7 +486,7 @@ public sealed class MaterialSelectionTests
             ThemeData.Light));
         harness.Pump(new Size(320, 160));
 
-        var position = new Point(2, 8);
+        var position = new Offset(2, 8);
         TapAt(harness, 73, position);
         TapAt(harness, 73, position);
         Assert.Equal("alpha", selected?.PlainText);
@@ -518,14 +518,14 @@ public sealed class MaterialSelectionTests
             state.SelectAll();
             harness.Pump(new Size(320, 160));
 
-            SecondaryTapAt(harness, 74, new Point(2, 8));
+            SecondaryTapAt(harness, 74, new Offset(2, 8));
             harness.Pump(new Size(320, 160));
 
             // A right click inside the active selection shows the menu without collapsing it.
             Assert.True(state.ContextMenuIsVisible);
             Assert.Equal("alpha beta gamma", state.SelectedContent?.PlainText);
 
-            SecondaryTapAt(harness, 74, new Point(2, 8));
+            SecondaryTapAt(harness, 74, new Offset(2, 8));
             harness.Pump(new Size(320, 160));
             Assert.False(state.ContextMenuIsVisible);
         }
@@ -535,7 +535,7 @@ public sealed class MaterialSelectionTests
         }
     }
 
-    private static void TapAt(WidgetRenderHarness harness, int pointer, Point position)
+    private static void TapAt(WidgetRenderHarness harness, int pointer, Offset position)
     {
         var binding = GestureBinding.Instance;
         DateTime now = DateTime.UtcNow;
@@ -545,7 +545,7 @@ public sealed class MaterialSelectionTests
             pointer, PointerDeviceKind.Mouse, position, PointerButtons.None, now.AddMilliseconds(16)));
     }
 
-    private static void SecondaryTapAt(WidgetRenderHarness harness, int pointer, Point position)
+    private static void SecondaryTapAt(WidgetRenderHarness harness, int pointer, Offset position)
     {
         var binding = GestureBinding.Instance;
         DateTime now = DateTime.UtcNow;

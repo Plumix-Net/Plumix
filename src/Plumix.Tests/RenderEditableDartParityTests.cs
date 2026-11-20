@@ -121,9 +121,9 @@ public sealed class RenderEditableDartParityTests
         using var tester = new RenderingTester();
         tester.Layout(editable, new BoxConstraints(MaxHeight: 1000.0, MaxWidth: 1000.0), EnginePhase.Composite);
 
-        var paintOffset = new Point(100, 200);
+        var paintOffset = new Offset(100, 200);
         const double fontSize = 20.0;
-        var endpoint = new Point(0.0, fontSize);
+        var endpoint = new Offset(0.0, fontSize);
 
         editable.Paint(context, paintOffset);
 
@@ -238,7 +238,7 @@ public sealed class RenderEditableDartParityTests
 
         Assert.True(Paints(
             PaintEditable(editable),
-            RectStep(Color.FromARGB(0xFF, 0xFF, 0x00, 0x00), new Rect(40, 0, 1, 10))));
+            RectStep(Color.FromARGB(0xFF, 0xFF, 0x00, 0x00), DartGeometry.RectFromLTWH(40, 0, 1, 10))));
 
         // Now change to a rounded caret.
         editable.CursorColor = Color.FromARGB(0xFF, 0x00, 0x00, 0xFF);
@@ -250,7 +250,7 @@ public sealed class RenderEditableDartParityTests
             PaintEditable(editable),
             RRectStep(
                 Color.FromARGB(0xFF, 0x00, 0x00, 0xFF),
-                RRect.FromRectAndRadius(new Rect(40, 0, 4, 10), Radius.Circular(3)))));
+                RRect.FromRectAndRadius(DartGeometry.RectFromLTWH(40, 0, 4, 10), Radius.Circular(3)))));
 
         editable.TextScaler = TextScaler.Linear(2.0);
         tester.PumpFrame(EnginePhase.CompositingBits);
@@ -260,7 +260,7 @@ public sealed class RenderEditableDartParityTests
             PaintEditable(editable),
             RRectStep(
                 Color.FromARGB(0xFF, 0x00, 0x00, 0xFF),
-                RRect.FromRectAndRadius(new Rect(80, 0, 4, 20), Radius.Circular(3)))));
+                RRect.FromRectAndRadius(DartGeometry.RectFromLTWH(80, 0, 4, 20), Radius.Circular(3)))));
 
         // Can turn off caret.
         showCursor.Value = false;
@@ -376,7 +376,7 @@ public sealed class RenderEditableDartParityTests
 
         Assert.True(Paints(PaintEditable(editable), ParagraphStep(offset: default)));
 
-        editable.SelectPositionAt(from: new Point(0, 2), cause: SelectionChangedCause.Tap);
+        editable.SelectPositionAt(from: new Offset(0, 2), cause: SelectionChangedCause.Tap);
         tester.PumpFrame();
 
         Assert.True(@delegate.Selection!.Value.IsCollapsed);
@@ -386,11 +386,11 @@ public sealed class RenderEditableDartParityTests
 
         tester.PumpFrame(EnginePhase.CompositingBits);
 
-        Assert.True(Paints(PaintEditable(editable), ParagraphStep(offset: new Point(0, -10))));
+        Assert.True(Paints(PaintEditable(editable), ParagraphStep(offset: new Offset(0, -10))));
 
         // Tap the same place. But because the offset is scrolled up, the second line gets tapped
         // instead.
-        editable.SelectPositionAt(from: new Point(0, 2), cause: SelectionChangedCause.Tap);
+        editable.SelectPositionAt(from: new Offset(0, 2), cause: SelectionChangedCause.Tap);
         tester.PumpFrame();
 
         Assert.True(@delegate.Selection!.Value.IsCollapsed);
@@ -398,14 +398,14 @@ public sealed class RenderEditableDartParityTests
 
         // Test the other selection methods.
         // Move over by one character.
-        editable.HandleTapDown(new TapDownDetails(globalPosition: new Point(10, 2)));
+        editable.HandleTapDown(new TapDownDetails(globalPosition: new Offset(10, 2)));
         tester.PumpFrame();
         editable.SelectPosition(cause: SelectionChangedCause.Tap);
         tester.PumpFrame();
         Assert.True(@delegate.Selection!.Value.IsCollapsed);
         Assert.Equal(6, @delegate.Selection.Value.BaseOffset);
 
-        editable.HandleTapDown(new TapDownDetails(globalPosition: new Point(20, 2)));
+        editable.HandleTapDown(new TapDownDetails(globalPosition: new Offset(20, 2)));
         tester.PumpFrame();
         editable.SelectWord(cause: SelectionChangedCause.LongPress);
         tester.PumpFrame();
@@ -415,7 +415,7 @@ public sealed class RenderEditableDartParityTests
 
         // Select one more character down but since it's still part of the same word, the same word
         // is selected.
-        editable.SelectWordsInRange(from: new Point(30, 2), cause: SelectionChangedCause.LongPress);
+        editable.SelectWordsInRange(from: new Offset(30, 2), cause: SelectionChangedCause.LongPress);
         tester.PumpFrame();
         Assert.False(@delegate.Selection!.Value.IsCollapsed);
         Assert.Equal(5, @delegate.Selection.Value.BaseOffset);
@@ -433,7 +433,7 @@ public sealed class RenderEditableDartParityTests
                 WhitespaceEditable("  test", readOnly: true);
             using (tester)
             {
-                editable.SelectWordsInRange(from: new Point(10, 2), cause: SelectionChangedCause.LongPress);
+                editable.SelectWordsInRange(from: new Offset(10, 2), cause: SelectionChangedCause.LongPress);
                 tester.PumpFrame();
                 Assert.False(@delegate.Selection!.Value.IsCollapsed);
                 Assert.Equal(1, @delegate.Selection.Value.BaseOffset);
@@ -458,7 +458,7 @@ public sealed class RenderEditableDartParityTests
                 WhitespaceEditable("  test", readOnly: false);
             using (tester)
             {
-                editable.SelectWordsInRange(from: new Point(10, 2), cause: SelectionChangedCause.LongPress);
+                editable.SelectWordsInRange(from: new Offset(10, 2), cause: SelectionChangedCause.LongPress);
                 tester.PumpFrame();
                 Assert.False(@delegate.Selection!.Value.IsCollapsed);
                 Assert.Equal(1, @delegate.Selection.Value.BaseOffset);
@@ -483,7 +483,7 @@ public sealed class RenderEditableDartParityTests
                 WhitespaceEditable("   ", readOnly: false);
             using (tester)
             {
-                editable.SelectWordsInRange(from: new Point(10, 2), cause: SelectionChangedCause.LongPress);
+                editable.SelectWordsInRange(from: new Offset(10, 2), cause: SelectionChangedCause.LongPress);
                 tester.PumpFrame();
                 Assert.True(@delegate.Selection!.Value.IsCollapsed);
                 Assert.Equal(1, @delegate.Selection.Value.BaseOffset);
@@ -528,7 +528,7 @@ public sealed class RenderEditableDartParityTests
         using var tester = new RenderingTester();
         tester.Layout(editable);
 
-        editable.SelectPositionAt(from: new Point(30, 2), to: new Point(10, 2), cause: SelectionChangedCause.Drag);
+        editable.SelectPositionAt(from: new Offset(30, 2), to: new Offset(10, 2), cause: SelectionChangedCause.Drag);
         tester.PumpFrame();
 
         Assert.False(@delegate.Selection!.Value.IsCollapsed);
@@ -614,21 +614,21 @@ public sealed class RenderEditableDartParityTests
             text: new TextSpan(text: "‎"));
         editable.Layout(BoxConstraints.Loose(new Size(100, 100)));
         IReadOnlyList<TextSelectionPoint> endpoints = editable.GetEndpointsForSelection(new TextSelection(0, 1));
-        Assert.Equal(0, endpoints[0].Point.X);
+        Assert.Equal(0, endpoints[0].Point.Dx);
     }
 
     [Fact]
     public void TextSelectionPointCanCompare()
     {
         // ignore: prefer_const_constructors
-        var first = new TextSelectionPoint(new Point(1, 2), TextDirection.Ltr);
+        var first = new TextSelectionPoint(new Offset(1, 2), TextDirection.Ltr);
         // ignore: prefer_const_constructors
-        var second = new TextSelectionPoint(new Point(1, 2), TextDirection.Ltr);
+        var second = new TextSelectionPoint(new Offset(1, 2), TextDirection.Ltr);
         Assert.True(first == second);
         Assert.Equal(first.GetHashCode(), second.GetHashCode());
 
         // ignore: prefer_const_constructors
-        var different = new TextSelectionPoint(new Point(2, 2), TextDirection.Ltr);
+        var different = new TextSelectionPoint(new Offset(2, 2), TextDirection.Ltr);
         Assert.False(first == different);
         Assert.NotEqual(first.GetHashCode(), different.GetHashCode());
     }
@@ -880,19 +880,19 @@ public sealed class RenderEditableDartParityTests
         tester.Layout(renderEditable, BoxConstraints.TightFor(width: 100.0 + CaretMarginOf(renderEditable)));
 
         // Prepare for painting after layout. Hit-testing the A span.
-        AssertHitSpans(renderEditable, new Point(5.0, 5.0), true, textSpanA);
-        AssertHitSpans(renderEditable, new Point(95.0, 5.0), true, textSpanA);
-        AssertHitSpans(renderEditable, new Point(200.0, 5.0), false);
+        AssertHitSpans(renderEditable, new Offset(5.0, 5.0), true, textSpanA);
+        AssertHitSpans(renderEditable, new Offset(95.0, 5.0), true, textSpanA);
+        AssertHitSpans(renderEditable, new Offset(200.0, 5.0), false);
 
         // Hit-testing the BC span. The first character 'B' is at x = 13.0 (letterSpacing / 2).
-        AssertHitSpans(renderEditable, new Point(18.0, 15.0), true, textSpanBC);
+        AssertHitSpans(renderEditable, new Offset(18.0, 15.0), true, textSpanBC);
         // Between B and C, with large letter-spacing.
-        AssertHitSpans(renderEditable, new Point(31.0, 15.0), true, textSpanBC);
+        AssertHitSpans(renderEditable, new Offset(31.0, 15.0), true, textSpanBC);
         // On C.
-        AssertHitSpans(renderEditable, new Point(54.0, 15.0), true, textSpanBC);
+        AssertHitSpans(renderEditable, new Offset(54.0, 15.0), true, textSpanBC);
         // After C.
-        AssertHitSpans(renderEditable, new Point(100.0, 15.0), true);
-        AssertHitSpans(renderEditable, new Point(9999.0, 9999.0), false);
+        AssertHitSpans(renderEditable, new Offset(100.0, 15.0), true);
+        AssertHitSpans(renderEditable, new Offset(9999.0, 9999.0), false);
     }
 
     [Fact]
@@ -917,9 +917,9 @@ public sealed class RenderEditableDartParityTests
         tester.Layout(renderEditable, BoxConstraints.TightFor(width: 100.0 + CaretMarginOf(renderEditable)));
 
         // Expected layout: "A        B" / "CCCCCCCCCC".
-        AssertHitSpans(renderEditable, new Point(5.0, 5.0), true, textSpanA);
-        AssertHitSpans(renderEditable, new Point(50.0, 5.0), true, textSpanA);
-        AssertHitSpans(renderEditable, new Point(95.0, 5.0), true, textSpanB);
+        AssertHitSpans(renderEditable, new Offset(5.0, 5.0), true, textSpanA);
+        AssertHitSpans(renderEditable, new Offset(50.0, 5.0), true, textSpanA);
+        AssertHitSpans(renderEditable, new Offset(95.0, 5.0), true, textSpanB);
     }
 
     [Fact]
@@ -941,7 +941,7 @@ public sealed class RenderEditableDartParityTests
         Assert.Equal("A", Assert.IsType<TextSpan>(result.Path[0].Target).Text);
         Assert.IsAssignableFrom<RenderEditable>(result.Path[^1].Target);
 
-        result = HitTest(editable, new Point(15.0, 0.0));
+        result = HitTest(editable, new Offset(15.0, 0.0));
         Assert.Equal(2, result.Path.Count);
         Assert.Equal("B", Assert.IsType<TextSpan>(result.Path[0].Target).Text);
     }
@@ -966,11 +966,11 @@ public sealed class RenderEditableDartParityTests
         Assert.Equal("A", Assert.IsType<TextSpan>(result.Path[0].Target).Text);
         Assert.IsAssignableFrom<RenderEditable>(result.Path[^1].Target);
 
-        result = HitTest(editable, new Point(15.0, 0.0));
+        result = HitTest(editable, new Offset(15.0, 0.0));
         Assert.Equal(2, result.Path.Count);
         Assert.Equal("B\n", Assert.IsType<TextSpan>(result.Path[0].Target).Text);
 
-        result = HitTest(editable, new Point(0.0, 6.0));
+        result = HitTest(editable, new Offset(0.0, 6.0));
         Assert.Equal(2, result.Path.Count);
         Assert.Equal("C", Assert.IsType<TextSpan>(result.Path[0].Target).Text);
     }
@@ -989,20 +989,20 @@ public sealed class RenderEditableDartParityTests
         // Prepare for painting after layout.
         tester.PumpFrame(EnginePhase.CompositingBits);
 
-        BoxHitTestResult result = HitTest(editable, new Point(6.0, 0));
+        BoxHitTestResult result = HitTest(editable, new Offset(6.0, 0));
         Assert.Equal(2, result.Path.Count);
         Assert.Equal("B", Assert.IsType<TextSpan>(result.Path[0].Target).Text);
         Assert.IsAssignableFrom<RenderEditable>(result.Path[^1].Target);
     }
 
-    private static BoxHitTestResult HitTest(RenderBox box, Point position)
+    private static BoxHitTestResult HitTest(RenderBox box, Offset position)
     {
         var result = new BoxHitTestResult();
         box.HitTest(result, position);
         return result;
     }
 
-    private static void AssertHitSpans(RenderEditable editable, Point position, bool hit, params TextSpan[] spans)
+    private static void AssertHitSpans(RenderEditable editable, Offset position, bool hit, params TextSpan[] spans)
     {
         var result = new BoxHitTestResult();
         Assert.Equal(hit, editable.HitTest(result, position));
@@ -1209,49 +1209,49 @@ public sealed class RenderEditableDartParityTests
         // Prepare for painting after layout.
         tester.PumpFrame(EnginePhase.CompositingBits);
 
-        BoxHitTestResult result = HitTest(editable, new Point(0.0, 4.0));
+        BoxHitTestResult result = HitTest(editable, new Offset(0.0, 4.0));
         Assert.Equal(2, result.Path.Count);
         Assert.Equal(text, Assert.IsType<TextSpan>(result.Path[0].Target).Text);
         Assert.IsAssignableFrom<RenderEditable>(result.Path[^1].Target);
-        result = HitTest(editable, new Point(15.0, 4.0));
+        result = HitTest(editable, new Offset(15.0, 4.0));
         Assert.Equal(2, result.Path.Count);
         Assert.Equal(text, Assert.IsType<TextSpan>(result.Path[0].Target).Text);
 
         AssertPlaceholderHits(editable);
 
         // Only the RenderEditable itself: nothing is laid out below the last line.
-        Assert.Single(HitTest(editable, new Point(5.0, 15.0)).Path);
+        Assert.Single(HitTest(editable, new Offset(5.0, 15.0)).Path);
     }
 
     private static void AssertWidgetSpanHits(RenderEditable editable, string text)
     {
-        BoxHitTestResult result = HitTest(editable, new Point(1.0, 5.0));
+        BoxHitTestResult result = HitTest(editable, new Offset(1.0, 5.0));
         Assert.Equal(2, result.Path.Count);
         Assert.Equal(text, Assert.IsType<TextSpan>(result.Path[0].Target).Text);
         Assert.IsAssignableFrom<RenderEditable>(result.Path[^1].Target);
-        result = HitTest(editable, new Point(15.0, 5.0));
+        result = HitTest(editable, new Offset(15.0, 5.0));
         Assert.Equal(2, result.Path.Count);
         Assert.Equal(text, Assert.IsType<TextSpan>(result.Path[0].Target).Text);
 
         AssertPlaceholderHits(editable);
 
-        Assert.Empty(HitTest(editable, new Point(5.0, 15.0)).Path);
+        Assert.Empty(HitTest(editable, new Offset(5.0, 15.0)).Path);
     }
 
     private static void AssertPlaceholderHits(RenderEditable editable)
     {
         // The hit on a placeholder goes through the child paragraph: its span, the paragraph, then the
         // editable.
-        BoxHitTestResult result = HitTest(editable, new Point(41.0, 0.0));
+        BoxHitTestResult result = HitTest(editable, new Offset(41.0, 0.0));
         Assert.Equal(3, result.Path.Count);
         Assert.Equal("a", Assert.IsType<TextSpan>(result.Path[0].Target).Text);
         Assert.IsAssignableFrom<RenderEditable>(result.Path[^1].Target);
 
-        result = HitTest(editable, new Point(55.0, 0.0));
+        result = HitTest(editable, new Offset(55.0, 0.0));
         Assert.Equal(3, result.Path.Count);
         Assert.Equal("b", Assert.IsType<TextSpan>(result.Path[0].Target).Text);
 
-        result = HitTest(editable, new Point(69.0, 5.0));
+        result = HitTest(editable, new Offset(69.0, 5.0));
         Assert.Equal(3, result.Path.Count);
         Assert.Equal("c", Assert.IsType<TextSpan>(result.Path[0].Target).Text);
     }
@@ -1361,11 +1361,11 @@ public sealed class RenderEditableDartParityTests
         editable.ShowCursor = showCursor;
         editable.SetFloatingCursor(
             FloatingCursorDragState.Start,
-            new Point(50, 50),
+            new Offset(50, 50),
             new TextPosition(4, TextAffinity.Upstream));
         tester.PumpFrame(EnginePhase.CompositingBits);
 
-        RRect expectedRRect = RRect.FromRectAndRadius(new Rect(49.5, 51, 2, 8), Radius.Circular(1));
+        RRect expectedRRect = RRect.FromRectAndRadius(DartGeometry.RectFromLTWH(49.5, 51, 2, 8), Radius.Circular(1));
 
         Assert.True(Paints(PaintEditable(editable), RRectStep(cursorColor.WithOpacity(0.75), expectedRRect)));
 
@@ -1375,7 +1375,7 @@ public sealed class RenderEditableDartParityTests
         // Floating cursor should be drawn in the same position.
         editable.SetFloatingCursor(
             FloatingCursorDragState.Start,
-            new Point(50, 50),
+            new Offset(50, 50),
             new TextPosition(4, TextAffinity.Upstream));
         tester.PumpFrame(EnginePhase.CompositingBits);
 
@@ -1515,7 +1515,7 @@ public sealed class RenderEditableDartParityTests
 
             PointerRouter router = GestureBinding.Instance.PointerRouter;
             var down = new PointerDownEvent(pointer: pointer);
-            editable.HandleEvent(down, new BoxHitTestEntry(editable, new Point(10, 10)));
+            editable.HandleEvent(down, new BoxHitTestEntry(editable, new Offset(10, 10)));
             router.Route(down);
             // The recognizers registered pointer routes for the down event.
             Assert.True(router.DebugRouteCountFor(pointer) > 0);
@@ -1777,7 +1777,7 @@ public sealed class RenderEditableDartParityTests
     }
 
     private static Rect FromLTRB(double left, double top, double right, double bottom) =>
-        new(left, top, right - left, bottom - top);
+        DartGeometry.RectFromLTWH(left, top, right - left, bottom - top);
 
     private static IReadOnlyList<CanvasCall> PaintEditable(RenderEditable editable)
     {
@@ -1825,7 +1825,7 @@ public sealed class RenderEditableDartParityTests
         "drawRRect",
         call => (color is null || call.Color == color) && (rrect is null || call.RRect == rrect));
 
-    private static PaintStep ParagraphStep(Point? offset = null) => new(
+    private static PaintStep ParagraphStep(Offset? offset = null) => new(
         "drawParagraph",
         call => offset is null || call.Offset == offset);
 
@@ -1907,12 +1907,12 @@ public sealed class RenderEditableDartParityTests
 
         public IReadOnlyList<CanvasCall> Calls => _canvas.DebugCalls;
 
-        public override void PaintChild(RenderObject child, Point offset) => child.Paint(this, offset);
+        public override void PaintChild(RenderObject child, Offset offset) => child.Paint(this, offset);
 
         public override void PushLayer(
             ContainerLayer childLayer,
             PaintingContextCallback painter,
-            Point offset,
+            Offset offset,
             Rect? childPaintBounds = null)
         {
             painter(this, offset);
@@ -1920,13 +1920,13 @@ public sealed class RenderEditableDartParityTests
 
         public override ClipRectLayer? PushClipRect(
             bool needsCompositing,
-            Point offset,
+            Offset offset,
             Rect clipRect,
             PaintingContextCallback painter,
             Clip clipBehavior = Clip.HardEdge,
             ClipRectLayer? oldLayer = null)
         {
-            Rect shifted = clipRect.Translate(new Vector(offset.X, offset.Y));
+            Rect shifted = clipRect.Shift(new Offset(offset.Dx, offset.Dy));
             ClipRectAndPaint(shifted, clipBehavior, shifted, () => painter(this, offset));
             return null;
         }
@@ -1939,7 +1939,7 @@ public sealed class RenderEditableDartParityTests
 
         public override ClipRectLayer? PushClipRect(
             bool needsCompositing,
-            Point offset,
+            Offset offset,
             Rect clipRect,
             PaintingContextCallback painter,
             Clip clipBehavior = Clip.HardEdge,
@@ -1958,7 +1958,7 @@ public sealed class RenderEditableDartParityTests
         public override void PushLayer(
             ContainerLayer childLayer,
             PaintingContextCallback painter,
-            Point offset,
+            Offset offset,
             Rect? childPaintBounds = null)
         {
             PushedLayers.Add(childLayer);
@@ -2041,7 +2041,7 @@ public sealed class RenderEditableDartParityTests
     {
         public int PaintCount { get; set; }
 
-        public override void Paint(PaintingContext context, Point offset)
+        public override void Paint(PaintingContext context, Offset offset)
         {
             base.Paint(context, offset);
             PaintCount += 1;
@@ -2084,7 +2084,7 @@ public sealed class RenderEditableDartParityTests
         public override void Paint(Canvas canvas, Size size, RenderEditable renderEditable)
         {
             PaintCount += 1;
-            canvas.DrawRectangle(new SolidColorBrush(Color), null, new Rect(1, 1, 0, 0));
+            canvas.DrawRectangle(new SolidColorBrush(Color), null, DartGeometry.RectFromLTWH(1, 1, 0, 0));
         }
 
         public override bool ShouldRepaint(RenderEditablePainter? oldDelegate) => Repaint;

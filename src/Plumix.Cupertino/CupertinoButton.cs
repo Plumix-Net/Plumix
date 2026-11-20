@@ -638,7 +638,7 @@ public sealed class CupertinoButton : StatefulWidget
                 return;
             }
 
-            Point localPosition = renderObject.GlobalToLocal(@event.GlobalPosition);
+            Offset localPosition = renderObject.GlobalToLocal(@event.GlobalPosition);
             if (Contains(renderObject.PaintBounds.Inflate(TapMoveSlop()), localPosition))
             {
                 HandleTap();
@@ -662,7 +662,7 @@ public sealed class CupertinoButton : StatefulWidget
                 return;
             }
 
-            Point localPosition = renderObject.GlobalToLocal(details.GlobalPosition);
+            Offset localPosition = renderObject.GlobalToLocal(details.GlobalPosition);
             bool buttonShouldHeldDown =
                 Contains(renderObject.PaintBounds.Inflate(TapMoveSlop()), localPosition);
             if (_tapInProgress && buttonShouldHeldDown != _buttonHeldDown)
@@ -714,12 +714,12 @@ public sealed class CupertinoButton : StatefulWidget
         }
 
         // Dart's `Rect.contains`: the right and bottom edges are exclusive, unlike Avalonia's.
-        private static bool Contains(Rect rect, Point point)
+        private static bool Contains(Rect rect, Offset point)
         {
-            return point.X >= rect.Left
-                   && point.X < rect.Right
-                   && point.Y >= rect.Top
-                   && point.Y < rect.Bottom;
+            return point.Dx >= rect.Left
+                   && point.Dx < rect.Right
+                   && point.Dy >= rect.Top
+                   && point.Dy < rect.Bottom;
         }
 
         // Dart's `Color.withOpacity`: replaces the alpha channel outright.

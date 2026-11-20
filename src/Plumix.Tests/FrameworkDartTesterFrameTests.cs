@@ -35,7 +35,7 @@ public sealed class FrameworkDartTesterFrameTests
         int frames = 0;
         tester.View.RenderRequested += (_, _) => frames++;
 
-        tester.TapAt(new Point(20, 20));
+        tester.TapAt(new Offset(20, 20));
 
         Assert.Equal(["down", "down microtask", "up", "up microtask"], log);
         Assert.Equal(0, frames);
@@ -289,7 +289,7 @@ public sealed class FrameworkDartTesterFrameTests
 
         protected override void PerformLayout() => Size = Constraints.Biggest;
 
-        public override void Paint(PaintingContext ctx, Point offset) => PaintCount++;
+        public override void Paint(PaintingContext ctx, Offset offset) => PaintCount++;
 
         protected override void DescribeSemanticsConfiguration(SemanticsConfiguration configuration)
         {

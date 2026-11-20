@@ -424,7 +424,7 @@ internal sealed class CupertinoRadioPainter : ToggleablePainter
 
     internal void Configure(
         Color focusColor,
-        Point? downPosition,
+        Offset? downPosition,
         bool isFocused,
         Color activeColor,
         Color inactiveColor,
@@ -449,7 +449,7 @@ internal sealed class CupertinoRadioPainter : ToggleablePainter
         NotifyPainterChanged();
     }
 
-    private void DrawPressedOverlay(PaintingContext context, Point center, double radius)
+    private void DrawPressedOverlay(PaintingContext context, Offset center, double radius)
     {
         Color pressedColor = _brightness == Plumix.UI.Brightness.Light
             ? WithOpacity(CupertinoColors.Black, KPressedOverlayOpacity)
@@ -459,7 +459,7 @@ internal sealed class CupertinoRadioPainter : ToggleablePainter
 
     private static void DrawFillGradient(
         PaintingContext context,
-        Point center,
+        Offset center,
         double radius,
         Color topColor,
         Color bottomColor)
@@ -473,7 +473,7 @@ internal sealed class CupertinoRadioPainter : ToggleablePainter
         context.Canvas.DrawOval(circleRect, fillGradient.CreateShader(circleRect), pen: null);
     }
 
-    private void DrawOuterBorder(PaintingContext context, Point center)
+    private void DrawOuterBorder(PaintingContext context, Offset center)
     {
         var borderPen = new Pen(new SolidColorBrush(_borderColor), KBorderOutlineStrokeWidth);
         context.Canvas.DrawOval(RectFromCircle(center, KOuterRadius), brush: null, borderPen);
@@ -481,7 +481,7 @@ internal sealed class CupertinoRadioPainter : ToggleablePainter
 
     public override void Paint(PaintingContext context, Size size)
     {
-        var center = new Point(size.Width / 2.0, size.Height / 2.0);
+        var center = new Offset(size.Width / 2.0, size.Height / 2.0);
 
         if (_checkmarkStyle)
         {
@@ -493,15 +493,15 @@ internal sealed class CupertinoRadioPainter : ToggleablePainter
                     KCheckmarkStrokeWidth,
                     lineCap: PenLineCap.Round);
                 double width = KSize.Width;
-                var origin = new Point(center.X - (width / 2.0), center.Y - (width / 2.0));
-                var start = new Point(width * 0.25, width * 0.52);
-                var mid = new Point(width * 0.46, width * 0.75);
-                var end = new Point(width * 0.85, width * 0.29);
-                path.MoveTo(origin.X + start.X, origin.Y + start.Y);
-                path.LineTo(origin.X + mid.X, origin.Y + mid.Y);
+                var origin = new Offset(center.Dx - (width / 2.0), center.Dy - (width / 2.0));
+                var start = new Offset(width * 0.25, width * 0.52);
+                var mid = new Offset(width * 0.46, width * 0.75);
+                var end = new Offset(width * 0.85, width * 0.29);
+                path.MoveTo(origin.Dx + start.Dx, origin.Dy + start.Dy);
+                path.LineTo(origin.Dx + mid.Dx, origin.Dy + mid.Dy);
                 context.Canvas.DrawPath(path, brush: null, checkPen);
-                path.MoveTo(origin.X + mid.X, origin.Y + mid.Y);
-                path.LineTo(origin.X + end.X, origin.Y + end.Y);
+                path.MoveTo(origin.Dx + mid.Dx, origin.Dy + mid.Dy);
+                path.LineTo(origin.Dx + end.Dx, origin.Dy + end.Dy);
                 context.Canvas.DrawPath(path, brush: null, checkPen);
             }
         }
@@ -581,9 +581,9 @@ internal sealed class CupertinoRadioPainter : ToggleablePainter
         return !ReferenceEquals(this, oldDelegate);
     }
 
-    private static Rect RectFromCircle(Point center, double radius)
+    private static Rect RectFromCircle(Offset center, double radius)
     {
-        return new Rect(center.X - radius, center.Y - radius, radius * 2.0, radius * 2.0);
+        return DartGeometry.RectFromLTWH(center.Dx - radius, center.Dy - radius, radius * 2.0, radius * 2.0);
     }
 
     // Dart's `Color.withOpacity`: replaces the alpha channel outright.

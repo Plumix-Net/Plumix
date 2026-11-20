@@ -11,7 +11,7 @@ internal sealed class NoSplashFactory : InteractiveInkFeatureFactory
     public override InteractiveInkFeature Create(
         MaterialInkController controller,
         RenderBox referenceBox,
-        Point position,
+        Offset position,
         Color color,
         TextDirection textDirection,
         bool containedInkWell = false,

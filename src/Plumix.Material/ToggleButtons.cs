@@ -596,7 +596,7 @@ internal sealed class RenderSelectToggleButton : RenderShiftedBox
         EdgeInsets padding = ChildPadding;
         Child.Layout(Constraints.Deflate(padding), parentUsesSize: true);
         Size = Constraints.Constrain(Inflate(Child.Size, padding));
-        ((BoxParentData)Child.parentData!).offset = new Point(padding.Left, padding.Top);
+        ((BoxParentData)Child.parentData!).offset = new Offset(padding.Left, padding.Top);
     }
 
     protected override Size ComputeDryLayout(BoxConstraints constraints)
@@ -667,7 +667,7 @@ internal sealed class RenderSelectToggleButton : RenderShiftedBox
         return childBaseline + ChildPadding.Top;
     }
 
-    public override void Paint(PaintingContext context, Point offset)
+    public override void Paint(PaintingContext context, Offset offset)
     {
         base.Paint(context, offset);
         PaintBorder(context, offset);
@@ -684,7 +684,7 @@ internal sealed class RenderSelectToggleButton : RenderShiftedBox
                 : new Size(horizontal.Height, horizontal.Width));
     }
 
-    private void PaintBorder(PaintingContext context, Point offset)
+    private void PaintBorder(PaintingContext context, Offset offset)
     {
         if (Size.Width <= 0.0 || Size.Height <= 0.0)
         {
@@ -714,7 +714,7 @@ internal sealed class RenderSelectToggleButton : RenderShiftedBox
         }
     }
 
-    private void PaintRoundedRectangle(PaintingContext context, Point offset, BorderSide side)
+    private void PaintRoundedRectangle(PaintingContext context, Offset offset, BorderSide side)
     {
         if (!ShouldPaint(side))
         {
@@ -722,8 +722,8 @@ internal sealed class RenderSelectToggleButton : RenderShiftedBox
         }
 
         double half = side.Width / 2.0;
-        var rect = new Rect(
-            offset + new Vector(half, half),
+        var rect = DartGeometry.RectFromOffsetAndSize(
+            offset + new Offset(half, half),
             new Size(Math.Max(0.0, Size.Width - side.Width), Math.Max(0.0, Size.Height - side.Width)));
         context.Canvas.DrawRectangle(
             new SolidColorBrush(Colors.Transparent),
@@ -734,7 +734,7 @@ internal sealed class RenderSelectToggleButton : RenderShiftedBox
 
     private void PaintHorizontalBorder(
         PaintingContext context,
-        Point offset,
+        Offset offset,
         bool physicalLeftEdge,
         bool physicalRightEdge)
     {
@@ -782,7 +782,7 @@ internal sealed class RenderSelectToggleButton : RenderShiftedBox
 
     private void PaintVerticalBorder(
         PaintingContext context,
-        Point offset,
+        Offset offset,
         bool physicalTopEdge,
         bool physicalBottomEdge)
     {
@@ -830,7 +830,7 @@ internal sealed class RenderSelectToggleButton : RenderShiftedBox
 
     private void PaintHorizontalLine(
         PaintingContext context,
-        Point offset,
+        Offset offset,
         BorderSide side,
         bool top,
         double startInset = 0.0,
@@ -842,18 +842,18 @@ internal sealed class RenderSelectToggleButton : RenderShiftedBox
         }
 
         double half = side.Width / 2.0;
-        double y = offset.Y + (top ? half : Size.Height - half);
+        double y = offset.Dy + (top ? half : Size.Height - half);
         context.Canvas.DrawLine(
             PenFor(side),
-            new Point(offset.X + half + startInset, y),
-            new Point(
-                offset.X + Math.Max(half + startInset, Size.Width - half - endInset),
+            new Offset(offset.Dx + half + startInset, y),
+            new Offset(
+                offset.Dx + Math.Max(half + startInset, Size.Width - half - endInset),
                 y));
     }
 
     private void PaintVerticalLine(
         PaintingContext context,
-        Point offset,
+        Offset offset,
         BorderSide side,
         bool left,
         double startInset = 0.0,
@@ -865,18 +865,18 @@ internal sealed class RenderSelectToggleButton : RenderShiftedBox
         }
 
         double half = side.Width / 2.0;
-        double x = offset.X + (left ? half : Size.Width - half);
+        double x = offset.Dx + (left ? half : Size.Width - half);
         context.Canvas.DrawLine(
             PenFor(side),
-            new Point(x, offset.Y + half + startInset),
-            new Point(
+            new Offset(x, offset.Dy + half + startInset),
+            new Offset(
                 x,
-                offset.Y + Math.Max(half + startInset, Size.Height - half - endInset)));
+                offset.Dy + Math.Max(half + startInset, Size.Height - half - endInset)));
     }
 
     private void PaintCorner(
         PaintingContext context,
-        Point offset,
+        Offset offset,
         BorderSide side,
         Corner corner,
         Radius radius)
@@ -887,14 +887,14 @@ internal sealed class RenderSelectToggleButton : RenderShiftedBox
         }
 
         double half = side.Width / 2.0;
-        Point position = corner switch
+        Offset position = corner switch
         {
-            Corner.TopLeft => offset + new Vector(half, half),
-            Corner.TopRight => offset + new Vector(Size.Width - half - (radius.X * 2.0), half),
-            Corner.BottomRight => offset + new Vector(
+            Corner.TopLeft => offset + new Offset(half, half),
+            Corner.TopRight => offset + new Offset(Size.Width - half - (radius.X * 2.0), half),
+            Corner.BottomRight => offset + new Offset(
                 Size.Width - half - (radius.X * 2.0),
                 Size.Height - half - (radius.Y * 2.0)),
-            Corner.BottomLeft => offset + new Vector(half, Size.Height - half - (radius.Y * 2.0)),
+            Corner.BottomLeft => offset + new Offset(half, Size.Height - half - (radius.Y * 2.0)),
             _ => throw new ArgumentOutOfRangeException(nameof(corner), corner, null),
         };
         double startAngle = corner switch
@@ -907,7 +907,7 @@ internal sealed class RenderSelectToggleButton : RenderShiftedBox
         };
         context.Canvas.DrawArc(
             PenFor(side),
-            new Rect(position, new Size(radius.X * 2.0, radius.Y * 2.0)),
+            DartGeometry.RectFromOffsetAndSize(position, new Size(radius.X * 2.0, radius.Y * 2.0)),
             startAngle,
             Math.PI / 2.0);
     }
@@ -1052,7 +1052,7 @@ internal sealed class RenderToggleButtonInputPadding : RenderShiftedBox
         Size = Constraints.Constrain(new Size(
             Math.Max(Child.Size.Width, MinSize.Width),
             Math.Max(Child.Size.Height, MinSize.Height)));
-        ((BoxParentData)Child.parentData!).offset = new Point(
+        ((BoxParentData)Child.parentData!).offset = new Offset(
             (Size.Width - Child.Size.Width) / 2.0,
             (Size.Height - Child.Size.Height) / 2.0);
     }
@@ -1108,11 +1108,11 @@ internal sealed class RenderToggleButtonInputPadding : RenderShiftedBox
         return childBaseline.Value + ((outerSize.Height - childSize.Height) / 2.0);
     }
 
-    public override bool HitTest(BoxHitTestResult result, Point position)
+    public override bool HitTest(BoxHitTestResult result, Offset position)
     {
         // The base HitTest also checks HitTestChildren. We don't want that in this case because
         // we've padded around the children per tapTargetSize.
-        if (position.X < 0.0 || position.Y < 0.0 || position.X >= Size.Width || position.Y >= Size.Height)
+        if (position.Dx < 0.0 || position.Dy < 0.0 || position.Dx >= Size.Width || position.Dy >= Size.Height)
         {
             return false;
         }
@@ -1125,9 +1125,9 @@ internal sealed class RenderToggleButtonInputPadding : RenderShiftedBox
         RenderBox child = Child;
 
         // Only adjust one axis to ensure the correct button is tapped.
-        Point center = Direction == Axis.Horizontal
-            ? new Point(position.X, child.Size.Height / 2.0)
-            : new Point(child.Size.Width / 2.0, position.Y);
+        Offset center = Direction == Axis.Horizontal
+            ? new Offset(position.Dx, child.Size.Height / 2.0)
+            : new Offset(child.Size.Width / 2.0, position.Dy);
         return result.AddWithRawTransform(
             MatrixUtils.ForceToPoint(center),
             center,

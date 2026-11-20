@@ -180,8 +180,8 @@ public class Tween<T> : Animatable<T>
         object? result = begin switch
         {
             double b when end is double e => b + ((e - b) * t),
-            Point b when end is Point e => new Point(b.X + ((e.X - b.X) * t), b.Y + ((e.Y - b.Y) * t)),
-            Vector b when end is Vector e => new Vector(b.X + ((e.X - b.X) * t), b.Y + ((e.Y - b.Y) * t)),
+            Offset b when end is Offset e => new Offset(b.Dx + ((e.Dx - b.Dx) * t), b.Dy + ((e.Dy - b.Dy) * t)),
+            Offset b when end is Offset e => new Offset(b.Dx + ((e.Dx - b.Dx) * t), b.Dy + ((e.Dy - b.Dy) * t)),
             Size b when end is Size e => new Size(
                 b.Width + ((e.Width - b.Width) * t),
                 b.Height + ((e.Height - b.Height) * t)),
@@ -452,7 +452,7 @@ public class RectTween : Tween<Rect?>
 
     private static Rect FromLTRB(double left, double top, double right, double bottom)
     {
-        return new Rect(left, top, Math.Max(0.0, right - left), Math.Max(0.0, bottom - top));
+        return DartGeometry.RectFromLTWH(left, top, Math.Max(0.0, right - left), Math.Max(0.0, bottom - top));
     }
 }
 
@@ -577,15 +577,15 @@ public sealed class DoubleTween : Tween<double>
 /// C#-only: the nullable spelling of Dart's <c>Tween&lt;Offset&gt;</c> over Avalonia's <see cref="Vector"/>
 /// (see <see cref="Tween{T}"/>'s remarks).
 /// </summary>
-public sealed class VectorTween : Tween<Vector>
+public sealed class VectorTween : Tween<Offset>
 {
-    public VectorTween(Vector? begin = null, Vector? end = null)
+    public VectorTween(Offset? begin = null, Offset? end = null)
     {
         Begin = begin;
         End = end;
     }
 
-    public new Vector? Begin
+    public new Offset? Begin
     {
         get => HasBeginValue ? GetBeginValue() : null;
         set
@@ -601,7 +601,7 @@ public sealed class VectorTween : Tween<Vector>
         }
     }
 
-    public new Vector? End
+    public new Offset? End
     {
         get => HasEndValue ? GetEndValue() : null;
         set

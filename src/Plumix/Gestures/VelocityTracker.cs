@@ -10,10 +10,10 @@ namespace Plumix.Gestures;
 public delegate VelocityTracker GestureVelocityTrackerBuilder(PointerEvent @event);
 
 public sealed record VelocityEstimate(
-    Vector PixelsPerSecond,
+    Offset PixelsPerSecond,
     double Confidence,
     TimeSpan Duration,
-    Vector Offset);
+    Offset Offset);
 
 public class VelocityTracker
 {
@@ -35,7 +35,7 @@ public class VelocityTracker
     // Time difference since the last sample was added.
     private DartStopwatch SinceLastSample => _stopwatch ??= GestureBinding.Instance.SamplingClock.Stopwatch();
 
-    public virtual void AddPosition(DateTime timestampUtc, Point position)
+    public virtual void AddPosition(DateTime timestampUtc, Offset position)
     {
         RestartSampleClock();
         _index = (_index + 1) % HistorySize;
@@ -80,8 +80,8 @@ public class VelocityTracker
             }
 
             oldestSample = sample.Value;
-            x.Add(sample.Value.Position.X);
-            y.Add(sample.Value.Position.Y);
+            x.Add(sample.Value.Position.Dx);
+            y.Add(sample.Value.Position.Dy);
             weights.Add(1.0);
             time.Add(-age);
             index = index == 0 ? HistorySize - 1 : index - 1;
@@ -96,7 +96,7 @@ public class VelocityTracker
             if (xFit != null && yFit != null)
             {
                 return new VelocityEstimate(
-                    new Vector(xFit.Coefficients[1] * 1000.0, yFit.Coefficients[1] * 1000.0),
+                    new Offset(xFit.Coefficients[1] * 1000.0, yFit.Coefficients[1] * 1000.0),
                     xFit.Confidence * yFit.Confidence,
                     newestSample.Value.TimestampUtc - oldestSample.TimestampUtc,
                     newestSample.Value.Position - oldestSample.Position);
@@ -131,7 +131,7 @@ public class VelocityTracker
         return new VelocityEstimate(default, 1.0, TimeSpan.Zero, default);
     }
 
-    protected readonly record struct PointAtTime(Point Position, DateTime TimestampUtc);
+    protected readonly record struct PointAtTime(Offset Position, DateTime TimestampUtc);
 }
 
 public class IOSScrollViewFlingVelocityTracker : VelocityTracker
@@ -144,7 +144,7 @@ public class IOSScrollViewFlingVelocityTracker : VelocityTracker
     {
     }
 
-    public override void AddPosition(DateTime timestampUtc, Point position)
+    public override void AddPosition(DateTime timestampUtc, Offset position)
     {
         PointAtTime? previousPoint = _touchSamples[_index];
         if (previousPoint != null && previousPoint.Value.TimestampUtc > timestampUtc)
@@ -173,7 +173,7 @@ public class IOSScrollViewFlingVelocityTracker : VelocityTracker
             + (PreviousVelocityAt(0) * 0.05));
     }
 
-    protected Vector PreviousVelocityAt(int offset)
+    protected Offset PreviousVelocityAt(int offset)
     {
         int endIndex = PositiveModulo(_index + offset, SampleSize);
         int startIndex = PositiveModulo(_index + offset - 1, SampleSize);
@@ -190,7 +190,7 @@ public class IOSScrollViewFlingVelocityTracker : VelocityTracker
             : default;
     }
 
-    protected VelocityEstimate CreateEstimate(Vector estimatedVelocity)
+    protected VelocityEstimate CreateEstimate(Offset estimatedVelocity)
     {
         PointAtTime? newestSample = _touchSamples[_index];
         PointAtTime? oldestSample = null;

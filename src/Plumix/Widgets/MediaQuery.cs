@@ -435,7 +435,7 @@ public sealed record MediaQueryData
             && subScreen.Right <= Size.Width
             && subScreen.Bottom <= Size.Height,
             "'subScreen' argument cannot be outside the bounds of the screen");
-        if (subScreen.Size == Size && subScreen.Position == default)
+        if (subScreen.Size == Size && subScreen.TopLeft == default)
         {
             return this;
         }

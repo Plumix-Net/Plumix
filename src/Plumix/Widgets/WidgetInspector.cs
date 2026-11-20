@@ -94,7 +94,7 @@ internal sealed class WidgetInspectorState : State<WidgetInspector>
     private const double EdgeHitMargin = 2.0;
 
     private readonly GlobalKey _ignorePointerKey = new LabeledGlobalKey<State>(null);
-    private Point? _lastPointerLocation;
+    private Offset? _lastPointerLocation;
     private InspectorSelection _selection = null!;
     private bool _isSelectMode;
 
@@ -140,7 +140,7 @@ internal sealed class WidgetInspectorState : State<WidgetInspector>
     private static bool HitTestHelper(
         List<RenderObject> hits,
         List<RenderObject> edgeHits,
-        Point position,
+        Offset position,
         RenderObject @object,
         Matrix4 transform)
     {
@@ -153,7 +153,7 @@ internal sealed class WidgetInspectorState : State<WidgetInspector>
             return false;
         }
 
-        Point localPosition = MatrixUtils.TransformPoint(inverse, position);
+        Offset localPosition = MatrixUtils.TransformPoint(inverse, position);
 
         List<DiagnosticsNode> children = @object.DebugDescribeChildren();
         for (int i = children.Count - 1; i >= 0; i -= 1)
@@ -205,7 +205,7 @@ internal sealed class WidgetInspectorState : State<WidgetInspector>
     /// matches. Priority is given to matches that occur at the edge of a render object's bounding box
     /// and to matches found by smaller render objects.
     /// </remarks>
-    public List<RenderObject> HitTest(Point position, RenderObject root)
+    public List<RenderObject> HitTest(Offset position, RenderObject root)
     {
         var regularHits = new List<RenderObject>();
         var edgeHits = new List<RenderObject>();
@@ -232,7 +232,7 @@ internal sealed class WidgetInspectorState : State<WidgetInspector>
         return hits;
     }
 
-    private void InspectAt(Point position)
+    private void InspectAt(Offset position)
     {
         if (!IsSelectModeWithSelectionOnTapEnabled)
         {
@@ -266,7 +266,7 @@ internal sealed class WidgetInspectorState : State<WidgetInspector>
         // of the display we do not want to select anything. A user can still select
         // a widget that is only at the exact screen margin by tapping.
         FlutterView view = View.Of(Context);
-        var bounds = new Rect(
+        var bounds = DartGeometry.RectFromLTWH(
             0,
             0,
             view.PhysicalSize.Width / view.DevicePixelRatio,
@@ -287,7 +287,7 @@ internal sealed class WidgetInspectorState : State<WidgetInspector>
     {
         double width = Math.Max(0.0, rect.Width - 2 * delta);
         double height = Math.Max(0.0, rect.Height - 2 * delta);
-        return new Rect(rect.X + delta, rect.Y + delta, width, height);
+        return DartGeometry.RectFromLTWH(rect.Left + delta, rect.Top + delta, width, height);
     }
 
     private void HandleTap()
@@ -651,11 +651,11 @@ internal sealed class RenderInspectorOverlay : RenderBox
         return constraints.Constrain(new Size(double.PositiveInfinity, double.PositiveInfinity));
     }
 
-    public override void Paint(PaintingContext context, Point offset)
+    public override void Paint(PaintingContext context, Offset offset)
     {
         Debug.Assert(NeedsCompositing);
         context.AddLayer(new InspectorOverlayLayer(
-            overlayRect: new Rect(offset.X, offset.Y, Size.Width, Size.Height),
+            overlayRect: DartGeometry.RectFromLTWH(offset.Dx, offset.Dy, Size.Width, Size.Height),
             selection: Selection,
             rootRenderObject: Parent));
     }
@@ -964,7 +964,7 @@ internal sealed class InspectorOverlayLayer : Layer
             _picture = BuildPicture(state);
         }
 
-        builder.AddPicture(new Point(0, 0), _picture!);
+        builder.AddPicture(new Offset(0, 0), _picture!);
     }
 
     private Picture BuildPicture(InspectorOverlayRenderState state)
@@ -1011,7 +1011,7 @@ internal sealed class InspectorOverlayLayer : Layer
         Rect targetRect = MatrixUtils.TransformRect(state.Selected.Transform, state.Selected.Rect);
         if (!HasNaN(targetRect))
         {
-            var target = new Point(targetRect.Left, targetRect.Center.Y);
+            var target = new Offset(targetRect.Left, targetRect.Center.Dy);
             const double offsetFromWidget = 9.0;
             double verticalOffset = targetRect.Height / 2 + offsetFromWidget;
 
@@ -1030,7 +1030,7 @@ internal sealed class InspectorOverlayLayer : Layer
         Canvas canvas,
         string message,
         TextDirection textDirection,
-        Point target,
+        Offset target,
         double verticalOffset,
         Size size,
         Rect targetRect)
@@ -1056,7 +1056,7 @@ internal sealed class InspectorOverlayLayer : Layer
         var tooltipSize = new Size(
             _textPainter.Size.Width + tooltipPadding * 2,
             _textPainter.Size.Height + tooltipPadding * 2);
-        Point tipOffset = PaintingGeometry.PositionDependentBox(
+        Offset tipOffset = PaintingGeometry.PositionDependentBox(
             size: size,
             childSize: tooltipSize,
             target: target,
@@ -1069,20 +1069,20 @@ internal sealed class InspectorOverlayLayer : Layer
             Color = WidgetInspectorOverlay.TooltipBackgroundColor,
         };
         canvas.DrawRect(
-            new Rect(tipOffset, new Point(tipOffset.X + tooltipSize.Width, tipOffset.Y + tooltipSize.Height)),
+            DartGeometry.RectFromCorners(tipOffset, new Offset(tipOffset.Dx + tooltipSize.Width, tipOffset.Dy + tooltipSize.Height)),
             tooltipBackground);
 
-        double wedgeY = tipOffset.Y;
-        bool tooltipBelow = tipOffset.Y > target.Y;
+        double wedgeY = tipOffset.Dy;
+        bool tooltipBelow = tipOffset.Dy > target.Dy;
         if (!tooltipBelow)
         {
             wedgeY += tooltipSize.Height;
         }
 
         const double wedgeSize = tooltipPadding * 2;
-        double wedgeX = Math.Max(tipOffset.X, target.X) + wedgeSize * 2;
-        wedgeX = Math.Min(wedgeX, tipOffset.X + tooltipSize.Width - wedgeSize * 2);
-        var wedge = new List<Point>
+        double wedgeX = Math.Max(tipOffset.Dx, target.Dx) + wedgeSize * 2;
+        wedgeX = Math.Min(wedgeX, tipOffset.Dx + tooltipSize.Width - wedgeSize * 2);
+        var wedge = new List<Offset>
         {
             new(wedgeX - wedgeSize, wedgeY),
             new(wedgeX + wedgeSize, wedgeY),
@@ -1091,13 +1091,13 @@ internal sealed class InspectorOverlayLayer : Layer
         var wedgePath = new Path();
         wedgePath.AddPolygon(wedge, true);
         canvas.DrawPath(wedgePath, tooltipBackground);
-        _textPainter.Paint(canvas, new Point(tipOffset.X + tooltipPadding, tipOffset.Y + tooltipPadding));
+        _textPainter.Paint(canvas, new Offset(tipOffset.Dx + tooltipPadding, tipOffset.Dy + tooltipPadding));
         canvas.Restore();
     }
 
     protected internal override bool FindAnnotations<S>(
         AnnotationResult<S> result,
-        Point localPosition,
+        Offset localPosition,
         bool onlyFirst)
     {
         return false;
@@ -1493,12 +1493,12 @@ internal sealed class ExitWidgetSelectionTooltipPainter : CustomPainter
         double tooltipYOffset = 0 - tooltipHeight - tooltipSpacing;
 
         // Draw tooltip background.
-        canvas.DrawRect(new Rect(tooltipXOffset, tooltipYOffset, tooltipWidth, tooltipHeight), tooltipPaint);
+        canvas.DrawRect(DartGeometry.RectFromLTWH(tooltipXOffset, tooltipYOffset, tooltipWidth, tooltipHeight), tooltipPaint);
 
         // Draw tooltip text.
         tooltipTextPainter.Paint(
             canvas,
-            new Point(tooltipXOffset + tooltipPadding, tooltipYOffset + tooltipPadding));
+            new Offset(tooltipXOffset + tooltipPadding, tooltipYOffset + tooltipPadding));
     }
 
     public override bool ShouldRepaint(CustomPainter oldDelegate)

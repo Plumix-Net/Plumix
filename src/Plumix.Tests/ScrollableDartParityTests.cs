@@ -109,7 +109,7 @@ public sealed class ScrollableDartParityTests
             using var tester = NewTester();
 
             PumpTest(tester);
-            tester.Drag(tester.ElementOfType<Scrollable>(), new Vector(0.0, 200.0), touchSlopY: 0.0);
+            tester.Drag(tester.ElementOfType<Scrollable>(), new Offset(0.0, 200.0), touchSlopY: 0.0);
             Assert.Equal(-200.0, GetScrollOffset(tester));
             tester.Pump(); // trigger ballistic
             tester.Pump(TimeSpan.FromMilliseconds(10));
@@ -140,11 +140,11 @@ public sealed class ScrollableDartParityTests
             using var tester = NewTester();
 
             PumpTest(tester);
-            tester.Fling(tester.ElementOfType<Scrollable>(), new Vector(0.0, -DragOffset), 1000.0);
+            tester.Fling(tester.ElementOfType<Scrollable>(), new Offset(0.0, -DragOffset), 1000.0);
             tester.Pump(); // trigger fling
             tester.Pump(TimeSpan.FromMilliseconds(10));
             // Repeat the exact same motion.
-            tester.Fling(tester.ElementOfType<Scrollable>(), new Vector(0.0, -DragOffset), 1000.0);
+            tester.Fling(tester.ElementOfType<Scrollable>(), new Offset(0.0, -DragOffset), 1000.0);
             tester.Pump();
             // On iOS, the velocity will be larger than the velocity of the last fling by a
             // non-trivial amount.
@@ -159,11 +159,11 @@ public sealed class ScrollableDartParityTests
         using var tester = NewTester();
 
         PumpTest(tester);
-        tester.Fling(tester.ElementOfType<Scrollable>(), new Vector(0.0, -DragOffset), 1000.0);
+        tester.Fling(tester.ElementOfType<Scrollable>(), new Offset(0.0, -DragOffset), 1000.0);
         tester.Pump(); // trigger fling
         tester.Pump(TimeSpan.FromMilliseconds(10));
         // Repeat the exact same motion.
-        tester.Fling(tester.ElementOfType<Scrollable>(), new Vector(0.0, -DragOffset), 1000.0);
+        tester.Fling(tester.ElementOfType<Scrollable>(), new Offset(0.0, -DragOffset), 1000.0);
         tester.Pump();
         // On Android, there is no momentum build. The final velocity is the same as the
         // velocity of the last fling.
@@ -181,15 +181,15 @@ public sealed class ScrollableDartParityTests
             using var tester = NewTester();
 
             PumpTest(tester);
-            tester.Fling(tester.ElementOfType<Scrollable>(), new Vector(0.0, -DragOffset), 1000.0);
+            tester.Fling(tester.ElementOfType<Scrollable>(), new Offset(0.0, -DragOffset), 1000.0);
             tester.Pump(); // trigger fling
             tester.Pump(TimeSpan.FromMilliseconds(10));
             // Repeat the exact same motion to build momentum.
-            tester.Fling(tester.ElementOfType<Scrollable>(), new Vector(0.0, -DragOffset), 1000.0);
+            tester.Fling(tester.ElementOfType<Scrollable>(), new Offset(0.0, -DragOffset), 1000.0);
             tester.Pump(); // trigger the second fling
             tester.Pump(TimeSpan.FromMilliseconds(10));
             // Make a final fling that is much slower.
-            tester.Fling(tester.ElementOfType<Scrollable>(), new Vector(0.0, -DragOffset), 200.0);
+            tester.Fling(tester.ElementOfType<Scrollable>(), new Offset(0.0, -DragOffset), 200.0);
             tester.Pump(); // trigger the third fling
             tester.Pump(TimeSpan.FromMilliseconds(10));
             // expect that there is no carried velocity
@@ -208,11 +208,11 @@ public sealed class ScrollableDartParityTests
             using var tester = NewTester();
 
             PumpTest(tester);
-            tester.Fling(tester.ElementOfType<Scrollable>(), new Vector(0.0, -DragOffset), 1000.0);
+            tester.Fling(tester.ElementOfType<Scrollable>(), new Offset(0.0, -DragOffset), 1000.0);
             tester.Pump(); // trigger fling
             tester.Pump(TimeSpan.FromMilliseconds(10));
             // Repeat the exact same motion in the opposite direction.
-            tester.Fling(tester.ElementOfType<Scrollable>(), new Vector(0.0, DragOffset), 1000.0);
+            tester.Fling(tester.ElementOfType<Scrollable>(), new Offset(0.0, DragOffset), 1000.0);
             tester.Pump();
             // The only applied velocity to the scrollable is the second fling that was in the
             // opposite direction.
@@ -231,7 +231,7 @@ public sealed class ScrollableDartParityTests
             using var tester = NewTester();
 
             PumpTest(tester);
-            tester.Fling(tester.ElementOfType<Scrollable>(), new Vector(0.0, -DragOffset), 1000.0);
+            tester.Fling(tester.ElementOfType<Scrollable>(), new Offset(0.0, -DragOffset), 1000.0);
             tester.Pump(); // trigger fling
             tester.Pump(TimeSpan.FromMilliseconds(10));
             Assert.True(GetScrollVelocity(tester) > 0.0);
@@ -257,11 +257,11 @@ public sealed class ScrollableDartParityTests
             PointerDeviceKind.Touch);
         try
         {
-            gesture.MoveBy(new Vector(0.0, -0.5));
+            gesture.MoveBy(new Offset(0.0, -0.5));
             Assert.Equal(0.5, GetScrollOffset(tester));
-            gesture.MoveBy(new Vector(0.0, -0.5), TimeSpan.FromMilliseconds(10));
+            gesture.MoveBy(new Offset(0.0, -0.5), TimeSpan.FromMilliseconds(10));
             Assert.Equal(1.0, GetScrollOffset(tester));
-            gesture.MoveBy(new Vector(0.0, -0.5), TimeSpan.FromMilliseconds(20));
+            gesture.MoveBy(new Offset(0.0, -0.5), TimeSpan.FromMilliseconds(20));
             Assert.Equal(1.5, GetScrollOffset(tester));
         }
         finally
@@ -286,19 +286,19 @@ public sealed class ScrollableDartParityTests
                 PointerDeviceKind.Touch);
             try
             {
-                gesture.MoveBy(new Vector(0.0, -0.5));
+                gesture.MoveBy(new Offset(0.0, -0.5));
                 Assert.Equal(0.0, GetScrollOffset(tester));
-                gesture.MoveBy(new Vector(0.0, -0.5), TimeSpan.FromMilliseconds(10));
+                gesture.MoveBy(new Offset(0.0, -0.5), TimeSpan.FromMilliseconds(10));
                 Assert.Equal(0.0, GetScrollOffset(tester));
-                gesture.MoveBy(new Vector(0.0, -0.5), TimeSpan.FromMilliseconds(20));
+                gesture.MoveBy(new Offset(0.0, -0.5), TimeSpan.FromMilliseconds(20));
                 Assert.Equal(0.0, GetScrollOffset(tester));
-                gesture.MoveBy(new Vector(0.0, -1.0), TimeSpan.FromMilliseconds(30));
+                gesture.MoveBy(new Offset(0.0, -1.0), TimeSpan.FromMilliseconds(30));
                 // Now -2.5 in total.
                 Assert.Equal(0.0, GetScrollOffset(tester));
-                gesture.MoveBy(new Vector(0.0, -1.0), TimeSpan.FromMilliseconds(40));
+                gesture.MoveBy(new Offset(0.0, -1.0), TimeSpan.FromMilliseconds(40));
                 // Now -3.5, just reached threshold.
                 Assert.Equal(0.0, GetScrollOffset(tester));
-                gesture.MoveBy(new Vector(0.0, -0.5), TimeSpan.FromMilliseconds(50));
+                gesture.MoveBy(new Offset(0.0, -0.5), TimeSpan.FromMilliseconds(50));
                 // -0.5 over threshold transferred.
                 Assert.Equal(0.5, GetScrollOffset(tester));
             }
@@ -325,7 +325,7 @@ public sealed class ScrollableDartParityTests
                 PointerDeviceKind.Touch);
             try
             {
-                gesture.MoveBy(new Vector(0.0, -30.0));
+                gesture.MoveBy(new Offset(0.0, -30.0));
                 // No offset lost from threshold.
                 Assert.Equal(30.0, GetScrollOffset(tester));
             }
@@ -353,9 +353,9 @@ public sealed class ScrollableDartParityTests
             try
             {
                 // This is a typical 'hesitant' iOS scroll start.
-                gesture.MoveBy(new Vector(0.0, -10.0));
+                gesture.MoveBy(new Offset(0.0, -10.0));
                 AssertMoreOrLessEquals(1.1666666666666667, GetScrollOffset(tester));
-                gesture.MoveBy(new Vector(0.0, -10.0), TimeSpan.FromMilliseconds(20));
+                gesture.MoveBy(new Offset(0.0, -10.0), TimeSpan.FromMilliseconds(20));
                 // Subsequent motions unaffected.
                 AssertMoreOrLessEquals(11.16666666666666673, GetScrollOffset(tester));
             }
@@ -382,13 +382,13 @@ public sealed class ScrollableDartParityTests
                 PointerDeviceKind.Touch);
             try
             {
-                gesture.MoveBy(new Vector(0.0, -30.0)); // Break threshold.
+                gesture.MoveBy(new Offset(0.0, -30.0)); // Break threshold.
                 Assert.Equal(30.0, GetScrollOffset(tester));
-                gesture.MoveBy(new Vector(0.0, -0.5), TimeSpan.FromMilliseconds(20));
+                gesture.MoveBy(new Offset(0.0, -0.5), TimeSpan.FromMilliseconds(20));
                 Assert.Equal(30.5, GetScrollOffset(tester));
-                gesture.MoveBy(new Vector(0.0, -0.5), TimeSpan.FromMilliseconds(40));
+                gesture.MoveBy(new Offset(0.0, -0.5), TimeSpan.FromMilliseconds(40));
                 Assert.Equal(31.0, GetScrollOffset(tester));
-                gesture.MoveBy(new Vector(0.0, -0.5), TimeSpan.FromMilliseconds(60));
+                gesture.MoveBy(new Offset(0.0, -0.5), TimeSpan.FromMilliseconds(60));
                 Assert.Equal(31.5, GetScrollOffset(tester));
             }
             finally
@@ -414,23 +414,23 @@ public sealed class ScrollableDartParityTests
                 PointerDeviceKind.Touch);
             try
             {
-                gesture.MoveBy(new Vector(0.0, -30.0)); // Break threshold.
+                gesture.MoveBy(new Offset(0.0, -30.0)); // Break threshold.
                 Assert.Equal(30.0, GetScrollOffset(tester));
-                gesture.MoveBy(new Vector(0.0, -0.5), TimeSpan.FromMilliseconds(20));
+                gesture.MoveBy(new Offset(0.0, -0.5), TimeSpan.FromMilliseconds(20));
                 Assert.Equal(30.5, GetScrollOffset(tester));
                 gesture.MoveBy(default, TimeSpan.FromMilliseconds(21));
                 // Stationary too long, threshold reset.
                 gesture.MoveBy(default, TimeSpan.FromMilliseconds(120));
-                gesture.MoveBy(new Vector(0.0, -1.0), TimeSpan.FromMilliseconds(140));
+                gesture.MoveBy(new Offset(0.0, -1.0), TimeSpan.FromMilliseconds(140));
                 Assert.Equal(30.5, GetScrollOffset(tester));
-                gesture.MoveBy(new Vector(0.0, -1.0), TimeSpan.FromMilliseconds(150));
+                gesture.MoveBy(new Offset(0.0, -1.0), TimeSpan.FromMilliseconds(150));
                 Assert.Equal(30.5, GetScrollOffset(tester));
-                gesture.MoveBy(new Vector(0.0, -1.0), TimeSpan.FromMilliseconds(160));
+                gesture.MoveBy(new Offset(0.0, -1.0), TimeSpan.FromMilliseconds(160));
                 Assert.Equal(30.5, GetScrollOffset(tester));
-                gesture.MoveBy(new Vector(0.0, -1.0), TimeSpan.FromMilliseconds(170));
+                gesture.MoveBy(new Offset(0.0, -1.0), TimeSpan.FromMilliseconds(170));
                 // New threshold broken.
                 Assert.Equal(31.5, GetScrollOffset(tester));
-                gesture.MoveBy(new Vector(0.0, -1.0), TimeSpan.FromMilliseconds(180));
+                gesture.MoveBy(new Offset(0.0, -1.0), TimeSpan.FromMilliseconds(180));
                 Assert.Equal(32.5, GetScrollOffset(tester));
             }
             finally
@@ -447,11 +447,11 @@ public sealed class ScrollableDartParityTests
         using var tester = NewTester();
 
         PumpTest(tester);
-        Point scrollEventLocation = tester.GetCenter(tester.ElementOfType<Viewport>());
-        tester.SendPointerScroll(scrollEventLocation, new Vector(0.0, 20.0));
+        Offset scrollEventLocation = tester.GetCenter(tester.ElementOfType<Viewport>());
+        tester.SendPointerScroll(scrollEventLocation, new Offset(0.0, 20.0));
         Assert.Equal(20.0, GetScrollOffset(tester));
         // Pointer signals should not cause overscroll.
-        tester.SendPointerScroll(scrollEventLocation, new Vector(0.0, -30.0));
+        tester.SendPointerScroll(scrollEventLocation, new Offset(0.0, -30.0));
         Assert.Equal(0.0, GetScrollOffset(tester));
     }
 
@@ -479,11 +479,11 @@ public sealed class ScrollableDartParityTests
                     new SliverToBoxAdapter(new SizedBox(height: 2000.0)),
                 ])));
 
-        Point scrollEventLocation = tester.GetCenter(tester.ElementsOfType<Viewport>()[^1]);
-        tester.SendPointerScroll(scrollEventLocation, new Vector(0.0, 20.0));
+        Offset scrollEventLocation = tester.GetCenter(tester.ElementsOfType<Viewport>()[^1]);
+        tester.SendPointerScroll(scrollEventLocation, new Offset(0.0, 20.0));
         Assert.Equal(20.0, GetScrollOffset(tester));
         // Pointer signals should not cause overscroll.
-        tester.SendPointerScroll(scrollEventLocation, new Vector(0.0, -30.0));
+        tester.SendPointerScroll(scrollEventLocation, new Offset(0.0, -30.0));
         Assert.Equal(0.0, GetScrollOffset(tester));
     }
 
@@ -494,8 +494,8 @@ public sealed class ScrollableDartParityTests
         using var tester = NewTester();
 
         PumpTest(tester, scrollable: false);
-        Point scrollEventLocation = tester.GetCenter(tester.ElementOfType<Viewport>());
-        tester.SendPointerScroll(scrollEventLocation, new Vector(0.0, 20.0));
+        Offset scrollEventLocation = tester.GetCenter(tester.ElementOfType<Viewport>());
+        tester.SendPointerScroll(scrollEventLocation, new Offset(0.0, 20.0));
         Assert.Equal(0.0, GetScrollOffset(tester));
     }
 
@@ -509,10 +509,10 @@ public sealed class ScrollableDartParityTests
             using var tester = NewTester();
 
             PumpTest(tester, scrollable: false);
-            Point scrollEventLocation = tester.GetCenter(tester.ElementOfType<Viewport>());
+            Offset scrollEventLocation = tester.GetCenter(tester.ElementOfType<Viewport>());
 
             bool allowedPlatformDefault = false;
-            foreach (bool allow in tester.SendPointerScroll(scrollEventLocation, new Vector(0.0, 20.0)))
+            foreach (bool allow in tester.SendPointerScroll(scrollEventLocation, new Offset(0.0, 20.0)))
             {
                 allowedPlatformDefault = allow;
             }
@@ -533,11 +533,11 @@ public sealed class ScrollableDartParityTests
 
             PumpTest(tester, scrollDirection: Axis.Horizontal);
 
-            Point scrollEventLocation = tester.GetCenter(tester.ElementOfType<Viewport>());
+            Offset scrollEventLocation = tester.GetCenter(tester.ElementOfType<Viewport>());
 
             // Horizontal input is accepted
             SendKeyDown(LogicalKeyboardKey.ShiftLeft, shift: true);
-            List<bool> accepted = tester.SendPointerScroll(scrollEventLocation, new Vector(0.0, 10.0));
+            List<bool> accepted = tester.SendPointerScroll(scrollEventLocation, new Offset(0.0, 10.0));
             SendKeyUp(LogicalKeyboardKey.ShiftLeft);
             tester.Pump();
             // Engine should be notified when scroll is accepted.
@@ -546,7 +546,7 @@ public sealed class ScrollableDartParityTests
             Assert.False(accepted[^1]);
 
             // Vertical input not accepted
-            List<bool> rejected = tester.SendPointerScroll(scrollEventLocation, new Vector(0.0, 20.0));
+            List<bool> rejected = tester.SendPointerScroll(scrollEventLocation, new Offset(0.0, 20.0));
             // Engine should be notified when scroll is rejected.
             Assert.NotEmpty(rejected);
             // Engine should be notified when scroll is rejected by the scrollable.
@@ -575,20 +575,20 @@ public sealed class ScrollableDartParityTests
             }
         });
 
-        tester.Drag(tester.ElementOfType<Scrollable>(), new Vector(0.0, -20.0), touchSlopY: 0.0);
+        tester.Drag(tester.ElementOfType<Scrollable>(), new Offset(0.0, -20.0), touchSlopY: 0.0);
 
         Assert.Equal(ScrollDirection.Reverse, lastUserScrollingDirection);
 
-        Point scrollEventLocation = tester.GetCenter(tester.ElementOfType<Viewport>());
-        tester.SendPointerScroll(scrollEventLocation, new Vector(0.0, 20.0));
+        Offset scrollEventLocation = tester.GetCenter(tester.ElementOfType<Viewport>());
+        tester.SendPointerScroll(scrollEventLocation, new Offset(0.0, 20.0));
 
         Assert.Equal(ScrollDirection.Reverse, lastUserScrollingDirection);
 
-        tester.Drag(tester.ElementOfType<Scrollable>(), new Vector(0.0, 20.0), touchSlopY: 0.0);
+        tester.Drag(tester.ElementOfType<Scrollable>(), new Offset(0.0, 20.0), touchSlopY: 0.0);
 
         Assert.Equal(ScrollDirection.Forward, lastUserScrollingDirection);
 
-        tester.SendPointerScroll(scrollEventLocation, new Vector(0.0, -20.0));
+        tester.SendPointerScroll(scrollEventLocation, new Offset(0.0, -20.0));
 
         Assert.Equal(ScrollDirection.Forward, lastUserScrollingDirection);
     }
@@ -601,8 +601,8 @@ public sealed class ScrollableDartParityTests
 
         PumpTest(tester, reverse: true);
 
-        Point scrollEventLocation = tester.GetCenter(tester.ElementOfType<Viewport>());
-        tester.SendPointerScroll(scrollEventLocation, new Vector(0.0, -20.0));
+        Offset scrollEventLocation = tester.GetCenter(tester.ElementOfType<Viewport>());
+        tester.SendPointerScroll(scrollEventLocation, new Offset(0.0, -20.0));
 
         Assert.Equal(20.0, GetScrollOffset(tester));
     }
@@ -618,19 +618,19 @@ public sealed class ScrollableDartParityTests
 
             PumpTest(tester, scrollDirection: Axis.Horizontal);
 
-            Point scrollEventLocation = tester.GetCenter(tester.ElementOfType<Viewport>());
-            tester.SendPointerScroll(scrollEventLocation, new Vector(0.0, 20.0));
+            Offset scrollEventLocation = tester.GetCenter(tester.ElementOfType<Viewport>());
+            tester.SendPointerScroll(scrollEventLocation, new Offset(0.0, 20.0));
             // Vertical input not accepted
             Assert.Equal(0.0, GetScrollOffset(tester));
 
             SendKeyDown(LogicalKeyboardKey.ShiftLeft, shift: true);
-            tester.SendPointerScroll(scrollEventLocation, new Vector(0.0, 20.0));
+            tester.SendPointerScroll(scrollEventLocation, new Offset(0.0, 20.0));
             // Vertical input flipped to horizontal and accepted.
             Assert.Equal(20.0, GetScrollOffset(tester));
             SendKeyUp(LogicalKeyboardKey.ShiftLeft);
             tester.Pump();
 
-            tester.SendPointerScroll(scrollEventLocation, new Vector(0.0, 20.0));
+            tester.SendPointerScroll(scrollEventLocation, new Offset(0.0, 20.0));
             // Vertical input not accepted
             Assert.Equal(20.0, GetScrollOffset(tester));
         });
@@ -647,19 +647,19 @@ public sealed class ScrollableDartParityTests
 
             PumpTest(tester, scrollDirection: Axis.Horizontal);
 
-            Point scrollEventLocation = tester.GetCenter(tester.ElementOfType<Viewport>());
-            tester.SendPointerScroll(scrollEventLocation, new Vector(0.0, 20.0), PointerDeviceKind.Trackpad);
+            Offset scrollEventLocation = tester.GetCenter(tester.ElementOfType<Viewport>());
+            tester.SendPointerScroll(scrollEventLocation, new Offset(0.0, 20.0), PointerDeviceKind.Trackpad);
             // Vertical input not accepted
             Assert.Equal(0.0, GetScrollOffset(tester));
 
             SendKeyDown(LogicalKeyboardKey.ShiftLeft, shift: true);
-            tester.SendPointerScroll(scrollEventLocation, new Vector(0.0, 20.0), PointerDeviceKind.Trackpad);
+            tester.SendPointerScroll(scrollEventLocation, new Offset(0.0, 20.0), PointerDeviceKind.Trackpad);
             // Vertical input not flipped.
             Assert.Equal(0.0, GetScrollOffset(tester));
             SendKeyUp(LogicalKeyboardKey.ShiftLeft);
             tester.Pump();
 
-            tester.SendPointerScroll(scrollEventLocation, new Vector(0.0, 20.0), PointerDeviceKind.Trackpad);
+            tester.SendPointerScroll(scrollEventLocation, new Offset(0.0, 20.0), PointerDeviceKind.Trackpad);
             // Vertical input not accepted
             Assert.Equal(0.0, GetScrollOffset(tester));
         });
@@ -679,19 +679,19 @@ public sealed class ScrollableDartParityTests
                 scrollDirection: Axis.Horizontal,
                 axisModifier: new HashSet<LogicalKeyboardKey> { LogicalKeyboardKey.AltLeft });
 
-            Point scrollEventLocation = tester.GetCenter(tester.ElementOfType<Viewport>());
-            tester.SendPointerScroll(scrollEventLocation, new Vector(0.0, 20.0));
+            Offset scrollEventLocation = tester.GetCenter(tester.ElementOfType<Viewport>());
+            tester.SendPointerScroll(scrollEventLocation, new Offset(0.0, 20.0));
             // Vertical input not accepted
             Assert.Equal(0.0, GetScrollOffset(tester));
 
             SendKeyDown(LogicalKeyboardKey.AltLeft, alt: true);
-            tester.SendPointerScroll(scrollEventLocation, new Vector(0.0, 20.0));
+            tester.SendPointerScroll(scrollEventLocation, new Offset(0.0, 20.0));
             // Vertical input flipped to horizontal and accepted.
             Assert.Equal(20.0, GetScrollOffset(tester));
             SendKeyUp(LogicalKeyboardKey.AltLeft);
             tester.Pump();
 
-            tester.SendPointerScroll(scrollEventLocation, new Vector(0.0, 20.0));
+            tester.SendPointerScroll(scrollEventLocation, new Offset(0.0, 20.0));
             // Vertical input not accepted
             Assert.Equal(20.0, GetScrollOffset(tester));
         });
@@ -711,21 +711,21 @@ public sealed class ScrollableDartParityTests
                 scrollDirection: Axis.Horizontal,
                 axisModifier: new HashSet<LogicalKeyboardKey> { LogicalKeyboardKey.AltLeft });
 
-            Point scrollEventLocation = tester.GetCenter(tester.ElementOfType<Viewport>());
-            tester.SendPointerScroll(scrollEventLocation, new Vector(0.0, 20.0));
+            Offset scrollEventLocation = tester.GetCenter(tester.ElementOfType<Viewport>());
+            tester.SendPointerScroll(scrollEventLocation, new Offset(0.0, 20.0));
             // Vertical input not accepted
             Assert.Equal(0.0, GetScrollOffset(tester));
 
             SendKeyDown(LogicalKeyboardKey.AltLeft, alt: true);
             SendKeyDown(LogicalKeyboardKey.Space, alt: true);
-            tester.SendPointerScroll(scrollEventLocation, new Vector(0.0, 20.0));
+            tester.SendPointerScroll(scrollEventLocation, new Offset(0.0, 20.0));
             // Vertical flipped & accepted.
             Assert.Equal(20.0, GetScrollOffset(tester));
             SendKeyUp(LogicalKeyboardKey.AltLeft);
             SendKeyUp(LogicalKeyboardKey.Space);
             tester.Pump();
 
-            tester.SendPointerScroll(scrollEventLocation, new Vector(0.0, 20.0));
+            tester.SendPointerScroll(scrollEventLocation, new Offset(0.0, 20.0));
             // Vertical input not accepted
             Assert.Equal(20.0, GetScrollOffset(tester));
         });
@@ -791,7 +791,7 @@ public sealed class ScrollableDartParityTests
             PointerDeviceKind.Touch);
         Assert.False(renderIgnorePointer.Ignoring);
 
-        gesture.MoveBy(new Vector(0, -100));
+        gesture.MoveBy(new Offset(0, -100));
         // Starts ignoring when the drag is recognized.
         Assert.True(renderIgnorePointer.Ignoring);
 
@@ -814,7 +814,7 @@ public sealed class ScrollableDartParityTests
         Assert.False(renderIgnorePointer.Ignoring);
 
         // Starts ignoring when the drag is recognized.
-        tester.Fling(tester.ElementOfType<Scrollable>(), new Vector(0, -100), 1000);
+        tester.Fling(tester.ElementOfType<Scrollable>(), new Offset(0, -100), 1000);
         Assert.True(renderIgnorePointer.Ignoring);
         tester.Pump();
 
@@ -1124,18 +1124,18 @@ public sealed class ScrollableDartParityTests
                     ]))));
         Assert.Equal(0.0, outerController.Position.Pixels);
         Assert.Equal(0.0, innerController.Position.Pixels);
-        Point outerScrollable = tester.GetCenter(tester.OnstageElementsWithText("SingleChildScrollView 3").Single());
+        Offset outerScrollable = tester.GetCenter(tester.OnstageElementsWithText("SingleChildScrollView 3").Single());
         // Hover over the outer scroll view and create a pointer scroll.
-        tester.SendPointerScroll(outerScrollable, new Vector(0.0, 20.0));
+        tester.SendPointerScroll(outerScrollable, new Offset(0.0, 20.0));
         tester.Pump(TimeSpan.FromMilliseconds(250));
         Assert.Equal(20.0, outerController.Position.Pixels);
         Assert.Equal(0.0, innerController.Position.Pixels);
 
-        Point innerScrollable = tester.GetCenter(
+        Offset innerScrollable = tester.GetCenter(
             tester.OnstageElementsWithText("Nested NeverScrollable ListView 20").Single());
         // Hover over the inner scroll view and create a pointer scroll.
         // This inner scroll view is not scrollable, and so the outer should scroll.
-        tester.SendPointerScroll(innerScrollable, new Vector(0.0, -20.0));
+        tester.SendPointerScroll(innerScrollable, new Offset(0.0, -20.0));
         tester.Pump(TimeSpan.FromMilliseconds(250));
         Assert.Equal(0.0, outerController.Position.Pixels);
         Assert.Equal(0.0, innerController.Position.Pixels);
@@ -1175,7 +1175,7 @@ public sealed class ScrollableDartParityTests
         Assert.Equal(0.0, controller.Position.MaxScrollExtent);
 
         // Hover over the scroll view and create a zero offset pointer scroll.
-        Point scrollable = tester.GetCenter(tester.ElementOfType<SingleChildScrollView>());
+        Offset scrollable = tester.GetCenter(tester.ElementOfType<SingleChildScrollView>());
         tester.SendPointerScroll(scrollable, default);
 
         Assert.Null(tester.TakeException());
@@ -1200,13 +1200,13 @@ public sealed class ScrollableDartParityTests
                 tester.GetCenter(tester.ElementOfType<Scrollable>()),
                 PointerDeviceKind.Unknown);
             Assert.Equal(0.0, GetScrollOffset(tester));
-            gesture.MoveBy(new Vector(0.0, -200));
+            gesture.MoveBy(new Offset(0.0, -200));
             tester.Pump();
             tester.PumpAndSettle();
 
             Assert.Equal(200, GetScrollOffset(tester));
 
-            gesture.MoveBy(new Vector(0.0, 200));
+            gesture.MoveBy(new Offset(0.0, 200));
             tester.Pump();
             tester.PumpAndSettle();
 
@@ -1233,13 +1233,13 @@ public sealed class ScrollableDartParityTests
                 tester.GetCenter(tester.ElementOfType<Scrollable>()),
                 PointerDeviceKind.Mouse);
 
-            gesture.MoveBy(new Vector(0.0, -200));
+            gesture.MoveBy(new Offset(0.0, -200));
             tester.Pump();
             tester.PumpAndSettle();
 
             Assert.Equal(0.0, GetScrollOffset(tester));
 
-            gesture.MoveBy(new Vector(0.0, 200));
+            gesture.MoveBy(new Offset(0.0, 200));
             tester.Pump();
             tester.PumpAndSettle();
 
@@ -1269,18 +1269,18 @@ public sealed class ScrollableDartParityTests
         using var tester = NewTester();
 
         tester.PumpWidget(BuildFrame(new HashSet<PointerDeviceKind> { PointerDeviceKind.Mouse }));
-        tester.Drag(tester.ElementOfType<Scrollable>(), new Vector(0.0, -100.0), PointerDeviceKind.Mouse);
+        tester.Drag(tester.ElementOfType<Scrollable>(), new Offset(0.0, -100.0), PointerDeviceKind.Mouse);
 
         // Matching device should allow user scrolling.
         Assert.Equal(100.0, GetScrollOffset(tester));
 
         tester.PumpWidget(BuildFrame(new HashSet<PointerDeviceKind> { PointerDeviceKind.Stylus }));
-        tester.Drag(tester.ElementOfType<Scrollable>(), new Vector(0.0, -100.0), PointerDeviceKind.Mouse);
+        tester.Drag(tester.ElementOfType<Scrollable>(), new Offset(0.0, -100.0), PointerDeviceKind.Mouse);
 
         // Non-matching device should not allow user scrolling.
         Assert.Equal(100.0, GetScrollOffset(tester));
 
-        tester.Drag(tester.ElementOfType<Scrollable>(), new Vector(0.0, -100.0), PointerDeviceKind.Stylus);
+        tester.Drag(tester.ElementOfType<Scrollable>(), new Offset(0.0, -100.0), PointerDeviceKind.Stylus);
 
         // Matching device should allow user scrolling.
         Assert.Equal(200.0, GetScrollOffset(tester));
@@ -1302,13 +1302,13 @@ public sealed class ScrollableDartParityTests
                 tester.GetCenter(tester.ElementOfType<Scrollable>()),
                 PointerDeviceKind.Mouse);
 
-            gesture.MoveBy(new Vector(0.0, -200));
+            gesture.MoveBy(new Offset(0.0, -200));
             tester.Pump();
             tester.PumpAndSettle();
 
             Assert.Equal(200.0, GetScrollOffset(tester));
 
-            gesture.MoveBy(new Vector(0.0, 200));
+            gesture.MoveBy(new Offset(0.0, 200));
             tester.Pump();
             tester.PumpAndSettle();
 
@@ -1434,12 +1434,12 @@ public sealed class ScrollableDartParityTests
         using var tester = NewTester();
 
         PumpTest(tester);
-        tester.Fling(tester.ElementOfType<Scrollable>(), new Vector(0.0, -DragOffset), 1000.0);
+        tester.Fling(tester.ElementOfType<Scrollable>(), new Offset(0.0, -DragOffset), 1000.0);
         Assert.Equal(DragOffset, GetScrollOffset(tester));
         tester.Pump(); // trigger fling
         Assert.Equal(DragOffset, GetScrollOffset(tester));
         tester.Pump(TimeSpan.FromMilliseconds(200));
-        Point center = tester.GetCenter(tester.ElementOfType<Scrollable>());
+        Offset center = tester.GetCenter(tester.ElementOfType<Scrollable>());
         tester.SendEventToBinding(new PointerHoverEvent(
             pointer: 1,
             kind: PointerDeviceKind.Mouse,
@@ -1528,13 +1528,13 @@ public sealed class ScrollableDartParityTests
         try
         {
             Assert.Equal(0.0, GetScrollOffset(tester));
-            gesture.MoveBy(new Vector(0.0, -200));
+            gesture.MoveBy(new Offset(0.0, -200));
             tester.Pump();
             tester.PumpAndSettle();
 
             Assert.Equal(200, GetScrollOffset(tester));
             ScrollableState scrollable = tester.State<ScrollableState>();
-            Assert.Equal(new Point(0.0, 200), scrollable.DeltaToScrollOrigin);
+            Assert.Equal(new Offset(0.0, 200), scrollable.DeltaToScrollOrigin);
         }
         finally
         {
@@ -1559,7 +1559,7 @@ public sealed class ScrollableDartParityTests
         try
         {
             Assert.Equal(0.0, GetScrollOffset(tester));
-            gesture.MoveBy(new Vector(0.0, -200));
+            gesture.MoveBy(new Offset(0.0, -200));
             tester.Pump();
             tester.PumpAndSettle();
 
@@ -1610,7 +1610,7 @@ public sealed class ScrollableDartParityTests
             tester.GetCenter(tester.ElementOfType<Scrollable>()),
             PointerDeviceKind.Mouse);
         Assert.Equal(0.0, GetScrollOffset(tester));
-        gesture.MoveBy(new Vector(0.0, -200));
+        gesture.MoveBy(new Offset(0.0, -200));
         tester.PumpAndSettle();
         Assert.Equal(0.0, GetScrollOffset(tester));
 
@@ -1624,7 +1624,7 @@ public sealed class ScrollableDartParityTests
             tester.GetCenter(tester.ElementOfType<Scrollable>()),
             PointerDeviceKind.Mouse);
         Assert.Equal(0.0, GetScrollOffset(tester));
-        gesture.MoveBy(new Vector(0.0, -200));
+        gesture.MoveBy(new Offset(0.0, -200));
         tester.PumpAndSettle();
         Assert.Equal(200, GetScrollOffset(tester));
         gesture.Up();
@@ -1660,7 +1660,7 @@ public sealed class ScrollableDartParityTests
             tester.GetCenter(tester.ElementOfType<Scrollable>()),
             PointerDeviceKind.Mouse);
         Assert.Equal(0.0, GetScrollOffset(tester));
-        gesture.MoveBy(new Vector(0.0, -200));
+        gesture.MoveBy(new Offset(0.0, -200));
         tester.PumpAndSettle();
         Assert.Equal(0.0, GetScrollOffset(tester));
         gesture.Up();
@@ -1674,7 +1674,7 @@ public sealed class ScrollableDartParityTests
             tester.GetCenter(tester.ElementOfType<Scrollable>()),
             PointerDeviceKind.Mouse);
         Assert.Equal(0.0, GetScrollOffset(tester));
-        gesture.MoveBy(new Vector(0.0, -200));
+        gesture.MoveBy(new Offset(0.0, -200));
         tester.PumpAndSettle();
         Assert.Equal(200, GetScrollOffset(tester));
         gesture.Up();
@@ -1711,10 +1711,10 @@ public sealed class ScrollableDartParityTests
 
         Assert.Equal(0.0, verticalController.Offset);
 
-        Point location = tester.GetCenter(tester.ElementsOfType<ListView>()[^1]);
+        Offset location = tester.GetCenter(tester.ElementsOfType<ListView>()[^1]);
 
         // Simulate diagonal scroll: dx: 20, dy: -20 (trying to scroll up/back vertically, which is at edge)
-        List<bool> onRespondCalls = tester.SendPointerScroll(location, new Vector(20.0, -20.0));
+        List<bool> onRespondCalls = tester.SendPointerScroll(location, new Offset(20.0, -20.0));
 
         Assert.Equal(20.0, horizontalController.Offset);
         Assert.Equal(0.0, verticalController.Offset);
@@ -1794,7 +1794,7 @@ public sealed class ScrollableDartParityTests
     }
 
     // flutter_test: WidgetTester.tapAt.
-    private static void TapAt(FrameworkDartTester tester, Point location)
+    private static void TapAt(FrameworkDartTester tester, Offset location)
     {
         TestGesture gesture = tester.StartGesture(location, PointerDeviceKind.Touch);
         gesture.Up();

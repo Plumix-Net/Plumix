@@ -69,8 +69,8 @@ public sealed class PlatformViewLinkTests : IDisposable
                     onVerticalDragStart: _ => verticalDragAcceptedByParent = true,
                     child: new SizedBox(width: 200.0, height: 100.0, child: Surface())))));
 
-        TestGesture gesture = _tester.StartGesture(new Point(50.0, 50.0), PointerDeviceKind.Touch);
-        gesture.MoveBy(new Vector(0.0, 100.0));
+        TestGesture gesture = _tester.StartGesture(new Offset(50.0, 50.0), PointerDeviceKind.Touch);
+        gesture.MoveBy(new Offset(0.0, 100.0));
         gesture.Up();
 
         Assert.True(verticalDragAcceptedByParent);
@@ -91,8 +91,8 @@ public sealed class PlatformViewLinkTests : IDisposable
                     child: Surface(Recognizers(
                         new Factory<VerticalDragGestureRecognizer>(() => new VerticalDragGestureRecognizer())))))));
 
-        TestGesture gesture = _tester.StartGesture(new Point(50.0, 50.0), PointerDeviceKind.Touch);
-        gesture.MoveBy(new Vector(0.0, 100.0));
+        TestGesture gesture = _tester.StartGesture(new Offset(50.0, 50.0), PointerDeviceKind.Touch);
+        gesture.MoveBy(new Offset(0.0, 100.0));
         gesture.Up();
 
         Assert.False(verticalDragAcceptedByParent);
@@ -113,7 +113,7 @@ public sealed class PlatformViewLinkTests : IDisposable
                 onLongPress: () => { },
                 child: new SizedBox(width: 200.0, height: 100.0, child: Surface()))));
 
-        TestGesture gesture = _tester.StartGesture(new Point(50.0, 50.0), PointerDeviceKind.Touch);
+        TestGesture gesture = _tester.StartGesture(new Offset(50.0, 50.0), PointerDeviceKind.Touch);
         gesture.Up();
 
         Assert.False(verticalDragAcceptedByParent);
@@ -125,8 +125,8 @@ public sealed class PlatformViewLinkTests : IDisposable
     {
         _tester.PumpWidget(TopLeft(200.0, 100.0, Surface()));
 
-        TestGesture gesture = _tester.StartGesture(new Point(50.0, 50.0), PointerDeviceKind.Touch);
-        gesture.MoveBy(new Vector(0.0, 100.0));
+        TestGesture gesture = _tester.StartGesture(new Offset(50.0, 50.0), PointerDeviceKind.Touch);
+        gesture.MoveBy(new Offset(0.0, 100.0));
 
         _tester.PumpWidget(TopLeft(200.0, 100.0, Surface()));
 
@@ -148,7 +148,7 @@ public sealed class PlatformViewLinkTests : IDisposable
                     child: Surface(Recognizers(
                         new Factory<OneSequenceGestureRecognizer>(() => new EagerGestureRecognizer())))))));
 
-        TestGesture gesture = _tester.StartGesture(new Point(50.0, 50.0), PointerDeviceKind.Touch);
+        TestGesture gesture = _tester.StartGesture(new Offset(50.0, 50.0), PointerDeviceKind.Touch);
 
         // Normally (without the eager gesture recognizer) after just the pointer down event no gesture
         // recognizer will win the arena (so no motion events will be dispatched to the PlatformViewSurface).
@@ -330,7 +330,7 @@ public sealed class PlatformViewLinkTests : IDisposable
             alignment: Alignment.Center,
             child: new SizedBox(width: 100, height: 50, child: platformViewLink)));
 
-        Assert.Equal(new Point(150, 75), controller!.CreatePosition);
+        Assert.Equal(new Offset(150, 75), controller!.CreatePosition);
     }
 
     [Fact]
@@ -682,7 +682,7 @@ public sealed class PlatformViewLinkTests : IDisposable
         _tester.PumpWidget(Scaffold(Surface(hitTestBehavior: PlatformViewHitTestBehavior.Opaque)));
         logs.Clear();
 
-        gesture.MoveTo(new Point(400, 300));
+        gesture.MoveTo(new Offset(400, 300));
         Assert.Equal(["enter1"], logs);
         Assert.Single(_controller.DispatchedPointerEvents);
         Assert.IsType<PointerHoverEvent>(_controller.DispatchedPointerEvents[0]);
@@ -700,12 +700,12 @@ public sealed class PlatformViewLinkTests : IDisposable
         Assert.Empty(_controller.DispatchedPointerEvents);
         logs.Clear();
 
-        gesture.MoveBy(new Vector(1, 1));
+        gesture.MoveBy(new Offset(1, 1));
         Assert.Empty(logs);
         PointerEvent hover = Assert.Single(_controller.DispatchedPointerEvents);
         Assert.IsType<PointerHoverEvent>(hover);
-        Assert.Equal(new Point(401, 301), hover.Position);
-        Assert.Equal(new Point(101, 101), hover.LocalPosition);
+        Assert.Equal(new Offset(401, 301), hover.Position);
+        Assert.Equal(new Offset(101, 101), hover.LocalPosition);
         _controller.ClearTestingVariables();
 
         // Test: Transparent
@@ -713,7 +713,7 @@ public sealed class PlatformViewLinkTests : IDisposable
         Assert.Empty(logs);
         Assert.Empty(_controller.DispatchedPointerEvents);
 
-        gesture.MoveBy(new Vector(1, 1));
+        gesture.MoveBy(new Offset(1, 1));
         Assert.Empty(logs);
         Assert.Empty(_controller.DispatchedPointerEvents);
 
@@ -723,7 +723,7 @@ public sealed class PlatformViewLinkTests : IDisposable
         Assert.Empty(_controller.DispatchedPointerEvents);
         logs.Clear();
 
-        gesture.MoveBy(new Vector(1, 1));
+        gesture.MoveBy(new Offset(1, 1));
         Assert.Empty(logs);
         Assert.Single(_controller.DispatchedPointerEvents);
         Assert.IsType<PointerHoverEvent>(_controller.DispatchedPointerEvents[0]);

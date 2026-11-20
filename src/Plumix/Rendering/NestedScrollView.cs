@@ -199,7 +199,7 @@ public class RenderSliverOverlapAbsorber : RenderSliver, IRenderObjectSingleChil
 
     public override double ChildMainAxisPosition(RenderObject child) => 0.0;
 
-    public override void Paint(PaintingContext ctx, Point offset)
+    public override void Paint(PaintingContext ctx, Offset offset)
     {
         if (_child != null)
         {
@@ -323,13 +323,13 @@ public class RenderSliverOverlapInjector : RenderSliver
     }
 
     /// <summary>An injector has no content of its own to paint.</summary>
-    public override void Paint(PaintingContext ctx, Point offset)
+    public override void Paint(PaintingContext ctx, Offset offset)
     {
     }
 
     /// <inheritdoc />
     /// <remarks>Flutter's <c>RenderSliverOverlapInjector.debugPaint</c>: a zig-zag over the gap.</remarks>
-    protected override void DebugPaint(PaintingContext context, Point offset)
+    protected override void DebugPaint(PaintingContext context, Offset offset)
     {
         ArgumentNullException.ThrowIfNull(context);
         base.DebugPaint(context, offset);
@@ -340,27 +340,27 @@ public class RenderSliverOverlapInjector : RenderSliver
 
         var pen = new Pen(new SolidColorBrush(new Color(0xFFCC9933)), 3.0);
         SliverConstraints constraints = Constraints;
-        Point start;
-        Point end;
-        Point delta;
+        Offset start;
+        Offset end;
+        Offset delta;
         if (constraints.Axis == Axis.Vertical)
         {
-            double x = offset.X + (constraints.CrossAxisExtent / 2.0);
-            start = new Point(x, offset.Y);
-            end = new Point(x, offset.Y + Geometry!.PaintExtent);
-            delta = new Point(constraints.CrossAxisExtent / 5.0, 0.0);
+            double x = offset.Dx + (constraints.CrossAxisExtent / 2.0);
+            start = new Offset(x, offset.Dy);
+            end = new Offset(x, offset.Dy + Geometry!.PaintExtent);
+            delta = new Offset(constraints.CrossAxisExtent / 5.0, 0.0);
         }
         else
         {
-            double y = offset.Y + (constraints.CrossAxisExtent / 2.0);
-            start = new Point(offset.X, y);
-            end = new Point(offset.Y + Geometry!.PaintExtent, y);
-            delta = new Point(0.0, constraints.CrossAxisExtent / 5.0);
+            double y = offset.Dy + (constraints.CrossAxisExtent / 2.0);
+            start = new Offset(offset.Dx, y);
+            end = new Offset(offset.Dy + Geometry!.PaintExtent, y);
+            delta = new Offset(0.0, constraints.CrossAxisExtent / 5.0);
         }
 
         for (int index = -2; index <= 2; index += 1)
         {
-            var shift = new Point(delta.X * index, delta.Y * index);
+            var shift = new Offset(delta.Dx * index, delta.Dy * index);
             PaintUtilities.PaintZigZag(context, pen, start - shift, end - shift, 10, 10.0);
         }
     }

@@ -38,7 +38,7 @@ public sealed class PlatformSelectableRegionContextMenu : SingleChildRenderObjec
 
     /// <summary>The host's synchronous DOM mousedown entry point, in view logical coordinates.
     /// A null result leaves the browser event alone; otherwise prevent its default action.</summary>
-    public static PlatformSelectionContextMenuResult? HandleMouseDown(RenderView view, Point position, int button)
+    public static PlatformSelectionContextMenuResult? HandleMouseDown(RenderView view, Offset position, int button)
     {
         CheckWeb();
         using var scope = EventLoop.EnterFrameworkThread();
@@ -56,8 +56,8 @@ public sealed class PlatformSelectableRegionContextMenu : SingleChildRenderObjec
             return new(false, string.Empty);
         }
 
-        Point local = surface.GlobalToLocal(position);
-        Point global = MatrixUtils.TransformPoint(client.GetTransformTo(null), local);
+        Offset local = surface.GlobalToLocal(position);
+        Offset global = MatrixUtils.TransformPoint(client.GetTransformTo(null), local);
         client.DispatchSelectionEvent(new SelectWordSelectionEvent(global));
         return new(true, client.GetSelectedContent()?.PlainText ?? string.Empty);
     }

@@ -595,9 +595,9 @@ internal sealed class NavigationBarIndicatorInkWell : InkResponse
             RenderBox iconBox = _iconKey.CurrentContext?.FindRenderObject() as RenderBox
                                 ?? throw new InvalidOperationException(
                                     "The navigation destination icon must be laid out before resolving its ink rect.");
-            Point iconTopLeft = iconBox.LocalToGlobal(default);
-            Point localTopLeft = referenceBox.GlobalToLocal(iconTopLeft);
-            return new Rect(localTopLeft, iconBox.Size);
+            Offset iconTopLeft = iconBox.LocalToGlobal(default);
+            Offset localTopLeft = referenceBox.GlobalToLocal(iconTopLeft);
+            return DartGeometry.RectFromOffsetAndSize(localTopLeft, iconBox.Size);
         };
     }
 }
@@ -662,10 +662,10 @@ internal sealed class NavigationDestinationLayoutDelegate : MultiChildLayoutDele
         double iconYPosition = (size.Height / 2.0) - yPositionOffset;
         PositionChild(
             IconId,
-            new Point((size.Width - iconSize.Width) / 2.0, iconYPosition));
+            new Offset((size.Width - iconSize.Width) / 2.0, iconYPosition));
         PositionChild(
             LabelId,
-            new Point((size.Width - labelSize.Width) / 2.0, iconYPosition + iconSize.Height));
+            new Offset((size.Width - labelSize.Width) / 2.0, iconYPosition + iconSize.Height));
     }
 
     public override bool ShouldRelayout(MultiChildLayoutDelegate oldDelegate)
@@ -749,7 +749,7 @@ internal static class NavigationSurfaceUtilities
             [
                 new BoxShadow(
                     color: WithOpacity(shadowColor!, 0.20),
-                    offset: new Point(0, Math.Max(1, elevation * 0.5)),
+                    offset: new Offset(0, Math.Max(1, elevation * 0.5)),
                     blurRadius: Math.Max(2, elevation * 2.4)),
             ];
         }

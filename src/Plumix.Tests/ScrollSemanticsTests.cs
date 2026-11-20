@@ -86,7 +86,7 @@ public sealed class ScrollSemanticsTests
         Assert.True(harness.PerformSemanticsAction(
             scrolling.Id,
             SemanticsActions.ScrollToOffset,
-            new Point(123.0, 456.0)));
+            new Offset(123.0, 456.0)));
 
         Assert.Equal(456.0, controller.Offset);
     }
@@ -103,7 +103,7 @@ public sealed class ScrollSemanticsTests
         Assert.True(harness.PerformSemanticsAction(
             scrolling.Id,
             SemanticsActions.ScrollToOffset,
-            new Point(123.0, 456.0)));
+            new Offset(123.0, 456.0)));
 
         Assert.Equal(123.0, controller.Offset);
     }

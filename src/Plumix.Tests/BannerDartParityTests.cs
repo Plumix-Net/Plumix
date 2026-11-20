@@ -198,8 +198,8 @@ public sealed class BannerDartParityTests
         .Save()
         .Translate(x: width, y: 0.0)
         .Rotate(angle: Math.PI / 4.0)
-        .Rect(rect: new Rect(-40.0, 28.0, 80.0, 12.0), color: new Color(0x7f000000), hasMaskFilter: true)
-        .Rect(rect: new Rect(-40.0, 28.0, 80.0, 12.0), color: new Color(0xa0b71c1c), hasMaskFilter: false)
-        .Paragraph(offset: new Point(-40.0, 29.0))
+        .Rect(rect: DartGeometry.RectFromLTWH(-40.0, 28.0, 80.0, 12.0), color: new Color(0x7f000000), hasMaskFilter: true)
+        .Rect(rect: DartGeometry.RectFromLTWH(-40.0, 28.0, 80.0, 12.0), color: new Color(0xa0b71c1c), hasMaskFilter: false)
+        .Paragraph(offset: new Offset(-40.0, 29.0))
         .Restore();
 }

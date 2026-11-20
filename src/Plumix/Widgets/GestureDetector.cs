@@ -83,7 +83,7 @@ public sealed class GestureDetector : StatelessWidget
         bool excludeFromSemantics = false,
         DragStartBehavior dragStartBehavior = DragStartBehavior.Start,
         bool trackpadScrollCausesScale = false,
-        Point? trackpadScrollToScaleFactor = null,
+        Offset? trackpadScrollToScaleFactor = null,
         IReadOnlySet<PointerDeviceKind>? supportedDevices = null,
         Key? key = null) : base(key)
     {
@@ -355,7 +355,7 @@ public sealed class GestureDetector : StatelessWidget
     public bool TrackpadScrollCausesScale { get; }
 
     /// <summary>Controls the direction and magnitude of the scale a trackpad scroll converts to.</summary>
-    public Point TrackpadScrollToScaleFactor { get; }
+    public Offset TrackpadScrollToScaleFactor { get; }
 
     /// <summary>The device kinds this detector recognizes gestures from; null means every kind.</summary>
     public IReadOnlySet<PointerDeviceKind>? SupportedDevices { get; }
@@ -945,11 +945,11 @@ internal sealed class DefaultSemanticsGestureDelegate : SemanticsGestureDelegate
     private static Rect GetLocalRectFromRenderObject(RenderObject renderObject)
     {
         return renderObject is RenderBox box
-            ? new Rect(0.0, 0.0, box.Size.Width, box.Size.Height)
+            ? DartGeometry.RectFromLTWH(0.0, 0.0, box.Size.Width, box.Size.Height)
             : default;
     }
 
-    private static Point TransformOffsetToGlobal(RenderObject renderObject, Point local)
+    private static Offset TransformOffsetToGlobal(RenderObject renderObject, Offset local)
     {
         return MatrixUtils.TransformPoint(renderObject.GetTransformTo(null), local);
     }
@@ -971,8 +971,8 @@ internal sealed class DefaultSemanticsGestureDelegate : SemanticsGestureDelegate
 
         return () =>
         {
-            Point localCenter = GetLocalRectFromRenderObject(renderObject).Center;
-            Point globalCenter = TransformOffsetToGlobal(renderObject, localCenter);
+            Offset localCenter = GetLocalRectFromRenderObject(renderObject).Center;
+            Offset globalCenter = TransformOffsetToGlobal(renderObject, localCenter);
             tap.OnTapDown?.Invoke(new TapDownDetails(
                 globalPosition: globalCenter,
                 localPosition: localCenter,
@@ -996,8 +996,8 @@ internal sealed class DefaultSemanticsGestureDelegate : SemanticsGestureDelegate
 
         return () =>
         {
-            Point localCenter = GetLocalRectFromRenderObject(renderObject).Center;
-            Point globalCenter = TransformOffsetToGlobal(renderObject, localCenter);
+            Offset localCenter = GetLocalRectFromRenderObject(renderObject).Center;
+            Offset globalCenter = TransformOffsetToGlobal(renderObject, localCenter);
             longPress.OnLongPressDown?.Invoke(new LongPressDownDetails(
                 GlobalPosition: globalCenter,
                 LocalPosition: localCenter));
@@ -1068,10 +1068,10 @@ internal sealed class DefaultSemanticsGestureDelegate : SemanticsGestureDelegate
     {
         return details =>
         {
-            Point localCenter = GetLocalRectFromRenderObject(renderObject).Center;
-            Point globalCenter = TransformOffsetToGlobal(renderObject, localCenter);
-            Point newLocalOffset = localCenter + details.Delta;
-            Point newGlobalOffset = TransformOffsetToGlobal(renderObject, newLocalOffset);
+            Offset localCenter = GetLocalRectFromRenderObject(renderObject).Center;
+            Offset globalCenter = TransformOffsetToGlobal(renderObject, localCenter);
+            Offset newLocalOffset = localCenter + details.Delta;
+            Offset newGlobalOffset = TransformOffsetToGlobal(renderObject, newLocalOffset);
             recognizer.OnDown?.Invoke(new DragDownDetails(
                 GlobalPosition: globalCenter,
                 LocalPosition: localCenter));

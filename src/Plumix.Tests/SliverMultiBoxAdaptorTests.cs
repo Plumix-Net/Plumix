@@ -29,8 +29,8 @@ public sealed class SliverMultiBoxAdaptorTests
         PipelineOwner pipeline = Layout(viewport);
 
         Assert.Equal(new Size(800, 600), viewport.Size);
-        Assert.Equal(new Point(0, 0), manager.Children[0].LocalToGlobal(new Point(0, 0)));
-        Assert.Equal(new Point(0, 400), manager.Children[1].LocalToGlobal(new Point(0, 0)));
+        Assert.Equal(new Offset(0, 0), manager.Children[0].LocalToGlobal(new Offset(0, 0)));
+        Assert.Equal(new Offset(0, 400), manager.Children[1].LocalToGlobal(new Offset(0, 0)));
         Assert.False(manager.Children[2].Attached);
         Assert.False(manager.Children[3].Attached);
         Assert.False(manager.Children[4].Attached);
@@ -38,34 +38,34 @@ public sealed class SliverMultiBoxAdaptorTests
         // Make sure that layout is stable by laying out again.
         inner.MarkNeedsLayout();
         pipeline.FlushLayout(new Size(800, 600));
-        Assert.Equal(new Point(0, 0), manager.Children[0].LocalToGlobal(new Point(0, 0)));
-        Assert.Equal(new Point(0, 400), manager.Children[1].LocalToGlobal(new Point(0, 0)));
+        Assert.Equal(new Offset(0, 0), manager.Children[0].LocalToGlobal(new Offset(0, 0)));
+        Assert.Equal(new Offset(0, 400), manager.Children[1].LocalToGlobal(new Offset(0, 0)));
 
         offset.JumpTo(200);
         pipeline.FlushLayout(new Size(800, 600));
-        Assert.Equal(new Point(0, -200), manager.Children[0].LocalToGlobal(new Point(0, 0)));
-        Assert.Equal(new Point(0, 200), manager.Children[1].LocalToGlobal(new Point(0, 0)));
+        Assert.Equal(new Offset(0, -200), manager.Children[0].LocalToGlobal(new Offset(0, 0)));
+        Assert.Equal(new Offset(0, 200), manager.Children[1].LocalToGlobal(new Offset(0, 0)));
         Assert.False(manager.Children[2].Attached);
 
         offset.JumpTo(600);
         pipeline.FlushLayout(new Size(800, 600));
         Assert.False(manager.Children[0].Attached);
-        Assert.Equal(new Point(0, -200), manager.Children[1].LocalToGlobal(new Point(0, 0)));
-        Assert.Equal(new Point(0, 200), manager.Children[2].LocalToGlobal(new Point(0, 0)));
+        Assert.Equal(new Offset(0, -200), manager.Children[1].LocalToGlobal(new Offset(0, 0)));
+        Assert.Equal(new Offset(0, 200), manager.Children[2].LocalToGlobal(new Offset(0, 0)));
         Assert.False(manager.Children[3].Attached);
 
         offset.JumpTo(900);
         pipeline.FlushLayout(new Size(800, 600));
         Assert.False(manager.Children[1].Attached);
-        Assert.Equal(new Point(0, -100), manager.Children[2].LocalToGlobal(new Point(0, 0)));
-        Assert.Equal(new Point(0, 300), manager.Children[3].LocalToGlobal(new Point(0, 0)));
+        Assert.Equal(new Offset(0, -100), manager.Children[2].LocalToGlobal(new Offset(0, 0)));
+        Assert.Equal(new Offset(0, 300), manager.Children[3].LocalToGlobal(new Offset(0, 0)));
         Assert.False(manager.Children[4].Attached);
 
         // Try going back up.
         offset.JumpTo(200);
         pipeline.FlushLayout(new Size(800, 600));
-        Assert.Equal(new Point(0, -200), manager.Children[0].LocalToGlobal(new Point(0, 0)));
-        Assert.Equal(new Point(0, 200), manager.Children[1].LocalToGlobal(new Point(0, 0)));
+        Assert.Equal(new Offset(0, -200), manager.Children[0].LocalToGlobal(new Offset(0, 0)));
+        Assert.Equal(new Offset(0, 200), manager.Children[1].LocalToGlobal(new Offset(0, 0)));
         Assert.False(manager.Children[2].Attached);
     }
 
@@ -84,38 +84,38 @@ public sealed class SliverMultiBoxAdaptorTests
         PipelineOwner pipeline = Layout(viewport);
 
         Assert.Equal(new Size(800, 600), viewport.Size);
-        Assert.Equal(new Point(0, 200), manager.Children[0].LocalToGlobal(new Point(0, 0)));
-        Assert.Equal(new Point(0, -200), manager.Children[1].LocalToGlobal(new Point(0, 0)));
+        Assert.Equal(new Offset(0, 200), manager.Children[0].LocalToGlobal(new Offset(0, 0)));
+        Assert.Equal(new Offset(0, -200), manager.Children[1].LocalToGlobal(new Offset(0, 0)));
         Assert.False(manager.Children[2].Attached);
 
         // Make sure that layout is stable by laying out again.
         inner.MarkNeedsLayout();
         pipeline.FlushLayout(new Size(800, 600));
-        Assert.Equal(new Point(0, 200), manager.Children[0].LocalToGlobal(new Point(0, 0)));
-        Assert.Equal(new Point(0, -200), manager.Children[1].LocalToGlobal(new Point(0, 0)));
+        Assert.Equal(new Offset(0, 200), manager.Children[0].LocalToGlobal(new Offset(0, 0)));
+        Assert.Equal(new Offset(0, -200), manager.Children[1].LocalToGlobal(new Offset(0, 0)));
 
         offset.JumpTo(200);
         pipeline.FlushLayout(new Size(800, 600));
-        Assert.Equal(new Point(0, 400), manager.Children[0].LocalToGlobal(new Point(0, 0)));
-        Assert.Equal(new Point(0, 0), manager.Children[1].LocalToGlobal(new Point(0, 0)));
+        Assert.Equal(new Offset(0, 400), manager.Children[0].LocalToGlobal(new Offset(0, 0)));
+        Assert.Equal(new Offset(0, 0), manager.Children[1].LocalToGlobal(new Offset(0, 0)));
 
         offset.JumpTo(600);
         pipeline.FlushLayout(new Size(800, 600));
         Assert.False(manager.Children[0].Attached);
-        Assert.Equal(new Point(0, 400), manager.Children[1].LocalToGlobal(new Point(0, 0)));
-        Assert.Equal(new Point(0, 0), manager.Children[2].LocalToGlobal(new Point(0, 0)));
+        Assert.Equal(new Offset(0, 400), manager.Children[1].LocalToGlobal(new Offset(0, 0)));
+        Assert.Equal(new Offset(0, 0), manager.Children[2].LocalToGlobal(new Offset(0, 0)));
 
         offset.JumpTo(900);
         pipeline.FlushLayout(new Size(800, 600));
         Assert.False(manager.Children[1].Attached);
-        Assert.Equal(new Point(0, 300), manager.Children[2].LocalToGlobal(new Point(0, 0)));
-        Assert.Equal(new Point(0, -100), manager.Children[3].LocalToGlobal(new Point(0, 0)));
+        Assert.Equal(new Offset(0, 300), manager.Children[2].LocalToGlobal(new Offset(0, 0)));
+        Assert.Equal(new Offset(0, -100), manager.Children[3].LocalToGlobal(new Offset(0, 0)));
 
         // Try going back up.
         offset.JumpTo(200);
         pipeline.FlushLayout(new Size(800, 600));
-        Assert.Equal(new Point(0, 400), manager.Children[0].LocalToGlobal(new Point(0, 0)));
-        Assert.Equal(new Point(0, 0), manager.Children[1].LocalToGlobal(new Point(0, 0)));
+        Assert.Equal(new Offset(0, 400), manager.Children[0].LocalToGlobal(new Offset(0, 0)));
+        Assert.Equal(new Offset(0, 0), manager.Children[1].LocalToGlobal(new Offset(0, 0)));
     }
 
     /// <summary>
@@ -147,10 +147,10 @@ public sealed class SliverMultiBoxAdaptorTests
         Layout(viewport);
 
         var context = new PaintingContext(new ContainerLayer());
-        inner.Paint(context, new Point(0, 0));
+        inner.Paint(context, new Offset(0, 0));
 
-        Assert.Equal(new Point(firstX, firstY), ((RecordingBox)manager.Children[0]).PaintedAt);
-        Assert.Equal(new Point(secondX, secondY), ((RecordingBox)manager.Children[1]).PaintedAt);
+        Assert.Equal(new Offset(firstX, firstY), ((RecordingBox)manager.Children[0]).PaintedAt);
+        Assert.Equal(new Offset(secondX, secondY), ((RecordingBox)manager.Children[1]).PaintedAt);
         Assert.Null(((RecordingBox)manager.Children[2]).PaintedAt);
     }
 
@@ -175,13 +175,13 @@ public sealed class SliverMultiBoxAdaptorTests
         pipeline.FlushLayout(new Size(800, 600));
 
         var context = new PaintingContext(new ContainerLayer());
-        inner.Paint(context, new Point(0, 0));
+        inner.Paint(context, new Offset(0, 0));
 
         // Index 1 is only in the cache area (it ends exactly at the scroll offset), so it is
         // reified but never painted.
         Assert.True(manager.Children[1].Attached);
         Assert.Null(((RecordingBox)manager.Children[1]).PaintedAt);
-        Assert.Equal(new Point(0, 0), ((RecordingBox)manager.Children[2]).PaintedAt);
+        Assert.Equal(new Offset(0, 0), ((RecordingBox)manager.Children[2]).PaintedAt);
     }
 
     [Fact]
@@ -197,7 +197,7 @@ public sealed class SliverMultiBoxAdaptorTests
         Layout(viewport);
 
         var result = new BoxHitTestResult();
-        Assert.True(viewport.HitTest(result, new Point(50, 450)));
+        Assert.True(viewport.HitTest(result, new Offset(50, 450)));
         Assert.Contains(result.Path, entry => ReferenceEquals(entry.Target, manager.Children[1]));
     }
 
@@ -220,11 +220,11 @@ public sealed class SliverMultiBoxAdaptorTests
 
         // With AxisDirection.up the first child occupies the bottom 400 pixels of the viewport.
         var first = new BoxHitTestResult();
-        Assert.True(viewport.HitTest(first, new Point(50, 550)));
+        Assert.True(viewport.HitTest(first, new Offset(50, 550)));
         Assert.Contains(first.Path, entry => ReferenceEquals(entry.Target, manager.Children[0]));
 
         var second = new BoxHitTestResult();
-        Assert.True(viewport.HitTest(second, new Point(50, 50)));
+        Assert.True(viewport.HitTest(second, new Offset(50, 50)));
         Assert.Contains(second.Path, entry => ReferenceEquals(entry.Target, manager.Children[1]));
     }
 
@@ -283,7 +283,7 @@ public sealed class SliverMultiBoxAdaptorTests
         RenderBox first = manager.Children[0];
         var painted = Matrix4.Identity();
         inner.ApplyPaintTransform(first, painted);
-        Assert.Equal(new Point(0, 0), MatrixUtils.TransformPoint(painted, new Point(0, 0)));
+        Assert.Equal(new Offset(0, 0), MatrixUtils.TransformPoint(painted, new Offset(0, 0)));
 
         ((SliverMultiBoxAdaptorParentData)first.parentData!).KeepAlive = true;
         offset.JumpTo(900);
@@ -343,16 +343,16 @@ public sealed class SliverMultiBoxAdaptorTests
             _size = size;
         }
 
-        public Point? PaintedAt { get; private set; }
+        public Offset? PaintedAt { get; private set; }
 
         protected override void PerformLayout()
         {
             Size = Constraints.Constrain(_size);
         }
 
-        protected override bool HitTestSelf(Point position) => true;
+        protected override bool HitTestSelf(Offset position) => true;
 
-        public override void Paint(PaintingContext ctx, Point offset)
+        public override void Paint(PaintingContext ctx, Offset offset)
         {
             PaintedAt = offset;
         }

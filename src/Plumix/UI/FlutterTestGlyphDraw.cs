@@ -46,7 +46,7 @@ internal sealed class FlutterTestGlyphDraw(IReadOnlyList<FlutterTestGlyphDraw.Op
     internal sealed record GlyphsOperation(IReadOnlyList<Glyph> Glyphs, TextShadowDraw? Shadow = null);
 
     /// <summary>A text shadow's offset, color and blur sigma.</summary>
-    internal readonly record struct TextShadowDraw(Point Offset, Color Color, double BlurSigma);
+    internal readonly record struct TextShadowDraw(Offset Offset, Color Color, double BlurSigma);
 
     /// <summary>
     /// `Decorations::paint` for one style run. <see cref="Clip"/> is the run's clip rectangle (`ClipContext.clip`
@@ -67,7 +67,7 @@ internal sealed class FlutterTestGlyphDraw(IReadOnlyList<FlutterTestGlyphDraw.Op
 
     public Rect Bounds => bounds;
 
-    public bool HitTest(Point point) => false;
+    public bool HitTest(Offset point) => false;
 
     public bool Equals(ICustomDrawOperation? other) => ReferenceEquals(this, other);
 
@@ -122,7 +122,7 @@ internal sealed class FlutterTestGlyphDraw(IReadOnlyList<FlutterTestGlyphDraw.Op
                     {
                         context.FillRectangle(
                             new ImmutableSolidColorBrush(glyph.Color),
-                            new Rect(
+                            DartGeometry.RectFromLTWH(
                                 glyph.X,
                                 glyph.Baseline - (glyph.FontSize * 0.75),
                                 glyph.FontSize,
@@ -153,8 +153,8 @@ internal sealed class FlutterTestGlyphDraw(IReadOnlyList<FlutterTestGlyphDraw.Op
             ? SKMaskFilter.CreateBlur(SKBlurStyle.Normal, (float)blurred.BlurSigma, false)
             : null;
         paint.MaskFilter = blur;
-        float dx = (float)(run.Shadow?.Offset.X ?? 0.0);
-        float dy = (float)(run.Shadow?.Offset.Y ?? 0.0);
+        float dx = (float)(run.Shadow?.Offset.Dx ?? 0.0);
+        float dy = (float)(run.Shadow?.Offset.Dy ?? 0.0);
         int start = 0;
         while (start < glyphs.Count)
         {

@@ -27,20 +27,20 @@ public static class PaintUtilities
     public static void PaintZigZag(
         PaintingContext context,
         IPen pen,
-        Point start,
-        Point end,
+        Offset start,
+        Offset end,
         int zigs,
         double width)
     {
         ArgumentNullException.ThrowIfNull(context);
         ArgumentOutOfRangeException.ThrowIfLessThan(zigs, 1);
 
-        Point delta = end - start;
+        Offset delta = end - start;
         context.Canvas.Save();
-        context.Canvas.Translate(start.X, start.Y);
-        context.Canvas.Rotate(Math.Atan2(delta.X, delta.Y));
+        context.Canvas.Translate(start.Dx, start.Dy);
+        context.Canvas.Rotate(Math.Atan2(delta.Dx, delta.Dy));
         context.Canvas.DrawPath(
-            BuildZigZagPath(Math.Sqrt((delta.X * delta.X) + (delta.Y * delta.Y)), zigs, width),
+            BuildZigZagPath(Math.Sqrt((delta.Dx * delta.Dx) + (delta.Dy * delta.Dy)), zigs, width),
             brush: null,
             pen: pen);
         context.Canvas.Restore();

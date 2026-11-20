@@ -19,7 +19,7 @@ public sealed class DesktopTextSelectionToolbar : StatelessWidget
     internal const double ToolbarWidth = 222.0;
 
     public DesktopTextSelectionToolbar(
-        Point anchor,
+        Offset anchor,
         IReadOnlyList<Widget> children,
         Key? key = null) : base(key)
     {
@@ -33,14 +33,14 @@ public sealed class DesktopTextSelectionToolbar : StatelessWidget
         Children = children;
     }
 
-    public Point Anchor { get; }
+    public Offset Anchor { get; }
 
     public IReadOnlyList<Widget> Children { get; }
 
     public override Widget Build(BuildContext context)
     {
         double paddingAbove = MediaQuery.PaddingOf(context).Top + ToolbarScreenPadding;
-        var localAdjustment = new Vector(ToolbarScreenPadding, paddingAbove);
+        var localAdjustment = new Offset(ToolbarScreenPadding, paddingAbove);
         var localAnchor = Anchor - localAdjustment;
 
         Widget toolbar = new SizedBox(

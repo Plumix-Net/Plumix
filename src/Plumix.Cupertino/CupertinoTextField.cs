@@ -824,7 +824,7 @@ internal sealed class CupertinoTextFieldState
             selectionHeightStyle: Current.SelectionHeightStyle,
             selectionWidthStyle: Current.SelectionWidthStyle,
             cursorOpacityAnimates: Current.CursorOpacityAnimates,
-            cursorOffset: new Point(-2.0 / (MediaQuery.MaybeOf(context)?.DevicePixelRatio ?? 1.0), 0.0),
+            cursorOffset: new Offset(-2.0 / (MediaQuery.MaybeOf(context)?.DevicePixelRatio ?? 1.0), 0.0),
             paintCursorAboveText: true,
             enableInteractiveSelection: Current.EnableInteractiveSelection,
             selectAllOnFocus: Current.SelectAllOnFocus,
@@ -1357,12 +1357,12 @@ internal sealed class RenderCupertinoBaselineAlignedStack : RenderBox,
         PositionChildren();
     }
 
-    public override void Paint(PaintingContext context, Point offset)
+    public override void Paint(PaintingContext context, Offset offset)
     {
         _children.DefaultPaint(context, offset);
     }
 
-    protected override bool HitTestChildren(BoxHitTestResult result, Point position)
+    protected override bool HitTestChildren(BoxHitTestResult result, Offset position)
     {
         RenderBox? editable = LastChild;
         if (editable is null)
@@ -1380,8 +1380,8 @@ internal sealed class RenderCupertinoBaselineAlignedStack : RenderBox,
     public void Insert(RenderBox child, RenderBox? after = null) => _children.Insert(child, after);
     public void Move(RenderBox child, RenderBox? after = null) => _children.Move(child, after);
     public void Remove(RenderBox child) => _children.Remove(child);
-    public void DefaultPaint(PaintingContext context, Point offset) => _children.DefaultPaint(context, offset);
-    public bool DefaultHitTestChildren(BoxHitTestResult result, Point position) =>
+    public void DefaultPaint(PaintingContext context, Offset offset) => _children.DefaultPaint(context, offset);
+    public bool DefaultHitTestChildren(BoxHitTestResult result, Offset position) =>
         _children.DefaultHitTestChildren(result, position);
 
     public override void VisitChildren(Action<RenderObject> visitor)
@@ -1430,7 +1430,7 @@ internal sealed class RenderCupertinoBaselineAlignedStack : RenderBox,
         }
         double editableBaseline = editable.GetDistanceToBaseline(TextBaseline.Alphabetic, onlyReal: true)
                                   ?? editable.Size.Height;
-        Point editableOffset = new Alignment(0.0, TextAlignVertical.Y).AlongOffset(Size, editable.Size);
+        Offset editableOffset = new Alignment(0.0, TextAlignVertical.Y).AlongOffset(Size, editable.Size);
         ((CupertinoBaselineAlignedStackParentData)editable.parentData!).offset = editableOffset;
         for (RenderBox? child = FirstChild; child is not null && !ReferenceEquals(child, editable);
              child = ChildAfter(child))
@@ -1438,7 +1438,7 @@ internal sealed class RenderCupertinoBaselineAlignedStack : RenderBox,
             double childBaseline = child.GetDistanceToBaseline(TextBaseline.Alphabetic, onlyReal: true)
                                    ?? child.Size.Height;
             ((CupertinoBaselineAlignedStackParentData)child.parentData!).offset =
-                editableOffset + new Vector(0.0, editableBaseline - childBaseline);
+                editableOffset + new Offset(0.0, editableBaseline - childBaseline);
         }
     }
 
@@ -1473,7 +1473,7 @@ internal sealed class CupertinoTextFieldSelectionGestureDetectorBuilder(Cupertin
         if (state.ClearGlobalKey.CurrentContext is not null)
         {
             var renderBox = (RenderBox)state.ClearGlobalKey.CurrentContext.FindRenderObject()!;
-            Point localOffset = renderBox.GlobalToLocal(details.GlobalPosition);
+            Offset localOffset = renderBox.GlobalToLocal(details.GlobalPosition);
             if (renderBox.HitTest(new BoxHitTestResult(), localOffset))
             {
                 return;

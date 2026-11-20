@@ -53,7 +53,7 @@ public sealed class LayerHandle<T> where T : Layer
 // Dart parity source: flutter/packages/flutter/lib/src/rendering/layer.dart
 public sealed record AnnotationEntry<T>(
     T Annotation,
-    Point LocalPosition)
+    Offset LocalPosition)
     where T : notnull;
 
 // Dart parity source: flutter/packages/flutter/lib/src/rendering/layer.dart
@@ -144,15 +144,15 @@ public abstract class Layer : DiagnosticableTree
     internal static bool ContainsRoundedRect(
         Rect rect,
         BorderRadius borderRadius,
-        Point position)
+        Offset position)
     {
         if (!ContainsRect(rect, position))
         {
             return false;
         }
 
-        bool left = position.X < rect.Center.X;
-        bool top = position.Y < rect.Center.Y;
+        bool left = position.Dx < rect.Center.Dx;
+        bool top = position.Dy < rect.Center.Dy;
         Radius corner = (left, top) switch
         {
             (true, true) => borderRadius.TopLeftRadius,
@@ -163,16 +163,16 @@ public abstract class Layer : DiagnosticableTree
         Radius radius = ClampRadius(corner, rect.Width / 2.0, rect.Height / 2.0);
         if (radius.X <= 0.0
             || radius.Y <= 0.0
-            || (position.X >= rect.Left + radius.X && position.X <= rect.Right - radius.X)
-            || (position.Y >= rect.Top + radius.Y && position.Y <= rect.Bottom - radius.Y))
+            || (position.Dx >= rect.Left + radius.X && position.Dx <= rect.Right - radius.X)
+            || (position.Dy >= rect.Top + radius.Y && position.Dy <= rect.Bottom - radius.Y))
         {
             return true;
         }
 
         double centerX = left ? rect.Left + radius.X : rect.Right - radius.X;
         double centerY = top ? rect.Top + radius.Y : rect.Bottom - radius.Y;
-        double dx = (position.X - centerX) / radius.X;
-        double dy = (position.Y - centerY) / radius.Y;
+        double dx = (position.Dx - centerX) / radius.X;
+        double dy = (position.Dy - centerY) / radius.Y;
         return (dx * dx) + (dy * dy) <= 1.0;
     }
 
@@ -188,12 +188,12 @@ public abstract class Layer : DiagnosticableTree
             Math.Min(radius.Y, Math.Max(0.0, maxY)));
     }
 
-    internal static bool ContainsRect(Rect rect, Point position)
+    internal static bool ContainsRect(Rect rect, Offset position)
     {
-        return position.X >= rect.Left
-               && position.X < rect.Right
-               && position.Y >= rect.Top
-               && position.Y < rect.Bottom;
+        return position.Dx >= rect.Left
+               && position.Dx < rect.Right
+               && position.Dy >= rect.Top
+               && position.Dy < rect.Bottom;
     }
 
     /// <remarks>Flutter's <c>Layer._updateSubtreeCompositionObserverCount</c>.</remarks>
@@ -471,7 +471,7 @@ public abstract class Layer : DiagnosticableTree
 
     protected internal virtual bool FindAnnotations<T>(
         AnnotationResult<T> result,
-        Point localPosition,
+        Offset localPosition,
         bool onlyFirst)
         where T : notnull
     {
@@ -479,7 +479,7 @@ public abstract class Layer : DiagnosticableTree
         return false;
     }
 
-    public T? Find<T>(Point localPosition)
+    public T? Find<T>(Offset localPosition)
         where T : notnull
     {
         var result = new AnnotationResult<T>();
@@ -487,7 +487,7 @@ public abstract class Layer : DiagnosticableTree
         return result.Entries.Count == 0 ? default : result.Entries[0].Annotation;
     }
 
-    public AnnotationResult<T> FindAllAnnotations<T>(Point localPosition)
+    public AnnotationResult<T> FindAllAnnotations<T>(Offset localPosition)
         where T : notnull
     {
         var result = new AnnotationResult<T>();
@@ -657,7 +657,7 @@ public class ContainerLayer : Layer
 
     protected internal override bool FindAnnotations<T>(
         AnnotationResult<T> result,
-        Point localPosition,
+        Offset localPosition,
         bool onlyFirst)
     {
         ArgumentNullException.ThrowIfNull(result);
@@ -1081,9 +1081,9 @@ public sealed class LayerLink
 public sealed class LeaderLayer : ContainerLayer
 {
     private LayerLink _link;
-    private Point _offset;
+    private Offset _offset;
 
-    public LeaderLayer(LayerLink link, Point offset = default)
+    public LeaderLayer(LayerLink link, Offset offset = default)
     {
         _link = link;
         _offset = offset;
@@ -1115,7 +1115,7 @@ public sealed class LeaderLayer : ContainerLayer
     }
 
     /// <summary>Offset from parent in the parent's coordinate system.</summary>
-    public Point Offset
+    public Offset Offset
     {
         get => _offset;
         set
@@ -1147,7 +1147,7 @@ public sealed class LeaderLayer : ContainerLayer
 
     protected internal override bool FindAnnotations<T>(
         AnnotationResult<T> result,
-        Point localPosition,
+        Offset localPosition,
         bool onlyFirst)
     {
         return base.FindAnnotations(result, localPosition - Offset, onlyFirst);
@@ -1158,7 +1158,7 @@ public sealed class LeaderLayer : ContainerLayer
         if (Offset != default)
         {
             EngineLayer = builder.PushTransform(
-                Matrix4.TranslationValues(Offset.X, Offset.Y, 0.0).Storage,
+                Matrix4.TranslationValues(Offset.Dx, Offset.Dy, 0.0).Storage,
                 oldLayer: EngineLayer as TransformEngineLayer);
         }
         else
@@ -1184,7 +1184,7 @@ public sealed class LeaderLayer : ContainerLayer
     {
         if (Offset != default)
         {
-            transform.TranslateByDouble(Offset.X, Offset.Y, 0, 1);
+            transform.TranslateByDouble(Offset.Dx, Offset.Dy, 0, 1);
         }
     }
 
@@ -1192,7 +1192,7 @@ public sealed class LeaderLayer : ContainerLayer
     public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
     {
         base.DebugFillProperties(properties);
-        properties.Add(new DiagnosticsProperty<Point>("offset", Offset));
+        properties.Add(new DiagnosticsProperty<Offset>("offset", Offset));
         properties.Add(new DiagnosticsProperty<LayerLink>("link", Link));
     }
 }
@@ -1208,7 +1208,7 @@ public sealed class LeaderLayer : ContainerLayer
 /// </remarks>
 public sealed class FollowerLayer : ContainerLayer
 {
-    private Point? _lastOffset;
+    private Offset? _lastOffset;
     private Matrix4? _lastTransform;
     private Matrix4? _invertedTransform;
     private bool _inverseDirty = true;
@@ -1216,8 +1216,8 @@ public sealed class FollowerLayer : ContainerLayer
     public FollowerLayer(
         LayerLink link,
         bool showWhenUnlinked = true,
-        Point unlinkedOffset = default,
-        Point linkedOffset = default)
+        Offset unlinkedOffset = default,
+        Offset linkedOffset = default)
     {
         Link = link ?? throw new ArgumentNullException(nameof(link));
         ShowWhenUnlinked = showWhenUnlinked;
@@ -1238,15 +1238,15 @@ public sealed class FollowerLayer : ContainerLayer
     /// Offset from parent in the parent's coordinate system, used when the layer is not linked to a
     /// <see cref="LeaderLayer"/>.
     /// </summary>
-    public Point? UnlinkedOffset { get; set; }
+    public Offset? UnlinkedOffset { get; set; }
 
     /// <summary>
     /// Offset from the origin of the leader layer to the origin of the child layers, used when the layer is
     /// linked to a <see cref="LeaderLayer"/>.
     /// </summary>
-    public Point? LinkedOffset { get; set; }
+    public Offset? LinkedOffset { get; set; }
 
-    private Point? TransformOffset(Point localPosition)
+    private Offset? TransformOffset(Offset localPosition)
     {
         if (_inverseDirty)
         {
@@ -1259,14 +1259,14 @@ public sealed class FollowerLayer : ContainerLayer
             return null;
         }
 
-        var vector = new Vector4(localPosition.X, localPosition.Y, 0.0, 1.0);
+        var vector = new Vector4(localPosition.Dx, localPosition.Dy, 0.0, 1.0);
         Vector4 result = _invertedTransform.Transform(vector);
-        return new Point(result[0] - LinkedOffset!.Value.X, result[1] - LinkedOffset!.Value.Y);
+        return new Offset(result[0] - LinkedOffset!.Value.Dx, result[1] - LinkedOffset!.Value.Dy);
     }
 
     protected internal override bool FindAnnotations<T>(
         AnnotationResult<T> result,
-        Point localPosition,
+        Offset localPosition,
         bool onlyFirst)
     {
         if (Link.Leader == null)
@@ -1279,7 +1279,7 @@ public sealed class FollowerLayer : ContainerLayer
             return false;
         }
 
-        Point? transformedOffset = TransformOffset(localPosition);
+        Offset? transformedOffset = TransformOffset(localPosition);
         if (transformedOffset == null)
         {
             return false;
@@ -1303,7 +1303,7 @@ public sealed class FollowerLayer : ContainerLayer
             return null;
         }
 
-        Matrix4 result = Matrix4.TranslationValues(-_lastOffset!.Value.X, -_lastOffset!.Value.Y, 0.0);
+        Matrix4 result = Matrix4.TranslationValues(-_lastOffset!.Value.Dx, -_lastOffset!.Value.Dy, 0.0);
         result.Multiply(_lastTransform);
         return result;
     }
@@ -1446,7 +1446,7 @@ public sealed class FollowerLayer : ContainerLayer
         // Further transforms the coordinate system to a hypothetical child (null) of the leader layer, to
         // account for the leader's additional paint offset and layer offset (LeaderLayer.Offset).
         leader.ApplyTransform(null, forwardTransform);
-        forwardTransform.TranslateByDouble(LinkedOffset!.Value.X, LinkedOffset!.Value.Y, 0, 1);
+        forwardTransform.TranslateByDouble(LinkedOffset!.Value.Dx, LinkedOffset!.Value.Dy, 0, 1);
 
         Matrix4 inverseTransform = CollectTransformForLayerChain(inverseLayers);
 
@@ -1493,7 +1493,7 @@ public sealed class FollowerLayer : ContainerLayer
         else
         {
             _lastOffset = null;
-            Matrix4 matrix = Matrix4.TranslationValues(UnlinkedOffset!.Value.X, UnlinkedOffset!.Value.Y, .0);
+            Matrix4 matrix = Matrix4.TranslationValues(UnlinkedOffset!.Value.Dx, UnlinkedOffset!.Value.Dy, .0);
             EngineLayer = builder.PushTransform(matrix.Storage, oldLayer: EngineLayer as TransformEngineLayer);
             AddChildrenToScene(builder);
             builder.Pop();
@@ -1512,7 +1512,7 @@ public sealed class FollowerLayer : ContainerLayer
         }
         else
         {
-            transform.Multiply(Matrix4.TranslationValues(UnlinkedOffset!.Value.X, UnlinkedOffset!.Value.Y, 0));
+            transform.Multiply(Matrix4.TranslationValues(UnlinkedOffset!.Value.Dx, UnlinkedOffset!.Value.Dy, 0));
         }
     }
 
@@ -1534,7 +1534,7 @@ public sealed class AnnotatedRegionLayer<T> : ContainerLayer where T : notnull
     public AnnotatedRegionLayer(
         T value,
         Size? size = null,
-        Point? offset = null,
+        Offset? offset = null,
         bool opaque = false)
     {
         ArgumentNullException.ThrowIfNull(value);
@@ -1548,13 +1548,13 @@ public sealed class AnnotatedRegionLayer<T> : ContainerLayer where T : notnull
 
     public Size? Size { get; }
 
-    public Point Offset { get; }
+    public Offset Offset { get; }
 
     public bool Opaque { get; }
 
     protected internal override bool FindAnnotations<S>(
         AnnotationResult<S> result,
-        Point localPosition,
+        Offset localPosition,
         bool onlyFirst)
     {
         bool isAbsorbed = base.FindAnnotations(result, localPosition, onlyFirst);
@@ -1563,7 +1563,7 @@ public sealed class AnnotatedRegionLayer<T> : ContainerLayer where T : notnull
             return isAbsorbed;
         }
 
-        if (Size.HasValue && !ContainsRect(new Rect(Offset, Size.Value), localPosition))
+        if (Size.HasValue && !ContainsRect(DartGeometry.RectFromOffsetAndSize(Offset, Size.Value), localPosition))
         {
             return isAbsorbed;
         }
@@ -1587,7 +1587,7 @@ public sealed class AnnotatedRegionLayer<T> : ContainerLayer where T : notnull
         base.DebugFillProperties(properties);
         properties.Add(new DiagnosticsProperty<T>("value", Value));
         properties.Add(new DiagnosticsProperty<Size?>("size", Size, defaultValue: DiagnosticsDefaults.NullValue));
-        properties.Add(new DiagnosticsProperty<Point>("offset", Offset, defaultValue: DiagnosticsDefaults.NullValue));
+        properties.Add(new DiagnosticsProperty<Offset>("offset", Offset, defaultValue: DiagnosticsDefaults.NullValue));
         properties.Add(new DiagnosticsProperty<bool>("opaque", Opaque, defaultValue: false));
     }
 }
@@ -1599,7 +1599,7 @@ public sealed class AnnotatedRegionLayer<T> : ContainerLayer where T : notnull
 public sealed class MagnifierLayer : ContainerLayer
 {
     private Rect _lensRect;
-    private Point _focalPointOffset;
+    private Offset _focalPointOffset;
     private double _magnificationScale = 1.0;
     private MagnifierDecoration _decoration = new();
     private Clip _clipBehavior = Clip.None;
@@ -1610,7 +1610,7 @@ public sealed class MagnifierLayer : ContainerLayer
         set => SetField(ref _lensRect, value);
     }
 
-    public Point FocalPointOffset
+    public Offset FocalPointOffset
     {
         get => _focalPointOffset;
         set => SetField(ref _focalPointOffset, value);
@@ -1659,15 +1659,15 @@ public sealed class MagnifierLayer : ContainerLayer
 /// <remarks>Flutter's <c>OffsetLayer</c>.</remarks>
 public class OffsetLayer : ContainerLayer
 {
-    private Point _offset;
+    private Offset _offset;
 
-    public OffsetLayer(Point offset = default)
+    public OffsetLayer(Offset offset = default)
     {
         _offset = offset;
     }
 
     /// <summary>Offset from parent in the parent's coordinate system.</summary>
-    public Point Offset
+    public Offset Offset
     {
         get => _offset;
         set
@@ -1683,7 +1683,7 @@ public class OffsetLayer : ContainerLayer
 
     protected internal override bool FindAnnotations<T>(
         AnnotationResult<T> result,
-        Point localPosition,
+        Offset localPosition,
         bool onlyFirst)
     {
         return FindAnnotationsInChildren(result, localPosition - Offset, onlyFirst);
@@ -1691,7 +1691,7 @@ public class OffsetLayer : ContainerLayer
 
     protected bool FindAnnotationsInChildren<T>(
         AnnotationResult<T> result,
-        Point localPosition,
+        Offset localPosition,
         bool onlyFirst)
         where T : notnull
     {
@@ -1702,7 +1702,7 @@ public class OffsetLayer : ContainerLayer
     public override void ApplyTransform(Layer? child, Matrix4 transform)
     {
         Debug.Assert(child != null);
-        transform.TranslateByDouble(Offset.X, Offset.Y, 0, 1);
+        transform.TranslateByDouble(Offset.Dx, Offset.Dy, 0, 1);
     }
 
     protected internal override void AddToScene(SceneBuilder builder)
@@ -1712,7 +1712,7 @@ public class OffsetLayer : ContainerLayer
         // retained rendering, we don't want to push the offset down to each leaf
         // node. Otherwise, changing an offset layer on the very high level could
         // cascade the change to too many leaves.
-        EngineLayer = builder.PushOffset(Offset.X, Offset.Y, oldLayer: EngineLayer as OffsetEngineLayer);
+        EngineLayer = builder.PushOffset(Offset.Dx, Offset.Dy, oldLayer: EngineLayer as OffsetEngineLayer);
         AddChildrenToScene(builder);
         builder.Pop();
     }
@@ -1722,7 +1722,7 @@ public class OffsetLayer : ContainerLayer
     {
         var builder = new SceneBuilder();
         Matrix4 transform = Matrix4.Diagonal3Values(pixelRatio, pixelRatio, 1);
-        transform.TranslateByDouble(-(bounds.Left + Offset.X), -(bounds.Top + Offset.Y), 0, 1);
+        transform.TranslateByDouble(-(bounds.Left + Offset.Dx), -(bounds.Top + Offset.Dy), 0, 1);
         builder.PushTransform(transform.Storage);
         return BuildScene(builder);
     }
@@ -1773,7 +1773,7 @@ public class OffsetLayer : ContainerLayer
     public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
     {
         base.DebugFillProperties(properties);
-        properties.Add(new DiagnosticsProperty<Point>("offset", Offset));
+        properties.Add(new DiagnosticsProperty<Offset>("offset", Offset));
     }
 }
 
@@ -1782,7 +1782,7 @@ public sealed class OpacityLayer : OffsetLayer
 {
     private int? _alpha;
 
-    public OpacityLayer(int? alpha = null, Point offset = default) : base(offset)
+    public OpacityLayer(int? alpha = null, Offset offset = default) : base(offset)
     {
         _alpha = alpha;
     }
@@ -1853,7 +1853,7 @@ public sealed class OpacityLayer : OffsetLayer
         else
         {
             Debug.Assert(EngineLayer is null or OffsetEngineLayer);
-            EngineLayer = builder.PushOffset(Offset.X, Offset.Y, oldLayer: EngineLayer as OffsetEngineLayer);
+            EngineLayer = builder.PushOffset(Offset.Dx, Offset.Dy, oldLayer: EngineLayer as OffsetEngineLayer);
         }
 
         AddChildrenToScene(builder);
@@ -1946,7 +1946,7 @@ public sealed class ImageFilterLayer : OffsetLayer
     private ImageFilter? _imageFilter;
     private Rect _filterBounds;
 
-    public ImageFilterLayer(ImageFilter? imageFilter = null, Point offset = default) : base(offset)
+    public ImageFilterLayer(ImageFilter? imageFilter = null, Offset offset = default) : base(offset)
     {
         _imageFilter = imageFilter;
     }
@@ -2285,7 +2285,7 @@ public sealed class ClipRectLayer : ContainerLayer
 
     protected internal override bool FindAnnotations<T>(
         AnnotationResult<T> result,
-        Point localPosition,
+        Offset localPosition,
         bool onlyFirst)
     {
         return ContainsRect(ClipRect, localPosition)
@@ -2375,7 +2375,7 @@ public sealed class ClipRRectLayer : ContainerLayer
 
     protected internal override bool FindAnnotations<T>(
         AnnotationResult<T> result,
-        Point localPosition,
+        Offset localPosition,
         bool onlyFirst)
     {
         return ContainsRoundedRect(ClipRRect.Rect, ClipRRect.Radii, localPosition)
@@ -2466,7 +2466,7 @@ public sealed class ClipRSuperellipseLayer : ContainerLayer
 
     protected internal override bool FindAnnotations<T>(
         AnnotationResult<T> result,
-        Point localPosition,
+        Offset localPosition,
         bool onlyFirst)
     {
         // Dart hit tests the superellipse's bounding rectangle.
@@ -2558,7 +2558,7 @@ public sealed class ClipPathLayer : ContainerLayer
 
     protected internal override bool FindAnnotations<T>(
         AnnotationResult<T> result,
-        Point localPosition,
+        Offset localPosition,
         bool onlyFirst)
     {
         return _clipPath.Contains(localPosition)
@@ -2583,7 +2583,7 @@ public sealed class ClipGeometryLayer : ContainerLayer
 {
     private Geometry _geometry = new RectangleGeometry();
     private Clip _clipBehavior = Clip.AntiAlias;
-    private Point _geometryOffset;
+    private Offset _geometryOffset;
 
     public Geometry Geometry
     {
@@ -2616,7 +2616,7 @@ public sealed class ClipGeometryLayer : ContainerLayer
         }
     }
 
-    public Point GeometryOffset
+    public Offset GeometryOffset
     {
         get => _geometryOffset;
         set
@@ -2661,7 +2661,7 @@ public sealed class ClipGeometryLayer : ContainerLayer
 
     protected internal override bool FindAnnotations<T>(
         AnnotationResult<T> result,
-        Point localPosition,
+        Offset localPosition,
         bool onlyFirst)
     {
         return Geometry.FillContains(localPosition - GeometryOffset)
@@ -2682,7 +2682,7 @@ public sealed class TransformLayer : OffsetLayer
     private Matrix4? _invertedTransform;
     private bool _inverseDirty = true;
 
-    public TransformLayer(Matrix4? transform = null, Point offset = default) : base(offset)
+    public TransformLayer(Matrix4? transform = null, Offset offset = default) : base(offset)
     {
         _transform = transform;
     }
@@ -2719,7 +2719,7 @@ public sealed class TransformLayer : OffsetLayer
         _lastEffectiveTransform = Transform;
         if (Offset != default)
         {
-            _lastEffectiveTransform = Matrix4.TranslationValues(Offset.X, Offset.Y, 0.0);
+            _lastEffectiveTransform = Matrix4.TranslationValues(Offset.Dx, Offset.Dy, 0.0);
             _lastEffectiveTransform.Multiply(Transform);
         }
 
@@ -2730,7 +2730,7 @@ public sealed class TransformLayer : OffsetLayer
         builder.Pop();
     }
 
-    private Point? TransformOffset(Point localPosition)
+    private Offset? TransformOffset(Offset localPosition)
     {
         if (_inverseDirty)
         {
@@ -2748,10 +2748,10 @@ public sealed class TransformLayer : OffsetLayer
 
     protected internal override bool FindAnnotations<T>(
         AnnotationResult<T> result,
-        Point localPosition,
+        Offset localPosition,
         bool onlyFirst)
     {
-        Point? transformedOffset = TransformOffset(localPosition);
+        Offset? transformedOffset = TransformOffset(localPosition);
         if (transformedOffset == null)
         {
             return false;
@@ -2928,7 +2928,7 @@ public sealed class TextureLayer : Layer
 
     protected internal override bool FindAnnotations<T>(
         AnnotationResult<T> result,
-        Point localPosition,
+        Offset localPosition,
         bool onlyFirst)
     {
         return false;
@@ -3010,7 +3010,7 @@ public sealed class PerformanceOverlayLayer : Layer
 
     protected internal override bool FindAnnotations<T>(
         AnnotationResult<T> result,
-        Point localPosition,
+        Offset localPosition,
         bool onlyFirst)
     {
         return false;

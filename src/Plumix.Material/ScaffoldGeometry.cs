@@ -39,8 +39,8 @@ public sealed class ScaffoldGeometry
         }
 
         Rect area = FloatingActionButtonArea!.Value;
-        var collapsed = new Rect(area.Center, default(Size));
-        var scaledButton = new Rect(
+        var collapsed = DartGeometry.RectFromOffsetAndSize(area.Center, default(Size));
+        var scaledButton = DartGeometry.RectFromLTWH(
             LerpDouble(collapsed.Left, area.Left, scaleFactor),
             LerpDouble(collapsed.Top, area.Top, scaleFactor),
             LerpDouble(collapsed.Width, area.Width, scaleFactor),

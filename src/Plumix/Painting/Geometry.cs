@@ -23,26 +23,26 @@ public static class PaintingGeometry
     /// distance between the child and the edges of the container.
     /// </para>
     /// </remarks>
-    public static Point PositionDependentBox(
+    public static Offset PositionDependentBox(
         Size size,
         Size childSize,
-        Point target,
+        Offset target,
         bool preferBelow,
         double verticalOffset = 0.0,
         double margin = 10.0)
     {
         // VERTICAL DIRECTION
-        bool fitsBelow = target.Y + verticalOffset + childSize.Height <= size.Height - margin;
-        bool fitsAbove = target.Y - verticalOffset - childSize.Height >= margin;
+        bool fitsBelow = target.Dy + verticalOffset + childSize.Height <= size.Height - margin;
+        bool fitsAbove = target.Dy - verticalOffset - childSize.Height >= margin;
         bool tooltipBelow = fitsAbove == fitsBelow ? preferBelow : fitsBelow;
         double y;
         if (tooltipBelow)
         {
-            y = Math.Min(target.Y + verticalOffset, size.Height - margin);
+            y = Math.Min(target.Dy + verticalOffset, size.Height - margin);
         }
         else
         {
-            y = Math.Max(target.Y - verticalOffset - childSize.Height, margin);
+            y = Math.Max(target.Dy - verticalOffset - childSize.Height, margin);
         }
 
         // HORIZONTAL DIRECTION
@@ -51,7 +51,7 @@ public static class PaintingGeometry
             // If there's not enough horizontal space for margin + child, center the
             // child.
             ? flexibleSpace / 2.0
-            : Math.Clamp(target.X - childSize.Width / 2, margin, flexibleSpace - margin);
-        return new Point(x, y);
+            : Math.Clamp(target.Dx - childSize.Width / 2, margin, flexibleSpace - margin);
+        return new Offset(x, y);
     }
 }

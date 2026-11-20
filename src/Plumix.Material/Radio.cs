@@ -380,10 +380,10 @@ public sealed class Radio<T> : StatefulWidget
             double baseSize = tapTargetSize == Plumix.Material.MaterialTapTargetSize.Padded
                 ? 48.0
                 : 40.0;
-            Vector densityAdjustment = visualDensity.BaseSizeAdjustment;
+            Offset densityAdjustment = visualDensity.BaseSizeAdjustment;
             var size = new Size(
-                Math.Max(0.0, baseSize + densityAdjustment.X),
-                Math.Max(0.0, baseSize + densityAdjustment.Y));
+                Math.Max(0.0, baseSize + densityAdjustment.Dx),
+                Math.Max(0.0, baseSize + densityAdjustment.Dy));
             return new CustomPaint(
                 painter: _painter,
                 size: size);
@@ -677,7 +677,7 @@ internal sealed class RadioPainter : ToggleablePainter
         Color inactiveReactionColor,
         Color hoverColor,
         Color focusColor,
-        Point? downPosition,
+        Offset? downPosition,
         bool isFocused,
         bool isHovered)
     {
@@ -701,7 +701,7 @@ internal sealed class RadioPainter : ToggleablePainter
 
     public override void Paint(PaintingContext context, Size size)
     {
-        Point origin = new(size.Width / 2.0, size.Height / 2.0);
+        Offset origin = new(size.Width / 2.0, size.Height / 2.0);
         PaintRadialReaction(context, origin);
 
         Color backgroundColor = LerpColor(

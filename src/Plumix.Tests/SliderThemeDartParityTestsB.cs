@@ -55,7 +55,7 @@ public sealed class SliderThemeDartParityTestsB : IDisposable
         RenderObject valueIndicatorBox = OverlayBox(tester);
 
         // Tap the center of the track and wait for animations to finish.
-        Point center = tester.GetCenter(tester.ElementOfType<Slider>());
+        Offset center = tester.GetCenter(tester.ElementOfType<Slider>());
         TestGesture gesture = tester.StartGesture(center, PointerDeviceKind.Touch);
         tester.PumpAndSettle();
 
@@ -88,7 +88,7 @@ public sealed class SliderThemeDartParityTestsB : IDisposable
         RenderObject valueIndicatorBox = OverlayBox(tester);
 
         // Tap the center of the track to kick off the animation of the value indicator.
-        Point center = tester.GetCenter(tester.ElementOfType<Slider>());
+        Offset center = tester.GetCenter(tester.ElementOfType<Slider>());
         TestGesture gesture = tester.StartGesture(center, PointerDeviceKind.Touch);
 
         // Nothing to paint at scale 0.
@@ -123,7 +123,7 @@ public sealed class SliderThemeDartParityTestsB : IDisposable
         RenderObject valueIndicatorBox = OverlayBox(tester);
 
         // Tap the center of the track to kick off the animation of the value indicator.
-        Point center = tester.GetCenter(tester.ElementOfType<Slider>());
+        Offset center = tester.GetCenter(tester.ElementOfType<Slider>());
         TestGesture gesture = tester.StartGesture(center, PointerDeviceKind.Touch);
 
         // Nothing to paint at scale 0.
@@ -153,7 +153,7 @@ public sealed class SliderThemeDartParityTestsB : IDisposable
 
         RenderObject valueIndicatorBox = OverlayBox(tester);
 
-        Point center = tester.GetCenter(tester.ElementOfType<RangeSlider>());
+        Offset center = tester.GetCenter(tester.ElementOfType<RangeSlider>());
         TestGesture gesture = tester.StartGesture(center, PointerDeviceKind.Touch);
         // Wait for value indicator animation to finish.
         tester.PumpAndSettle();
@@ -202,7 +202,7 @@ public sealed class SliderThemeDartParityTestsB : IDisposable
 
         RenderObject valueIndicatorBox = OverlayBox(tester);
 
-        Point center = tester.GetCenter(tester.ElementOfType<RangeSlider>());
+        Offset center = tester.GetCenter(tester.ElementOfType<RangeSlider>());
         TestGesture gesture = tester.StartGesture(center, PointerDeviceKind.Touch);
         // Wait for value indicator animation to finish.
         tester.PumpAndSettle();
@@ -252,7 +252,7 @@ public sealed class SliderThemeDartParityTestsB : IDisposable
         RenderObject valueIndicatorBox = OverlayBox(tester);
 
         // Tap the center of the track to kick off the animation of the value indicator.
-        Point center = tester.GetCenter(tester.ElementOfType<RangeSlider>());
+        Offset center = tester.GetCenter(tester.ElementOfType<RangeSlider>());
         TestGesture gesture = tester.StartGesture(center, PointerDeviceKind.Touch);
 
         // No value indicator path to paint at scale 0.
@@ -286,7 +286,7 @@ public sealed class SliderThemeDartParityTestsB : IDisposable
         RenderObject valueIndicatorBox = OverlayBox(tester);
 
         // Tap the center of the track to kick off the animation of the value indicator.
-        Point center = tester.GetCenter(tester.ElementOfType<RangeSlider>());
+        Offset center = tester.GetCenter(tester.ElementOfType<RangeSlider>());
         TestGesture gesture = tester.StartGesture(center, PointerDeviceKind.Touch);
 
         // No value indicator path to paint at scale 0.
@@ -311,7 +311,7 @@ public sealed class SliderThemeDartParityTestsB : IDisposable
                     additionalActiveTrackHeight: 10.0)),
             value: 0.5));
         tester.PumpAndSettle();
-        Point center = tester.GetCenter(tester.ElementOfType<Slider>());
+        Offset center = tester.GetCenter(tester.ElementOfType<Slider>());
         TestGesture gesture = tester.StartGesture(center, PointerDeviceKind.Touch);
         PaintAssert.Paints(
             FoundRenderObject<Slider>(tester),
@@ -388,7 +388,7 @@ public sealed class SliderThemeDartParityTestsB : IDisposable
         value = 0.0;
         gesture.Down(tester.GetCenter(tester.ElementOfType<Slider>()));
         tester.Pump();
-        gesture.MoveBy(new Vector(50, 0));
+        gesture.MoveBy(new Offset(50, 0));
         Assert.Equal(0.0, value); // no change
         gesture.Up();
 
@@ -404,7 +404,7 @@ public sealed class SliderThemeDartParityTestsB : IDisposable
         value = 0.0;
         gesture.Down(tester.GetCenter(tester.ElementOfType<Slider>()));
         tester.Pump();
-        gesture.MoveBy(new Vector(50, 0));
+        gesture.MoveBy(new Offset(50, 0));
         Assert.Equal(0.0, value); // no change
         gesture.Up();
 
@@ -420,7 +420,7 @@ public sealed class SliderThemeDartParityTestsB : IDisposable
         value = 0.0;
         gesture.Down(tester.GetCenter(tester.ElementOfType<Slider>()));
         tester.Pump();
-        gesture.MoveBy(new Vector(50, 0));
+        gesture.MoveBy(new Offset(50, 0));
         Assert.True(value > 0.0); // changes
         gesture.Up();
 
@@ -438,7 +438,7 @@ public sealed class SliderThemeDartParityTestsB : IDisposable
         value = 0.0;
         gesture.Down(tester.GetCenter(tester.ElementOfType<Slider>()));
         tester.Pump();
-        gesture.MoveBy(new Vector(50, 0));
+        gesture.MoveBy(new Offset(50, 0));
         Assert.True(value > 0.0); // changes
         gesture.Up();
     }
@@ -475,7 +475,7 @@ public sealed class SliderThemeDartParityTestsB : IDisposable
 
         RenderObject valueIndicatorBox = OverlayBox(tester);
 
-        Point center = tester.GetCenter(tester.ElementOfType<Slider>());
+        Offset center = tester.GetCenter(tester.ElementOfType<Slider>());
         TestGesture gesture = tester.StartGesture(center, PointerDeviceKind.Touch);
         // Wait for value indicator animation to finish.
         tester.PumpAndSettle();
@@ -944,7 +944,7 @@ public sealed class SliderThemeDartParityTestsB : IDisposable
                 .Circle()
                 .RRect(rrect: RRect.FromLTRBR(395.0, 295.0, 405.0, 305.0, Radius.Circular(5.0))));
 
-        Point center = tester.GetCenter(tester.ElementOfType<Slider>());
+        Offset center = tester.GetCenter(tester.ElementOfType<Slider>());
         TestGesture gesture = tester.StartGesture(center, PointerDeviceKind.Touch);
         tester.PumpAndSettle();
 
@@ -997,7 +997,7 @@ public sealed class SliderThemeDartParityTestsB : IDisposable
                 .RRect(rrect: RRect.FromLTRBR(583.0, 295.0, 593.0, 305.0, Radius.Circular(5.0))));
 
         Rect sliderRect = tester.GetRect(tester.ElementOfType<RangeSlider>());
-        var topRight = new Point(sliderRect.Right, sliderRect.Top);
+        var topRight = new Offset(sliderRect.Right, sliderRect.Top);
         TestGesture gesture = tester.StartGesture(topRight, PointerDeviceKind.Touch);
         tester.PumpAndSettle();
 
@@ -1305,7 +1305,7 @@ public sealed class SliderThemeDartParityTestsB : IDisposable
 
         // Test the default color for value indicator.
         tester.PumpWidget(BuildTestApp(divisions: 3));
-        Point center = tester.GetCenter(tester.ElementOfType<Slider>());
+        Offset center = tester.GetCenter(tester.ElementOfType<Slider>());
         TestGesture gesture = tester.StartGesture(center, PointerDeviceKind.Touch);
         // Wait for value indicator animation to finish.
         tester.PumpAndSettle();
@@ -1351,7 +1351,7 @@ public sealed class SliderThemeDartParityTestsB : IDisposable
 
         RenderObject valueIndicatorBox = OverlayBox(tester);
 
-        Point center = tester.GetCenter(tester.ElementOfType<Slider>());
+        Offset center = tester.GetCenter(tester.ElementOfType<Slider>());
         TestGesture gesture = tester.StartGesture(center, PointerDeviceKind.Touch);
         // Wait for value indicator animation to finish.
         tester.PumpAndSettle();
@@ -1393,7 +1393,7 @@ public sealed class SliderThemeDartParityTestsB : IDisposable
 
         RenderObject valueIndicatorBox = OverlayBox(tester);
 
-        Point center = tester.GetCenter(tester.ElementOfType<Slider>());
+        Offset center = tester.GetCenter(tester.ElementOfType<Slider>());
         tester.StartGesture(center, PointerDeviceKind.Touch);
         // Wait for value indicator animation to finish.
         tester.PumpAndSettle();
@@ -1435,7 +1435,7 @@ public sealed class SliderThemeDartParityTestsB : IDisposable
 
         RenderObject valueIndicatorBox = OverlayBox(tester);
 
-        Point center = tester.GetCenter(tester.ElementOfType<RangeSlider>());
+        Offset center = tester.GetCenter(tester.ElementOfType<RangeSlider>());
         TestGesture gesture = tester.StartGesture(center, PointerDeviceKind.Touch);
         // Wait for value indicator animation to finish.
         tester.PumpAndSettle();
@@ -1567,13 +1567,13 @@ public sealed class SliderThemeDartParityTestsB : IDisposable
 
         public override void Paint(
             PaintingContext context,
-            Point offset,
+            Offset offset,
             RenderBox parentBox,
             SliderThemeData sliderTheme,
             Animation<double> enableAnimation,
-            Point thumbCenter,
+            Offset thumbCenter,
             TextDirection textDirection,
-            Point? secondaryOffset = null,
+            Offset? secondaryOffset = null,
             bool isEnabled = false,
             bool isDiscrete = false)
         {

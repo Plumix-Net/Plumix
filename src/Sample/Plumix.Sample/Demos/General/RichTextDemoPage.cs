@@ -304,7 +304,7 @@ public sealed class RichTextDemoPageState : State
                     children:
                     [
                         new TextSpan("Shadows", style: new TextStyle(Shadows:
-                            [new Shadow(new Color(0x883B82F6), new Point(3, 3), 2)])),
+                            [new Shadow(new Color(0x883B82F6), new Offset(3, 3), 2)])),
                         new TextSpan(" and "),
                         new TextSpan("outlined text\n", style: new TextStyle(Foreground: new Paint
                         {

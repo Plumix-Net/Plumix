@@ -49,7 +49,7 @@ public sealed class RenderIndexedStack : RenderStack
 
         var childParentData = (StackParentData)child.parentData!;
         double? childBaseline = child.GetDistanceToActualBaseline(baseline);
-        return childBaseline.HasValue ? childBaseline.Value + childParentData.offset.Y : null;
+        return childBaseline.HasValue ? childBaseline.Value + childParentData.offset.Dy : null;
     }
 
     protected override double? ComputeDryBaseline(BoxConstraints constraints, TextBaseline baseline)
@@ -68,7 +68,7 @@ public sealed class RenderIndexedStack : RenderStack
             baseline);
     }
 
-    protected override bool HitTestChildren(BoxHitTestResult result, Point position)
+    protected override bool HitTestChildren(BoxHitTestResult result, Offset position)
     {
         RenderBox? child = ChildAtIndex();
         if (child is null)
@@ -83,7 +83,7 @@ public sealed class RenderIndexedStack : RenderStack
             (hitResult, transformed) => child.HitTest(hitResult, transformed));
     }
 
-    protected override void PaintStack(PaintingContext context, Point offset)
+    protected override void PaintStack(PaintingContext context, Offset offset)
     {
         RenderBox? child = ChildAtIndex();
         if (child is null)

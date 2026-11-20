@@ -352,7 +352,7 @@ public sealed class MaterialDialogThemeTests
         tester.PumpAndSettle();
         MaterialSurfaceProbe surface = Assert.Single(MaterialSurfaceProbe.FindAll(tester.RenderView));
         Assert.Equal(new Size(280, 100), surface.Size);
-        Assert.Equal(explicitOverrides ? new Point(500, 15) : new Point(10, 475),
+        Assert.Equal(explicitOverrides ? new Offset(500, 15) : new Offset(10, 475),
             surface.RenderObject.LocalToGlobal(default));
         Assert.Equal(explicitOverrides ? Clip.AntiAlias : Clip.HardEdge, surface.ClipBehavior);
         Assert.Equal(BorderRadius.Circular(16), surface.BorderRadius);
@@ -370,7 +370,7 @@ public sealed class MaterialDialogThemeTests
             },
             home: new Dialog(child: SizedBox.Expand(key: childKey))));
         var box = Assert.IsAssignableFrom<RenderBox>(tester.ElementsWithKey(childKey).Single().RenderObject);
-        Assert.Equal(new Point(10, 15), box.LocalToGlobal(default));
+        Assert.Equal(new Offset(10, 15), box.LocalToGlobal(default));
         Assert.Equal(new Size(770, 560), box.Size);
 
         tester.PumpWidget(new MaterialApp(

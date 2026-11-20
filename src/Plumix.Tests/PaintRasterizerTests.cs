@@ -22,10 +22,10 @@ public sealed class PaintRasterizerTests
         var recorder = new PictureRecorder();
         var canvas = new Canvas(recorder);
         canvas.Scale(scale, scale * 2.0);
-        canvas.DrawLine(new Point(4, 1), new Point(4, 8), new Paint { Color = Colors.Red });
+        canvas.DrawLine(new Offset(4, 1), new Offset(4, 8), new Paint { Color = Colors.Red });
         Picture picture = recorder.EndRecording();
         using var bitmap = new Avalonia.Media.Imaging.RenderTargetBitmap(
-            new PixelSize(80, 120), new Vector(96.0 * dpiScale, 96.0 * dpiScale));
+            new PixelSize(80, 120), new Offset(96.0 * dpiScale, 96.0 * dpiScale));
         using (DrawingContext context = bitmap.CreateDrawingContext())
         {
             picture.Playback(context, default);
@@ -50,9 +50,9 @@ public sealed class PaintRasterizerTests
     {
         var recorder = new PictureRecorder();
         var canvas = new Canvas(recorder);
-        canvas.ClipRect(new Rect(0, 0, 10, 6));
+        canvas.ClipRect(DartGeometry.RectFromLTWH(0, 0, 10, 6));
         var paint = new Paint { Color = Colors.Red };
-        canvas.DrawLine(new Point(4, 1), new Point(4, 10), paint);
+        canvas.DrawLine(new Offset(4, 1), new Offset(4, 10), paint);
         paint.Color = Colors.Blue;
         Picture picture = recorder.EndRecording();
         using var bitmap = new Avalonia.Media.Imaging.RenderTargetBitmap(new PixelSize(12, 12));
@@ -173,18 +173,18 @@ public sealed class PaintRasterizerTests
         var recorder = new PictureRecorder();
         var canvas = new Canvas(recorder);
         var blur = MaskFilter.Blur(BlurStyle.Outer, 3.0);
-        canvas.DrawRect(new Rect(0, 0, 10, 10), new Paint { Color = new Color(0xFF112233), MaskFilter = blur });
-        canvas.DrawOval(new Rect(0, 0, 10, 20), new Paint { BlendMode = BlendMode.Multiply });
+        canvas.DrawRect(DartGeometry.RectFromLTWH(0, 0, 10, 10), new Paint { Color = new Color(0xFF112233), MaskFilter = blur });
+        canvas.DrawOval(DartGeometry.RectFromLTWH(0, 0, 10, 20), new Paint { BlendMode = BlendMode.Multiply });
         var path = new Path();
-        path.AddRect(new Rect(0, 0, 5, 5));
+        path.AddRect(DartGeometry.RectFromLTWH(0, 0, 5, 5));
         canvas.DrawPath(path, new Paint { Style = PaintingStyle.Stroke, StrokeWidth = 2.0 });
-        canvas.DrawLine(new Point(0, 0), new Point(5, 5), new Paint { StrokeWidth = 3.0 });
+        canvas.DrawLine(new Offset(0, 0), new Offset(5, 5), new Paint { StrokeWidth = 3.0 });
         canvas.DrawDRRect(
-            RRect.FromRectAndRadius(new Rect(0, 0, 20, 20), 4.0),
-            RRect.FromRectAndRadius(new Rect(5, 5, 10, 10), 2.0),
+            RRect.FromRectAndRadius(DartGeometry.RectFromLTWH(0, 0, 20, 20), 4.0),
+            RRect.FromRectAndRadius(DartGeometry.RectFromLTWH(5, 5, 10, 10), 2.0),
             new Paint());
         canvas.DrawRSuperellipseBlur(
-            RSuperellipse.FromRectAndRadius(new Rect(0, 0, 20, 20), Radius.Circular(5.0)),
+            RSuperellipse.FromRectAndRadius(DartGeometry.RectFromLTWH(0, 0, 20, 20), Radius.Circular(5.0)),
             new Color(0x40000000),
             2.0);
 
@@ -209,7 +209,7 @@ public sealed class PaintRasterizerTests
     {
         var canvas = new Canvas(new PictureRecorder());
         var paint = new Paint { Color = new Color(0xFF00FF00) };
-        canvas.DrawCircle(new Point(5, 5), 5, paint);
+        canvas.DrawCircle(new Offset(5, 5), 5, paint);
         paint.Color = new Color(0xFFFF0000);
         paint.MaskFilter = MaskFilter.Blur(BlurStyle.Normal, 1.0);
 

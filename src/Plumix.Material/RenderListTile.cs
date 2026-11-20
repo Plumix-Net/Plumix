@@ -233,7 +233,7 @@ internal sealed class RenderListTile : RenderBox, ISlottedRenderObjectContainer
 
     private double EffectiveHorizontalTitleGap => _horizontalTitleGap + (_visualDensity.Horizontal * 2.0);
 
-    private double DefaultTileHeight => _visualDensity.BaseSizeAdjustment.Y + (_isThreeLine
+    private double DefaultTileHeight => _visualDensity.BaseSizeAdjustment.Dy + (_isThreeLine
         ? (_isDense ? 76.0 : 88.0)
         : _subtitle is not null
             ? (_isDense ? 64.0 : 72.0)
@@ -318,7 +318,7 @@ internal sealed class RenderListTile : RenderBox, ISlottedRenderObjectContainer
     protected override double? ComputeDistanceToActualBaseline(TextBaseline baseline)
     {
         double? childBaseline = Title.GetDistanceToActualBaseline(baseline);
-        return childBaseline.HasValue ? childBaseline.Value + ParentDataOf(Title).offset.Y : null;
+        return childBaseline.HasValue ? childBaseline.Value + ParentDataOf(Title).offset.Dy : null;
     }
 
     protected override double? ComputeDryBaseline(BoxConstraints constraints, TextBaseline baseline)
@@ -349,7 +349,7 @@ internal sealed class RenderListTile : RenderBox, ISlottedRenderObjectContainer
         Size = Constraints.Constrain(sizes.TileSize);
     }
 
-    public override void Paint(PaintingContext context, Point offset)
+    public override void Paint(PaintingContext context, Offset offset)
     {
         PaintChild(context, _leading, offset);
         PaintChild(context, _title, offset);
@@ -357,9 +357,9 @@ internal sealed class RenderListTile : RenderBox, ISlottedRenderObjectContainer
         PaintChild(context, _trailing, offset);
     }
 
-    protected override bool HitTestSelf(Point position) => true;
+    protected override bool HitTestSelf(Offset position) => true;
 
-    protected override bool HitTestChildren(BoxHitTestResult result, Point position)
+    protected override bool HitTestChildren(BoxHitTestResult result, Offset position)
     {
         return HitTestChild(result, _leading, position)
                || HitTestChild(result, _title, position)
@@ -371,11 +371,11 @@ internal sealed class RenderListTile : RenderBox, ISlottedRenderObjectContainer
         Func<RenderBox, BoxConstraints, Size> getSize,
         Func<RenderBox, BoxConstraints, TextBaseline, double?> getBaseline,
         BoxConstraints constraints,
-        Action<RenderBox, Point>? positionChild = null)
+        Action<RenderBox, Offset>? positionChild = null)
     {
         BoxConstraints looseConstraints = constraints.Loosen();
         double tileWidth = looseConstraints.MaxWidth;
-        double maxIconHeight = (_isDense ? 48.0 : 56.0) + _visualDensity.BaseSizeAdjustment.Y;
+        double maxIconHeight = (_isDense ? 48.0 : 56.0) + _visualDensity.BaseSizeAdjustment.Dy;
         BoxConstraints iconConstraints = looseConstraints.Enforce(new BoxConstraints(MaxHeight: maxIconHeight));
         Size? leadingSize = _leading is null ? null : getSize(_leading, iconConstraints);
         Size? trailingSize = _trailing is null ? null : getSize(_trailing, iconConstraints);
@@ -459,7 +459,7 @@ internal sealed class RenderListTile : RenderBox, ISlottedRenderObjectContainer
                            || idealSubtitleY + subtitleHeight + _minVerticalPadding > TargetTileHeight;
             positionChild?.Invoke(
                 _subtitle,
-                new Point(
+                new Offset(
                     isLtr ? titleStart : adjustedTrailingWidth,
                     compact ? _minVerticalPadding + titleHeight : idealSubtitleY));
             tileHeight = compact
@@ -470,12 +470,12 @@ internal sealed class RenderListTile : RenderBox, ISlottedRenderObjectContainer
 
         if (positionChild is not null)
         {
-            positionChild(Title, new Point(isLtr ? titleStart : adjustedTrailingWidth, titleY));
+            positionChild(Title, new Offset(isLtr ? titleStart : adjustedTrailingWidth, titleY));
             if (_leading is not null && leadingSize.HasValue)
             {
                 positionChild(
                     _leading,
-                    new Point(
+                    new Offset(
                         isLtr ? 0.0 : tileWidth - leadingSize.Value.Width,
                         ResolveSlotY(leadingSize.Value.Height, tileHeight, isLeading: true)));
             }
@@ -483,7 +483,7 @@ internal sealed class RenderListTile : RenderBox, ISlottedRenderObjectContainer
             {
                 positionChild(
                     _trailing,
-                    new Point(
+                    new Offset(
                         isLtr ? tileWidth - trailingSize.Value.Width : 0.0,
                         ResolveSlotY(trailingSize.Value.Height, tileHeight, isLeading: false)));
             }
@@ -524,12 +524,12 @@ internal sealed class RenderListTile : RenderBox, ISlottedRenderObjectContainer
         return child.GetDistanceToBaseline(baseline, onlyReal: true);
     }
 
-    private static void PositionChild(RenderBox child, Point offset)
+    private static void PositionChild(RenderBox child, Offset offset)
     {
         ParentDataOf(child).offset = offset;
     }
 
-    private static void PaintChild(PaintingContext context, RenderBox? child, Point offset)
+    private static void PaintChild(PaintingContext context, RenderBox? child, Offset offset)
     {
         if (child is not null)
         {
@@ -537,7 +537,7 @@ internal sealed class RenderListTile : RenderBox, ISlottedRenderObjectContainer
         }
     }
 
-    private static bool HitTestChild(BoxHitTestResult result, RenderBox? child, Point position)
+    private static bool HitTestChild(BoxHitTestResult result, RenderBox? child, Offset position)
     {
         if (child is null)
         {

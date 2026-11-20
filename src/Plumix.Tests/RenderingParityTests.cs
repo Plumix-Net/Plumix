@@ -303,7 +303,7 @@ public sealed class RenderingParityTests
             Size = Constraints.Constrain(new Size(20, 10));
         }
 
-        public override void Paint(PaintingContext ctx, Point offset)
+        public override void Paint(PaintingContext ctx, Offset offset)
         {
         }
     }
@@ -326,7 +326,7 @@ public sealed class RenderingParityTests
             Size = Constraints.Constrain(new Size(20, 10));
         }
 
-        public override void Paint(PaintingContext ctx, Point offset)
+        public override void Paint(PaintingContext ctx, Offset offset)
         {
         }
     }
@@ -361,10 +361,10 @@ public sealed class RenderingParityTests
             // parentUsesSize: false makes the child a relayout boundary, so its size is not ours to read.
             _child.Layout(Constraints, parentUsesSize: false);
             Size = Constraints.Biggest;
-            ((BoxParentData)_child.parentData!).offset = new Point(0, 0);
+            ((BoxParentData)_child.parentData!).offset = new Offset(0, 0);
         }
 
-        public override void Paint(PaintingContext ctx, Point offset)
+        public override void Paint(PaintingContext ctx, Offset offset)
         {
             ctx.PaintChild(_child, offset);
         }
@@ -399,10 +399,10 @@ public sealed class RenderingParityTests
             LayoutCount += 1;
             _child.Layout(Constraints, parentUsesSize: true);
             Size = Constraints.Constrain(_child.Size);
-            ((BoxParentData)_child.parentData!).offset = new Point(0, 0);
+            ((BoxParentData)_child.parentData!).offset = new Offset(0, 0);
         }
 
-        public override void Paint(PaintingContext ctx, Point offset)
+        public override void Paint(PaintingContext ctx, Offset offset)
         {
             ctx.PaintChild(_child, offset);
         }
@@ -422,12 +422,12 @@ public sealed class RenderingParityTests
             Size = Constraints.Constrain(_desiredSize);
         }
 
-        public override void Paint(PaintingContext ctx, Point offset)
+        public override void Paint(PaintingContext ctx, Offset offset)
         {
             ctx.Canvas.DrawRectangle(
                 new SolidColorBrush(new Color(0xFFC8E6C9)),
                 null,
-                new Rect(offset, Size));
+                DartGeometry.RectFromOffsetAndSize(offset, Size));
         }
     }
 

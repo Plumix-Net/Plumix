@@ -84,13 +84,13 @@ public sealed class TextPainterTests
 
         painter.Text = new TextSpan("A");
         painter.Layout();
-        Assert.Equal(0.0, painter.GetOffsetForCaret(new TextPosition(0), default).X);
-        Assert.Equal(painter.Width, painter.GetOffsetForCaret(new TextPosition(1), default).X);
+        Assert.Equal(0.0, painter.GetOffsetForCaret(new TextPosition(0), default).Dx);
+        Assert.Equal(painter.Width, painter.GetOffsetForCaret(new TextPosition(1), default).Dx);
 
         const string emoji = "A\U0001F600";
         painter.Text = new TextSpan(emoji);
         painter.Layout();
-        Assert.Equal(painter.Width, painter.GetOffsetForCaret(new TextPosition(emoji.Length), default).X);
+        Assert.Equal(painter.Width, painter.GetOffsetForCaret(new TextPosition(emoji.Length), default).Dx);
         CheckCaretOffsetsLtr(emoji);
 
         // Trailing white spaces (U+00A0, U+2007 and U+202F are not trailing spaces).
@@ -104,9 +104,9 @@ public sealed class TextPainterTests
             string text = "A" + space;
             painter.Text = new TextSpan(text);
             painter.Layout();
-            Assert.Equal(0.0, painter.GetOffsetForCaret(new TextPosition(0), default).X);
-            Assert.Equal(14.0, painter.GetOffsetForCaret(new TextPosition(1), default).X);
-            Assert.Equal(painter.Width, painter.GetOffsetForCaret(new TextPosition(text.Length), default).X);
+            Assert.Equal(0.0, painter.GetOffsetForCaret(new TextPosition(0), default).Dx);
+            Assert.Equal(14.0, painter.GetOffsetForCaret(new TextPosition(1), default).Dx);
+            Assert.Equal(painter.Width, painter.GetOffsetForCaret(new TextPosition(text.Length), default).Dx);
 
             painter.Layout(maxWidth: 14.0);
             IReadOnlyList<LineMetrics> lines = painter.ComputeLineMetrics();
@@ -131,7 +131,7 @@ public sealed class TextPainterTests
         ]);
         painter.Layout();
         int length = painter.Text.ToPlainText().Length;
-        Assert.Equal(painter.Width, painter.GetOffsetForCaret(new TextPosition(length), default).X);
+        Assert.Equal(painter.Width, painter.GetOffsetForCaret(new TextPosition(length), default).Dx);
     }
 
     [Fact]
@@ -140,14 +140,14 @@ public sealed class TextPainterTests
         using var painter = new TextPainter(textDirection: TextDirection.Ltr);
         painter.Text = new TextSpan(children: [new TextSpan("B"), new TextSpan("C")]);
         painter.Layout();
-        Assert.Equal(0.0, painter.GetOffsetForCaret(new TextPosition(0), default).X);
-        Assert.Equal(painter.Width / 2, painter.GetOffsetForCaret(new TextPosition(1), default).X);
-        Assert.Equal(painter.Width, painter.GetOffsetForCaret(new TextPosition(2), default).X);
+        Assert.Equal(0.0, painter.GetOffsetForCaret(new TextPosition(0), default).Dx);
+        Assert.Equal(painter.Width / 2, painter.GetOffsetForCaret(new TextPosition(1), default).Dx);
+        Assert.Equal(painter.Width, painter.GetOffsetForCaret(new TextPosition(2), default).Dx);
 
         painter.Text = new TextSpan(children: []);
         painter.Layout();
-        Assert.Equal(0.0, painter.GetOffsetForCaret(new TextPosition(0), default).X);
-        Assert.Equal(0.0, painter.GetOffsetForCaret(new TextPosition(1), default).X);
+        Assert.Equal(0.0, painter.GetOffsetForCaret(new TextPosition(0), default).Dx);
+        Assert.Equal(0.0, painter.GetOffsetForCaret(new TextPosition(1), default).Dx);
     }
 
     [Fact]
@@ -161,23 +161,23 @@ public sealed class TextPainterTests
         Assert.Equal(23, text.Length);
         painter.Layout(maxWidth: 10000);
 
-        Assert.Equal(0.0, painter.GetOffsetForCaret(new TextPosition(0), default).X);
+        Assert.Equal(0.0, painter.GetOffsetForCaret(new TextPosition(0), default).Dx);
         for (int offset = 1; offset <= 8; offset++)
         {
-            Assert.Equal(42.0, painter.GetOffsetForCaret(new TextPosition(offset), default).X);
+            Assert.Equal(42.0, painter.GetOffsetForCaret(new TextPosition(offset), default).Dx);
         }
 
         for (int offset = 9; offset <= 19; offset++)
         {
-            Assert.Equal(98.0, painter.GetOffsetForCaret(new TextPosition(offset), default).X);
+            Assert.Equal(98.0, painter.GetOffsetForCaret(new TextPosition(offset), default).Dx);
         }
 
         for (int offset = 20; offset <= 23; offset++)
         {
-            Assert.Equal(126.0, painter.GetOffsetForCaret(new TextPosition(offset), default).X);
+            Assert.Equal(126.0, painter.GetOffsetForCaret(new TextPosition(offset), default).Dx);
         }
 
-        Assert.Equal(painter.Width, painter.GetOffsetForCaret(new TextPosition(23), default).X);
+        Assert.Equal(painter.Width, painter.GetOffsetForCaret(new TextPosition(23), default).Dx);
     }
 
     [Theory]
@@ -284,11 +284,11 @@ public sealed class TextPainterTests
             textAlign: TextAlign.Center);
         painter.Layout();
 
-        Assert.Equal(21.0, painter.GetOffsetForCaret(new TextPosition(0), default).X);
+        Assert.Equal(21.0, painter.GetOffsetForCaret(new TextPosition(0), default).Dx);
         // The line end is 441, clamped to the content width.
-        Assert.Equal(painter.Width, painter.GetOffsetForCaret(new TextPosition(text.Length), default).X);
-        Assert.Equal(35.0, painter.GetOffsetForCaret(new TextPosition(1), default).X);
-        Assert.Equal(49.0, painter.GetOffsetForCaret(new TextPosition(2), default).X);
+        Assert.Equal(painter.Width, painter.GetOffsetForCaret(new TextPosition(text.Length), default).Dx);
+        Assert.Equal(35.0, painter.GetOffsetForCaret(new TextPosition(1), default).Dx);
+        Assert.Equal(49.0, painter.GetOffsetForCaret(new TextPosition(2), default).Dx);
     }
 
     [Fact]
@@ -307,7 +307,7 @@ public sealed class TextPainterTests
     {
         using var painter = new TextPainter(text: new TextSpan("aa"), textDirection: TextDirection.Ltr);
         painter.Layout();
-        var prototype = new Rect(0, 0, 5, 5);
+        var prototype = DartGeometry.RectFromLTWH(0, 0, 5, 5);
         Assert.Equal(
             painter.GetOffsetForCaret(new TextPosition(1), prototype),
             painter.GetOffsetForCaret(new TextPosition(1, TextAffinity.Upstream), prototype));
@@ -316,25 +316,25 @@ public sealed class TextPainterTests
     [Fact]
     public void Caret_TrailingSpacesInLtrAndRtl()
     {
-        var prototype = new Rect(0, 0, 5, 5);
+        var prototype = DartGeometry.RectFromLTWH(0, 0, 5, 5);
         using var ltr = new TextPainter(text: new TextSpan("a    "), textDirection: TextDirection.Ltr);
         ltr.Layout(minWidth: 1000, maxWidth: 1000);
-        Assert.Equal(SizeOfA * 5, ltr.GetOffsetForCaret(new TextPosition(5), prototype).X);
+        Assert.Equal(SizeOfA * 5, ltr.GetOffsetForCaret(new TextPosition(5), prototype).Dx);
 
         using var rtl = new TextPainter(text: new TextSpan("\u0644    "), textDirection: TextDirection.Rtl);
         rtl.Layout(minWidth: 1000, maxWidth: 1000);
-        Assert.Equal(1000 - (SizeOfA * 5) - 5, rtl.GetOffsetForCaret(new TextPosition(5), prototype).X);
+        Assert.Equal(1000 - (SizeOfA * 5) - 5, rtl.GetOffsetForCaret(new TextPosition(5), prototype).Dx);
     }
 
     [Fact]
     public void Caret_EndOfTextWithAPlusOneBidiLevel()
     {
-        var prototype = new Rect(0, 0, 5, 5);
+        var prototype = DartGeometry.RectFromLTWH(0, 0, 5, 5);
         using var painter = new TextPainter(text: new TextSpan("a\u0644"), textDirection: TextDirection.Ltr);
         painter.Layout(minWidth: 1000, maxWidth: 1000);
-        Assert.Equal(0.0, painter.GetOffsetForCaret(new TextPosition(0), prototype).X);
-        Assert.Equal((SizeOfA * 2) - 5, painter.GetOffsetForCaret(new TextPosition(1), prototype).X);
-        Assert.Equal(SizeOfA * 2, painter.GetOffsetForCaret(new TextPosition(2), prototype).X);
+        Assert.Equal(0.0, painter.GetOffsetForCaret(new TextPosition(0), prototype).Dx);
+        Assert.Equal((SizeOfA * 2) - 5, painter.GetOffsetForCaret(new TextPosition(1), prototype).Dx);
+        Assert.Equal(SizeOfA * 2, painter.GetOffsetForCaret(new TextPosition(2), prototype).Dx);
     }
 
     [Fact]
@@ -344,9 +344,9 @@ public sealed class TextPainterTests
 
         void ExpectCaret(int offset, double dx, double dy)
         {
-            Assert.Equal(new Point(dx, dy), painter.GetOffsetForCaret(new TextPosition(offset), default));
+            Assert.Equal(new Offset(dx, dy), painter.GetOffsetForCaret(new TextPosition(offset), default));
             Assert.Equal(
-                new Point(dx, dy),
+                new Offset(dx, dy),
                 painter.GetOffsetForCaret(new TextPosition(offset, TextAffinity.Upstream), default));
         }
 
@@ -370,9 +370,9 @@ public sealed class TextPainterTests
 
         painter.Text = new TextSpan("aaaaaaaa");
         painter.Layout(maxWidth: 100);
-        Assert.Equal(new Point(0, SizeOfA), painter.GetOffsetForCaret(new TextPosition(7), default));
+        Assert.Equal(new Offset(0, SizeOfA), painter.GetOffsetForCaret(new TextPosition(7), default));
         Assert.Equal(
-            new Point(SizeOfA * 7, 0),
+            new Offset(SizeOfA * 7, 0),
             painter.GetOffsetForCaret(new TextPosition(7, TextAffinity.Upstream), default));
 
         painter.Text = new TextSpan("aaa\n");
@@ -382,7 +382,7 @@ public sealed class TextPainterTests
         painter.TextAlign = TextAlign.Right;
         painter.Text = new TextSpan("aaa");
         painter.Layout();
-        Assert.Equal(new Point(0, 0), painter.GetOffsetForCaret(new TextPosition(0), default));
+        Assert.Equal(new Offset(0, 0), painter.GetOffsetForCaret(new TextPosition(0), default));
         painter.TextAlign = TextAlign.Left;
 
         painter.Text = new TextSpan("aaa\naaa");
@@ -540,7 +540,7 @@ public sealed class TextPainterTests
         ];
         foreach ((int offset, double dx) in carets)
         {
-            Assert.Equal(dx, painter.GetOffsetForCaret(new TextPosition(offset), default).X);
+            Assert.Equal(dx, painter.GetOffsetForCaret(new TextPosition(offset), default).Dx);
         }
 
         IReadOnlyList<TextBox> boxes = painter.InlinePlaceholderBoxes!;
@@ -622,7 +622,7 @@ public sealed class TextPainterTests
         painter.Layout();
         Rect glyphBox = painter.GetBoxesForSelection(new TextSelection(0, 1))[0].ToRect();
         Assert.Equal(painter.Size, glyphBox.Size);
-        Assert.Equal(new Point(0, 0), glyphBox.TopLeft);
+        Assert.Equal(new Offset(0, 0), glyphBox.TopLeft);
     }
 
     [Fact]
@@ -683,7 +683,7 @@ public sealed class TextPainterTests
         painter.Layout();
         Assert.Equal(
             painter.Width,
-            painter.GetOffsetForCaret(new TextPosition(text.Length, TextAffinity.Upstream), default).X);
+            painter.GetOffsetForCaret(new TextPosition(text.Length, TextAffinity.Upstream), default).Dx);
     }
 
     [Fact]
@@ -1027,8 +1027,8 @@ public sealed class TextPainterTests
             textDirection: TextDirection.Ltr);
         painter.Layout();
         IReadOnlyList<TextBox> boxes = painter.GetBoxesForSelection(new TextSelection(0, 2));
-        Assert.Equal(new Rect(0, 0, 128, 128), boxes[0].ToRect());
-        Assert.Equal(new Rect(128, 48, 64, 64), boxes[1].ToRect());
+        Assert.Equal(DartGeometry.RectFromLTWH(0, 0, 128, 128), boxes[0].ToRect());
+        Assert.Equal(DartGeometry.RectFromLTWH(128, 48, 64, 64), boxes[1].ToRect());
 
         painter.DebugPaintTextLayoutBoxes = true;
         Assert.Equal(3, PaintedDrawCommands(painter));
@@ -1128,12 +1128,12 @@ public sealed class TextPainterTests
         painter.Layout(maxWidth: 10.0);
 
         Assert.Equal(new TextRange(0, 2), painter.GetWordBoundary(new TextPosition(0)));
-        Assert.Equal(new Point(0, 0), painter.GetOffsetForCaret(new TextPosition(0, TextAffinity.Upstream), default));
-        Assert.Equal(new Point(0, 0), painter.GetOffsetForCaret(new TextPosition(0), default));
-        Assert.Equal(new Point(10, 0), painter.GetOffsetForCaret(new TextPosition(1, TextAffinity.Upstream), default));
-        Assert.Equal(new Point(10, 10), painter.GetOffsetForCaret(new TextPosition(1), default));
-        Assert.Equal(new Point(0, 10), painter.GetOffsetForCaret(new TextPosition(2, TextAffinity.Upstream), default));
-        Assert.Equal(new Point(10, 10), painter.GetOffsetForCaret(new TextPosition(2), default));
+        Assert.Equal(new Offset(0, 0), painter.GetOffsetForCaret(new TextPosition(0, TextAffinity.Upstream), default));
+        Assert.Equal(new Offset(0, 0), painter.GetOffsetForCaret(new TextPosition(0), default));
+        Assert.Equal(new Offset(10, 0), painter.GetOffsetForCaret(new TextPosition(1, TextAffinity.Upstream), default));
+        Assert.Equal(new Offset(10, 10), painter.GetOffsetForCaret(new TextPosition(1), default));
+        Assert.Equal(new Offset(0, 10), painter.GetOffsetForCaret(new TextPosition(2, TextAffinity.Upstream), default));
+        Assert.Equal(new Offset(10, 10), painter.GetOffsetForCaret(new TextPosition(2), default));
 
         Assert.Equal(
             [
@@ -1178,7 +1178,7 @@ public sealed class TextPainterTests
         double[] result = new double[length + 1];
         for (int offset = 0; offset <= length; offset++)
         {
-            result[offset] = painter.GetOffsetForCaret(new TextPosition(offset), default).X;
+            result[offset] = painter.GetOffsetForCaret(new TextPosition(offset), default).Dx;
         }
 
         Assert.Equal(painter.Width, textDirection == TextDirection.Ltr ? result[length] : result[0]);
@@ -1216,16 +1216,16 @@ public sealed class TextPainterTests
         int codeUnit = 0;
         for (int index = 0; index < pieces.Count; index++)
         {
-            Assert.Equal(expectedOffsets[index], painter.GetOffsetForCaret(new TextPosition(codeUnit), default).X);
+            Assert.Equal(expectedOffsets[index], painter.GetOffsetForCaret(new TextPosition(codeUnit), default).Dx);
             codeUnit += pieces[index].Length;
         }
 
-        Assert.Equal(expectedOffsets[^1], painter.GetOffsetForCaret(new TextPosition(codeUnit), default).X);
+        Assert.Equal(expectedOffsets[^1], painter.GetOffsetForCaret(new TextPosition(codeUnit), default).Dx);
 
         double previous = double.NegativeInfinity;
         for (int offset = 0; offset <= text.Length; offset++)
         {
-            double caret = painter.GetOffsetForCaret(new TextPosition(offset), default).X;
+            double caret = painter.GetOffsetForCaret(new TextPosition(offset), default).Dx;
             Assert.True(caret >= previous, $"The caret at {offset} ({caret}) is left of {previous}.");
             previous = caret;
         }

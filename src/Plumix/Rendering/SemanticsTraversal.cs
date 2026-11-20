@@ -92,11 +92,11 @@ internal static class SemanticsTraversal
             Rect childRect = Deflate(child.Rect, 0.1);
             edges.Add(new BoxEdge(
                 IsLeadingEdge: true,
-                Offset: PointInParentCoordinates(child, childRect.TopLeft).Y,
+                Offset: PointInParentCoordinates(child, childRect.TopLeft).Dy,
                 Node: child));
             edges.Add(new BoxEdge(
                 IsLeadingEdge: false,
-                Offset: PointInParentCoordinates(child, childRect.BottomRight).Y,
+                Offset: PointInParentCoordinates(child, childRect.BottomRight).Dy,
                 Node: child));
         }
 
@@ -125,11 +125,11 @@ internal static class SemanticsTraversal
             Rect childRect = Deflate(child.Rect, 0.1);
             edges.Add(new BoxEdge(
                 IsLeadingEdge: true,
-                Offset: PointInParentCoordinates(child, childRect.TopLeft).X,
+                Offset: PointInParentCoordinates(child, childRect.TopLeft).Dx,
                 Node: child));
             edges.Add(new BoxEdge(
                 IsLeadingEdge: false,
-                Offset: PointInParentCoordinates(child, childRect.BottomRight).X,
+                Offset: PointInParentCoordinates(child, childRect.BottomRight).Dx,
                 Node: child));
         }
 
@@ -168,7 +168,7 @@ internal static class SemanticsTraversal
         foreach (SemanticsNode node in nodes)
         {
             nodeMap[node.Id] = node;
-            Point center = PointInParentCoordinates(node, Center(node.Rect));
+            Offset center = PointInParentCoordinates(node, Center(node.Rect));
             foreach (SemanticsNode nextNode in nodes)
             {
                 if (ReferenceEquals(node, nextNode)
@@ -178,9 +178,9 @@ internal static class SemanticsTraversal
                     continue;
                 }
 
-                Point nextCenter = PointInParentCoordinates(nextNode, Center(nextNode.Rect));
-                double deltaX = nextCenter.X - center.X;
-                double deltaY = nextCenter.Y - center.Y;
+                Offset nextCenter = PointInParentCoordinates(nextNode, Center(nextNode.Rect));
+                double deltaX = nextCenter.Dx - center.Dx;
+                double deltaY = nextCenter.Dy - center.Dy;
                 // Coincident centers report a direction of 0.0, exactly like Dart's `Offset.direction`.
                 double direction = deltaX == 0 && deltaY == 0 ? 0.0 : Math.Atan2(deltaY, deltaX);
                 bool isLtrAndForward = group.TextDirection == TextDirection.Ltr
@@ -200,10 +200,10 @@ internal static class SemanticsTraversal
         var startNodes = new List<SemanticsNode>(nodes);
         startNodes.Sort(static (a, b) =>
         {
-            Point aTopLeft = PointInParentCoordinates(a, a.Rect.TopLeft);
-            Point bTopLeft = PointInParentCoordinates(b, b.Rect.TopLeft);
-            int verticalDiff = aTopLeft.Y.CompareTo(bTopLeft.Y);
-            return verticalDiff != 0 ? -verticalDiff : -aTopLeft.X.CompareTo(bTopLeft.X);
+            Offset aTopLeft = PointInParentCoordinates(a, a.Rect.TopLeft);
+            Offset bTopLeft = PointInParentCoordinates(b, b.Rect.TopLeft);
+            int verticalDiff = aTopLeft.Dy.CompareTo(bTopLeft.Dy);
+            return verticalDiff != 0 ? -verticalDiff : -aTopLeft.Dx.CompareTo(bTopLeft.Dx);
         });
 
         void Search(int id)
@@ -263,7 +263,7 @@ internal static class SemanticsTraversal
     }
 
     /// <summary>Converts <paramref name="point"/> into the node's parent's coordinate system.</summary>
-    private static Point PointInParentCoordinates(SemanticsNode node, Point point)
+    private static Offset PointInParentCoordinates(SemanticsNode node, Offset point)
     {
         // The traversal transform, so a grafted child sorts in its traversal parent's coordinates.
         return node.TraversalTransform is { } transform
@@ -271,13 +271,13 @@ internal static class SemanticsTraversal
             : point;
     }
 
-    private static Point Center(Rect rect) => new(rect.X + rect.Width / 2.0, rect.Y + rect.Height / 2.0);
+    private static Offset Center(Rect rect) => new(rect.Left + rect.Width / 2.0, rect.Top + rect.Height / 2.0);
 
     private static Rect Deflate(Rect rect, double delta)
     {
-        return new Rect(
-            rect.X + delta,
-            rect.Y + delta,
+        return DartGeometry.RectFromLTWH(
+            rect.Left + delta,
+            rect.Top + delta,
             Math.Max(0.0, rect.Width - 2 * delta),
             Math.Max(0.0, rect.Height - 2 * delta));
     }

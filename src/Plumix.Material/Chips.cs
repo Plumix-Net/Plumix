@@ -911,11 +911,11 @@ public sealed class RawChip : StatefulWidget
                             Color: ResolveBackground(states, widget, chipTheme, defaults)),
                         child: content)));
 
-            Vector densityAdjustment = density.BaseSizeAdjustment;
+            Offset densityAdjustment = density.BaseSizeAdjustment;
             BoxConstraints constraints = tapTargetSize == Plumix.Material.MaterialTapTargetSize.Padded
                 ? new BoxConstraints(
-                    MinWidth: WidgetConstants.MinInteractiveDimension + densityAdjustment.X,
-                    MinHeight: WidgetConstants.MinInteractiveDimension + densityAdjustment.Y)
+                    MinWidth: WidgetConstants.MinInteractiveDimension + densityAdjustment.Dx,
+                    MinHeight: WidgetConstants.MinInteractiveDimension + densityAdjustment.Dy)
                 : BoxConstraints.Unbounded;
             result = new ChipRedirectingHitDetectionWidget(
                 constraints: constraints,
@@ -1026,7 +1026,7 @@ public sealed class RawChip : StatefulWidget
             }
 
             double semanticExtent = (tapTargetSize == Plumix.Material.MaterialTapTargetSize.Padded ? 48.0 : 32.0)
-                                    + density.BaseSizeAdjustment.Y;
+                                    + density.BaseSizeAdjustment.Dy;
             semanticExtent = Math.Max(0.0, semanticExtent);
             return new EnsureMinSemanticsSize(
                 minSemanticSize: new Size(semanticExtent, semanticExtent),
@@ -1501,9 +1501,9 @@ internal sealed class RenderChipRedirectingHitDetection : RenderConstrainedBox
     {
     }
 
-    public override bool HitTest(BoxHitTestResult result, Point position)
+    public override bool HitTest(BoxHitTestResult result, Offset position)
     {
-        if (position.X < 0 || position.Y < 0 || position.X >= Size.Width || position.Y >= Size.Height)
+        if (position.Dx < 0 || position.Dy < 0 || position.Dx >= Size.Width || position.Dy >= Size.Height)
         {
             return false;
         }
@@ -1511,10 +1511,10 @@ internal sealed class RenderChipRedirectingHitDetection : RenderConstrainedBox
         // Only redirects hit detection which occurs above and below the render object. In order to
         // make this assumption true, the minimum width constraint is dropped, since any reasonable
         // chip would be at least that wide.
-        var offset = new Point(position.X, Size.Height / 2.0);
+        var offset = new Offset(position.Dx, Size.Height / 2.0);
         return result.AddWithRawTransform(
             MatrixUtils.ForceToPoint(offset),
             position,
-            (BoxHitTestResult nested, Point _) => Child!.HitTest(nested, offset));
+            (BoxHitTestResult nested, Offset _) => Child!.HitTest(nested, offset));
     }
 }

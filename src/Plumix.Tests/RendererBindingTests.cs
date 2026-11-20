@@ -110,9 +110,9 @@ public sealed class RendererBindingTests
             var firstResult = new HitTestResult();
             var secondResult = new HitTestResult();
             var unknownResult = new HitTestResult();
-            binding.HitTestInView(firstResult, new Point(10, 10), 1011);
-            binding.HitTestInView(secondResult, new Point(10, 10), 1012);
-            binding.HitTestInView(unknownResult, new Point(10, 10), 1013);
+            binding.HitTestInView(firstResult, new Offset(10, 10), 1011);
+            binding.HitTestInView(secondResult, new Offset(10, 10), 1012);
+            binding.HitTestInView(unknownResult, new Offset(10, 10), 1013);
 
             Assert.Contains(firstResult.Path, entry => ReferenceEquals(entry.Target, firstTarget));
             Assert.DoesNotContain(firstResult.Path, entry => ReferenceEquals(entry.Target, secondTarget));

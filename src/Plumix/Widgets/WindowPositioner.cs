@@ -88,33 +88,33 @@ internal static class WindowPositionerAnchorExtensions
     /// Dart's <c>_offsetFor</c>: the offset from a child rectangle of <paramref name="size"/>'s top-left
     /// corner to the anchor's point on it, negated.
     /// </summary>
-    public static Point OffsetFor(this WindowPositionerAnchor anchor, Size size)
+    public static Offset OffsetFor(this WindowPositionerAnchor anchor, Size size)
     {
         return anchor switch
         {
-            WindowPositionerAnchor.Center => new Point(-size.Width / 2.0, -size.Height / 2.0),
-            WindowPositionerAnchor.Top => new Point(-size.Width / 2.0, 0.0),
-            WindowPositionerAnchor.Bottom => new Point(-size.Width / 2.0, -size.Height),
-            WindowPositionerAnchor.Left => new Point(0.0, -size.Height / 2.0),
-            WindowPositionerAnchor.Right => new Point(-size.Width, -size.Height / 2.0),
-            WindowPositionerAnchor.TopLeft => new Point(0.0, 0.0),
-            WindowPositionerAnchor.BottomLeft => new Point(0.0, -size.Height),
-            WindowPositionerAnchor.TopRight => new Point(-size.Width, 0.0),
-            WindowPositionerAnchor.BottomRight => new Point(-size.Width, -size.Height),
+            WindowPositionerAnchor.Center => new Offset(-size.Width / 2.0, -size.Height / 2.0),
+            WindowPositionerAnchor.Top => new Offset(-size.Width / 2.0, 0.0),
+            WindowPositionerAnchor.Bottom => new Offset(-size.Width / 2.0, -size.Height),
+            WindowPositionerAnchor.Left => new Offset(0.0, -size.Height / 2.0),
+            WindowPositionerAnchor.Right => new Offset(-size.Width, -size.Height / 2.0),
+            WindowPositionerAnchor.TopLeft => new Offset(0.0, 0.0),
+            WindowPositionerAnchor.BottomLeft => new Offset(0.0, -size.Height),
+            WindowPositionerAnchor.TopRight => new Offset(-size.Width, 0.0),
+            WindowPositionerAnchor.BottomRight => new Offset(-size.Width, -size.Height),
             _ => throw new ArgumentOutOfRangeException(nameof(anchor)),
         };
     }
 
     /// <summary>Dart's <c>_anchorPositionFor</c>: the anchor's point on <paramref name="rect"/>.</summary>
-    public static Point AnchorPositionFor(this WindowPositionerAnchor anchor, Rect rect)
+    public static Offset AnchorPositionFor(this WindowPositionerAnchor anchor, Rect rect)
     {
         return anchor switch
         {
             WindowPositionerAnchor.Center => rect.Center,
-            WindowPositionerAnchor.Top => new Point(rect.Left + rect.Width / 2.0, rect.Top),
-            WindowPositionerAnchor.Bottom => new Point(rect.Left + rect.Width / 2.0, rect.Bottom),
-            WindowPositionerAnchor.Left => new Point(rect.Left, rect.Top + rect.Height / 2.0),
-            WindowPositionerAnchor.Right => new Point(rect.Right, rect.Top + rect.Height / 2.0),
+            WindowPositionerAnchor.Top => new Offset(rect.Left + rect.Width / 2.0, rect.Top),
+            WindowPositionerAnchor.Bottom => new Offset(rect.Left + rect.Width / 2.0, rect.Bottom),
+            WindowPositionerAnchor.Left => new Offset(rect.Left, rect.Top + rect.Height / 2.0),
+            WindowPositionerAnchor.Right => new Offset(rect.Right, rect.Top + rect.Height / 2.0),
             WindowPositionerAnchor.TopLeft => rect.TopLeft,
             WindowPositionerAnchor.BottomLeft => rect.BottomLeft,
             WindowPositionerAnchor.TopRight => rect.TopRight,
@@ -197,7 +197,7 @@ public sealed class WindowPositioner
     public WindowPositioner(
         WindowPositionerAnchor parentAnchor = WindowPositionerAnchor.Center,
         WindowPositionerAnchor childAnchor = WindowPositionerAnchor.Center,
-        Point offset = default,
+        Offset offset = default,
         WindowPositionerConstraintAdjustment? constraintAdjustment = null)
     {
         ParentAnchor = parentAnchor;
@@ -210,7 +210,7 @@ public sealed class WindowPositioner
     public WindowPositioner CopyWith(
         WindowPositionerAnchor? parentAnchor = null,
         WindowPositionerAnchor? childAnchor = null,
-        Point? offset = null,
+        Offset? offset = null,
         WindowPositionerConstraintAdjustment? constraintAdjustment = null)
     {
         return new WindowPositioner(
@@ -235,7 +235,7 @@ public sealed class WindowPositioner
     /// The anchor point is defined by <see cref="ParentAnchor"/>; the offset is applied to it before it is
     /// constrained to the parent rectangle.
     /// </remarks>
-    public Point Offset { get; }
+    public Offset Offset { get; }
 
     /// <summary>
     /// The adjustments to apply if the initial position causes the child window to be constrained.
@@ -255,7 +255,7 @@ public sealed class WindowPositioner
     {
         Rect defaultResult;
         {
-            Point result = ConstrainTo(parentRect, ParentAnchor.AnchorPositionFor(anchorRect) + Offset)
+            Offset result = ConstrainTo(parentRect, ParentAnchor.AnchorPositionFor(anchorRect) + Offset)
                            + ChildAnchor.OffsetFor(childSize);
             defaultResult = RectFrom(result, childSize);
             if (RectContains(displayRect, defaultResult))
@@ -266,7 +266,7 @@ public sealed class WindowPositioner
 
         if (ConstraintAdjustment.FlipX)
         {
-            Point result = ConstrainTo(
+            Offset result = ConstrainTo(
                                parentRect,
                                ParentAnchor.FlipX().AnchorPositionFor(anchorRect) + FlipX(Offset))
                            + ChildAnchor.FlipX().OffsetFor(childSize);
@@ -278,7 +278,7 @@ public sealed class WindowPositioner
 
         if (ConstraintAdjustment.FlipY)
         {
-            Point result = ConstrainTo(
+            Offset result = ConstrainTo(
                                parentRect,
                                ParentAnchor.FlipY().AnchorPositionFor(anchorRect) + FlipY(Offset))
                            + ChildAnchor.FlipY().OffsetFor(childSize);
@@ -290,7 +290,7 @@ public sealed class WindowPositioner
 
         if (ConstraintAdjustment.FlipX && ConstraintAdjustment.FlipY)
         {
-            Point result = ConstrainTo(
+            Offset result = ConstrainTo(
                                parentRect,
                                ParentAnchor.FlipY().FlipX().AnchorPositionFor(anchorRect) + FlipX(FlipY(Offset)))
                            + ChildAnchor.FlipY().FlipX().OffsetFor(childSize);
@@ -301,36 +301,36 @@ public sealed class WindowPositioner
         }
 
         {
-            Point result = ConstrainTo(parentRect, ParentAnchor.AnchorPositionFor(anchorRect) + Offset)
+            Offset result = ConstrainTo(parentRect, ParentAnchor.AnchorPositionFor(anchorRect) + Offset)
                            + ChildAnchor.OffsetFor(childSize);
 
             if (ConstraintAdjustment.SlideX)
             {
-                double leftOverhang = result.X - displayRect.Left;
-                double rightOverhang = result.X + childSize.Width - displayRect.Right;
+                double leftOverhang = result.Dx - displayRect.Left;
+                double rightOverhang = result.Dx + childSize.Width - displayRect.Right;
 
                 if (leftOverhang < 0.0)
                 {
-                    result += new Point(-leftOverhang, 0.0);
+                    result += new Offset(-leftOverhang, 0.0);
                 }
                 else if (rightOverhang > 0.0)
                 {
-                    result += new Point(-rightOverhang, 0.0);
+                    result += new Offset(-rightOverhang, 0.0);
                 }
             }
 
             if (ConstraintAdjustment.SlideY)
             {
-                double topOverhang = result.Y - displayRect.Top;
-                double botOverhang = result.Y + childSize.Height - displayRect.Bottom;
+                double topOverhang = result.Dy - displayRect.Top;
+                double botOverhang = result.Dy + childSize.Height - displayRect.Bottom;
 
                 if (topOverhang < 0.0)
                 {
-                    result += new Point(0.0, -topOverhang);
+                    result += new Offset(0.0, -topOverhang);
                 }
                 else if (botOverhang > 0.0)
                 {
-                    result += new Point(0.0, -botOverhang);
+                    result += new Offset(0.0, -botOverhang);
                 }
             }
 
@@ -341,17 +341,17 @@ public sealed class WindowPositioner
         }
 
         {
-            Point result = ConstrainTo(parentRect, ParentAnchor.AnchorPositionFor(anchorRect) + Offset)
+            Offset result = ConstrainTo(parentRect, ParentAnchor.AnchorPositionFor(anchorRect) + Offset)
                            + ChildAnchor.OffsetFor(childSize);
 
             if (ConstraintAdjustment.ResizeX)
             {
-                double leftOverhang = result.X - displayRect.Left;
-                double rightOverhang = result.X + childSize.Width - displayRect.Right;
+                double leftOverhang = result.Dx - displayRect.Left;
+                double rightOverhang = result.Dx + childSize.Width - displayRect.Right;
 
                 if (leftOverhang < 0.0)
                 {
-                    result += new Point(-leftOverhang, 0.0);
+                    result += new Offset(-leftOverhang, 0.0);
                     childSize = new Size(childSize.Width + leftOverhang, childSize.Height);
                 }
 
@@ -363,12 +363,12 @@ public sealed class WindowPositioner
 
             if (ConstraintAdjustment.ResizeY)
             {
-                double topOverhang = result.Y - displayRect.Top;
-                double botOverhang = result.Y + childSize.Height - displayRect.Bottom;
+                double topOverhang = result.Dy - displayRect.Top;
+                double botOverhang = result.Dy + childSize.Height - displayRect.Bottom;
 
                 if (topOverhang < 0.0)
                 {
-                    result += new Point(0.0, -topOverhang);
+                    result += new Offset(0.0, -topOverhang);
                     childSize = new Size(childSize.Width, childSize.Height + topOverhang);
                 }
 
@@ -395,20 +395,20 @@ public sealed class WindowPositioner
     }
 
     /// <summary>Dart's <c>Offset &amp; Size</c>.</summary>
-    private static Rect RectFrom(Point offset, Size size) =>
-        new(offset.X, offset.Y, size.Width, size.Height);
+    private static Rect RectFrom(Offset offset, Size size) =>
+        DartGeometry.RectFromLTWH(offset.Dx, offset.Dy, size.Width, size.Height);
 
     private static bool RectContains(Rect r1, Rect r2)
     {
         return r1.Left <= r2.Left && r1.Right >= r2.Right && r1.Top <= r2.Top && r1.Bottom >= r2.Bottom;
     }
 
-    private static Point ConstrainTo(Rect r, Point p)
+    private static Offset ConstrainTo(Rect r, Offset p)
     {
-        return new Point(Math.Clamp(p.X, r.Left, r.Right), Math.Clamp(p.Y, r.Top, r.Bottom));
+        return new Offset(Math.Clamp(p.Dx, r.Left, r.Right), Math.Clamp(p.Dy, r.Top, r.Bottom));
     }
 
-    private static Point FlipX(Point offset) => new(-offset.X, offset.Y);
+    private static Offset FlipX(Offset offset) => new(-offset.Dx, offset.Dy);
 
-    private static Point FlipY(Point offset) => new(offset.X, -offset.Y);
+    private static Offset FlipY(Offset offset) => new(offset.Dx, -offset.Dy);
 }

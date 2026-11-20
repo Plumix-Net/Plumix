@@ -56,7 +56,7 @@ internal sealed class RenderEditableCustomPaint : RenderBox
     }
 
     /// <inheritdoc />
-    public override void Paint(PaintingContext context, Point offset)
+    public override void Paint(PaintingContext context, Offset offset)
     {
         RenderEditable? parent = EditableParent;
         RenderEditable.DebugAssert(parent is not null);
@@ -214,11 +214,11 @@ internal sealed class TextHighlightPainter : RenderEditablePainter
                 SelectionWidthStyle)
             .Distinct();
 
-        Point paintOffset = renderEditable.PaintOffset;
-        var textRect = new Rect(0, 0, textPainter.Width, textPainter.Height);
+        Offset paintOffset = renderEditable.PaintOffset;
+        var textRect = DartGeometry.RectFromLTWH(0, 0, textPainter.Width, textPainter.Height);
         foreach (TextBox box in boxes)
         {
-            Rect shifted = box.ToRect().Translate(new Vector(paintOffset.X, paintOffset.Y));
+            Rect shifted = box.ToRect().Shift(new Offset(paintOffset.Dx, paintOffset.Dy));
             canvas.DrawRectangle(highlightBrush, null, Intersect(shifted, textRect));
         }
     }
@@ -231,7 +231,7 @@ internal sealed class TextHighlightPainter : RenderEditablePainter
         double top = Math.Max(a.Top, b.Top);
         double right = Math.Min(a.Right, b.Right);
         double bottom = Math.Min(a.Bottom, b.Bottom);
-        return new Rect(left, top, Math.Max(0.0, right - left), Math.Max(0.0, bottom - top));
+        return DartGeometry.RectFromLTWH(left, top, Math.Max(0.0, right - left), Math.Max(0.0, bottom - top));
     }
 
     public override bool ShouldRepaint(RenderEditablePainter? oldDelegate)
@@ -268,7 +268,7 @@ internal sealed class CaretPainter : RenderEditablePainter
     private bool _shouldPaint = true;
     private Color? _caretColor;
     private Radius? _cursorRadius;
-    private Point _cursorOffset;
+    private Offset _cursorOffset;
     private Color? _backgroundCursorColor;
     private Rect? _floatingCursorRect;
 
@@ -322,7 +322,7 @@ internal sealed class CaretPainter : RenderEditablePainter
         }
     }
 
-    public Point CursorOffset
+    public Offset CursorOffset
     {
         get => _cursorOffset;
         set
@@ -381,8 +381,8 @@ internal sealed class CaretPainter : RenderEditablePainter
         {
             if (FloatingCursorRect is { } floatingCursorRect)
             {
-                double dx = floatingCursorRect.Center.X - integralRect.Center.X;
-                double dy = floatingCursorRect.Center.Y - integralRect.Center.Y;
+                double dx = floatingCursorRect.Center.Dx - integralRect.Center.Dx;
+                double dy = floatingCursorRect.Center.Dy - integralRect.Center.Dy;
                 double distanceSquared = (dx * dx) + (dy * dy);
                 if (distanceSquared < KShortestDistanceSquaredWithFloatingAndRegularCursors)
                 {

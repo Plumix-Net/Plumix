@@ -634,7 +634,7 @@ public sealed class EditableTextEditingDartParityTests : IDisposable
             tester.Pump();
             var action = new EditableTextTapOutsideIntent(
                 _focusNode,
-                new PointerDownEvent(1, PointerDeviceKind.Touch, new Point(500, 500)));
+                new PointerDownEvent(1, PointerDeviceKind.Touch, new Offset(500, 500)));
             // Invoked below the field's own `Actions`, as the field's tap region does.
             _ = Actions.Invoke(_focusNode.Context!, action);
             tester.Pump();

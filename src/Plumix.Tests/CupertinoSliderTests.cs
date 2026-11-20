@@ -24,7 +24,7 @@ public sealed class CupertinoSliderTests : IDisposable
     /// <summary>The drag extent Dart divides the primary delta by: `width - 2 * (padding + radius)`.</summary>
     private const double Extent = SliderWidth - (2.0 * (8.0 + CupertinoThumbPainter.Radius));
 
-    private static readonly Point TopLeft = new(
+    private static readonly Offset TopLeft = new(
         (ViewSize.Width - SliderWidth) / 2.0,
         (ViewSize.Height - SliderHeight) / 2.0);
 
@@ -92,7 +92,7 @@ public sealed class CupertinoSliderTests : IDisposable
             harness.Pump(ViewSize);
 
             // The centre of the slider is far away from the thumb, so `hitTestSelf` rejects it.
-            Point center = TopLeft + new Vector(SliderWidth / 2.0, SliderHeight / 2.0);
+            Offset center = TopLeft + new Offset(SliderWidth / 2.0, SliderHeight / 2.0);
             Down(harness, center);
             Up(harness, center, 16.0);
             harness.Pump(ViewSize);
@@ -472,21 +472,21 @@ public sealed class CupertinoSliderTests : IDisposable
     }
 
     /// <summary>The global centre of the thumb for a normalized value, in the harness' layout.</summary>
-    private static Point ThumbCenter(double value, TextDirection direction)
+    private static Offset ThumbCenter(double value, TextDirection direction)
     {
         double visual = direction == TextDirection.Rtl ? 1.0 - value : value;
         double left = 8.0 + CupertinoThumbPainter.Radius;
         double right = SliderWidth - 8.0 - CupertinoThumbPainter.Radius;
-        return TopLeft + new Vector(left + ((right - left) * visual), SliderHeight / 2.0);
+        return TopLeft + new Offset(left + ((right - left) * visual), SliderHeight / 2.0);
     }
 
     private static void Drag(
         CupertinoThemeTestHarness harness,
-        Point from,
+        Offset from,
         double delta,
         double moveMilliseconds = 16.0)
     {
-        Point to = from + new Vector(delta, 0.0);
+        Offset to = from + new Offset(delta, 0.0);
         Down(harness, from);
         harness.Pump(ViewSize);
         Move(harness, to, moveMilliseconds);
@@ -495,14 +495,14 @@ public sealed class CupertinoSliderTests : IDisposable
         harness.Pump(ViewSize);
     }
 
-    private static void Down(CupertinoThemeTestHarness harness, Point position)
+    private static void Down(CupertinoThemeTestHarness harness, Offset position)
     {
         GestureBinding.Instance.HandlePointerEvent(
             harness.RenderView,
             new PointerDownEvent(1, PointerDeviceKind.Touch, position, PointerButtons.Primary, Clock));
     }
 
-    private static void Move(CupertinoThemeTestHarness harness, Point position, double milliseconds)
+    private static void Move(CupertinoThemeTestHarness harness, Offset position, double milliseconds)
     {
         GestureBinding.Instance.HandlePointerEvent(
             harness.RenderView,
@@ -514,7 +514,7 @@ public sealed class CupertinoSliderTests : IDisposable
                 Clock.AddMilliseconds(milliseconds)));
     }
 
-    private static void Up(CupertinoThemeTestHarness harness, Point position, double milliseconds)
+    private static void Up(CupertinoThemeTestHarness harness, Offset position, double milliseconds)
     {
         GestureBinding.Instance.HandlePointerEvent(
             harness.RenderView,

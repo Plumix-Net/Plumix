@@ -128,7 +128,7 @@ internal sealed class DemoPlatformViewController(
 
     public override bool AwaitingCreation => !_created;
 
-    public override Task Create(Size? size = null, Point? position = null)
+    public override Task Create(Size? size = null, Offset? position = null)
     {
         if (size is not { } createSize || position is not { } createPosition)
         {
@@ -137,7 +137,7 @@ internal sealed class DemoPlatformViewController(
 
         _created = true;
         log($"create #{ViewId} ({parameters.ViewType}) {createSize.Width:0}x{createSize.Height:0} "
-            + $"at ({createPosition.X:0}, {createPosition.Y:0})");
+            + $"at ({createPosition.Dx:0}, {createPosition.Dy:0})");
         parameters.OnPlatformViewCreated(ViewId);
         return Task.CompletedTask;
     }

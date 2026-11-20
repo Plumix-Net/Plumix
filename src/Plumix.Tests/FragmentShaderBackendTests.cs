@@ -29,7 +29,7 @@ public sealed class FragmentShaderBackendTests
         shader.SetFloat(2, 0.0);
         shader.SetFloat(3, 0.25);
         using RenderTargetBitmap filled = Render(canvas => canvas.DrawRect(
-            new Rect(0, 0, 40, 40), new Paint { Shader = shader }));
+            DartGeometry.RectFromLTWH(0, 0, 40, 40), new Paint { Shader = shader }));
         AssertPixel(filled, 10, 10, 128, 0, 32, 128);
     }
 
@@ -42,10 +42,10 @@ public sealed class FragmentShaderBackendTests
         shader.SetFloat(1, 1.0);
         var recorder = new PictureRecorder();
         var canvas = new Canvas(recorder);
-        canvas.DrawRect(new Rect(0, 0, 20, 40), new Paint { Shader = shader });
+        canvas.DrawRect(DartGeometry.RectFromLTWH(0, 0, 20, 40), new Paint { Shader = shader });
         shader.SetFloat(1, 0.0);
         shader.SetFloat(3, 1.0);
-        canvas.ClipRect(new Rect(20, 0, 20, 40));
+        canvas.ClipRect(DartGeometry.RectFromLTWH(20, 0, 20, 40));
         canvas.DrawPaint(new Paint { Shader = shader });
         Picture picture = recorder.EndRecording();
         shader.Dispose();
@@ -93,7 +93,7 @@ public sealed class FragmentShaderBackendTests
         {
             canvas.Translate(10, 10);
             canvas.Scale(2, 2);
-            canvas.ClipRect(new Rect(0, 0, 10, 10));
+            canvas.ClipRect(DartGeometry.RectFromLTWH(0, 0, 10, 10));
             canvas.DrawPaint(new Paint { Shader = shader });
         });
         AssertPixel(image, 20, 20, 67, 67, 0, 255);
@@ -107,7 +107,7 @@ public sealed class FragmentShaderBackendTests
         using RuntimeFragmentShader shader = RuntimeFragmentProgram.Compile(Source).FragmentShader();
         shader.SetFloat(0, 1.0);
         shader.SetFloat(1, 1.0);
-        using RenderTargetBitmap image = Render(canvas => canvas.DrawCircle(new Point(20, 20), 12,
+        using RenderTargetBitmap image = Render(canvas => canvas.DrawCircle(new Offset(20, 20), 12,
             new Paint
             {
                 Shader = shader,

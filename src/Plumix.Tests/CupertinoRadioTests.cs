@@ -365,7 +365,7 @@ public sealed class CupertinoRadioTests
             harness.FindWidgets<GestureDetector>(),
             candidate => candidate.OnTapDown is not null);
         detector.OnTapDown!(new TapDownDetails(
-            globalPosition: new Point(9.0, 9.0),
+            globalPosition: new Offset(9.0, 9.0),
             kind: PointerDeviceKind.Touch));
         harness.Pump(ViewSize);
 

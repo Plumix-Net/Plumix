@@ -191,14 +191,14 @@ public sealed class RenderWrap : RenderBox,
         base.Dispose();
     }
 
-    public override void Paint(PaintingContext context, Point offset)
+    public override void Paint(PaintingContext context, Offset offset)
     {
         if (_hasVisualOverflow && ClipBehavior != Clip.None)
         {
             _clipRectLayer.Layer = context.PushClipRect(
                 NeedsCompositing,
                 offset,
-                new Rect(new Point(0, 0), Size),
+                DartGeometry.RectFromOffsetAndSize(new Offset(0, 0), Size),
                 DefaultPaint,
                 ClipBehavior,
                 _clipRectLayer.Layer);
@@ -226,14 +226,14 @@ public sealed class RenderWrap : RenderBox,
         }
     }
 
-    protected override bool HitTestChildren(BoxHitTestResult result, Point position)
+    protected override bool HitTestChildren(BoxHitTestResult result, Offset position)
     {
         return DefaultHitTestChildren(result, position);
     }
 
-    public void DefaultPaint(PaintingContext context, Point offset) => _container.DefaultPaint(context, offset);
+    public void DefaultPaint(PaintingContext context, Offset offset) => _container.DefaultPaint(context, offset);
 
-    public bool DefaultHitTestChildren(BoxHitTestResult result, Point position)
+    public bool DefaultHitTestChildren(BoxHitTestResult result, Offset position)
     {
         return _container.DefaultHitTestChildren(result, position);
     }
@@ -389,9 +389,9 @@ public sealed class RenderWrap : RenderBox,
     private Size ToSize(double mainExtent, double crossExtent) => Direction == Axis.Horizontal
         ? new Size(mainExtent, crossExtent)
         : new Size(crossExtent, mainExtent);
-    private Point ToOffset(double mainOffset, double crossOffset) => Direction == Axis.Horizontal
-        ? new Point(mainOffset, crossOffset)
-        : new Point(crossOffset, mainOffset);
+    private Offset ToOffset(double mainOffset, double crossOffset) => Direction == Axis.Horizontal
+        ? new Offset(mainOffset, crossOffset)
+        : new Offset(crossOffset, mainOffset);
 
     private void SetLayoutProperty<T>(ref T field, T value)
     {

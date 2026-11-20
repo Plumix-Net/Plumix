@@ -33,15 +33,15 @@ public sealed class ScrollableSelectionDartParityTests : IDisposable
     }
 
     // Dart's top-level `textOffsetToPosition`.
-    private static Point TextOffsetToPosition(RenderParagraph paragraph, int offset)
+    private static Offset TextOffsetToPosition(RenderParagraph paragraph, int offset)
     {
-        var caret = new Rect(0.0, 0.0, 2.0, 20.0);
-        Point localOffset = paragraph.GetOffsetForCaret(new TextPosition(offset), caret);
+        var caret = DartGeometry.RectFromLTWH(0.0, 0.0, 2.0, 20.0);
+        Offset localOffset = paragraph.GetOffsetForCaret(new TextPosition(offset), caret);
         return paragraph.LocalToGlobal(localOffset);
     }
 
     // Dart's top-level `globalize`.
-    private static Point Globalize(Point point, RenderBox box) => box.LocalToGlobal(point);
+    private static Offset Globalize(Offset point, RenderBox box) => box.LocalToGlobal(point);
 
     // `find.descendant(of: find.text(text), matching: find.byType(RichText))`, onstage only.
     private static List<RenderParagraph> FindParagraphs(FrameworkDartTester tester, string text)
@@ -78,7 +78,7 @@ public sealed class ScrollableSelectionDartParityTests : IDisposable
     private static int CountText(FrameworkDartTester tester, string text)
         => tester.OnstageElements().Count(element => element.Widget is Text { Data: var data } && data == text);
 
-    private static Point GetBottomLeft(FrameworkDartTester tester, Element element)
+    private static Offset GetBottomLeft(FrameworkDartTester tester, Element element)
     {
         Rect rect = tester.GetRect(element);
         return rect.BottomLeft;
@@ -225,7 +225,7 @@ public sealed class ScrollableSelectionDartParityTests : IDisposable
         AssertSelection(paragraph1, 2, 4);
 
         RenderParagraph paragraph2 = Paragraph(tester, "Item 1");
-        gesture.MoveTo(TextOffsetToPosition(paragraph2, 5) + new Vector(0, 5));
+        gesture.MoveTo(TextOffsetToPosition(paragraph2, 5) + new Offset(0, 5));
         // Should select the rest of paragraph 1.
         AssertSelection(paragraph1, 2, 6);
         AssertSelection(paragraph2, 0, 5);
@@ -295,7 +295,7 @@ public sealed class ScrollableSelectionDartParityTests : IDisposable
         AssertSelection(paragraph1, 0, 5);
 
         RenderParagraph paragraph2 = Paragraph(tester, "Item 1");
-        gesture.MoveTo(TextOffsetToPosition(paragraph2, 5) + new Vector(0, 5));
+        gesture.MoveTo(TextOffsetToPosition(paragraph2, 5) + new Offset(0, 5));
         // Should select the rest of paragraph 1.
         AssertSelection(paragraph1, 0, 6);
         AssertSelection(paragraph2, 0, 6);
@@ -380,14 +380,14 @@ public sealed class ScrollableSelectionDartParityTests : IDisposable
 
         RenderParagraph paragraph2 = Paragraph(tester, "Item 1");
         Assert.Empty(paragraph2.Selections);
-        gesture.MoveTo(TextOffsetToPosition(paragraph2, 5) + new Vector(0, 50));
+        gesture.MoveTo(TextOffsetToPosition(paragraph2, 5) + new Offset(0, 50));
         // Should select paragraph 2.
         AssertSelection(paragraph1, 0, 6);
         AssertSelection(paragraph2, 0, 6);
 
         RenderParagraph paragraph3 = Paragraph(tester, "Item 2");
         Assert.Empty(paragraph3.Selections);
-        gesture.MoveTo(TextOffsetToPosition(paragraph3, 5) + new Vector(0, 50));
+        gesture.MoveTo(TextOffsetToPosition(paragraph3, 5) + new Offset(0, 50));
         // Should select paragraph 3.
         AssertSelection(paragraph1, 0, 6);
         AssertSelection(paragraph2, 0, 6);
@@ -413,7 +413,7 @@ public sealed class ScrollableSelectionDartParityTests : IDisposable
         double previousOffset = controller.Offset;
 
         // Scrollable only auto scroll if the drag passes the boundary.
-        gesture.MoveTo(tester.GetBottomRight(tester.ElementOfType<ListView>()) + new Vector(0, 20));
+        gesture.MoveTo(tester.GetBottomRight(tester.ElementOfType<ListView>()) + new Offset(0, 20));
         tester.Pump();
         tester.Pump(OneSecond);
         Assert.True(controller.Offset > previousOffset);
@@ -465,7 +465,7 @@ public sealed class ScrollableSelectionDartParityTests : IDisposable
         double previousOffset = controller.Offset;
 
         // Scrollable only auto scroll if the drag passes the boundary
-        gesture.MoveTo(tester.GetBottomRight(tester.ElementOfType<ListView>()) + new Vector(0, 20));
+        gesture.MoveTo(tester.GetBottomRight(tester.ElementOfType<ListView>()) + new Offset(0, 20));
         tester.Pump();
         tester.Pump(TimeSpan.FromMilliseconds(100));
         Assert.True(controller.Offset > previousOffset);
@@ -501,7 +501,7 @@ public sealed class ScrollableSelectionDartParityTests : IDisposable
         Assert.Equal(4000, controller.Offset);
         double previousOffset = controller.Offset;
 
-        gesture.MoveTo(tester.GetTopLeft(tester.ElementOfType<ListView>()) + new Vector(0, -20));
+        gesture.MoveTo(tester.GetTopLeft(tester.ElementOfType<ListView>()) + new Offset(0, -20));
         tester.Pump();
         tester.Pump(OneSecond);
         Assert.True(controller.Offset < previousOffset);
@@ -541,7 +541,7 @@ public sealed class ScrollableSelectionDartParityTests : IDisposable
         double previousOffset = controller.Offset;
 
         // Scrollable only auto scroll if the drag passes the boundary
-        gesture.MoveTo(tester.GetBottomRight(tester.ElementOfType<ListView>()) + new Vector(20, 0));
+        gesture.MoveTo(tester.GetBottomRight(tester.ElementOfType<ListView>()) + new Offset(20, 0));
         tester.Pump();
         tester.Pump(OneSecond);
         Assert.True(controller.Offset > previousOffset);
@@ -584,7 +584,7 @@ public sealed class ScrollableSelectionDartParityTests : IDisposable
         Assert.Equal(2080, controller.Offset);
         double previousOffset = controller.Offset;
 
-        gesture.MoveTo(tester.GetTopLeft(tester.ElementOfType<ListView>()) + new Vector(-10, 0));
+        gesture.MoveTo(tester.GetTopLeft(tester.ElementOfType<ListView>()) + new Offset(-10, 0));
         tester.Pump();
         tester.Pump(OneSecond);
         Assert.True(controller.Offset < previousOffset);
@@ -725,13 +725,13 @@ public sealed class ScrollableSelectionDartParityTests : IDisposable
         IReadOnlyList<TextBox> boxes = paragraph0.GetBoxesForSelection(paragraph0.Selections[0]);
         Assert.Single(boxes);
         // Find end handle.
-        Point handlePos = Globalize(boxes[0].ToRect().BottomRight, paragraph0);
+        Offset handlePos = Globalize(boxes[0].ToRect().BottomRight, paragraph0);
         gesture.Down(handlePos);
 
         Assert.Equal(0.0, controller.Offset);
         double previousOffset = controller.Offset;
         // Scrollable only auto scroll if the drag passes the boundary
-        gesture.MoveTo(tester.GetBottomRight(tester.ElementOfType<ListView>()) + new Vector(0, 40));
+        gesture.MoveTo(tester.GetBottomRight(tester.ElementOfType<ListView>()) + new Offset(0, 40));
         tester.Pump();
         tester.Pump(OneSecond);
         Assert.True(controller.Offset > previousOffset);
@@ -768,13 +768,13 @@ public sealed class ScrollableSelectionDartParityTests : IDisposable
         IReadOnlyList<TextBox> boxes = paragraph0.GetBoxesForSelection(paragraph0.Selections[0]);
         Assert.Single(boxes);
         Rect box = boxes[0].ToRect();
-        Point handlePos = Globalize(startHandle ? box.BottomLeft : box.BottomRight, paragraph0);
+        Offset handlePos = Globalize(startHandle ? box.BottomLeft : box.BottomRight, paragraph0);
         gesture.Down(handlePos);
 
         Assert.Equal(0.0, controller.Offset);
         double previousOffset = controller.Offset;
         // Scrollable only auto scroll if the drag passes the boundary.
-        gesture.MoveTo(tester.GetBottomRight(tester.ElementOfType<ListView>()) + new Vector(0, 40));
+        gesture.MoveTo(tester.GetBottomRight(tester.ElementOfType<ListView>()) + new Offset(0, 40));
         tester.Pump();
         tester.Pump(OneSecond);
         Assert.True(controller.Offset > previousOffset);
@@ -831,7 +831,7 @@ public sealed class ScrollableSelectionDartParityTests : IDisposable
         tester.PumpAndSettle();
         RenderParagraph paragraph9 = Paragraph(tester, "Item 9");
         TestGesture gesture = tester.StartGesture(TextOffsetToPosition(paragraph9, 2), PointerDeviceKind.Mouse);
-        gesture.MoveTo(TextOffsetToPosition(paragraph9, 4) + new Vector(0, 5));
+        gesture.MoveTo(TextOffsetToPosition(paragraph9, 4) + new Offset(0, 5));
         tester.PumpAndSettle();
         gesture.Up();
         tester.Pump();
@@ -878,7 +878,7 @@ public sealed class ScrollableSelectionDartParityTests : IDisposable
         tester.PumpAndSettle();
         RenderParagraph paragraph9 = Paragraph(tester, "Item 9");
         TestGesture gesture = tester.StartGesture(TextOffsetToPosition(paragraph9, 2), PointerDeviceKind.Mouse);
-        gesture.MoveTo(TextOffsetToPosition(paragraph9, 4) + new Vector(0, 5));
+        gesture.MoveTo(TextOffsetToPosition(paragraph9, 4) + new Offset(0, 5));
         tester.PumpAndSettle();
         gesture.Up();
         tester.Pump();
@@ -925,7 +925,7 @@ public sealed class ScrollableSelectionDartParityTests : IDisposable
         tester.PumpAndSettle();
         RenderParagraph paragraph2 = Paragraph(tester, "Item 2");
         TestGesture gesture = tester.StartGesture(TextOffsetToPosition(paragraph2, 0), PointerDeviceKind.Mouse);
-        gesture.MoveTo(TextOffsetToPosition(paragraph2, 1) + new Vector(0, 5));
+        gesture.MoveTo(TextOffsetToPosition(paragraph2, 1) + new Offset(0, 5));
         tester.PumpAndSettle();
         gesture.Up();
         tester.Pump();
@@ -962,9 +962,9 @@ public sealed class ScrollableSelectionDartParityTests : IDisposable
         tester.PumpAndSettle();
         RenderParagraph paragraph1 = Paragraph(tester, "Item 1");
         TestGesture gesture = tester.StartGesture(
-            TextOffsetToPosition(paragraph1, 5) + new Vector(0, 5),
+            TextOffsetToPosition(paragraph1, 5) + new Offset(0, 5),
             PointerDeviceKind.Mouse);
-        gesture.MoveTo(TextOffsetToPosition(paragraph1, 4) + new Vector(0, 5));
+        gesture.MoveTo(TextOffsetToPosition(paragraph1, 4) + new Offset(0, 5));
         tester.PumpAndSettle();
         gesture.Up();
         tester.PumpAndSettle();
@@ -1015,9 +1015,9 @@ public sealed class ScrollableSelectionDartParityTests : IDisposable
                 child: new SingleChildScrollView(padding: EdgeInsets.All(50.0), child: new Text(text)))));
         tester.PumpAndSettle();
 
-        Point paddingOffset =
-            tester.GetTopLeft(tester.ElementOfType<SingleChildScrollView>()) + new Vector(20.0, 20.0);
-        Point textCenter = tester.GetCenter(tester.ElementsWithText(text).Single());
+        Offset paddingOffset =
+            tester.GetTopLeft(tester.ElementOfType<SingleChildScrollView>()) + new Offset(20.0, 20.0);
+        Offset textCenter = tester.GetCenter(tester.ElementsWithText(text).Single());
 
         TestGesture gesture = tester.StartGesture(paddingOffset, PointerDeviceKind.Touch);
 
@@ -1058,12 +1058,12 @@ public sealed class ScrollableSelectionDartParityTests : IDisposable
         Assert.Equal(0.0, position.Pixels);
 
         // Get a point inside the padding (which is inside the scrollable).
-        Point scrollableTopLeft = tester.GetTopLeft(tester.ElementOfType<SingleChildScrollView>());
-        Point paddingStartOffset = scrollableTopLeft + new Vector(50.0, 20.0); // Inside padding.
+        Offset scrollableTopLeft = tester.GetTopLeft(tester.ElementOfType<SingleChildScrollView>());
+        Offset paddingStartOffset = scrollableTopLeft + new Offset(50.0, 20.0); // Inside padding.
 
         // Get a point outside the bottom of the scrollable to trigger downward auto-scrolling.
-        Point dragEndOffset =
-            GetBottomLeft(tester, tester.ElementOfType<SingleChildScrollView>()) + new Vector(50.0, 100.0);
+        Offset dragEndOffset =
+            GetBottomLeft(tester, tester.ElementOfType<SingleChildScrollView>()) + new Offset(50.0, 100.0);
 
         // Start gesture perfectly on padding.
         TestGesture gesture = tester.StartGesture(paddingStartOffset, PointerDeviceKind.Touch);
@@ -1117,7 +1117,7 @@ public sealed class ScrollableSelectionDartParityTests : IDisposable
 
         // Drag past the bottom of the scrollable; this would normally trigger
         // edge auto-scroll.
-        gesture.MoveTo(tester.GetBottomRight(tester.ElementOfType<ListView>()) + new Vector(0.0, 40.0));
+        gesture.MoveTo(tester.GetBottomRight(tester.ElementOfType<ListView>()) + new Offset(0.0, 40.0));
         tester.Pump();
         tester.Pump(OneSecond);
 
@@ -1165,7 +1165,7 @@ public sealed class ScrollableSelectionDartParityTests : IDisposable
         RenderParagraph paragraph0 = Paragraph(tester, "Item 0");
         TestGesture gesture = tester.StartGesture(TextOffsetToPosition(paragraph0, 2), PointerDeviceKind.Mouse);
         RenderParagraph paragraph1 = Paragraph(tester, "Item 1");
-        gesture.MoveTo(TextOffsetToPosition(paragraph1, 2) + new Vector(0, 5));
+        gesture.MoveTo(TextOffsetToPosition(paragraph1, 2) + new Offset(0, 5));
         tester.PumpAndSettle();
         gesture.Up();
 
@@ -1212,10 +1212,10 @@ public sealed class ScrollableSelectionDartParityTests : IDisposable
         tester.PumpAndSettle();
         RenderParagraph innerParagraph23 = Paragraph(tester, "Iteminner 23");
         TestGesture gesture = tester.StartGesture(
-            TextOffsetToPosition(innerParagraph23, 2) + new Vector(0, 5),
+            TextOffsetToPosition(innerParagraph23, 2) + new Offset(0, 5),
             PointerDeviceKind.Mouse);
         RenderParagraph innerParagraph24 = Paragraph(tester, "Iteminner 24");
-        gesture.MoveTo(TextOffsetToPosition(innerParagraph24, 2) + new Vector(0, 5));
+        gesture.MoveTo(TextOffsetToPosition(innerParagraph24, 2) + new Offset(0, 5));
         tester.PumpAndSettle();
         gesture.Up();
         AssertSelection(innerParagraph23, 2, 12);
@@ -1279,10 +1279,10 @@ public sealed class ScrollableSelectionDartParityTests : IDisposable
         tester.PumpAndSettle();
         RenderParagraph paragraph0 = Paragraph(tester, "Item 0");
         TestGesture gesture = tester.StartGesture(
-            TextOffsetToPosition(paragraph0, 2) + new Vector(0, 5),
+            TextOffsetToPosition(paragraph0, 2) + new Offset(0, 5),
             PointerDeviceKind.Mouse);
         RenderParagraph paragraph1 = Paragraph(tester, "Item 1");
-        gesture.MoveTo(TextOffsetToPosition(paragraph1, 2) + new Vector(0, 5));
+        gesture.MoveTo(TextOffsetToPosition(paragraph1, 2) + new Offset(0, 5));
         tester.PumpAndSettle();
         gesture.Up();
         AssertSelection(paragraph0, 2, 6);

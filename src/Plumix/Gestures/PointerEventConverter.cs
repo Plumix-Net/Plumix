@@ -61,8 +61,8 @@ public static class PointerEventConverter
 
     private static PointerEvent? Convert(PointerData datum, double devicePixelRatio)
     {
-        var position = new Point(datum.PhysicalX / devicePixelRatio, datum.PhysicalY / devicePixelRatio);
-        var delta = new Point(datum.PhysicalDeltaX / devicePixelRatio, datum.PhysicalDeltaY / devicePixelRatio);
+        var position = new Offset(datum.PhysicalX / devicePixelRatio, datum.PhysicalY / devicePixelRatio);
+        var delta = new Offset(datum.PhysicalDeltaX / devicePixelRatio, datum.PhysicalDeltaY / devicePixelRatio);
         double radiusMinor = ToLogicalPixels(datum.RadiusMinor, devicePixelRatio);
         double radiusMajor = ToLogicalPixels(datum.RadiusMajor, devicePixelRatio);
         double radiusMin = ToLogicalPixels(datum.RadiusMin, devicePixelRatio);
@@ -230,8 +230,8 @@ public static class PointerEventConverter
                             embedderId: datum.EmbedderId,
                             synthesized: datum.Synthesized);
                     case PointerChange.PanZoomUpdate:
-                        var pan = new Point(datum.PanX / devicePixelRatio, datum.PanY / devicePixelRatio);
-                        var panDelta = new Point(
+                        var pan = new Offset(datum.PanX / devicePixelRatio, datum.PanY / devicePixelRatio);
+                        var panDelta = new Offset(
                             datum.PanDeltaX / devicePixelRatio,
                             datum.PanDeltaY / devicePixelRatio);
                         return new PointerPanZoomUpdateEvent(
@@ -267,7 +267,7 @@ public static class PointerEventConverter
                     return null;
                 }
 
-                var scrollDelta = new Point(
+                var scrollDelta = new Offset(
                     datum.ScrollDeltaX / devicePixelRatio,
                     datum.ScrollDeltaY / devicePixelRatio);
                 return new PointerScrollEvent(

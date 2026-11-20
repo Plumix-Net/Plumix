@@ -549,7 +549,7 @@ internal abstract class SemanticsNodeAutomationPeer : AutomationPeer
         Rect bounds = Node.GetBoundsInView();
         return bounds.Width <= 0
                || bounds.Height <= 0
-               || !new Rect(Host.ViewSize).Intersects(bounds);
+               || !DartGeometry.RectFromSize(Host.ViewSize).Overlaps(bounds);
     }
 
     // The engine's `kFocus`: accessibility focus moves to this node.
@@ -847,7 +847,7 @@ internal abstract class SemanticsNodeAutomationPeer : AutomationPeer
         double vertical = verticalPercent >= 0 && VerticallyScrollable
             ? min + ((max - min) * verticalPercent / 100)
             : 0;
-        Node.PerformAction(SemanticsActions.ScrollToOffset, new Point(horizontal, vertical));
+        Node.PerformAction(SemanticsActions.ScrollToOffset, new Offset(horizontal, vertical));
     }
 
     private void PerformScroll(ScrollAmount amount, SemanticsActions forward, SemanticsActions backward)

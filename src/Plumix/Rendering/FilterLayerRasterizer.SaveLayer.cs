@@ -70,7 +70,7 @@ internal static partial class FilterLayerRasterizer
                     CopyFromFramebuffer(framebuffer, width, height),
                     width,
                     height,
-                    new Rect(left, top, width, height));
+                    DartGeometry.RectFromLTWH(left, top, width, height));
             }
         }
 
@@ -104,9 +104,9 @@ internal static partial class FilterLayerRasterizer
         }
 
         WriteableBitmap bitmap = CreateBitmap(frame);
-        var destination = new Rect(
-            frame.Bounds.X / scale,
-            frame.Bounds.Y / scale,
+        var destination = DartGeometry.RectFromLTWH(
+            frame.Bounds.Left / scale,
+            frame.Bounds.Top / scale,
             frame.Width / scale,
             frame.Height / scale);
         return (bitmap, destination);
@@ -118,7 +118,7 @@ internal static partial class FilterLayerRasterizer
     /// </summary>
     internal static WriteableBitmap? FilterImage(IImage image, ColorFilter? colorFilter, bool invertColors)
     {
-        var bounds = new Rect(image.Size);
+        var bounds = DartGeometry.RectFromSize(image.Size);
         if (!CanRasterize(bounds))
         {
             return null;
@@ -147,7 +147,7 @@ internal static partial class FilterLayerRasterizer
                    BitmapInterpolationMode = BitmapInterpolationMode.LowQuality,
                }))
         {
-            context.DrawImage(image, new Rect(image.Size), destination);
+            context.DrawImage(image, DartGeometry.RectFromSize(image.Size), destination);
         }
     }
 
@@ -166,7 +166,7 @@ internal static partial class FilterLayerRasterizer
                 blur.SigmaY * scale,
                 blur.TileMode,
                 blur.Bounds is { } bounds
-                    ? new Rect(bounds.X * scale, bounds.Y * scale, bounds.Width * scale, bounds.Height * scale)
+                    ? DartGeometry.RectFromLTWH(bounds.Left * scale, bounds.Top * scale, bounds.Width * scale, bounds.Height * scale)
                     : null),
             ImageFilter.Matrix matrix => new ImageFilter.Matrix(
                 ScaleMatrix(matrix.Values, scale),

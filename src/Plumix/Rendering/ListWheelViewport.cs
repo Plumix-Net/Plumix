@@ -693,7 +693,7 @@ public class RenderListWheelViewport : RenderBox, IContainerRenderObjectMixin<Re
         var childParentData = (ListWheelParentData)child.parentData!;
         // Centers the child horizontally.
         double crossPosition = (Size.Width / 2.0) - (child.Size.Width / 2.0);
-        childParentData.offset = new Point(crossPosition, IndexToScrollOffset(index));
+        childParentData.offset = new Offset(crossPosition, IndexToScrollOffset(index));
     }
 
     /// <summary>
@@ -849,7 +849,7 @@ public class RenderListWheelViewport : RenderBox, IContainerRenderObjectMixin<Re
                || Size.Height < highestUntransformedPaintY + MaxEstimatedScrollExtent + _itemExtent;
     }
 
-    public override void Paint(PaintingContext context, Point offset)
+    public override void Paint(PaintingContext context, Offset offset)
     {
         if (ChildCount > 0)
         {
@@ -858,7 +858,7 @@ public class RenderListWheelViewport : RenderBox, IContainerRenderObjectMixin<Re
                 _clipRectLayer.Layer = context.PushClipRect(
                     NeedsCompositing,
                     offset,
-                    new Rect(new Point(0, 0), Size),
+                    DartGeometry.RectFromOffsetAndSize(new Offset(0, 0), Size),
                     PaintVisibleChildren,
                     ClipBehavior,
                     _clipRectLayer.Layer);
@@ -883,7 +883,7 @@ public class RenderListWheelViewport : RenderBox, IContainerRenderObjectMixin<Re
     }
 
     /// <summary>Paints all children visible in the current viewport.</summary>
-    private void PaintVisibleChildren(PaintingContext context, Point offset)
+    private void PaintVisibleChildren(PaintingContext context, Offset offset)
     {
         // The magnifier cannot be turned off if the opacity is less than 1.0.
         if (OverAndUnderCenterOpacity >= 1)
@@ -903,7 +903,7 @@ public class RenderListWheelViewport : RenderBox, IContainerRenderObjectMixin<Re
         PaintAllChildren(context, offset, center: true);
     }
 
-    private void PaintAllChildren(PaintingContext context, Point offset, bool? center = null)
+    private void PaintAllChildren(PaintingContext context, Offset offset, bool? center = null)
     {
         RenderBox? childToPaint = FirstChild;
         while (childToPaint != null)
@@ -923,15 +923,15 @@ public class RenderListWheelViewport : RenderBox, IContainerRenderObjectMixin<Re
     private void PaintTransformedChild(
         RenderBox child,
         PaintingContext context,
-        Point offset,
-        Point layoutOffset,
+        Offset offset,
+        Offset layoutOffset,
         bool? center)
     {
-        Point untransformedPaintingCoordinates =
-            offset + new Point(layoutOffset.X, GetUntransformedPaintingCoordinateY(layoutOffset.Y));
+        Offset untransformedPaintingCoordinates =
+            offset + new Offset(layoutOffset.Dx, GetUntransformedPaintingCoordinateY(layoutOffset.Dy));
 
         // Get child's center as a fraction of the viewport's height.
-        double fractionalY = (untransformedPaintingCoordinates.Y + (_itemExtent / 2.0)) / Size.Height;
+        double fractionalY = (untransformedPaintingCoordinates.Dy + (_itemExtent / 2.0)) / Size.Height;
         double angle = -(fractionalY - 0.5) * 2.0 * MaxVisibleRadian / Squeeze;
         // Don't paint the backside of the cylinder when renderChildrenOutsideViewport is true. Otherwise,
         // only children within a 180° visible cylinder are visible.
@@ -946,7 +946,7 @@ public class RenderListWheelViewport : RenderBox, IContainerRenderObjectMixin<Re
             perspective: _perspective);
 
         // Offset that helps painting everything in the center (e.g. angle = 0).
-        var offsetToCenter = new Point(untransformedPaintingCoordinates.X, -TopScrollMarginExtent);
+        var offsetToCenter = new Offset(untransformedPaintingCoordinates.Dx, -TopScrollMarginExtent);
 
         bool shouldApplyOffCenterDim = OverAndUnderCenterOpacity < 1;
         if (UseMagnifier || shouldApplyOffCenterDim)
@@ -976,23 +976,23 @@ public class RenderListWheelViewport : RenderBox, IContainerRenderObjectMixin<Re
     /// </summary>
     private void PaintChildWithMagnifier(
         PaintingContext context,
-        Point offset,
+        Offset offset,
         RenderBox child,
         Matrix4 cylindricalTransform,
-        Point offsetToCenter,
-        Point untransformedPaintingCoordinates,
+        Offset offsetToCenter,
+        Offset untransformedPaintingCoordinates,
         bool? center)
     {
         double magnifierTopLinePosition = (Size.Height / 2) - (_itemExtent * _magnification / 2);
         double magnifierBottomLinePosition = (Size.Height / 2) + (_itemExtent * _magnification / 2);
 
-        bool isAfterMagnifierTopLine = untransformedPaintingCoordinates.Y
+        bool isAfterMagnifierTopLine = untransformedPaintingCoordinates.Dy
                                        >= magnifierTopLinePosition - (_itemExtent * _magnification);
-        bool isBeforeMagnifierBottomLine = untransformedPaintingCoordinates.Y <= magnifierBottomLinePosition;
+        bool isBeforeMagnifierBottomLine = untransformedPaintingCoordinates.Dy <= magnifierBottomLinePosition;
 
-        var centerRect = new Rect(0.0, magnifierTopLinePosition, Size.Width, _itemExtent * _magnification);
-        var topHalfRect = new Rect(0.0, 0.0, Size.Width, magnifierTopLinePosition);
-        var bottomHalfRect = new Rect(0.0, magnifierBottomLinePosition, Size.Width, magnifierTopLinePosition);
+        var centerRect = DartGeometry.RectFromLTWH(0.0, magnifierTopLinePosition, Size.Width, _itemExtent * _magnification);
+        var topHalfRect = DartGeometry.RectFromLTWH(0.0, 0.0, Size.Width, magnifierTopLinePosition);
+        var bottomHalfRect = DartGeometry.RectFromLTWH(0.0, magnifierBottomLinePosition, Size.Width, magnifierTopLinePosition);
         // Some part of the child is in the center magnifier.
         bool inCenter = isAfterMagnifierTopLine && isBeforeMagnifierBottomLine;
 
@@ -1014,7 +1014,7 @@ public class RenderListWheelViewport : RenderBox, IContainerRenderObjectMixin<Re
         // Clipping the part in either the top-half or bottom-half of the wheel.
         if ((center == null || center == false) && inCenter)
         {
-            Rect halfRect = untransformedPaintingCoordinates.Y <= magnifierTopLinePosition
+            Rect halfRect = untransformedPaintingCoordinates.Dy <= magnifierTopLinePosition
                 ? topHalfRect
                 : bottomHalfRect;
             context.PushClipRect(
@@ -1042,12 +1042,12 @@ public class RenderListWheelViewport : RenderBox, IContainerRenderObjectMixin<Re
     /// </summary>
     private void PaintChildCylindrically(
         PaintingContext context,
-        Point offset,
+        Offset offset,
         RenderBox child,
         Matrix4 cylindricalTransform,
-        Point offsetToCenter)
+        Offset offsetToCenter)
     {
-        Point paintOriginOffset = offset + offsetToCenter;
+        Offset paintOriginOffset = offset + offsetToCenter;
 
         // Paint child cylindrically, without [overAndUnderCenterOpacity].
         context.PushTransform(
@@ -1059,7 +1059,7 @@ public class RenderListWheelViewport : RenderBox, IContainerRenderObjectMixin<Re
 
         // Save the final transform that accounts both for the offset and cylindrical transform.
         Matrix4 transform = CenterOriginTransform(cylindricalTransform);
-        transform.TranslateByDouble(paintOriginOffset.X, paintOriginOffset.Y, 0, 1);
+        transform.TranslateByDouble(paintOriginOffset.Dx, paintOriginOffset.Dy, 0, 1);
         ((ListWheelParentData)child.parentData!).Transform = transform;
     }
 
@@ -1078,22 +1078,22 @@ public class RenderListWheelViewport : RenderBox, IContainerRenderObjectMixin<Re
     private Matrix4 CenterOriginTransform(Matrix4 originalMatrix)
     {
         Matrix4 result = Matrix4.Identity();
-        Point centerOriginTranslation = Alignment.Center.AlongSize(Size);
+        Offset centerOriginTranslation = Alignment.Center.AlongSize(Size);
         result.TranslateByDouble(
-            centerOriginTranslation.X * ((-_offAxisFraction * 2) + 1),
-            centerOriginTranslation.Y,
+            centerOriginTranslation.Dx * ((-_offAxisFraction * 2) + 1),
+            centerOriginTranslation.Dy,
             0,
             1);
         result.Multiply(originalMatrix);
         result.TranslateByDouble(
-            -centerOriginTranslation.X * ((-_offAxisFraction * 2) + 1),
-            -centerOriginTranslation.Y,
+            -centerOriginTranslation.Dx * ((-_offAxisFraction * 2) + 1),
+            -centerOriginTranslation.Dy,
             0,
             1);
         return result;
     }
 
-    private static bool DebugAssertValidHitTestOffsets(string context, Point offset1, Point offset2)
+    private static bool DebugAssertValidHitTestOffsets(string context, Offset offset1, Offset offset2)
     {
         if (offset1 != offset2)
         {
@@ -1120,10 +1120,10 @@ public class RenderListWheelViewport : RenderBox, IContainerRenderObjectMixin<Re
 
     protected override Rect? DescribeApproximatePaintClip(RenderObject? child)
     {
-        return ShouldClipAtCurrentOffset() ? new Rect(default(Point), Size) : null;
+        return ShouldClipAtCurrentOffset() ? DartGeometry.RectFromOffsetAndSize(default(Offset), Size) : null;
     }
 
-    protected override bool HitTestChildren(BoxHitTestResult result, Point position)
+    protected override bool HitTestChildren(BoxHitTestResult result, Offset position)
     {
         RenderBox? child = LastChild;
         while (child != null)
@@ -1154,7 +1154,7 @@ public class RenderListWheelViewport : RenderBox, IContainerRenderObjectMixin<Re
         return false;
     }
 
-    private static bool DebugValidateHitTestOffsets(Matrix4 transform, Point transformed, Point position)
+    private static bool DebugValidateHitTestOffsets(Matrix4 transform, Offset transformed, Offset position)
     {
         Matrix4? inverted = Matrix4.TryInvert(PointerEvent.RemovePerspectiveTransform(transform));
         if (inverted == null)
@@ -1190,11 +1190,11 @@ public class RenderListWheelViewport : RenderBox, IContainerRenderObjectMixin<Re
         }
 
         var parentData = (ListWheelParentData)child.parentData!;
-        double targetOffset = parentData.offset.Y; // the so-called "centerPosition"
+        double targetOffset = parentData.offset.Dy; // the so-called "centerPosition"
 
         Matrix4 transform = target.GetTransformTo(child);
         Rect bounds = MatrixUtils.TransformRect(transform, rect.Value);
-        Rect targetRect = bounds.Translate(new Vector(0.0, (Size.Height - ItemExtent) / 2));
+        Rect targetRect = bounds.Shift(new Offset(0.0, (Size.Height - ItemExtent) / 2));
 
         return new RevealedOffset(targetOffset, targetRect);
     }

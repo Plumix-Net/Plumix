@@ -60,7 +60,7 @@ public sealed class FlowRepaintBoundaryTests
         Assert.Equal(1, first.PaintCount);
         Assert.Equal(0, second.PaintCount);
         var hitResult = new BoxHitTestResult();
-        Assert.True(flow.HitTest(hitResult, new Point(20, 15)));
+        Assert.True(flow.HitTest(hitResult, new Offset(20, 15)));
         Assert.Same(second, hitResult.Path[0].Target);
 
         Matrix4 firstSemanticsTransform = Matrix4.Identity();
@@ -72,7 +72,7 @@ public sealed class FlowRepaintBoundaryTests
 
         var flowLayer = Assert.IsType<OffsetLayer>(Assert.Single(pipeline.RootLayer.Children));
         var clipLayer = Assert.IsType<ClipRectLayer>(Assert.Single(flowLayer.Children));
-        Assert.Equal(new Rect(0, 0, 80, 60), clipLayer.ClipRect);
+        Assert.Equal(DartGeometry.RectFromLTWH(0, 0, 80, 60), clipLayer.ClipRect);
     }
 
     [Fact]
@@ -277,9 +277,9 @@ public sealed class FlowRepaintBoundaryTests
             Size = Constraints.Constrain(_desiredSize);
         }
 
-        protected override bool HitTestSelf(Point position) => _hitTestSelf;
+        protected override bool HitTestSelf(Offset position) => _hitTestSelf;
 
-        public override void Paint(PaintingContext context, Point offset)
+        public override void Paint(PaintingContext context, Offset offset)
         {
             PaintCount++;
         }

@@ -311,7 +311,7 @@ public class RenderTreeSliver : RenderSliverVariedExtentList
     /// Dart's <c>RenderTreeSliver.paint</c>: the rows after each animating parent are painted in their
     /// own segment, clipped from the parent's trailing edge to the segment's last row.
     /// </remarks>
-    public override void Paint(PaintingContext context, Point offset)
+    public override void Paint(PaintingContext context, Offset offset)
     {
         if (FirstChild is null)
         {
@@ -321,16 +321,16 @@ public class RenderTreeSliver : RenderSliverVariedExtentList
         // TODO(Piinks): Clip based on actual visible area.
         RenderBox? nextChild = FirstChild;
 
-        void PaintUpTo(int index, RenderBox? startWith, PaintingContext paintingContext, Point paintOffset)
+        void PaintUpTo(int index, RenderBox? startWith, PaintingContext paintingContext, Offset paintOffset)
         {
             RenderBox? child = startWith;
             while (child is not null && IndexOf(child) <= index)
             {
                 double mainAxisDelta = ChildMainAxisPosition(child);
                 var parentData = (TreeSliverNodeParentData)child.parentData!;
-                var childOffset = new Point(
-                    (parentData.Depth * Indentation) + paintOffset.X,
-                    parentData.LayoutOffset!.Value - Constraints.ScrollOffset + paintOffset.Y);
+                var childOffset = new Offset(
+                    (parentData.Depth * Indentation) + paintOffset.Dx,
+                    parentData.LayoutOffset!.Value - Constraints.ScrollOffset + paintOffset.Dy);
 
                 // If the child's visible interval (mainAxisDelta, mainAxisDelta + paintExtentOf(child))
                 // does not intersect the paint extent interval (0, constraints.remainingPaintExtent),
@@ -386,9 +386,9 @@ public class RenderTreeSliver : RenderSliverVariedExtentList
                 + (parentIndex == 0 ? 0.0 : ItemExtentBuilder!(parentIndex, LayoutDimensions)!.Value);
             double trailingOffset = IndexToLayoutOffset(0.0, segment.TrailingIndex)
                 + ItemExtentBuilder!(segment.TrailingIndex, LayoutDimensions)!.Value;
-            var rect = new Rect(
-                new Point(0.0, leadingOffset),
-                new Point(Constraints.CrossAxisExtent, trailingOffset));
+            var rect = DartGeometry.RectFromCorners(
+                new Offset(0.0, leadingOffset),
+                new Offset(Constraints.CrossAxisExtent, trailingOffset));
             // We use the same animation key to keep track of the clip layer, unless this is the odd
             // man out segment.
             UniqueKey key = _animationLeadingIndices[parentIndex];
@@ -402,7 +402,7 @@ public class RenderTreeSliver : RenderSliverVariedExtentList
                 NeedsCompositing,
                 offset,
                 rect,
-                (PaintingContext clipContext, Point clipOffset) =>
+                (PaintingContext clipContext, Offset clipOffset) =>
                     PaintUpTo(segment.TrailingIndex, nextChild, clipContext, clipOffset),
                 oldLayer: handle.Layer);
         }

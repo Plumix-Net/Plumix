@@ -243,7 +243,7 @@ internal sealed class RenderAnimatedSize : RenderAligningShiftedBox
 
     private readonly LayerHandle<ClipRectLayer> _clipRectLayer = new();
 
-    public override void Paint(PaintingContext context, Point offset)
+    public override void Paint(PaintingContext context, Offset offset)
     {
         if (Child is null)
         {
@@ -255,7 +255,7 @@ internal sealed class RenderAnimatedSize : RenderAligningShiftedBox
             _clipRectLayer.Layer = context.PushClipRect(
                 NeedsCompositing,
                 offset,
-                new Rect(new Point(0, 0), Size),
+                DartGeometry.RectFromOffsetAndSize(new Offset(0, 0), Size),
                 base.Paint,
                 ClipBehavior,
                 _clipRectLayer.Layer);

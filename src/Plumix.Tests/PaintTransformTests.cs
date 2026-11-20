@@ -28,9 +28,9 @@ public sealed class PaintTransformTests
         Matrix4 transform = Matrix4.Identity();
         padded.ApplyPaintTransform(child, transform);
 
-        Assert.Equal(new Point(12, 7), MatrixUtils.TransformPoint(transform, default));
-        Assert.Equal(new Point(12, 7), child.LocalToGlobal(default));
-        Assert.Equal(new Point(12, 7), child.GetPaintOffsetToRoot());
+        Assert.Equal(new Offset(12, 7), MatrixUtils.TransformPoint(transform, default));
+        Assert.Equal(new Offset(12, 7), child.LocalToGlobal(default));
+        Assert.Equal(new Offset(12, 7), child.GetPaintOffsetToRoot());
     }
 
     [Fact]
@@ -45,12 +45,12 @@ public sealed class PaintTransformTests
         pipeline.FlushLayout(new Size(200, 200));
 
         // The scale applies in the transform's own space, then the padding offset shifts the result.
-        Assert.Equal(new Point(5, 9), child.LocalToGlobal(default));
-        Assert.Equal(new Point(25, 39), child.LocalToGlobal(new Point(10, 10)));
-        Assert.Equal(new Point(10, 10), child.GlobalToLocal(new Point(25, 39)));
+        Assert.Equal(new Offset(5, 9), child.LocalToGlobal(default));
+        Assert.Equal(new Offset(25, 39), child.LocalToGlobal(new Offset(10, 10)));
+        Assert.Equal(new Offset(10, 10), child.GlobalToLocal(new Offset(25, 39)));
 
         // Relative to an ancestor the padding offset drops out again.
-        Assert.Equal(new Point(20, 30), child.LocalToGlobal(new Point(10, 10), scaled));
+        Assert.Equal(new Offset(20, 30), child.LocalToGlobal(new Offset(10, 10), scaled));
     }
 
     [Fact]
@@ -65,7 +65,7 @@ public sealed class PaintTransformTests
         pipeline.FlushLayout(new Size(100, 100));
 
         // The transform chain walks the parent chain, so it no longer depends on the semantics walk.
-        Assert.Equal(new Point(4, 6), child.LocalToGlobal(default));
+        Assert.Equal(new Offset(4, 6), child.LocalToGlobal(default));
     }
 
     [Fact]
@@ -86,7 +86,7 @@ public sealed class PaintTransformTests
         // ancestor: it walks both chains to their common ancestor and inverts the target's half. The
         // row places `second` 20 logical pixels to the right of `first`, so `first`'s origin sits at
         // x = -20 in `second`'s coordinate space.
-        Assert.Equal(new Point(-20, 0), first.LocalToGlobal(default, second));
+        Assert.Equal(new Offset(-20, 0), first.LocalToGlobal(default, second));
 
         // A render object in a different tree is still an error.
         var orphan = new RenderConstrainedBox(BoxConstraints.Tight(new Size(5, 5)));
@@ -119,49 +119,49 @@ public sealed class PaintTransformTests
     public void ApplyPaintTransform_FractionalTranslation_ShiftsByAFractionOfItsSize()
     {
         var child = new RenderConstrainedBox(BoxConstraints.Tight(new Size(40, 20)));
-        var translated = new RenderFractionalTranslation(new Point(0.5, -1.0)) { Child = child };
+        var translated = new RenderFractionalTranslation(new Offset(0.5, -1.0)) { Child = child };
         var renderView = new RenderView(new FlutterView(new Size(800, 600))) { Child = translated };
         var pipeline = new PipelineOwner(renderView);
         pipeline.Attach(renderView);
         pipeline.FlushLayout(new Size(100, 100));
 
-        Assert.Equal(new Point(20, -20), child.LocalToGlobal(default));
+        Assert.Equal(new Offset(20, -20), child.LocalToGlobal(default));
     }
 
     [Fact]
     public void PathCombine_DifferenceRemovesTheSecondPath()
     {
         var outer = new Path();
-        outer.AddRect(new Rect(0, 0, 100, 50));
+        outer.AddRect(DartGeometry.RectFromLTWH(0, 0, 100, 50));
         var gap = new Path();
-        gap.AddRect(new Rect(20, -1, 30, 2));
+        gap.AddRect(DartGeometry.RectFromLTWH(20, -1, 30, 2));
 
         Path combined = Path.Combine(PathOperation.Difference, outer, gap);
 
-        Assert.True(combined.Contains(new Point(10, 0.5)));
-        Assert.False(combined.Contains(new Point(30, 0.5)));
-        Assert.True(combined.Contains(new Point(30, 10)));
-        Assert.Equal(new Rect(0, 0, 100, 50), combined.GetBounds());
-        combined.AddRect(new Rect(120, 0, 10, 10));
-        Assert.True(combined.Contains(new Point(125, 5)));
+        Assert.True(combined.Contains(new Offset(10, 0.5)));
+        Assert.False(combined.Contains(new Offset(30, 0.5)));
+        Assert.True(combined.Contains(new Offset(30, 10)));
+        Assert.Equal(DartGeometry.RectFromLTWH(0, 0, 100, 50), combined.GetBounds());
+        combined.AddRect(DartGeometry.RectFromLTWH(120, 0, 10, 10));
+        Assert.True(combined.Contains(new Offset(125, 5)));
     }
 
     [Fact]
     public void PathCombine_IntersectUnionAndXorFollowTheirSetOperations()
     {
         var left = new Path();
-        left.AddRect(new Rect(0, 0, 40, 40));
+        left.AddRect(DartGeometry.RectFromLTWH(0, 0, 40, 40));
         var right = new Path();
-        right.AddRect(new Rect(20, 0, 40, 40));
+        right.AddRect(DartGeometry.RectFromLTWH(20, 0, 40, 40));
 
         // Boolean results are concrete independent contours, shared by paint and containment.
-        Assert.False(Path.Combine(PathOperation.Difference, left, right).ToGeometry().FillContains(new Point(30, 20)));
+        Assert.False(Path.Combine(PathOperation.Difference, left, right).ToGeometry().FillContains(new Offset(30, 20)));
 
-        Assert.True(Path.Combine(PathOperation.Intersect, left, right).Contains(new Point(30, 20)));
-        Assert.False(Path.Combine(PathOperation.Intersect, left, right).Contains(new Point(10, 20)));
-        Assert.True(Path.Combine(PathOperation.Union, left, right).Contains(new Point(50, 20)));
-        Assert.False(Path.Combine(PathOperation.Xor, left, right).Contains(new Point(30, 20)));
-        Assert.True(Path.Combine(PathOperation.ReverseDifference, left, right).Contains(new Point(50, 20)));
-        Assert.False(Path.Combine(PathOperation.ReverseDifference, left, right).Contains(new Point(30, 20)));
+        Assert.True(Path.Combine(PathOperation.Intersect, left, right).Contains(new Offset(30, 20)));
+        Assert.False(Path.Combine(PathOperation.Intersect, left, right).Contains(new Offset(10, 20)));
+        Assert.True(Path.Combine(PathOperation.Union, left, right).Contains(new Offset(50, 20)));
+        Assert.False(Path.Combine(PathOperation.Xor, left, right).Contains(new Offset(30, 20)));
+        Assert.True(Path.Combine(PathOperation.ReverseDifference, left, right).Contains(new Offset(50, 20)));
+        Assert.False(Path.Combine(PathOperation.ReverseDifference, left, right).Contains(new Offset(30, 20)));
     }
 }

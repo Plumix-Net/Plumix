@@ -88,7 +88,7 @@ public sealed class MaterialSegmentedButtonsTests
                 selectedColor: Colors.Gold)));
         harness.Pump(new Size(320, 120));
 
-        Tap(harness.RenderView, new Point(24, 24), 201);
+        Tap(harness.RenderView, new Offset(24, 24), 201);
         Assert.Equal(0, pressed);
         Assert.Equal(Colors.Purple,
             Assert.IsType<SolidColorBrush>(FindParagraph(harness.RenderView, "One")!.Foreground).Color);
@@ -625,7 +625,7 @@ public sealed class MaterialSegmentedButtonsTests
         var lastData = Assert.IsType<SegmentedButtonParentData>(verticalLayout.LastChild!.parentData);
 
         Assert.Equal(300.0, verticalLayout.Size.Width, precision: 3);
-        Assert.True(firstData.offset.Y > lastData.offset.Y);
+        Assert.True(firstData.offset.Dy > lastData.offset.Dy);
         Assert.Equal(verticalLayout.FirstChild.Size, verticalLayout.LastChild.Size);
     }
 
@@ -697,7 +697,7 @@ public sealed class MaterialSegmentedButtonsTests
                     theme,
                     new Align(alignment: Alignment.TopLeft, child: child))));
 
-    private static void Tap(RenderView view, Point point, int pointer)
+    private static void Tap(RenderView view, Offset point, int pointer)
     {
         var binding = GestureBinding.Instance;
         binding.ResetForTests();
@@ -715,10 +715,10 @@ public sealed class MaterialSegmentedButtonsTests
         }
     }
 
-    private static Point CenterOf(RenderView view, string text)
+    private static Offset CenterOf(RenderView view, string text)
     {
         RenderParagraph label = FindParagraph(view, text)!;
-        return label.LocalToGlobal(new Point(label.Size.Width / 2, label.Size.Height / 2));
+        return label.LocalToGlobal(new Offset(label.Size.Width / 2, label.Size.Height / 2));
     }
 
     private static RenderParagraph? FindParagraph(RenderObject? root, string text) =>

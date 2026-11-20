@@ -41,9 +41,9 @@ public sealed class SliverProtocolTests
         double[] expected = [a, b, c, d, e];
         for (int i = 0; i < boxes.Length; i++)
         {
-            Point origin = boxes[i].LocalToGlobal(default);
-            Assert.Equal(expected[i], IsVertical(axisDirection) ? origin.Y : origin.X, 6);
-            Assert.Equal(0.0, IsVertical(axisDirection) ? origin.X : origin.Y, 6);
+            Offset origin = boxes[i].LocalToGlobal(default);
+            Assert.Equal(expected[i], IsVertical(axisDirection) ? origin.Dy : origin.Dx, 6);
+            Assert.Equal(0.0, IsVertical(axisDirection) ? origin.Dx : origin.Dy, 6);
         }
 
         Assert.Same(viewport, boxes[0].Parent!.Parent);
@@ -64,7 +64,7 @@ public sealed class SliverProtocolTests
         pipeline.FlushLayout(new Size(800, 600));
 
         var result = new BoxHitTestResult();
-        Assert.True(viewport.HitTest(result, new Point(x, y)));
+        Assert.True(viewport.HitTest(result, new Offset(x, y)));
 
         Assert.Same(boxes[2], result.Path[0].Target);
         SliverHitTestEntry sliverEntry = Assert.Single(result.Path.OfType<SliverHitTestEntry>());
@@ -91,7 +91,7 @@ public sealed class SliverProtocolTests
         pipeline.FlushLayout(new Size(800, 600));
 
         var result = new BoxHitTestResult();
-        Assert.True(viewport.HitTest(result, new Point(x, y)));
+        Assert.True(viewport.HitTest(result, new Offset(x, y)));
         Assert.Same(boxes[2], result.Path[0].Target);
     }
 
@@ -103,7 +103,7 @@ public sealed class SliverProtocolTests
         pipeline.FlushLayout(new Size(800, 600));
 
         var result = new BoxHitTestResult();
-        viewport.HitTest(result, new Point(130, 150));
+        viewport.HitTest(result, new Offset(130, 150));
 
         // The third sliver starts at scroll offset 800, so at offset 900 it is painted from the top
         // of the viewport and the main-axis position is the viewport-local y coordinate.
@@ -128,7 +128,7 @@ public sealed class SliverProtocolTests
         pipeline.FlushLayout(new Size(800, 600));
 
         var result = new BoxHitTestResult();
-        viewport.HitTest(result, new Point(400, 300));
+        viewport.HitTest(result, new Offset(400, 300));
 
         Assert.Equal(
             expected,
@@ -190,7 +190,7 @@ public sealed class SliverProtocolTests
     {
         var result = new SliverHitTestResult();
         var entry = new SliverHitTestEntry(new ProbeSliver(), mainAxisPosition: 0, crossAxisPosition: 0);
-        result.AddWithAxisOffset(new Point(7, 11), 0, 0, 0, 0, (hit, _, _) =>
+        result.AddWithAxisOffset(new Offset(7, 11), 0, 0, 0, 0, (hit, _, _) =>
         {
             hit.Add(entry);
             return true;
@@ -373,7 +373,7 @@ public sealed class SliverProtocolTests
         PipelineOwner pipeline = Attach(viewport);
         pipeline.FlushLayout(new Size(800, 600));
 
-        Rect expected = axis == Axis.Vertical ? new Rect(0, 0, 800, 150) : new Rect(0, 0, 150, 600);
+        Rect expected = axis == Axis.Vertical ? DartGeometry.RectFromLTWH(0, 0, 800, 150) : DartGeometry.RectFromLTWH(0, 0, 150, 600);
         Assert.Equal(expected, sliver.PaintBounds);
         Assert.Equal(expected, sliver.SemanticBoundsForSemantics);
     }
@@ -433,7 +433,7 @@ public sealed class SliverProtocolTests
         var sliver = new ProbeSliver();
 
         Assert.Null(sliver.Geometry);
-        Assert.Equal(new Rect(0, 0, 0, 0), sliver.MaxPaintRect);
+        Assert.Equal(DartGeometry.RectFromLTWH(0, 0, 0, 0), sliver.MaxPaintRect);
     }
 
     public static TheoryData<SliverGeometry, AxisDirection, GrowthDirection, double, double, double, double, Rect>
@@ -444,24 +444,24 @@ public sealed class SliverProtocolTests
         var forward = GrowthDirection.Forward;
         return new()
         {
-            { SliverGeometry.Zero, AxisDirection.Down, forward, 0, 300, 100, 0, new Rect(0, 0, 0, 0) },
-            { new SliverGeometry(), AxisDirection.Down, forward, 0, 300, 100, 0, new Rect(0, 0, 100, 0) },
-            { full, AxisDirection.Down, forward, 0, 300, 100, 0, new Rect(0, 0, 100, 100) },
-            { full, AxisDirection.Down, GrowthDirection.Reverse, 0, 300, 100, 0, new Rect(0, 0, 100, 100) },
-            { half, AxisDirection.Down, forward, 50, 50, 100, 0, new Rect(0, -50, 100, 100) },
-            { full, AxisDirection.Up, forward, 0, 300, 100, 0, new Rect(0, 0, 100, 100) },
-            { half, AxisDirection.Up, forward, 50, 50, 100, 0, new Rect(0, 0, 100, 100) },
-            { full, AxisDirection.Right, forward, 0, 300, 100, 0, new Rect(0, 0, 100, 100) },
-            { half, AxisDirection.Right, forward, 50, 50, 100, 0, new Rect(-50, 0, 100, 100) },
-            { full, AxisDirection.Left, forward, 0, 300, 100, 0, new Rect(0, 0, 100, 100) },
-            { half, AxisDirection.Left, forward, 50, 50, 100, 0, new Rect(0, 0, 100, 100) },
+            { SliverGeometry.Zero, AxisDirection.Down, forward, 0, 300, 100, 0, DartGeometry.RectFromLTWH(0, 0, 0, 0) },
+            { new SliverGeometry(), AxisDirection.Down, forward, 0, 300, 100, 0, DartGeometry.RectFromLTWH(0, 0, 100, 0) },
+            { full, AxisDirection.Down, forward, 0, 300, 100, 0, DartGeometry.RectFromLTWH(0, 0, 100, 100) },
+            { full, AxisDirection.Down, GrowthDirection.Reverse, 0, 300, 100, 0, DartGeometry.RectFromLTWH(0, 0, 100, 100) },
+            { half, AxisDirection.Down, forward, 50, 50, 100, 0, DartGeometry.RectFromLTWH(0, -50, 100, 100) },
+            { full, AxisDirection.Up, forward, 0, 300, 100, 0, DartGeometry.RectFromLTWH(0, 0, 100, 100) },
+            { half, AxisDirection.Up, forward, 50, 50, 100, 0, DartGeometry.RectFromLTWH(0, 0, 100, 100) },
+            { full, AxisDirection.Right, forward, 0, 300, 100, 0, DartGeometry.RectFromLTWH(0, 0, 100, 100) },
+            { half, AxisDirection.Right, forward, 50, 50, 100, 0, DartGeometry.RectFromLTWH(-50, 0, 100, 100) },
+            { full, AxisDirection.Left, forward, 0, 300, 100, 0, DartGeometry.RectFromLTWH(0, 0, 100, 100) },
+            { half, AxisDirection.Left, forward, 50, 50, 100, 0, DartGeometry.RectFromLTWH(0, 0, 100, 100) },
             {
                 new SliverGeometry(
                     ScrollExtent: 100,
                     PaintExtent: 10,
                     MaxPaintExtent: 100,
                     MaxScrollObstructionExtent: 10),
-                AxisDirection.Down, forward, 95, 10, 100, 0, new Rect(0, -90, 100, 100)
+                AxisDirection.Down, forward, 95, 10, 100, 0, DartGeometry.RectFromLTWH(0, -90, 100, 100)
             },
             {
                 new SliverGeometry(
@@ -469,15 +469,15 @@ public sealed class SliverProtocolTests
                     PaintExtent: 100,
                     MaxPaintExtent: double.PositiveInfinity,
                     CacheExtent: 150),
-                AxisDirection.Down, forward, 50, 300, 200, -50, new Rect(0, -50, 100, 150)
+                AxisDirection.Down, forward, 50, 300, 200, -50, DartGeometry.RectFromLTWH(0, -50, 100, 150)
             },
             {
                 new SliverGeometry(ScrollExtent: 100, PaintExtent: 100, MaxPaintExtent: 100, CrossAxisExtent: 50),
-                AxisDirection.Down, forward, 0, 300, 100, 0, new Rect(0, 0, 50, 100)
+                AxisDirection.Down, forward, 0, 300, 100, 0, DartGeometry.RectFromLTWH(0, 0, 50, 100)
             },
             {
                 new SliverGeometry(ScrollExtent: 200, PaintExtent: 100, MaxPaintExtent: 150),
-                AxisDirection.Down, forward, 0, 100, 100, 0, new Rect(0, 0, 100, 150)
+                AxisDirection.Down, forward, 0, 100, 100, 0, DartGeometry.RectFromLTWH(0, 0, 100, 150)
             },
         };
     }
@@ -649,9 +649,9 @@ public sealed class SliverProtocolTests
     {
         protected override void PerformLayout() => Size = Constraints.Constrain(size);
 
-        protected override bool HitTestSelf(Point position) => true;
+        protected override bool HitTestSelf(Offset position) => true;
 
-        public override void Paint(PaintingContext context, Point offset)
+        public override void Paint(PaintingContext context, Offset offset)
         {
         }
     }
@@ -673,7 +673,7 @@ public sealed class SliverProtocolTests
             Geometry = geometry;
         }
 
-        public override void Paint(PaintingContext context, Point offset)
+        public override void Paint(PaintingContext context, Offset offset)
         {
         }
     }
@@ -707,7 +707,7 @@ public sealed class SliverProtocolTests
             return false;
         }
 
-        public override void Paint(PaintingContext context, Point offset)
+        public override void Paint(PaintingContext context, Offset offset)
         {
         }
     }

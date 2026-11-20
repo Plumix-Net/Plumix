@@ -147,7 +147,7 @@ public abstract class SnapshotPainter : ChangeNotifier
     /// <param name="pixelRatio">The device pixel ratio the raster was taken at.</param>
     public abstract void PaintSnapshot(
         PaintingContext context,
-        Point offset,
+        Offset offset,
         Size size,
         IImage image,
         Size sourceSize,
@@ -155,7 +155,7 @@ public abstract class SnapshotPainter : ChangeNotifier
 
     /// <summary>Paint the child via <paramref name="painter"/>, applying any effects that would have been
     /// painted in <see cref="PaintSnapshot"/>.</summary>
-    public abstract void Paint(PaintingContext context, Point offset, Size size, PaintingContextCallback painter);
+    public abstract void Paint(PaintingContext context, Offset offset, Size size, PaintingContextCallback painter);
 
     /// <summary>Called whenever a new instance of the snapshot widget delegate class is provided to the
     /// <see cref="RenderSnapshotWidget"/> object, or any time that a new <see cref="SnapshotPainter"/> object
@@ -185,21 +185,21 @@ internal sealed class DefaultSnapshotPainter : SnapshotPainter
     {
     }
 
-    public override void Paint(PaintingContext context, Point offset, Size size, PaintingContextCallback painter)
+    public override void Paint(PaintingContext context, Offset offset, Size size, PaintingContextCallback painter)
     {
         painter(context, offset);
     }
 
     public override void PaintSnapshot(
         PaintingContext context,
-        Point offset,
+        Offset offset,
         Size size,
         IImage image,
         Size sourceSize,
         double pixelRatio)
     {
-        var src = new Rect(0, 0, sourceSize.Width, sourceSize.Height);
-        var dst = new Rect(offset.X, offset.Y, size.Width, size.Height);
+        var src = DartGeometry.RectFromLTWH(0, 0, sourceSize.Width, sourceSize.Height);
+        var dst = DartGeometry.RectFromLTWH(offset.Dx, offset.Dy, size.Width, size.Height);
         var paint = new Paint { FilterQuality = FilterQuality.Medium };
         context.Canvas.DrawImageRect(image, src, dst, paint);
     }

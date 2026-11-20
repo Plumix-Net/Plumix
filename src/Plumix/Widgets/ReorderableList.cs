@@ -363,17 +363,17 @@ public sealed class SliverReorderableListState : State<SliverReorderableList>
     private int? _dragIndex;
     private ReorderDragInfo? _dragInfo;
     private int? _insertIndex;
-    internal Point? FinalDropPosition { get; private set; }
+    internal Offset? FinalDropPosition { get; private set; }
     private MultiDragGestureRecognizer? _recognizer;
     private int? _recognizerPointer;
     private EdgeDraggingAutoScroller? _autoScroller;
     private ScrollableState _scrollable = null!;
 
     internal SliverReorderableList CurrentWidget => Widget;
-    internal Rect DragOriginBounds => _dragInfo is null ? default : new Rect(_dragInfo.Origin, _dragInfo.ItemSize);
+    internal Rect DragOriginBounds => _dragInfo is null ? default : DartGeometry.RectFromOffsetAndSize(_dragInfo.Origin, _dragInfo.ItemSize);
     internal bool IsDragging => _dragInfo is not null;
     internal int? DragIndex => _dragIndex;
-    internal Vector DragTranslation => _dragInfo is null
+    internal Offset DragTranslation => _dragInfo is null
         ? default
         : (_dragInfo.DragPosition - _dragInfo.DragOffset) - _dragInfo.Origin;
     internal Axis ScrollAxis => ScrollDirectionUtils.AxisDirectionToAxis(_scrollable.AxisDirection);
@@ -567,7 +567,7 @@ public sealed class SliverReorderableListState : State<SliverReorderableList>
         }
     }
 
-    private Drag? BeginDrag(Point position)
+    private Drag? BeginDrag(Offset position)
     {
         ReorderableItemState item = _items[_dragIndex!.Value];
         item.SetDragging(true);
@@ -591,7 +591,7 @@ public sealed class SliverReorderableListState : State<SliverReorderableList>
         return _dragInfo;
     }
 
-    private void HandleDragUpdate(ReorderDragInfo item, Point position, Point delta)
+    private void HandleDragUpdate(ReorderDragInfo item, Offset position, Offset delta)
     {
         SetState(() =>
         {
@@ -779,12 +779,12 @@ public sealed class SliverReorderableListState : State<SliverReorderableList>
     private bool CurrentWidgetIsReverse() =>
         _scrollable.AxisDirection is AxisDirection.Up or AxisDirection.Left;
 
-    private double MainAxisOffset(Point point) => ScrollAxis == Axis.Vertical ? point.Y : point.X;
+    private double MainAxisOffset(Offset point) => ScrollAxis == Axis.Vertical ? point.Dy : point.Dx;
     private double MainAxisExtent(Size size) => ScrollAxis == Axis.Vertical ? size.Height : size.Width;
-    private Vector ExtentOffset(double extent) =>
-        ScrollAxis == Axis.Vertical ? new Vector(0, extent) : new Vector(extent, 0);
-    private Rect DragTargetRect() => new(_dragInfo!.DragPosition - _dragInfo.DragOffset, _dragInfo.ItemSize);
-    private Point ItemOffsetAt(int index) => _items[index].TargetGeometry().TopLeft;
+    private Offset ExtentOffset(double extent) =>
+        ScrollAxis == Axis.Vertical ? new Offset(0, extent) : new Offset(extent, 0);
+    private Rect DragTargetRect() => DartGeometry.RectFromOffsetAndSize(_dragInfo!.DragPosition - _dragInfo.DragOffset, _dragInfo.ItemSize);
+    private Offset ItemOffsetAt(int index) => _items[index].TargetGeometry().TopLeft;
     private double ItemExtentAt(int index) => MainAxisExtent(_items[index].TargetGeometry().Size);
 
     private void InvokeReorder(int oldIndex, int insertionIndex)
@@ -851,8 +851,8 @@ internal sealed class ReorderableItem : StatefulWidget
 internal sealed class ReorderableItemState : State<ReorderableItem>
 {
     private SliverReorderableListState _listState = null!;
-    private Vector _startOffset;
-    private Vector _targetOffset;
+    private Offset _startOffset;
+    private Offset _targetOffset;
     private AnimationController? _offsetAnimation;
     private bool _dragging;
 
@@ -897,8 +897,8 @@ internal sealed class ReorderableItemState : State<ReorderableItem>
         }
 
         _listState.RegisterItem(this);
-        Vector offset = Offset;
-        return new Transform(Matrix4.TranslationValues(offset.X, offset.Y, 0.0), CurrentWidget.Child);
+        Offset offset = Offset;
+        return new Transform(Matrix4.TranslationValues(offset.Dx, offset.Dy, 0.0), CurrentWidget.Child);
     }
 
     public override void Deactivate()
@@ -915,7 +915,7 @@ internal sealed class ReorderableItemState : State<ReorderableItem>
         }
     }
 
-    internal Vector Offset
+    internal Offset Offset
     {
         get
         {
@@ -936,13 +936,13 @@ internal sealed class ReorderableItemState : State<ReorderableItem>
             extent = reverse ? gapExtent : -gapExtent;
         }
 
-        Vector newTarget = _listState.ScrollAxis == Axis.Vertical ? new Vector(0, extent) : new Vector(extent, 0);
+        Offset newTarget = _listState.ScrollAxis == Axis.Vertical ? new Offset(0, extent) : new Offset(extent, 0);
         if (newTarget == _targetOffset)
         {
             return;
         }
 
-        Vector previousTarget = _targetOffset;
+        Offset previousTarget = _targetOffset;
         _targetOffset = newTarget;
         if (animate)
         {
@@ -980,7 +980,7 @@ internal sealed class ReorderableItemState : State<ReorderableItem>
     internal Rect TargetGeometry()
     {
         var box = (RenderBox)Context.FindRenderObject()!;
-        return new Rect(box.LocalToGlobal(default) + _targetOffset, box.Size);
+        return DartGeometry.RectFromOffsetAndSize(box.LocalToGlobal(default) + _targetOffset, box.Size);
     }
 
     internal bool TryGetTargetGeometry(out Rect geometry)

@@ -175,7 +175,7 @@ public sealed class Transform : SingleChildRenderObjectWidget
     public Transform(
         Matrix4 transform,
         Widget? child = null,
-        Point? origin = null,
+        Offset? origin = null,
         AlignmentGeometry? alignment = null,
         bool transformHitTests = true,
         FilterQuality? filterQuality = null,
@@ -192,7 +192,7 @@ public sealed class Transform : SingleChildRenderObjectWidget
     public static Transform Rotate(
         double angle,
         Widget? child = null,
-        Point? origin = null,
+        Offset? origin = null,
         AlignmentGeometry? alignment = null,
         bool transformHitTests = true,
         FilterQuality? filterQuality = null,
@@ -208,13 +208,13 @@ public sealed class Transform : SingleChildRenderObjectWidget
 
     /// <summary>Creates a widget that translates its child by <paramref name="offset"/>.</summary>
     public static Transform Translate(
-        Point offset,
+        Offset offset,
         Widget? child = null,
         bool transformHitTests = true,
         FilterQuality? filterQuality = null,
         Key? key = null) =>
         new(
-            Matrix4.TranslationValues(offset.X, offset.Y, 0.0),
+            Matrix4.TranslationValues(offset.Dx, offset.Dy, 0.0),
             child,
             origin: null,
             alignment: null,
@@ -228,7 +228,7 @@ public sealed class Transform : SingleChildRenderObjectWidget
         double? scaleX = null,
         double? scaleY = null,
         Widget? child = null,
-        Point? origin = null,
+        Offset? origin = null,
         AlignmentGeometry? alignment = null,
         bool transformHitTests = true,
         FilterQuality? filterQuality = null,
@@ -263,7 +263,7 @@ public sealed class Transform : SingleChildRenderObjectWidget
         bool flipX = false,
         bool flipY = false,
         Widget? child = null,
-        Point? origin = null,
+        Offset? origin = null,
         bool transformHitTests = true,
         FilterQuality? filterQuality = null,
         Key? key = null) =>
@@ -282,7 +282,7 @@ public sealed class Transform : SingleChildRenderObjectWidget
     public Matrix4 Matrix { get; }
 
     /// <summary>The origin of the coordinate system in which to apply the matrix.</summary>
-    public Point? Origin { get; }
+    public Offset? Origin { get; }
 
     /// <summary>The alignment of the origin, relative to the size of the box.</summary>
     public AlignmentGeometry? Alignment { get; }
@@ -422,7 +422,7 @@ public sealed class FittedBox : SingleChildRenderObjectWidget
 public sealed class FractionalTranslation : SingleChildRenderObjectWidget
 {
     public FractionalTranslation(
-        Point translation,
+        Offset translation,
         Widget? child = null,
         bool transformHitTests = true,
         Key? key = null) : base(child, key)
@@ -432,7 +432,7 @@ public sealed class FractionalTranslation : SingleChildRenderObjectWidget
     }
 
     /// <summary>The translation to apply, as a fraction of this box's size.</summary>
-    public Point Translation { get; }
+    public Offset Translation { get; }
 
     /// <summary>Whether to apply the translation when performing hit tests.</summary>
     public bool TransformHitTests { get; }

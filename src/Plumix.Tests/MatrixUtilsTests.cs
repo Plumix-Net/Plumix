@@ -13,12 +13,12 @@ public sealed class MatrixUtilsTests
     [Fact]
     public void GetAsTranslation_MatchesOnlyPureTwoDimensionalTranslations()
     {
-        Assert.Equal(new Point(0.0, 0.0), MatrixUtils.GetAsTranslation(Matrix4.Identity()));
+        Assert.Equal(new Offset(0.0, 0.0), MatrixUtils.GetAsTranslation(Matrix4.Identity()));
         Assert.Null(MatrixUtils.GetAsTranslation(Matrix4.Zero()));
         Assert.Null(MatrixUtils.GetAsTranslation(Matrix4.RotationX(1.0)));
         Assert.Null(MatrixUtils.GetAsTranslation(Matrix4.RotationZ(1.0)));
         Assert.Equal(
-            new Point(1.0, 2.0),
+            new Offset(1.0, 2.0),
             MatrixUtils.GetAsTranslation(Matrix4.TranslationValues(1.0, 2.0, 0.0)));
         Assert.Null(MatrixUtils.GetAsTranslation(Matrix4.TranslationValues(1.0, 2.0, 3.0)));
 
@@ -75,21 +75,21 @@ public sealed class MatrixUtilsTests
         perspective.SetEntry(3, 0, 0.01);
 
         // w = 0.01 * 100 + 1 = 2, so the point lands at half its affine position.
-        Assert.Equal(new Point(50.0, 10.0), MatrixUtils.TransformPoint(perspective, new Point(100.0, 20.0)));
+        Assert.Equal(new Offset(50.0, 10.0), MatrixUtils.TransformPoint(perspective, new Offset(100.0, 20.0)));
         Assert.Equal(
-            new Point(11.0, 22.0),
-            MatrixUtils.TransformPoint(Matrix4.TranslationValues(1.0, 2.0, 0.0), new Point(10.0, 20.0)));
+            new Offset(11.0, 22.0),
+            MatrixUtils.TransformPoint(Matrix4.TranslationValues(1.0, 2.0, 0.0), new Offset(10.0, 20.0)));
     }
 
     [Fact]
     public void TransformRect_HandlesIdentityScaleAndRotation()
     {
-        var rect = new Rect(10.0, 20.0, 20.0, 20.0);
+        var rect = DartGeometry.RectFromLTWH(10.0, 20.0, 20.0, 20.0);
 
         Assert.Equal(rect, MatrixUtils.TransformRect(Matrix4.Identity(), rect));
 
         Rect scaled = MatrixUtils.TransformRect(Matrix4.Diagonal3Values(2.0, 2.0, 2.0), rect);
-        Assert.Equal(new Rect(20.0, 40.0, 40.0, 40.0), scaled);
+        Assert.Equal(DartGeometry.RectFromLTWH(20.0, 40.0, 40.0, 40.0), scaled);
 
         Rect rotated = MatrixUtils.TransformRect(Matrix4.RotationZ(Math.PI / 2.0), rect);
         Assert.Equal(-40.0, rotated.Left, precision: 5);
@@ -101,9 +101,9 @@ public sealed class MatrixUtilsTests
     [Fact]
     public void TransformRect_KeepsVeryLargeFiniteRectsFinite()
     {
-        var rect = new Rect(
-            new Point(0.0, -1.7976931348623157e+308),
-            new Point(800.0, 1.7976931348623157e+308));
+        var rect = DartGeometry.RectFromCorners(
+            new Offset(0.0, -1.7976931348623157e+308),
+            new Offset(800.0, 1.7976931348623157e+308));
         Matrix4 transform = Matrix4.Identity();
         transform.TranslateByDouble(10.0, 0.0, 0.0, 1);
 
@@ -127,16 +127,16 @@ public sealed class MatrixUtilsTests
 
         for (int i = 1; i < 500; i++)
         {
-            var rect = new Rect(11.0 * i, 12.0 * i, (15.0 - 11.0) * i, (18.0 - 12.0) * i);
+            var rect = DartGeometry.RectFromLTWH(11.0 * i, 12.0 * i, (15.0 - 11.0) * i, (18.0 - 12.0) * i);
             Rect actual = MatrixUtils.TransformRect(transform, rect);
 
             double minX = double.PositiveInfinity;
             double minY = double.PositiveInfinity;
             double maxX = double.NegativeInfinity;
             double maxY = double.NegativeInfinity;
-            foreach (Point corner in new[] { rect.TopLeft, rect.TopRight, rect.BottomLeft, rect.BottomRight })
+            foreach (Offset corner in new[] { rect.TopLeft, rect.TopRight, rect.BottomLeft, rect.BottomRight })
             {
-                Vector3 projected = transform.PerspectiveTransform(new Vector3(corner.X, corner.Y, 0.0));
+                Vector3 projected = transform.PerspectiveTransform(new Vector3(corner.Dx, corner.Dy, 0.0));
                 minX = Math.Min(minX, projected.X);
                 minY = Math.Min(minY, projected.Y);
                 maxX = Math.Max(maxX, projected.X);
@@ -153,30 +153,30 @@ public sealed class MatrixUtilsTests
     [Fact]
     public void InverseTransformRect_ShortCircuitsOnTheIdentity()
     {
-        var rect = new Rect(10.0, 20.0, 20.0, 20.0);
+        var rect = DartGeometry.RectFromLTWH(10.0, 20.0, 20.0, 20.0);
 
         Assert.Equal(rect, MatrixUtils.InverseTransformRect(Matrix4.Identity(), rect));
         Assert.Equal(
-            new Rect(5.0, 10.0, 10.0, 10.0),
+            DartGeometry.RectFromLTWH(5.0, 10.0, 10.0, 10.0),
             MatrixUtils.InverseTransformRect(Matrix4.Diagonal3Values(2.0, 2.0, 2.0), rect));
     }
 
     [Fact]
     public void ForceToPoint_CollapsesEveryPointOntoTheOffset()
     {
-        Matrix4 forced = MatrixUtils.ForceToPoint(new Point(20.0, -30.0));
+        Matrix4 forced = MatrixUtils.ForceToPoint(new Offset(20.0, -30.0));
 
-        foreach (Point probe in new[]
+        foreach (Offset probe in new[]
                  {
-                     new Point(20.0, -30.0),
-                     new Point(0.0, 0.0),
-                     new Point(1.0, 1.0),
-                     new Point(-1.0, -1.0),
-                     new Point(-20.0, 30.0),
-                     new Point(-1.2344, 1422434.23),
+                     new Offset(20.0, -30.0),
+                     new Offset(0.0, 0.0),
+                     new Offset(1.0, 1.0),
+                     new Offset(-1.0, -1.0),
+                     new Offset(-20.0, 30.0),
+                     new Offset(-1.2344, 1422434.23),
                  })
         {
-            Assert.Equal(new Point(20.0, -30.0), MatrixUtils.TransformPoint(forced, probe));
+            Assert.Equal(new Offset(20.0, -30.0), MatrixUtils.TransformPoint(forced, probe));
         }
     }
 

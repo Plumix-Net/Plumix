@@ -11,7 +11,7 @@ namespace Plumix.Tests;
 // the paragraph backend probe runs before Skia registers its font manager.
 internal static class RasterBackend
 {
-    private static readonly Vector Dpi = new(96.0, 96.0);
+    private static readonly Offset Dpi = new(96.0, 96.0);
 
     [ModuleInitializer]
     internal static void Initialize()

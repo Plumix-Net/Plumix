@@ -145,7 +145,7 @@ public sealed class MaterialDartParityTests : IDisposable
         Assert.Equal([new Size(150.0, 150.0), new Size(100.0, 100.0)], log);
         log.Clear();
 
-        tester.Drag(tester.ElementOfType<ListView>(), new Vector(0.0, -300.0));
+        tester.Drag(tester.ElementOfType<ListView>(), new Offset(0.0, -300.0));
         tester.Pump();
 
         Assert.Empty(log);
@@ -1096,7 +1096,7 @@ public sealed class MaterialDartParityTests : IDisposable
     // `tester.view` with view id 100.
     private static readonly FlutterView FakeView = new(new Size(800, 600), 1.0, 5100);
 
-    private static readonly Rect LargestRect = new(-1e9, -1e9, 2e9, 2e9);
+    private static readonly Rect LargestRect = DartGeometry.RectFromLTWH(-1e9, -1e9, 2e9, 2e9);
 
     private static Widget BuildMaterial(
         double elevation = 0.0,
@@ -1276,7 +1276,7 @@ public sealed class MaterialDartParityTests : IDisposable
         public override void Paint(PaintingContext context, Size size)
         {
             log.Add(size);
-            context.Canvas.DrawRect(new Rect(new Point(0, 0), size), new Paint { Color = new Color(0xFF0000FF) });
+            context.Canvas.DrawRect(DartGeometry.RectFromOffsetAndSize(new Offset(0, 0), size), new Paint { Color = new Color(0xFF0000FF) });
         }
 
         public override bool ShouldRepaint(CustomPainter oldDelegate) => false;

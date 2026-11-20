@@ -21,7 +21,7 @@ internal sealed class CupertinoMenuOverlay : StatefulWidget
         Size overlaySize,
         EdgeInsetsGeometry overlayPadding,
         Rect anchorRect,
-        Vector? anchorPosition,
+        Offset? anchorPosition,
         object tapRegionGroupId,
         Animation<double> visibilityAnimation,
         IValueListenable<double> swipeDistanceListenable,
@@ -57,7 +57,7 @@ internal sealed class CupertinoMenuOverlay : StatefulWidget
 
     public Rect AnchorRect { get; }
 
-    public Vector? AnchorPosition { get; }
+    public Offset? AnchorPosition { get; }
 
     public object TapRegionGroupId { get; }
 
@@ -71,7 +71,7 @@ internal sealed class CupertinoMenuOverlay : StatefulWidget
 /// <summary>Dart parity source: <c>_MenuOverlayState</c>.</summary>
 internal sealed class CupertinoMenuOverlayState : State<CupertinoMenuOverlay>, WidgetsBindingObserver
 {
-    private static readonly Vector KAttachmentOffset = new(0.0, 8.0);
+    private static readonly Offset KAttachmentOffset = new(0.0, 8.0);
 
     private static readonly IReadOnlyDictionary<ShortcutActivator, Intent> KMenuTraversalShortcuts =
         new Dictionary<ShortcutActivator, Intent>
@@ -97,7 +97,7 @@ internal sealed class CupertinoMenuOverlayState : State<CupertinoMenuOverlay>, W
     private readonly ProxyAnimation _sizeAnimation = new();
     private AnimationController _swipeAnimationController = null!;
     private Alignment _attachmentPointAlignment;
-    private Point _attachmentPoint;
+    private Offset _attachmentPoint;
     private Alignment _menuAlignment;
     private IReadOnlyList<Widget> _children = [];
     private TextDirection? _textDirection;
@@ -239,7 +239,7 @@ internal sealed class CupertinoMenuOverlayState : State<CupertinoMenuOverlay>, W
             builder: (_, value, child) => new CustomSingleChildLayout(
                 layoutDelegate: new CupertinoMenuLayoutDelegate(
                     anchorRect: Current.AnchorPosition.HasValue
-                        ? new Rect(_attachmentPoint, new Size())
+                        ? DartGeometry.RectFromOffsetAndSize(_attachmentPoint, new Size())
                         : Current.AnchorRect,
                     attachmentPoint: _attachmentPoint,
                     avoidBounds: avoidBounds,
@@ -339,20 +339,20 @@ internal sealed class CupertinoMenuOverlayState : State<CupertinoMenuOverlay>, W
     /// <summary>Dart parity source: <c>_MenuOverlayState._resolvePosition</c>.</summary>
     private void ResolvePosition()
     {
-        Point anchorMidpoint = Current.AnchorPosition.HasValue
+        Offset anchorMidpoint = Current.AnchorPosition.HasValue
             ? Current.AnchorRect.TopLeft + Current.AnchorPosition.Value
             : Current.AnchorRect.Center;
         double xMidpointRatio = Current.OverlaySize.Width == 0.0
             ? 0.5
-            : anchorMidpoint.X / Current.OverlaySize.Width;
+            : anchorMidpoint.Dx / Current.OverlaySize.Width;
         double yMidpointRatio = Current.OverlaySize.Height == 0.0
             ? 0.5
-            : anchorMidpoint.Y / Current.OverlaySize.Height;
+            : anchorMidpoint.Dy / Current.OverlaySize.Height;
         double dy = yMidpointRatio < 0.55 ? 1.0 : -1.0;
         double dx = xMidpointRatio < 0.4 ? -1.0 : xMidpointRatio > 0.6 ? 1.0 : 0.0;
         _menuAlignment = new Alignment(dx, -dy);
 
-        Point transformOrigin;
+        Offset transformOrigin;
         if (Current.AnchorPosition.HasValue)
         {
             _attachmentPoint = Current.AnchorRect.TopLeft + Current.AnchorPosition.Value;
@@ -360,7 +360,7 @@ internal sealed class CupertinoMenuOverlayState : State<CupertinoMenuOverlay>, W
         }
         else
         {
-            Vector offset = KAttachmentOffset * dy;
+            Offset offset = KAttachmentOffset * dy;
             _attachmentPoint = new Alignment(dx, dy).WithinRect(Current.AnchorRect) + offset;
             transformOrigin = new Alignment(0.0, dy).WithinRect(Current.AnchorRect) + offset;
         }
@@ -368,10 +368,10 @@ internal sealed class CupertinoMenuOverlayState : State<CupertinoMenuOverlay>, W
         _attachmentPointAlignment = new Alignment(
             Current.OverlaySize.Width == 0.0
                 ? 0.0
-                : (transformOrigin.X / Current.OverlaySize.Width * 2.0) - 1.0,
+                : (transformOrigin.Dx / Current.OverlaySize.Width * 2.0) - 1.0,
             Current.OverlaySize.Height == 0.0
                 ? 0.0
-                : (transformOrigin.Y / Current.OverlaySize.Height * 2.0) - 1.0);
+                : (transformOrigin.Dy / Current.OverlaySize.Height * 2.0) - 1.0);
     }
 
     private Widget BuildAlign(BuildContext context, Widget? child) => new Align(
@@ -464,7 +464,7 @@ internal sealed class CupertinoMenuShadowPainter : CustomPainter
     public override void Paint(PaintingContext context, Size size)
     {
         double shadowAnimation = ShadowAnimation;
-        var rect = new Rect(default, size);
+        var rect = DartGeometry.RectFromOffsetAndSize(default, size);
         RSuperellipse roundedRect = RSuperellipse.FromRectAndRadius(rect, KRadius);
         double blurSigma = shadowAnimation * 50.0;
         Color shadowColor = Plumix.UI.Color.FromRGBO(0, 0, 10, shadowAnimation * shadowAnimation * KShadowOpacity);
@@ -491,7 +491,7 @@ internal sealed class CupertinoMenuLayoutDelegate : SingleChildLayoutDelegate
 {
     public CupertinoMenuLayoutDelegate(
         Rect anchorRect,
-        Point attachmentPoint,
+        Offset attachmentPoint,
         IReadOnlyList<Rect> avoidBounds,
         double heightFactor,
         Alignment menuAlignment,
@@ -507,7 +507,7 @@ internal sealed class CupertinoMenuLayoutDelegate : SingleChildLayoutDelegate
 
     public Rect AnchorRect { get; }
 
-    public Point AttachmentPoint { get; }
+    public Offset AttachmentPoint { get; }
 
     public IReadOnlyList<Rect> AvoidBounds { get; }
 
@@ -520,24 +520,24 @@ internal sealed class CupertinoMenuLayoutDelegate : SingleChildLayoutDelegate
     public override BoxConstraints GetConstraintsForChild(BoxConstraints constraints) =>
         BoxConstraints.Loose(constraints.Biggest).Deflate(OverlayPadding);
 
-    public override Point GetPositionForChild(Size size, Size childSize)
+    public override Offset GetPositionForChild(Size size, Size childSize)
     {
         double inverseHeightFactor = HeightFactor > 0.01 ? 1.0 / HeightFactor : 0.0;
         double finalHeight = Math.Min(childSize.Height * inverseHeightFactor, size.Height);
         var finalSize = new Size(childSize.Width, finalHeight);
-        Point desired = AttachmentPoint - MenuAlignment.AlongSize(finalSize);
+        Offset desired = AttachmentPoint - MenuAlignment.AlongSize(finalSize);
         Rect screen = ClosestScreen(size);
-        Point finalPosition = PositionChild(screen, finalSize, desired, AnchorRect);
-        double x = finalPosition.X;
-        double y = finalPosition.Y;
+        Offset finalPosition = PositionChild(screen, finalSize, desired, AnchorRect);
+        double x = finalPosition.Dx;
+        double y = finalPosition.Dy;
 
-        if (y + finalHeight <= AnchorRect.Center.Y)
+        if (y + finalHeight <= AnchorRect.Center.Dy)
         {
-            return new Point(x, y + finalHeight - childSize.Height);
+            return new Offset(x, y + finalHeight - childSize.Height);
         }
 
         double startY = AnchorRect.Bottom;
-        return new Point(x, startY + ((y - startY) * HeightFactor));
+        return new Offset(x, startY + ((y - startY) * HeightFactor));
     }
 
     public override bool ShouldRelayout(SingleChildLayoutDelegate oldDelegate)
@@ -557,9 +557,9 @@ internal sealed class CupertinoMenuLayoutDelegate : SingleChildLayoutDelegate
 
     private Rect ClosestScreen(Size size)
     {
-        List<Rect> screens = DisplayFeatureSubScreen.SubScreensInBounds(new Rect(default, size), AvoidBounds);
-        Point anchor = AnchorRect.Center;
-        Rect closest = screens.Count == 0 ? new Rect(default, size) : screens[0];
+        List<Rect> screens = DisplayFeatureSubScreen.SubScreensInBounds(DartGeometry.RectFromOffsetAndSize(default, size), AvoidBounds);
+        Offset anchor = AnchorRect.Center;
+        Rect closest = screens.Count == 0 ? DartGeometry.RectFromOffsetAndSize(default, size) : screens[0];
         double closestDistance = CupertinoMenuMetrics.ComputeSquaredDistanceToRect(anchor, closest);
         foreach (Rect screen in screens.Skip(1))
         {
@@ -574,10 +574,10 @@ internal sealed class CupertinoMenuLayoutDelegate : SingleChildLayoutDelegate
         return closest;
     }
 
-    private Point PositionChild(Rect screen, Size childSize, Point position, Rect anchor)
+    private Offset PositionChild(Rect screen, Size childSize, Offset position, Rect anchor)
     {
-        double x = position.X;
-        double y = position.Y;
+        double x = position.Dx;
+        double y = position.Dy;
         bool OverLeft(double value) => value < screen.Left + OverlayPadding.Left;
         bool OverRight(double value) =>
             value > screen.Right - childSize.Width - OverlayPadding.Right;
@@ -592,7 +592,7 @@ internal sealed class CupertinoMenuLayoutDelegate : SingleChildLayoutDelegate
         }
         else if (OverLeft(x))
         {
-            double flipped = (anchor.Center.X * 2.0) - position.X - childSize.Width;
+            double flipped = (anchor.Center.Dx * 2.0) - position.Dx - childSize.Width;
             hasHorizontalAnchorOverlap = OverRight(flipped);
             x = hasHorizontalAnchorOverlap || OverLeft(flipped)
                 ? screen.Left + OverlayPadding.Left
@@ -600,7 +600,7 @@ internal sealed class CupertinoMenuLayoutDelegate : SingleChildLayoutDelegate
         }
         else if (OverRight(x))
         {
-            double flipped = (anchor.Center.X * 2.0) - position.X - childSize.Width;
+            double flipped = (anchor.Center.Dx * 2.0) - position.Dx - childSize.Width;
             hasHorizontalAnchorOverlap = OverLeft(flipped);
             x = hasHorizontalAnchorOverlap || OverRight(flipped)
                 ? screen.Right - childSize.Width - OverlayPadding.Right
@@ -609,7 +609,7 @@ internal sealed class CupertinoMenuLayoutDelegate : SingleChildLayoutDelegate
 
         if (childSize.Height >= screen.Height)
         {
-            return new Point(x, screen.Top + OverlayPadding.Top);
+            return new Offset(x, screen.Top + OverlayPadding.Top);
         }
 
         if (hasHorizontalAnchorOverlap && anchor.Width > 0.0 && anchor.Height > 0.0)
@@ -624,19 +624,19 @@ internal sealed class CupertinoMenuLayoutDelegate : SingleChildLayoutDelegate
 
         if (OverTop(y))
         {
-            double flipped = (anchor.Center.Y * 2.0) - position.Y - childSize.Height;
+            double flipped = (anchor.Center.Dy * 2.0) - position.Dy - childSize.Height;
             y = OverTop(flipped) || OverBottom(flipped)
                 ? screen.Top + OverlayPadding.Top
                 : flipped;
         }
         else if (OverBottom(y))
         {
-            double flipped = (anchor.Center.Y * 2.0) - position.Y - childSize.Height;
+            double flipped = (anchor.Center.Dy * 2.0) - position.Dy - childSize.Height;
             y = OverTop(flipped) || OverBottom(flipped)
                 ? screen.Bottom - childSize.Height - OverlayPadding.Bottom
                 : flipped;
         }
 
-        return new Point(x, y);
+        return new Offset(x, y);
     }
 }

@@ -635,7 +635,7 @@ public sealed class RendererBinding
     /// Flutter's <c>RendererBinding.hitTestInView</c> over <c>GestureBinding.hitTestInView</c>: the
     /// gesture binding is the last entry even when the view id has no registered render view.
     /// </remarks>
-    public void HitTestInView(HitTestResult result, Point position, int viewId)
+    public void HitTestInView(HitTestResult result, Offset position, int viewId)
     {
         ArgumentNullException.ThrowIfNull(result);
         if (_viewIdToRenderView.TryGetValue(viewId, out RenderView? renderView))

@@ -562,46 +562,46 @@ public abstract class DirectionalFocusTraversalPolicy : FocusTraversalPolicy
     private static bool OverlapsVerticalExtent(Rect node, Rect focused) =>
         Math.Max(node.Top, focused.Top) < Math.Min(node.Bottom, focused.Bottom) && node.Left < node.Right;
 
-    private static int VerticalCompare(Point target, Point a, Point b) =>
-        Math.Abs(a.Y - target.Y).CompareTo(Math.Abs(b.Y - target.Y));
+    private static int VerticalCompare(Offset target, Offset a, Offset b) =>
+        Math.Abs(a.Dy - target.Dy).CompareTo(Math.Abs(b.Dy - target.Dy));
 
-    private static int HorizontalCompare(Point target, Point a, Point b) =>
-        Math.Abs(a.X - target.X).CompareTo(Math.Abs(b.X - target.X));
+    private static int HorizontalCompare(Offset target, Offset a, Offset b) =>
+        Math.Abs(a.Dx - target.Dx).CompareTo(Math.Abs(b.Dx - target.Dx));
 
-    private static List<FocusNode> SortByDistancePreferVertical(Point target, IEnumerable<FocusNode> nodes) =>
+    private static List<FocusNode> SortByDistancePreferVertical(Offset target, IEnumerable<FocusNode> nodes) =>
         StableSort(nodes, (nodeA, nodeB) =>
         {
-            Point a = nodeA.Rect.Center;
-            Point b = nodeB.Rect.Center;
+            Offset a = nodeA.Rect.Center;
+            Offset b = nodeB.Rect.Center;
             int vertical = VerticalCompare(target, a, b);
             return vertical == 0 ? HorizontalCompare(target, a, b) : vertical;
         });
 
-    private static List<FocusNode> SortByDistancePreferHorizontal(Point target, IEnumerable<FocusNode> nodes) =>
+    private static List<FocusNode> SortByDistancePreferHorizontal(Offset target, IEnumerable<FocusNode> nodes) =>
         StableSort(nodes, (nodeA, nodeB) =>
         {
-            Point a = nodeA.Rect.Center;
-            Point b = nodeB.Rect.Center;
+            Offset a = nodeA.Rect.Center;
+            Offset b = nodeB.Rect.Center;
             int horizontal = HorizontalCompare(target, a, b);
             return horizontal == 0 ? VerticalCompare(target, a, b) : horizontal;
         });
 
-    private static int VerticalCompareClosestEdge(Point target, Rect a, Rect b)
+    private static int VerticalCompareClosestEdge(Offset target, Rect a, Rect b)
     {
-        double aCoord = Math.Abs(a.Top - target.Y) < Math.Abs(a.Bottom - target.Y) ? a.Top : a.Bottom;
-        double bCoord = Math.Abs(b.Top - target.Y) < Math.Abs(b.Bottom - target.Y) ? b.Top : b.Bottom;
-        return Math.Abs(aCoord - target.Y).CompareTo(Math.Abs(bCoord - target.Y));
+        double aCoord = Math.Abs(a.Top - target.Dy) < Math.Abs(a.Bottom - target.Dy) ? a.Top : a.Bottom;
+        double bCoord = Math.Abs(b.Top - target.Dy) < Math.Abs(b.Bottom - target.Dy) ? b.Top : b.Bottom;
+        return Math.Abs(aCoord - target.Dy).CompareTo(Math.Abs(bCoord - target.Dy));
     }
 
-    private static int HorizontalCompareClosestEdge(Point target, Rect a, Rect b)
+    private static int HorizontalCompareClosestEdge(Offset target, Rect a, Rect b)
     {
-        double aCoord = Math.Abs(a.Left - target.X) < Math.Abs(a.Right - target.X) ? a.Left : a.Right;
-        double bCoord = Math.Abs(b.Left - target.X) < Math.Abs(b.Right - target.X) ? b.Left : b.Right;
-        return Math.Abs(aCoord - target.X).CompareTo(Math.Abs(bCoord - target.X));
+        double aCoord = Math.Abs(a.Left - target.Dx) < Math.Abs(a.Right - target.Dx) ? a.Left : a.Right;
+        double bCoord = Math.Abs(b.Left - target.Dx) < Math.Abs(b.Right - target.Dx) ? b.Left : b.Right;
+        return Math.Abs(aCoord - target.Dx).CompareTo(Math.Abs(bCoord - target.Dx));
     }
 
     private static List<FocusNode> SortClosestEdgesByDistancePreferHorizontal(
-        Point target,
+        Offset target,
         IEnumerable<FocusNode> nodes) =>
         StableSort(nodes, (nodeA, nodeB) =>
         {
@@ -612,7 +612,7 @@ public abstract class DirectionalFocusTraversalPolicy : FocusTraversalPolicy
         });
 
     private static List<FocusNode> SortClosestEdgesByDistancePreferVertical(
-        Point target,
+        Offset target,
         IEnumerable<FocusNode> nodes) =>
         StableSort(nodes, (nodeA, nodeB) =>
         {
@@ -632,18 +632,18 @@ public abstract class DirectionalFocusTraversalPolicy : FocusTraversalPolicy
         {
             TraversalDirection.Left => node => node.Rect != target
                                                && (forward
-                                                   ? node.Rect.Center.X <= target.Left
-                                                   : node.Rect.Center.X >= target.Left),
+                                                   ? node.Rect.Center.Dx <= target.Left
+                                                   : node.Rect.Center.Dx >= target.Left),
             TraversalDirection.Right => node => node.Rect != target
                                                 && (forward
-                                                    ? node.Rect.Center.X >= target.Right
-                                                    : node.Rect.Center.X <= target.Right),
+                                                    ? node.Rect.Center.Dx >= target.Right
+                                                    : node.Rect.Center.Dx <= target.Right),
             _ => throw new ArgumentOutOfRangeException(nameof(direction), direction, "Invalid direction."),
         };
 
         return StableSort(
             nodes.Where(predicate),
-            static (a, b) => a.Rect.Center.X.CompareTo(b.Rect.Center.X));
+            static (a, b) => a.Rect.Center.Dx.CompareTo(b.Rect.Center.Dx));
     }
 
     private static List<FocusNode> SortAndFilterVertically(
@@ -656,18 +656,18 @@ public abstract class DirectionalFocusTraversalPolicy : FocusTraversalPolicy
         {
             TraversalDirection.Up => node => node.Rect != target
                                              && (forward
-                                                 ? node.Rect.Center.Y <= target.Top
-                                                 : node.Rect.Center.Y >= target.Top),
+                                                 ? node.Rect.Center.Dy <= target.Top
+                                                 : node.Rect.Center.Dy >= target.Top),
             TraversalDirection.Down => node => node.Rect != target
                                                && (forward
-                                                   ? node.Rect.Center.Y >= target.Bottom
-                                                   : node.Rect.Center.Y <= target.Bottom),
+                                                   ? node.Rect.Center.Dy >= target.Bottom
+                                                   : node.Rect.Center.Dy <= target.Bottom),
             _ => throw new ArgumentOutOfRangeException(nameof(direction), direction, "Invalid direction."),
         };
 
         return StableSort(
             nodes.Where(predicate),
-            static (a, b) => a.Rect.Center.Y.CompareTo(b.Rect.Center.Y));
+            static (a, b) => a.Rect.Center.Dy.CompareTo(b.Rect.Center.Dy));
     }
 
     /// <summary>Dart parity source: <c>DirectionalFocusTraversalPolicyMixin._popPolicyDataIfNeeded</c>.</summary>
@@ -1013,7 +1013,7 @@ internal sealed class ReadingOrderDirectionalGroupData
             {
                 foreach (ReadingOrderSortData member in Members)
                 {
-                    _rect = _rect == null ? member.Rect : _rect.Value.Union(member.Rect);
+                    _rect = _rect == null ? member.Rect : _rect.Value.ExpandToInclude(member.Rect);
                 }
             }
 

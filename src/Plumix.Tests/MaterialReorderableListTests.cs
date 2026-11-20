@@ -56,7 +56,7 @@ public sealed class MaterialReorderableListTests
         IndexedWidgetBuilder builder = (_, index) => new SizedBox(key: new ValueKey<int>(index));
         ReorderCallback callback = (_, _) => { };
         ReorderDragBoundaryProvider boundaryProvider = _ =>
-            new FixedRectDragBoundaryDelegate(new Rect(0, 0, 100, 100));
+            new FixedRectDragBoundaryDelegate(DartGeometry.RectFromLTWH(0, 0, 100, 100));
         ChildIndexGetter childIndexGetter = _ => 0;
 
         ReorderableListView list = ReorderableListView.Builder(
@@ -141,7 +141,7 @@ public sealed class MaterialReorderableListTests
         RenderViewport viewport = Assert.Single(FindDescendants<RenderViewport>(harness.RenderView));
         Assert.Equal(0.25, viewport.Anchor);
         Assert.Equal(Clip.None, viewport.ClipBehavior);
-        Assert.Equal(new Point(4, 29), itemContext.FindRenderObject()!.GetPaintOffsetToRoot());
+        Assert.Equal(new Offset(4, 29), itemContext.FindRenderObject()!.GetPaintOffsetToRoot());
 
         SliverReorderableList sliver = Assert.IsType<SliverReorderableList>(
             itemContext.FindAncestorWidgetOfExactType<SliverReorderableList>());
@@ -221,22 +221,22 @@ public sealed class MaterialReorderableListTests
 
         BuildContext context = key.CurrentContext!;
         DragBoundaryDelegate<Rect> global = DragBoundary.ForRectOf(context);
-        Assert.False(global.IsWithinBoundary(new Rect(10, 10, 20, 20)));
-        Assert.True(global.IsWithinBoundary(new Rect(40, 30, 20, 20)));
+        Assert.False(global.IsWithinBoundary(DartGeometry.RectFromLTWH(10, 10, 20, 20)));
+        Assert.True(global.IsWithinBoundary(DartGeometry.RectFromLTWH(40, 30, 20, 20)));
         Assert.Equal(
-            new Rect(40, 30, 20, 20),
-            global.NearestPositionWithinBoundary(new Rect(10, 10, 20, 20)));
+            DartGeometry.RectFromLTWH(40, 30, 20, 20),
+            global.NearestPositionWithinBoundary(DartGeometry.RectFromLTWH(10, 10, 20, 20)));
 
         DragBoundaryDelegate<Rect> local = DragBoundary.ForRectOf(
             context,
             useGlobalPosition: false);
-        Assert.True(local.IsWithinBoundary(new Rect(50, 50, 20, 20)));
-        Assert.False(local.IsWithinBoundary(new Rect(90, 90, 20, 20)));
+        Assert.True(local.IsWithinBoundary(DartGeometry.RectFromLTWH(50, 50, 20, 20)));
+        Assert.False(local.IsWithinBoundary(DartGeometry.RectFromLTWH(90, 90, 20, 20)));
         Assert.Equal(
-            new Rect(80, 80, 20, 20),
-            local.NearestPositionWithinBoundary(new Rect(90, 90, 20, 20)));
+            DartGeometry.RectFromLTWH(80, 80, 20, 20),
+            local.NearestPositionWithinBoundary(DartGeometry.RectFromLTWH(90, 90, 20, 20)));
         Assert.Throws<InvalidOperationException>(() =>
-            local.NearestPositionWithinBoundary(new Rect(0, 0, 101, 20)));
+            local.NearestPositionWithinBoundary(DartGeometry.RectFromLTWH(0, 0, 101, 20)));
 
         var freeKey = new LabeledGlobalKey<State>("free-drag-boundary-child");
         using WidgetRenderHarness freeHarness = new(Wrap(new SizedBox(
@@ -248,7 +248,7 @@ public sealed class MaterialReorderableListTests
         BuildContext freeContext = freeKey.CurrentContext!;
         Assert.Null(DragBoundary.ForRectMaybeOf(freeContext));
         DragBoundaryDelegate<Rect> free = DragBoundary.ForRectOf(freeContext);
-        var unrestricted = new Rect(300, 300, 300, 300);
+        var unrestricted = DartGeometry.RectFromLTWH(300, 300, 300, 300);
         Assert.True(free.IsWithinBoundary(unrestricted));
         Assert.Equal(unrestricted, free.NearestPositionWithinBoundary(unrestricted));
     }
@@ -283,15 +283,15 @@ public sealed class MaterialReorderableListTests
             harness.Pump(new Size(200, 150));
 
             DateTime start = DateTime.UtcNow;
-            DispatchDown(binding, harness.RenderView, 75, new Point(100, 25), start);
-            DispatchMove(binding, harness.RenderView, 75, new Point(100, -400), start.AddMilliseconds(100));
+            DispatchDown(binding, harness.RenderView, 75, new Offset(100, 25), start);
+            DispatchMove(binding, harness.RenderView, 75, new Offset(100, -400), start.AddMilliseconds(100));
 
-            Assert.Equal(0, listKey.CurrentState!.DragTranslation.Y, precision: 6);
+            Assert.Equal(0, listKey.CurrentState!.DragTranslation.Dy, precision: 6);
 
-            DispatchMove(binding, harness.RenderView, 75, new Point(100, 800), start.AddMilliseconds(200));
+            DispatchMove(binding, harness.RenderView, 75, new Offset(100, 800), start.AddMilliseconds(200));
 
-            Assert.Equal(100, listKey.CurrentState.DragTranslation.Y, precision: 6);
-            DispatchUp(binding, harness.RenderView, 75, new Point(100, 800), start.AddMilliseconds(300));
+            Assert.Equal(100, listKey.CurrentState.DragTranslation.Dy, precision: 6);
+            DispatchUp(binding, harness.RenderView, 75, new Offset(100, 800), start.AddMilliseconds(300));
         }
         finally
         {
@@ -331,11 +331,11 @@ public sealed class MaterialReorderableListTests
             harness.Pump(new Size(200, 150));
 
             DateTime start = DateTime.UtcNow;
-            DispatchDown(binding, harness.RenderView, 76, new Point(100, 25), start);
-            DispatchMove(binding, harness.RenderView, 76, new Point(100, -400), start.AddMilliseconds(100));
+            DispatchDown(binding, harness.RenderView, 76, new Offset(100, 25), start);
+            DispatchMove(binding, harness.RenderView, 76, new Offset(100, -400), start.AddMilliseconds(100));
 
-            Assert.Equal(-425, listKey.CurrentState!.DragTranslation.Y, precision: 6);
-            DispatchUp(binding, harness.RenderView, 76, new Point(100, -400), start.AddMilliseconds(200));
+            Assert.Equal(-425, listKey.CurrentState!.DragTranslation.Dy, precision: 6);
+            DispatchUp(binding, harness.RenderView, 76, new Offset(100, -400), start.AddMilliseconds(200));
         }
         finally
         {
@@ -370,9 +370,9 @@ public sealed class MaterialReorderableListTests
             harness.Pump(new Size(200, 150));
 
             DateTime start = DateTime.UtcNow;
-            DispatchDown(binding, harness.RenderView, 71, new Point(100, 25), start);
-            DispatchMove(binding, harness.RenderView, 71, new Point(100, 115), start.AddMilliseconds(100));
-            DispatchUp(binding, harness.RenderView, 71, new Point(100, 115), start.AddMilliseconds(200));
+            DispatchDown(binding, harness.RenderView, 71, new Offset(100, 25), start);
+            DispatchMove(binding, harness.RenderView, 71, new Offset(100, 115), start.AddMilliseconds(100));
+            DispatchUp(binding, harness.RenderView, 71, new Offset(100, 115), start.AddMilliseconds(200));
             CompleteDropAnimation();
 
             Assert.Equal([0], starts);
@@ -410,9 +410,9 @@ public sealed class MaterialReorderableListTests
             harness.Pump(new Size(200, 150));
 
             DateTime start = DateTime.UtcNow;
-            DispatchDown(binding, harness.RenderView, 72, new Point(100, 25), start);
-            DispatchMove(binding, harness.RenderView, 72, new Point(100, 115), start.AddMilliseconds(100));
-            DispatchUp(binding, harness.RenderView, 72, new Point(100, 115), start.AddMilliseconds(200));
+            DispatchDown(binding, harness.RenderView, 72, new Offset(100, 25), start);
+            DispatchMove(binding, harness.RenderView, 72, new Offset(100, 115), start.AddMilliseconds(100));
+            DispatchUp(binding, harness.RenderView, 72, new Offset(100, 115), start.AddMilliseconds(200));
             CompleteDropAnimation();
 
             Assert.Equal([(0, 3)], reorders);
@@ -447,9 +447,9 @@ public sealed class MaterialReorderableListTests
             harness.Pump(new Size(150, 100));
 
             DateTime start = DateTime.UtcNow;
-            DispatchDown(binding, harness.RenderView, 74, new Point(25, 50), start);
-            DispatchMove(binding, harness.RenderView, 74, new Point(115, 50), start.AddMilliseconds(100));
-            DispatchUp(binding, harness.RenderView, 74, new Point(115, 50), start.AddMilliseconds(200));
+            DispatchDown(binding, harness.RenderView, 74, new Offset(25, 50), start);
+            DispatchMove(binding, harness.RenderView, 74, new Offset(115, 50), start.AddMilliseconds(100));
+            DispatchUp(binding, harness.RenderView, 74, new Offset(115, 50), start.AddMilliseconds(200));
             CompleteDropAnimation();
 
             Assert.Equal([(0, 2)], reorders);
@@ -523,13 +523,13 @@ public sealed class MaterialReorderableListTests
 
             Assert.Contains(resolvedStates, states => states.Count == 0);
             DateTime start = DateTime.UtcNow;
-            DispatchDown(binding, harness.RenderView, 95, new Point(220, 25), start);
-            DispatchMove(binding, harness.RenderView, 95, new Point(220, 75), start.AddMilliseconds(100));
+            DispatchDown(binding, harness.RenderView, 95, new Offset(220, 25), start);
+            DispatchMove(binding, harness.RenderView, 95, new Offset(220, 75), start.AddMilliseconds(100));
             harness.Pump(new Size(240, 100));
 
             Assert.Contains(resolvedStates, states => states.Contains(WidgetState.Dragged));
 
-            DispatchUp(binding, harness.RenderView, 95, new Point(220, 75), start.AddMilliseconds(200));
+            DispatchUp(binding, harness.RenderView, 95, new Offset(220, 75), start.AddMilliseconds(200));
             CompleteDropAnimation();
         }
         finally
@@ -565,9 +565,9 @@ public sealed class MaterialReorderableListTests
             harness.Pump(new Size(240, 150));
 
             DateTime start = DateTime.UtcNow;
-            DispatchDown(binding, harness.RenderView, 73, new Point(220, 25), start);
-            DispatchMove(binding, harness.RenderView, 73, new Point(220, 115), start.AddMilliseconds(100));
-            DispatchUp(binding, harness.RenderView, 73, new Point(220, 115), start.AddMilliseconds(200));
+            DispatchDown(binding, harness.RenderView, 73, new Offset(220, 25), start);
+            DispatchMove(binding, harness.RenderView, 73, new Offset(220, 115), start.AddMilliseconds(100));
+            DispatchUp(binding, harness.RenderView, 73, new Offset(220, 115), start.AddMilliseconds(200));
             CompleteDropAnimation();
 
             Assert.Equal([(0, 2)], reorders);
@@ -683,8 +683,8 @@ public sealed class MaterialReorderableListTests
             int baselineEntries = harness.FindState<OverlayState>().Entries.Count;
 
             DateTime start = DateTime.UtcNow;
-            DispatchDown(binding, harness.RenderView, 80, new Point(100, 25), start);
-            DispatchMove(binding, harness.RenderView, 80, new Point(100, 115), start.AddMilliseconds(100));
+            DispatchDown(binding, harness.RenderView, 80, new Offset(100, 25), start);
+            DispatchMove(binding, harness.RenderView, 80, new Offset(100, 115), start.AddMilliseconds(100));
             harness.Pump(new Size(200, 150));
 
             Assert.Equal(baselineEntries + 1, harness.FindState<OverlayState>().Entries.Count);
@@ -699,7 +699,7 @@ public sealed class MaterialReorderableListTests
             SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(pickupClock + 0.01));
             SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(pickupClock + 0.30));
 
-            DispatchUp(binding, harness.RenderView, 80, new Point(100, 115), start.AddMilliseconds(200));
+            DispatchUp(binding, harness.RenderView, 80, new Offset(100, 115), start.AddMilliseconds(200));
             Assert.Empty(reorders);
             Assert.Equal(baselineEntries + 1, harness.FindState<OverlayState>().Entries.Count);
 
@@ -734,9 +734,9 @@ public sealed class MaterialReorderableListTests
             harness.Pump(new Size(200, 150));
 
             DateTime start = DateTime.UtcNow;
-            DispatchDown(binding, harness.RenderView, 82, new Point(100, 25), start);
-            DispatchMove(binding, harness.RenderView, 82, new Point(100, 115), start.AddMilliseconds(100));
-            DispatchUp(binding, harness.RenderView, 82, new Point(100, 115), start.AddMilliseconds(200));
+            DispatchDown(binding, harness.RenderView, 82, new Offset(100, 25), start);
+            DispatchMove(binding, harness.RenderView, 82, new Offset(100, 115), start.AddMilliseconds(100));
+            DispatchUp(binding, harness.RenderView, 82, new Offset(100, 115), start.AddMilliseconds(200));
             CompleteDropAnimation();
             harness.Pump(new Size(200, 150));
 
@@ -776,8 +776,8 @@ public sealed class MaterialReorderableListTests
             harness.Pump(new Size(200, 150));
 
             DateTime start = DateTime.UtcNow;
-            DispatchDown(binding, harness.RenderView, 81, new Point(100, 25), start);
-            DispatchMove(binding, harness.RenderView, 81, new Point(100, 190), start.AddMilliseconds(100));
+            DispatchDown(binding, harness.RenderView, 81, new Offset(100, 25), start);
+            DispatchMove(binding, harness.RenderView, 81, new Offset(100, 190), start.AddMilliseconds(100));
 
             double clock = AnimationPump.CurrentSeconds;
             AnimationPump.Prime();
@@ -789,7 +789,7 @@ public sealed class MaterialReorderableListTests
 
             Assert.True(firstOffset > 0.0);
             Assert.True(controller.Offset > firstOffset);
-            DispatchUp(binding, harness.RenderView, 81, new Point(100, 190), start.AddMilliseconds(200));
+            DispatchUp(binding, harness.RenderView, 81, new Offset(100, 190), start.AddMilliseconds(200));
         }
         finally
         {
@@ -843,7 +843,7 @@ public sealed class MaterialReorderableListTests
         GestureBinding binding,
         RenderView view,
         int pointer,
-        Point position,
+        Offset position,
         DateTime timestamp)
     {
         binding.HandlePointerEvent(
@@ -855,7 +855,7 @@ public sealed class MaterialReorderableListTests
         GestureBinding binding,
         RenderView view,
         int pointer,
-        Point position,
+        Offset position,
         DateTime timestamp)
     {
         binding.HandlePointerEvent(
@@ -872,7 +872,7 @@ public sealed class MaterialReorderableListTests
         GestureBinding binding,
         RenderView view,
         int pointer,
-        Point position,
+        Offset position,
         DateTime timestamp)
     {
         binding.HandlePointerEvent(
@@ -934,9 +934,9 @@ public sealed class MaterialReorderableListTests
 
         public override Rect NearestPositionWithinBoundary(Rect draggedObject)
         {
-            return new Rect(
-                Math.Clamp(draggedObject.X, _boundary.Left, _boundary.Right - draggedObject.Width),
-                Math.Clamp(draggedObject.Y, _boundary.Top, _boundary.Bottom - draggedObject.Height),
+            return DartGeometry.RectFromLTWH(
+                Math.Clamp(draggedObject.Left, _boundary.Left, _boundary.Right - draggedObject.Width),
+                Math.Clamp(draggedObject.Top, _boundary.Top, _boundary.Bottom - draggedObject.Height),
                 draggedObject.Width,
                 draggedObject.Height);
         }

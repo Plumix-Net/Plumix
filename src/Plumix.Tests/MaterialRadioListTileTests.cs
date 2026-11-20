@@ -42,7 +42,7 @@ public sealed class MaterialRadioListTileTests
         using var harness = new ListTileControlHarness(BuildGroup("one", log.Add));
 
         harness.Pump();
-        harness.TapTile(pointer: 721, position: new Point(150, 80));
+        harness.TapTile(pointer: 721, position: new Offset(150, 80));
 
         Assert.Equal(["two"], log);
     }
@@ -56,7 +56,7 @@ public sealed class MaterialRadioListTileTests
         using var harness = new ListTileControlHarness(BuildGroup("one", log.Add));
 
         harness.Pump();
-        harness.TapTile(pointer: 722, position: new Point(150, 28));
+        harness.TapTile(pointer: 722, position: new Offset(150, 28));
 
         Assert.Empty(log);
     }
@@ -70,7 +70,7 @@ public sealed class MaterialRadioListTileTests
         using var harness = new ListTileControlHarness(BuildGroup("one", log.Add, toggleable: true));
 
         harness.Pump();
-        harness.TapTile(pointer: 723, position: new Point(150, 28));
+        harness.TapTile(pointer: 723, position: new Offset(150, 28));
 
         Assert.Equal([null], log);
     }

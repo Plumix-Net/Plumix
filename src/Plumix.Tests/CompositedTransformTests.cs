@@ -61,7 +61,7 @@ public sealed class CompositedTransformTests
         root.Update(new CompositedTransformFollower(
             secondLink,
             showWhenUnlinked: false,
-            offset: new Point(7, -3),
+            offset: new Offset(7, -3),
             targetAnchor: Alignment.BottomRight,
             followerAnchor: Alignment.Center,
             child: new SizedBox(width: 20, height: 10)));
@@ -71,7 +71,7 @@ public sealed class CompositedTransformTests
         Assert.Same(follower, updated);
         Assert.Same(secondLink, updated.Link);
         Assert.False(updated.ShowWhenUnlinked);
-        Assert.Equal(new Point(7, -3), updated.Offset);
+        Assert.Equal(new Offset(7, -3), updated.Offset);
         Assert.Equal(Alignment.BottomRight, updated.LeaderAnchor);
         Assert.Equal(Alignment.Center, updated.FollowerAnchor);
     }
@@ -84,7 +84,7 @@ public sealed class CompositedTransformTests
         var followerChild = new HitTestRenderBox(new Size(20, 10), hitTestSelf: true);
         var follower = new RenderFollowerLayer(
             link,
-            offset: new Point(5, 7),
+            offset: new Offset(5, 7),
             leaderAnchor: Alignment.BottomRight,
             followerAnchor: Alignment.Center,
             child: followerChild);
@@ -103,7 +103,7 @@ public sealed class CompositedTransformTests
         Assert.Equal(Matrix4.TranslationValues(-85, -38, 0.0), follower.GetCurrentTransform());
 
         var result = new BoxHitTestResult();
-        Assert.True(stack.HitTest(result, new Point(75, 67)));
+        Assert.True(stack.HitTest(result, new Offset(75, 67)));
         Assert.Contains(result.Path, entry => ReferenceEquals(entry.Target, followerChild));
 
         Matrix4 semanticsTransform = Matrix4.Identity();
@@ -131,7 +131,7 @@ public sealed class CompositedTransformTests
 
         Assert.Null(link.Leader);
         Assert.Equal(Matrix4.Identity(), follower.GetCurrentTransform());
-        Assert.False(follower.HitTest(new BoxHitTestResult(), new Point(5, 5)));
+        Assert.False(follower.HitTest(new BoxHitTestResult(), new Offset(5, 5)));
 
         // Dart's `RenderFollowerLayer` has no `visitChildrenForSemantics` override, so an unlinked,
         // hidden follower still contributes its child's semantics.
@@ -155,7 +155,7 @@ public sealed class CompositedTransformTests
             child: target);
         var follower = new RenderFollowerLayer(
             link,
-            offset: new Point(5, 7),
+            offset: new Offset(5, 7),
             leaderAnchor: Alignment.BottomRight,
             followerAnchor: Alignment.Center,
             child: new HitTestRenderBox(new Size(20, 10)));
@@ -182,10 +182,10 @@ public sealed class CompositedTransformTests
         Assert.True(follower.TryGetTransformFromRoot(out Matrix4 followerToRoot));
         Matrix4 followerChildToRoot = Matrix4.Copy(followerToRoot);
         followerChildToRoot.Multiply(follower.GetCurrentTransform());
-        Point expectedAnchor = MatrixUtils.TransformPoint(leaderToRoot, new Point(45, 27));
-        Point actualAnchor = MatrixUtils.TransformPoint(followerChildToRoot, new Point(10, 5));
-        Assert.Equal(expectedAnchor.X, actualAnchor.X, precision: 8);
-        Assert.Equal(expectedAnchor.Y, actualAnchor.Y, precision: 8);
+        Offset expectedAnchor = MatrixUtils.TransformPoint(leaderToRoot, new Offset(45, 27));
+        Offset actualAnchor = MatrixUtils.TransformPoint(followerChildToRoot, new Offset(10, 5));
+        Assert.Equal(expectedAnchor.Dx, actualAnchor.Dx, precision: 8);
+        Assert.Equal(expectedAnchor.Dy, actualAnchor.Dy, precision: 8);
     }
 
     [Fact]
@@ -278,9 +278,9 @@ public sealed class CompositedTransformTests
             Size = Constraints.Constrain(_preferredSize);
         }
 
-        protected override bool HitTestSelf(Point position) => _hitTestSelf;
+        protected override bool HitTestSelf(Offset position) => _hitTestSelf;
 
-        public override void Paint(PaintingContext ctx, Point offset)
+        public override void Paint(PaintingContext ctx, Offset offset)
         {
         }
     }

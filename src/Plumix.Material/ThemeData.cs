@@ -95,12 +95,12 @@ public readonly record struct VisualDensity
     /// The number of logical pixels this density adds to (or removes from) a component's base
     /// size on each axis: one density unit is four logical pixels.
     /// </summary>
-    public Vector BaseSizeAdjustment
+    public Offset BaseSizeAdjustment
     {
         get
         {
             const double interval = 4.0;
-            return new Vector(Horizontal * interval, Vertical * interval);
+            return new Offset(Horizontal * interval, Vertical * interval);
         }
     }
 
@@ -123,15 +123,15 @@ public readonly record struct VisualDensity
     /// </summary>
     public BoxConstraints EffectiveConstraints(BoxConstraints constraints)
     {
-        Vector adjustment = BaseSizeAdjustment;
+        Offset adjustment = BaseSizeAdjustment;
         return constraints with
         {
             MinWidth = Math.Clamp(
-                constraints.MinWidth + adjustment.X,
+                constraints.MinWidth + adjustment.Dx,
                 0.0,
                 constraints.MaxWidth),
             MinHeight = Math.Clamp(
-                constraints.MinHeight + adjustment.Y,
+                constraints.MinHeight + adjustment.Dy,
                 0.0,
                 constraints.MaxHeight),
         };

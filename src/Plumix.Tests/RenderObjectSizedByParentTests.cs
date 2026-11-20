@@ -440,7 +440,7 @@ public sealed class RenderObjectSizedByParentTests
 
         public void SetSizeOutsideLayout(Size size) => Size = size;
 
-        public override void Paint(PaintingContext ctx, Point offset)
+        public override void Paint(PaintingContext ctx, Offset offset)
         {
         }
     }
@@ -457,7 +457,7 @@ public sealed class RenderObjectSizedByParentTests
             Size = Constraints.Smallest;
         }
 
-        public override void Paint(PaintingContext ctx, Point offset)
+        public override void Paint(PaintingContext ctx, Offset offset)
         {
         }
     }
@@ -465,7 +465,7 @@ public sealed class RenderObjectSizedByParentTests
     /// <summary>Flutter's <c>MissingPerformLayoutRenderBox</c> from <c>test/rendering/box_test.dart</c>.</summary>
     private sealed class MissingPerformLayoutRenderBox : RenderBox
     {
-        public override void Paint(PaintingContext ctx, Point offset)
+        public override void Paint(PaintingContext ctx, Offset offset)
         {
         }
     }
@@ -491,7 +491,7 @@ public sealed class RenderObjectSizedByParentTests
 
         public override void VisitChildren(Action<RenderObject> visitor) => visitor(_child);
 
-        public override void Paint(PaintingContext ctx, Point offset)
+        public override void Paint(PaintingContext ctx, Offset offset)
         {
         }
     }
@@ -507,7 +507,7 @@ public sealed class RenderObjectSizedByParentTests
 
         public void SetGeometryOutsideLayout(SliverGeometry geometry) => Geometry = geometry;
 
-        public override void Paint(PaintingContext ctx, Point offset)
+        public override void Paint(PaintingContext ctx, Offset offset)
         {
         }
     }

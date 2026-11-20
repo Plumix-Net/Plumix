@@ -24,8 +24,8 @@ internal enum TapDragState
 public sealed class TapDragDownDetails
 {
     public TapDragDownDetails(
-        Point globalPosition,
-        Point localPosition,
+        Offset globalPosition,
+        Offset localPosition,
         int consecutiveTapCount,
         PointerDeviceKind? kind = null)
     {
@@ -35,9 +35,9 @@ public sealed class TapDragDownDetails
         Kind = kind;
     }
 
-    public Point GlobalPosition { get; }
+    public Offset GlobalPosition { get; }
 
-    public Point LocalPosition { get; }
+    public Offset LocalPosition { get; }
 
     public PointerDeviceKind? Kind { get; }
 
@@ -49,8 +49,8 @@ public sealed class TapDragDownDetails
 public sealed class TapDragUpDetails
 {
     public TapDragUpDetails(
-        Point globalPosition,
-        Point localPosition,
+        Offset globalPosition,
+        Offset localPosition,
         PointerDeviceKind kind,
         int consecutiveTapCount)
     {
@@ -60,9 +60,9 @@ public sealed class TapDragUpDetails
         ConsecutiveTapCount = consecutiveTapCount;
     }
 
-    public Point GlobalPosition { get; }
+    public Offset GlobalPosition { get; }
 
-    public Point LocalPosition { get; }
+    public Offset LocalPosition { get; }
 
     public PointerDeviceKind Kind { get; }
 
@@ -73,8 +73,8 @@ public sealed class TapDragUpDetails
 public sealed class TapDragStartDetails
 {
     public TapDragStartDetails(
-        Point globalPosition,
-        Point localPosition,
+        Offset globalPosition,
+        Offset localPosition,
         int consecutiveTapCount,
         DateTime? sourceTimeStampUtc = null,
         PointerDeviceKind? kind = null)
@@ -86,9 +86,9 @@ public sealed class TapDragStartDetails
         Kind = kind;
     }
 
-    public Point GlobalPosition { get; }
+    public Offset GlobalPosition { get; }
 
-    public Point LocalPosition { get; }
+    public Offset LocalPosition { get; }
 
     /// Recorded timestamp of the source pointer event that triggered the drag.
     public DateTime? SourceTimeStampUtc { get; }
@@ -102,19 +102,19 @@ public sealed class TapDragStartDetails
 public sealed class TapDragUpdateDetails
 {
     public TapDragUpdateDetails(
-        Point globalPosition,
-        Point localPosition,
-        Point offsetFromOrigin,
-        Point localOffsetFromOrigin,
+        Offset globalPosition,
+        Offset localPosition,
+        Offset offsetFromOrigin,
+        Offset localOffsetFromOrigin,
         int consecutiveTapCount,
         DateTime? sourceTimeStampUtc = null,
-        Point delta = default,
+        Offset delta = default,
         double? primaryDelta = null,
         PointerDeviceKind? kind = null)
     {
         if (primaryDelta is { } primary
-            && !(primary == delta.X && delta.Y == 0.0)
-            && !(primary == delta.Y && delta.X == 0.0))
+            && !(primary == delta.Dx && delta.Dy == 0.0)
+            && !(primary == delta.Dy && delta.Dx == 0.0))
         {
             throw new ArgumentException(
                 "PrimaryDelta must match one axis of Delta while the other axis is zero.",
@@ -132,15 +132,15 @@ public sealed class TapDragUpdateDetails
         Kind = kind;
     }
 
-    public Point GlobalPosition { get; }
+    public Offset GlobalPosition { get; }
 
-    public Point LocalPosition { get; }
+    public Offset LocalPosition { get; }
 
     public DateTime? SourceTimeStampUtc { get; }
 
     /// The amount the pointer has moved in the coordinate space of the event receiver since the
     /// previous update.
-    public Point Delta { get; }
+    public Offset Delta { get; }
 
     /// The amount the pointer has moved along the primary axis, or null for a free-axis drag.
     public double? PrimaryDelta { get; }
@@ -148,10 +148,10 @@ public sealed class TapDragUpdateDetails
     public PointerDeviceKind? Kind { get; }
 
     /// A delta offset from the point where the drag initially contacted the screen.
-    public Point OffsetFromOrigin { get; }
+    public Offset OffsetFromOrigin { get; }
 
     /// [OffsetFromOrigin] in the coordinate space of the event receiver.
-    public Point LocalOffsetFromOrigin { get; }
+    public Offset LocalOffsetFromOrigin { get; }
 
     public int ConsecutiveTapCount { get; }
 }
@@ -161,14 +161,14 @@ public sealed class TapDragEndDetails
 {
     public TapDragEndDetails(
         int consecutiveTapCount,
-        Point globalPosition = default,
-        Point? localPosition = null,
+        Offset globalPosition = default,
+        Offset? localPosition = null,
         Velocity velocity = default,
         double? primaryVelocity = null)
     {
         if (primaryVelocity is { } primary
-            && primary != velocity.PixelsPerSecond.X
-            && primary != velocity.PixelsPerSecond.Y)
+            && primary != velocity.PixelsPerSecond.Dx
+            && primary != velocity.PixelsPerSecond.Dy)
         {
             throw new ArgumentException(
                 "PrimaryVelocity must match one axis of Velocity.",
@@ -182,9 +182,9 @@ public sealed class TapDragEndDetails
         ConsecutiveTapCount = consecutiveTapCount;
     }
 
-    public Point GlobalPosition { get; }
+    public Offset GlobalPosition { get; }
 
-    public Point LocalPosition { get; }
+    public Offset LocalPosition { get; }
 
     /// The velocity the pointer was moving when it stopped contacting the screen.
     public Velocity Velocity { get; }
@@ -209,7 +209,7 @@ public abstract class BaseTapAndDragGestureRecognizer : OneSequenceGestureRecogn
     private OffsetPair? _originPosition;
     private PointerButtons? _previousButtons;
     private Timer? _consecutiveTapTimer;
-    private Point? _lastTapOffset;
+    private Offset? _lastTapOffset;
 
     // -- Tap-and-drag state --------------------------------------------------------------------
     private readonly HashSet<int> _acceptedActivePointers = [];
@@ -278,10 +278,10 @@ public abstract class BaseTapAndDragGestureRecognizer : OneSequenceGestureRecogn
     protected double AccumulatedGlobalDistanceMoved => _globalDistanceMoved;
 
     /// The delta reported for this recognizer's axis.
-    protected abstract Point GetDeltaForDetails(Point delta);
+    protected abstract Offset GetDeltaForDetails(Offset delta);
 
     /// The primary-axis component of the offset, or null for a free-axis drag.
-    protected abstract double? GetPrimaryValueFromOffset(Point value);
+    protected abstract double? GetPrimaryValueFromOffset(Offset value);
 
     /// Whether the accumulated movement is far enough for this recognizer to claim a drag.
     protected abstract bool HasSufficientGlobalDistanceToAccept(PointerDeviceKind pointerDeviceKind);
@@ -591,7 +591,7 @@ public abstract class BaseTapAndDragGestureRecognizer : OneSequenceGestureRecogn
 
     private bool HasSameButton(PointerButtons buttons) => buttons == _previousButtons;
 
-    private bool IsWithinConsecutiveTapTolerance(Point secondTapOffset)
+    private bool IsWithinConsecutiveTapTolerance(Offset secondTapOffset)
     {
         return _lastTapOffset is { } lastTapOffset
                && (secondTapOffset - lastTapOffset).Distance() <= GestureConstants.DoubleTapSlop;
@@ -626,7 +626,7 @@ public abstract class BaseTapAndDragGestureRecognizer : OneSequenceGestureRecogn
     {
         // Plumix pointer events carry no per-event transform, so the delta transform is the
         // identity; see `PointerEvent.TransformDeltaViaPositions`.
-        Point movedLocally = GetDeltaForDetails(@event.LocalDelta);
+        Offset movedLocally = GetDeltaForDetails(@event.LocalDelta);
         _globalDistanceMoved += PointerEvent.TransformDeltaViaPositions(
                 untransformedEndPosition: @event.LocalPosition,
                 untransformedDelta: movedLocally,
@@ -669,12 +669,12 @@ public abstract class BaseTapAndDragGestureRecognizer : OneSequenceGestureRecogn
         }
 
         CheckDragStart(@event);
-        Point localDelta = @event.LocalDelta;
+        Offset localDelta = @event.LocalDelta;
         if (localDelta != default)
         {
             _currentPosition = OffsetPair.FromEventPosition(@event);
-            Point correctedLocalPosition = _initialPosition.Local + localDelta;
-            Point globalUpdateDelta = PointerEvent.TransformDeltaViaPositions(
+            Offset correctedLocalPosition = _initialPosition.Local + localDelta;
+            Offset globalUpdateDelta = PointerEvent.TransformDeltaViaPositions(
                 untransformedEndPosition: correctedLocalPosition,
                 untransformedDelta: localDelta,
                 transform: null);
@@ -745,8 +745,8 @@ public abstract class BaseTapAndDragGestureRecognizer : OneSequenceGestureRecogn
 
     private void CheckDragUpdate(PointerEvent @event, OffsetPair? corrected = null)
     {
-        Point globalPosition = corrected?.Global ?? @event.Position;
-        Point localPosition = corrected?.Local ?? @event.LocalPosition;
+        Offset globalPosition = corrected?.Global ?? @event.Position;
+        Offset localPosition = corrected?.Local ?? @event.LocalPosition;
         var details = new TapDragUpdateDetails(
             globalPosition: globalPosition,
             localPosition: localPosition,
@@ -894,9 +894,9 @@ public class TapAndHorizontalDragGestureRecognizer : BaseTapAndDragGestureRecogn
                > PointerEventUtils.ComputeHitSlop(pointerDeviceKind, GestureSettings);
     }
 
-    protected override Point GetDeltaForDetails(Point delta) => new(delta.X, 0.0);
+    protected override Offset GetDeltaForDetails(Offset delta) => new(delta.Dx, 0.0);
 
-    protected override double? GetPrimaryValueFromOffset(Point value) => value.X;
+    protected override double? GetPrimaryValueFromOffset(Offset value) => value.Dx;
 }
 
 /// <summary>
@@ -916,9 +916,9 @@ public class TapAndPanGestureRecognizer : BaseTapAndDragGestureRecognizer
                > PointerEventUtils.ComputePanSlop(pointerDeviceKind, GestureSettings);
     }
 
-    protected override Point GetDeltaForDetails(Point delta) => delta;
+    protected override Offset GetDeltaForDetails(Offset delta) => delta;
 
-    protected override double? GetPrimaryValueFromOffset(Point value) => null;
+    protected override double? GetPrimaryValueFromOffset(Offset value) => null;
 }
 
 /// <summary>
@@ -941,7 +941,7 @@ public sealed class TapAndDragGestureRecognizer : BaseTapAndDragGestureRecognize
                > PointerEventUtils.ComputePanSlop(pointerDeviceKind, GestureSettings);
     }
 
-    protected override Point GetDeltaForDetails(Point delta) => delta;
+    protected override Offset GetDeltaForDetails(Offset delta) => delta;
 
-    protected override double? GetPrimaryValueFromOffset(Point value) => null;
+    protected override double? GetPrimaryValueFromOffset(Offset value) => null;
 }

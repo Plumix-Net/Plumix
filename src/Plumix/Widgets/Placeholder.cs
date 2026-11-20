@@ -23,7 +23,7 @@ internal sealed class PlaceholderPainter : CustomPainter
     public override void Paint(PaintingContext context, Size size)
     {
         var pen = new Pen(new SolidColorBrush(Color), StrokeWidth);
-        var rect = new Rect(size);
+        var rect = DartGeometry.RectFromSize(size);
         context.Canvas.DrawRectangle(Brushes.Transparent, pen, rect);
         context.Canvas.DrawLine(pen, rect.TopRight, rect.BottomLeft);
         context.Canvas.DrawLine(pen, rect.TopLeft, rect.BottomRight);
@@ -36,7 +36,7 @@ internal sealed class PlaceholderPainter : CustomPainter
                || oldPainter.StrokeWidth != StrokeWidth;
     }
 
-    public override bool? HitTest(Point position) => false;
+    public override bool? HitTest(Offset position) => false;
 }
 
 public sealed class Placeholder : StatelessWidget

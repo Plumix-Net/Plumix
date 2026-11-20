@@ -795,10 +795,10 @@ public class TableRowInkWell : InkResponse
                 // The rect is in the table's coordinate space. We need to change it to the
                 // TableRowInkWell's coordinate space.
                 renderTable.ApplyPaintTransform(cell, transform);
-                Point? offset = MatrixUtils.GetAsTranslation(transform);
+                Offset? offset = MatrixUtils.GetAsTranslation(transform);
                 if (offset is not null)
                 {
-                    return rect.Translate(new Vector(-offset.Value.X, -offset.Value.Y));
+                    return rect.Shift(new Offset(-offset.Value.Dx, -offset.Value.Dy));
                 }
             }
 

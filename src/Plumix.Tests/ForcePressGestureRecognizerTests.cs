@@ -40,7 +40,7 @@ public sealed class ForcePressGestureRecognizerTests : IDisposable
         return new PointerDownEvent(
             pointer,
             PointerDeviceKind.Touch,
-            new Point(10.0, 10.0),
+            new Offset(10.0, 10.0),
             PointerButtons.Primary,
             DateTime.UnixEpoch,
             pressure: pressure,
@@ -51,15 +51,15 @@ public sealed class ForcePressGestureRecognizerTests : IDisposable
     private static PointerMoveEvent Move(
         int pointer,
         double pressure,
-        Point? position = null,
-        Point delta = default,
+        Offset? position = null,
+        Offset delta = default,
         double pressureMin = PressureMin,
         double pressureMax = PressureMax)
     {
         var @event = new PointerMoveEvent(
             pointer,
             PointerDeviceKind.Touch,
-            position ?? new Point(10.0, 10.0),
+            position ?? new Offset(10.0, 10.0),
             PointerButtons.Primary,
             DateTime.UnixEpoch,
             pressure: pressure,
@@ -71,7 +71,7 @@ public sealed class ForcePressGestureRecognizerTests : IDisposable
     private static PointerUpEvent Up(int pointer)
     {
         return new PointerUpEvent(
-            pointer, PointerDeviceKind.Touch, new Point(10.0, 10.0), PointerButtons.None, DateTime.UnixEpoch);
+            pointer, PointerDeviceKind.Touch, new Offset(10.0, 10.0), PointerButtons.None, DateTime.UnixEpoch);
     }
 
     private void Route(PointerEvent @event)
@@ -128,7 +128,7 @@ public sealed class ForcePressGestureRecognizerTests : IDisposable
     public void ForcePress_IsRecognizedAcrossTheStartPeakAndEndThresholds()
     {
         var recognizer = new ForcePressGestureRecognizer();
-        Point startGlobalPosition = default;
+        Offset startGlobalPosition = default;
         recognizer.OnStart = details => startGlobalPosition = details.GlobalPosition;
         Log log = Log.Attach(recognizer);
         recognizer.OnStart = details =>
@@ -152,7 +152,7 @@ public sealed class ForcePressGestureRecognizerTests : IDisposable
             Assert.Equal(1, log.Count("start"));
             Assert.Equal(1, log.Count("update"));
             Assert.Equal(0, log.Count("peak"));
-            Assert.Equal(new Point(10.0, 10.0), startGlobalPosition);
+            Assert.Equal(new Offset(10.0, 10.0), startGlobalPosition);
 
             // 5.8 / 6.66 = 0.87 crosses the 0.85 peak pressure exactly once.
             Route(Move(1, pressure: 3.3));
@@ -238,8 +238,8 @@ public sealed class ForcePressGestureRecognizerTests : IDisposable
             drag.AddPointer(down);
             _binding.GestureArena.Close(1);
 
-            Route(Move(1, pressure: 0.0, position: new Point(30.0, 10.0), delta: new Point(20.0, 0.0)));
-            Route(Move(1, pressure: 0.0, position: new Point(60.0, 10.0), delta: new Point(30.0, 0.0)));
+            Route(Move(1, pressure: 0.0, position: new Offset(30.0, 10.0), delta: new Offset(20.0, 0.0)));
+            Route(Move(1, pressure: 0.0, position: new Offset(60.0, 10.0), delta: new Offset(30.0, 0.0)));
 
             Assert.Empty(log.Entries);
             Assert.Equal(1, panStarts);
@@ -401,15 +401,15 @@ public sealed class ForcePressGestureRecognizerTests : IDisposable
     [Fact]
     public void Details_DefaultTheLocalPositionToTheGlobalPosition()
     {
-        var details = new ForcePressDetails(globalPosition: new Point(4.0, 8.0), pressure: 0.5);
-        Assert.Equal(new Point(4.0, 8.0), details.LocalPosition);
+        var details = new ForcePressDetails(globalPosition: new Offset(4.0, 8.0), pressure: 0.5);
+        Assert.Equal(new Offset(4.0, 8.0), details.LocalPosition);
         Assert.Equal(0.5, details.Pressure);
 
         var relocated = new ForcePressDetails(
-            globalPosition: new Point(4.0, 8.0),
+            globalPosition: new Offset(4.0, 8.0),
             pressure: 0.5,
-            localPosition: new Point(1.0, 2.0));
-        Assert.Equal(new Point(1.0, 2.0), relocated.LocalPosition);
+            localPosition: new Offset(1.0, 2.0));
+        Assert.Equal(new Offset(1.0, 2.0), relocated.LocalPosition);
     }
 
     [DebugOnlyFact]

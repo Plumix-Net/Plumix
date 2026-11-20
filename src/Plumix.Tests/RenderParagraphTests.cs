@@ -24,15 +24,15 @@ public sealed class RenderParagraphTests
         var paragraph = new RenderParagraph(new TextSpan(KText));
         LayOut(paragraph);
 
-        var caret = new Rect(0.0, 0.0, 2.0, 20.0);
-        Point offset5 = paragraph.GetOffsetForCaret(new TextPosition(5), caret);
-        Assert.True(offset5.X > 0.0);
+        var caret = DartGeometry.RectFromLTWH(0.0, 0.0, 2.0, 20.0);
+        Offset offset5 = paragraph.GetOffsetForCaret(new TextPosition(5), caret);
+        Assert.True(offset5.Dx > 0.0);
 
-        Point offset25 = paragraph.GetOffsetForCaret(new TextPosition(25), caret);
-        Assert.True(offset25.X > offset5.X);
+        Offset offset25 = paragraph.GetOffsetForCaret(new TextPosition(25), caret);
+        Assert.True(offset25.Dx > offset5.Dx);
 
-        Point offset50 = paragraph.GetOffsetForCaret(new TextPosition(50), caret);
-        Assert.True(offset50.Y > offset5.Y);
+        Offset offset50 = paragraph.GetOffsetForCaret(new TextPosition(50), caret);
+        Assert.True(offset50.Dy > offset5.Dy);
     }
 
     [Fact]
@@ -49,13 +49,13 @@ public sealed class RenderParagraphTests
         var paragraph = new RenderParagraph(new TextSpan(KText));
         LayOut(paragraph);
 
-        TextPosition position20 = paragraph.GetPositionForOffset(new Point(20.0, 5.0));
+        TextPosition position20 = paragraph.GetPositionForOffset(new Offset(20.0, 5.0));
         Assert.True(position20.Offset > 0);
 
-        TextPosition position40 = paragraph.GetPositionForOffset(new Point(40.0, 5.0));
+        TextPosition position40 = paragraph.GetPositionForOffset(new Offset(40.0, 5.0));
         Assert.True(position40.Offset > position20.Offset);
 
-        TextPosition positionBelow = paragraph.GetPositionForOffset(new Point(5.0, 20.0));
+        TextPosition positionBelow = paragraph.GetPositionForOffset(new Offset(5.0, 20.0));
         Assert.True(positionBelow.Offset > position40.Offset);
     }
 
@@ -238,7 +238,7 @@ public sealed class RenderParagraphTests
         Rect RectForA() => paragraph.GetBoxesForSelection(new TextSelection(0, 1)).Single().ToRect();
 
         LayOut(paragraph, new BoxConstraints(MinWidth: 100.0, MaxWidth: 100.0));
-        Assert.Equal(new Rect(0, 0, 10, 10), RectForA());
+        Assert.Equal(DartGeometry.RectFromLTWH(0, 0, 10, 10), RectForA());
 
         paragraph.TextAlign = TextAlign.Right;
         if (Plumix.Foundation.Constants.KDebugMode)
@@ -249,7 +249,7 @@ public sealed class RenderParagraphTests
         }
 
         paragraph.Paint(new PaintingContext(new ContainerLayer()), default);
-        Assert.Equal(new Rect(90, 0, 10, 10), RectForA());
+        Assert.Equal(DartGeometry.RectFromLTWH(90, 0, 10, 10), RectForA());
     }
 
     [Fact]
@@ -468,14 +468,14 @@ public sealed class RenderParagraphTests
             children: [textSpanA, textSpanBC]));
         LayOut(paragraph, new BoxConstraints(MinWidth: 100.0, MaxWidth: 100.0));
 
-        AssertHit(paragraph, new Point(5.0, 5.0), textSpanA);
-        AssertHit(paragraph, new Point(95.0, 5.0), textSpanA);
-        AssertHit(paragraph, new Point(200.0, 5.0), null);
-        AssertHit(paragraph, new Point(18.0, 15.0), textSpanBC);
-        AssertHit(paragraph, new Point(31.0, 15.0), textSpanBC);
-        AssertHit(paragraph, new Point(54.0, 15.0), textSpanBC);
-        AssertHit(paragraph, new Point(100.0, 15.0), null);
-        AssertHit(paragraph, new Point(9999.0, 9999.0), null);
+        AssertHit(paragraph, new Offset(5.0, 5.0), textSpanA);
+        AssertHit(paragraph, new Offset(95.0, 5.0), textSpanA);
+        AssertHit(paragraph, new Offset(200.0, 5.0), null);
+        AssertHit(paragraph, new Offset(18.0, 15.0), textSpanBC);
+        AssertHit(paragraph, new Offset(31.0, 15.0), textSpanBC);
+        AssertHit(paragraph, new Offset(54.0, 15.0), textSpanBC);
+        AssertHit(paragraph, new Offset(100.0, 15.0), null);
+        AssertHit(paragraph, new Offset(9999.0, 9999.0), null);
     }
 
     [Fact]
@@ -493,9 +493,9 @@ public sealed class RenderParagraphTests
         };
         LayOut(paragraph, new BoxConstraints(MinWidth: 100.0, MaxWidth: 100.0));
 
-        AssertHit(paragraph, new Point(5.0, 5.0), textSpanA);
-        AssertHit(paragraph, new Point(50.0, 5.0), textSpanA);
-        AssertHit(paragraph, new Point(95.0, 5.0), textSpanB);
+        AssertHit(paragraph, new Offset(5.0, 5.0), textSpanA);
+        AssertHit(paragraph, new Offset(50.0, 5.0), textSpanA);
+        AssertHit(paragraph, new Offset(95.0, 5.0), textSpanB);
     }
 
     [Fact]
@@ -504,12 +504,12 @@ public sealed class RenderParagraphTests
         var paragraph = new RenderParagraph(new TextSpan("1234567"));
         LayOut(paragraph);
 
-        Assert.Equal(new TextPosition(3), paragraph.GetPositionForOffset(new Point(42.0, 14.0)));
+        Assert.Equal(new TextPosition(3), paragraph.GetPositionForOffset(new Offset(42.0, 14.0)));
         Assert.Equal(
-            new Rect(14, 0, 56, 14),
+            DartGeometry.RectFromLTWH(14, 0, 56, 14),
             paragraph.GetBoxesForSelection(new TextSelection(1, 5)).Single().ToRect());
         Assert.Equal(
-            new Rect(28, 0, 28, 14),
+            DartGeometry.RectFromLTWH(28, 0, 28, 14),
             paragraph.GetBoxesForSelection(new TextSelection(2, 4)).Single().ToRect());
     }
 
@@ -536,7 +536,7 @@ public sealed class RenderParagraphTests
         return paragraph;
     }
 
-    private static void AssertHit(RenderParagraph paragraph, Point position, TextSpan? expected)
+    private static void AssertHit(RenderParagraph paragraph, Offset position, TextSpan? expected)
     {
         var result = new BoxHitTestResult();
         bool hit = paragraph.HitTest(result, position);

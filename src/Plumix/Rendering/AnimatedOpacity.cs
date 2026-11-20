@@ -198,7 +198,7 @@ public class RenderAnimatedOpacity : RenderProxyBox
     public override bool PaintsChild(RenderObject child) => _animatedOpacity.PaintsChild(child);
 
     /// <inheritdoc />
-    public override void Paint(PaintingContext context, Point offset)
+    public override void Paint(PaintingContext context, Offset offset)
     {
         if (_animatedOpacity.Alpha == 0)
         {

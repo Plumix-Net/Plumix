@@ -17,7 +17,7 @@ public sealed class SemanticsRoleChecksDartParityTests
 
     private static SemanticsNode Node(SemanticsConfiguration config, params SemanticsNode[] children)
     {
-        var node = new SemanticsNode { Rect = new Rect(0, 0, 50, 50) };
+        var node = new SemanticsNode { Rect = DartGeometry.RectFromLTWH(0, 0, 50, 50) };
         node.UpdateWith(config, children);
         return node;
     }
@@ -26,7 +26,7 @@ public sealed class SemanticsRoleChecksDartParityTests
     {
         using var owner = new SemanticsOwner();
         SemanticsNode root = SemanticsNode.Root(owner);
-        root.Rect = new Rect(0, 0, 100, 100);
+        root.Rect = DartGeometry.RectFromLTWH(0, 0, 100, 100);
         root.UpdateWith(config, children);
         owner.SendSemanticsUpdate();
     }

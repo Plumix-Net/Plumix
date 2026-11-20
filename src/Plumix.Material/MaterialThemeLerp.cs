@@ -126,9 +126,9 @@ internal static class MaterialThemeLerp
             return null;
         }
 
-        Avalonia.Size from = a ?? default;
-        Avalonia.Size to = b ?? default;
-        return new Avalonia.Size(
+        Size from = a ?? default;
+        Size to = b ?? default;
+        return new Size(
             from.Width + ((to.Width - from.Width) * t),
             from.Height + ((to.Height - from.Height) * t));
     }

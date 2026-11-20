@@ -4,3 +4,7 @@
 // `Avalonia.Media` for brushes, fonts and the drawing backend, which has a `Color` of its own; this
 // alias makes the unqualified name mean the framework type everywhere in the project.
 global using Color = Plumix.UI.Color;
+// Geometry: dart:ui's Offset/Size/Rect. During the migration Offset aliases Avalonia's Point.
+global using Offset = global::Avalonia.Point;
+global using Size = global::Avalonia.Size;
+global using Rect = global::Avalonia.Rect;

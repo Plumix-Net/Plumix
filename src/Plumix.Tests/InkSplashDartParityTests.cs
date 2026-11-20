@@ -147,7 +147,7 @@ public sealed class InkSplashDartParityTests
     // `Material.of(element)`, the `_RenderInkFeatures` render box.
     private static RenderObject MaterialOf(Element element) => (RenderInkFeatures)MaterialWidget.Of(element);
 
-    private static TestGesture StartGesture(FrameworkDartTester tester, Avalonia.Point location) =>
+    private static TestGesture StartGesture(FrameworkDartTester tester, Offset location) =>
         tester.StartGesture(location, PointerDeviceKind.Touch);
 
     // `tester.tap(finder)`: a down and an up at the center, no pump.

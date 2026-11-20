@@ -202,7 +202,7 @@ public sealed class AdaptiveTextSelectionToolbar : StatelessWidget
                 children: children);
         }
 
-        Point anchorBelow = Anchors.SecondaryAnchor ?? Anchors.PrimaryAnchor;
+        Offset anchorBelow = Anchors.SecondaryAnchor ?? Anchors.PrimaryAnchor;
         return new TextSelectionToolbar(
             anchorAbove: Anchors.PrimaryAnchor,
             anchorBelow: anchorBelow,

@@ -300,7 +300,7 @@ internal sealed class RenderFlexibleSpaceHeaderOpacity : RenderOpacity
 
     public override bool IsRepaintBoundary => false;
 
-    public override void Paint(PaintingContext context, Point offset)
+    public override void Paint(PaintingContext context, Offset offset)
     {
         if (Child is null)
         {

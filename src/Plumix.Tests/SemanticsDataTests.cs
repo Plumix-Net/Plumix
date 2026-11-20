@@ -20,7 +20,7 @@ public sealed class SemanticsDataTests
     [Fact]
     public void GetSemanticsData_OnAnUnmergedNode_ReadsTheNodesOwnAnnotations()
     {
-        var node = new SemanticsNode { Rect = new Rect(0, 0, 10, 10) };
+        var node = new SemanticsNode { Rect = DartGeometry.RectFromLTWH(0, 0, 10, 10) };
         node.UpdateWith(new SemanticsConfiguration
         {
             Label = "Label",
@@ -44,7 +44,7 @@ public sealed class SemanticsDataTests
         Assert.Equal(SemanticsHitTestBehavior.Opaque, data.HitTestBehavior);
         Assert.Equal("0", data.MinValue);
         Assert.Equal("10", data.MaxValue);
-        Assert.Equal(new Rect(0, 0, 10, 10), data.Rect);
+        Assert.Equal(DartGeometry.RectFromLTWH(0, 0, 10, 10), data.Rect);
         Assert.Empty(data.CustomSemanticsActionIds!);
     }
 
@@ -55,11 +55,11 @@ public sealed class SemanticsDataTests
         var tag2 = new SemanticsTag("tag2");
         var tag3 = new SemanticsTag("tag3");
 
-        var node = new SemanticsNode { Rect = new Rect(0, 0, 10, 10) };
+        var node = new SemanticsNode { Rect = DartGeometry.RectFromLTWH(0, 0, 10, 10) };
         node.ReplaceTags([tag1, tag2]);
         Assert.Equal([tag1, tag2], node.GetSemanticsData().Tags!.OrderBy(static tag => tag.Name));
 
-        var child = new SemanticsNode { Rect = new Rect(0, 0, 10, 10) };
+        var child = new SemanticsNode { Rect = DartGeometry.RectFromLTWH(0, 0, 10, 10) };
         child.ReplaceTags([tag3]);
         child.IsMergedIntoParent = true;
         node.UpdateWith(
@@ -75,7 +75,7 @@ public sealed class SemanticsDataTests
     public void GetSemanticsData_DefensivelyCopiesTheTagSet()
     {
         var tag = new SemanticsTag("tag");
-        var node = new SemanticsNode { Rect = new Rect(0, 0, 10, 10) };
+        var node = new SemanticsNode { Rect = DartGeometry.RectFromLTWH(0, 0, 10, 10) };
         node.ReplaceTags([tag]);
 
         IReadOnlySet<SemanticsTag> tags = node.GetSemanticsData().Tags!;
@@ -264,7 +264,7 @@ public sealed class SemanticsDataTests
         config.AddActionHandler(SemanticsActions.ShowOnScreen, static () => { });
         config.AddActionHandler(SemanticsActions.DidGainAccessibilityFocus, static () => { });
 
-        var node = new SemanticsNode { Rect = new Rect(0, 0, 10, 10) };
+        var node = new SemanticsNode { Rect = DartGeometry.RectFromLTWH(0, 0, 10, 10) };
         node.UpdateWith(config);
 
         SemanticsData data = node.GetSemanticsData();
@@ -306,7 +306,7 @@ public sealed class SemanticsDataTests
     [Fact]
     public void GetSemanticsData_IsRecomputedOnEveryCall()
     {
-        var node = new SemanticsNode { Rect = new Rect(0, 0, 10, 10) };
+        var node = new SemanticsNode { Rect = DartGeometry.RectFromLTWH(0, 0, 10, 10) };
         node.UpdateWith(new SemanticsConfiguration { Label = "before", TextDirection = TextDirection.Ltr });
         Assert.Equal("before", node.GetSemanticsData().Label);
 
@@ -330,7 +330,7 @@ public sealed class SemanticsDataTests
             attributedHint: AttributedString.Empty,
             tooltip: string.Empty,
             textDirection: null,
-            rect: new Rect(0, 0, 10, 10),
+            rect: DartGeometry.RectFromLTWH(0, 0, 10, 10),
             textSelection: null,
             scrollIndex: null,
             scrollChildCount: null,
@@ -366,7 +366,7 @@ public sealed class SemanticsDataTests
     {
         var node = new SemanticsNode
         {
-            Rect = new Rect(50, 10, 20, 30),
+            Rect = DartGeometry.RectFromLTWH(50, 10, 20, 30),
             Transform = Matrix4.TranslationValues(10, 10, 0),
         };
         node.UpdateWith(new SemanticsConfiguration
@@ -388,7 +388,7 @@ public sealed class SemanticsDataTests
         // `sortKey` lives on the node, never on the flattened data.
         Assert.DoesNotContain("sortKey", description);
 
-        var empty = new SemanticsNode { Rect = new Rect(50, 10, 20, 30) };
+        var empty = new SemanticsNode { Rect = DartGeometry.RectFromLTWH(50, 10, 20, 30) };
         string emptyDescription = empty.GetSemanticsData().ToString();
         Assert.DoesNotContain("label", emptyDescription);
         Assert.DoesNotContain("headingLevel", emptyDescription);
@@ -622,13 +622,13 @@ public sealed class SemanticsDataTests
         var childNodes = new List<SemanticsNode>(children.Length);
         foreach (SemanticsConfiguration childConfig in children)
         {
-            var child = new SemanticsNode { Rect = new Rect(0, 0, 10, 10) };
+            var child = new SemanticsNode { Rect = DartGeometry.RectFromLTWH(0, 0, 10, 10) };
             child.UpdateWith(childConfig);
             child.IsMergedIntoParent = true;
             childNodes.Add(child);
         }
 
-        var root = new SemanticsNode { Rect = new Rect(0, 0, 10, 10) };
+        var root = new SemanticsNode { Rect = DartGeometry.RectFromLTWH(0, 0, 10, 10) };
         root.UpdateWith(rootConfig, childNodes);
         return root;
     }

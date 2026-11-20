@@ -39,7 +39,7 @@ public abstract class SliderComponentShape
     /// [sizeWithOverflow] is the size of the parent box plus the value indicator overflow.
     public abstract void Paint(
         PaintingContext context,
-        Point center,
+        Offset center,
         Animation<double> activationAnimation,
         Animation<double> enableAnimation,
         bool isDiscrete,
@@ -70,7 +70,7 @@ internal sealed class EmptySliderComponentShape : SliderComponentShape
 
     public override void Paint(
         PaintingContext context,
-        Point center,
+        Offset center,
         Animation<double> activationAnimation,
         Animation<double> enableAnimation,
         bool isDiscrete,
@@ -113,7 +113,7 @@ public class RoundSliderOverlayShape : SliderComponentShape
 
     public override void Paint(
         PaintingContext context,
-        Point center,
+        Offset center,
         Animation<double> activationAnimation,
         Animation<double> enableAnimation,
         bool isDiscrete,
@@ -174,7 +174,7 @@ public class RectangularSliderValueIndicatorShape : SliderComponentShape
 
     public override void Paint(
         PaintingContext context,
-        Point center,
+        Offset center,
         Animation<double> activationAnimation,
         Animation<double> enableAnimation,
         bool isDiscrete,
@@ -229,7 +229,7 @@ public class RectangularRangeSliderValueIndicatorShape : RangeSliderValueIndicat
 
     public override double GetHorizontalShift(
         RenderBox? parentBox = null,
-        Point? center = null,
+        Offset? center = null,
         TextPainter? labelPainter = null,
         Animation<double>? activationAnimation = null,
         double? textScaleFactor = null,
@@ -246,7 +246,7 @@ public class RectangularRangeSliderValueIndicatorShape : RangeSliderValueIndicat
 
     public override void Paint(
         PaintingContext context,
-        Point center,
+        Offset center,
         Animation<double> activationAnimation,
         Animation<double> enableAnimation,
         TextPainter labelPainter,
@@ -297,7 +297,7 @@ internal sealed class RectangularSliderValueIndicatorPathPainter
 
     public double GetHorizontalShift(
         RenderBox parentBox,
-        Point center,
+        Offset center,
         TextPainter labelPainter,
         double textScaleFactor,
         Size sizeWithOverflow,
@@ -311,16 +311,16 @@ internal sealed class RectangularSliderValueIndicatorPathPainter
         const double edgePadding = 8.0;
         double rectangleWidth = UpperRectangleWidth(labelPainter, scale, textScaleFactor);
 
-        Point globalCenter = parentBox.LocalToGlobal(center);
+        Offset globalCenter = parentBox.LocalToGlobal(center);
 
         // The rectangle must be shifted towards the center so that it minimizes the
         // chance of it rendering outside the bounds of the render box. If the shift
         // is negative, then the lobe is shifted from right to left, and if it is
         // positive, then the lobe is shifted from left to right.
-        double overflowLeft = Math.Max(0, (rectangleWidth / 2) - globalCenter.X + edgePadding);
+        double overflowLeft = Math.Max(0, (rectangleWidth / 2) - globalCenter.Dx + edgePadding);
         double overflowRight = Math.Max(
             0,
-            (rectangleWidth / 2) - (sizeWithOverflow.Width - globalCenter.X - edgePadding));
+            (rectangleWidth / 2) - (sizeWithOverflow.Width - globalCenter.Dx - edgePadding));
 
         if (rectangleWidth < sizeWithOverflow.Width)
         {
@@ -346,7 +346,7 @@ internal sealed class RectangularSliderValueIndicatorPathPainter
     public void Paint(
         RenderBox parentBox,
         Canvas canvas,
-        Point center,
+        Offset center,
         double scale,
         TextPainter labelPainter,
         double textScaleFactor,
@@ -375,7 +375,7 @@ internal sealed class RectangularSliderValueIndicatorPathPainter
             scale: scale);
 
         double rectHeight = labelPainter.Height + _labelPadding;
-        var upperRect = new Rect(
+        var upperRect = DartGeometry.RectFromLTWH(
             (-rectangleWidth / 2) + horizontalShift,
             -_triangleHeight - rectHeight,
             rectangleWidth,
@@ -392,7 +392,7 @@ internal sealed class RectangularSliderValueIndicatorPathPainter
         canvas.Save();
         // Prepare the canvas for the base of the tooltip, which is relative to the
         // center of the thumb.
-        canvas.Translate(center.X, center.Y - _bottomTipYOffset);
+        canvas.Translate(center.Dx, center.Dy - _bottomTipYOffset);
         canvas.Scale(scale, scale);
         if (strokePaintColor != null)
         {
@@ -405,9 +405,9 @@ internal sealed class RectangularSliderValueIndicatorPathPainter
         // The label text is centered within the value indicator.
         double bottomTipToUpperRectTranslateY = (-_preferredHalfHeight / 2) - upperRect.Height;
         canvas.Translate(0, bottomTipToUpperRectTranslateY);
-        var boxCenter = new Point(horizontalShift, upperRect.Height / 2);
-        var halfLabelPainterOffset = new Point(labelPainter.Width / 2, labelPainter.Height / 2);
-        Point labelOffset = boxCenter - halfLabelPainterOffset;
+        var boxCenter = new Offset(horizontalShift, upperRect.Height / 2);
+        var halfLabelPainterOffset = new Offset(labelPainter.Width / 2, labelPainter.Height / 2);
+        Offset labelOffset = boxCenter - halfLabelPainterOffset;
         labelPainter.Paint(canvas, labelOffset);
         canvas.Restore();
     }
@@ -452,7 +452,7 @@ public class PaddleSliderValueIndicatorShape : SliderComponentShape
 
     public override void Paint(
         PaintingContext context,
-        Point center,
+        Offset center,
         Animation<double> activationAnimation,
         Animation<double> enableAnimation,
         bool isDiscrete,
@@ -513,7 +513,7 @@ public class PaddleRangeSliderValueIndicatorShape : RangeSliderValueIndicatorSha
 
     public override double GetHorizontalShift(
         RenderBox? parentBox = null,
-        Point? center = null,
+        Offset? center = null,
         TextPainter? labelPainter = null,
         Animation<double>? activationAnimation = null,
         double? textScaleFactor = null,
@@ -531,7 +531,7 @@ public class PaddleRangeSliderValueIndicatorShape : RangeSliderValueIndicatorSha
     /// null is read as that default.
     public override void Paint(
         PaintingContext context,
-        Point center,
+        Offset center,
         Animation<double> activationAnimation,
         Animation<double> enableAnimation,
         TextPainter labelPainter,
@@ -591,7 +591,7 @@ internal sealed class PaddleSliderValueIndicatorPathPainter
     private const double _neckTriangleBase = _topNeckRadius + (_middleNeckWidth / 2);
     private const double _rightBottomNeckCenterX = (_middleNeckWidth / 2) + _bottomNeckRadius;
     private const double _rightBottomNeckAngleStart = Math.PI;
-    private static readonly Point _topLobeCenter = new(0.0, -_distanceBetweenTopBottomCenters);
+    private static readonly Offset _topLobeCenter = new(0.0, -_distanceBetweenTopBottomCenters);
     private const double _topNeckRadius = 13.0;
 
     // The length of the hypotenuse of the triangle formed by the center
@@ -628,19 +628,19 @@ internal sealed class PaddleSliderValueIndicatorPathPainter
 
     // Adds an arc to the path that has the attributes passed in. This is
     // a convenience to make adding arcs have less boilerplate.
-    private static void AddArc(Path path, Point center, double radius, double startAngle, double endAngle)
+    private static void AddArc(Path path, Offset center, double radius, double startAngle, double endAngle)
     {
-        if (Constants.KDebugMode && !(double.IsFinite(center.X) && double.IsFinite(center.Y)))
+        if (Constants.KDebugMode && !(double.IsFinite(center.Dx) && double.IsFinite(center.Dy)))
         {
             throw new AssertionError("center.isFinite");
         }
 
-        var arcRect = new Rect(center.X - radius, center.Y - radius, radius * 2.0, radius * 2.0);
+        var arcRect = DartGeometry.RectFromLTWH(center.Dx - radius, center.Dy - radius, radius * 2.0, radius * 2.0);
         path.ArcTo(arcRect, startAngle, endAngle - startAngle, false);
     }
 
     public double GetHorizontalShift(
-        Point center,
+        Offset center,
         TextPainter labelPainter,
         double scale,
         double textScaleFactor,
@@ -669,30 +669,30 @@ internal sealed class PaddleSliderValueIndicatorPathPainter
     private static double GetIdealOffset(
         double halfWidthNeeded,
         double scale,
-        Point center,
+        Offset center,
         double widthWithOverflow)
     {
         const double edgeMargin = 8.0;
-        var topLobeRect = new Rect(
+        var topLobeRect = DartGeometry.RectFromLTWH(
             -_topLobeRadius - halfWidthNeeded,
             -_topLobeRadius - _distanceBetweenTopBottomCenters,
             2.0 * (_topLobeRadius + halfWidthNeeded),
             2.0 * _topLobeRadius);
         // We can just multiply by scale instead of a transform, since we're scaling
         // around (0, 0).
-        Point topLeft = (topLobeRect.TopLeft * scale) + center;
-        Point bottomRight = (topLobeRect.BottomRight * scale) + center;
+        Offset topLeft = (topLobeRect.TopLeft * scale) + center;
+        Offset bottomRight = (topLobeRect.BottomRight * scale) + center;
         double shift = 0.0;
 
-        if (topLeft.X < edgeMargin)
+        if (topLeft.Dx < edgeMargin)
         {
-            shift = edgeMargin - topLeft.X;
+            shift = edgeMargin - topLeft.Dx;
         }
 
         double endGlobal = widthWithOverflow;
-        if (bottomRight.X > endGlobal - edgeMargin)
+        if (bottomRight.Dx > endGlobal - edgeMargin)
         {
-            shift = endGlobal - edgeMargin - bottomRight.X;
+            shift = endGlobal - edgeMargin - bottomRight.Dx;
         }
 
         shift = scale == 0.0 ? 0.0 : shift / scale;
@@ -712,7 +712,7 @@ internal sealed class PaddleSliderValueIndicatorPathPainter
 
     public void Paint(
         Canvas canvas,
-        Point center,
+        Offset center,
         Plumix.UI.Paint paint,
         double scale,
         TextPainter labelPainter,
@@ -739,7 +739,7 @@ internal sealed class PaddleSliderValueIndicatorPathPainter
         double labelHalfWidth = labelPainter.Width / 2.0;
 
         canvas.Save();
-        canvas.Translate(center.X, center.Y);
+        canvas.Translate(center.Dx, center.Dy);
         canvas.Scale(overallScale, overallScale);
 
         double bottomNeckTriangleHypotenuse =
@@ -752,19 +752,19 @@ internal sealed class PaddleSliderValueIndicatorPathPainter
         path.MoveTo(_middleNeckWidth / 2, rightBottomNeckCenterY);
         AddArc(
             path,
-            new Point(_rightBottomNeckCenterX, rightBottomNeckCenterY),
+            new Offset(_rightBottomNeckCenterX, rightBottomNeckCenterY),
             _bottomNeckRadius,
             _rightBottomNeckAngleStart,
             rightBottomNeckAngleEnd);
         AddArc(
             path,
-            new Point(0.0, 0.0),
+            new Offset(0.0, 0.0),
             _bottomLobeRadius / overallScale,
             rightBottomNeckAngleEnd - Math.PI,
             (2 * Math.PI) - rightBottomNeckAngleEnd);
         AddArc(
             path,
-            new Point(-_rightBottomNeckCenterX, rightBottomNeckCenterY),
+            new Offset(-_rightBottomNeckCenterX, rightBottomNeckCenterY),
             _bottomNeckRadius,
             Math.PI - rightBottomNeckAngleEnd,
             0);
@@ -793,12 +793,12 @@ internal sealed class PaddleSliderValueIndicatorPathPainter
         double leftTheta = (1.0 - leftAmount) * _thirtyDegrees;
         double rightTheta = (1.0 - rightAmount) * _thirtyDegrees;
         // The center of the top left neck arc.
-        var leftTopNeckCenter = new Point(
+        var leftTopNeckCenter = new Offset(
             -_neckTriangleBase,
-            _topLobeCenter.Y + (Math.Cos(leftTheta) * _neckTriangleHypotenuse));
-        var neckRightCenter = new Point(
+            _topLobeCenter.Dy + (Math.Cos(leftTheta) * _neckTriangleHypotenuse));
+        var neckRightCenter = new Offset(
             _neckTriangleBase,
-            _topLobeCenter.Y + (Math.Cos(rightTheta) * _neckTriangleHypotenuse));
+            _topLobeCenter.Dy + (Math.Cos(rightTheta) * _neckTriangleHypotenuse));
         double leftNeckArcAngle = _ninetyDegrees - leftTheta;
         double rightNeckArcAngle = Math.PI + _ninetyDegrees - rightTheta;
         // The distance between the end of the bottom neck arc and the beginning of
@@ -806,18 +806,18 @@ internal sealed class PaddleSliderValueIndicatorPathPainter
         // factor of the value indicator.
         double neckStretchBaseline = Math.Max(
             0.0,
-            rightBottomNeckCenterY - Math.Max(leftTopNeckCenter.Y, neckRightCenter.Y));
+            rightBottomNeckCenterY - Math.Max(leftTopNeckCenter.Dy, neckRightCenter.Dy));
         double t = Math.Pow(inverseTextScale, 3.0);
         double stretch = Math.Clamp(neckStretchBaseline * t, 0.0, 10.0 * neckStretchBaseline);
-        var neckStretch = new Point(0.0, neckStretchBaseline - stretch);
+        var neckStretch = new Offset(0.0, neckStretchBaseline - stretch);
 
         if (Constants.KDebugMode && _debuggingLabelLocation)
         {
-            Point leftCenter = _topLobeCenter - new Point(leftWidthNeeded, 0.0) + neckStretch;
-            Point rightCenter = _topLobeCenter + new Point(rightWidthNeeded, 0.0) + neckStretch;
-            var valueRect = new Rect(
-                new Point(leftCenter.X - _topLobeRadius, leftCenter.Y - _topLobeRadius),
-                new Point(rightCenter.X + _topLobeRadius, rightCenter.Y + _topLobeRadius));
+            Offset leftCenter = _topLobeCenter - new Offset(leftWidthNeeded, 0.0) + neckStretch;
+            Offset rightCenter = _topLobeCenter + new Offset(rightWidthNeeded, 0.0) + neckStretch;
+            var valueRect = DartGeometry.RectFromCorners(
+                new Offset(leftCenter.Dx - _topLobeRadius, leftCenter.Dy - _topLobeRadius),
+                new Offset(rightCenter.Dx + _topLobeRadius, rightCenter.Dy + _topLobeRadius));
             var outlinePaint = new Pen(new SolidColorBrush(new Color(0xffff0000)), 1.0);
             canvas.DrawRectangle(null, outlinePaint, valueRect);
         }
@@ -825,13 +825,13 @@ internal sealed class PaddleSliderValueIndicatorPathPainter
         AddArc(path, leftTopNeckCenter + neckStretch, _topNeckRadius, 0.0, -leftNeckArcAngle);
         AddArc(
             path,
-            _topLobeCenter - new Point(leftWidthNeeded, 0.0) + neckStretch,
+            _topLobeCenter - new Offset(leftWidthNeeded, 0.0) + neckStretch,
             _topLobeRadius,
             _ninetyDegrees + leftTheta,
             _twoSeventyDegrees);
         AddArc(
             path,
-            _topLobeCenter + new Point(rightWidthNeeded, 0.0) + neckStretch,
+            _topLobeCenter + new Offset(rightWidthNeeded, 0.0) + neckStretch,
             _topLobeRadius,
             _twoSeventyDegrees,
             _twoSeventyDegrees + Math.PI - rightTheta);
@@ -847,9 +847,9 @@ internal sealed class PaddleSliderValueIndicatorPathPainter
 
         // Draw the label.
         canvas.Save();
-        canvas.Translate(shift, -_distanceBetweenTopBottomCenters + neckStretch.Y);
+        canvas.Translate(shift, -_distanceBetweenTopBottomCenters + neckStretch.Dy);
         canvas.Scale(inverseTextScale, inverseTextScale);
-        labelPainter.Paint(canvas, new Point(0.0, 0.0) - new Point(labelHalfWidth, labelPainter.Height / 2.0));
+        labelPainter.Paint(canvas, new Offset(0.0, 0.0) - new Offset(labelHalfWidth, labelPainter.Height / 2.0));
         canvas.Restore();
         canvas.Restore();
     }

@@ -45,11 +45,11 @@ public sealed class FittedBoxTests
         fittedBox.Layout(BoxConstraints.TightFor(width: 100, height: 80));
 
         var hitResult = new BoxHitTestResult();
-        bool hit = fittedBox.HitTest(hitResult, new Point(90, 75));
+        bool hit = fittedBox.HitTest(hitResult, new Offset(90, 75));
         Assert.True(hit);
 
         var missResult = new BoxHitTestResult();
-        bool miss = fittedBox.HitTest(missResult, new Point(10, 10));
+        bool miss = fittedBox.HitTest(missResult, new Offset(10, 10));
         Assert.False(miss);
     }
 
@@ -104,7 +104,7 @@ public sealed class FittedBoxTests
             Size = Constraints.Constrain(_size);
         }
 
-        public override void Paint(PaintingContext ctx, Point offset)
+        public override void Paint(PaintingContext ctx, Offset offset)
         {
         }
     }
@@ -123,12 +123,12 @@ public sealed class FittedBoxTests
             Size = Constraints.Constrain(_size);
         }
 
-        protected override bool HitTestSelf(Point position)
+        protected override bool HitTestSelf(Offset position)
         {
             return true;
         }
 
-        public override void Paint(PaintingContext ctx, Point offset)
+        public override void Paint(PaintingContext ctx, Offset offset)
         {
         }
     }

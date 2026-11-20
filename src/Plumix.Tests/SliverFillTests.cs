@@ -123,7 +123,7 @@ public sealed class SliverFillTests
             viewportMainAxisExtent: 200), parentUsesSize: true);
 
         Assert.Equal(300, vertical.Geometry!.ScrollExtent);
-        Assert.Equal(new Point(0, 50), ((SliverPhysicalParentData)verticalChild.parentData!).PaintOffset);
+        Assert.Equal(new Offset(0, 50), ((SliverPhysicalParentData)verticalChild.parentData!).PaintOffset);
 
         var horizontalChild = new RecordingSliver(scrollExtent: 120);
         var horizontal = new RenderSliverFractionalPadding(0.1) { Child = horizontalChild };
@@ -134,7 +134,7 @@ public sealed class SliverFillTests
             viewportMainAxisExtent: 300), parentUsesSize: true);
 
         Assert.Equal(180, horizontal.Geometry!.ScrollExtent);
-        Assert.Equal(new Point(30, 0), ((SliverPhysicalParentData)horizontalChild.parentData!).PaintOffset);
+        Assert.Equal(new Offset(30, 0), ((SliverPhysicalParentData)horizontalChild.parentData!).PaintOffset);
     }
 
     [Fact]
@@ -270,7 +270,7 @@ public sealed class SliverFillTests
         Assert.Equal(new Size(200, 80), child.Size);
         // A reversed axis measures the scroll offset from the trailing end of the child, so a filled
         // sliver whose scroll extent is the viewport extent keeps its box at the sliver's origin.
-        Assert.Equal(new Point(0, 0), ((SliverPhysicalParentData)child.parentData!).PaintOffset);
+        Assert.Equal(new Offset(0, 0), ((SliverPhysicalParentData)child.parentData!).PaintOffset);
     }
 
     private static SliverConstraints CreateConstraints(
@@ -331,7 +331,7 @@ public sealed class SliverFillTests
             Size = Constraints.Constrain(naturalSize);
         }
 
-        public override void Paint(PaintingContext ctx, Point offset)
+        public override void Paint(PaintingContext ctx, Offset offset)
         {
         }
     }
@@ -343,7 +343,7 @@ public sealed class SliverFillTests
             Size = Constraints.Constrain(Constraints.Biggest);
         }
 
-        public override void Paint(PaintingContext ctx, Point offset)
+        public override void Paint(PaintingContext ctx, Offset offset)
         {
         }
     }
@@ -362,7 +362,7 @@ public sealed class SliverFillTests
                 CacheExtent: paintExtent);
         }
 
-        public override void Paint(PaintingContext ctx, Point offset)
+        public override void Paint(PaintingContext ctx, Offset offset)
         {
         }
     }

@@ -29,8 +29,8 @@ public sealed class MaterialTextSelectionControlsTests : IDisposable
 
         Assert.Equal(new Size(22, 22), controls.GetHandleSize(10));
         Assert.Equal(new Size(22, 22), controls.GetHandleSize(40));
-        Assert.Equal(new Point(11, -4), controls.GetHandleAnchor(TextSelectionHandleType.Collapsed, 10));
-        Assert.Equal(new Point(22, 0), controls.GetHandleAnchor(TextSelectionHandleType.Left, 10));
+        Assert.Equal(new Offset(11, -4), controls.GetHandleAnchor(TextSelectionHandleType.Collapsed, 10));
+        Assert.Equal(new Offset(22, 0), controls.GetHandleAnchor(TextSelectionHandleType.Left, 10));
         Assert.Equal(default, controls.GetHandleAnchor(TextSelectionHandleType.Right, 10));
         Assert.Equal(20.0, MaterialTextSelectionControls.ToolbarContentDistanceBelow);
         Assert.Equal(8.0, MaterialTextSelectionControls.ToolbarContentDistance);
@@ -101,8 +101,8 @@ public sealed class MaterialTextSelectionControlsTests : IDisposable
         // double-blends where the two shapes overlap. `radius` comes from the width alone.
         var combined = Assert.IsType<CombinedGeometry>(TextSelectionHandlePainter.BuildPath(new Size(22, 40)));
         Assert.Equal(GeometryCombineMode.Union, combined.GeometryCombineMode);
-        Assert.Equal(new Rect(0, 0, 22, 22), Assert.IsType<EllipseGeometry>(combined.Geometry1).Rect);
-        Assert.Equal(new Rect(0, 0, 11, 11), Assert.IsType<RectangleGeometry>(combined.Geometry2).Rect);
+        Assert.Equal(DartGeometry.RectFromLTWH(0, 0, 22, 22), Assert.IsType<EllipseGeometry>(combined.Geometry1).Rect);
+        Assert.Equal(DartGeometry.RectFromLTWH(0, 0, 11, 11), Assert.IsType<RectangleGeometry>(combined.Geometry2).Rect);
 
         var root = new ContainerLayer();
         var context = new PaintingContext(root);
@@ -129,8 +129,8 @@ public sealed class MaterialTextSelectionControlsTests : IDisposable
 
         // anchorAbove = (editableRegion.left + midpoint.x, max(start.y - lineHeight, 0) + top - 8)
         // anchorBelow = (editableRegion.left + midpoint.x, top + end.y + 20)
-        Assert.Equal(new Point(30, 16 + 40 - 8), toolbar.AnchorAbove);
-        Assert.Equal(new Point(30, 40 + 42 + 20), toolbar.AnchorBelow);
+        Assert.Equal(new Offset(30, 16 + 40 - 8), toolbar.AnchorAbove);
+        Assert.Equal(new Offset(30, 40 + 42 + 20), toolbar.AnchorBelow);
 
         Assert.Equal(["Cut", "Copy", "Paste", "Select all"], ToolbarLabels(harness));
     }
@@ -203,7 +203,7 @@ public sealed class MaterialTextSelectionControlsTests : IDisposable
 
         Assert.IsAssignableFrom<ITextSelectionHandleControls>(controls);
         Assert.Equal(new Size(22, 22), controls.GetHandleSize(10));
-        Assert.Equal(new Point(22, 0), controls.GetHandleAnchor(TextSelectionHandleType.Left, 10));
+        Assert.Equal(new Offset(22, 0), controls.GetHandleAnchor(TextSelectionHandleType.Left, 10));
 
 #pragma warning disable CS0618 // Exercising the deprecated Flutter surface on purpose.
         Assert.False(controls.CanCut(@delegate));
@@ -239,7 +239,7 @@ public sealed class MaterialTextSelectionControlsTests : IDisposable
             lineHeightAtStart: 14,
             endHandleType: TextSelectionHandleType.Right,
             lineHeightAtEnd: 14,
-            selectionEndpoints: [new TextSelectionPoint(new Point(0, 14), null)],
+            selectionEndpoints: [new TextSelectionPoint(new Offset(0, 14), null)],
             selectionControls: MaterialTextSelectionHandleControls.Instance,
             selectionDelegate: new FakeSelectionDelegate(new TextEditingValue("hello")),
             clipboardStatus: new ClipboardStatusNotifier(ClipboardStatus.Pasteable),
@@ -327,13 +327,13 @@ public sealed class MaterialTextSelectionControlsTests : IDisposable
                     TextDirection.Ltr,
                     new Builder(context => MaterialTextSelectionControls.Instance.BuildToolbar(
                         context,
-                        globalEditableRegion: new Rect(10, 40, 200, 60),
+                        globalEditableRegion: DartGeometry.RectFromLTWH(10, 40, 200, 60),
                         textLineHeight: 14,
-                        selectionMidpoint: new Point(20, 0),
+                        selectionMidpoint: new Offset(20, 0),
                         endpoints:
                         [
-                            new TextSelectionPoint(new Point(4, 30), null),
-                            new TextSelectionPoint(new Point(60, 42), null),
+                            new TextSelectionPoint(new Offset(4, 30), null),
+                            new TextSelectionPoint(new Offset(60, 42), null),
                         ],
                         @delegate: @delegate,
                         clipboardStatus: clipboardStatus,

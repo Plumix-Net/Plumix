@@ -94,7 +94,7 @@ internal sealed class DecoratedBoxDemoPageState : State
                                     [
                                         new Plumix.Rendering.BoxShadow(
                                             color: new Color(0x99000000),
-                                            offset: new Point(0, 4),
+                                            offset: new Offset(0, 4),
                                             blurRadius: 12,
                                             spreadRadius: 1,
                                             blurStyle: _blurStyle),
@@ -241,7 +241,7 @@ internal sealed class DecoratedBoxDemoPageState : State
 
 internal sealed class GeometryProbePainter(bool continuous, bool outer) : CustomPainter
 {
-    private static Point Probe(bool outer) => outer ? new Point(95.74, 99.89) : new Point(95.72, 99.87);
+    private static Offset Probe(bool outer) => outer ? new Offset(95.74, 99.89) : new Offset(95.72, 99.87);
 
     internal static bool Contains(bool continuous, bool outer) => continuous
         ? Plumix.UI.RSuperellipse.FromLTRBXY(0, 0, 100, 100, 5, 5).Contains(Probe(outer))
@@ -258,7 +258,7 @@ internal sealed class GeometryProbePainter(bool continuous, bool outer) : Custom
         {
             context.Canvas.DrawRRect(Plumix.UI.RRect.FromLTRBXY(5, 5, 105, 105, 5, 5), paint);
         }
-        context.Canvas.DrawCircle(Probe(outer) + new Point(5, 5), 2,
+        context.Canvas.DrawCircle(Probe(outer) + new Offset(5, 5), 2,
             new Plumix.UI.Paint
             {
                 Color = Contains(continuous, outer) ? new Color(0xFF1B5E20) : new Color(0xFFB71C1C),

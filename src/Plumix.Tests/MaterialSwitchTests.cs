@@ -624,8 +624,8 @@ public sealed class MaterialSwitchTests
         harness.Pump(new Size(200.0, 200.0));
 
         GestureBinding binding = GestureBinding.Instance;
-        DispatchPointerDown(binding, harness.RenderView, 900, new Point(30.0, 24.0));
-        DispatchPointerUp(binding, harness.RenderView, 900, new Point(30.0, 24.0));
+        DispatchPointerDown(binding, harness.RenderView, 900, new Offset(30.0, 24.0));
+        DispatchPointerUp(binding, harness.RenderView, 900, new Offset(30.0, 24.0));
         harness.Pump(new Size(200.0, 200.0));
 
         Assert.True(next);
@@ -678,20 +678,20 @@ public sealed class MaterialSwitchTests
 
         GestureBinding binding = GestureBinding.Instance;
         // Dragging an "off" switch further left never crosses the midpoint, so nothing is reported.
-        DispatchPointerDown(binding, harness.RenderView, 910, new Point(60.0, 24.0));
+        DispatchPointerDown(binding, harness.RenderView, 910, new Offset(60.0, 24.0));
         // The first move only carries the drag past the mouse hit slop and wins the arena; with
         // `DragStartBehavior.Start` the drag starts there and updates begin with the next move.
-        DispatchPointerMove(binding, harness.RenderView, 910, new Point(56.0, 24.0));
-        DispatchPointerMove(binding, harness.RenderView, 910, new Point(20.0, 24.0));
-        DispatchPointerUp(binding, harness.RenderView, 910, new Point(20.0, 24.0));
+        DispatchPointerMove(binding, harness.RenderView, 910, new Offset(56.0, 24.0));
+        DispatchPointerMove(binding, harness.RenderView, 910, new Offset(20.0, 24.0));
+        DispatchPointerUp(binding, harness.RenderView, 910, new Offset(20.0, 24.0));
         harness.Pump(new Size(200.0, 200.0));
         Assert.Null(reported);
 
         // Dragging right past the midpoint reports the flipped value.
-        DispatchPointerDown(binding, harness.RenderView, 911, new Point(20.0, 24.0));
-        DispatchPointerMove(binding, harness.RenderView, 911, new Point(24.0, 24.0));
-        DispatchPointerMove(binding, harness.RenderView, 911, new Point(60.0, 24.0));
-        DispatchPointerUp(binding, harness.RenderView, 911, new Point(60.0, 24.0));
+        DispatchPointerDown(binding, harness.RenderView, 911, new Offset(20.0, 24.0));
+        DispatchPointerMove(binding, harness.RenderView, 911, new Offset(24.0, 24.0));
+        DispatchPointerMove(binding, harness.RenderView, 911, new Offset(60.0, 24.0));
+        DispatchPointerUp(binding, harness.RenderView, 911, new Offset(60.0, 24.0));
         harness.Pump(new Size(200.0, 200.0));
         Assert.True(reported);
     }
@@ -747,8 +747,8 @@ public sealed class MaterialSwitchTests
             Assert.True(merged!.Actions.HasFlag(SemanticsActions.Tap));
 
             GestureBinding binding = GestureBinding.Instance;
-            DispatchPointerDown(binding, harness.RenderView, 912, new Point(30.0, 24.0));
-            DispatchPointerUp(binding, harness.RenderView, 912, new Point(30.0, 24.0));
+            DispatchPointerDown(binding, harness.RenderView, 912, new Offset(30.0, 24.0));
+            DispatchPointerUp(binding, harness.RenderView, 912, new Offset(30.0, 24.0));
 
             TapSemanticEvent tapEvent = Assert.IsType<TapSemanticEvent>(received);
             Assert.Equal(merged.Id, tapEvent.NodeId);
@@ -1025,7 +1025,7 @@ public sealed class MaterialSwitchTests
                && Math.Abs(actual.Height - height) <= tolerance;
     }
 
-    private static void DispatchPointerDown(GestureBinding binding, RenderView renderView, int pointer, Point position)
+    private static void DispatchPointerDown(GestureBinding binding, RenderView renderView, int pointer, Offset position)
     {
         binding.HandlePointerEvent(
             renderView,
@@ -1037,7 +1037,7 @@ public sealed class MaterialSwitchTests
                 timestampUtc: DateTime.UtcNow));
     }
 
-    private static void DispatchPointerMove(GestureBinding binding, RenderView renderView, int pointer, Point position)
+    private static void DispatchPointerMove(GestureBinding binding, RenderView renderView, int pointer, Offset position)
     {
         binding.HandlePointerEvent(
             renderView,
@@ -1049,7 +1049,7 @@ public sealed class MaterialSwitchTests
                 timestampUtc: DateTime.UtcNow));
     }
 
-    private static void DispatchPointerUp(GestureBinding binding, RenderView renderView, int pointer, Point position)
+    private static void DispatchPointerUp(GestureBinding binding, RenderView renderView, int pointer, Offset position)
     {
         binding.HandlePointerEvent(
             renderView,

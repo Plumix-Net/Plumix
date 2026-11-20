@@ -178,7 +178,7 @@ internal sealed class RenderSegmentedControlLayout : RenderBox,
             double x = 0.0;
             foreach (var item in measured)
             {
-                ((SegmentedControlParentData)item.Child.parentData!).offset = new Point(
+                ((SegmentedControlParentData)item.Child.parentData!).offset = new Offset(
                     x,
                     (Size.Height - item.Child.Size.Height) / 2);
                 x += item.Child.Size.Width;
@@ -190,7 +190,7 @@ internal sealed class RenderSegmentedControlLayout : RenderBox,
         foreach (var item in measured)
         {
             right -= item.Child.Size.Width;
-            ((SegmentedControlParentData)item.Child.parentData!).offset = new Point(
+            ((SegmentedControlParentData)item.Child.parentData!).offset = new Offset(
                 right,
                 (Size.Height - item.Child.Size.Height) / 2);
         }
@@ -203,7 +203,7 @@ internal sealed class RenderSegmentedControlLayout : RenderBox,
             double y = 0.0;
             foreach (var item in measured)
             {
-                ((SegmentedControlParentData)item.Child.parentData!).offset = new Point(
+                ((SegmentedControlParentData)item.Child.parentData!).offset = new Offset(
                     (Size.Width - item.Child.Size.Width) / 2,
                     y);
                 y += item.Child.Size.Height;
@@ -215,20 +215,20 @@ internal sealed class RenderSegmentedControlLayout : RenderBox,
         foreach (var item in measured)
         {
             bottom -= item.Child.Size.Height;
-            ((SegmentedControlParentData)item.Child.parentData!).offset = new Point(
+            ((SegmentedControlParentData)item.Child.parentData!).offset = new Offset(
                 (Size.Width - item.Child.Size.Width) / 2,
                 bottom);
         }
     }
 
-    public override void Paint(PaintingContext ctx, Point offset) => DefaultPaint(ctx, offset);
+    public override void Paint(PaintingContext ctx, Offset offset) => DefaultPaint(ctx, offset);
 
-    protected override bool HitTestChildren(BoxHitTestResult result, Point position) =>
+    protected override bool HitTestChildren(BoxHitTestResult result, Offset position) =>
         DefaultHitTestChildren(result, position);
 
-    public void DefaultPaint(PaintingContext ctx, Point offset) => _container.DefaultPaint(ctx, offset);
+    public void DefaultPaint(PaintingContext ctx, Offset offset) => _container.DefaultPaint(ctx, offset);
 
-    public bool DefaultHitTestChildren(BoxHitTestResult result, Point position) =>
+    public bool DefaultHitTestChildren(BoxHitTestResult result, Offset position) =>
         _container.DefaultHitTestChildren(result, position);
 
     public override void VisitChildren(Action<RenderObject> visitor)

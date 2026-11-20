@@ -13,21 +13,21 @@ namespace Plumix.Gestures;
 public interface IPositionedGestureDetails
 {
     /// <summary>The global position at which the pointer interacts with the screen.</summary>
-    Point GlobalPosition { get; }
+    Offset GlobalPosition { get; }
 
     /// <summary>
     /// The local position in the coordinate system of the event receiver at which the pointer
     /// interacts with the screen.
     /// </summary>
-    Point LocalPosition { get; }
+    Offset LocalPosition { get; }
 }
 
 /// <summary>Diagnostics helpers for Dart's <c>Offset</c>-backed gesture detail properties.</summary>
 internal static class GestureDetailsDiagnostics
 {
-    internal static DiagnosticsProperty<Point> OffsetProperty(string name, Point value)
+    internal static DiagnosticsProperty<Offset> OffsetProperty(string name, Offset value)
     {
-        string description = FormattableString.Invariant($"Offset({value.X:0.0}, {value.Y:0.0})");
-        return new DiagnosticsProperty<Point>(name, value, description: description);
+        string description = FormattableString.Invariant($"Offset({value.Dx:0.0}, {value.Dy:0.0})");
+        return new DiagnosticsProperty<Offset>(name, value, description: description);
     }
 }

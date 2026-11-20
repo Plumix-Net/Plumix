@@ -779,14 +779,14 @@ public sealed class CalendarDatePickerDartParityTests : IDisposable
             PointerDeviceKind.Touch);
         // This initial drag is required for the PageView to recognize the gesture, as it uses
         // DragStartBehavior.start. It does not count towards the drag distance.
-        gesture.MoveBy(new Vector(100, 0));
+        gesture.MoveBy(new Offset(100, 0));
         // Dragging for a bit less than half the width should reveal the previous month.
-        gesture.MoveBy(new Vector(800.0 / 2 - 1, 0));
+        gesture.MoveBy(new Offset(800.0 / 2 - 1, 0));
         tester.PumpAndSettle();
         Finds.OneWidget(Find.Text("January 2016"));
         Finds.NWidgets(Find.Text("1"), 2);
         // Dragging a bit over the half should still show both.
-        gesture.MoveBy(new Vector(2, 0));
+        gesture.MoveBy(new Offset(2, 0));
         tester.PumpAndSettle();
         Finds.OneWidget(Find.Text("December 2015"));
         Finds.NWidgets(Find.Text("1"), 2);
@@ -1264,7 +1264,7 @@ public sealed class CalendarDatePickerDartParityTests : IDisposable
         Assert.Equal(1, PaintRecording.Record(inkFeatures).CountCalls("clipPath"));
 
         // Rect.fromCircle(center: const Offset(400.0, 241.0), radius: 35.0)
-        var expectedClipRect = new Rect(365.0, 206.0, 70.0, 70.0);
+        var expectedClipRect = DartGeometry.RectFromLTWH(365.0, 206.0, 70.0, 70.0);
         var expectedClipPath = new Plumix.UI.Path();
         expectedClipPath.AddRect(expectedClipRect);
         PaintAssert.Paints(

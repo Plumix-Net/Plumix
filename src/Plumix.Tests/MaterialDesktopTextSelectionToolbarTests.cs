@@ -40,20 +40,20 @@ public sealed class MaterialDesktopTextSelectionToolbarTests : IDisposable
     public void LayoutDelegate_LoosensChildAndClampsOnlyPositiveViewportOverhang()
     {
         var constraints = new BoxConstraints(MinWidth: 80, MaxWidth: 300, MinHeight: 60, MaxHeight: 200);
-        var layoutDelegate = new DesktopTextSelectionToolbarLayoutDelegate(new Point(260, 180));
+        var layoutDelegate = new DesktopTextSelectionToolbarLayoutDelegate(new Offset(260, 180));
 
         Assert.Equal(new BoxConstraints(MaxWidth: 300, MaxHeight: 200),
             layoutDelegate.GetConstraintsForChild(constraints));
-        Assert.Equal(new Point(180, 150),
+        Assert.Equal(new Offset(180, 150),
             layoutDelegate.GetPositionForChild(new Size(300, 200), new Size(120, 50)));
 
-        var negativeAnchor = new DesktopTextSelectionToolbarLayoutDelegate(new Point(-12, -7));
-        Assert.Equal(new Point(-12, -7),
+        var negativeAnchor = new DesktopTextSelectionToolbarLayoutDelegate(new Offset(-12, -7));
+        Assert.Equal(new Offset(-12, -7),
             negativeAnchor.GetPositionForChild(new Size(300, 200), new Size(120, 50)));
         Assert.True(layoutDelegate.ShouldRelayout(
-            new DesktopTextSelectionToolbarLayoutDelegate(new Point(20, 30))));
+            new DesktopTextSelectionToolbarLayoutDelegate(new Offset(20, 30))));
         Assert.False(layoutDelegate.ShouldRelayout(
-            new DesktopTextSelectionToolbarLayoutDelegate(new Point(260, 180))));
+            new DesktopTextSelectionToolbarLayoutDelegate(new Offset(260, 180))));
     }
 
     [Fact]
@@ -62,7 +62,7 @@ public sealed class MaterialDesktopTextSelectionToolbarTests : IDisposable
         using var harness = CreateHarness(
             ThemeData.Light,
             new DesktopTextSelectionToolbar(
-                anchor: new Point(380, 280),
+                anchor: new Offset(380, 280),
                 children:
                 [
                     new DesktopTextSelectionToolbarButton(() => { }, new Text("Copy")),
@@ -78,7 +78,7 @@ public sealed class MaterialDesktopTextSelectionToolbarTests : IDisposable
 
         var customLayout = Assert.Single(FindDescendants<RenderCustomSingleChildLayoutBox>(harness.RenderView));
         Assert.Equal(new Size(384, 272), customLayout.Size);
-        Assert.Equal(new Point(162, 176), ((BoxParentData)customLayout.Child!.parentData!).offset);
+        Assert.Equal(new Offset(162, 176), ((BoxParentData)customLayout.Child!.parentData!).offset);
 
         Assert.Contains(FindDescendants<RenderConstrainedBox>(harness.RenderView), box =>
             box.AdditionalConstraints == BoxConstraints.TightFor(width: 222));
@@ -186,18 +186,18 @@ public sealed class MaterialDesktopTextSelectionToolbarTests : IDisposable
         Assert.Equal(60.0, TextSelectionToolbarLayoutDelegate.CenterOn(100, 80, 200));
 
         var above = new TextSelectionToolbarLayoutDelegate(
-            anchorAbove: new Point(100, 90),
-            anchorBelow: new Point(100, 120),
+            anchorAbove: new Offset(100, 90),
+            anchorBelow: new Offset(100, 120),
             fitsAbove: true);
         var below = new TextSelectionToolbarLayoutDelegate(
-            anchorAbove: new Point(100, 20),
-            anchorBelow: new Point(100, 55));
+            anchorAbove: new Offset(100, 20),
+            anchorBelow: new Offset(100, 55));
 
-        Assert.Equal(new Point(60, 50), above.GetPositionForChild(new Size(200, 160), new Size(80, 40)));
-        Assert.Equal(new Point(60, 55), below.GetPositionForChild(new Size(200, 160), new Size(80, 40)));
+        Assert.Equal(new Offset(60, 50), above.GetPositionForChild(new Size(200, 160), new Size(80, 40)));
+        Assert.Equal(new Offset(60, 55), below.GetPositionForChild(new Size(200, 160), new Size(80, 40)));
         Assert.False(above.ShouldRelayout(new TextSelectionToolbarLayoutDelegate(
-            new Point(100, 90),
-            new Point(100, 120),
+            new Offset(100, 90),
+            new Offset(100, 120),
             true)));
         Assert.True(above.ShouldRelayout(below));
     }
@@ -245,8 +245,8 @@ public sealed class MaterialDesktopTextSelectionToolbarTests : IDisposable
         using var harness = CreateHarness(
             ThemeData.Light,
             new TextSelectionToolbar(
-                anchorAbove: new Point(160, 100),
-                anchorBelow: new Point(160, 120),
+                anchorAbove: new Offset(160, 100),
+                anchorBelow: new Offset(160, 120),
                 children:
                 [
                     new TextSelectionToolbarTextButton(
@@ -266,8 +266,8 @@ public sealed class MaterialDesktopTextSelectionToolbarTests : IDisposable
             value.Padding == EdgeInsets.FromLTRB(8, 20, 8, 8));
         var customLayout = Assert.Single(FindDescendants<RenderCustomSingleChildLayoutBox>(harness.RenderView));
         var layoutDelegate = Assert.IsType<TextSelectionToolbarLayoutDelegate>(customLayout.LayoutDelegate);
-        Assert.Equal(new Point(152, 72), layoutDelegate.AnchorAbove);
-        Assert.Equal(new Point(152, 120), layoutDelegate.AnchorBelow);
+        Assert.Equal(new Offset(152, 72), layoutDelegate.AnchorAbove);
+        Assert.Equal(new Offset(152, 120), layoutDelegate.AnchorBelow);
         Assert.True(layoutDelegate.FitsAbove);
         // Dart's Material clips through its physical shape (RenderPhysicalShape with a ShapeBorderClipper).
         Assert.Contains(FindDescendants<RenderPhysicalShape>(harness.RenderView), clip =>
@@ -298,12 +298,12 @@ public sealed class MaterialDesktopTextSelectionToolbarTests : IDisposable
         Assert.True(((ToolbarItemsParentData)first.parentData!).ShouldPaint);
         Assert.False(((ToolbarItemsParentData)second.parentData!).ShouldPaint);
         Assert.False(((ToolbarItemsParentData)third.parentData!).ShouldPaint);
-        Assert.Equal(new Point(70, 0), ((ToolbarItemsParentData)navigation.parentData!).offset);
+        Assert.Equal(new Offset(70, 0), ((ToolbarItemsParentData)navigation.parentData!).offset);
 
         layout.TextDirection = TextDirection.Rtl;
         layout.Layout(BoxConstraints.Loose(new Size(180, 300)));
-        Assert.Equal(new Point(0, 0), ((ToolbarItemsParentData)navigation.parentData!).offset);
-        Assert.Equal(new Point(48, 0), ((ToolbarItemsParentData)first.parentData!).offset);
+        Assert.Equal(new Offset(0, 0), ((ToolbarItemsParentData)navigation.parentData!).offset);
+        Assert.Equal(new Offset(48, 0), ((ToolbarItemsParentData)first.parentData!).offset);
 
         layout.TextDirection = TextDirection.Ltr;
         layout.OverflowOpen = true;
@@ -314,14 +314,14 @@ public sealed class MaterialDesktopTextSelectionToolbarTests : IDisposable
         Assert.False(((ToolbarItemsParentData)first.parentData!).ShouldPaint);
         Assert.True(((ToolbarItemsParentData)second.parentData!).ShouldPaint);
         Assert.True(((ToolbarItemsParentData)third.parentData!).ShouldPaint);
-        Assert.Equal(new Point(0, 0), ((ToolbarItemsParentData)navigation.parentData!).offset);
-        Assert.Equal(new Point(0, 44), ((ToolbarItemsParentData)second.parentData!).offset);
-        Assert.Equal(new Point(0, 88), ((ToolbarItemsParentData)third.parentData!).offset);
+        Assert.Equal(new Offset(0, 0), ((ToolbarItemsParentData)navigation.parentData!).offset);
+        Assert.Equal(new Offset(0, 44), ((ToolbarItemsParentData)second.parentData!).offset);
+        Assert.Equal(new Offset(0, 88), ((ToolbarItemsParentData)third.parentData!).offset);
 
         layout.IsAbove = true;
         layout.Layout(BoxConstraints.Loose(new Size(180, 300)));
-        Assert.Equal(new Point(0, 88), ((ToolbarItemsParentData)navigation.parentData!).offset);
-        Assert.Equal(new Point(0, 0), ((ToolbarItemsParentData)second.parentData!).offset);
+        Assert.Equal(new Offset(0, 88), ((ToolbarItemsParentData)navigation.parentData!).offset);
+        Assert.Equal(new Offset(0, 0), ((ToolbarItemsParentData)second.parentData!).offset);
     }
 
     [Fact]
@@ -366,8 +366,8 @@ public sealed class MaterialDesktopTextSelectionToolbarTests : IDisposable
             new(null, label: "Custom action"),
         };
         var anchors = new TextSelectionToolbarAnchors(
-            PrimaryAnchor: new Point(120, 80),
-            SecondaryAnchor: new Point(120, 104));
+            PrimaryAnchor: new Offset(120, 80),
+            SecondaryAnchor: new Offset(120, 104));
 
         using var androidHarness = CreateHarness(
             ThemeData.Light with { Platform = TargetPlatform.Android },
@@ -400,7 +400,7 @@ public sealed class MaterialDesktopTextSelectionToolbarTests : IDisposable
     [Fact]
     public void AdaptiveToolbar_EditableOmitsUnavailableActionsAndEmptyShrinks()
     {
-        var anchors = new TextSelectionToolbarAnchors(new Point(50, 50));
+        var anchors = new TextSelectionToolbarAnchors(new Offset(50, 50));
         AdaptiveTextSelectionToolbar toolbar = AdaptiveTextSelectionToolbar.Editable(
             onCopy: () => { },
             onCut: null,
@@ -432,7 +432,7 @@ public sealed class MaterialDesktopTextSelectionToolbarTests : IDisposable
         {
             new(() => { }, label: "Copy"),
         };
-        var anchors = new TextSelectionToolbarAnchors(new Point(120, 80), new Point(120, 104));
+        var anchors = new TextSelectionToolbarAnchors(new Offset(120, 80), new Offset(120, 104));
 
         using var iosHarness = CreateHarness(
             ThemeData.Light with { Platform = TargetPlatform.IOS },
@@ -461,7 +461,7 @@ public sealed class MaterialDesktopTextSelectionToolbarTests : IDisposable
             new(() => { }, label: "Copy"),
             new(() => { }, label: "Paste"),
         };
-        var anchors = new TextSelectionToolbarAnchors(new Point(120, 80), new Point(120, 104));
+        var anchors = new TextSelectionToolbarAnchors(new Offset(120, 80), new Offset(120, 104));
 
         PlatformDefaults.DebugTargetPlatformOverride = TargetPlatform.IOS;
         using var iosHarness = CreateHarness(
@@ -541,17 +541,17 @@ public sealed class MaterialDesktopTextSelectionToolbarTests : IDisposable
     [Fact]
     public void SpellCheckLayoutDelegate_CentersAndRaisesToolbarAboveViewportBottom()
     {
-        var layoutDelegate = new SpellCheckSuggestionsToolbarLayoutDelegate(new Point(140, 170));
+        var layoutDelegate = new SpellCheckSuggestionsToolbarLayoutDelegate(new Offset(140, 170));
         var constraints = new BoxConstraints(MinWidth: 50, MaxWidth: 280, MinHeight: 40, MaxHeight: 190);
 
         Assert.Equal(new BoxConstraints(MaxWidth: 280, MaxHeight: 190),
             layoutDelegate.GetConstraintsForChild(constraints));
-        Assert.Equal(new Point(57.5, 1),
+        Assert.Equal(new Offset(57.5, 1),
             layoutDelegate.GetPositionForChild(new Size(280, 190), new Size(165, 189)));
         Assert.False(layoutDelegate.ShouldRelayout(
-            new SpellCheckSuggestionsToolbarLayoutDelegate(new Point(140, 170))));
+            new SpellCheckSuggestionsToolbarLayoutDelegate(new Offset(140, 170))));
         Assert.True(layoutDelegate.ShouldRelayout(
-            new SpellCheckSuggestionsToolbarLayoutDelegate(new Point(20, 30))));
+            new SpellCheckSuggestionsToolbarLayoutDelegate(new Offset(20, 30))));
     }
 
     [Fact]
@@ -562,9 +562,9 @@ public sealed class MaterialDesktopTextSelectionToolbarTests : IDisposable
             .ToArray();
         Assert.Throws<ArgumentException>(() => new SpellCheckSuggestionsToolbar(default, tooManyItems));
         Assert.Equal(
-            new Point(20, 30),
+            new Offset(20, 30),
             SpellCheckSuggestionsToolbar.GetToolbarAnchor(
-                new TextSelectionToolbarAnchors(new Point(10, 12), new Point(20, 30))));
+                new TextSelectionToolbarAnchors(new Offset(10, 12), new Offset(20, 30))));
 
         var items = new ContextMenuButtonItem[]
         {
@@ -573,7 +573,7 @@ public sealed class MaterialDesktopTextSelectionToolbarTests : IDisposable
         };
         using var harness = CreateHarness(
             ThemeData.Light with { Platform = TargetPlatform.Android },
-            new SpellCheckSuggestionsToolbar(new Point(150, 180), items),
+            new SpellCheckSuggestionsToolbar(new Offset(150, 180), items),
             padding: EdgeInsets.FromLTRB(0, 10, 0, 0),
             viewInsets: EdgeInsets.FromLTRB(0, 0, 0, 30));
         harness.Pump(new Size(300, 250));
@@ -777,10 +777,10 @@ public sealed class MaterialDesktopTextSelectionToolbarTests : IDisposable
             Size = Constraints.Constrain(_preferredSize);
         }
 
-        public override void Paint(PaintingContext context, Point offset)
+        public override void Paint(PaintingContext context, Offset offset)
         {
         }
 
-        protected override bool HitTestSelf(Point position) => true;
+        protected override bool HitTestSelf(Offset position) => true;
     }
 }

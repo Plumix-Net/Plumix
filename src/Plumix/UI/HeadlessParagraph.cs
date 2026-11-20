@@ -1177,14 +1177,14 @@ internal sealed class HeadlessParagraph : Paragraph
         return boxes;
     }
 
-    public override TextPosition GetPositionForOffset(Point offset)
+    public override TextPosition GetPositionForOffset(Offset offset)
     {
         if (!_laidOut || _lines.Count == 0)
         {
             return new TextPosition(0);
         }
 
-        Line line = LineForY(offset.Y);
+        Line line = LineForY(offset.Dy);
         List<Placed> items = line.Visual.Where(item => item.IsEllipsis || !item.Cluster!.HardBreak).ToList();
         if (items.Count == 0)
         {
@@ -1193,17 +1193,17 @@ internal sealed class HeadlessParagraph : Paragraph
 
         Placed first = items[0];
         Placed last = items[^1];
-        if (offset.X < first.X)
+        if (offset.Dx < first.X)
         {
             return LeftEdgePosition(first, line);
         }
 
         foreach (Placed item in items)
         {
-            if (offset.X < item.X + item.Width)
+            if (offset.Dx < item.X + item.Width)
             {
                 double middle = item.X + (item.Width / 2.0);
-                return offset.X < middle ? LeftEdgePosition(item, line) : RightEdgePosition(item, line);
+                return offset.Dx < middle ? LeftEdgePosition(item, line) : RightEdgePosition(item, line);
             }
         }
 
@@ -1270,7 +1270,7 @@ internal sealed class HeadlessParagraph : Paragraph
         return null;
     }
 
-    public override GlyphInfo? GetClosestGlyphInfoForOffset(Point offset)
+    public override GlyphInfo? GetClosestGlyphInfoForOffset(Offset offset)
     {
         if (!_laidOut)
         {
@@ -1288,7 +1288,7 @@ internal sealed class HeadlessParagraph : Paragraph
 
             double top = line.Top;
             double bottom = line.Top + line.Ascent + line.Descent;
-            double distance = offset.Y < top ? top - offset.Y : offset.Y >= bottom ? offset.Y - bottom : 0.0;
+            double distance = offset.Dy < top ? top - offset.Dy : offset.Dy >= bottom ? offset.Dy - bottom : 0.0;
             if (distance < bestDistance)
             {
                 bestDistance = distance;
@@ -1315,7 +1315,7 @@ internal sealed class HeadlessParagraph : Paragraph
         {
             double left = item.X;
             double right = item.X + item.Width;
-            double distance = offset.X < left ? left - offset.X : offset.X >= right ? offset.X - right : 0.0;
+            double distance = offset.Dx < left ? left - offset.Dx : offset.Dx >= right ? offset.Dx - right : 0.0;
             if (distance < bestHorizontal)
             {
                 bestHorizontal = distance;
@@ -1336,13 +1336,13 @@ internal sealed class HeadlessParagraph : Paragraph
             TextRange range = placeholder.Width == 0.0 && placeholder.Height == 0.0
                 ? new TextRange(0, 0)
                 : new TextRange(cluster.Start, cluster.End);
-            return new GlyphInfo(new Rect(item.X, top, item.Width, placeholder.Height), range, direction);
+            return new GlyphInfo(DartGeometry.RectFromLTWH(item.X, top, item.Width, placeholder.Height), range, direction);
         }
 
         double fontSize = item.Style.FontSize;
-        var bounds = new Rect(
-            new Point(item.X, line.Baseline - (fontSize * AscentRatio)),
-            new Point(item.X + item.Width, line.Baseline + (fontSize * DescentRatio)));
+        var bounds = DartGeometry.RectFromCorners(
+            new Offset(item.X, line.Baseline - (fontSize * AscentRatio)),
+            new Offset(item.X + item.Width, line.Baseline + (fontSize * DescentRatio)));
         return new GlyphInfo(bounds, new TextRange(cluster.Start, cluster.End), direction);
     }
 
@@ -1422,7 +1422,7 @@ internal sealed class HeadlessParagraph : Paragraph
     /// whitespace nothing, and any code point the font does not cover its `.notdef` frame. The shapes are
     /// painted with the run's foreground paint, or its color.
     /// </remarks>
-    internal override Action<DrawingContext>? CreateDrawAction(Point offset)
+    internal override Action<DrawingContext>? CreateDrawAction(Offset offset)
     {
         if (!_laidOut)
         {
@@ -1432,7 +1432,7 @@ internal sealed class HeadlessParagraph : Paragraph
         // Skia operations batch into one custom draw; shader-painted glyphs are Avalonia geometry.
         var steps = new List<PaintStep>();
         Rect? bounds = null;
-        void Include(Rect rect) => bounds = bounds is { } current ? current.Union(rect) : rect;
+        void Include(Rect rect) => bounds = bounds is { } current ? current.ExpandToInclude(rect) : rect;
         void AddOperation(FlutterTestGlyphDraw.Operation operation)
         {
             if (steps.Count == 0 || steps[^1] is not List<FlutterTestGlyphDraw.Operation> batch)
@@ -1448,7 +1448,7 @@ internal sealed class HeadlessParagraph : Paragraph
         {
             Line line = _lines[lineIndex];
             // SkParagraph's TextLine paints its blob at floor(baseline + 0.5).
-            double baseline = offset.Y + Math.Floor(line.Baseline + 0.5);
+            double baseline = offset.Dy + Math.Floor(line.Baseline + 0.5);
             List<StyleRun> runs = StyleRunsOf(line, lineIndex, offset);
             foreach (StyleRun run in runs)
             {
@@ -1466,7 +1466,7 @@ internal sealed class HeadlessParagraph : Paragraph
                     continue;
                 }
 
-                List<FlutterTestGlyphDraw.Glyph> glyphs = GlyphsOf(run, offset.X, baseline);
+                List<FlutterTestGlyphDraw.Glyph> glyphs = GlyphsOf(run, offset.Dx, baseline);
                 foreach (Rendering.Shadow shadow in shadows)
                 {
                     // TextShadow::hasShadow.
@@ -1478,7 +1478,7 @@ internal sealed class HeadlessParagraph : Paragraph
                     AddOperation(new FlutterTestGlyphDraw.GlyphsOperation(
                         glyphs,
                         new FlutterTestGlyphDraw.TextShadowDraw(shadow.Offset, shadow.Color, shadow.BlurSigma)));
-                    Include(run.Clip.Translate(shadow.Offset).Inflate((shadow.BlurSigma * 3.0) + 1.0));
+                    Include(run.Clip.Shift(shadow.Offset).Inflate((shadow.BlurSigma * 3.0) + 1.0));
                 }
             }
 
@@ -1486,7 +1486,7 @@ internal sealed class HeadlessParagraph : Paragraph
             {
                 if (run.Style.Foreground is { Shader: { } shader })
                 {
-                    foreach (FlutterTestGlyphDraw.Glyph glyph in GlyphsOf(run, offset.X, baseline))
+                    foreach (FlutterTestGlyphDraw.Glyph glyph in GlyphsOf(run, offset.Dx, baseline))
                     {
                         steps.Add(new ShaderGlyphStep(
                             FlutterTestGlyph(ShapeOf(glyph.CodePoint), glyph.X, glyph.FontSize,
@@ -1496,10 +1496,10 @@ internal sealed class HeadlessParagraph : Paragraph
                 }
                 else
                 {
-                    AddOperation(new FlutterTestGlyphDraw.GlyphsOperation(GlyphsOf(run, offset.X, baseline)));
+                    AddOperation(new FlutterTestGlyphDraw.GlyphsOperation(GlyphsOf(run, offset.Dx, baseline)));
                 }
 
-                Include(run.Clip.Union(new Rect(
+                Include(run.Clip.ExpandToInclude(DartGeometry.RectFromLTWH(
                     run.Left,
                     baseline - (run.Style.FontSize * AscentRatio),
                     run.Right - run.Left + run.Style.FontSize,
@@ -1561,7 +1561,7 @@ internal sealed class HeadlessParagraph : Paragraph
     /// one style and direction, with the `ClipContext.clip` each is painted against. LTR paragraphs leave the
     /// line's trailing spaces out of the clip (`measureTextInsideOneRun` stops at the line advance).
     /// </summary>
-    private List<StyleRun> StyleRunsOf(Line line, int lineIndex, Point offset)
+    private List<StyleRun> StyleRunsOf(Line line, int lineIndex, Offset offset)
     {
         TextHeightBehavior behavior = _content.Style.TextHeightBehavior ?? new TextHeightBehavior();
         bool trimAscent = lineIndex == 0 && !behavior.ApplyHeightToFirstAscent;
@@ -1587,10 +1587,10 @@ internal sealed class HeadlessParagraph : Paragraph
                 && !item.IsEllipsis
                 && open.Level == item.Level
                 && Equals(open.Style, item.Style)
-                && Math.Abs(open.Right - (offset.X + item.X)) < Epsilon)
+                && Math.Abs(open.Right - (offset.Dx + item.X)) < Epsilon)
             {
                 open.Items.Add(item);
-                open.Right = offset.X + item.X + item.Width;
+                open.Right = offset.Dx + item.X + item.Width;
                 open.Clip = open.Clip.WithWidth(open.Right - open.Left);
                 continue;
             }
@@ -1601,13 +1601,13 @@ internal sealed class HeadlessParagraph : Paragraph
             ascent = trimAscent ? fontSize * AscentRatio : ascent;
             descent = trimDescent ? fontSize * DescentRatio : descent;
             // LineMetrics::runTop and Run::calculateHeight (CSS metric style).
-            double top = offset.Y + line.Top + line.Ascent - ascent + delta;
-            double left = offset.X + item.X;
+            double top = offset.Dy + line.Top + line.Ascent - ascent + delta;
+            double left = offset.Dx + item.X;
             current = new StyleRun(style, item.Level, item.IsEllipsis, ascent)
             {
                 Left = left,
                 Right = left + item.Width,
-                Clip = new Rect(left, top, item.Width, ascent + descent),
+                Clip = DartGeometry.RectFromLTWH(left, top, item.Width, ascent + descent),
             };
             current.Items.Add(item);
             runs.Add(current);
@@ -1753,17 +1753,17 @@ internal sealed class HeadlessParagraph : Paragraph
         switch (shape)
         {
             case GlyphShape.DescentOnly:
-                return new RectangleGeometry(new Rect(x, baseline, Math.Max(width, 0.0), descent));
+                return new RectangleGeometry(DartGeometry.RectFromLTWH(x, baseline, Math.Max(width, 0.0), descent));
             case GlyphShape.AscentOnly:
-                return new RectangleGeometry(new Rect(x, baseline - ascent, Math.Max(width, 0.0), ascent));
+                return new RectangleGeometry(DartGeometry.RectFromLTWH(x, baseline - ascent, Math.Max(width, 0.0), ascent));
             case GlyphShape.NotDef:
                 double unit = fontSize / 1024.0;
-                var outer = new Rect(x + (128 * unit), baseline - (768 * unit), 768 * unit, 768 * unit);
-                var inner = new Rect(x + (256 * unit), baseline - (640 * unit), 512 * unit, 512 * unit);
+                var outer = DartGeometry.RectFromLTWH(x + (128 * unit), baseline - (768 * unit), 768 * unit, 768 * unit);
+                var inner = DartGeometry.RectFromLTWH(x + (256 * unit), baseline - (640 * unit), 512 * unit, 512 * unit);
                 return new CombinedGeometry(GeometryCombineMode.Exclude,
                     new RectangleGeometry(outer), new RectangleGeometry(inner));
             default:
-                return new RectangleGeometry(new Rect(x, baseline - ascent, Math.Max(width, 0.0), ascent + descent));
+                return new RectangleGeometry(DartGeometry.RectFromLTWH(x, baseline - ascent, Math.Max(width, 0.0), ascent + descent));
         }
     }
 

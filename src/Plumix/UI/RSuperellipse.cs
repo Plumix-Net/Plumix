@@ -28,7 +28,7 @@ public readonly record struct RSuperellipse
     public double Bottom => _geometry.Bottom;
     public double Width => _geometry.Width;
     public double Height => _geometry.Height;
-    public Point Center => _geometry.Center;
+    public Offset Center => _geometry.Center;
     public double ShortestSide => _geometry.ShortestSide;
     public double LongestSide => _geometry.LongestSide;
     public Rect SafeInnerRect => _geometry.SafeInnerRect;
@@ -77,7 +77,7 @@ public readonly record struct RSuperellipse
         Radius? bottomRight = null, Radius? bottomLeft = null) =>
         new(rect, topLeft ?? default, topRight ?? default, bottomRight ?? default, bottomLeft ?? default);
 
-    public RSuperellipse Shift(Point offset) => new(_geometry.Shift(offset));
+    public RSuperellipse Shift(Offset offset) => new(_geometry.Shift(offset));
     public RSuperellipse Inflate(double delta) => new(_geometry.Inflate(delta));
     public RSuperellipse Deflate(double delta) => Inflate(-delta);
     public RSuperellipse ScaleRadii() => new(_geometry.ScaleRadii());
@@ -86,7 +86,7 @@ public readonly record struct RSuperellipse
         : b is { } end ? new RSuperellipse(end._geometry.LerpTo(null, 1 - t)) : null;
     public override string ToString() => _geometry.Format(nameof(RSuperellipse));
 
-    public bool Contains(Point point) => SuperellipseGeometry.Contains(this, point);
+    public bool Contains(Offset point) => SuperellipseGeometry.Contains(this, point);
 
     public Path ToPath()
     {
@@ -423,7 +423,7 @@ internal static class RoundSuperellipsePathBuilder
 
         public double Length => Math.Sqrt((X * X) + (Y * Y));
 
-        public static Vec FromPoint(Point point) => new(point.X, point.Y);
+        public static Vec FromPoint(Offset point) => new(point.Dx, point.Dy);
 
         public static Vec FromRadius(Radius radius) => new(radius.X, radius.Y);
 

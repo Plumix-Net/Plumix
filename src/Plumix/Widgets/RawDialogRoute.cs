@@ -31,7 +31,7 @@ public class RawDialogRoute<T> : PopupRoute
         RouteTransitionsBuilder? transitionBuilder = null,
         RouteSettings? settings = null,
         bool? requestFocus = null,
-        Point? anchorPoint = null,
+        Offset? anchorPoint = null,
         TraversalEdgeBehavior? traversalEdgeBehavior = null,
         TraversalEdgeBehavior? directionalTraversalEdgeBehavior = null,
         bool fullscreenDialog = false) : base(settings, requestFocus: requestFocus)
@@ -51,7 +51,7 @@ public class RawDialogRoute<T> : PopupRoute
     }
 
     /// <summary>The anchor used to select a sub-screen when a display feature splits the screen.</summary>
-    public Point? AnchorPoint { get; }
+    public Offset? AnchorPoint { get; }
 
     public override bool BarrierDismissible => _barrierDismissible;
 
@@ -110,7 +110,7 @@ public static class GeneralDialogs
         bool useRootNavigator = true,
         bool fullscreenDialog = false,
         RouteSettings? routeSettings = null,
-        Point? anchorPoint = null,
+        Offset? anchorPoint = null,
         bool? requestFocus = null)
     {
         if (barrierDismissible && barrierLabel is null)

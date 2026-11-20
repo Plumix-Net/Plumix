@@ -95,7 +95,7 @@ public sealed class InkPaintDartParityTests : IDisposable
                                 splashColor: splashColor,
                                 onTap: () => { }))))));
 
-        Point center = tester.GetCenter(InkWellOf(tester));
+        Offset center = tester.GetCenter(InkWellOf(tester));
         TestGesture gesture = StartGesture(tester, center);
         tester.Pump(); // start gesture
         tester.Pump(TimeSpan.FromMilliseconds(200)); // wait for splash to be well under way
@@ -138,7 +138,7 @@ public sealed class InkPaintDartParityTests : IDisposable
                                 splashColor: splashColor,
                                 onTap: () => { }))))));
 
-        Point center = tester.GetCenter(InkWellOf(tester));
+        Offset center = tester.GetCenter(InkWellOf(tester));
         TestGesture gesture = StartGesture(tester, center);
         tester.Pump(); // start gesture
         tester.Pump(TimeSpan.FromMilliseconds(200)); // wait for splash to be well under way
@@ -185,46 +185,46 @@ public sealed class InkPaintDartParityTests : IDisposable
                                 radius: 100.0,
                                 splashFactory: InkRipple.SplashFactory))))));
 
-        Point tapDownOffset = tester.GetTopLeft(InkWellOf(tester));
-        Point inkWellCenter = tester.GetCenter(InkWellOf(tester));
+        Offset tapDownOffset = tester.GetTopLeft(InkWellOf(tester));
+        Offset inkWellCenter = tester.GetCenter(InkWellOf(tester));
         TapAt(tester, tapDownOffset);
         tester.Pump(); // start gesture
 
         RenderObject box = MaterialOf(InkWellOf(tester));
 
-        PaintPattern RipplePattern(Point expectedCenter, double expectedRadius, int expectedAlpha)
+        PaintPattern RipplePattern(Offset expectedCenter, double expectedRadius, int expectedAlpha)
         {
             return PaintPattern.Paints
                 .Translate(x: 0.0, y: 0.0)
-                .Translate(x: tapDownOffset.X, y: tapDownOffset.Y)
+                .Translate(x: tapDownOffset.Dx, y: tapDownOffset.Dy)
                 .Something(call => CircleMatches(call, expectedCenter, expectedRadius, expectedAlpha));
         }
 
         // Initially the ripple's center is where the tap occurred;
         // ripplePattern always add a translation of tapDownOffset.
-        PaintAssert.Paints(box, RipplePattern(new Point(0, 0), 30.0, 0));
+        PaintAssert.Paints(box, RipplePattern(new Offset(0, 0), 30.0, 0));
 
         // The ripple fades in for 75ms. During that time its alpha is eased from
         // 0 to the splashColor's alpha value and its center moves towards the
         // center of the ink well.
         tester.Pump(TimeSpan.FromMilliseconds(50));
-        PaintAssert.Paints(box, RipplePattern(new Point(17.0, 17.0), 56.0, 120));
+        PaintAssert.Paints(box, RipplePattern(new Offset(17.0, 17.0), 56.0, 120));
 
         // At 75ms the ripple has fade in: it's alpha matches the splashColor's
         // alpha and its center has moved closer to the ink well's center.
         tester.Pump(TimeSpan.FromMilliseconds(25));
-        PaintAssert.Paints(box, RipplePattern(new Point(29.0, 29.0), 73.0, 180));
+        PaintAssert.Paints(box, RipplePattern(new Offset(29.0, 29.0), 73.0, 180));
 
         // At this point the splash radius has expanded to its limit: 5 past the
         // ink well's radius parameter. The splash center has moved to its final
         // location at the inkwell's center and the fade-out is about to start.
         // The fade-out begins at 225ms = 50ms + 25ms + 150ms.
         tester.Pump(TimeSpan.FromMilliseconds(150));
-        PaintAssert.Paints(box, RipplePattern((Point)(inkWellCenter - tapDownOffset), 105.0, 180));
+        PaintAssert.Paints(box, RipplePattern((Offset)(inkWellCenter - tapDownOffset), 105.0, 180));
 
         // After another 150ms the fade-out is complete.
         tester.Pump(TimeSpan.FromMilliseconds(150));
-        PaintAssert.Paints(box, RipplePattern((Point)(inkWellCenter - tapDownOffset), 105.0, 0));
+        PaintAssert.Paints(box, RipplePattern((Offset)(inkWellCenter - tapDownOffset), 105.0, 0));
     }
 
     // Flutter: "Material2 - Does the Ink widget render anything"
@@ -243,7 +243,7 @@ public sealed class InkPaintDartParityTests : IDisposable
                             height: 200.0,
                             child: new InkWell(splashColor: Colors.Green, onTap: () => { }))))));
 
-        Point center = tester.GetCenter(InkWellOf(tester));
+        Offset center = tester.GetCenter(InkWellOf(tester));
         TestGesture gesture = StartGesture(tester, center);
         tester.Pump(); // start gesture
         tester.Pump(TimeSpan.FromMilliseconds(200)); // wait for splash to be well under way
@@ -310,7 +310,7 @@ public sealed class InkPaintDartParityTests : IDisposable
                             height: 200.0,
                             child: new InkWell(key: inkWellKey, splashColor: Colors.Green, onTap: () => { }))))));
 
-        Point center = tester.GetCenter(InkWellOf(tester));
+        Offset center = tester.GetCenter(InkWellOf(tester));
         TestGesture gesture = StartGesture(tester, center);
         tester.Pump(); // start gesture
         tester.Pump(TimeSpan.FromMilliseconds(200)); // wait for splash to be well under way
@@ -398,14 +398,14 @@ public sealed class InkPaintDartParityTests : IDisposable
         focusNode.RequestFocus();
         tester.PumpAndSettle();
 
-        Point topLeft = tester.GetTopLeft(InkWellOf(tester));
-        var inkWellCenter = (Point)(tester.GetCenter(InkWellOf(tester)) - topLeft);
+        Offset topLeft = tester.GetTopLeft(InkWellOf(tester));
+        var inkWellCenter = (Offset)(tester.GetCenter(InkWellOf(tester)) - topLeft);
 
         PaintPattern RipplePattern(double expectedRadius, int expectedAlpha)
         {
             return PaintPattern.Paints
                 .Translate(x: 0.0, y: 0.0)
-                .Translate(x: topLeft.X, y: topLeft.Y)
+                .Translate(x: topLeft.Dx, y: topLeft.Dy)
                 .Something(call => CircleMatches(call, inkWellCenter, expectedRadius, expectedAlpha));
         }
 
@@ -458,14 +458,14 @@ public sealed class InkPaintDartParityTests : IDisposable
                                 radius: 100.0,
                                 splashFactory: InkRipple.SplashFactory))))));
 
-        Point tapDownOffset = tester.GetTopLeft(InkWellOf(tester));
+        Offset tapDownOffset = tester.GetTopLeft(InkWellOf(tester));
         TapAt(tester, tapDownOffset);
         tester.Pump(); // start splash
         tester.Pump(TimeSpan.FromMilliseconds(375)); // _kFadeOutDuration, in_ripple.dart
 
         TestGesture gesture = StartGesture(tester, tapDownOffset);
         tester.Pump(); // start gesture
-        gesture.MoveTo(new Point(0, 0));
+        gesture.MoveTo(new Offset(0, 0));
         gesture.Up(); // generates a tap cancel
         tester.PumpAndSettle();
         Assert.Null(tester.TakeException());
@@ -494,7 +494,7 @@ public sealed class InkPaintDartParityTests : IDisposable
                                 radius: 100.0,
                                 splashFactory: InkRipple.SplashFactory))))));
 
-        Point tapDownOffset = tester.GetTopLeft(InkWellOf(tester));
+        Offset tapDownOffset = tester.GetTopLeft(InkWellOf(tester));
         TapAt(tester, tapDownOffset);
         tester.Pump(); // start splash
         // No delay here so _fadeInController.value=1.0 (InkRipple.dart)
@@ -502,7 +502,7 @@ public sealed class InkPaintDartParityTests : IDisposable
         // Generate a tap cancel; Will cancel the ink splash before it started
         TestGesture gesture = StartGesture(tester, tapDownOffset);
         tester.Pump(); // start gesture
-        gesture.MoveTo(new Point(0, 0));
+        gesture.MoveTo(new Offset(0, 0));
         gesture.Up(); // generates a tap cancel
 
         RenderObject box = MaterialOf(InkWellOf(tester));
@@ -604,7 +604,7 @@ public sealed class InkPaintDartParityTests : IDisposable
 
         tester.PumpWidget(BuildWidget());
 
-        Point center = tester.GetCenter(SizedBoxAbove<InkResponse>(tester));
+        Offset center = tester.GetCenter(SizedBoxAbove<InkResponse>(tester));
         TestGesture gesture = StartGesture(tester, center);
         tester.Pump(); // start gesture
         tester.PumpAndSettle(); // Finish rendering ink splash.
@@ -655,18 +655,18 @@ public sealed class InkPaintDartParityTests : IDisposable
     }
 
     // The `offsetsAreClose`/`radiiAreClose`/alpha check of the ripple tests' `something` predicate.
-    private static bool CircleMatches(CanvasCall call, Point expectedCenter, double expectedRadius, int expectedAlpha)
+    private static bool CircleMatches(CanvasCall call, Offset expectedCenter, double expectedRadius, int expectedAlpha)
     {
         if (call.Method != "drawCircle")
         {
             return false;
         }
 
-        Point center = call.Center!.Value;
+        Offset center = call.Center!.Value;
         double radius = call.Radius!.Value;
         int alpha = call.Color!.Alpha;
         double distance = Math.Sqrt(
-            Math.Pow(center.X - expectedCenter.X, 2) + Math.Pow(center.Y - expectedCenter.Y, 2));
+            Math.Pow(center.Dx - expectedCenter.Dx, 2) + Math.Pow(center.Dy - expectedCenter.Dy, 2));
         if (distance < 1.0 && Math.Abs(radius - expectedRadius) < 1.0 && alpha == expectedAlpha)
         {
             return true;
@@ -697,18 +697,18 @@ public sealed class InkPaintDartParityTests : IDisposable
     private static FrameworkDartTester CreateTester() => new(fakeGestureTimers: true);
 
     private static Rect Ltrb(double left, double top, double right, double bottom) =>
-        new(new Point(left, top), new Point(right, bottom));
+        DartGeometry.RectFromCorners(new Offset(left, top), new Offset(right, bottom));
 
     private static Element InkWellOf(FrameworkDartTester tester) => tester.ElementOfType<InkWell>();
 
     // `Material.of(element) as RenderBox`.
     private static RenderObject MaterialOf(Element element) => (RenderInkFeatures)MaterialWidget.Of(element);
 
-    private static TestGesture StartGesture(FrameworkDartTester tester, Point location) =>
+    private static TestGesture StartGesture(FrameworkDartTester tester, Offset location) =>
         tester.StartGesture(location, PointerDeviceKind.Touch);
 
     // `tester.tapAt(location)`.
-    private static void TapAt(FrameworkDartTester tester, Point location) => StartGesture(tester, location).Up();
+    private static void TapAt(FrameworkDartTester tester, Offset location) => StartGesture(tester, location).Up();
 
 
     // The test file's `_InkRippleFactory`: an InkRipple whose rect callback is a fixed 100x100 square.
@@ -717,7 +717,7 @@ public sealed class InkPaintDartParityTests : IDisposable
         public override InteractiveInkFeature Create(
             MaterialInkController controller,
             RenderBox referenceBox,
-            Point position,
+            Offset position,
             Color color,
             TextDirection textDirection,
             bool containedInkWell = false,
@@ -733,7 +733,7 @@ public sealed class InkPaintDartParityTests : IDisposable
                 position: position,
                 color: color,
                 containedInkWell: containedInkWell,
-                rectCallback: () => new Rect(0, 0, 100, 100),
+                rectCallback: () => DartGeometry.RectFromLTWH(0, 0, 100, 100),
                 borderRadius: borderRadius,
                 customBorder: customBorder,
                 radius: radius,

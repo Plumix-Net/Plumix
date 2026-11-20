@@ -62,9 +62,9 @@ internal sealed class ListTileControlHarness : IDisposable
 
     /// Taps the tile body well clear of the embedded control, the way Flutter's `tap(find.byType(...))`
     /// on the list tile does.
-    public void TapTile(int pointer, Point? position = null)
+    public void TapTile(int pointer, Offset? position = null)
     {
-        Point target = position ?? new Point(150, 28);
+        Offset target = position ?? new Offset(150, 28);
         GestureBinding binding = GestureBinding.Instance;
         binding.ResetForTests();
         try
@@ -102,15 +102,15 @@ internal sealed class ListTileControlHarness : IDisposable
     public static Color? ForegroundOf(RenderParagraph? paragraph) =>
         paragraph?.Foreground is SolidColorBrush brush ? (Color)brush.Color : null;
 
-    public static Point GlobalOffsetOf(RenderObject renderObject)
+    public static Offset GlobalOffsetOf(RenderObject renderObject)
     {
-        var result = new Point();
+        var result = new Offset();
         RenderObject? current = renderObject;
         while (current is not null)
         {
             if (current.parentData is BoxParentData parentData)
             {
-                result = new Point(result.X + parentData.offset.X, result.Y + parentData.offset.Y);
+                result = new Offset(result.Dx + parentData.offset.Dx, result.Dy + parentData.offset.Dy);
             }
 
             current = current.Parent;

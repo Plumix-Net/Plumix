@@ -24,9 +24,9 @@ public sealed class WrapTests
         Layout(wrap, new Size(100, 80));
 
         Assert.Equal(new Size(100, 80), wrap.Size);
-        Assert.Equal(new Point(5, 20), ParentData(first).offset);
-        Assert.Equal(new Point(55, 20), ParentData(second).offset);
-        Assert.Equal(new Point(35, 45), ParentData(third).offset);
+        Assert.Equal(new Offset(5, 20), ParentData(first).offset);
+        Assert.Equal(new Offset(55, 20), ParentData(second).offset);
+        Assert.Equal(new Offset(35, 45), ParentData(third).offset);
     }
 
     [Fact]
@@ -42,8 +42,8 @@ public sealed class WrapTests
 
         Layout(wrap, new Size(100, 30));
 
-        Assert.Equal(new Point(80, 0), ParentData(first).offset);
-        Assert.Equal(new Point(55, 0), ParentData(second).offset);
+        Assert.Equal(new Offset(80, 0), ParentData(first).offset);
+        Assert.Equal(new Offset(55, 0), ParentData(second).offset);
     }
 
     [Fact]
@@ -63,9 +63,9 @@ public sealed class WrapTests
 
         Layout(wrap, new Size(80, 100));
 
-        Assert.Equal(new Point(60, 60), ParentData(first).offset);
-        Assert.Equal(new Point(60, 15), ParentData(second).offset);
-        Assert.Equal(new Point(35, 70), ParentData(third).offset);
+        Assert.Equal(new Offset(60, 60), ParentData(first).offset);
+        Assert.Equal(new Offset(60, 15), ParentData(second).offset);
+        Assert.Equal(new Offset(35, 70), ParentData(third).offset);
     }
 
     private static WrapParentData ParentData(RenderBox child)
@@ -96,7 +96,7 @@ public sealed class WrapTests
             Size = Constraints.Constrain(_desiredSize);
         }
 
-        public override void Paint(PaintingContext context, Point offset)
+        public override void Paint(PaintingContext context, Offset offset)
         {
         }
     }

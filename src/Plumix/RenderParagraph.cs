@@ -374,9 +374,9 @@ public sealed partial class RenderParagraph : RenderBox,
 
     public override void VisitChildren(Action<RenderObject> visitor) => _container.VisitChildren(visitor);
 
-    public void DefaultPaint(PaintingContext ctx, Point offset) => _container.DefaultPaint(ctx, offset);
+    public void DefaultPaint(PaintingContext ctx, Offset offset) => _container.DefaultPaint(ctx, offset);
 
-    public bool DefaultHitTestChildren(BoxHitTestResult result, Point position)
+    public bool DefaultHitTestChildren(BoxHitTestResult result, Offset position)
     {
         return _container.DefaultHitTestChildren(result, position);
     }
@@ -579,13 +579,13 @@ public sealed partial class RenderParagraph : RenderBox,
                             TextDirection.Rtl => (fadeSizePainter.Width, 0.0),
                             _ => (Size.Width - fadeSizePainter.Width, Size.Width),
                         };
-                        _overflowShader = new OverflowShader(new Point(fadeStart, 0.0), new Point(fadeEnd, 0.0));
+                        _overflowShader = new OverflowShader(new Offset(fadeStart, 0.0), new Offset(fadeEnd, 0.0));
                     }
                     else
                     {
                         double fadeEnd = Size.Height;
                         double fadeStart = fadeEnd - (fadeSizePainter.Height / 2.0);
-                        _overflowShader = new OverflowShader(new Point(0.0, fadeStart), new Point(0.0, fadeEnd));
+                        _overflowShader = new OverflowShader(new Offset(0.0, fadeStart), new Offset(0.0, fadeEnd));
                     }
                 }
 
@@ -595,7 +595,7 @@ public sealed partial class RenderParagraph : RenderBox,
 
     // -- Paint -------------------------------------------------------------------------
 
-    public override void Paint(PaintingContext context, Point offset)
+    public override void Paint(PaintingContext context, Offset offset)
     {
         // Text alignment only triggers repaint so it's possible the text layout has been invalidated
         // but performLayout wasn't called at this point. Make sure the TextPainter has a valid layout.
@@ -605,7 +605,7 @@ public sealed partial class RenderParagraph : RenderBox,
             context.Canvas.DrawRectangle(
                 new SolidColorBrush(RenderingDebug.CurrentRepaintColor.ToColor()),
                 null,
-                new Rect(offset, Size));
+                DartGeometry.RectFromOffsetAndSize(offset, Size));
         }
 
         if (_lastSelectableFragments is not null)
@@ -613,7 +613,7 @@ public sealed partial class RenderParagraph : RenderBox,
             if (_needsClipping)
             {
                 context.Canvas.Save();
-                context.Canvas.ClipRect(new Rect(offset, Size));
+                context.Canvas.ClipRect(DartGeometry.RectFromOffsetAndSize(offset, Size));
             }
 
             PaintSelectionHighlights(context, offset);
@@ -625,7 +625,7 @@ public sealed partial class RenderParagraph : RenderBox,
 
         if (_needsClipping)
         {
-            var bounds = new Rect(offset, Size);
+            var bounds = DartGeometry.RectFromOffsetAndSize(offset, Size);
             context.Canvas.Save();
             if (_overflowShader is { } shader)
             {
@@ -662,9 +662,9 @@ public sealed partial class RenderParagraph : RenderBox,
 
     // -- Hit testing ---------------------------------------------------------------------
 
-    protected override bool HitTestSelf(Point position) => true;
+    protected override bool HitTestSelf(Offset position) => true;
 
-    protected override bool HitTestChildren(BoxHitTestResult result, Point position)
+    protected override bool HitTestChildren(BoxHitTestResult result, Offset position)
     {
         GlyphInfo? glyph = _textPainter.GetClosestGlyphForOffset(position);
         // The hit-test can't fall through the horizontal gaps between visually adjacent characters
@@ -685,9 +685,9 @@ public sealed partial class RenderParagraph : RenderBox,
     }
 
     // Dart's `Rect.contains`: the left and top edges are inside, the right and bottom edges are not.
-    private static bool Contains(Rect rect, Point point)
+    private static bool Contains(Rect rect, Offset point)
     {
-        return point.X >= rect.Left && point.X < rect.Right && point.Y >= rect.Top && point.Y < rect.Bottom;
+        return point.Dx >= rect.Left && point.Dx < rect.Right && point.Dy >= rect.Top && point.Dy < rect.Bottom;
     }
 
     // -- Semantics -------------------------------------------------------------------------
@@ -886,12 +886,12 @@ public sealed partial class RenderParagraph : RenderBox,
             currentDirection = rects[0].Direction;
             foreach (TextBox textBox in rects.Skip(1))
             {
-                rect = rect.Union(textBox.ToRect());
+                rect = rect.ExpandToInclude(textBox.ToRect());
                 currentDirection = textBox.Direction;
             }
 
             // Infinite text boxes must not reach platform accessibility bridges.
-            rect = new Rect(
+            rect = DartGeometry.RectFromLTWH(
                 Math.Max(0.0, rect.Left),
                 Math.Max(0.0, rect.Top),
                 Math.Min(rect.Width, Constraints.MaxWidth),
@@ -900,7 +900,7 @@ public sealed partial class RenderParagraph : RenderBox,
             double top = Math.Floor(rect.Top) - 4.0;
             double right = Math.Ceiling(rect.Right) + 4.0;
             double bottom = Math.Ceiling(rect.Bottom) + 4.0;
-            var currentRect = new Rect(left, top, right - left, bottom - top);
+            var currentRect = DartGeometry.RectFromLTWH(left, top, right - left, bottom - top);
             var configuration = new SemanticsConfiguration
             {
                 SortKey = new OrdinalSortKey(ordinal++),
@@ -1012,7 +1012,7 @@ public sealed partial class RenderParagraph : RenderBox,
 
     /// The linear white-to-transparent gradient Dart builds for `TextOverflow.fade`, in paragraph
     /// coordinates.
-    private readonly record struct OverflowShader(Point From, Point To)
+    private readonly record struct OverflowShader(Offset From, Offset To)
     {
         public IBrush CreateBrush(Size size)
         {
@@ -1020,8 +1020,8 @@ public sealed partial class RenderParagraph : RenderBox,
             double height = Math.Max(size.Height, double.Epsilon);
             return new LinearGradientBrush
             {
-                StartPoint = new RelativePoint(From.X / width, From.Y / height, RelativeUnit.Relative),
-                EndPoint = new RelativePoint(To.X / width, To.Y / height, RelativeUnit.Relative),
+                StartPoint = new RelativePoint(From.Dx / width, From.Dy / height, RelativeUnit.Relative),
+                EndPoint = new RelativePoint(To.Dx / width, To.Dy / height, RelativeUnit.Relative),
                 GradientStops = new GradientStops
                 {
                     new GradientStop(new Color(0xFFFFFFFF), 0),

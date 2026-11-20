@@ -86,7 +86,7 @@ public sealed class TweenDartParityTests : IDisposable
     [DebugOnlyFact]
     public void ThrowsFlutterErrorWhenTweeningTypesThatDoNotSatisfyTweenRequirements_Rect()
     {
-        var rectTween = new Tween<Rect>(new Rect(0, 0, 10, 10), new Rect(2, 2, 2, 2));
+        var rectTween = new Tween<Rect>(DartGeometry.RectFromLTWH(0, 0, 10, 10), DartGeometry.RectFromLTWH(2, 2, 2, 2));
 
         FlutterError error = Assert.Throws<FlutterError>(() => rectTween.Transform(0.1));
         Assert.Equal(
@@ -168,10 +168,10 @@ public sealed class TweenDartParityTests : IDisposable
     [Fact]
     public void RectTween()
     {
-        var a = new Rect(5.0, 3.0, 7.0, 11.0);
-        var b = new Rect(8.0, 12.0, 14.0, 18.0);
+        var a = DartGeometry.RectFromLTWH(5.0, 3.0, 7.0, 11.0);
+        var b = DartGeometry.RectFromLTWH(8.0, 12.0, 14.0, 18.0);
         var tween = new RectTween(begin: a, end: b);
-        Assert.Equal(new Rect(6.5, 7.5, 10.5, 14.5), tween.Lerp(0.5));
+        Assert.Equal(DartGeometry.RectFromLTWH(6.5, 7.5, 10.5, 14.5), tween.Lerp(0.5));
         AssertOneLineDescription(tween);
     }
 
@@ -294,8 +294,8 @@ public sealed class TweenDartParityTests : IDisposable
         Assert.Equal(25.0, tween.Transform(1.5));
         Assert.Equal(5.0, tween.Transform(-0.5));
 
-        var offsets = new Tween<Point>(new Point(0, 10), new Point(10, 30));
-        Assert.Equal(new Point(2.5, 15), offsets.Transform(0.25));
+        var offsets = new Tween<Offset>(new Offset(0, 10), new Offset(10, 30));
+        Assert.Equal(new Offset(2.5, 15), offsets.Transform(0.25));
     }
 
     [Fact]
@@ -316,7 +316,7 @@ public sealed class TweenDartParityTests : IDisposable
         Assert.Equal(new Size(5, 10), new SizeTween(end: new Size(10, 20)).Lerp(0.5));
         Assert.Equal(new Size(5, 10), new SizeTween(begin: new Size(10, 20)).Lerp(0.5));
         Assert.Null(new SizeTween().Lerp(0.5));
-        Assert.Equal(new Rect(1, 2, 3, 4), new RectTween(end: new Rect(2, 4, 6, 8)).Lerp(0.5));
+        Assert.Equal(DartGeometry.RectFromLTWH(1, 2, 3, 4), new RectTween(end: DartGeometry.RectFromLTWH(2, 4, 6, 8)).Lerp(0.5));
         Assert.Null(new RectTween().Transform(0.0));
     }
 
@@ -345,7 +345,7 @@ public sealed class TweenDartParityTests : IDisposable
         ]).ToString());
         Assert.Contains(
             "(Offset(0.0, 1.0) → Offset(2.0, 3.0))",
-            new Tween<Point>(new Point(0, 1), new Point(2, 3)).ToString());
+            new Tween<Offset>(new Offset(0, 1), new Offset(2, 3)).ToString());
     }
 
     [Fact]

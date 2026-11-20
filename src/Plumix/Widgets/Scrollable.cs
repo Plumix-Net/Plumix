@@ -328,12 +328,12 @@ public class ScrollableState : RestorationState<Scrollable>, IScrollContext
     /// The distance from the scroll origin to the leading edge of the viewport, expressed as an
     /// offset in the scrollable's own axis direction.
     /// </summary>
-    public Point DeltaToScrollOrigin => AxisDirection switch
+    public Offset DeltaToScrollOrigin => AxisDirection switch
     {
-        AxisDirection.Up => new Point(0, -Position.Pixels),
-        AxisDirection.Down => new Point(0, Position.Pixels),
-        AxisDirection.Left => new Point(-Position.Pixels, 0),
-        _ => new Point(Position.Pixels, 0),
+        AxisDirection.Up => new Offset(0, -Position.Pixels),
+        AxisDirection.Down => new Offset(0, Position.Pixels),
+        AxisDirection.Left => new Offset(-Position.Pixels, 0),
+        _ => new Offset(Position.Pixels, 0),
     };
 
     /// <summary>The direction in which the widget scrolls.</summary>
@@ -727,7 +727,7 @@ public class ScrollableState : RestorationState<Scrollable>, IScrollContext
         Axis axis = flipAxes
             ? CurrentWidget.Axis == Axis.Horizontal ? Axis.Vertical : Axis.Horizontal
             : CurrentWidget.Axis;
-        double delta = axis == Axis.Horizontal ? @event.ScrollDelta.X : @event.ScrollDelta.Y;
+        double delta = axis == Axis.Horizontal ? @event.ScrollDelta.Dx : @event.ScrollDelta.Dy;
         return ScrollDirectionUtils.AxisDirectionIsReversed(CurrentWidget.AxisDirection) ? -delta : delta;
     }
 

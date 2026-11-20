@@ -107,7 +107,7 @@ public class ViewConfiguration : IEquatable<ViewConfiguration>
 
 /// <summary>A callback <see cref="RenderView.DebugAddPaintCallback"/> registers; runs after the view painted.</summary>
 /// <remarks>Flutter's <c>DebugPaintCallback</c>.</remarks>
-public delegate void DebugPaintCallback(PaintingContext context, Point offset, RenderView renderView);
+public delegate void DebugPaintCallback(PaintingContext context, Offset offset, RenderView renderView);
 
 /// <summary>
 /// The root of the render tree: the object that bridges the render tree and a platform view.
@@ -350,7 +350,7 @@ public class RenderView : RenderObject, IRenderObjectSingleChildContainer
     /// even when the position lies outside the view. <paramref name="position"/> is in logical
     /// pixels; the device pixel ratio is not applied.
     /// </remarks>
-    public bool HitTest(HitTestResult result, Point position)
+    public bool HitTest(HitTestResult result, Offset position)
     {
         ArgumentNullException.ThrowIfNull(result);
         _child?.HitTest(BoxHitTestResult.Wrap(result), position: position);
@@ -362,7 +362,7 @@ public class RenderView : RenderObject, IRenderObjectSingleChildContainer
     public override bool IsRepaintBoundary => true;
 
     /// <inheritdoc />
-    public override void Paint(PaintingContext ctx, Point offset)
+    public override void Paint(PaintingContext ctx, Offset offset)
     {
         if (_child != null)
         {
@@ -471,16 +471,16 @@ public class RenderView : RenderObject, IRenderObjectSingleChildContainer
         // placed to update system style overlay.
         Rect bounds = PaintBounds;
         // Center of the status bar.
-        var top = new Point(
+        var top = new Offset(
             // Horizontal center of the screen.
-            bounds.Center.X,
+            bounds.Center.Dx,
             // The vertical center of the system status bar. The system status bar height is kept as
             // top window padding.
             FlutterView.Padding.Top / 2.0);
         // Center of the navigation bar.
-        var bottom = new Point(
+        var bottom = new Offset(
             // Horizontal center of the screen.
-            bounds.Center.X,
+            bounds.Center.Dx,
             // Vertical center of the system navigation bar. The system navigation bar height is kept
             // as bottom window padding. The "1" needs to be subtracted from the bottom because
             // available pixels are in (0..bottom) range.
@@ -547,7 +547,7 @@ public class RenderView : RenderObject, IRenderObjectSingleChildContainer
         get
         {
             double devicePixelRatio = Configuration.DevicePixelRatio;
-            return new Rect(0.0, 0.0, _size.Width * devicePixelRatio, _size.Height * devicePixelRatio);
+            return DartGeometry.RectFromLTWH(0.0, 0.0, _size.Width * devicePixelRatio, _size.Height * devicePixelRatio);
         }
     }
 
@@ -558,7 +558,7 @@ public class RenderView : RenderObject, IRenderObjectSingleChildContainer
         get
         {
             Debug.Assert(_rootTransform is not null);
-            return MatrixUtils.TransformRect(_rootTransform!, new Rect(_size));
+            return MatrixUtils.TransformRect(_rootTransform!, DartGeometry.RectFromSize(_size));
         }
     }
 

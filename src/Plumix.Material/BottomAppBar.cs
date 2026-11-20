@@ -343,9 +343,9 @@ internal sealed class RenderBottomAppBarSurface : RenderProxyBox
 
     internal Rect? GuestRect => ResolveGuestRect();
 
-    public override bool HitTest(BoxHitTestResult result, Point position)
+    public override bool HitTest(BoxHitTestResult result, Offset position)
     {
-        var host = new Rect(Size);
+        var host = DartGeometry.RectFromSize(Size);
         if (!ShapeContains(host, ResolveGuestRect(), position))
         {
             return false;
@@ -354,7 +354,7 @@ internal sealed class RenderBottomAppBarSurface : RenderProxyBox
         return base.HitTest(result, position);
     }
 
-    private bool ShapeContains(Rect host, Rect? guest, Point position)
+    private bool ShapeContains(Rect host, Rect? guest, Offset position)
     {
         if (!host.Contains(position))
         {
@@ -373,7 +373,7 @@ internal sealed class RenderBottomAppBarSurface : RenderProxyBox
         catch (InvalidOperationException)
         {
             // Host-less tests do not install Avalonia's platform geometry implementation.
-            if (!guest.HasValue || !host.Intersects(guest.Value))
+            if (!guest.HasValue || !host.Overlaps(guest.Value))
             {
                 return true;
             }
@@ -393,8 +393,8 @@ internal sealed class RenderBottomAppBarSurface : RenderProxyBox
                     return true;
                 }
 
-                double normalizedX = (position.X - guestRect.Center.X) / radiusX;
-                double normalizedY = (position.Y - guestRect.Center.Y) / radiusY;
+                double normalizedX = (position.Dx - guestRect.Center.Dx) / radiusX;
+                double normalizedY = (position.Dy - guestRect.Center.Dy) / radiusY;
                 return (normalizedX * normalizedX) + (normalizedY * normalizedY) > 1.0;
             }
 
@@ -402,10 +402,10 @@ internal sealed class RenderBottomAppBarSurface : RenderProxyBox
         }
     }
 
-    public override void Paint(PaintingContext context, Point offset)
+    public override void Paint(PaintingContext context, Offset offset)
     {
         if (Size.Width <= 0 || Size.Height <= 0) return;
-        var host = new Rect(Size);
+        var host = DartGeometry.RectFromSize(Size);
         var geometry = Shape?.GetOuterPath(host, ResolveGuestRect()) ?? new RectangleGeometry(host);
         if (Elevation > 0.0 && ShadowColor.Alpha > 0)
         {
@@ -448,7 +448,7 @@ internal sealed class RenderBottomAppBarSurface : RenderProxyBox
             return null;
         }
 
-        var localArea = new Rect(area.X, area.Y - top, area.Width, area.Height);
+        var localArea = DartGeometry.RectFromLTWH(area.Left, area.Top - top, area.Width, area.Height);
         return localArea.Inflate(NotchMargin);
     }
 }

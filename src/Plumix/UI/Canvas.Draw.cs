@@ -53,10 +53,10 @@ public partial class Canvas
         {
             var roundedRect = new RoundedRect(
                 rect,
-                new Vector(borderRadius.TopLeftRadius.X, borderRadius.TopLeftRadius.Y),
-                new Vector(borderRadius.TopRightRadius.X, borderRadius.TopRightRadius.Y),
-                new Vector(borderRadius.BottomRightRadius.X, borderRadius.BottomRightRadius.Y),
-                new Vector(borderRadius.BottomLeftRadius.X, borderRadius.BottomLeftRadius.Y));
+                new Offset(borderRadius.TopLeftRadius.X, borderRadius.TopLeftRadius.Y),
+                new Offset(borderRadius.TopRightRadius.X, borderRadius.TopRightRadius.Y),
+                new Offset(borderRadius.BottomRightRadius.X, borderRadius.BottomRightRadius.Y),
+                new Offset(borderRadius.BottomLeftRadius.X, borderRadius.BottomLeftRadius.Y));
             ShaderDrawing.DrawRectangle(context, brush, pen, roundedRect, boxShadows);
         });
     }
@@ -120,7 +120,7 @@ public partial class Canvas
         AddDrawCommand(context => ShaderDrawing.DrawRectangle(context, brush, null, DrawPaintBounds));
     }
 
-    private static readonly Rect DrawPaintBounds = new(-1.0e9, -1.0e9, 2.0e9, 2.0e9);
+    private static readonly Rect DrawPaintBounds = DartGeometry.RectFromLTWH(-1.0e9, -1.0e9, 2.0e9, 2.0e9);
 
     // Dart parity source: dart:ui Canvas.drawRRect.
     public virtual void DrawRRect(RRect rrect, IBrush? brush, IPen? pen)
@@ -337,11 +337,11 @@ public partial class Canvas
         return result;
     }
 
-    private static Path CreateLinePath(Point start, Point end)
+    private static Path CreateLinePath(Offset start, Offset end)
     {
         var result = new Path();
-        result.MoveTo(start.X, start.Y);
-        result.LineTo(end.X, end.Y);
+        result.MoveTo(start.Dx, start.Dy);
+        result.LineTo(end.Dx, end.Dy);
         return result;
     }
 
@@ -557,7 +557,7 @@ public partial class Canvas
     }
 
     // Dart parity source: dart:ui Canvas.drawCircle.
-    public virtual void DrawCircle(IBrush? brush, IPen? pen, Point center, double radius)
+    public virtual void DrawCircle(IBrush? brush, IPen? pen, Offset center, double radius)
     {
         DebugRecordCall(new CanvasCall("drawCircle", Brush: brush, Pen: pen, Center: center, Radius: radius));
         double clampedRadius = Math.Max(0, radius);
@@ -566,7 +566,7 @@ public partial class Canvas
 
     /// <summary>Draws a circle with the given <see cref="Paint"/>.</summary>
     /// <remarks>Dart's <c>Canvas.drawCircle(c, radius, paint)</c>; see <see cref="DrawShape"/>.</remarks>
-    public virtual void DrawCircle(Point center, double radius, Paint paint)
+    public virtual void DrawCircle(Offset center, double radius, Paint paint)
     {
         ArgumentNullException.ThrowIfNull(paint);
         double clampedRadius = Math.Max(0, radius);
@@ -574,13 +574,13 @@ public partial class Canvas
             "drawCircle",
             paint,
             call => call with { Center = center, Radius = radius },
-            () => new EllipseGeometry(new Rect(
-                center.X - clampedRadius,
-                center.Y - clampedRadius,
+            () => new EllipseGeometry(DartGeometry.RectFromLTWH(
+                center.Dx - clampedRadius,
+                center.Dy - clampedRadius,
                 clampedRadius * 2.0,
                 clampedRadius * 2.0)),
             (context, fill, pen) => ShaderDrawing.DrawEllipse(context, fill, pen, center, clampedRadius, clampedRadius),
-            () => CreateOvalPath(new Rect(center.X - clampedRadius, center.Y - clampedRadius,
+            () => CreateOvalPath(DartGeometry.RectFromLTWH(center.Dx - clampedRadius, center.Dy - clampedRadius,
                 clampedRadius * 2.0, clampedRadius * 2.0)));
     }
 
@@ -603,8 +603,8 @@ public partial class Canvas
             var geometry = new StreamGeometry();
             using (var geometryContext = geometry.Open())
             {
-                Point startPoint = PointOnEllipse(rect, startAngleRadians);
-                Point endPoint = PointOnEllipse(rect, startAngleRadians + sweepAngleRadians);
+                Offset startPoint = PointOnEllipse(rect, startAngleRadians);
+                Offset endPoint = PointOnEllipse(rect, startAngleRadians + sweepAngleRadians);
                 geometryContext.BeginFigure(startPoint, isFilled: false);
                 geometryContext.ArcTo(
                     point: endPoint,
@@ -622,7 +622,7 @@ public partial class Canvas
     }
 
     // Dart parity source: dart:ui Canvas.drawLine.
-    public virtual void DrawLine(IPen pen, Point startPoint, Point endPoint)
+    public virtual void DrawLine(IPen pen, Offset startPoint, Offset endPoint)
     {
         DebugRecordCall(new CanvasCall("drawLine", Pen: pen, Offset: startPoint, EndOffset: endPoint));
         if (pen is { Thickness: 0.0, DashStyle: null, Brush: ISolidColorBrush solid })
@@ -651,7 +651,7 @@ public partial class Canvas
     /// Dart's <c>Canvas.drawLine(p1, p2, paint)</c>: the paint's style is ignored and the line is
     /// always stroked; see <see cref="DrawShape"/> for the mask filter and blend mode.
     /// </remarks>
-    public virtual void DrawLine(Point startPoint, Point endPoint, Paint paint)
+    public virtual void DrawLine(Offset startPoint, Offset endPoint, Paint paint)
     {
         ArgumentNullException.ThrowIfNull(paint);
         if (paint.StrokeWidth == 0.0 && paint.Shader is null
@@ -679,7 +679,7 @@ public partial class Canvas
     }
 
     // Dart parity source: dart:ui Canvas.drawPath over a closed polygon contour.
-    public virtual void DrawPolygon(IBrush? brush, IPen? pen, IReadOnlyList<Point> points)
+    public virtual void DrawPolygon(IBrush? brush, IPen? pen, IReadOnlyList<Offset> points)
     {
         ArgumentNullException.ThrowIfNull(points);
         if (points.Count < 3)
@@ -710,10 +710,10 @@ public partial class Canvas
         IBrush? brush,
         IPen? pen,
         Geometry geometry,
-        Point geometryOffset = default)
+        Offset geometryOffset = default)
     {
         ArgumentNullException.ThrowIfNull(geometry);
-        if (geometryOffset.X == 0.0 && geometryOffset.Y == 0.0)
+        if (geometryOffset.Dx == 0.0 && geometryOffset.Dy == 0.0)
         {
             AddDrawCommand(context => ShaderDrawing.DrawGeometry(context, brush, pen, geometry));
             return;
@@ -722,7 +722,7 @@ public partial class Canvas
         AddDrawCommand(context =>
         {
             using var transform = context.PushTransform(
-                Matrix.CreateTranslation(geometryOffset.X, geometryOffset.Y));
+                Matrix.CreateTranslation(geometryOffset.Dx, geometryOffset.Dy));
             ShaderDrawing.DrawGeometry(context, brush, pen, geometry);
         });
     }
@@ -740,7 +740,7 @@ public partial class Canvas
         Color color,
         double elevation,
         bool transparentOccluder,
-        Point geometryOffset = default)
+        Offset geometryOffset = default)
     {
         ArgumentNullException.ThrowIfNull(geometry);
         if (ShadowPathOf(geometry) is { } path)
@@ -767,7 +767,7 @@ public partial class Canvas
         Color color,
         double elevation,
         bool transparentOccluder,
-        Point geometryOffset = default)
+        Offset geometryOffset = default)
     {
         ArgumentNullException.ThrowIfNull(path);
         DebugRecordCall(new CanvasCall("drawShadow", Path: path, ShadowColor: color, Elevation: elevation));
@@ -776,7 +776,7 @@ public partial class Canvas
             return;
         }
 
-        Path occluder = geometryOffset.X == 0.0 && geometryOffset.Y == 0.0 ? path : path.Shift(geometryOffset);
+        Path occluder = geometryOffset.Dx == 0.0 && geometryOffset.Dy == 0.0 ? path : path.Shift(geometryOffset);
         double devicePixelRatio = PlatformDispatcher.Instance.EngineDevicePixelRatio;
         var shadow = new ShadowDraw(occluder, color, elevation, transparentOccluder, devicePixelRatio);
         AddDrawCommand(context => context.Custom(shadow));
@@ -807,9 +807,9 @@ public partial class Canvas
                 // An unset Rect means the ellipse is given by its centre and radii (Avalonia's two modes).
                 path.AddOval(ellipse.Rect != default
                     ? ellipse.Rect
-                    : new Rect(
-                        ellipse.Center.X - ellipse.RadiusX,
-                        ellipse.Center.Y - ellipse.RadiusY,
+                    : DartGeometry.RectFromLTWH(
+                        ellipse.Center.Dx - ellipse.RadiusX,
+                        ellipse.Center.Dy - ellipse.RadiusY,
                         ellipse.RadiusX * 2.0,
                         ellipse.RadiusY * 2.0));
                 return path;
@@ -825,7 +825,7 @@ public partial class Canvas
         Color color,
         double elevation,
         bool transparentOccluder,
-        Point geometryOffset)
+        Offset geometryOffset)
     {
         if (elevation <= 0.0 || color.Alpha == 0)
         {
@@ -834,10 +834,10 @@ public partial class Canvas
 
         AddDrawCommand(context =>
         {
-            Point effectiveOffset = geometryOffset + new Vector(0.0, elevation * 0.5);
+            Offset effectiveOffset = geometryOffset + new Offset(0.0, elevation * 0.5);
             using var transform = context.PushTransform(Matrix.CreateTranslation(
-                effectiveOffset.X,
-                effectiveOffset.Y));
+                effectiveOffset.Dx,
+                effectiveOffset.Dy));
             int steps = Math.Max(1, (int)Math.Ceiling(elevation * 2.0));
             for (int step = steps; step >= 1; step--)
             {
@@ -859,18 +859,18 @@ public partial class Canvas
     /// </summary>
     /// <remarks>Dart's <c>Canvas.drawImage(image, offset, paint)</c>; the image is an Avalonia
     /// <see cref="IImage"/> (see <c>docs/ai/DIVERGENCES.md</c>).</remarks>
-    public virtual void DrawImage(IImage image, Point offset, Paint paint)
+    public virtual void DrawImage(IImage image, Offset offset, Paint paint)
     {
         ArgumentNullException.ThrowIfNull(image);
         ArgumentNullException.ThrowIfNull(paint);
         Size size = ImageSize(image);
-        var destination = new Rect(offset, size);
+        var destination = DartGeometry.RectFromOffsetAndSize(offset, size);
         RecordImageDraw(
             new CanvasCall("drawImage", Offset: offset, Image: image),
             image,
             paint,
             destination,
-            (context, source) => context.DrawImage(source, new Rect(source.Size), destination));
+            (context, source) => context.DrawImage(source, DartGeometry.RectFromSize(source.Size), destination));
     }
 
     /// <summary>
@@ -942,12 +942,12 @@ public partial class Canvas
         {
             for (int column = 0; column < 3; column++)
             {
-                Rect source = new Rect(
-                    new Point(sourceX[column], sourceY[row]),
-                    new Point(sourceX[column + 1], sourceY[row + 1]));
-                Rect destination = new Rect(
-                    new Point(destinationX[column], destinationY[row]),
-                    new Point(destinationX[column + 1], destinationY[row + 1]));
+                Rect source = DartGeometry.RectFromCorners(
+                    new Offset(sourceX[column], sourceY[row]),
+                    new Offset(sourceX[column + 1], sourceY[row + 1]));
+                Rect destination = DartGeometry.RectFromCorners(
+                    new Offset(destinationX[column], destinationY[row]),
+                    new Offset(destinationX[column + 1], destinationY[row + 1]));
                 if (source.Width > 0.0 && source.Height > 0.0 && destination.Width > 0.0 && destination.Height > 0.0)
                 {
                     yield return (source, destination);
@@ -1040,13 +1040,13 @@ public partial class Canvas
         }
     }
 
-    private static Point PointOnEllipse(Rect rect, double angleRadians)
+    private static Offset PointOnEllipse(Rect rect, double angleRadians)
     {
-        double centerX = rect.X + (rect.Width / 2.0);
-        double centerY = rect.Y + (rect.Height / 2.0);
+        double centerX = rect.Left + (rect.Width / 2.0);
+        double centerY = rect.Top + (rect.Height / 2.0);
         double radiusX = rect.Width / 2.0;
         double radiusY = rect.Height / 2.0;
-        return new Point(
+        return new Offset(
             centerX + (Math.Cos(angleRadians) * radiusX),
             centerY + (Math.Sin(angleRadians) * radiusY));
     }

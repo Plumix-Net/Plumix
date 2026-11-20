@@ -387,12 +387,12 @@ public sealed record StarBorder : OutlinedBorder
 
     private sealed class PointInfo
     {
-        public Point Valley;
-        public Point Point;
-        public Point ValleyArc1;
-        public Point PointArc1;
-        public Point PointArc2;
-        public Point ValleyArc2;
+        public Offset Valley;
+        public Offset Point;
+        public Offset ValleyArc1;
+        public Offset PointArc1;
+        public Offset PointArc2;
+        public Offset ValleyArc2;
     }
 
     private sealed class StarGenerator(
@@ -406,7 +406,7 @@ public sealed record StarBorder : OutlinedBorder
         public Path Generate(Rect rect)
         {
             double radius = BoxBorder.ShortestSide(rect) / 2.0;
-            Point center = rect.Center;
+            Offset center = rect.Center;
 
             // Add a tiny fudge factor so that the shape is never degenerate.
             const double minInnerRadiusRatio = .002;
@@ -422,42 +422,42 @@ public sealed record StarBorder : OutlinedBorder
             var path = new Path();
             DrawPoints(path, pointList);
 
-            var scale = new Point(rect.Width / maxDiameter, rect.Height / maxDiameter);
+            var scale = new Offset(rect.Width / maxDiameter, rect.Height / maxDiameter);
             scale = BoxBorder.ShortestSide(rect) == rect.Width
-                ? new Point(scale.X, (squash * scale.Y) + ((1 - squash) * scale.X))
-                : new Point((squash * scale.X) + ((1 - squash) * scale.Y), scale.Y);
+                ? new Offset(scale.Dx, (squash * scale.Dy) + ((1 - squash) * scale.Dx))
+                : new Offset((squash * scale.Dx) + ((1 - squash) * scale.Dy), scale.Dy);
 
-            Matrix squashMatrix = Matrix.CreateTranslation(-center.X, -center.Y)
+            Matrix squashMatrix = Matrix.CreateTranslation(-center.Dx, -center.Dy)
                                   * Matrix.CreateRotation(rotation)
-                                  * Matrix.CreateScale(scale.X, scale.Y)
-                                  * Matrix.CreateTranslation(center.X, center.Y);
+                                  * Matrix.CreateScale(scale.Dx, scale.Dy)
+                                  * Matrix.CreateTranslation(center.Dx, center.Dy);
             return path.Transform(squashMatrix);
         }
 
-        private double GeneratePoints(List<PointInfo> pointList, Point center, double radius, double innerRadius)
+        private double GeneratePoints(List<PointInfo> pointList, Offset center, double radius, double innerRadius)
         {
             double step = Math.PI / points;
 
             // Start at the top of the star, one step before the first point.
             double angle = (-Math.PI / 2.0) - step;
-            var valley = new Point(
-                center.X + (Math.Cos(angle) * innerRadius),
-                center.Y + (Math.Sin(angle) * innerRadius));
+            var valley = new Offset(
+                center.Dx + (Math.Cos(angle) * innerRadius),
+                center.Dy + (Math.Sin(angle) * innerRadius));
 
             double AddPoint(double pointAngle, double pointStep, double pointRadius, double pointInnerRadius)
             {
                 pointAngle += pointStep;
-                var point = new Point(
-                    center.X + (Math.Cos(pointAngle) * pointRadius),
-                    center.Y + (Math.Sin(pointAngle) * pointRadius));
+                var point = new Offset(
+                    center.Dx + (Math.Cos(pointAngle) * pointRadius),
+                    center.Dy + (Math.Sin(pointAngle) * pointRadius));
                 pointAngle += pointStep;
-                var nextValley = new Point(
-                    center.X + (Math.Cos(pointAngle) * pointInnerRadius),
-                    center.Y + (Math.Sin(pointAngle) * pointInnerRadius));
-                Point valleyArc1 = Along(valley, point, valleyRounding);
-                Point pointArc1 = Along(point, valley, pointRounding);
-                Point pointArc2 = Along(point, nextValley, pointRounding);
-                Point valleyArc2 = Along(nextValley, point, valleyRounding);
+                var nextValley = new Offset(
+                    center.Dx + (Math.Cos(pointAngle) * pointInnerRadius),
+                    center.Dy + (Math.Sin(pointAngle) * pointInnerRadius));
+                Offset valleyArc1 = Along(valley, point, valleyRounding);
+                Offset pointArc1 = Along(point, valley, pointRounding);
+                Offset pointArc2 = Along(point, nextValley, pointRounding);
+                Offset valleyArc2 = Along(nextValley, point, valleyRounding);
                 pointList.Add(new PointInfo
                 {
                     Valley = valley,
@@ -481,13 +481,13 @@ public sealed record StarBorder : OutlinedBorder
 
             PointInfo thisPoint = pointList[0];
             PointInfo nextPoint = pointList[1];
-            Point pointMidpoint = GetCurveMidpoint(
+            Offset pointMidpoint = GetCurveMidpoint(
                 thisPoint.Valley,
                 thisPoint.Point,
                 nextPoint.Valley,
                 thisPoint.PointArc1,
                 thisPoint.PointArc2);
-            Point valleyMidpoint = GetCurveMidpoint(
+            Offset valleyMidpoint = GetCurveMidpoint(
                 thisPoint.Point,
                 nextPoint.Valley,
                 nextPoint.Point,
@@ -509,8 +509,8 @@ public sealed record StarBorder : OutlinedBorder
 
         private void DrawPoints(Path path, List<PointInfo> pointList)
         {
-            Point startingPoint = pointList[0].PointArc1;
-            path.MoveTo(startingPoint.X, startingPoint.Y);
+            Offset startingPoint = pointList[0].PointArc1;
+            path.MoveTo(startingPoint.Dx, startingPoint.Dy);
             double pointAngle = GetAngle(pointList[0].Valley, pointList[0].Point, pointList[1].Valley);
             double pointWeight = GetWeight(pointAngle);
             double valleyAngle = GetAngle(pointList[1].Point, pointList[1].Valley, pointList[0].Point);
@@ -520,42 +520,42 @@ public sealed record StarBorder : OutlinedBorder
             {
                 PointInfo point = pointList[i];
                 PointInfo nextPoint = pointList[(i + 1) % pointList.Count];
-                path.LineTo(point.PointArc1.X, point.PointArc1.Y);
+                path.LineTo(point.PointArc1.Dx, point.PointArc1.Dy);
                 if (pointAngle != 180 && pointAngle != 0)
                 {
-                    path.ConicTo(point.Point.X, point.Point.Y, point.PointArc2.X, point.PointArc2.Y, pointWeight);
+                    path.ConicTo(point.Point.Dx, point.Point.Dy, point.PointArc2.Dx, point.PointArc2.Dy, pointWeight);
                 }
                 else
                 {
-                    path.LineTo(point.PointArc2.X, point.PointArc2.Y);
+                    path.LineTo(point.PointArc2.Dx, point.PointArc2.Dy);
                 }
 
-                path.LineTo(point.ValleyArc2.X, point.ValleyArc2.Y);
+                path.LineTo(point.ValleyArc2.Dx, point.ValleyArc2.Dy);
                 if (valleyAngle != 180 && valleyAngle != 0)
                 {
                     path.ConicTo(
-                        nextPoint.Valley.X,
-                        nextPoint.Valley.Y,
-                        nextPoint.ValleyArc1.X,
-                        nextPoint.ValleyArc1.Y,
+                        nextPoint.Valley.Dx,
+                        nextPoint.Valley.Dy,
+                        nextPoint.ValleyArc1.Dx,
+                        nextPoint.ValleyArc1.Dy,
                         valleyWeight);
                 }
                 else
                 {
-                    path.LineTo(nextPoint.ValleyArc1.X, nextPoint.ValleyArc1.Y);
+                    path.LineTo(nextPoint.ValleyArc1.Dx, nextPoint.ValleyArc1.Dy);
                 }
             }
 
             path.Close();
         }
 
-        private static Point GetCurveMidpoint(Point a, Point b, Point c, Point a1, Point c1)
+        private static Offset GetCurveMidpoint(Offset a, Offset b, Offset c, Offset a1, Offset c1)
         {
             double angle = GetAngle(a, b, c);
             double w = GetWeight(angle) / 2.0;
-            return new Point(
-                ((a1.X / 4.0) + (b.X * w) + (c1.X / 4.0)) / (0.5 + w),
-                ((a1.Y / 4.0) + (b.Y * w) + (c1.Y / 4.0)) / (0.5 + w));
+            return new Offset(
+                ((a1.Dx / 4.0) + (b.Dx * w) + (c1.Dx / 4.0)) / (0.5 + w),
+                ((a1.Dy / 4.0) + (b.Dy * w) + (c1.Dy / 4.0)) / (0.5 + w));
         }
 
         private static double GetWeight(double angle)
@@ -567,18 +567,18 @@ public sealed record StarBorder : OutlinedBorder
         }
 
         /// Returns the included angle between the vectors BA and BC, in radians.
-        private static double GetAngle(Point a, Point b, Point c)
+        private static double GetAngle(Offset a, Offset b, Offset c)
         {
             if (a == c || b == c || b == a)
             {
                 return 0;
             }
 
-            var u = new Point(a.X - b.X, a.Y - b.Y);
-            var v = new Point(c.X - b.X, c.Y - b.Y);
-            double dot = (u.X * v.X) + (u.Y * v.Y);
-            double m1 = b.X == a.X ? double.PositiveInfinity : -u.Y / -u.X;
-            double m2 = b.X == c.X ? double.PositiveInfinity : -v.Y / -v.X;
+            var u = new Offset(a.Dx - b.Dx, a.Dy - b.Dy);
+            var v = new Offset(c.Dx - b.Dx, c.Dy - b.Dy);
+            double dot = (u.Dx * v.Dx) + (u.Dy * v.Dy);
+            double m1 = b.Dx == a.Dx ? double.PositiveInfinity : -u.Dy / -u.Dx;
+            double m2 = b.Dx == c.Dx ? double.PositiveInfinity : -v.Dy / -v.Dx;
             double angle = Math.Abs(Math.Atan2(m1 - m2, 1 + (m1 * m2)));
             if (dot < 0)
             {
@@ -588,17 +588,17 @@ public sealed record StarBorder : OutlinedBorder
             return angle;
         }
 
-        private static Point Along(Point from, Point to, double fraction)
+        private static Offset Along(Offset from, Offset to, double fraction)
         {
-            return new Point(
-                from.X + ((to.X - from.X) * fraction),
-                from.Y + ((to.Y - from.Y) * fraction));
+            return new Offset(
+                from.Dx + ((to.Dx - from.Dx) * fraction),
+                from.Dy + ((to.Dy - from.Dy) * fraction));
         }
 
-        private static double Distance(Point a, Point b)
+        private static double Distance(Offset a, Offset b)
         {
-            double dx = a.X - b.X;
-            double dy = a.Y - b.Y;
+            double dx = a.Dx - b.Dx;
+            double dy = a.Dy - b.Dy;
             return Math.Sqrt((dx * dx) + (dy * dy));
         }
     }

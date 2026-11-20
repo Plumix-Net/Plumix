@@ -205,7 +205,7 @@ public abstract class MultiSelectableSelectionContainerDelegate : SelectionConta
         Rect result = boxes[0];
         for (int index = 1; index < boxes.Count; index += 1)
         {
-            result = result.Union(boxes[index]);
+            result = result.ExpandToInclude(boxes[index]);
         }
 
         return result;
@@ -575,7 +575,7 @@ public abstract class MultiSelectableSelectionContainerDelegate : SelectionConta
         return HandleSelectBoundary(@event, @event.GlobalPosition);
     }
 
-    private SelectionResult HandleSelectBoundary(SelectionEvent @event, Point effectiveGlobalPosition)
+    private SelectionResult HandleSelectBoundary(SelectionEvent @event, Offset effectiveGlobalPosition)
     {
         SelectionResult? lastSelectionResult = null;
         double minDistanceSquared = double.PositiveInfinity;
@@ -593,10 +593,10 @@ public abstract class MultiSelectableSelectionContainerDelegate : SelectionConta
                     break;
                 }
 
-                double dx = effectiveGlobalPosition.X
-                            - Math.Clamp(effectiveGlobalPosition.X, globalRect.Left, globalRect.Right);
-                double dy = effectiveGlobalPosition.Y
-                            - Math.Clamp(effectiveGlobalPosition.Y, globalRect.Top, globalRect.Bottom);
+                double dx = effectiveGlobalPosition.Dx
+                            - Math.Clamp(effectiveGlobalPosition.Dx, globalRect.Left, globalRect.Right);
+                double dy = effectiveGlobalPosition.Dy
+                            - Math.Clamp(effectiveGlobalPosition.Dy, globalRect.Top, globalRect.Bottom);
                 double distanceSquared = (dx * dx) + (dy * dy);
                 if (distanceSquared < minDistanceSquared)
                 {
@@ -801,7 +801,7 @@ public abstract class MultiSelectableSelectionContainerDelegate : SelectionConta
         if (startGeometry.StartSelectionPoint is { } geometryStart)
         {
             Matrix4 startTransform = GetTransformFrom(Selectables[startIndexWalker]);
-            Point start = MatrixUtils.TransformPoint(startTransform, geometryStart.LocalPosition);
+            Offset start = MatrixUtils.TransformPoint(startTransform, geometryStart.LocalPosition);
             if (IsFinite(start))
             {
                 startPoint = new SelectionPoint(start, geometryStart.LineHeight, geometryStart.HandleType);
@@ -820,7 +820,7 @@ public abstract class MultiSelectableSelectionContainerDelegate : SelectionConta
         if (endGeometry.EndSelectionPoint is { } geometryEnd)
         {
             Matrix4 endTransform = GetTransformFrom(Selectables[endIndexWalker]);
-            Point end = MatrixUtils.TransformPoint(endTransform, geometryEnd.LocalPosition);
+            Offset end = MatrixUtils.TransformPoint(endTransform, geometryEnd.LocalPosition);
             if (IsFinite(end))
             {
                 endPoint = new SelectionPoint(end, geometryEnd.LineHeight, geometryEnd.HandleType);
@@ -828,7 +828,7 @@ public abstract class MultiSelectableSelectionContainerDelegate : SelectionConta
         }
 
         var selectionRects = new List<Rect>();
-        Rect? drawableArea = HasSize ? new Rect(default, ContainerSize) : null;
+        Rect? drawableArea = HasSize ? DartGeometry.RectFromOffsetAndSize(default, ContainerSize) : null;
         for (int index = CurrentSelectionStartIndex; index <= CurrentSelectionEndIndex; index += 1)
         {
             Matrix4 transform = GetTransformFrom(Selectables[index]);
@@ -836,7 +836,7 @@ public abstract class MultiSelectableSelectionContainerDelegate : SelectionConta
             {
                 Rect localRect = RenderObject.TransformRect(transform, rect);
                 Rect resolved = drawableArea?.Intersect(localRect) ?? localRect;
-                if (IsFinite(resolved.Position)
+                if (IsFinite(resolved.TopLeft)
                     && double.IsFinite(resolved.Width) && double.IsFinite(resolved.Height)
                     && resolved.Width > 0 && resolved.Height > 0)
                 {
@@ -853,9 +853,9 @@ public abstract class MultiSelectableSelectionContainerDelegate : SelectionConta
             selectionRects: selectionRects);
     }
 
-    private static bool IsFinite(Point point)
+    private static bool IsFinite(Offset point)
     {
-        return double.IsFinite(point.X) && double.IsFinite(point.Y);
+        return double.IsFinite(point.Dx) && double.IsFinite(point.Dy);
     }
 
     private int AdjustSelectionIndexBasedOnSelectionGeometry(int currentIndex, int towardIndex)
@@ -891,7 +891,7 @@ public abstract class MultiSelectableSelectionContainerDelegate : SelectionConta
         if (effectiveStartHandle is not null || effectiveEndHandle is not null)
         {
             Rect? drawableArea = HasSize
-                ? new Rect(default, ContainerSize).Inflate(SelectionHandleDrawableAreaPadding)
+                ? DartGeometry.RectFromOffsetAndSize(default, ContainerSize).Inflate(SelectionHandleDrawableAreaPadding)
                 : null;
             bool hideStartHandle = Value.StartSelectionPoint is not { } start
                                    || drawableArea is not { } startArea
@@ -1064,8 +1064,8 @@ public class StaticSelectionContainerDelegate : MultiSelectableSelectionContaine
 {
     private readonly HashSet<ISelectable> _hasReceivedStartEvent = [];
     private readonly HashSet<ISelectable> _hasReceivedEndEvent = [];
-    private Point? _lastStartEdgeUpdateGlobalPosition;
-    private Point? _lastEndEdgeUpdateGlobalPosition;
+    private Offset? _lastStartEdgeUpdateGlobalPosition;
+    private Offset? _lastEndEdgeUpdateGlobalPosition;
 
     /// Records that the `selectable` has received a selection edge event.
     protected void DidReceiveSelectionEventFor(ISelectable selectable, bool? forEnd = null)
@@ -1104,7 +1104,7 @@ public class StaticSelectionContainerDelegate : MultiSelectableSelectionContaine
     }
 
     /// Stores the last global location of a selection edge.
-    protected void UpdateLastSelectionEdgeLocation(Point globalSelectionEdgeLocation, bool forEnd)
+    protected void UpdateLastSelectionEdgeLocation(Offset globalSelectionEdgeLocation, bool forEnd)
     {
         if (forEnd)
         {
@@ -1122,9 +1122,9 @@ public class StaticSelectionContainerDelegate : MultiSelectableSelectionContaine
         {
             ISelectable start = Selectables[CurrentSelectionStartIndex];
             SelectionPoint startPoint = start.Value.StartSelectionPoint!;
-            var localStartEdge = new Point(
-                startPoint.LocalPosition.X,
-                startPoint.LocalPosition.Y - (startPoint.LineHeight / 2));
+            var localStartEdge = new Offset(
+                startPoint.LocalPosition.Dx,
+                startPoint.LocalPosition.Dy - (startPoint.LineHeight / 2));
             UpdateLastSelectionEdgeLocation(
                 MatrixUtils.TransformPoint(start.GetTransformTo(null), localStartEdge),
                 forEnd: false);
@@ -1134,9 +1134,9 @@ public class StaticSelectionContainerDelegate : MultiSelectableSelectionContaine
         {
             ISelectable end = Selectables[CurrentSelectionEndIndex];
             SelectionPoint endPoint = end.Value.EndSelectionPoint!;
-            var localEndEdge = new Point(
-                endPoint.LocalPosition.X,
-                endPoint.LocalPosition.Y - (endPoint.LineHeight / 2));
+            var localEndEdge = new Offset(
+                endPoint.LocalPosition.Dx,
+                endPoint.LocalPosition.Dy - (endPoint.LineHeight / 2));
             UpdateLastSelectionEdgeLocation(
                 MatrixUtils.TransformPoint(end.GetTransformTo(null), localEndEdge),
                 forEnd: true);

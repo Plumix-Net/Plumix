@@ -16,7 +16,7 @@ public sealed class BoxDecorationDartParityTests
 {
     private static IReadOnlyList<CanvasCall> PaintDecoration(
         BoxPainter painter,
-        Point offset,
+        Offset offset,
         ImageConfiguration configuration)
     {
         var context = new TestRecordingPaintingContext();
@@ -40,19 +40,19 @@ public sealed class BoxDecorationDartParityTests
             BorderRadius: BorderRadiusDirectional.Only(topStart: 100.0));
         BoxPainter painter = decoration.CreateBoxPainter();
         var size = new Size(1000.0, 1000.0);
-        var rect = new Rect(size);
+        var rect = DartGeometry.RectFromSize(size);
 
         PaintAssert.Paints(
             PaintDecoration(painter, default, new ImageConfiguration(Size: size, TextDirection: TextDirection.Rtl)),
             PaintPattern.Paints.RRect(rrect: RRect.FromRectAndCorners(rect, BorderRadius.Only(topRight: 100.0))));
-        Assert.True(decoration.HitTest(size, new Point(10.0, 10.0), TextDirection.Rtl));
-        Assert.False(decoration.HitTest(size, new Point(990.0, 10.0), TextDirection.Rtl));
+        Assert.True(decoration.HitTest(size, new Offset(10.0, 10.0), TextDirection.Rtl));
+        Assert.False(decoration.HitTest(size, new Offset(990.0, 10.0), TextDirection.Rtl));
 
         PaintAssert.Paints(
             PaintDecoration(painter, default, new ImageConfiguration(Size: size, TextDirection: TextDirection.Ltr)),
             PaintPattern.Paints.RRect(rrect: RRect.FromRectAndCorners(rect, BorderRadius.Only(topLeft: 100.0))));
-        Assert.False(decoration.HitTest(size, new Point(10.0, 10.0), TextDirection.Ltr));
-        Assert.True(decoration.HitTest(size, new Point(990.0, 10.0), TextDirection.Ltr));
+        Assert.False(decoration.HitTest(size, new Offset(10.0, 10.0), TextDirection.Ltr));
+        Assert.True(decoration.HitTest(size, new Offset(990.0, 10.0), TextDirection.Ltr));
     }
 
     [Fact]
@@ -69,33 +69,33 @@ public sealed class BoxDecorationDartParityTests
 
         PaintAssert.Paints(
             PaintDecoration(painter, default, new ImageConfiguration(Size: size, TextDirection: TextDirection.Rtl)),
-            PaintPattern.Paints.Rect(rect: new Rect(size)));
+            PaintPattern.Paints.Rect(rect: DartGeometry.RectFromSize(size)));
     }
 
     [Fact]
     public void GetClipPath_WithBorderRadius()
     {
         var decoration = new BoxDecoration(BorderRadius: BorderRadius.All(Radius.Circular(10)));
-        var rect = new Rect(0.0, 0.0, 100.0, 20.0);
+        var rect = DartGeometry.RectFromLTWH(0.0, 0.0, 100.0, 20.0);
         Path clipPath = decoration.GetClipPath(rect, TextDirection.Ltr);
 
-        Assert.True(clipPath.Contains(new Point(30.0, 10.0)));
-        Assert.True(clipPath.Contains(new Point(50.0, 10.0)));
-        Assert.False(clipPath.Contains(new Point(1.0, 1.0)));
-        Assert.False(clipPath.Contains(new Point(99.0, 19.0)));
+        Assert.True(clipPath.Contains(new Offset(30.0, 10.0)));
+        Assert.True(clipPath.Contains(new Offset(50.0, 10.0)));
+        Assert.False(clipPath.Contains(new Offset(1.0, 1.0)));
+        Assert.False(clipPath.Contains(new Offset(99.0, 19.0)));
     }
 
     [Fact]
     public void GetClipPath_WithShapeCircle()
     {
         var decoration = new BoxDecoration(Shape: BoxShape.Circle);
-        var rect = new Rect(0.0, 0.0, 100.0, 20.0);
+        var rect = DartGeometry.RectFromLTWH(0.0, 0.0, 100.0, 20.0);
         Path clipPath = decoration.GetClipPath(rect, TextDirection.Ltr);
 
-        Assert.True(clipPath.Contains(new Point(50.0, 0.0)));
-        Assert.True(clipPath.Contains(new Point(40.0, 10.0)));
-        Assert.False(clipPath.Contains(new Point(40.0, 0.0)));
-        Assert.False(clipPath.Contains(new Point(10.0, 10.0)));
+        Assert.True(clipPath.Contains(new Offset(50.0, 0.0)));
+        Assert.True(clipPath.Contains(new Offset(40.0, 10.0)));
+        Assert.False(clipPath.Contains(new Offset(40.0, 0.0)));
+        Assert.False(clipPath.Contains(new Offset(10.0, 10.0)));
     }
 
     [Fact]
@@ -149,8 +149,8 @@ public sealed class BoxDecorationDartParityTests
         Assert.Equal(
             new BoxShadow(color: new Color(0xFF112233)),
             new BoxShadow().CopyWith(color: new Color(0xFF112233)));
-        Assert.NotEqual(new BoxShadow(), new BoxShadow(offset: new Point(1.0, 2.0)));
-        Assert.Equal(new BoxShadow(offset: new Point(1.0, 2.0)), new BoxShadow().CopyWith(offset: new Point(1.0, 2.0)));
+        Assert.NotEqual(new BoxShadow(), new BoxShadow(offset: new Offset(1.0, 2.0)));
+        Assert.Equal(new BoxShadow(offset: new Offset(1.0, 2.0)), new BoxShadow().CopyWith(offset: new Offset(1.0, 2.0)));
         Assert.NotEqual(new BoxShadow(), new BoxShadow(blurRadius: 123.0));
         Assert.Equal(new BoxShadow(blurRadius: 123.0), new BoxShadow().CopyWith(blurRadius: 123.0));
         Assert.NotEqual(new BoxShadow(), new BoxShadow(spreadRadius: 123.0));
@@ -191,7 +191,7 @@ public sealed class BoxDecorationDartParityTests
     {
         var shadow = new BoxShadow(
             color: new Color(0x80000000),
-            offset: new Point(2.0, 4.0),
+            offset: new Offset(2.0, 4.0),
             blurRadius: 6.0,
             spreadRadius: 1.0,
             blurStyle: BlurStyle.Solid);
@@ -202,20 +202,20 @@ public sealed class BoxDecorationDartParityTests
             Border: Plumix.Rendering.Border.All(color: new Color(0xFF0000FF), width: 2.0));
         IReadOnlyList<CanvasCall> calls = PaintDecoration(
             decoration.CreateBoxPainter(),
-            new Point(10.0, 20.0),
+            new Offset(10.0, 20.0),
             new ImageConfiguration(Size: new Size(100.0, 50.0)));
 
-        var rect = new Rect(10.0, 20.0, 100.0, 50.0);
+        var rect = DartGeometry.RectFromLTWH(10.0, 20.0, 100.0, 50.0);
         // _paintShadows: the rect shifted by the offset and inflated by the spread, with the shadow's paint.
         CanvasCall shadowCall = calls[0];
         Assert.Equal("drawRRect", shadowCall.Method);
-        Assert.Equal(BorderRadius.Circular(8.0).ToRRect(new Rect(11.0, 23.0, 102.0, 52.0)), shadowCall.RRect);
+        Assert.Equal(BorderRadius.Circular(8.0).ToRRect(DartGeometry.RectFromLTWH(11.0, 23.0, 102.0, 52.0)), shadowCall.RRect);
         Assert.Equal(MaskFilter.Blur(BlurStyle.Solid, shadow.BlurSigma), shadowCall.MaskFilter);
         Assert.Equal(new Color(0x80000000), shadowCall.Color);
         // _paintBackgroundColor: an opaque solid Border reduces the rect by half its stroke inset.
         CanvasCall background = calls[1];
         Assert.Equal("drawRRect", background.Method);
-        Assert.Equal(BorderRadius.Circular(8.0).ToRRect(new Rect(11.0, 21.0, 98.0, 48.0)), background.RRect);
+        Assert.Equal(BorderRadius.Circular(8.0).ToRRect(DartGeometry.RectFromLTWH(11.0, 21.0, 98.0, 48.0)), background.RRect);
         Assert.Null(background.MaskFilter);
         Assert.Equal(new Color(0xFF00FF00), background.Color);
     }
@@ -231,7 +231,7 @@ public sealed class BoxDecorationDartParityTests
             default,
             new ImageConfiguration(Size: new Size(100.0, 50.0)));
 
-        PaintAssert.Paints(calls, PaintPattern.Paints.Rect(rect: new Rect(0.0, 0.0, 100.0, 50.0)));
+        PaintAssert.Paints(calls, PaintPattern.Paints.Rect(rect: DartGeometry.RectFromLTWH(0.0, 0.0, 100.0, 50.0)));
     }
 
     [Fact]
@@ -242,13 +242,13 @@ public sealed class BoxDecorationDartParityTests
             Border: new BorderDirectional(start: new BorderSide(new Color(0xFF000000), 4.0)));
         var configuration = new ImageConfiguration(Size: new Size(100.0, 50.0), TextDirection: TextDirection.Rtl);
         IReadOnlyList<CanvasCall> rtl = PaintDecoration(decoration.CreateBoxPainter(), default, configuration);
-        PaintAssert.Paints(rtl, PaintPattern.Paints.Rect(rect: new Rect(0.0, 0.0, 98.0, 50.0)));
+        PaintAssert.Paints(rtl, PaintPattern.Paints.Rect(rect: DartGeometry.RectFromLTWH(0.0, 0.0, 98.0, 50.0)));
 
         IReadOnlyList<CanvasCall> ltr = PaintDecoration(
             decoration.CreateBoxPainter(),
             default,
             configuration with { TextDirection = TextDirection.Ltr });
-        PaintAssert.Paints(ltr, PaintPattern.Paints.Rect(rect: new Rect(2.0, 0.0, 98.0, 50.0)));
+        PaintAssert.Paints(ltr, PaintPattern.Paints.Rect(rect: DartGeometry.RectFromLTWH(2.0, 0.0, 98.0, 50.0)));
     }
 
     [Fact]
@@ -257,10 +257,10 @@ public sealed class BoxDecorationDartParityTests
         var decoration = new BoxDecoration(
             Color: new Color(0xFF123456),
             Shape: BoxShape.Circle,
-            BoxShadows: [new BoxShadow(color: new Color(0x40000000), offset: new Point(0.0, 3.0), blurRadius: 4.0)]);
+            BoxShadows: [new BoxShadow(color: new Color(0x40000000), offset: new Offset(0.0, 3.0), blurRadius: 4.0)]);
         IReadOnlyList<CanvasCall> calls = PaintDecoration(
             decoration.CreateBoxPainter(),
-            new Point(10.0, 10.0),
+            new Offset(10.0, 10.0),
             new ImageConfiguration(Size: new Size(100.0, 40.0)));
 
         PaintAssert.Paints(
@@ -281,7 +281,7 @@ public sealed class BoxDecorationDartParityTests
             decoration.CreateBoxPainter(),
             default,
             new ImageConfiguration(Size: new Size(10.0, 10.0)));
-        PaintAssert.Paints(calls, PaintPattern.Paints.Rect(rect: new Rect(0.0, 0.0, 10.0, 10.0)));
+        PaintAssert.Paints(calls, PaintPattern.Paints.Rect(rect: DartGeometry.RectFromLTWH(0.0, 0.0, 10.0, 10.0)));
     }
 
     [Fact]
@@ -311,7 +311,7 @@ public sealed class BoxDecorationDartParityTests
 
         IBrush? first = Assert.Single(PaintDecoration(painter, default, configuration)).Brush;
         IBrush? same = Assert.Single(PaintDecoration(painter, default, configuration)).Brush;
-        IBrush? moved = Assert.Single(PaintDecoration(painter, new Point(5.0, 0.0), configuration)).Brush;
+        IBrush? moved = Assert.Single(PaintDecoration(painter, new Offset(5.0, 0.0), configuration)).Brush;
 
         Assert.NotNull(first);
         Assert.Same(first, same);
@@ -336,7 +336,7 @@ public sealed class BoxDecorationDartParityTests
         try
         {
             var decoration = new BoxDecoration(
-                BoxShadows: [new BoxShadow(offset: new Point(1.0, 1.0), blurRadius: 4.0, blurStyle: BlurStyle.Outer)]);
+                BoxShadows: [new BoxShadow(offset: new Offset(1.0, 1.0), blurRadius: 4.0, blurStyle: BlurStyle.Outer)]);
             IReadOnlyList<CanvasCall> calls = PaintDecoration(
                 decoration.CreateBoxPainter(),
                 default,
@@ -346,8 +346,8 @@ public sealed class BoxDecorationDartParityTests
                 calls,
                 PaintPattern.Paints
                     .Save()
-                    .ClipRect(rect: new Rect(1.0, 1.0, 10.0, 10.0))
-                    .Rect(rect: new Rect(1.0, 1.0, 10.0, 10.0), hasMaskFilter: false)
+                    .ClipRect(rect: DartGeometry.RectFromLTWH(1.0, 1.0, 10.0, 10.0))
+                    .Rect(rect: DartGeometry.RectFromLTWH(1.0, 1.0, 10.0, 10.0), hasMaskFilter: false)
                     .Restore());
         }
         finally

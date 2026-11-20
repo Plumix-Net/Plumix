@@ -549,7 +549,7 @@ public sealed class TreeSliverDartParityTests
                                     treeNodeBuilder: (_, _, _) => new ColoredBox(new Color(0xFFF44336))),
                             ]))))));
 
-        Assert.Equal(new Point(0, 10), tester.GetTopLeft(Find.ByType<ColoredBox>()));
+        Assert.Equal(new Offset(0, 10), tester.GetTopLeft(Find.ByType<ColoredBox>()));
     }
 
     // Flutter: 'sliver_tree_test.dart: The child node positions of TreeSliver are correct.'
@@ -569,7 +569,7 @@ public sealed class TreeSliverDartParityTests
             treeRowExtentBuilder: (_, _) => 20,
             treeNodeBuilder: (_, node, _) => new Container(key: (Key)node.Content!))));
 
-        Assert.Equal(new Point(20, 20), tester.GetTopLeft(Find.ByKey(new ValueKey<int>(1))));
+        Assert.Equal(new Offset(20, 20), tester.GetTopLeft(Find.ByKey(new ValueKey<int>(1))));
     }
 
     // Flutter: 'sliver_tree_test.dart: TreeSliver renders correctly after scrolling.'
@@ -602,7 +602,7 @@ public sealed class TreeSliverDartParityTests
         controller.JumpTo(5);
         tester.PumpAndSettle();
 
-        Assert.Equal(new Point(0, -5), tester.GetTopLeft(Find.ByType<ColoredBox>()));
+        Assert.Equal(new Offset(0, -5), tester.GetTopLeft(Find.ByType<ColoredBox>()));
         controller.Dispose();
     }
 

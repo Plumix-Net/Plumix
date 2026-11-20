@@ -18,7 +18,7 @@ namespace Plumix.Material;
 /// Since the value indicator is painted on the Overlay; this method paints the value indicator in a
 /// <see cref="RenderBox"/> that appears in the <see cref="Overlay"/>.
 /// </remarks>
-public delegate void PaintRangeValueIndicator(PaintingContext context, Point offset);
+public delegate void PaintRangeValueIndicator(PaintingContext context, Offset offset);
 
 /// <summary>
 /// A Material Design range slider.
@@ -651,7 +651,7 @@ public class RangeSlider : StatefulWidget
             base.OnDetach();
         }
 
-        public override void Paint(PaintingContext context, Point offset)
+        public override void Paint(PaintingContext context, Offset offset)
         {
             _state.PaintBottomValueIndicator?.Invoke(context, offset);
             _state.PaintTopValueIndicator?.Invoke(context, offset);
@@ -901,8 +901,8 @@ internal sealed class RenderRangeSlider : RenderBox
     private readonly TapGestureRecognizer _tap;
     private bool _active;
     private RangeValues _newValues = null!;
-    private Point _startThumbCenter;
-    private Point _endThumbCenter;
+    private Offset _startThumbCenter;
+    private Offset _endThumbCenter;
 
     internal Rect? OverlayStartRect { get; set; }
 
@@ -1348,9 +1348,9 @@ internal sealed class RenderRangeSlider : RenderBox
         };
     }
 
-    private double GetValueFromGlobalPosition(Point globalPosition)
+    private double GetValueFromGlobalPosition(Offset globalPosition)
     {
-        double visualPosition = (GlobalToLocal(globalPosition).X - TrackRect.Left) / TrackRect.Width;
+        double visualPosition = (GlobalToLocal(globalPosition).Dx - TrackRect.Left) / TrackRect.Width;
         return GetValueFromVisualPosition(visualPosition);
     }
 
@@ -1370,7 +1370,7 @@ internal sealed class RenderRangeSlider : RenderBox
         return new RangeValues(Discretize(values.Start), Discretize(values.End));
     }
 
-    private void StartInteraction(Point globalPosition)
+    private void StartInteraction(Offset globalPosition)
     {
         if (_active)
         {
@@ -1455,7 +1455,7 @@ internal sealed class RenderRangeSlider : RenderBox
                 dragValue,
                 ThumbSize,
                 Size,
-                details.Delta.X);
+                details.Delta.Dx);
             if (_lastThumbSelection != null)
             {
                 shouldCallOnChangeStart = true;
@@ -1539,7 +1539,7 @@ internal sealed class RenderRangeSlider : RenderBox
         EndInteraction();
     }
 
-    protected override bool HitTestSelf(Point position) => true;
+    protected override bool HitTestSelf(Offset position) => true;
 
     public override void HandleEvent(PointerEvent @event, HitTestEntry entry)
     {
@@ -1594,7 +1594,7 @@ internal sealed class RenderRangeSlider : RenderBox
                 : Math.Max(MinPreferredTrackHeight!.Value, MaxSliderPartHeight));
     }
 
-    public override void Paint(PaintingContext context, Point offset)
+    public override void Paint(PaintingContext context, Offset offset)
     {
         double startValue = _state.StartPositionController.Value;
         double endValue = _state.EndPositionController.Value;
@@ -1615,7 +1615,7 @@ internal sealed class RenderRangeSlider : RenderBox
             sliderTheme: _sliderTheme,
             isDiscrete: IsDiscrete);
         double padding = _sliderTheme.RangeTrackShape!.IsRounded ? trackRect.Height : 0.0;
-        double thumbYOffset = trackRect.Center.Y;
+        double thumbYOffset = trackRect.Center.Dy;
         double startThumbPosition = IsDiscrete
             ? trackRect.Left + (startVisualPosition * (trackRect.Width - padding)) + (padding / 2)
             : trackRect.Left + (startVisualPosition * trackRect.Width);
@@ -1624,13 +1624,13 @@ internal sealed class RenderRangeSlider : RenderBox
             : trackRect.Left + (endVisualPosition * trackRect.Width);
         Size thumbPreferredSize = _sliderTheme.RangeThumbShape!.GetPreferredSize(IsEnabled, IsDiscrete);
         double thumbPadding = padding > thumbPreferredSize.Width / 2 ? padding / 2 : 0;
-        _startThumbCenter = new Point(
+        _startThumbCenter = new Offset(
             BoxConstraints.ClampDouble(
                 startThumbPosition,
                 trackRect.Left + thumbPadding,
                 trackRect.Right - thumbPadding),
             thumbYOffset);
-        _endThumbCenter = new Point(
+        _endThumbCenter = new Offset(
             BoxConstraints.ClampDouble(endThumbPosition, trackRect.Left + thumbPadding, trackRect.Right - thumbPadding),
             thumbYOffset);
         if (IsEnabled)
@@ -1756,14 +1756,14 @@ internal sealed class RenderRangeSlider : RenderBox
             // If the tick marks would be too dense, don't bother painting them.
             if (adjustedTrackWidth / Divisions!.Value >= 3.0 * tickMarkWidth)
             {
-                double dy = trackRect.Center.Y;
+                double dy = trackRect.Center.Dy;
                 for (int i = 0; i <= Divisions!.Value; i++)
                 {
                     double value = (double)i / Divisions!.Value;
                     // The ticks are mapped to be within the track, so the tick mark width
                     // must be subtracted from the track width.
                     double dx = trackRect.Left + (value * adjustedTrackWidth) + (discreteTrackPadding / 2);
-                    var tickMarkOffset = new Point(dx, dy);
+                    var tickMarkOffset = new Offset(dx, dy);
                     _sliderTheme.RangeTickMarkShape!.Paint(
                         context,
                         tickMarkOffset,
@@ -1778,13 +1778,13 @@ internal sealed class RenderRangeSlider : RenderBox
             }
         }
 
-        double thumbDelta = Math.Abs(_endThumbCenter.X - _startThumbCenter.X);
+        double thumbDelta = Math.Abs(_endThumbCenter.Dx - _startThumbCenter.Dx);
 
         bool isLastThumbStart = _lastThumbSelection == Thumb.Start;
         Thumb bottomThumb = isLastThumbStart ? Thumb.End : Thumb.Start;
         Thumb topThumb = isLastThumbStart ? Thumb.Start : Thumb.End;
-        Point bottomThumbCenter = isLastThumbStart ? _endThumbCenter : _startThumbCenter;
-        Point topThumbCenter = isLastThumbStart ? _startThumbCenter : _endThumbCenter;
+        Offset bottomThumbCenter = isLastThumbStart ? _endThumbCenter : _startThumbCenter;
+        Offset topThumbCenter = isLastThumbStart ? _startThumbCenter : _endThumbCenter;
         TextPainter bottomLabelPainter = isLastThumbStart ? _endLabelPainter : _startLabelPainter;
         TextPainter topLabelPainter = isLastThumbStart ? _startLabelPainter : _endLabelPainter;
         double bottomValue = isLastThumbStart ? endValue : startValue;
@@ -1797,7 +1797,7 @@ internal sealed class RenderRangeSlider : RenderBox
 
         if (shouldPaintValueIndicators)
         {
-            _state.PaintBottomValueIndicator = (PaintingContext indicatorContext, Point indicatorOffset) =>
+            _state.PaintBottomValueIndicator = (PaintingContext indicatorContext, Offset indicatorOffset) =>
             {
                 if (Attached)
                 {
@@ -1883,7 +1883,7 @@ internal sealed class RenderRangeSlider : RenderBox
                     _ => throw new InvalidOperationException(),
                 };
 
-            _state.PaintTopValueIndicator = (PaintingContext indicatorContext, Point indicatorOffset) =>
+            _state.PaintTopValueIndicator = (PaintingContext indicatorContext, Offset indicatorOffset) =>
             {
                 if (Attached)
                 {
@@ -2116,14 +2116,14 @@ internal sealed class RenderRangeSlider : RenderBox
         TimeSpan.FromMicroseconds((long)DartRound(duration.Ticks / TimeSpan.TicksPerMicrosecond * factor));
 
     /// <summary>Dart's <c>Rect.fromCircle</c>.</summary>
-    private static Rect RectFromCircle(Point center, double radius) =>
+    private static Rect RectFromCircle(Offset center, double radius) =>
         RectFromCenter(center, radius * 2, radius * 2);
 
     /// <summary>Dart's <c>Rect.fromCenter</c>, built from its left/top/right/bottom edges.</summary>
-    private static Rect RectFromCenter(Point center, double width, double height) =>
-        new(
-            new Point(center.X - (width / 2), center.Y - (height / 2)),
-            new Point(center.X + (width / 2), center.Y + (height / 2)));
+    private static Rect RectFromCenter(Offset center, double width, double height) =>
+        DartGeometry.RectFromCorners(
+            new Offset(center.Dx - (width / 2), center.Dy - (height / 2)),
+            new Offset(center.Dx + (width / 2), center.Dy + (height / 2)));
 }
 
 /// <summary>Flutter's private <c>_RangeSliderDefaultsM2</c>.</summary>

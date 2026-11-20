@@ -70,7 +70,7 @@ public class TextSelectionGestureDetectorBuilder
     /// </summary>
     protected virtual bool OnUserTapAlwaysCalled => false;
 
-    private void ShowMagnifierIfSupportedByPlatform(Point positionToShow)
+    private void ShowMagnifierIfSupportedByPlatform(Offset positionToShow)
     {
         switch (PlatformDefaults.TargetPlatform)
         {
@@ -131,7 +131,7 @@ public class TextSelectionGestureDetectorBuilder
     //
     // If fromSelection is given, will expand from that selection instead of the current selection
     // in renderEditable.
-    private void ExpandSelection(Point offset, SelectionChangedCause cause, TextSelection? fromSelection = null)
+    private void ExpandSelection(Offset offset, SelectionChangedCause cause, TextSelection? fromSelection = null)
     {
         TextPosition tappedPosition = RenderEditable.GetPositionForPoint(offset);
         TextSelection selection = fromSelection ?? RenderEditable.Selection!.Value;
@@ -151,7 +151,7 @@ public class TextSelectionGestureDetectorBuilder
     // Extend the selection to the given global position.
     //
     // Holds the base in place and moves the extent.
-    private void ExtendSelection(Point offset, SelectionChangedCause cause)
+    private void ExtendSelection(Offset offset, SelectionChangedCause cause)
     {
         TextPosition tappedPosition = RenderEditable.GetPositionForPoint(offset);
         TextSelection selection = RenderEditable.Selection!.Value;
@@ -488,7 +488,7 @@ public class TextSelectionGestureDetectorBuilder
                         startLocation: (
                             RenderEditable.GlobalToLocal(details.GlobalPosition),
                             new TextPosition(selection.BaseOffset, selection.Affinity)),
-                        offset: default(Point));
+                        offset: default(Offset));
                     EditableText.UpdateFloatingCursor(cursorPoint);
                 }
 
@@ -512,16 +512,16 @@ public class TextSelectionGestureDetectorBuilder
         _dragStartScrollOffset = ScrollPosition;
     }
 
-    private Point EditableOffsetFromDragStart() =>
+    private Offset EditableOffsetFromDragStart() =>
         RenderEditable.MaxLines == 1
-            ? new Point(RenderEditable.Offset.Pixels - _dragStartViewportOffset, 0.0)
-            : new Point(0.0, RenderEditable.Offset.Pixels - _dragStartViewportOffset);
+            ? new Offset(RenderEditable.Offset.Pixels - _dragStartViewportOffset, 0.0)
+            : new Offset(0.0, RenderEditable.Offset.Pixels - _dragStartViewportOffset);
 
-    private Point ScrollableOffsetFromDragStart() =>
+    private Offset ScrollableOffsetFromDragStart() =>
         BasicTypes.AxisDirectionToAxis(ScrollDirection ?? AxisDirection.Left) switch
         {
-            Axis.Horizontal => new Point(ScrollPosition - _dragStartScrollOffset, 0.0),
-            _ => new Point(0.0, ScrollPosition - _dragStartScrollOffset),
+            Axis.Horizontal => new Offset(ScrollPosition - _dragStartScrollOffset, 0.0),
+            _ => new Offset(0.0, ScrollPosition - _dragStartScrollOffset),
         };
 
     /// <summary>Handler for a move during a long press.</summary>
@@ -533,8 +533,8 @@ public class TextSelectionGestureDetectorBuilder
         }
 
         // Adjust the drag start offset for possible viewport offset changes.
-        Point editableOffset = EditableOffsetFromDragStart();
-        Point scrollableOffset = ScrollableOffsetFromDragStart();
+        Offset editableOffset = EditableOffsetFromDragStart();
+        Offset scrollableOffset = ScrollableOffsetFromDragStart();
 
         switch (PlatformDefaults.TargetPlatform)
         {
@@ -666,14 +666,14 @@ public class TextSelectionGestureDetectorBuilder
 
     // Selects the set of paragraphs in a document that intersect a given range of global
     // positions.
-    private void SelectParagraphsInRange(Point from, Point? to = null, SelectionChangedCause? cause = null)
+    private void SelectParagraphsInRange(Offset from, Offset? to = null, SelectionChangedCause? cause = null)
     {
         TextBoundary paragraphBoundary = new ParagraphBoundary(EditableText.TextEditingValue.Text);
         SelectTextBoundariesInRange(boundary: paragraphBoundary, from: from, to: to, cause: cause);
     }
 
     // Selects the set of lines in a document that intersect a given range of global positions.
-    private void SelectLinesInRange(Point from, Point? to = null, SelectionChangedCause? cause = null)
+    private void SelectLinesInRange(Offset from, Offset? to = null, SelectionChangedCause? cause = null)
     {
         TextBoundary lineBoundary = new LineBoundary(RenderEditable);
         SelectTextBoundariesInRange(boundary: lineBoundary, from: from, to: to, cause: cause);
@@ -701,8 +701,8 @@ public class TextSelectionGestureDetectorBuilder
     // text boundary respectively.
     private void SelectTextBoundariesInRange(
         TextBoundary boundary,
-        Point from,
-        Point? to = null,
+        Offset from,
+        Offset? to = null,
         SelectionChangedCause? cause = null)
     {
         TextPosition fromPosition = RenderEditable.GetPositionForPoint(from);
@@ -861,10 +861,10 @@ public class TextSelectionGestureDetectorBuilder
         if (!_isShiftPressed)
         {
             // Adjust the drag start offset for possible viewport offset changes.
-            Point editableOffset = EditableOffsetFromDragStart();
-            Point scrollableOffset = ScrollableOffsetFromDragStart();
-            Point dragStartGlobalPosition = details.GlobalPosition - details.OffsetFromOrigin;
-            Point origin = dragStartGlobalPosition - editableOffset - scrollableOffset;
+            Offset editableOffset = EditableOffsetFromDragStart();
+            Offset scrollableOffset = ScrollableOffsetFromDragStart();
+            Offset dragStartGlobalPosition = details.GlobalPosition - details.OffsetFromOrigin;
+            Offset origin = dragStartGlobalPosition - editableOffset - scrollableOffset;
             int effectiveCount =
                 TextSelectionGestureDetectorState.GetEffectiveConsecutiveTapCount(details.ConsecutiveTapCount);
 

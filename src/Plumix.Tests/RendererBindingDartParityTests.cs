@@ -236,7 +236,7 @@ public sealed class RendererBindingDartParityTests : IDisposable
         int node = FindNode(owner, "rect");
 
         Assert.Equal(
-            new Rect(0, 0, 100, 100),
+            DartGeometry.RectFromLTWH(0, 0, 100, 100),
             SemanticsBinding.Instance.GetRectOfSemanticsNodeInViewCoordinates(8114, node));
     }
 
@@ -267,10 +267,10 @@ public sealed class RendererBindingDartParityTests : IDisposable
         PumpFrame();
         int node = FindNode(owner, "scaled");
 
-        Assert.Equal(new Rect(0, 0, 200, 200), owner.SemanticsOwner!.GetSemanticsNode(node)!.GlobalRect);
-        Assert.Equal(new Rect(0, 0, 200, 200), owner.SemanticsOwner!.RootNode!.Rect);
+        Assert.Equal(DartGeometry.RectFromLTWH(0, 0, 200, 200), owner.SemanticsOwner!.GetSemanticsNode(node)!.GlobalRect);
+        Assert.Equal(DartGeometry.RectFromLTWH(0, 0, 200, 200), owner.SemanticsOwner!.RootNode!.Rect);
         Assert.Equal(
-            new Rect(0, 0, 100, 100),
+            DartGeometry.RectFromLTWH(0, 0, 100, 100),
             SemanticsBinding.Instance.GetRectOfSemanticsNodeInViewCoordinates(8115, node));
         Assert.Equal(new Size(100, 100), view.Size);
     }
@@ -305,19 +305,19 @@ public sealed class RendererBindingDartParityTests : IDisposable
         PumpFrame();
 
         var firstResult = new HitTestResult();
-        RendererBinding.Instance.HitTestInView(firstResult, new Point(0, 0), 8131);
+        RendererBinding.Instance.HitTestInView(firstResult, new Offset(0, 0), 8131);
         Assert.Equal<object>(
             [first, GestureBinding.Instance],
             firstResult.Path.Select(static entry => entry.Target));
 
         var secondResult = new HitTestResult();
-        RendererBinding.Instance.HitTestInView(secondResult, new Point(0, 0), 8132);
+        RendererBinding.Instance.HitTestInView(secondResult, new Offset(0, 0), 8132);
         Assert.Equal<object>(
             [second, GestureBinding.Instance],
             secondResult.Path.Select(static entry => entry.Target));
 
         var unknownResult = new HitTestResult();
-        RendererBinding.Instance.HitTestInView(unknownResult, new Point(0, 0), 8133);
+        RendererBinding.Instance.HitTestInView(unknownResult, new Offset(0, 0), 8133);
         Assert.Equal<object>([GestureBinding.Instance], unknownResult.Path.Select(static entry => entry.Target));
     }
 

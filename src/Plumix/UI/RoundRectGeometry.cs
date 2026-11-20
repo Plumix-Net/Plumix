@@ -37,7 +37,7 @@ internal readonly record struct RoundRectGeometry
     public double Width => Right - Left;
     public double Height => Bottom - Top;
     public Rect OuterRect => DartGeometry.RectFromLTRB(Left, Top, Right, Bottom);
-    public Point Center => new(Left + Width / 2.0, Top + Height / 2.0);
+    public Offset Center => new(Left + Width / 2.0, Top + Height / 2.0);
     public double ShortestSide => Math.Min(Math.Abs(Width), Math.Abs(Height));
     public double LongestSide => Math.Max(Math.Abs(Width), Math.Abs(Height));
     public bool IsEmpty => Left >= Right || Top >= Bottom;
@@ -66,8 +66,8 @@ internal readonly record struct RoundRectGeometry
         Right - Math.Max(TopRight.X, BottomRight.X) * factor,
         Bottom - Math.Max(BottomRight.Y, BottomLeft.Y) * factor);
 
-    public RoundRectGeometry Shift(Point offset) => new(
-        Left + offset.X, Top + offset.Y, Right + offset.X, Bottom + offset.Y,
+    public RoundRectGeometry Shift(Offset offset) => new(
+        Left + offset.Dx, Top + offset.Dy, Right + offset.Dx, Bottom + offset.Dy,
         TopLeft, TopRight, BottomRight, BottomLeft);
 
     public RoundRectGeometry Inflate(double delta) => new(

@@ -209,18 +209,18 @@ public sealed class CupertinoTextSelectionToolbarButton : StatefulWidget
                 LineCap = PenLineCap.Round,
                 LineJoin = PenLineJoin.Round,
             };
-            var origin = new Point(-size.Width / 2.0, -size.Height / 2.0);
+            var origin = new Offset(-size.Width / 2.0, -size.Height / 2.0);
 
             // Path for the one corner.
             var path = new Plumix.UI.Path();
-            path.MoveTo(origin.X, origin.Y + 3.5);
-            path.LineTo(origin.X, origin.Y + 1.0);
+            path.MoveTo(origin.Dx, origin.Dy + 3.5);
+            path.LineTo(origin.Dx, origin.Dy + 1.0);
             path.ArcTo(
-                new Rect(origin.X, origin.Y, 2.0, 2.0),
+                DartGeometry.RectFromLTWH(origin.Dx, origin.Dy, 2.0, 2.0),
                 Math.PI,
                 Math.PI / 2.0,
                 forceMoveTo: false);
-            path.LineTo(origin.X + 3.5, origin.Y);
+            path.LineTo(origin.Dx + 3.5, origin.Dy);
 
             context.Canvas.Save();
             context.Canvas.Translate(size.Width / 2.0, size.Height / 2.0);
@@ -235,9 +235,9 @@ public sealed class CupertinoTextSelectionToolbarButton : StatefulWidget
             }
 
             // Draw three lines.
-            context.Canvas.DrawLine(pen, new Point(-3.0, -3.0), new Point(3.0, -3.0));
-            context.Canvas.DrawLine(pen, new Point(-3.0, 0.0), new Point(3.0, 0.0));
-            context.Canvas.DrawLine(pen, new Point(-3.0, 3.0), new Point(1.0, 3.0));
+            context.Canvas.DrawLine(pen, new Offset(-3.0, -3.0), new Offset(3.0, -3.0));
+            context.Canvas.DrawLine(pen, new Offset(-3.0, 0.0), new Offset(3.0, 0.0));
+            context.Canvas.DrawLine(pen, new Offset(-3.0, 3.0), new Offset(1.0, 3.0));
             context.Canvas.Restore();
         }
 

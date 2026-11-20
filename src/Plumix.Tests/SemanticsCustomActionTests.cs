@@ -192,7 +192,7 @@ public sealed class SemanticsCustomActionTests
         (SemanticsOwner owner, SemanticsNode mergedNode) = BuildMerged(left, right);
 
         Assert.True(owner.PerformActionAt(
-            new Point(5, 5),
+            new Offset(5, 5),
             SemanticsActions.CustomAction,
             CustomSemanticsAction.GetIdentifier(leftAction)));
         Assert.Equal(1, leftCount);
@@ -200,7 +200,7 @@ public sealed class SemanticsCustomActionTests
 
         // Nothing lives outside the merged group's box.
         Assert.False(owner.PerformActionAt(
-            new Point(5, 500),
+            new Offset(5, 500),
             SemanticsActions.CustomAction,
             CustomSemanticsAction.GetIdentifier(leftAction)));
         Assert.Equal(1, leftCount);
@@ -252,7 +252,7 @@ public sealed class SemanticsCustomActionTests
 
         Rect? rect = pipeline.SemanticsOwner!.GetRectOfSemanticsNode(secondNode.Id);
         Assert.NotNull(rect);
-        Assert.Equal(new Rect(20, 0, 30, 10), rect!.Value);
+        Assert.Equal(DartGeometry.RectFromLTWH(20, 0, 30, 10), rect!.Value);
         Assert.Null(pipeline.SemanticsOwner!.GetRectOfSemanticsNode(-1));
     }
 

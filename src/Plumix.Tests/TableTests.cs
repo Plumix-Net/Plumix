@@ -172,10 +172,10 @@ public sealed class TableTests
         Assert.Equal(new Size(130, 230), table.Size);
         Assert.Equal([10.0, 20.0, 100.0, 0.0, 0.0], table.ResolvedColumnWidths);
         Assert.Equal([30.0, 0.0, 0.0, 0.0, 200.0], table.ResolvedRowHeights);
-        Assert.Equal(new Point(0, 0), OffsetOf(a));
-        Assert.Equal(new Point(10, 0), OffsetOf(b));
-        Assert.Equal(new Point(30, 0), OffsetOf(c));
-        Assert.Equal(new Point(30, 30), OffsetOf(tall));
+        Assert.Equal(new Offset(0, 0), OffsetOf(a));
+        Assert.Equal(new Offset(10, 0), OffsetOf(b));
+        Assert.Equal(new Offset(30, 0), OffsetOf(c));
+        Assert.Equal(new Offset(30, 30), OffsetOf(tall));
 
         // The third column is widened by the tall cell below it, so `c` is stretched to 100.
         Assert.Equal(BoxConstraints.TightFor(width: 100.0), c.LastConstraints);
@@ -200,9 +200,9 @@ public sealed class TableTests
 
         table.Layout(new BoxConstraints(MaxWidth: 60, MaxHeight: 40));
 
-        Assert.Equal(50.0, OffsetOf(a).X);
-        Assert.Equal(30.0, OffsetOf(b).X);
-        Assert.Equal(0.0, OffsetOf(c).X);
+        Assert.Equal(50.0, OffsetOf(a).Dx);
+        Assert.Equal(30.0, OffsetOf(b).Dx);
+        Assert.Equal(0.0, OffsetOf(c).Dx);
     }
 
     [Fact]
@@ -227,11 +227,11 @@ public sealed class TableTests
         table.Layout(new BoxConstraints(MaxWidth: 200, MaxHeight: 200));
 
         Assert.Equal(40.0, table.ResolvedRowHeights[0]);
-        Assert.Equal(0.0, OffsetOf(top).Y);
-        Assert.Equal(15.0, OffsetOf(middle).Y);
-        Assert.Equal(30.0, OffsetOf(bottom).Y);
-        Assert.Equal(0.0, OffsetOf(fill).Y);
-        Assert.Equal(0.0, OffsetOf(intrinsic).Y);
+        Assert.Equal(0.0, OffsetOf(top).Dy);
+        Assert.Equal(15.0, OffsetOf(middle).Dy);
+        Assert.Equal(30.0, OffsetOf(bottom).Dy);
+        Assert.Equal(0.0, OffsetOf(fill).Dy);
+        Assert.Equal(0.0, OffsetOf(intrinsic).Dy);
         Assert.Equal(40.0, fill.Size.Height);
         Assert.Equal(40.0, intrinsic.Size.Height);
     }
@@ -290,8 +290,8 @@ public sealed class TableTests
 
         table.Layout(new BoxConstraints(MaxWidth: 100, MaxHeight: 100));
 
-        Assert.Equal(15.0, OffsetOf(shallow).Y);
-        Assert.Equal(0.0, OffsetOf(deep).Y);
+        Assert.Equal(15.0, OffsetOf(shallow).Dy);
+        Assert.Equal(0.0, OffsetOf(deep).Dy);
         // beforeBaseline = max(10, 25) = 25, afterBaseline = max(30 - 10, 30 - 25) = 20.
         Assert.Equal(45.0, table.ResolvedRowHeights[0]);
         Assert.Equal(25.0, table.GetDistanceToBaseline(TextBaseline.Alphabetic));
@@ -536,8 +536,8 @@ public sealed class TableTests
 
         PaintThroughPipeline(table, new Size(100, 100));
 
-        (Point offset, ImageConfiguration configuration) = Assert.Single(decoration.Painted);
-        Assert.Equal(new Point(0, 0), offset);
+        (Offset offset, ImageConfiguration configuration) = Assert.Single(decoration.Painted);
+        Assert.Equal(new Offset(0, 0), offset);
         Assert.Equal(new Size(table.Size.Width, 20), configuration.Size);
     }
 
@@ -572,8 +572,8 @@ public sealed class TableTests
         table.Layout(new BoxConstraints(MaxWidth: 100, MaxHeight: 100));
 
         var result = new BoxHitTestResult();
-        Assert.True(table.HitTest(result, new Point(25, 5)));
-        Assert.Equal(new Point(5, 5), second.LastPosition);
+        Assert.True(table.HitTest(result, new Offset(25, 5)));
+        Assert.Equal(new Offset(5, 5), second.LastPosition);
     }
 
     [Fact]
@@ -608,7 +608,7 @@ public sealed class TableTests
             {
                 Assert.Equal(SemanticsRole.Row, row.Role);
                 Assert.Equal(0, row.IndexInParent);
-                Assert.Equal(new Rect(0, 0, 100, 10), row.GlobalRect);
+                Assert.Equal(DartGeometry.RectFromLTWH(0, 0, 100, 10), row.GlobalRect);
                 Assert.Collection(
                     row.Children,
                     cell =>
@@ -628,7 +628,7 @@ public sealed class TableTests
             {
                 Assert.Equal(SemanticsRole.Row, row.Role);
                 Assert.Equal(1, row.IndexInParent);
-                Assert.Equal(new Rect(0, 10, 100, 10), row.GlobalRect);
+                Assert.Equal(DartGeometry.RectFromLTWH(0, 10, 100, 10), row.GlobalRect);
                 Assert.Collection(
                     row.Children,
                     cell =>
@@ -661,7 +661,7 @@ public sealed class TableTests
         Assert.Empty(wrapper.Label);
         Assert.Equal(0, wrapper.IndexInParent);
         // The wrapper is clipped to its column, not to the whole row.
-        Assert.Equal(new Rect(0, 0, 50, 10), wrapper.GlobalRect);
+        Assert.Equal(DartGeometry.RectFromLTWH(0, 0, 50, 10), wrapper.GlobalRect);
         Assert.Equal("Plain", Assert.Single(wrapper.Children).Label);
         Assert.Same(FindNodeWithLabel(tableNode, "Celled"), row.Children[1]);
     }
@@ -957,7 +957,7 @@ public sealed class TableTests
         double[] expected = direction == TextDirection.Ltr
             ? [0.0, 100.0, 210.0]
             : [235.0, 125.0, 0.0];
-        Assert.Equal(expected, row.Select(cell => ((BoxParentData)cell.parentData!).offset.X));
+        Assert.Equal(expected, row.Select(cell => ((BoxParentData)cell.parentData!).offset.Dx));
     }
 
     [Fact]
@@ -1047,7 +1047,7 @@ public sealed class TableTests
 
     // ---------------------------------------------------------------- helpers
 
-    private static Point OffsetOf(RenderBox box) => ((BoxParentData)box.parentData!).offset;
+    private static Offset OffsetOf(RenderBox box) => ((BoxParentData)box.parentData!).offset;
 
     private static void PaintThroughPipeline(RenderTable table, Size viewSize)
     {
@@ -1159,31 +1159,31 @@ public sealed class TableTests
         protected override double? ComputeDistanceToActualBaseline(TextBaseline baseline) =>
             baseline == TextBaseline.Alphabetic ? _alphabeticBaseline : null;
 
-        public override void Paint(PaintingContext context, Point offset)
+        public override void Paint(PaintingContext context, Offset offset)
         {
         }
     }
 
     private sealed class HitBox : RenderBox
     {
-        public Point LastPosition { get; private set; }
+        public Offset LastPosition { get; private set; }
 
         protected override void PerformLayout() => Size = Constraints.Constrain(new Size(20, 10));
 
-        protected override bool HitTestSelf(Point position)
+        protected override bool HitTestSelf(Offset position)
         {
             LastPosition = position;
             return true;
         }
 
-        public override void Paint(PaintingContext context, Point offset)
+        public override void Paint(PaintingContext context, Offset offset)
         {
         }
     }
 
     private sealed record RecordingDecoration : Decoration
     {
-        public List<(Point Offset, ImageConfiguration Configuration)> Painted { get; } = [];
+        public List<(Offset Offset, ImageConfiguration Configuration)> Painted { get; } = [];
 
         public int DisposedPainters { get; private set; }
 
@@ -1191,7 +1191,7 @@ public sealed class TableTests
 
         private sealed class Painter(RecordingDecoration owner, Action? onChanged) : BoxPainter(onChanged)
         {
-            public override void Paint(PaintingContext context, Point offset, ImageConfiguration configuration)
+            public override void Paint(PaintingContext context, Offset offset, ImageConfiguration configuration)
             {
                 owner.Painted.Add((offset, configuration));
             }

@@ -471,7 +471,7 @@ public sealed class PageViewTests
         using var harness = Harness(Pages(controller, 5, onPageChanged: reported.Add));
         harness.Pump(Viewport);
 
-        Drag(harness, from: new Point(700, 300), to: new Point(240, 300));
+        Drag(harness, from: new Offset(700, 300), to: new Offset(240, 300));
         harness.Pump(Viewport);
 
         Assert.Equal([1], reported);
@@ -486,7 +486,7 @@ public sealed class PageViewTests
         using var harness = Harness(Pages(controller, 5));
         harness.Pump(Viewport);
 
-        Drag(harness, from: new Point(700, 300), to: new Point(240, 300));
+        Drag(harness, from: new Offset(700, 300), to: new Offset(240, 300));
         Settle(harness);
 
         Assert.Equal(1.0, controller.Page!.Value, 3);
@@ -502,7 +502,7 @@ public sealed class PageViewTests
         using var harness = Harness(Pages(controller, 5, pageSnapping: false));
         harness.Pump(Viewport);
 
-        Drag(harness, from: new Point(700, 300), to: new Point(400, 300));
+        Drag(harness, from: new Offset(700, 300), to: new Offset(400, 300));
         Settle(harness);
 
         Assert.InRange(Position(controller).Pixels, 1, 799);
@@ -725,11 +725,11 @@ public sealed class PageViewTests
 
     private static RenderBox Single(WidgetRenderHarness harness) => Assert.Single(LaidOutPages(harness));
 
-    private static double PageLeft(RenderBox page) => page.GetPaintOffsetToRoot().X;
+    private static double PageLeft(RenderBox page) => page.GetPaintOffsetToRoot().Dx;
 
-    private static double PageTop(RenderBox page) => page.GetPaintOffsetToRoot().Y;
+    private static double PageTop(RenderBox page) => page.GetPaintOffsetToRoot().Dy;
 
-    private static void Drag(WidgetRenderHarness harness, Point from, Point to)
+    private static void Drag(WidgetRenderHarness harness, Offset from, Offset to)
     {
         DateTime now = DateTime.UtcNow;
         GestureBinding.Instance.HandlePointerEvent(harness.RenderView, new PointerDownEvent(

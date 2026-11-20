@@ -13,14 +13,14 @@ public delegate Widget TooltipComponentBuilder(
     BuildContext context,
     Animation<double> animation);
 
-public delegate Point TooltipPositionDelegate(TooltipPositionContext context);
+public delegate Offset TooltipPositionDelegate(TooltipPositionContext context);
 
 public delegate void TooltipTriggeredCallback();
 
 public sealed record TooltipPositionContext
 {
     public TooltipPositionContext(
-        Point Target,
+        Offset Target,
         Size TargetSize,
         Size TooltipSize,
         double VerticalOffset,
@@ -35,7 +35,7 @@ public sealed record TooltipPositionContext
     }
 
     public TooltipPositionContext(
-        Point Target,
+        Offset Target,
         Size TargetSize,
         Size TooltipSize,
         double VerticalOffset,
@@ -50,7 +50,7 @@ public sealed record TooltipPositionContext
     }
 
     public TooltipPositionContext(
-        Point Target,
+        Offset Target,
         Size TargetSize,
         Size TooltipSize,
         double VerticalOffset,
@@ -65,7 +65,7 @@ public sealed record TooltipPositionContext
         this.OverlaySize = OverlaySize;
     }
 
-    public Point Target { get; init; }
+    public Offset Target { get; init; }
 
     public Size TargetSize { get; init; }
 
@@ -490,9 +490,9 @@ public sealed class RawTooltipState : State<RawTooltip>
             return new SizedBox();
         }
 
-        Point target = MatrixUtils.TransformPoint(
+        Offset target = MatrixUtils.TransformPoint(
             layoutInfo.ChildPaintTransform,
-            new Point(
+            new Offset(
                 layoutInfo.ChildSize.Width / 2.0,
                 layoutInfo.ChildSize.Height / 2.0));
         Widget tooltip = new IgnorePointer(
@@ -581,7 +581,7 @@ public sealed class RawTooltipState : State<RawTooltip>
 internal sealed class RawTooltipPositionLayoutDelegate : SingleChildLayoutDelegate
 {
     public RawTooltipPositionLayoutDelegate(
-        Point target,
+        Offset target,
         Size targetSize,
         TooltipPositionDelegate? positionDelegate)
     {
@@ -590,7 +590,7 @@ internal sealed class RawTooltipPositionLayoutDelegate : SingleChildLayoutDelega
         PositionDelegate = positionDelegate;
     }
 
-    public Point Target { get; }
+    public Offset Target { get; }
 
     public Size TargetSize { get; }
 
@@ -599,7 +599,7 @@ internal sealed class RawTooltipPositionLayoutDelegate : SingleChildLayoutDelega
     public override BoxConstraints GetConstraintsForChild(BoxConstraints constraints) =>
         constraints.Loosen();
 
-    public override Point GetPositionForChild(Size size, Size childSize)
+    public override Offset GetPositionForChild(Size size, Size childSize)
     {
         var context = new TooltipPositionContext(
             Target,
@@ -624,10 +624,10 @@ internal sealed class RawTooltipPositionLayoutDelegate : SingleChildLayoutDelega
     }
 
     /// <summary>Dart's <c>positionDependentBox</c>; see <see cref="PaintingGeometry.PositionDependentBox"/>.</summary>
-    public static Point PositionDependentBox(
+    public static Offset PositionDependentBox(
         Size size,
         Size childSize,
-        Point target,
+        Offset target,
         bool preferBelow,
         double verticalOffset = 0,
         double margin = 10) =>
@@ -669,7 +669,7 @@ internal sealed class RenderExclusiveMouseRegion : RenderMouseRegion
     {
     }
 
-    public override bool HitTest(BoxHitTestResult result, Point position)
+    public override bool HitTest(BoxHitTestResult result, Offset position)
     {
         bool outermost = !_isOutermostMouseRegion;
         if (outermost)
@@ -679,7 +679,7 @@ internal sealed class RenderExclusiveMouseRegion : RenderMouseRegion
         }
 
         bool hit = false;
-        if (position.X >= 0 && position.Y >= 0 && position.X <= Size.Width && position.Y <= Size.Height)
+        if (position.Dx >= 0 && position.Dy >= 0 && position.Dx <= Size.Width && position.Dy <= Size.Height)
         {
             hit = HitTestChildren(result, position) || HitTestSelf(position);
             if ((hit || Behavior == Plumix.Rendering.HitTestBehavior.Translucent)

@@ -154,7 +154,7 @@ public sealed class SemanticsNodeDiagnosticsTests
         };
         var allProperties = new SemanticsNode
         {
-            Rect = new Rect(50.0, 10.0, 20.0, 30.0),
+            Rect = DartGeometry.RectFromLTWH(50.0, 10.0, 20.0, 30.0),
             Transform = Matrix4.TranslationValues(10.0, 10.0, 0.0),
         };
         allProperties.UpdateWith(config);
@@ -173,7 +173,7 @@ public sealed class SemanticsNodeDiagnosticsTests
 
         var scaled = new SemanticsNode
         {
-            Rect = new Rect(50.0, 10.0, 20.0, 30.0),
+            Rect = DartGeometry.RectFromLTWH(50.0, 10.0, 20.0, 30.0),
             Transform = Matrix4.Diagonal3Values(10.0, 10.0, 1.0),
         };
         Assert.Equal(
@@ -197,7 +197,7 @@ public sealed class SemanticsNodeDiagnosticsTests
         };
         var blocked = new SemanticsNode
         {
-            Rect = new Rect(50.0, 10.0, 20.0, 30.0),
+            Rect = DartGeometry.RectFromLTWH(50.0, 10.0, 20.0, 30.0),
             Transform = Matrix4.TranslationValues(10.0, 10.0, 0.0),
         };
         blocked.UpdateWith(config);
@@ -294,7 +294,7 @@ public sealed class SemanticsNodeDiagnosticsTests
         + "   maxValue: null\n";
 
     private static Rect FromLtrb(double left, double top, double right, double bottom) =>
-        new(left, top, right - left, bottom - top);
+        DartGeometry.RectFromLTWH(left, top, right - left, bottom - top);
 
     /// <summary>flutter_test's <c>equalsIgnoringHashCodes</c>: every <c>#xxxxx</c> becomes <c>#00000</c>.</summary>
     private static string IgnoringHashCodes(string value) =>

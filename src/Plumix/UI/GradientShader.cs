@@ -26,8 +26,8 @@ internal sealed class GradientShader : ImmutableGradientBrush, INativeShader
 
     private GradientShader(
         GradientKind kind,
-        Point start,
-        Point end,
+        Offset start,
+        Offset end,
         double radius,
         double focalRadius,
         IReadOnlyList<Color> colors,
@@ -73,8 +73,8 @@ internal sealed class GradientShader : ImmutableGradientBrush, INativeShader
     }
 
     internal GradientKind Kind { get; }
-    internal Point Start { get; }
-    internal Point End { get; }
+    internal Offset Start { get; }
+    internal Offset End { get; }
     internal double Radius { get; }
     internal double FocalRadius { get; }
     internal TileMode TileMode { get; }
@@ -83,7 +83,7 @@ internal sealed class GradientShader : ImmutableGradientBrush, INativeShader
     internal SKMatrix LocalMatrix => _matrix;
 
     internal static GradientShader Linear(
-        Point from, Point to, IReadOnlyList<Color> colors, IReadOnlyList<double> stops,
+        Offset from, Offset to, IReadOnlyList<Color> colors, IReadOnlyList<double> stops,
         TileMode tileMode, Matrix4? matrix)
     {
         CheckPoint(from);
@@ -92,19 +92,19 @@ internal sealed class GradientShader : ImmutableGradientBrush, INativeShader
     }
 
     internal static GradientShader Radial(
-        Point center, double radius, IReadOnlyList<Color> colors, IReadOnlyList<double> stops,
-        TileMode tileMode, Matrix4? matrix, Point? focal, double focalRadius)
+        Offset center, double radius, IReadOnlyList<Color> colors, IReadOnlyList<double> stops,
+        TileMode tileMode, Matrix4? matrix, Offset? focal, double focalRadius)
     {
         CheckPoint(center);
         bool radial = focal is null || (focal == center && focalRadius == 0.0);
-        DebugAssertions.Assert(radial || center != default || focal != default(Point),
+        DebugAssertions.Assert(radial || center != default || focal != default(Offset),
             "center != Offset.zero || focal != Offset.zero");
         return new GradientShader(radial ? GradientKind.Radial : GradientKind.Conical,
             focal ?? center, center, radius, focalRadius, colors, stops, tileMode, matrix);
     }
 
     internal static GradientShader Sweep(
-        Point center, IReadOnlyList<Color> colors, IReadOnlyList<double> stops,
+        Offset center, IReadOnlyList<Color> colors, IReadOnlyList<double> stops,
         TileMode tileMode, double startAngle, double endAngle, Matrix4? matrix)
     {
         CheckPoint(center);
@@ -124,8 +124,8 @@ internal sealed class GradientShader : ImmutableGradientBrush, INativeShader
             TileMode.Decal => SKShaderTileMode.Decal,
             _ => SKShaderTileMode.Clamp,
         };
-        SKPoint start = new(Path.Narrow(Start.X), Path.Narrow(Start.Y));
-        SKPoint end = new(Path.Narrow(End.X), Path.Narrow(End.Y));
+        SKPoint start = new(Path.Narrow(Start.Dx), Path.Narrow(Start.Dy));
+        SKPoint end = new(Path.Narrow(End.Dx), Path.Narrow(End.Dy));
         // Skia owns stop sanitization and degenerate geometry, just as in Flutter's Skia backend.
         return Kind switch
         {
@@ -142,8 +142,8 @@ internal sealed class GradientShader : ImmutableGradientBrush, INativeShader
 
     private static float Degrees(double radians) => Path.Narrow(radians) * 180.0f / (float)Math.PI;
 
-    private static void CheckPoint(Point point) => DebugAssertions.Assert(
-        !double.IsNaN(point.X) && !double.IsNaN(point.Y), "Offset argument contained a NaN value.");
+    private static void CheckPoint(Offset point) => DebugAssertions.Assert(
+        !double.IsNaN(point.Dx) && !double.IsNaN(point.Dy), "Offset argument contained a NaN value.");
 }
 
 internal enum GradientKind

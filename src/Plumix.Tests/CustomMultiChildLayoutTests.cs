@@ -41,13 +41,13 @@ public sealed class CustomMultiChildLayoutTests
         Assert.Equal(new Size(160, 100), layout.Size);
         Assert.Equal(new Size(60, 40), leader.Size);
         Assert.Equal(new Size(60, 40), follower.Size);
-        Assert.Equal(new Point(0, 0), ((MultiChildLayoutParentData)leader.parentData!).offset);
-        Assert.Equal(new Point(100, 60), ((MultiChildLayoutParentData)follower.parentData!).offset);
+        Assert.Equal(new Offset(0, 0), ((MultiChildLayoutParentData)leader.parentData!).offset);
+        Assert.Equal(new Offset(100, 60), ((MultiChildLayoutParentData)follower.parentData!).offset);
         Assert.True(layoutDelegate.SawLeader);
         Assert.True(layoutDelegate.SawFollower);
 
         var hitResult = new BoxHitTestResult();
-        Assert.True(layout.HitTest(hitResult, new Point(110, 70)));
+        Assert.True(layout.HitTest(hitResult, new Offset(110, 70)));
         Assert.Same(follower, hitResult.Path[0].Target);
     }
 
@@ -155,9 +155,9 @@ public sealed class CustomMultiChildLayoutTests
         RenderBox leading = layout.FirstChild!;
         RenderBox middle = layout.ChildAfter(leading)!;
         RenderBox trailing = layout.ChildAfter(middle)!;
-        Assert.Equal(new Point(expectedLeadingX, 0), OffsetOf(leading));
-        Assert.Equal(new Point(expectedMiddleX, 18), OffsetOf(middle));
-        Assert.Equal(new Point(expectedTrailingX, 18), OffsetOf(trailing));
+        Assert.Equal(new Offset(expectedLeadingX, 0), OffsetOf(leading));
+        Assert.Equal(new Offset(expectedMiddleX, 18), OffsetOf(middle));
+        Assert.Equal(new Offset(expectedTrailingX, 18), OffsetOf(trailing));
         Assert.Equal(new Size(40, 56), leading.Size);
         Assert.Equal(new Size(100, 20), middle.Size);
         Assert.Equal(new Size(30, 20), trailing.Size);
@@ -179,9 +179,9 @@ public sealed class CustomMultiChildLayoutTests
         RenderBox leading = layout.FirstChild!;
         RenderBox middle = layout.ChildAfter(leading)!;
         RenderBox trailing = layout.ChildAfter(middle)!;
-        Assert.Equal(new Point(0, 0), OffsetOf(leading));
-        Assert.Equal(new Point(136, 18), OffsetOf(middle));
-        Assert.Equal(new Point(220, 18), OffsetOf(trailing));
+        Assert.Equal(new Offset(0, 0), OffsetOf(leading));
+        Assert.Equal(new Offset(136, 18), OffsetOf(middle));
+        Assert.Equal(new Offset(220, 18), OffsetOf(trailing));
         Assert.Equal(new Size(68, 20), middle.Size);
     }
 
@@ -202,11 +202,11 @@ public sealed class CustomMultiChildLayoutTests
         layout.Layout(BoxConstraints.Tight(new Size(200, 56)));
 
         RenderBox middle = Assert.IsAssignableFrom<RenderBox>(layout.FirstChild);
-        Assert.Equal(new Point(80, 18), OffsetOf(middle));
+        Assert.Equal(new Offset(80, 18), OffsetOf(middle));
         Assert.Equal(1, layout.ChildCount);
     }
 
-    private static Point OffsetOf(RenderBox child)
+    private static Offset OffsetOf(RenderBox child)
     {
         return ((MultiChildLayoutParentData)child.parentData!).offset;
     }
@@ -264,7 +264,7 @@ public sealed class CustomMultiChildLayoutTests
             LayoutChild(TestSlot.Follower, BoxConstraints.Tight(leaderSize));
             PositionChild(
                 TestSlot.Follower,
-                new Point(size.Width - leaderSize.Width, size.Height - leaderSize.Height));
+                new Offset(size.Width - leaderSize.Width, size.Height - leaderSize.Height));
         }
 
         public override bool ShouldRelayout(MultiChildLayoutDelegate oldDelegate) => false;
@@ -357,9 +357,9 @@ public sealed class CustomMultiChildLayoutTests
             Size = Constraints.Constrain(_desiredSize);
         }
 
-        protected override bool HitTestSelf(Point position) => _hitTestSelf;
+        protected override bool HitTestSelf(Offset position) => _hitTestSelf;
 
-        public override void Paint(PaintingContext context, Point offset)
+        public override void Paint(PaintingContext context, Offset offset)
         {
         }
     }

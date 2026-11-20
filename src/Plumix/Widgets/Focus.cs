@@ -396,7 +396,7 @@ public class FocusNode : ChangeNotifier, IDiagnosticableTree
     public Size Size => Rect.Size;
 
     /// <summary>Dart parity source: <c>FocusNode.offset</c>.</summary>
-    public Point Offset => Rect.TopLeft;
+    public Offset Offset => Rect.TopLeft;
 
     /// <summary>Dart parity source: <c>FocusNode.unfocus</c>.</summary>
     public void Unfocus(UnfocusDisposition disposition = UnfocusDisposition.Scope)
@@ -553,7 +553,7 @@ public class FocusNode : ChangeNotifier, IDiagnosticableTree
             return null;
         }
 
-        var localRect = new Rect(new Point(0, 0), renderBox.Size);
+        var localRect = DartGeometry.RectFromOffsetAndSize(new Offset(0, 0), renderBox.Size);
         Matrix4 transformToRoot = renderBox.ComputePaintTransformToRoot();
         return RenderObject.TransformRect(transformToRoot, localRect);
     }

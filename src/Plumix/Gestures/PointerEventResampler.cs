@@ -11,7 +11,7 @@ public sealed class PointerEventResampler
     private readonly Queue<PointerEvent> _queuedEvents = [];
     private PointerEvent? _last;
     private PointerEvent? _next;
-    private Point _position;
+    private Offset _position;
     private bool _isTracked;
     private bool _isDown;
     private int _pointerIdentifier;
@@ -53,17 +53,17 @@ public sealed class PointerEventResampler
         _last = null;
     }
 
-    private Point PositionAt(DateTime sampleTime)
+    private Offset PositionAt(DateTime sampleTime)
     {
-        Point position = _next?.Position ?? default;
+        Offset position = _next?.Position ?? default;
         if (_next is not null && _last is not null
             && _next.TimestampUtc > sampleTime && _next.TimestampUtc > _last.TimestampUtc)
         {
             double interval = (_next.TimestampUtc - _last.TimestampUtc).TotalMilliseconds;
             double scalar = (sampleTime - _last.TimestampUtc).TotalMilliseconds / interval;
-            position = new Point(
-                _last.Position.X + (position.X - _last.Position.X) * scalar,
-                _last.Position.Y + (position.Y - _last.Position.Y) * scalar);
+            position = new Offset(
+                _last.Position.Dx + (position.Dx - _last.Position.Dx) * scalar,
+                _last.Position.Dy + (position.Dy - _last.Position.Dy) * scalar);
         }
 
         return position;
@@ -127,7 +127,7 @@ public sealed class PointerEventResampler
             _isTracked = @event is not PointerRemovedEvent;
             _isDown = @event.Down;
             _hasButtons = @event.Buttons;
-            Point position = PositionAt(sampleTime);
+            Offset position = PositionAt(sampleTime);
             if (_isTracked && !wasTracked)
             {
                 _position = position;
@@ -144,7 +144,7 @@ public sealed class PointerEventResampler
             {
                 if (position != _position)
                 {
-                    Point delta = position - _position;
+                    Offset delta = position - _position;
                     callback(ToMoveOrHoverEvent(
                         @event, position, delta, sampleTime, wasDown, hadButtons));
                     _position = position;
@@ -152,7 +152,7 @@ public sealed class PointerEventResampler
 
                 callback(@event.CopyWith(
                     position: position,
-                    delta: default(Point),
+                    delta: default(Offset),
                     pointer: pointerIdentifier,
                     timestampUtc: sampleTime).MarkResampled());
             }
@@ -163,17 +163,17 @@ public sealed class PointerEventResampler
 
     private void SamplePointerPosition(DateTime sampleTime, Action<PointerEvent> callback)
     {
-        Point position = PositionAt(sampleTime);
+        Offset position = PositionAt(sampleTime);
         if (position != _position && _next is not null)
         {
-            Point delta = position - _position;
+            Offset delta = position - _position;
             callback(ToMoveOrHoverEvent(
                 _next, position, delta, sampleTime, _isDown, _hasButtons));
             _position = position;
         }
     }
 
-    private static PointerEvent ToHoverEvent(PointerEvent @event, Point position, Point delta, DateTime timeStamp)
+    private static PointerEvent ToHoverEvent(PointerEvent @event, Offset position, Offset delta, DateTime timeStamp)
     {
         return new PointerHoverEvent(
             viewId: @event.ViewId,
@@ -201,8 +201,8 @@ public sealed class PointerEventResampler
 
     private static PointerEvent ToMoveEvent(
         PointerEvent @event,
-        Point position,
-        Point delta,
+        Offset position,
+        Offset delta,
         int pointerIdentifier,
         DateTime timeStamp,
         PointerButtons buttons)
@@ -235,8 +235,8 @@ public sealed class PointerEventResampler
 
     private PointerEvent ToMoveOrHoverEvent(
         PointerEvent @event,
-        Point position,
-        Point delta,
+        Offset position,
+        Offset delta,
         DateTime timeStamp,
         bool isDown,
         PointerButtons buttons)

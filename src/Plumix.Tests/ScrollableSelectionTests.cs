@@ -91,7 +91,7 @@ public sealed class ScrollableSelectionTests
 
         ScrollableState state = Scrollable.Of(itemContext!);
         Assert.Equal(
-            new Point(dx, dy),
+            new Offset(dx, dy),
             ScrollableSelectionContainerDelegate.GetDeltaToScrollOrigin(state));
     }
 
@@ -422,7 +422,7 @@ public sealed class ScrollableSelectionTests
     private sealed class SelectionRig : IDisposable
     {
         private readonly RestorationHarness _harness;
-        private Point? _endPosition;
+        private Offset? _endPosition;
 
         // One monotonic clock for the whole rig: the auto scroller's ticker reads the frame
         // timestamp, so a per-call counter would make time run backwards between pump loops.
@@ -473,7 +473,7 @@ public sealed class ScrollableSelectionTests
         }
 
         /// A point in global coordinates, given relative to the scrollable's top-left corner.
-        public Point Global(double dx, double dy) => ScrollableBox.LocalToGlobal(new Point(dx, dy));
+        public Offset Global(double dx, double dy) => ScrollableBox.LocalToGlobal(new Offset(dx, dy));
 
         public void Pump() => PumpFully(_harness);
 
@@ -488,12 +488,12 @@ public sealed class ScrollableSelectionTests
             }
         }
 
-        public void SelectStartTo(Point globalPosition)
+        public void SelectStartTo(Offset globalPosition)
         {
             Registrar.DispatchSelectionEvent(SelectionEdgeUpdateEvent.ForStart(globalPosition));
         }
 
-        public void SelectEndTo(Point globalPosition)
+        public void SelectEndTo(Offset globalPosition)
         {
             _endPosition = globalPosition;
             Registrar.DispatchSelectionEvent(SelectionEdgeUpdateEvent.ForEnd(globalPosition));

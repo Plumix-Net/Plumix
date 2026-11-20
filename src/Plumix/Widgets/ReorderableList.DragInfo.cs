@@ -11,7 +11,7 @@ namespace Plumix.Widgets;
 internal sealed class ReorderDragInfo : Drag, IDisposable
 {
     private readonly Axis _scrollDirection;
-    private readonly Action<ReorderDragInfo, Point, Point>? _onUpdate;
+    private readonly Action<ReorderDragInfo, Offset, Offset>? _onUpdate;
     private readonly Action<ReorderDragInfo>? _onEnd;
     private readonly Action<ReorderDragInfo>? _onCancel;
     private readonly Action? _onDropCompleted;
@@ -23,13 +23,13 @@ internal sealed class ReorderDragInfo : Drag, IDisposable
     private readonly BoxConstraints _itemLayoutConstraints;
     private readonly CapturedThemes _capturedThemes;
     private AnimationController? _proxyAnimation;
-    private Point _rawDragPosition;
+    private Offset _rawDragPosition;
 
     internal ReorderDragInfo(
         ReorderableItemState item,
-        Point initialPosition,
+        Offset initialPosition,
         Axis scrollDirection,
-        Action<ReorderDragInfo, Point, Point>? onUpdate,
+        Action<ReorderDragInfo, Offset, Offset>? onUpdate,
         Action<ReorderDragInfo>? onCancel,
         Action<ReorderDragInfo>? onEnd,
         Action? onDropCompleted,
@@ -53,8 +53,8 @@ internal sealed class ReorderDragInfo : Drag, IDisposable
         Index = item.Index;
         _child = item.Child;
         _capturedThemes = item.CapturedThemes;
-        Point localPosition = box.GlobalToLocal(initialPosition);
-        DragOffset = new Vector(localPosition.X, localPosition.Y);
+        Offset localPosition = box.GlobalToLocal(initialPosition);
+        DragOffset = new Offset(localPosition.Dx, localPosition.Dy);
         ItemSize = box.Size;
         Origin = box.LocalToGlobal(default);
         _rawDragPosition = initialPosition;
@@ -67,9 +67,9 @@ internal sealed class ReorderDragInfo : Drag, IDisposable
     }
 
     internal int Index { get; }
-    internal Point Origin { get; }
-    internal Point DragPosition { get; private set; }
-    internal Vector DragOffset { get; }
+    internal Offset Origin { get; }
+    internal Offset DragPosition { get; private set; }
+    internal Offset DragOffset { get; }
     internal Size ItemSize { get; }
     internal double ItemExtent { get; }
 
@@ -93,9 +93,9 @@ internal sealed class ReorderDragInfo : Drag, IDisposable
 
     public override void Update(DragUpdateDetails details)
     {
-        Vector delta = _scrollDirection == Axis.Vertical
-            ? new Vector(0, details.Delta.Y)
-            : new Vector(details.Delta.X, 0);
+        Offset delta = _scrollDirection == Axis.Vertical
+            ? new Offset(0, details.Delta.Dy)
+            : new Offset(details.Delta.Dx, 0);
         _rawDragPosition += delta;
         DragPosition = AdjustedDragOffset(_rawDragPosition);
         _onUpdate?.Invoke(this, DragPosition, details.Delta);
@@ -114,9 +114,9 @@ internal sealed class ReorderDragInfo : Drag, IDisposable
         _onCancel?.Invoke(this);
     }
 
-    private Point AdjustedDragOffset(Point position) => _boundary is null
+    private Offset AdjustedDragOffset(Offset position) => _boundary is null
         ? position
-        : _boundary.NearestPositionWithinBoundary(new Rect(position - DragOffset, ItemSize)).TopLeft + DragOffset;
+        : _boundary.NearestPositionWithinBoundary(DartGeometry.RectFromOffsetAndSize(position - DragOffset, ItemSize)).TopLeft + DragOffset;
 
     private void HandleStatus(AnimationStatus status)
     {
@@ -132,11 +132,11 @@ internal sealed class ReorderDragInfo : Drag, IDisposable
         _listState, Index, _child, DragPosition - DragOffset - OverlayOrigin(context),
         ItemSize, _itemLayoutConstraints, _proxyAnimation!, _proxyDecorator));
 
-    internal static Vector OverlayOrigin(BuildContext context)
+    internal static Offset OverlayOrigin(BuildContext context)
     {
         var box = (RenderBox)Overlay.Of(context).Context.FindRenderObject()!;
-        Point origin = box.LocalToGlobal(default);
-        return new Vector(origin.X, origin.Y);
+        Offset origin = box.LocalToGlobal(default);
+        return new Offset(origin.Dx, origin.Dy);
     }
 }
 
@@ -144,7 +144,7 @@ internal sealed class ReorderDragItemProxy(
     SliverReorderableListState listState,
     int index,
     Widget child,
-    Point position,
+    Offset position,
     Size size,
     BoxConstraints constraints,
     AnimationController animation,
@@ -153,21 +153,21 @@ internal sealed class ReorderDragItemProxy(
     public override Widget Build(BuildContext context)
     {
         Widget proxyChild = proxyDecorator?.Invoke(child, index, animation.View) ?? child;
-        Vector overlayOrigin = ReorderDragInfo.OverlayOrigin(context);
+        Offset overlayOrigin = ReorderDragInfo.OverlayOrigin(context);
         return MediaQuery.RemovePadding(context, new AnimatedBuilder(
             animation,
             (buildContext, animatedChild) =>
             {
-                Point effectivePosition = position;
+                Offset effectivePosition = position;
                 if (listState.FinalDropPosition is { } dropPosition)
                 {
-                    Point target = dropPosition - overlayOrigin;
+                    Offset target = dropPosition - overlayOrigin;
                     effectivePosition = target + ((position - target) * Curves.EaseOut.Transform(animation.Value));
                 }
 
                 return new Positioned(
-                    left: effectivePosition.X,
-                    top: effectivePosition.Y,
+                    left: effectivePosition.Dx,
+                    top: effectivePosition.Dy,
                     child: new SizedBox(
                         width: size.Width,
                         height: size.Height,

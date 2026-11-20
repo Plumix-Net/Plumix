@@ -30,7 +30,7 @@ public sealed class ReorderableListDartParityTests
             : new ReorderableDragStartListener(child, index, enabled, new ValueKey<int>(index));
     }
 
-    private static Point Position(FrameworkDartTester tester, int index) =>
+    private static Offset Position(FrameworkDartTester tester, int index) =>
         tester.GetTopLeft(Find.ByKey(ItemKey(index)));
 
     // Flutter: all variable-extent drop cases, each axis and reverse direction.
@@ -66,10 +66,10 @@ public sealed class ReorderableListDartParityTests
         double offset = remaining.Take(to).Sum();
         double viewport = axis == Axis.Vertical ? 600 : 800;
         double targetMain = reverse ? viewport - offset - extents[from] : offset;
-        Point target = axis == Axis.Vertical ? new Point(0, targetMain) : new Point(targetMain, 0);
-        Point initial = Position(tester, from);
+        Offset target = axis == Axis.Vertical ? new Offset(0, targetMain) : new Offset(targetMain, 0);
+        Offset initial = Position(tester, from);
         var gesture = tester.StartGesture(tester.GetCenter(Find.ByKey(ItemKey(from))), PointerDeviceKind.Mouse);
-        Vector step = (target - initial) / 20;
+        Offset step = (target - initial) / 20;
         for (int tick = 0; tick < 20; tick++)
         {
             gesture.MoveBy(step);
@@ -77,14 +77,14 @@ public sealed class ReorderableListDartParityTests
         }
 
         AssertClose(target, Position(tester, from));
-        Point animationStart = Position(tester, from);
+        Offset animationStart = Position(tester, from);
         gesture.Up();
         var state = tester.State<SliverReorderableListState>(Find.ByType<SliverReorderableList>());
         AssertClose(target, state.FinalDropPosition!.Value);
         tester.Pump();
         Assert.Empty(reorders);
         tester.Pump(TimeSpan.FromMilliseconds(125));
-        Point expected = target + ((animationStart - target) * Curves.EaseOut.Transform(0.5));
+        Offset expected = target + ((animationStart - target) * Curves.EaseOut.Transform(0.5));
         AssertClose(expected, Position(tester, from));
         tester.Pump(TimeSpan.FromMilliseconds(125));
         tester.PumpAndSettle();
@@ -122,7 +122,7 @@ public sealed class ReorderableListDartParityTests
         }
 
         tester.Pump(TimeSpan.FromMilliseconds(1));
-        gesture.MoveBy(new Vector(0, 60));
+        gesture.MoveBy(new Offset(0, 60));
         tester.Pump();
         tester.Pump(AnimationDuration);
         gesture.Up();
@@ -143,9 +143,9 @@ public sealed class ReorderableListDartParityTests
                 (_, index) => Item(index), 5,
                 onReorderItem: (oldIndex, newIndex) => reorders.Add((oldIndex, newIndex)))]))));
         var gesture = tester.StartGesture(tester.GetCenter(Find.ByKey(ItemKey(0))), PointerDeviceKind.Touch);
-        gesture.MoveBy(new Vector(0, 10));
+        gesture.MoveBy(new Offset(0, 10));
         tester.Pump();
-        gesture.MoveBy(new Vector(0, 40));
+        gesture.MoveBy(new Offset(0, 40));
         tester.Pump();
         tester.Pump(AnimationDuration);
         gesture.Up();
@@ -168,7 +168,7 @@ public sealed class ReorderableListDartParityTests
         var second = tester.StartGesture(tester.GetCenter(Find.ByKey(ItemKey(1))), PointerDeviceKind.Touch);
         tester.Pump(TimeSpan.FromMilliseconds(500));
         Assert.Equal([1], starts);
-        second.MoveBy(new Vector(0, 30));
+        second.MoveBy(new Offset(0, 30));
         tester.Pump();
         first.Up();
         second.Up();
@@ -194,18 +194,18 @@ public sealed class ReorderableListDartParityTests
             child: new DragBoundary(new ReorderableList(
                 (_, index) => Item(index, 100, axis), 3,
                 scrollDirection: axis, onReorderItem: (_, _) => { }))))));
-        Point initial = Position(tester, 0);
+        Offset initial = Position(tester, 0);
         var gesture = tester.StartGesture(tester.GetCenter(Find.ByKey(ItemKey(0))), PointerDeviceKind.Mouse);
-        gesture.MoveBy(new Vector(500, 500));
+        gesture.MoveBy(new Offset(500, 500));
         tester.Pump();
-        Point clamped = axis == Axis.Vertical ? initial + new Vector(0, 200) : initial + new Vector(200, 0);
+        Offset clamped = axis == Axis.Vertical ? initial + new Offset(0, 200) : initial + new Offset(200, 0);
         AssertClose(clamped, Position(tester, 0));
-        gesture.MoveBy(new Vector(-100, -100));
+        gesture.MoveBy(new Offset(-100, -100));
         tester.Pump();
         AssertClose(clamped, Position(tester, 0));
-        gesture.MoveBy(new Vector(-300, -300));
+        gesture.MoveBy(new Offset(-300, -300));
         tester.Pump();
-        AssertClose(axis == Axis.Vertical ? initial + new Vector(0, 100) : initial + new Vector(100, 0),
+        AssertClose(axis == Axis.Vertical ? initial + new Offset(0, 100) : initial + new Offset(100, 0),
             Position(tester, 0));
         gesture.Cancel();
         tester.PumpAndSettle();
@@ -228,7 +228,7 @@ public sealed class ReorderableListDartParityTests
                 (_, index) => Item(index), 5, key: listKey, onReorderEnd: ends.Add,
                 onReorderItem: (oldIndex, newIndex) => reorders.Add((oldIndex, newIndex)))));
             var gesture = tester.StartGesture(tester.GetCenter(Find.ByKey(ItemKey(0))), PointerDeviceKind.Mouse);
-            gesture.MoveBy(new Vector(0, 60));
+            gesture.MoveBy(new Offset(0, 60));
             tester.Pump();
             if (remove)
             {
@@ -276,7 +276,7 @@ public sealed class ReorderableListDartParityTests
                 }, key: new ValueKey<int>(index)), 5, onReorderItem: (_, _) => { })))));
         BoxConstraints before = constraints[0];
         var gesture = tester.StartGesture(tester.GetCenter(Find.Text("nested 0")), PointerDeviceKind.Mouse);
-        gesture.MoveBy(new Vector(0, 20));
+        gesture.MoveBy(new Offset(0, 20));
         tester.Pump();
         Assert.All(constraints, value => Assert.Equal(before, value));
         Element nested = tester.Element(Find.Text("nested 0"));
@@ -293,11 +293,11 @@ public sealed class ReorderableListDartParityTests
         tester.PumpWidget(Wrap(new ReorderableList(
             (_, index) => Item(index), 5, onReorderItem: (_, _) => { })));
         var gesture = tester.StartGesture(tester.GetCenter(Find.ByKey(ItemKey(0))), PointerDeviceKind.Mouse);
-        gesture.MoveBy(new Vector(0, 60));
+        gesture.MoveBy(new Offset(0, 60));
         tester.Pump();
         tester.Pump(TimeSpan.FromMilliseconds(100));
-        Point before = Position(tester, 1);
-        gesture.MoveBy(new Vector(0, -60));
+        Offset before = Position(tester, 1);
+        gesture.MoveBy(new Offset(0, -60));
         tester.Pump();
         AssertClose(before, Position(tester, 1));
         gesture.Cancel();
@@ -312,18 +312,18 @@ public sealed class ReorderableListDartParityTests
         using var tester = new FrameworkDartTester();
         tester.PumpWidget(Wrap(new ReorderableList(
             (_, index) => Item(index), 5, reverse: reverse, onReorderItem: (_, _) => { })));
-        Point original = Position(tester, 0);
+        Offset original = Position(tester, 0);
         var gesture = tester.StartGesture(tester.GetCenter(Find.ByKey(ItemKey(0))), PointerDeviceKind.Mouse);
-        gesture.MoveBy(new Vector(0, reverse ? -100 : 100));
+        gesture.MoveBy(new Offset(0, reverse ? -100 : 100));
         tester.Pump();
         tester.Pump(TimeSpan.FromMilliseconds(300));
-        gesture.MoveBy(new Vector(0, reverse ? 90 : -90));
+        gesture.MoveBy(new Offset(0, reverse ? 90 : -90));
         tester.Pump();
         tester.Pump(TimeSpan.FromMilliseconds(300));
         gesture.Up();
         tester.Pump();
         tester.Pump(TimeSpan.FromMilliseconds(125));
-        Assert.InRange(Math.Abs(Position(tester, 0).Y - original.Y), 0, 10);
+        Assert.InRange(Math.Abs(Position(tester, 0).Dy - original.Dy), 0, 10);
         tester.PumpAndSettle();
     }
 
@@ -368,10 +368,10 @@ public sealed class ReorderableListDartParityTests
         Assert.Null(tester.TakeException());
     }
 
-    private static void AssertClose(Point expected, Point actual)
+    private static void AssertClose(Offset expected, Offset actual)
     {
-        Assert.Equal(expected.X, actual.X, precision: 5);
-        Assert.Equal(expected.Y, actual.Y, precision: 5);
+        Assert.Equal(expected.Dx, actual.Dx, precision: 5);
+        Assert.Equal(expected.Dy, actual.Dy, precision: 5);
     }
 
     [Fact]
@@ -406,10 +406,10 @@ public sealed class ReorderableListDartParityTests
         tester.PumpWidget(Wrap(new ReorderableList((_, index) => Item(index), 5,
             onReorderItem: (_, _) => { }, itemExtent: extentStrategy == 1 ? 100 : null,
             prototypeItem: extentStrategy == 2 ? new SizedBox(width: 100, height: 100) : null)));
-        Point initial = Position(tester, 1);
+        Offset initial = Position(tester, 1);
         var gesture = tester.StartGesture(tester.GetCenter(Find.ByKey(ItemKey(0))), PointerDeviceKind.Mouse);
         tester.Pump(TimeSpan.FromMilliseconds(500));
-        gesture.MoveBy(new Vector(0, 20));
+        gesture.MoveBy(new Offset(0, 20));
         tester.Pump();
         AssertClose(initial, Position(tester, 1));
         gesture.Up();
@@ -441,7 +441,7 @@ public sealed class ReorderableListDartParityTests
         tester.PumpAndSettle();
         Assert.NotEmpty(lookups);
         Assert.All(lookups, key => Assert.IsType<ValueKey<int>>(key));
-        Assert.True(Position(tester, 2).Y < Position(tester, 0).Y);
+        Assert.True(Position(tester, 2).Dy < Position(tester, 0).Dy);
     }
 
     [Fact]
@@ -457,14 +457,14 @@ public sealed class ReorderableListDartParityTests
             return new ReorderableList((_, index) => Item(index), count, onReorderItem: (_, _) => reorders++);
         })));
         var gesture = tester.StartGesture(tester.GetCenter(Find.ByKey(ItemKey(0))), PointerDeviceKind.Mouse);
-        gesture.MoveBy(new Vector(0, 60));
+        gesture.MoveBy(new Offset(0, 60));
         tester.Pump();
         rebuild!(() => count = 4);
         tester.Pump();
         gesture.Up();
         tester.PumpAndSettle();
         Assert.Equal(0, reorders);
-        AssertClose(new Point(0, 0), Position(tester, 0));
+        AssertClose(new Offset(0, 0), Position(tester, 0));
     }
 
     [Fact]
@@ -477,13 +477,13 @@ public sealed class ReorderableListDartParityTests
             onReorderItem: (_, _) => { })));
         var gesture = tester.StartGesture(tester.GetCenter(Find.ByKey(ItemKey(0))), PointerDeviceKind.Mouse);
         tester.Pump(TimeSpan.FromMilliseconds(500));
-        gesture.MoveBy(new Vector(10, 0));
+        gesture.MoveBy(new Offset(10, 0));
         tester.Pump();
-        AssertClose(new Point(100, 0), Position(tester, 1));
-        AssertClose(new Point(200, 0), Position(tester, 2));
+        AssertClose(new Offset(100, 0), Position(tester, 1));
+        AssertClose(new Offset(200, 0), Position(tester, 2));
         if (tester.Any(Find.ByKey(ItemKey(3))))
         {
-            Assert.True(Position(tester, 3).X >= 300);
+            Assert.True(Position(tester, 3).Dx >= 300);
         }
 
         gesture.Cancel();
@@ -503,7 +503,7 @@ public sealed class ReorderableListDartParityTests
             tester.PumpWidget(Wrap(new ReorderableList((_, index) => Item(index), 5,
                 onReorderItem: (_, _) => { })));
             var gesture = tester.StartGesture(tester.GetCenter(Find.ByKey(ItemKey(0))), PointerDeviceKind.Mouse);
-            gesture.MoveBy(new Vector(0, 60));
+            gesture.MoveBy(new Offset(0, 60));
             tester.Pump();
             tester.Pump(AnimationDuration);
             if (cancel)
@@ -540,7 +540,7 @@ public sealed class ReorderableListDartParityTests
                 slivers: [new SliverReorderableList((_, index) => Item(index), 10,
                     autoScrollerVelocityScalar: velocityScalar, onReorderItem: (_, _) => { })])));
             var gesture = tester.StartGesture(tester.GetCenter(Find.ByKey(ItemKey(0))), PointerDeviceKind.Mouse);
-            gesture.MoveBy(new Vector(0, 500));
+            gesture.MoveBy(new Offset(0, 500));
             tester.Pump();
             for (int tick = 0; tick < 4; tick++)
             {
@@ -548,7 +548,7 @@ public sealed class ReorderableListDartParityTests
             }
 
             Assert.Equal(0, controller.Offset);
-            gesture.MoveBy(new Vector(0, 50));
+            gesture.MoveBy(new Offset(0, 50));
             tester.Pump();
             double interval = Math.Round(1000 / velocityScalar);
             int ticks = (int)Math.Ceiling(600 / interval);
@@ -595,12 +595,12 @@ public sealed class ReorderableListDartParityTests
         using var tester = new FrameworkDartTester();
         tester.PumpWidget(Wrap(new ReorderableList((_, index) => Item(index), 3,
             onReorderItem: (_, _) => { })));
-        Point start = tester.GetCenter(Find.ByKey(ItemKey(0)));
+        Offset start = tester.GetCenter(Find.ByKey(ItemKey(0)));
         var first = tester.StartGesture(start, PointerDeviceKind.Touch);
         var second = tester.StartGesture(start, PointerDeviceKind.Touch);
         tester.Pump(TimeSpan.FromMilliseconds(500));
-        first.MoveBy(new Vector(0, 100));
-        second.MoveBy(new Vector(0, 100));
+        first.MoveBy(new Offset(0, 100));
+        second.MoveBy(new Offset(0, 100));
         tester.PumpAndSettle();
         first.Up();
         second.Up();

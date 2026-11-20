@@ -394,7 +394,7 @@ public sealed class SliderDartParityTestsB : IDisposable
             tester.PumpWidget(BuildApp(sliderTheme: theme, divisions: divisions, enabled: enabled));
             ExpectIndicatorVisible(visibleWhenReleased);
 
-            Point center = tester.GetCenter(tester.ElementOfType<Slider>());
+            Offset center = tester.GetCenter(tester.ElementOfType<Slider>());
             TestGesture gesture = tester.StartGesture(center, PointerDeviceKind.Touch);
             tester.PumpAndSettle();
             ExpectIndicatorVisible(visibleWhenDragged);
@@ -527,7 +527,7 @@ public sealed class SliderDartParityTestsB : IDisposable
             PointerDeviceKind.Touch);
         tester.PumpAndSettle();
         Assert.Equal(0.5, value);
-        gesture.MoveBy(new Vector(-500.0, 0.0));
+        gesture.MoveBy(new Offset(-500.0, 0.0));
         tester.PumpAndSettle();
         // Change the tree to dispose the original widget.
         tester.PumpWidget(new Container());
@@ -580,8 +580,8 @@ public sealed class SliderDartParityTestsB : IDisposable
         tester.PumpWidget(BuildApp(divisions: 3));
 
         RenderObject valueIndicatorBox = tester.ElementOfType<Overlay>().FindRenderObject()!;
-        Point topRight = tester.GetTopLeft(tester.ElementOfType<Slider>())
-                         + new Vector(tester.GetSize(tester.ElementOfType<Slider>()).Width - 24, 0);
+        Offset topRight = tester.GetTopLeft(tester.ElementOfType<Slider>())
+                         + new Offset(tester.GetSize(tester.ElementOfType<Slider>()).Width - 24, 0);
         TestGesture gesture = tester.StartGesture(topRight, PointerDeviceKind.Touch);
         // Wait for value indicator animation to finish.
         tester.PumpAndSettle();
@@ -649,7 +649,7 @@ public sealed class SliderDartParityTestsB : IDisposable
                 tester.GetCenter(tester.ElementOfType<CupertinoSlider>()),
                 PointerDeviceKind.Touch);
             // Drag to the right end of the track.
-            gesture.MoveBy(new Vector(600.0, 0.0));
+            gesture.MoveBy(new Offset(600.0, 0.0));
             Assert.Equal(1.0, value);
             gesture.Up();
         }
@@ -670,7 +670,7 @@ public sealed class SliderDartParityTestsB : IDisposable
                 tester.GetCenter(tester.ElementOfType<Slider>()),
                 PointerDeviceKind.Touch);
             // Drag to the right end of the track.
-            gesture.MoveBy(new Vector(600.0, 0.0));
+            gesture.MoveBy(new Offset(600.0, 0.0));
             Assert.Equal(1.0, value);
             gesture.Up();
         }
@@ -820,7 +820,7 @@ public sealed class SliderDartParityTestsB : IDisposable
 
             // Dragged.
             gesture.Down(tester.GetCenter(tester.ElementOfType<Slider>()));
-            gesture.MoveBy(new Vector(20.0, 0.0));
+            gesture.MoveBy(new Offset(20.0, 0.0));
             tester.Pump();
             Assert.Equal(draggedCursor, ActiveCursor(gesture));
 
@@ -903,8 +903,8 @@ public sealed class SliderDartParityTestsB : IDisposable
         PaintAssert.Paints(
             renderObject,
             PaintPattern.Paints
-                .Rect(rect: new Rect(new Point(24.0, 298.0), new Point(400.0, 302.0))) // active track Rect.
-                .Rect(rect: new Rect(new Point(400.0, 298.0), new Point(776.0, 302.0)))); // inactive track Rect.
+                .Rect(rect: DartGeometry.RectFromCorners(new Offset(24.0, 298.0), new Offset(400.0, 302.0))) // active track Rect.
+                .Rect(rect: DartGeometry.RectFromCorners(new Offset(400.0, 298.0), new Offset(776.0, 302.0)))); // inactive track Rect.
     }
 
     // Flutter: "SliderTheme change should trigger re-layout"
@@ -1140,7 +1140,7 @@ public sealed class SliderDartParityTestsB : IDisposable
         tester.Pump(GestureConstants.PressTimeout);
 
         // Less than configured touch slop, more than default touch slop
-        drag.MoveBy(new Vector(19.0, 0));
+        drag.MoveBy(new Offset(19.0, 0));
         tester.Pump();
 
         Assert.Equal(0.5, value);
@@ -1161,7 +1161,7 @@ public sealed class SliderDartParityTestsB : IDisposable
         tester.PumpWidget(BuildApp(10, _ => sliderEnd = true));
 
         // More than touch slop.
-        drag.MoveBy(new Vector(12.0, 0));
+        drag.MoveBy(new Offset(12.0, 0));
 
         drag.Up();
         tester.PumpAndSettle();
@@ -1190,8 +1190,8 @@ public sealed class SliderDartParityTestsB : IDisposable
         FocusNode focusNode = tester.State<SliderState>().FocusNode;
         // The slider does not have focus.
         Assert.False(focusNode.HasFocus);
-        Point sliderCenter = tester.GetCenter(tester.ElementOfType<Slider>());
-        var tapLocation = new Point(sliderCenter.X + 50, sliderCenter.Y);
+        Offset sliderCenter = tester.GetCenter(tester.ElementOfType<Slider>());
+        var tapLocation = new Offset(sliderCenter.Dx + 50, sliderCenter.Dy);
         // Tap on the slider to change the value.
         TestGesture gesture = tester.CreateGesture();
         gesture.AddPointer();
@@ -1244,16 +1244,16 @@ public sealed class SliderDartParityTestsB : IDisposable
 
         public override void Paint(
             PaintingContext context,
-            Point center,
+            Offset center,
             RenderBox parentBox,
             SliderThemeData sliderTheme,
             Animation<double> enableAnimation,
-            Point thumbCenter,
+            Offset thumbCenter,
             bool isEnabled,
             TextDirection textDirection)
         {
             var paint = new Paint { Color = MaterialColors.Red };
-            context.Canvas.DrawRect(new Rect(center.X, center.Y, 10.0, 20.0), paint);
+            context.Canvas.DrawRect(DartGeometry.RectFromLTWH(center.Dx, center.Dy, 10.0, 20.0), paint);
         }
     }
 
@@ -1304,7 +1304,7 @@ public sealed class SliderDartParityTestsB : IDisposable
 
         public override void Paint(
             PaintingContext context,
-            Point center,
+            Offset center,
             Animation<double> activationAnimation,
             Animation<double> enableAnimation,
             bool isDiscrete,

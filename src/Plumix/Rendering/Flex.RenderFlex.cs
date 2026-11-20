@@ -904,8 +904,8 @@ public class RenderFlex : RenderBox, IRenderBoxContainerDefaultsMixin<RenderBox,
 
             childParentData.offset = Direction switch
             {
-                Axis.Horizontal => new Point(childMainPosition, childCrossPosition),
-                Axis.Vertical => new Point(childCrossPosition, childMainPosition),
+                Axis.Horizontal => new Offset(childMainPosition, childCrossPosition),
+                Axis.Vertical => new Offset(childCrossPosition, childMainPosition),
 
                 _ => throw new ArgumentOutOfRangeException()
             };
@@ -1018,7 +1018,7 @@ public class RenderFlex : RenderBox, IRenderBoxContainerDefaultsMixin<RenderBox,
         base.Dispose();
     }
 
-    public override void Paint(PaintingContext ctx, Point offset)
+    public override void Paint(PaintingContext ctx, Offset offset)
     {
         if (!_hasOverflow)
         {
@@ -1035,15 +1035,15 @@ public class RenderFlex : RenderBox, IRenderBoxContainerDefaultsMixin<RenderBox,
         _clipRectLayer.Layer = ctx.PushClipRect(
             NeedsCompositing,
             offset,
-            new Rect(new Point(0, 0), Size),
+            DartGeometry.RectFromOffsetAndSize(new Offset(0, 0), Size),
             DefaultPaint,
             ClipBehavior,
             _clipRectLayer.Layer);
 
         Rect overflowChildRect = Direction switch
         {
-            Axis.Horizontal => new Rect(0.0, 0.0, Size.Width + _overflow, 0.0),
-            Axis.Vertical => new Rect(0.0, 0.0, 0.0, Size.Height + _overflow),
+            Axis.Horizontal => DartGeometry.RectFromLTWH(0.0, 0.0, Size.Width + _overflow, 0.0),
+            Axis.Vertical => DartGeometry.RectFromLTWH(0.0, 0.0, 0.0, Size.Height + _overflow),
 
             _ => throw new ArgumentOutOfRangeException()
         };
@@ -1074,7 +1074,7 @@ public class RenderFlex : RenderBox, IRenderBoxContainerDefaultsMixin<RenderBox,
                 this,
                 ctx,
                 offset,
-                new Rect(new Point(), Size),
+                DartGeometry.RectFromOffsetAndSize(new Offset(), Size),
                 overflowChildRect,
                 overflowHints: debugOverflowHints);
         }
@@ -1084,7 +1084,7 @@ public class RenderFlex : RenderBox, IRenderBoxContainerDefaultsMixin<RenderBox,
     {
         Clip.None => null,
         Clip.HardEdge or Clip.AntiAlias or Clip.AntiAliasWithSaveLayer =>
-            _hasOverflow ? new Rect(new Point(), Size) : null,
+            _hasOverflow ? DartGeometry.RectFromOffsetAndSize(new Offset(), Size) : null,
 
         _ => throw new ArgumentOutOfRangeException()
     };
@@ -1097,7 +1097,7 @@ public class RenderFlex : RenderBox, IRenderBoxContainerDefaultsMixin<RenderBox,
         }
     }
 
-    protected override bool HitTestChildren(BoxHitTestResult result, Point position)
+    protected override bool HitTestChildren(BoxHitTestResult result, Offset position)
     {
         return DefaultHitTestChildren(result, position);
     }
@@ -1328,9 +1328,9 @@ public class RenderFlex : RenderBox, IRenderBoxContainerDefaultsMixin<RenderBox,
 
     public RenderBox? ChildAfter(RenderBox child) => _mixin1.ChildAfter(child);
 
-    public void DefaultPaint(PaintingContext ctx, Point offset) => _mixin1.DefaultPaint(ctx, offset);
+    public void DefaultPaint(PaintingContext ctx, Offset offset) => _mixin1.DefaultPaint(ctx, offset);
 
-    public bool DefaultHitTestChildren(BoxHitTestResult result, Point position) =>
+    public bool DefaultHitTestChildren(BoxHitTestResult result, Offset position) =>
         _mixin1.DefaultHitTestChildren(result, position);
 
     #endregion

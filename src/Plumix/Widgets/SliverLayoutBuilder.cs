@@ -223,7 +223,7 @@ internal sealed class RenderSliverLayoutBuilder : RenderProxySliver, IRenderObje
         }
 
         Child.Layout(constraints, parentUsesSize: true);
-        ((SliverPhysicalParentData)Child.parentData!).PaintOffset = new Point();
+        ((SliverPhysicalParentData)Child.parentData!).PaintOffset = new Offset();
         Geometry = Child.Geometry;
     }
 }

@@ -210,7 +210,7 @@ public partial class WidgetsBinding
                             {
                                 double dimension = ParseDartDouble(targetSize);
                                 EvaluationResult result =
-                                    await new MinimumTapTargetEvaluation(size: new Avalonia.Size(dimension, dimension))
+                                    await new MinimumTapTargetEvaluation(size: new Size(dimension, dimension))
                                         .Evaluate(this);
                                 return FormatEvaluationResult(result.Violations);
                             }

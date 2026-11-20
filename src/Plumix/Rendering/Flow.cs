@@ -56,7 +56,7 @@ public sealed class RenderFlow : RenderBox,
     private FlowDelegate _delegate;
     private Clip _clipBehavior;
     private PaintingContext? _paintingContext;
-    private Point? _paintingOffset;
+    private Offset? _paintingOffset;
 
     public RenderFlow(
         FlowDelegate @delegate,
@@ -243,12 +243,12 @@ public sealed class RenderFlow : RenderBox,
             return;
         }
 
-        void Painter(PaintingContext context, Point painterOffset)
+        void Painter(PaintingContext context, Offset painterOffset)
         {
             context.PaintChild(child, painterOffset);
         }
 
-        Point paintOffset = _paintingOffset.Value;
+        Offset paintOffset = _paintingOffset.Value;
         if (opacity == 1.0)
         {
             _paintingContext.PushTransform(NeedsCompositing, paintOffset, childTransform, Painter);
@@ -263,9 +263,9 @@ public sealed class RenderFlow : RenderBox,
                 context.PushTransform(NeedsCompositing, opacityOffset, childTransform, Painter));
     }
 
-    public override void Paint(PaintingContext context, Point offset)
+    public override void Paint(PaintingContext context, Offset offset)
     {
-        void PaintWithDelegate(PaintingContext paintingContext, Point paintingOffset)
+        void PaintWithDelegate(PaintingContext paintingContext, Offset paintingOffset)
         {
             _lastPaintOrder.Clear();
             _paintingContext = paintingContext;
@@ -296,7 +296,7 @@ public sealed class RenderFlow : RenderBox,
         _clipRectLayer.Layer = context.PushClipRect(
             NeedsCompositing,
             offset,
-            new Rect(new Point(0, 0), Size),
+            DartGeometry.RectFromOffsetAndSize(new Offset(0, 0), Size),
             PaintWithDelegate,
             ClipBehavior,
             _clipRectLayer.Layer);
@@ -339,10 +339,10 @@ public sealed class RenderFlow : RenderBox,
 
     protected override Rect? DescribeApproximatePaintClip(RenderObject? child)
     {
-        return ClipBehavior == Clip.None ? null : new Rect(default, Size);
+        return ClipBehavior == Clip.None ? null : DartGeometry.RectFromOffsetAndSize(default, Size);
     }
 
-    protected override bool HitTestChildren(BoxHitTestResult result, Point position)
+    protected override bool HitTestChildren(BoxHitTestResult result, Offset position)
     {
         for (int orderIndex = _lastPaintOrder.Count - 1; orderIndex >= 0; orderIndex--)
         {
@@ -372,9 +372,9 @@ public sealed class RenderFlow : RenderBox,
         return false;
     }
 
-    public void DefaultPaint(PaintingContext context, Point offset) => _container.DefaultPaint(context, offset);
+    public void DefaultPaint(PaintingContext context, Offset offset) => _container.DefaultPaint(context, offset);
 
-    public bool DefaultHitTestChildren(BoxHitTestResult result, Point position)
+    public bool DefaultHitTestChildren(BoxHitTestResult result, Offset position)
     {
         return _container.DefaultHitTestChildren(result, position);
     }

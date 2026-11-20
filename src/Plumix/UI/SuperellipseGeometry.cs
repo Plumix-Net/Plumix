@@ -8,7 +8,7 @@ namespace Plumix.UI;
 // The native containment path uses float32 parameters and raw radii, independently of path flattening.
 internal static class SuperellipseGeometry
 {
-    public static bool Contains(RSuperellipse shape, Point point)
+    public static bool Contains(RSuperellipse shape, Offset point)
     {
         float left = Narrow(shape.Left);
         float top = Narrow(shape.Top);
@@ -16,7 +16,7 @@ internal static class SuperellipseGeometry
         float bottom = Narrow(shape.Bottom);
         (left, right) = (MathF.Min(left, right), MathF.Max(left, right));
         (top, bottom) = (MathF.Min(top, bottom), MathF.Max(top, bottom));
-        V p = new(Narrow(point.X), Narrow(point.Y));
+        V p = new(Narrow(point.Dx), Narrow(point.Dy));
         if (!(p.X >= left && p.X < right && p.Y >= top && p.Y < bottom)) { return false; }
 
         V tl = FromRadius(shape.TopLeft);

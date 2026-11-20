@@ -693,7 +693,7 @@ internal sealed class RenderCupertinoSegmentedControl : RenderBox,
             }
 
             var data = (CupertinoSegmentedControlParentData)child.parentData!;
-            double positionedBaseline = data.offset.Y + childBaseline.Value;
+            double positionedBaseline = data.offset.Dy + childBaseline.Value;
             result = !result.HasValue ? positionedBaseline : Math.Min(result.Value, positionedBaseline);
         }
         return result;
@@ -716,11 +716,11 @@ internal sealed class RenderCupertinoSegmentedControl : RenderBox,
         while (positionedChild is not null)
         {
             var data = (CupertinoSegmentedControlParentData)positionedChild.parentData!;
-            data.offset = new Point(position, 0.0);
+            data.offset = new Offset(position, 0.0);
             bool firstPhysical = position == 0.0;
             bool lastPhysical = position + childSize.Width == Size.Width;
             data.SurroundingRect = RSuperellipse.FromRectAndCorners(
-                new Rect(data.offset, childSize),
+                DartGeometry.RectFromOffsetAndSize(data.offset, childSize),
                 topLeft: firstPhysical ? Radius.Circular(CornerRadius) : Radius.Zero,
                 topRight: lastPhysical ? Radius.Circular(CornerRadius) : Radius.Zero,
                 bottomRight: lastPhysical ? Radius.Circular(CornerRadius) : Radius.Zero,
@@ -732,7 +732,7 @@ internal sealed class RenderCupertinoSegmentedControl : RenderBox,
         }
     }
 
-    public override void Paint(PaintingContext context, Point offset)
+    public override void Paint(PaintingContext context, Offset offset)
     {
         int childIndex = 0;
         var borderPen = new Pen(new SolidColorBrush(BorderColor), 1.0);
@@ -742,12 +742,12 @@ internal sealed class RenderCupertinoSegmentedControl : RenderBox,
             RSuperellipse shape = data.SurroundingRect.Shift(offset);
             context.Canvas.DrawRSuperellipse(shape, new SolidColorBrush(BackgroundColors[childIndex]), null);
             context.Canvas.DrawRSuperellipse(shape, null, borderPen);
-            context.PaintChild(child, offset + (Vector)data.offset);
+            context.PaintChild(child, offset + (Offset)data.offset);
             childIndex++;
         }
     }
 
-    protected override bool HitTestChildren(BoxHitTestResult result, Point position)
+    protected override bool HitTestChildren(BoxHitTestResult result, Offset position)
     {
         for (RenderBox? child = LastChild; child is not null; child = ChildBefore(child))
         {
@@ -773,9 +773,9 @@ internal sealed class RenderCupertinoSegmentedControl : RenderBox,
 
     public RenderBox? ChildAfter(RenderBox child) => _children.ChildAfter(child);
 
-    public void DefaultPaint(PaintingContext context, Point offset) => _children.DefaultPaint(context, offset);
+    public void DefaultPaint(PaintingContext context, Offset offset) => _children.DefaultPaint(context, offset);
 
-    public bool DefaultHitTestChildren(BoxHitTestResult result, Point position) =>
+    public bool DefaultHitTestChildren(BoxHitTestResult result, Offset position) =>
         _children.DefaultHitTestChildren(result, position);
 
     public override void VisitChildren(Action<RenderObject> visitor)

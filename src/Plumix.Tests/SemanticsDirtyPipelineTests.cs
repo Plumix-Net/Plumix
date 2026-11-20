@@ -104,7 +104,7 @@ public sealed class SemanticsDirtyPipelineTests
     {
         var owner = new SemanticsOwner();
         SemanticsNode root = SemanticsNode.Root(owner);
-        root.Rect = new Rect(0, 0, 100, 100);
+        root.Rect = DartGeometry.RectFromLTWH(0, 0, 100, 100);
         var config = new SemanticsConfiguration { Label = "same", TextDirection = TextDirection.Ltr };
         root.UpdateWith(config);
         owner.SendSemanticsUpdate();
@@ -125,7 +125,7 @@ public sealed class SemanticsDirtyPipelineTests
     {
         var owner = new SemanticsOwner();
         SemanticsNode root = SemanticsNode.Root(owner);
-        root.Rect = new Rect(0, 0, 100, 100);
+        root.Rect = DartGeometry.RectFromLTWH(0, 0, 100, 100);
         var config = new SemanticsConfiguration();
         config.AddCustomActionHandler(new CustomSemanticsAction("first"), () => { });
         root.UpdateWith(config);
@@ -149,8 +149,8 @@ public sealed class SemanticsDirtyPipelineTests
         owner.OnSemanticsUpdate = updates.Add;
         SemanticsNode root = SemanticsNode.Root(owner);
         var child = new SemanticsNode();
-        root.Rect = new Rect(0, 0, 100, 100);
-        child.Rect = new Rect(0, 0, 50, 50);
+        root.Rect = DartGeometry.RectFromLTWH(0, 0, 100, 100);
+        child.Rect = DartGeometry.RectFromLTWH(0, 0, 50, 50);
         root.UpdateWith(
             new SemanticsConfiguration
             {
@@ -178,8 +178,8 @@ public sealed class SemanticsDirtyPipelineTests
         owner.OnSemanticsUpdate = updates.Add;
         SemanticsNode root = SemanticsNode.Root(owner);
         var child = new SemanticsNode();
-        root.Rect = new Rect(0, 0, 100, 100);
-        child.Rect = new Rect(0, 0, 50, 50);
+        root.Rect = DartGeometry.RectFromLTWH(0, 0, 100, 100);
+        child.Rect = DartGeometry.RectFromLTWH(0, 0, 50, 50);
         root.UpdateWith(
             new SemanticsConfiguration
             {
@@ -213,10 +213,10 @@ public sealed class SemanticsDirtyPipelineTests
         var node1 = new SemanticsNode();
         var node11 = new SemanticsNode();
         var node12 = new SemanticsNode();
-        root.Rect = new Rect(0, 0, 100, 100);
-        node1.Rect = new Rect(0, 0, 50, 50);
-        node11.Rect = new Rect(0, 0, 20, 20);
-        node12.Rect = new Rect(0, 0, 20, 20);
+        root.Rect = DartGeometry.RectFromLTWH(0, 0, 100, 100);
+        node1.Rect = DartGeometry.RectFromLTWH(0, 0, 50, 50);
+        node11.Rect = DartGeometry.RectFromLTWH(0, 0, 20, 20);
+        node12.Rect = DartGeometry.RectFromLTWH(0, 0, 20, 20);
         node1.UpdateWith(
             new SemanticsConfiguration { IsMergingSemanticsOfDescendants = true },
             [node11, node12]);
@@ -242,9 +242,9 @@ public sealed class SemanticsDirtyPipelineTests
         SemanticsNode root = SemanticsNode.Root(owner);
         var child = new SemanticsNode();
         var grandChild = new SemanticsNode();
-        root.Rect = new Rect(0, 0, 100, 100);
-        child.Rect = new Rect(0, 0, 50, 50);
-        grandChild.Rect = new Rect(0, 0, 20, 20);
+        root.Rect = DartGeometry.RectFromLTWH(0, 0, 100, 100);
+        child.Rect = DartGeometry.RectFromLTWH(0, 0, 50, 50);
+        grandChild.Rect = DartGeometry.RectFromLTWH(0, 0, 20, 20);
         child.UpdateWith(new SemanticsConfiguration(), [grandChild]);
         root.UpdateWith(new SemanticsConfiguration(), [child]);
 
@@ -286,7 +286,7 @@ public sealed class SemanticsDirtyPipelineTests
         var owner = new SemanticsOwner();
         SemanticsNode root = SemanticsNode.Root(owner);
         var child = new SemanticsNode();
-        root.Rect = new Rect(0, 0, 100, 100);
+        root.Rect = DartGeometry.RectFromLTWH(0, 0, 100, 100);
         root.UpdateWith(new SemanticsConfiguration(), [child]);
 
         FlutterError error = Assert.Throws<FlutterError>(owner.SendSemanticsUpdate);
@@ -413,7 +413,7 @@ public sealed class SemanticsDirtyPipelineTests
         owner.OnSemanticsUpdate = _ => order.Add("update");
         owner.AddListener(() => order.Add("listener"));
         SemanticsNode root = SemanticsNode.Root(owner);
-        root.Rect = new Rect(0, 0, 100, 100);
+        root.Rect = DartGeometry.RectFromLTWH(0, 0, 100, 100);
         root.UpdateWith(new SemanticsConfiguration { Label = "root", TextDirection = TextDirection.Ltr });
 
         owner.SendSemanticsUpdate();
@@ -426,7 +426,7 @@ public sealed class SemanticsDirtyPipelineTests
     {
         var owner = new SemanticsOwner();
         SemanticsNode root = SemanticsNode.Root(owner);
-        root.Rect = new Rect(0, 0, 100, 100);
+        root.Rect = DartGeometry.RectFromLTWH(0, 0, 100, 100);
         root.UpdateWith(new SemanticsConfiguration { Label = "root", TextDirection = TextDirection.Ltr });
 
         owner.Dispose();

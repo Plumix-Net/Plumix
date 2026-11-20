@@ -192,10 +192,10 @@ public sealed class CupertinoListSectionTests
         RenderParagraph customParagraph = Assert.IsType<RenderParagraph>(
             FindParagraph(customHarness.RenderView, "Custom row"));
 
-        Point defaultPosition = defaultParagraph.LocalToGlobal(default);
-        Point customPosition = customParagraph.LocalToGlobal(default);
-        Assert.Equal(10.0, customPosition.X - defaultPosition.X, precision: 5);
-        Assert.Equal(10.0, customPosition.Y - defaultPosition.Y, precision: 5);
+        Offset defaultPosition = defaultParagraph.LocalToGlobal(default);
+        Offset customPosition = customParagraph.LocalToGlobal(default);
+        Assert.Equal(10.0, customPosition.Dx - defaultPosition.Dx, precision: 5);
+        Assert.Equal(10.0, customPosition.Dy - defaultPosition.Dy, precision: 5);
     }
 
     [Fact]

@@ -98,7 +98,7 @@ public sealed class ModalRouteBarrierTests : IDisposable
         var page = FindParagraph(harness.RenderView, "Page");
         Assert.NotNull(page);
         Assert.Equal(new Size(400, 300), barrier.Size);
-        Assert.Equal(20, page.LocalToGlobal(default).X, precision: 3);
+        Assert.Equal(20, page.LocalToGlobal(default).Dx, precision: 3);
         Assert.True(PaintsBefore(harness.RenderView, barrier, page));
     }
 
@@ -141,7 +141,7 @@ public sealed class ModalRouteBarrierTests : IDisposable
         {
             PumpAnimation();
             harness.Pump(new Size(400, 300));
-            TapAt(harness, new Point(390, 290));
+            TapAt(harness, new Offset(390, 290));
             PumpAnimation();
             harness.Pump(new Size(400, 300));
             Assert.Null(FindParagraph(harness.RenderView, "Page"));
@@ -155,7 +155,7 @@ public sealed class ModalRouteBarrierTests : IDisposable
         {
             PumpAnimation();
             harness.Pump(new Size(400, 300));
-            TapAt(harness, new Point(390, 290));
+            TapAt(harness, new Offset(390, 290));
             PumpAnimation();
             harness.Pump(new Size(400, 300));
             Assert.NotNull(FindParagraph(harness.RenderView, "Page"));
@@ -233,7 +233,7 @@ public sealed class ModalRouteBarrierTests : IDisposable
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.60));
     }
 
-    private static void TapAt(WidgetRenderHarness harness, Point position)
+    private static void TapAt(WidgetRenderHarness harness, Offset position)
     {
         var binding = GestureBinding.Instance;
         var now = DateTime.UtcNow;

@@ -302,18 +302,18 @@ internal sealed class GlowingOverscrollIndicatorState : State<GlowingOverscrollI
     {
         var renderBox = (RenderBox)notification.Context!.FindRenderObject()!;
         Size size = renderBox.Size;
-        Point position = renderBox.GlobalToLocal(dragDetails.GlobalPosition);
+        Offset position = renderBox.GlobalToLocal(dragDetails.GlobalPosition);
         if (notification.Metrics.Axis == Axis.Horizontal)
         {
             extent = size.Width;
             crossExtent = size.Height;
-            crossAxisOffset = Math.Clamp(position.Y, 0.0, crossExtent);
+            crossAxisOffset = Math.Clamp(position.Dy, 0.0, crossExtent);
         }
         else
         {
             extent = size.Height;
             crossExtent = size.Width;
-            crossAxisOffset = Math.Clamp(position.X, 0.0, crossExtent);
+            crossAxisOffset = Math.Clamp(position.Dx, 0.0, crossExtent);
         }
     }
 }
@@ -453,8 +453,8 @@ internal sealed class StretchingOverscrollIndicatorState : State<StretchingOvers
         else if (notification is ScrollEndNotification scrollEnd)
         {
             double velocity = CurrentWidget.Axis == Axis.Vertical
-                ? scrollEnd.DragDetails?.Velocity.PixelsPerSecond.Y ?? 0.0
-                : scrollEnd.DragDetails?.Velocity.PixelsPerSecond.X ?? 0.0;
+                ? scrollEnd.DragDetails?.Velocity.PixelsPerSecond.Dy ?? 0.0
+                : scrollEnd.DragDetails?.Velocity.PixelsPerSecond.Dx ?? 0.0;
             if (notification.Metrics.AxisDirection is AxisDirection.Left or AxisDirection.Up)
             {
                 velocity = -velocity;
@@ -784,8 +784,8 @@ internal sealed class GlowController : ChangeNotifier
         double radius = size.Width * 1.5;
         double height = Math.Min(size.Height, size.Width * WidthToHeightFactor);
         double scaleY = GlowSize * baseGlowScale;
-        var clipRect = new Rect(0.0, 0.0, size.Width, height);
-        var center = new Point(size.Width / 2.0 * (0.5 + _displacement), height - radius);
+        var clipRect = DartGeometry.RectFromLTWH(0.0, 0.0, size.Width, height);
+        var center = new Offset(size.Width / 2.0 * (0.5 + _displacement), height - radius);
         var paint = new Paint { Color = Color.WithOpacity(GlowOpacity) };
         context.Canvas.Save();
         context.Canvas.Translate(0.0, PaintOffset + PaintOffsetScrollPixels);

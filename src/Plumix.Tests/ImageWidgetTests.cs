@@ -296,7 +296,7 @@ public sealed class ImageWidgetTests : IDisposable
         pipeline.CompositeFrame();
         Assert.NotEmpty(pipeline.RootLayer.Children);
         var hitTest = new BoxHitTestResult();
-        Assert.True(renderImage.HitTest(hitTest, new Point(10, 10)));
+        Assert.True(renderImage.HitTest(hitTest, new Offset(10, 10)));
     }
 
     [Fact]

@@ -7,13 +7,13 @@ namespace Plumix.UI;
 
 // Dart parity source: flutter/engine/src/flutter/lib/ui/painting.dart (Tangent, PathMetrics, PathMetric)
 // Engine adapter: engine/src/flutter/lib/ui/painting/path_measure.cc.
-public sealed class Tangent(Point position, Point vector)
+public sealed class Tangent(Offset position, Offset vector)
 {
-    public Point Position { get; } = position;
-    public Point Vector { get; } = vector;
-    public double Angle => -Math.Atan2(Vector.Y, Vector.X);
-    public static Tangent FromAngle(Point position, double angle) =>
-        new(position, new Point(Math.Cos(angle), Math.Sin(angle)));
+    public Offset Position { get; } = position;
+    public Offset Vector { get; } = vector;
+    public double Angle => -Math.Atan2(Vector.Dy, Vector.Dx);
+    public static Tangent FromAngle(Offset position, double angle) =>
+        new(position, new Offset(Math.Cos(angle), Math.Sin(angle)));
 }
 
 /// <summary>A single-use iterable over a snapshot of a path's nonzero-length contours.</summary>
@@ -102,7 +102,7 @@ public sealed class PathMetric
     public Tangent? GetTangentForOffset(double distance) =>
         _measure.At(ContourIndex).GetPositionAndTangent(
             Path.Narrow(distance), out SKPoint position, out SKPoint tangent)
-            ? new Tangent(new Point(position.X, position.Y), new Point(tangent.X, tangent.Y)) : null;
+            ? new Tangent(new Offset(position.X, position.Y), new Offset(tangent.X, tangent.Y)) : null;
 
     public Path ExtractPath(double start, double end, bool startWithMoveTo = true)
     {

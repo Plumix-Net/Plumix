@@ -45,7 +45,7 @@ public abstract class RangeSliderThumbShape
     /// </remarks>
     public abstract void Paint(
         PaintingContext context,
-        Point center,
+        Offset center,
         Animation<double> activationAnimation,
         Animation<double> enableAnimation,
         SliderThemeData sliderTheme,
@@ -94,7 +94,7 @@ public abstract class RangeSliderValueIndicatorShape
     /// </remarks>
     public virtual double GetHorizontalShift(
         RenderBox? parentBox = null,
-        Point? center = null,
+        Offset? center = null,
         TextPainter? labelPainter = null,
         Animation<double>? activationAnimation = null,
         double? textScaleFactor = null,
@@ -113,7 +113,7 @@ public abstract class RangeSliderValueIndicatorShape
     /// </remarks>
     public abstract void Paint(
         PaintingContext context,
-        Point center,
+        Offset center,
         Animation<double> activationAnimation,
         Animation<double> enableAnimation,
         TextPainter labelPainter,
@@ -162,12 +162,12 @@ public abstract class RangeSliderTickMarkShape
     /// </remarks>
     public abstract void Paint(
         PaintingContext context,
-        Point center,
+        Offset center,
         RenderBox parentBox,
         SliderThemeData sliderTheme,
         Animation<double> enableAnimation,
-        Point startThumbCenter,
-        Point endThumbCenter,
+        Offset startThumbCenter,
+        Offset endThumbCenter,
         TextDirection textDirection,
         bool isEnabled = false);
 
@@ -202,7 +202,7 @@ public abstract class RangeSliderTrackShape
     public abstract Rect GetPreferredRect(
         RenderBox parentBox,
         SliderThemeData sliderTheme,
-        Point offset = default,
+        Offset offset = default,
         bool isEnabled = false,
         bool isDiscrete = false);
 
@@ -216,12 +216,12 @@ public abstract class RangeSliderTrackShape
     /// </remarks>
     public abstract void Paint(
         PaintingContext context,
-        Point offset,
+        Offset offset,
         RenderBox parentBox,
         SliderThemeData sliderTheme,
         Animation<double> enableAnimation,
-        Point startThumbCenter,
-        Point endThumbCenter,
+        Offset startThumbCenter,
+        Offset endThumbCenter,
         TextDirection textDirection,
         bool isEnabled = false,
         bool isDiscrete = false);
@@ -258,7 +258,7 @@ public abstract class BaseRangeSliderTrackShape : RangeSliderTrackShape
     public override Rect GetPreferredRect(
         RenderBox parentBox,
         SliderThemeData sliderTheme,
-        Point offset = default,
+        Offset offset = default,
         bool isEnabled = false,
         bool isDiscrete = false)
     {
@@ -282,11 +282,11 @@ public abstract class BaseRangeSliderTrackShape : RangeSliderTrackShape
         }
 
         double trackLeft =
-            offset.X
+            offset.Dx
             + (sliderTheme.Padding == null
                 ? Math.Max(overlayWidth / 2, thumbSize.Width / 2)
                 : (thumbSize.Width / 2));
-        double trackTop = offset.Y + (parentBox.Size.Height - trackHeight) / 2;
+        double trackTop = offset.Dy + (parentBox.Size.Height - trackHeight) / 2;
         double trackRight =
             trackLeft
             + parentBox.Size.Width
@@ -326,12 +326,12 @@ public class RectangularRangeSliderTrackShape : BaseRangeSliderTrackShape
 
     public override void Paint(
         PaintingContext context,
-        Point offset,
+        Offset offset,
         RenderBox parentBox,
         SliderThemeData sliderTheme,
         Animation<double> enableAnimation,
-        Point startThumbCenter,
-        Point endThumbCenter,
+        Offset startThumbCenter,
+        Offset endThumbCenter,
         TextDirection textDirection,
         bool isEnabled = false,
         bool isDiscrete = false)
@@ -353,7 +353,7 @@ public class RectangularRangeSliderTrackShape : BaseRangeSliderTrackShape
         var activePaint = new SolidColorBrush(activeTrackColorTween.Transform(enableAnimation!.Value)!);
         var inactivePaint = new SolidColorBrush(inactiveTrackColorTween.Transform(enableAnimation.Value)!);
 
-        (Point leftThumbOffset, Point rightThumbOffset) = textDirection switch
+        (Offset leftThumbOffset, Offset rightThumbOffset) = textDirection switch
         {
             TextDirection.Ltr => (startThumbCenter, endThumbCenter),
             _ => (endThumbCenter, startThumbCenter),
@@ -368,7 +368,7 @@ public class RectangularRangeSliderTrackShape : BaseRangeSliderTrackShape
         Rect leftTrackSegment = DartGeometry.RectFromLTRB(
             trackRect.Left,
             trackRect.Top,
-            leftThumbOffset.X,
+            leftThumbOffset.Dx,
             trackRect.Bottom);
         if (!DartGeometry.RectIsEmpty(leftTrackSegment))
         {
@@ -376,9 +376,9 @@ public class RectangularRangeSliderTrackShape : BaseRangeSliderTrackShape
         }
 
         Rect middleTrackSegment = DartGeometry.RectFromLTRB(
-            leftThumbOffset.X,
+            leftThumbOffset.Dx,
             trackRect.Top,
-            rightThumbOffset.X,
+            rightThumbOffset.Dx,
             trackRect.Bottom);
         if (!DartGeometry.RectIsEmpty(middleTrackSegment))
         {
@@ -386,7 +386,7 @@ public class RectangularRangeSliderTrackShape : BaseRangeSliderTrackShape
         }
 
         Rect rightTrackSegment = DartGeometry.RectFromLTRB(
-            rightThumbOffset.X,
+            rightThumbOffset.Dx,
             trackRect.Top,
             trackRect.Right,
             trackRect.Bottom);
@@ -425,12 +425,12 @@ public class RoundedRectRangeSliderTrackShape : BaseRangeSliderTrackShape
     /// </remarks>
     public override void Paint(
         PaintingContext context,
-        Point offset,
+        Offset offset,
         RenderBox parentBox,
         SliderThemeData sliderTheme,
         Animation<double> enableAnimation,
-        Point startThumbCenter,
-        Point endThumbCenter,
+        Offset startThumbCenter,
+        Offset endThumbCenter,
         TextDirection textDirection,
         bool isEnabled = false,
         bool isDiscrete = false)
@@ -454,12 +454,12 @@ public class RoundedRectRangeSliderTrackShape : BaseRangeSliderTrackShape
     /// </summary>
     public void Paint(
         PaintingContext context,
-        Point offset,
+        Offset offset,
         RenderBox parentBox,
         SliderThemeData sliderTheme,
         Animation<double> enableAnimation,
-        Point startThumbCenter,
-        Point endThumbCenter,
+        Offset startThumbCenter,
+        Offset endThumbCenter,
         TextDirection textDirection,
         double additionalActiveTrackHeight,
         bool isEnabled = false,
@@ -487,7 +487,7 @@ public class RoundedRectRangeSliderTrackShape : BaseRangeSliderTrackShape
         var activePaint = new SolidColorBrush(activeTrackColorTween.Transform(enableAnimation.Value)!);
         var inactivePaint = new SolidColorBrush(inactiveTrackColorTween.Transform(enableAnimation.Value)!);
 
-        (Point leftThumbOffset, Point rightThumbOffset) = textDirection switch
+        (Offset leftThumbOffset, Offset rightThumbOffset) = textDirection switch
         {
             TextDirection.Ltr => (startThumbCenter, endThumbCenter),
             _ => (endThumbCenter, startThumbCenter),
@@ -509,7 +509,7 @@ public class RoundedRectRangeSliderTrackShape : BaseRangeSliderTrackShape
             RRect.FromLTRBAndCorners(
                 trackRect.Left,
                 trackRect.Top,
-                leftThumbOffset.X,
+                leftThumbOffset.Dx,
                 trackRect.Bottom,
                 topLeft: trackRadius,
                 bottomLeft: trackRadius),
@@ -517,7 +517,7 @@ public class RoundedRectRangeSliderTrackShape : BaseRangeSliderTrackShape
             null);
         context.Canvas.DrawRRect(
             RRect.FromLTRBAndCorners(
-                rightThumbOffset.X,
+                rightThumbOffset.Dx,
                 trackRect.Top,
                 trackRect.Right,
                 trackRect.Bottom,
@@ -527,9 +527,9 @@ public class RoundedRectRangeSliderTrackShape : BaseRangeSliderTrackShape
             null);
         context.Canvas.DrawRRect(
             RRect.FromLTRBR(
-                leftThumbOffset.X - (sliderTheme.TrackHeight!.Value / 2),
+                leftThumbOffset.Dx - (sliderTheme.TrackHeight!.Value / 2),
                 trackRect.Top - (additionalActiveTrackHeight / 2),
-                rightThumbOffset.X + (sliderTheme.TrackHeight!.Value / 2),
+                rightThumbOffset.Dx + (sliderTheme.TrackHeight!.Value / 2),
                 trackRect.Bottom + (additionalActiveTrackHeight / 2),
                 trackRadius),
             activePaint,
@@ -575,12 +575,12 @@ public class RoundRangeSliderTickMarkShape : RangeSliderTickMarkShape
 
     public override void Paint(
         PaintingContext context,
-        Point center,
+        Offset center,
         RenderBox parentBox,
         SliderThemeData sliderTheme,
         Animation<double> enableAnimation,
-        Point startThumbCenter,
-        Point endThumbCenter,
+        Offset startThumbCenter,
+        Offset endThumbCenter,
         TextDirection textDirection,
         bool isEnabled = false)
     {
@@ -590,7 +590,7 @@ public class RoundRangeSliderTickMarkShape : RangeSliderTickMarkShape
         DebugAssertions.Assert(sliderTheme.InactiveTickMarkColor != null);
 
         bool hasGap = sliderTheme.TrackGap != null && sliderTheme.TrackGap!.Value > 0;
-        bool underThumb = startThumbCenter.X == center.X || endThumbCenter.X == center.X;
+        bool underThumb = startThumbCenter.Dx == center.Dx || endThumbCenter.Dx == center.Dx;
         if (hasGap && underThumb)
         {
             return;
@@ -598,8 +598,8 @@ public class RoundRangeSliderTickMarkShape : RangeSliderTickMarkShape
 
         bool isBetweenThumbs = textDirection switch
         {
-            TextDirection.Ltr => startThumbCenter.X < center.X && center.X < endThumbCenter.X,
-            _ => endThumbCenter.X < center.X && center.X < startThumbCenter.X,
+            TextDirection.Ltr => startThumbCenter.Dx < center.Dx && center.Dx < endThumbCenter.Dx,
+            _ => endThumbCenter.Dx < center.Dx && center.Dx < startThumbCenter.Dx,
         };
         Color? begin = isBetweenThumbs
             ? sliderTheme.DisabledActiveTickMarkColor
@@ -673,7 +673,7 @@ public class RoundRangeSliderThumbShape : RangeSliderThumbShape
 
     public override void Paint(
         PaintingContext context,
-        Point center,
+        Offset center,
         Animation<double> activationAnimation,
         Animation<double> enableAnimation,
         SliderThemeData sliderTheme,
@@ -906,12 +906,12 @@ public class GappedRangeSliderTrackShape : BaseRangeSliderTrackShape
     /// </remarks>
     public override void Paint(
         PaintingContext context,
-        Point offset,
+        Offset offset,
         RenderBox parentBox,
         SliderThemeData sliderTheme,
         Animation<double> enableAnimation,
-        Point startThumbCenter,
-        Point endThumbCenter,
+        Offset startThumbCenter,
+        Offset endThumbCenter,
         TextDirection textDirection,
         bool isEnabled = false,
         bool isDiscrete = false)
@@ -935,12 +935,12 @@ public class GappedRangeSliderTrackShape : BaseRangeSliderTrackShape
     /// </summary>
     public void Paint(
         PaintingContext context,
-        Point offset,
+        Offset offset,
         RenderBox parentBox,
         SliderThemeData sliderTheme,
         Animation<double> enableAnimation,
-        Point startThumbCenter,
-        Point endThumbCenter,
+        Offset startThumbCenter,
+        Offset endThumbCenter,
         TextDirection textDirection,
         double additionalActiveTrackHeight,
         bool isEnabled = false,
@@ -977,7 +977,7 @@ public class GappedRangeSliderTrackShape : BaseRangeSliderTrackShape
         Radius trackCornerRadius = Radius.Circular(DartGeometry.ShortestSide(trackRect.Size) / 2);
         Radius trackInsideCornerRadius = Radius.Circular(2.0);
 
-        (Point leftThumbOffset, Point rightThumbOffset) = textDirection switch
+        (Offset leftThumbOffset, Offset rightThumbOffset) = textDirection switch
         {
             TextDirection.Ltr => (startThumbCenter, endThumbCenter),
             _ => (endThumbCenter, startThumbCenter),
@@ -998,7 +998,7 @@ public class GappedRangeSliderTrackShape : BaseRangeSliderTrackShape
         RRect leftRRect = RRect.FromLTRBAndCorners(
             trackRect.Left,
             trackRect.Top,
-            leftThumbOffset.X - trackGap,
+            leftThumbOffset.Dx - trackGap,
             trackRect.Bottom,
             topLeft: trackCornerRadius,
             bottomLeft: trackCornerRadius,
@@ -1006,7 +1006,7 @@ public class GappedRangeSliderTrackShape : BaseRangeSliderTrackShape
             bottomRight: trackInsideCornerRadius);
 
         RRect rightRRect = RRect.FromLTRBAndCorners(
-            rightThumbOffset.X + trackGap,
+            rightThumbOffset.Dx + trackGap,
             trackRect.Top,
             trackRect.Right,
             trackRect.Bottom,
@@ -1018,9 +1018,9 @@ public class GappedRangeSliderTrackShape : BaseRangeSliderTrackShape
         context.Canvas.Save();
         context.Canvas.ClipRRect(trackRRect);
         bool drawLeftTrack =
-            startThumbCenter.X > (leftRRect.Left + (sliderTheme.TrackHeight!.Value / 2));
+            startThumbCenter.Dx > (leftRRect.Left + (sliderTheme.TrackHeight!.Value / 2));
         bool drawRightTrack =
-            endThumbCenter.X < (rightRRect.Right - (sliderTheme.TrackHeight!.Value / 2));
+            endThumbCenter.Dx < (rightRRect.Right - (sliderTheme.TrackHeight!.Value / 2));
 
         if (drawLeftTrack)
         {
@@ -1032,13 +1032,13 @@ public class GappedRangeSliderTrackShape : BaseRangeSliderTrackShape
             context.Canvas.DrawRRect(rightRRect, inactivePaint, null);
         }
 
-        if (leftThumbOffset.X + trackGap < rightThumbOffset.X - trackGap)
+        if (leftThumbOffset.Dx + trackGap < rightThumbOffset.Dx - trackGap)
         {
             context.Canvas.DrawRRect(
                 RRect.FromLTRBR(
-                    leftThumbOffset.X + trackGap,
+                    leftThumbOffset.Dx + trackGap,
                     trackRect.Top,
-                    rightThumbOffset.X - trackGap,
+                    rightThumbOffset.Dx - trackGap,
                     trackRect.Bottom,
                     trackInsideCornerRadius),
                 activePaint,
@@ -1050,14 +1050,14 @@ public class GappedRangeSliderTrackShape : BaseRangeSliderTrackShape
         const double stopIndicatorRadius = 2.0;
         double stopIndicatorTrailingSpace = sliderTheme.TrackHeight!.Value / 2;
         // trackRect.centerLeft.dx / trackRect.centerRight.dx / trackRect.center.dy.
-        var startStopIndicatorOffset = new Point(
+        var startStopIndicatorOffset = new Offset(
             trackRect.Left + stopIndicatorTrailingSpace,
-            trackRect.Center.Y);
-        var endStopIndicatorOffset = new Point(
+            trackRect.Center.Dy);
+        var endStopIndicatorOffset = new Offset(
             trackRect.Right - stopIndicatorTrailingSpace,
-            trackRect.Center.Y);
+            trackRect.Center.Dy);
 
-        bool showStartStopIndicator = startThumbCenter.X > startStopIndicatorOffset.X;
+        bool showStartStopIndicator = startThumbCenter.Dx > startStopIndicatorOffset.Dx;
         if (showStartStopIndicator && !isDiscrete)
         {
             Rect stopIndicatorRect = DartGeometry.RectFromCircle(
@@ -1066,7 +1066,7 @@ public class GappedRangeSliderTrackShape : BaseRangeSliderTrackShape
             context.Canvas.DrawCircle(activePaint, null, stopIndicatorRect.Center, stopIndicatorRadius);
         }
 
-        bool showEndStopIndicator = endThumbCenter.X < endStopIndicatorOffset.X;
+        bool showEndStopIndicator = endThumbCenter.Dx < endStopIndicatorOffset.Dx;
         if (showEndStopIndicator && !isDiscrete)
         {
             Rect stopIndicatorRect = DartGeometry.RectFromCircle(
@@ -1103,7 +1103,7 @@ public class HandleRangeSliderThumbShape : RangeSliderThumbShape
 
     public override void Paint(
         PaintingContext context,
-        Point center,
+        Offset center,
         Animation<double> activationAnimation,
         Animation<double> enableAnimation,
         SliderThemeData sliderTheme,
@@ -1171,7 +1171,7 @@ public class RoundedRectRangeSliderValueIndicatorShape : RangeSliderValueIndicat
 
     public override void Paint(
         PaintingContext context,
-        Point center,
+        Offset center,
         Animation<double> activationAnimation,
         Animation<double> enableAnimation,
         TextPainter labelPainter,
@@ -1240,7 +1240,7 @@ public class DropRangeSliderValueIndicatorShape : RangeSliderValueIndicatorShape
 
     public override void Paint(
         PaintingContext context,
-        Point center,
+        Offset center,
         Animation<double> activationAnimation,
         Animation<double> enableAnimation,
         TextPainter labelPainter,

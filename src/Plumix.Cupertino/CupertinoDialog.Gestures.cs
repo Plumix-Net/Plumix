@@ -21,9 +21,9 @@ internal sealed class SlidingTapGestureRecognizer : VerticalDragGestureRecognize
 
     public override string DebugDescription => "tap slide";
 
-    public Action<Point>? OnResponsiveUpdate { get; set; }
+    public Action<Offset>? OnResponsiveUpdate { get; set; }
 
-    public Action<Point>? OnResponsiveEnd { get; set; }
+    public Action<Offset>? OnResponsiveEnd { get; set; }
 
     protected override void AddAllowedPointer(PointerDownEvent @event)
     {
@@ -73,9 +73,9 @@ internal sealed class TargetSelectionGestureRecognizer : GestureRecognizer
 {
     private readonly SlidingTapGestureRecognizer _slidingTap;
     private readonly List<ISlideTarget> _currentTargets = [];
-    private readonly Func<Point, HitTestResult> _hitTest;
+    private readonly Func<Offset, HitTestResult> _hitTest;
 
-    public TargetSelectionGestureRecognizer(Func<Point, HitTestResult> hitTest, object? debugOwner = null)
+    public TargetSelectionGestureRecognizer(Func<Offset, HitTestResult> hitTest, object? debugOwner = null)
         : base(debugOwner: debugOwner)
     {
         _hitTest = hitTest;
@@ -106,9 +106,9 @@ internal sealed class TargetSelectionGestureRecognizer : GestureRecognizer
 
     private void OnDown(DragDownDetails details) => Update(details.GlobalPosition, fromPointerDown: true);
 
-    private void OnUpdate(Point position) => Update(position, fromPointerDown: false);
+    private void OnUpdate(Offset position) => Update(position, fromPointerDown: false);
 
-    private void OnEnd(Point position)
+    private void OnEnd(Offset position)
     {
         Update(position, fromPointerDown: false);
         foreach (ISlideTarget target in _currentTargets)
@@ -129,7 +129,7 @@ internal sealed class TargetSelectionGestureRecognizer : GestureRecognizer
         _currentTargets.Clear();
     }
 
-    private void Update(Point position, bool fromPointerDown)
+    private void Update(Offset position, bool fromPointerDown)
     {
         var foundTargets = new List<ISlideTarget>();
         foreach (HitTestEntry entry in _hitTest(position).Path)
@@ -172,7 +172,7 @@ internal sealed class ActionSheetGestureDetector : StatelessWidget
 
     public Widget Child { get; }
 
-    private static HitTestResult HitTest(BuildContext context, Point globalPosition)
+    private static HitTestResult HitTest(BuildContext context, Offset globalPosition)
     {
         int viewId = View.Of(context).ViewId;
         return GestureBinding.Instance.HitTestInView(globalPosition, viewId);

@@ -87,7 +87,7 @@ internal sealed class CupertinoMenuSwipeRegionState : State<CupertinoMenuSwipeRe
 {
     private readonly List<RenderCupertinoMenuSwipeSurface> _surfaces = [];
     private MultiDragGestureRecognizer? _recognizer;
-    private Point? _position;
+    private Offset? _position;
 
     private CupertinoMenuSwipeRegion Current => (CupertinoMenuSwipeRegion)StateWidget;
 
@@ -145,7 +145,7 @@ internal sealed class CupertinoMenuSwipeRegionState : State<CupertinoMenuSwipeRe
         _recognizer?.Dispose();
         _recognizer = null;
 
-        Drag? HandleStart(Point position)
+        Drag? HandleStart(Offset position)
         {
             onStart?.Invoke();
             return CreateSwipeHandle(position);
@@ -166,7 +166,7 @@ internal sealed class CupertinoMenuSwipeRegionState : State<CupertinoMenuSwipeRe
         _recognizer.AddPointer(@event);
     }
 
-    private Drag CreateSwipeHandle(Point position)
+    private Drag CreateSwipeHandle(Offset position)
     {
         _position = position;
         return new CupertinoMenuSwipeHandle(
@@ -296,7 +296,7 @@ internal sealed class RenderCupertinoMenuSwipeSurface : RenderProxyBoxWithHitTes
 
     /// <summary>Dart parity source: <c>_RenderSwipeSurface.computeRect</c>.</summary>
     public Rect ComputeRect() => HasSize
-        ? new Rect(LocalToGlobal(default), Size)
+        ? DartGeometry.RectFromOffsetAndSize(LocalToGlobal(default), Size)
         : default;
 
     protected override void OnDetach()
@@ -322,11 +322,11 @@ internal sealed class CupertinoMenuSwipeHandle : Drag
     private readonly Action<DragUpdateDetails> _onSwipeUpdate;
     private readonly Action<DragEndDetails> _onSwipeEnd;
     private readonly Action _onSwipeCanceled;
-    private Point _position;
+    private Offset _position;
 
     public CupertinoMenuSwipeHandle(
         int viewId,
-        Point initialPosition,
+        Offset initialPosition,
         Action<DragUpdateDetails> onSwipeUpdate,
         Action<DragEndDetails> onSwipeEnd,
         Action onSwipeCanceled)
@@ -341,7 +341,7 @@ internal sealed class CupertinoMenuSwipeHandle : Drag
 
     public override void Update(DragUpdateDetails details)
     {
-        Point next = _position + details.Delta;
+        Offset next = _position + details.Delta;
         if (next == _position)
         {
             return;

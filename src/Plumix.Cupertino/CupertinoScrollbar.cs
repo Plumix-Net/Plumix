@@ -144,7 +144,7 @@ public sealed class CupertinoScrollbar : RawScrollbar
         // Thumb drag event callbacks handle the gesture where the user presses on the scrollbar
         // thumb and then drags the scrollbar without releasing.
 
-        protected override void HandleThumbPressStart(Point localPosition)
+        protected override void HandleThumbPressStart(Offset localPosition)
         {
             base.HandleThumbPressStart(localPosition);
             Axis? direction = GetScrollbarDirection();
@@ -153,7 +153,7 @@ public sealed class CupertinoScrollbar : RawScrollbar
                 return;
             }
 
-            _pressStartAxisPosition = direction == Axis.Vertical ? localPosition.Y : localPosition.X;
+            _pressStartAxisPosition = direction == Axis.Vertical ? localPosition.Dy : localPosition.Dx;
         }
 
         protected override void HandleThumbPress()
@@ -167,7 +167,7 @@ public sealed class CupertinoScrollbar : RawScrollbar
             _thicknessAnimationController.Forward().WhenComplete(() => HapticFeedback.MediumImpact());
         }
 
-        protected override void HandleThumbPressEnd(Point localPosition, Velocity velocity)
+        protected override void HandleThumbPressEnd(Offset localPosition, Velocity velocity)
         {
             Axis? direction = GetScrollbarDirection();
             if (direction is null)
@@ -177,10 +177,10 @@ public sealed class CupertinoScrollbar : RawScrollbar
 
             _thicknessAnimationController.Reverse();
             base.HandleThumbPressEnd(localPosition, velocity);
-            double axisPosition = direction == Axis.Horizontal ? localPosition.X : localPosition.Y;
+            double axisPosition = direction == Axis.Horizontal ? localPosition.Dx : localPosition.Dy;
             double axisVelocity = direction == Axis.Horizontal
-                ? velocity.PixelsPerSecond.X
-                : velocity.PixelsPerSecond.Y;
+                ? velocity.PixelsPerSecond.Dx
+                : velocity.PixelsPerSecond.Dy;
             if (axisPosition != _pressStartAxisPosition && Math.Abs(axisVelocity) < 10)
             {
                 HapticFeedback.MediumImpact();

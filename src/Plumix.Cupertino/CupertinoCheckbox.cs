@@ -372,7 +372,7 @@ internal sealed class CupertinoCheckboxPainter : ToggleablePainter
 
     internal void Configure(
         Color focusColor,
-        Point? downPosition,
+        Offset? downPosition,
         bool isFocused,
         bool isHovered,
         Color activeColor,
@@ -401,9 +401,9 @@ internal sealed class CupertinoCheckboxPainter : ToggleablePainter
         NotifyPainterChanged();
     }
 
-    private static Rect OuterRectAt(Point origin)
+    private static Rect OuterRectAt(Offset origin)
     {
-        return new Rect(origin.X, origin.Y, CupertinoCheckbox.Width, CupertinoCheckbox.Width);
+        return DartGeometry.RectFromLTWH(origin.Dx, origin.Dy, CupertinoCheckbox.Width, CupertinoCheckbox.Width);
     }
 
     // The checkbox's border color if value == false, or its fill color when value == true or null.
@@ -499,31 +499,31 @@ internal sealed class CupertinoCheckboxPainter : ToggleablePainter
         context.Canvas.DrawDRRect(outerRRect, outerRRect.Deflate(side.Width), new SolidColorBrush(side.Color));
     }
 
-    private void DrawCheck(PaintingContext context, Point origin, IPen pen)
+    private void DrawCheck(PaintingContext context, Offset origin, IPen pen)
     {
         // The ratios for the offsets below were found from looking at the checkbox examples in the
         // HIG docs. The distance from the needed point to the edge was measured, then divided by
         // the total width.
-        var start = new Point(origin.X + (CupertinoCheckbox.Width * 0.22), origin.Y + (CupertinoCheckbox.Width * 0.54));
-        var mid = new Point(origin.X + (CupertinoCheckbox.Width * 0.40), origin.Y + (CupertinoCheckbox.Width * 0.75));
-        var end = new Point(origin.X + (CupertinoCheckbox.Width * 0.78), origin.Y + (CupertinoCheckbox.Width * 0.25));
+        var start = new Offset(origin.Dx + (CupertinoCheckbox.Width * 0.22), origin.Dy + (CupertinoCheckbox.Width * 0.54));
+        var mid = new Offset(origin.Dx + (CupertinoCheckbox.Width * 0.40), origin.Dy + (CupertinoCheckbox.Width * 0.75));
+        var end = new Offset(origin.Dx + (CupertinoCheckbox.Width * 0.78), origin.Dy + (CupertinoCheckbox.Width * 0.25));
         context.Canvas.DrawLine(pen, start, mid);
         context.Canvas.DrawLine(pen, mid, end);
     }
 
-    private void DrawDash(PaintingContext context, Point origin, IPen pen)
+    private void DrawDash(PaintingContext context, Offset origin, IPen pen)
     {
         // From measuring the checkbox example in the HIG docs, the dash was found to be half the
         // total width, centered in the middle.
-        var start = new Point(origin.X + (CupertinoCheckbox.Width * 0.25), origin.Y + (CupertinoCheckbox.Width * 0.5));
-        var end = new Point(origin.X + (CupertinoCheckbox.Width * 0.75), origin.Y + (CupertinoCheckbox.Width * 0.5));
+        var start = new Offset(origin.Dx + (CupertinoCheckbox.Width * 0.25), origin.Dy + (CupertinoCheckbox.Width * 0.5));
+        var end = new Offset(origin.Dx + (CupertinoCheckbox.Width * 0.75), origin.Dy + (CupertinoCheckbox.Width * 0.5));
         context.Canvas.DrawLine(pen, start, end);
     }
 
     public override void Paint(PaintingContext context, Size size)
     {
         IPen strokePen = CreateStrokePen();
-        var origin = new Point(
+        var origin = new Offset(
             (size.Width / 2.0) - (CupertinoCheckbox.Width / 2.0),
             (size.Height / 2.0) - (CupertinoCheckbox.Width / 2.0));
         Rect outer = OuterRectAt(origin);

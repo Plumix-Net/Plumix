@@ -60,7 +60,7 @@ public abstract record Decoration : IDiagnosticable
     public virtual bool IsComplex => false;
 
     /// Tests whether the given point, on a box of the given size, would be considered a hit.
-    public virtual bool HitTest(Size size, Point position, TextDirection? textDirection = null)
+    public virtual bool HitTest(Size size, Offset position, TextDirection? textDirection = null)
     {
         return true;
     }
@@ -129,7 +129,7 @@ public abstract class BoxPainter : IDisposable
 
     public abstract void Paint(
         PaintingContext context,
-        Point offset,
+        Offset offset,
         ImageConfiguration configuration);
 
     public virtual void Dispose()
@@ -309,10 +309,10 @@ public readonly record struct BorderRadius
             bottomLeft ?? BottomLeftRadius);
     }
 
-    public Plumix.UI.RRect ToRRect(Avalonia.Rect rect) => Plumix.UI.RRect.FromRectAndCorners(rect, this);
+    public Plumix.UI.RRect ToRRect(Rect rect) => Plumix.UI.RRect.FromRectAndCorners(rect, this);
 
     /// <remarks>Flutter's <c>BorderRadius.toRSuperellipse</c>.</remarks>
-    public Plumix.UI.RSuperellipse ToRSuperellipse(Avalonia.Rect rect) =>
+    public Plumix.UI.RSuperellipse ToRSuperellipse(Rect rect) =>
         Plumix.UI.RSuperellipse.FromRectAndCorners(
             rect,
             TopLeftRadius.Clamp(minimum: Plumix.Rendering.Radius.Zero),
@@ -843,9 +843,9 @@ public sealed record ShapeDecoration : Decoration
         return Shape.GetOuterPath(rect, textDirection);
     }
 
-    public override bool HitTest(Size size, Point position, TextDirection? textDirection = null)
+    public override bool HitTest(Size size, Offset position, TextDirection? textDirection = null)
     {
-        return Shape.GetOuterPath(new Rect(new Point(0, 0), size), textDirection).Contains(position);
+        return Shape.GetOuterPath(DartGeometry.RectFromOffsetAndSize(new Offset(0, 0), size), textDirection).Contains(position);
     }
 
     public override BoxPainter CreateBoxPainter(Action? onChanged = null)
@@ -1035,10 +1035,10 @@ internal sealed class ShapeDecorationPainter : BoxPainter
 
     // Dart's `rect.shift(shadow.offset).inflate(shadow.spreadRadius)`.
     internal static Rect ShiftInflate(Rect rect, BoxShadow shadow) => DartGeometry.RectFromLTRB(
-        rect.Left + shadow.Offset.X - shadow.SpreadRadius,
-        rect.Top + shadow.Offset.Y - shadow.SpreadRadius,
-        rect.Right + shadow.Offset.X + shadow.SpreadRadius,
-        rect.Bottom + shadow.Offset.Y + shadow.SpreadRadius);
+        rect.Left + shadow.Offset.Dx - shadow.SpreadRadius,
+        rect.Top + shadow.Offset.Dy - shadow.SpreadRadius,
+        rect.Right + shadow.Offset.Dx + shadow.SpreadRadius,
+        rect.Bottom + shadow.Offset.Dy + shadow.SpreadRadius);
 
     private void PaintShadows(Canvas canvas, PaintingContext context, Rect rect, TextDirection? textDirection)
     {
@@ -1151,14 +1151,14 @@ internal sealed class ShapeDecorationPainter : BoxPainter
         _imagePainter = null;
     }
 
-    public override void Paint(PaintingContext context, Point offset, ImageConfiguration configuration)
+    public override void Paint(PaintingContext context, Offset offset, ImageConfiguration configuration)
     {
         if (Constants.KDebugMode && configuration.Size is null)
         {
             throw new AssertionError("A ShapeDecoration painter needs an ImageConfiguration with a size.");
         }
 
-        var rect = new Rect(offset, configuration.Size ?? default);
+        var rect = DartGeometry.RectFromOffsetAndSize(offset, configuration.Size ?? default);
         TextDirection? textDirection = configuration.TextDirection;
         Canvas canvas = context.Canvas;
         Precache(rect, textDirection);
@@ -1288,7 +1288,7 @@ public sealed record BoxDecoration : Decoration
         switch (Shape)
         {
             case BoxShape.Circle:
-                Point center = rect.Center;
+                Offset center = rect.Center;
                 double radius = DartGeometry.ShortestSide(rect) / 2.0;
                 path.AddOval(DartGeometry.RectFromCircle(center, radius));
                 return path;
@@ -1440,9 +1440,9 @@ public sealed record BoxDecoration : Decoration
         properties.Add(new EnumProperty<BoxShape>("shape", Shape, defaultValue: BoxShape.Rectangle));
     }
 
-    public override bool HitTest(Size size, Point position, TextDirection? textDirection = null)
+    public override bool HitTest(Size size, Offset position, TextDirection? textDirection = null)
     {
-        var bounds = new Rect(size);
+        var bounds = DartGeometry.RectFromSize(size);
         if (Constants.KDebugMode && !bounds.Contains(position))
         {
             throw new AssertionError($"The hit-test position {position} is outside the box {size}.");
@@ -1459,9 +1459,9 @@ public sealed record BoxDecoration : Decoration
                 return true;
             case BoxShape.Circle:
                 // Circles are inscribed into our smallest dimension.
-                Point center = bounds.Center;
-                double deltaX = position.X - center.X;
-                double deltaY = position.Y - center.Y;
+                Offset center = bounds.Center;
+                double deltaX = position.Dx - center.Dx;
+                double deltaY = position.Dy - center.Dy;
                 double distance = Math.Sqrt((deltaX * deltaX) + (deltaY * deltaY));
                 return distance <= Math.Min(size.Width, size.Height) / 2.0;
             default:
@@ -1537,7 +1537,7 @@ internal sealed class BoxDecorationPainter : BoxPainter
                     throw new AssertionError(BoxDecoration.CircleBorderRadiusMessage);
                 }
 
-                Point center = rect.Center;
+                Offset center = rect.Center;
                 double radius = DartGeometry.ShortestSide(rect) / 2.0;
                 canvas.DrawCircle(center, radius, paint);
                 break;
@@ -1651,7 +1651,7 @@ internal sealed class BoxDecorationPainter : BoxPainter
                     throw new AssertionError(BoxDecoration.CircleBorderRadiusMessage);
                 }
 
-                Point center = rect.Center;
+                Offset center = rect.Center;
                 double radius = DartGeometry.ShortestSide(rect) / 2.0;
                 Rect square = DartGeometry.RectFromCircle(center, radius);
                 clipPath = new Plumix.UI.Path();
@@ -1679,7 +1679,7 @@ internal sealed class BoxDecorationPainter : BoxPainter
     /// <summary>Paint the box decoration into the given location on the given canvas.</summary>
     public override void Paint(
         PaintingContext context,
-        Point offset,
+        Offset offset,
         ImageConfiguration configuration)
     {
         if (Constants.KDebugMode && configuration.Size is null)
@@ -1687,7 +1687,7 @@ internal sealed class BoxDecorationPainter : BoxPainter
             throw new AssertionError("A BoxDecoration painter needs an ImageConfiguration with a size.");
         }
 
-        var rect = new Rect(offset, configuration.Size ?? default);
+        var rect = DartGeometry.RectFromOffsetAndSize(offset, configuration.Size ?? default);
         TextDirection? textDirection = configuration.TextDirection;
         Canvas canvas = context.Canvas;
         PaintShadows(canvas, rect, textDirection);

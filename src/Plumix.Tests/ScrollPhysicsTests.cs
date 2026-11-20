@@ -892,7 +892,7 @@ public sealed class ScrollPhysicsTests
             Assert.Equal(0.0, position.Activity.Velocity);
 
             // The drag started from the hold inherits the interrupted fling's momentum.
-            ScrollDragController drag = position.Drag(new DragStartDetails(new Point(0, 0)));
+            ScrollDragController drag = position.Drag(new DragStartDetails(new Offset(0, 0)));
             Assert.Equal(
                 new BouncingScrollPhysics().CarriedMomentum(-1200),
                 drag.CarriedVelocity!.Value,
@@ -916,7 +916,7 @@ public sealed class ScrollPhysicsTests
         position.ApplyViewportDimension(100);
         position.ApplyContentDimensions(0, 1000);
 
-        ScrollDragController drag = position.Drag(new DragStartDetails(new Point(0, 0)));
+        ScrollDragController drag = position.Drag(new DragStartDetails(new Offset(0, 0)));
 
         Assert.Equal(0.0, drag.CarriedVelocity!.Value);
         Assert.Null(drag.MotionStartDistanceThreshold);
@@ -931,7 +931,7 @@ public sealed class ScrollPhysicsTests
         DateTime start = new(2026, 8, 11, 12, 0, 0, DateTimeKind.Utc);
         var drag = new ScrollDragController(
             @delegate: position,
-            details: new DragStartDetails(new Point(0, 0), SourceTimeStampUtc: start),
+            details: new DragStartDetails(new Offset(0, 0), SourceTimeStampUtc: start),
             motionStartDistanceThreshold: 3.5);
         position.BeginActivity(new DragScrollActivity(position, drag));
 
@@ -956,7 +956,7 @@ public sealed class ScrollPhysicsTests
         DateTime start = new(2026, 8, 11, 12, 0, 0, DateTimeKind.Utc);
         var drag = new ScrollDragController(
             @delegate: position,
-            details: new DragStartDetails(new Point(0, 0), SourceTimeStampUtc: start),
+            details: new DragStartDetails(new Offset(0, 0), SourceTimeStampUtc: start),
             motionStartDistanceThreshold: 3.5);
         position.BeginActivity(new DragScrollActivity(position, drag));
 
@@ -973,7 +973,7 @@ public sealed class ScrollPhysicsTests
         DateTime start = new(2026, 8, 11, 12, 0, 0, DateTimeKind.Utc);
         var drag = new ScrollDragController(
             @delegate: position,
-            details: new DragStartDetails(new Point(0, 0), SourceTimeStampUtc: start),
+            details: new DragStartDetails(new Offset(0, 0), SourceTimeStampUtc: start),
             motionStartDistanceThreshold: 3.5);
         position.BeginActivity(new DragScrollActivity(position, drag));
 
@@ -997,7 +997,7 @@ public sealed class ScrollPhysicsTests
         DateTime start = new(2026, 8, 11, 12, 0, 0, DateTimeKind.Utc);
         var drag = new ScrollDragController(
             @delegate: position,
-            details: new DragStartDetails(new Point(0, 0), SourceTimeStampUtc: start));
+            details: new DragStartDetails(new Offset(0, 0), SourceTimeStampUtc: start));
         position.BeginActivity(new DragScrollActivity(position, drag));
 
         Assert.Equal(-1.0, Update(position, drag, -1.0, start.AddMilliseconds(16)), precision: 6);
@@ -1021,7 +1021,7 @@ public sealed class ScrollPhysicsTests
             DateTime start = new(2026, 8, 11, 12, 0, 0, DateTimeKind.Utc);
             var drag = new ScrollDragController(
                 @delegate: position,
-                details: new DragStartDetails(new Point(0, 0), SourceTimeStampUtc: start));
+                details: new DragStartDetails(new Offset(0, 0), SourceTimeStampUtc: start));
         position.BeginActivity(new DragScrollActivity(position, drag));
 
             // Dragging down a reversed list scrolls forward instead of backward.
@@ -1079,7 +1079,7 @@ public sealed class ScrollPhysicsTests
         using var position = new ScrollPositionWithSingleContext(new ClampingScrollPhysics(), new TestScrollContext());
         Assert.Throws<ArgumentOutOfRangeException>(() => new ScrollDragController(
             @delegate: position,
-            details: new DragStartDetails(new Point(0, 0)),
+            details: new DragStartDetails(new Offset(0, 0)),
             motionStartDistanceThreshold: 0.0));
     }
 
@@ -1094,7 +1094,7 @@ public sealed class ScrollPhysicsTests
         position.ApplyContentDimensions(0, 1000);
         var drag = new ScrollDragController(
             @delegate: position,
-            details: new DragStartDetails(new Point(0, 0), SourceTimeStampUtc: start),
+            details: new DragStartDetails(new Offset(0, 0), SourceTimeStampUtc: start),
             carriedVelocity: carriedVelocity);
         position.BeginActivity(new DragScrollActivity(position, drag));
 
@@ -1115,9 +1115,9 @@ public sealed class ScrollPhysicsTests
     {
         double before = position.Pixels;
         drag.Update(new DragUpdateDetails(
-            GlobalPosition: new Point(0, 0),
-            LocalPosition: new Point(0, 0),
-            Delta: new Point(0, primaryDelta),
+            GlobalPosition: new Offset(0, 0),
+            LocalPosition: new Offset(0, 0),
+            Delta: new Offset(0, primaryDelta),
             PrimaryDelta: primaryDelta,
             SourceTimeStampUtc: timestampUtc));
         return before - position.Pixels;

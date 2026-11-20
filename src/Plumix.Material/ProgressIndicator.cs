@@ -639,7 +639,7 @@ internal sealed class RenderLinearProgressIndicator : RenderBox
         Size = Constraints.Constrain(new Size(width, resolvedMinHeight));
     }
 
-    public override void Paint(PaintingContext ctx, Point offset)
+    public override void Paint(PaintingContext ctx, Offset offset)
     {
         if (Size.Width <= 0 || Size.Height <= 0)
         {
@@ -720,7 +720,7 @@ internal sealed class RenderLinearProgressIndicator : RenderBox
 
     private void DrawBar(
         PaintingContext ctx,
-        Point offset,
+        Offset offset,
         IBrush brush,
         double startFraction,
         double endFraction,
@@ -736,10 +736,10 @@ internal sealed class RenderLinearProgressIndicator : RenderBox
 
         double width = Size.Width * widthFraction;
         double left = TextDirection == TextDirection.Rtl
-            ? offset.X + (Size.Width - width - (Size.Width * startFraction))
-            : offset.X + (Size.Width * startFraction);
+            ? offset.Dx + (Size.Width - width - (Size.Width * startFraction))
+            : offset.Dx + (Size.Width * startFraction);
 
-        var barRect = new Rect(left, offset.Y, width, Size.Height);
+        var barRect = DartGeometry.RectFromLTWH(left, offset.Dy, width, Size.Height);
         double barRadius = ResolveRadius(barRect.Width, barRect.Height, radius);
         ctx.Canvas.DrawRectangle(
             brush,
@@ -749,7 +749,7 @@ internal sealed class RenderLinearProgressIndicator : RenderBox
             barRadius);
     }
 
-    private void DrawStopIndicator(PaintingContext ctx, Point offset)
+    private void DrawStopIndicator(PaintingContext ctx, Offset offset)
     {
         if (!_stopIndicatorRadius.HasValue || _stopIndicatorRadius.Value <= 0 || _stopIndicatorColor is null)
         {
@@ -764,9 +764,9 @@ internal sealed class RenderLinearProgressIndicator : RenderBox
         }
 
         double centerX = TextDirection == TextDirection.Rtl
-            ? offset.X + maxRadius
-            : offset.X + (Size.Width - maxRadius);
-        var center = new Point(centerX, offset.Y + maxRadius);
+            ? offset.Dx + maxRadius
+            : offset.Dx + (Size.Width - maxRadius);
+        var center = new Offset(centerX, offset.Dy + maxRadius);
         ctx.Canvas.DrawCircle(new SolidColorBrush(_stopIndicatorColor!), null, center, radius);
     }
 
@@ -1704,7 +1704,7 @@ internal sealed class RenderCircularProgressIndicator : RenderBox
         Size = Constraints.Constrain(new Size(side, side));
     }
 
-    public override void Paint(PaintingContext ctx, Point offset)
+    public override void Paint(PaintingContext ctx, Offset offset)
     {
         if (Size.Width <= 0 || Size.Height <= 0)
         {
@@ -1730,9 +1730,9 @@ internal sealed class RenderCircularProgressIndicator : RenderBox
             return;
         }
 
-        double left = offset.X + ((Size.Width - diameter) / 2.0) + strokeOffset;
-        double top = offset.Y + ((Size.Height - diameter) / 2.0) + strokeOffset;
-        var arcRect = new Rect(left, top, arcDiameter, arcDiameter);
+        double left = offset.Dx + ((Size.Width - diameter) / 2.0) + strokeOffset;
+        double top = offset.Dy + ((Size.Height - diameter) / 2.0) + strokeOffset;
+        var arcRect = DartGeometry.RectFromLTWH(left, top, arcDiameter, arcDiameter);
         double? resolvedValue = Value.HasValue
             ? CircularProgressIndicator.ClampValue(Value.Value)
             : (double?)null;
@@ -1781,15 +1781,15 @@ internal sealed class RenderCircularProgressIndicator : RenderBox
         double arrowheadRadius = strokeWidth * 2.0 * ArrowheadScale;
         double innerRadius = Math.Max(0, radius - arrowheadRadius);
         double outerRadius = radius + arrowheadRadius;
-        var point = new Point(
-            center.X + (ux * radius) - (uy * strokeWidth * 2.0 * ArrowheadScale),
-            center.Y + (uy * radius) + (ux * strokeWidth * 2.0 * ArrowheadScale));
+        var point = new Offset(
+            center.Dx + (ux * radius) - (uy * strokeWidth * 2.0 * ArrowheadScale),
+            center.Dy + (uy * radius) + (ux * strokeWidth * 2.0 * ArrowheadScale));
         context.Canvas.DrawPolygon(
             new SolidColorBrush(ValueColor),
             null,
             [
-                new Point(center.X + (ux * innerRadius), center.Y + (uy * innerRadius)),
-                new Point(center.X + (ux * outerRadius), center.Y + (uy * outerRadius)),
+                new Offset(center.Dx + (ux * innerRadius), center.Dy + (uy * innerRadius)),
+                new Offset(center.Dx + (ux * outerRadius), center.Dy + (uy * outerRadius)),
                 point,
             ]);
     }

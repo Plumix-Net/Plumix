@@ -106,13 +106,13 @@ public sealed class CupertinoScrollbarTests
         Assert.Equal(3, painter.Thickness);
         // Thumb: x = 800 - crossAxisMargin(3) - thickness(3); y = mainAxisMargin(3);
         // extent = (600 - 2 * 3) * 600 / 1000.
-        Assert.Equal(794, geometry.ThumbRect.X, precision: 3);
-        Assert.Equal(3, geometry.ThumbRect.Y, precision: 3);
+        Assert.Equal(794, geometry.ThumbRect.Left, precision: 3);
+        Assert.Equal(3, geometry.ThumbRect.Top, precision: 3);
         Assert.Equal(3, geometry.ThumbRect.Width, precision: 3);
         Assert.Equal(356.4, geometry.ThumbRect.Height, precision: 3);
         // The track rect spans the whole padded viewport, thickness + 2 * crossAxisMargin wide.
-        Assert.Equal(791, geometry.TrackRect.X, precision: 3);
-        Assert.Equal(0, geometry.TrackRect.Y, precision: 3);
+        Assert.Equal(791, geometry.TrackRect.Left, precision: 3);
+        Assert.Equal(0, geometry.TrackRect.Top, precision: 3);
         Assert.Equal(9, geometry.TrackRect.Width, precision: 3);
         Assert.Equal(600, geometry.TrackRect.Height, precision: 3);
     }
@@ -130,9 +130,9 @@ public sealed class CupertinoScrollbarTests
         Settle(harness);
 
         ScrollbarGeometry geometry = RequirePainter(harness).Geometry!.Value;
-        Assert.Equal(new Rect(0, 0, 9, 600), geometry.TrackRect);
-        Assert.Equal(3, geometry.ThumbRect.X, precision: 3);
-        Assert.Equal(3, geometry.ThumbRect.Y, precision: 3);
+        Assert.Equal(DartGeometry.RectFromLTWH(0, 0, 9, 600), geometry.TrackRect);
+        Assert.Equal(3, geometry.ThumbRect.Left, precision: 3);
+        Assert.Equal(3, geometry.ThumbRect.Top, precision: 3);
         Assert.Equal(3, geometry.ThumbRect.Width, precision: 3);
         Assert.Equal(89.1, geometry.ThumbRect.Height, precision: 3);
     }
@@ -225,7 +225,7 @@ public sealed class CupertinoScrollbarTests
 
         // The dragged thumb sits `thicknessWhileDragging` wide against the right edge.
         ScrollbarGeometry geometry = RequirePainter(harness).Geometry!.Value;
-        Assert.Equal(789, geometry.ThumbRect.X, precision: 3);
+        Assert.Equal(789, geometry.ThumbRect.Left, precision: 3);
         Assert.Equal(8, geometry.ThumbRect.Width, precision: 3);
     }
 
@@ -240,11 +240,11 @@ public sealed class CupertinoScrollbarTests
         using var harness = new WidgetRenderHarness(BuildScrollbar(controller, contentExtent: 1000));
         Settle(harness);
 
-        Point start = PressThumb(harness);
+        Offset start = PressThumb(harness);
         AdvanceAndPump(harness, 0.11);
         Assert.Single(platform.Log);
 
-        var moved = new Point(start.X, start.Y + 40);
+        var moved = new Offset(start.Dx, start.Dy + 40);
         DateTime moveTime = PressTime.AddSeconds(5);
         Dispatch(harness, new PointerMoveEvent(
             71, PointerDeviceKind.Touch, moved, PointerButtons.Primary, moveTime));
@@ -285,10 +285,10 @@ public sealed class CupertinoScrollbarTests
         ScrollbarGeometry geometry = RequirePainter(harness).Geometry!.Value;
         Assert.Equal(Axis.Horizontal, geometry.Axis);
 
-        Point start = geometry.ThumbRect.Center;
+        Offset start = geometry.ThumbRect.Center;
         Dispatch(harness, new PointerDownEvent(
             81, PointerDeviceKind.Touch, start, PointerButtons.Primary, PressTime));
-        var moved = new Point(start.X + 20, start.Y);
+        var moved = new Offset(start.Dx + 20, start.Dy);
         Dispatch(harness, new PointerMoveEvent(
             81, PointerDeviceKind.Touch, moved, PointerButtons.Primary, PressTime.AddMilliseconds(20)));
 
@@ -346,9 +346,9 @@ public sealed class CupertinoScrollbarTests
         Assert.Null(RequirePainter(harness).Geometry);
     }
 
-    private Point PressThumb(WidgetRenderHarness harness)
+    private Offset PressThumb(WidgetRenderHarness harness)
     {
-        Point point = RequirePainter(harness).Geometry!.Value.ThumbRect.Center;
+        Offset point = RequirePainter(harness).Geometry!.Value.ThumbRect.Center;
         Dispatch(harness, new PointerDownEvent(
             71, PointerDeviceKind.Touch, point, PointerButtons.Primary, PressTime));
         harness.Pump(ViewportSize);
@@ -358,7 +358,7 @@ public sealed class CupertinoScrollbarTests
     private void TapTrackBelowThumb(WidgetRenderHarness harness)
     {
         Rect thumb = RequirePainter(harness).Geometry!.Value.ThumbRect;
-        var point = new Point(thumb.Center.X, thumb.Bottom + 100);
+        var point = new Offset(thumb.Center.Dx, thumb.Bottom + 100);
         Dispatch(harness, new PointerDownEvent(
             72, PointerDeviceKind.Touch, point, PointerButtons.Primary, PressTime));
         Dispatch(harness, new PointerUpEvent(

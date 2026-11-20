@@ -106,23 +106,23 @@ public sealed class TextSelectionOverlayDartParityTests : IDisposable
             .Single(handle => ReferenceEquals(handle.HandleLayerLink, link));
     }
 
-    private static Point GlobalEndpoint(FrameworkDartTester tester, bool end)
+    private static Offset GlobalEndpoint(FrameworkDartTester tester, bool end)
     {
         IReadOnlyList<TextSelectionPoint> endpoints = State(tester).SelectionOverlay!.SelectionOverlay.SelectionEndpoints;
         return Editable(tester).LocalToGlobal(end ? endpoints[^1].Point : endpoints[0].Point);
     }
 
-    private static Point GlobalCaret(FrameworkDartTester tester, int offset)
+    private static Offset GlobalCaret(FrameworkDartTester tester, int offset)
     {
         RenderEditable editable = Editable(tester);
         Rect caret = editable.GetLocalRectForCaret(new TextPosition(offset));
         return editable.LocalToGlobal(caret.Center);
     }
 
-    private static DragStartDetails Start(Point position) =>
+    private static DragStartDetails Start(Offset position) =>
         new(GlobalPosition: position, LocalPosition: position, Kind: PointerDeviceKind.Touch);
 
-    private static DragUpdateDetails Update(Point position) =>
+    private static DragUpdateDetails Update(Offset position) =>
         new(
             GlobalPosition: position,
             LocalPosition: position,
@@ -186,25 +186,25 @@ public sealed class TextSelectionOverlayDartParityTests : IDisposable
         Select(tester, 0, 2);
         double lineHeight = Editable(tester).PreferredLineHeight;
         SelectionHandleOverlay handle = Handle(tester, end: true);
-        Point start = GlobalEndpoint(tester, end: true);
+        Offset start = GlobalEndpoint(tester, end: true);
 
         handle.OnSelectionHandleDragStart!(Start(start));
-        handle.OnSelectionHandleDragUpdate!(Update(start + new Point(0, lineHeight * 0.9)));
+        handle.OnSelectionHandleDragUpdate!(Update(start + new Offset(0, lineHeight * 0.9)));
         tester.Pump();
         Assert.Equal(new TextSelection(0, 2), _controller.Selection);
 
-        handle.OnSelectionHandleDragUpdate!(Update(start + new Point(0, lineHeight * 1.1)));
+        handle.OnSelectionHandleDragUpdate!(Update(start + new Offset(0, lineHeight * 1.1)));
         tester.Pump();
         // One line down: the extent is on "bbbb bbbb", right below where it was.
         Assert.Equal(0, _controller.Selection.BaseOffset);
         Assert.Equal(12, _controller.Selection.ExtentOffset);
 
         // Going back up by less than a line keeps the handle on the second line.
-        handle.OnSelectionHandleDragUpdate!(Update(start + new Point(0, lineHeight * 0.2)));
+        handle.OnSelectionHandleDragUpdate!(Update(start + new Offset(0, lineHeight * 0.2)));
         tester.Pump();
         Assert.Equal(12, _controller.Selection.ExtentOffset);
 
-        handle.OnSelectionHandleDragUpdate!(Update(start + new Point(0, -lineHeight * 0.1)));
+        handle.OnSelectionHandleDragUpdate!(Update(start + new Offset(0, -lineHeight * 0.1)));
         tester.Pump();
         Assert.Equal(2, _controller.Selection.ExtentOffset);
         handle.OnSelectionHandleDragEnd!(End());
@@ -219,18 +219,18 @@ public sealed class TextSelectionOverlayDartParityTests : IDisposable
         using FrameworkDartTester tester = Pump(Field(), platform);
         Select(tester, 2, 4);
         SelectionHandleOverlay end = Handle(tester, end: true);
-        Point endPosition = GlobalEndpoint(tester, end: true);
+        Offset endPosition = GlobalEndpoint(tester, end: true);
 
         end.OnSelectionHandleDragStart!(Start(endPosition));
-        end.OnSelectionHandleDragUpdate!(Update(new Point(GlobalCaret(tester, 1).X, endPosition.Y)));
+        end.OnSelectionHandleDragUpdate!(Update(new Offset(GlobalCaret(tester, 1).Dx, endPosition.Dy)));
         tester.Pump();
         Assert.Equal(new TextSelection(2, 4), _controller.Selection);
 
         SelectionHandleOverlay startHandle = Handle(tester, end: false);
-        Point startPosition = GlobalEndpoint(tester, end: false);
+        Offset startPosition = GlobalEndpoint(tester, end: false);
         end.OnSelectionHandleDragEnd!(End());
         startHandle.OnSelectionHandleDragStart!(Start(startPosition));
-        startHandle.OnSelectionHandleDragUpdate!(Update(new Point(GlobalCaret(tester, 6).X, startPosition.Y)));
+        startHandle.OnSelectionHandleDragUpdate!(Update(new Offset(GlobalCaret(tester, 6).Dx, startPosition.Dy)));
         tester.Pump();
         Assert.Equal(new TextSelection(2, 4), _controller.Selection);
         startHandle.OnSelectionHandleDragEnd!(End());
@@ -244,10 +244,10 @@ public sealed class TextSelectionOverlayDartParityTests : IDisposable
         using FrameworkDartTester tester = Pump(Field(), platform);
         Select(tester, 2, 4);
         SelectionHandleOverlay end = Handle(tester, end: true);
-        Point endPosition = GlobalEndpoint(tester, end: true);
+        Offset endPosition = GlobalEndpoint(tester, end: true);
 
         end.OnSelectionHandleDragStart!(Start(endPosition));
-        end.OnSelectionHandleDragUpdate!(Update(new Point(GlobalCaret(tester, 1).X, endPosition.Y)));
+        end.OnSelectionHandleDragUpdate!(Update(new Offset(GlobalCaret(tester, 1).Dx, endPosition.Dy)));
         tester.Pump();
 
         // The selection keeps its base where the drag started and follows the handle.
@@ -261,10 +261,10 @@ public sealed class TextSelectionOverlayDartParityTests : IDisposable
         using FrameworkDartTester tester = Pump(Field());
         Select(tester, 2, 2);
         SelectionHandleOverlay handle = Handle(tester, end: false);
-        Point position = GlobalEndpoint(tester, end: false);
+        Offset position = GlobalEndpoint(tester, end: false);
 
         handle.OnSelectionHandleDragStart!(Start(position));
-        handle.OnSelectionHandleDragUpdate!(Update(new Point(GlobalCaret(tester, 7).X, position.Y)));
+        handle.OnSelectionHandleDragUpdate!(Update(new Offset(GlobalCaret(tester, 7).Dx, position.Dy)));
         tester.Pump();
         Assert.Equal(TextSelection.Collapsed(7), _controller.Selection);
         handle.OnSelectionHandleDragEnd!(End());
@@ -275,14 +275,14 @@ public sealed class TextSelectionOverlayDartParityTests : IDisposable
     {
         using FrameworkDartTester tester = Pump(Field());
         Select(tester, 0, 4);
-        Point position = GlobalEndpoint(tester, end: true);
+        Offset position = GlobalEndpoint(tester, end: true);
 
         // With a zero text scaler the preferred line height is zero and there is no handle Dy.
         tester.PumpWidget(Wrap(Field(), TextScaler.Linear(0.0)));
         tester.Pump();
         SelectionHandleOverlay handle = Handle(tester, end: true);
         handle.OnSelectionHandleDragStart!(Start(position));
-        handle.OnSelectionHandleDragUpdate!(Update(position + new Point(20, 20)));
+        handle.OnSelectionHandleDragUpdate!(Update(position + new Offset(20, 20)));
         tester.Pump();
         handle.OnSelectionHandleDragEnd!(End());
 
@@ -299,7 +299,7 @@ public sealed class TextSelectionOverlayDartParityTests : IDisposable
         Assert.False(overlay.ToolbarIsVisible);
 
         SelectionHandleOverlay handle = Handle(tester, end: true);
-        Point position = GlobalEndpoint(tester, end: true);
+        Offset position = GlobalEndpoint(tester, end: true);
         handle.OnSelectionHandleDragStart!(Start(position));
         handle.OnSelectionHandleDragEnd!(End());
         tester.Pump();

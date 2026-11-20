@@ -781,7 +781,7 @@ public sealed class PipelineOwnerTreeTests
         {
         }
 
-        public override void Paint(PaintingContext ctx, Point offset)
+        public override void Paint(PaintingContext ctx, Offset offset)
         {
         }
 
@@ -799,6 +799,6 @@ public sealed class PipelineOwnerTreeTests
 
         protected override void PerformLayout() => Size = Constraints.Constrain(new Size(10, 10));
 
-        public override void Paint(PaintingContext ctx, Point offset) => _onPaint();
+        public override void Paint(PaintingContext ctx, Offset offset) => _onPaint();
     }
 }

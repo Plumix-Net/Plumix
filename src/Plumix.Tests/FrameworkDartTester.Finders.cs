@@ -90,19 +90,19 @@ internal sealed partial class FrameworkDartTester
         PaintRecording.Record(RenderObject<RenderObject>(finder));
 
     /// <summary>Dart's <c>tester.getCenter(finder)</c>.</summary>
-    public Point GetCenter(Finder finder) => GetCenter(SingleElement(finder, "getCenter"));
+    public Offset GetCenter(Finder finder) => GetCenter(SingleElement(finder, "getCenter"));
 
     /// <summary>Dart's <c>tester.getTopLeft(finder)</c>.</summary>
-    public Point GetTopLeft(Finder finder) => GetTopLeft(SingleElement(finder, "getTopLeft"));
+    public Offset GetTopLeft(Finder finder) => GetTopLeft(SingleElement(finder, "getTopLeft"));
 
     /// <summary>Dart's <c>tester.getTopRight(finder)</c>.</summary>
-    public Point GetTopRight(Finder finder) => GetTopRight(SingleElement(finder, "getTopRight"));
+    public Offset GetTopRight(Finder finder) => GetTopRight(SingleElement(finder, "getTopRight"));
 
     /// <summary>Dart's <c>tester.getBottomLeft(finder)</c>.</summary>
-    public Point GetBottomLeft(Finder finder) => GetBottomLeft(SingleElement(finder, "getBottomLeft"));
+    public Offset GetBottomLeft(Finder finder) => GetBottomLeft(SingleElement(finder, "getBottomLeft"));
 
     /// <summary>Dart's <c>tester.getBottomRight(finder)</c>.</summary>
-    public Point GetBottomRight(Finder finder) => GetBottomRight(SingleElement(finder, "getBottomRight"));
+    public Offset GetBottomRight(Finder finder) => GetBottomRight(SingleElement(finder, "getBottomRight"));
 
     /// <summary>Dart's <c>tester.getRect(finder)</c>.</summary>
     public Rect GetRect(Finder finder) => GetRect(SingleElement(finder, "getRect"));
@@ -111,17 +111,17 @@ internal sealed partial class FrameworkDartTester
     public Size GetSize(Finder finder) => GetSize(SingleElement(finder, "getSize"));
 
     /// <summary>Dart's <c>tester.getTopRight</c>.</summary>
-    public Point GetTopRight(Element element)
+    public Offset GetTopRight(Element element)
     {
         var box = (RenderBox)element.FindRenderObject()!;
-        return box.LocalToGlobal(new Point(box.Size.Width, 0));
+        return box.LocalToGlobal(new Offset(box.Size.Width, 0));
     }
 
     /// <summary>Dart's <c>tester.getBottomLeft</c>.</summary>
-    public Point GetBottomLeft(Element element)
+    public Offset GetBottomLeft(Element element)
     {
         var box = (RenderBox)element.FindRenderObject()!;
-        return box.LocalToGlobal(new Point(0, box.Size.Height));
+        return box.LocalToGlobal(new Offset(0, box.Size.Height));
     }
 
     /// <summary>
@@ -135,7 +135,7 @@ internal sealed partial class FrameworkDartTester
 
     /// <summary>Dart's <c>tester.tapAt(location)</c>: a down and an up, no pump.</summary>
     public void TapAt(
-        Point location,
+        Offset location,
         PointerButtons buttons = PointerButtons.Primary,
         PointerDeviceKind kind = PointerDeviceKind.Touch)
     {
@@ -154,7 +154,7 @@ internal sealed partial class FrameworkDartTester
 
     /// <summary>Dart's <c>tester.longPressAt(location)</c>.</summary>
     public void LongPressAt(
-        Point location,
+        Offset location,
         PointerButtons buttons = PointerButtons.Primary,
         PointerDeviceKind kind = PointerDeviceKind.Touch)
     {
@@ -166,24 +166,24 @@ internal sealed partial class FrameworkDartTester
     /// <summary>Dart's <c>tester.drag(finder, offset)</c>.</summary>
     public void Drag(
         Finder finder,
-        Vector offset,
+        Offset offset,
         PointerDeviceKind kind = PointerDeviceKind.Touch,
         double touchSlopX = DragSlopDefault,
         double touchSlopY = DragSlopDefault) =>
         Drag(SingleElement(finder, "drag"), offset, kind, touchSlopX, touchSlopY);
 
     /// <summary>Dart's <c>tester.timedDrag(finder, offset, duration)</c>.</summary>
-    public void TimedDrag(Finder finder, Vector offset, TimeSpan duration, double frequency = 60.0) =>
+    public void TimedDrag(Finder finder, Offset offset, TimeSpan duration, double frequency = 60.0) =>
         TimedDrag(SingleElement(finder, "timedDrag"), offset, duration, frequency);
 
     /// <summary>Dart's <c>tester.fling(finder, offset, speed)</c>.</summary>
     public void Fling(
         Finder finder,
-        Vector offset,
+        Offset offset,
         double speed,
         PointerButtons buttons = PointerButtons.Primary,
         TimeSpan? frameInterval = null,
-        Vector initialOffset = default,
+        Offset initialOffset = default,
         TimeSpan? initialOffsetDelay = null) =>
         Fling(SingleElement(finder, "fling"), offset, speed, buttons, frameInterval, initialOffset, initialOffsetDelay);
 

@@ -22,7 +22,7 @@ public sealed class ImageByteDataTests
     {
         var bitmap = new WriteableBitmap(
             new PixelSize(2, 1),
-            new Vector(96.0, 96.0),
+            new Offset(96.0, 96.0),
             PixelFormats.Bgra8888,
             AlphaFormat.Premul);
         using ILockedFramebuffer framebuffer = bitmap.Lock();

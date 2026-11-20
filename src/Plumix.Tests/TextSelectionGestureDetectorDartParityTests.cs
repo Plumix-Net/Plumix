@@ -53,7 +53,7 @@ public sealed class TextSelectionGestureDetectorDartParityTests : IDisposable
         return tester;
     }
 
-    private static void TapAt(FrameworkDartTester tester, Point location, PointerDeviceKind kind = PointerDeviceKind.Touch)
+    private static void TapAt(FrameworkDartTester tester, Offset location, PointerDeviceKind kind = PointerDeviceKind.Touch)
     {
         TestGesture gesture = tester.StartGesture(location, kind);
         gesture.Up();
@@ -65,7 +65,7 @@ public sealed class TextSelectionGestureDetectorDartParityTests : IDisposable
         using FrameworkDartTester tester = PumpGestureDetector();
         for (int i = 0; i < 6; i++)
         {
-            TapAt(tester, new Point(200, 200));
+            TapAt(tester, new Offset(200, 200));
             tester.Pump(TimeSpan.FromMilliseconds(150));
         }
 
@@ -81,7 +81,7 @@ public sealed class TextSelectionGestureDetectorDartParityTests : IDisposable
         int[] tripleTapDown = [0, 0, 1, 1, 1, 2, 2];
         for (int i = 0; i < 7; i++)
         {
-            TapAt(tester, new Point(200, 200));
+            TapAt(tester, new Offset(200, 200));
             tester.Pump(TimeSpan.FromMilliseconds(50));
             Assert.Equal(singleTapUp[i], _singleTapUpCount);
             Assert.Equal(doubleTapDown[i], _doubleTapDownCount);
@@ -95,11 +95,11 @@ public sealed class TextSelectionGestureDetectorDartParityTests : IDisposable
     public void QuickTapTapHoldIsADoubleTapDown()
     {
         using FrameworkDartTester tester = PumpGestureDetector();
-        TapAt(tester, new Point(200, 200));
+        TapAt(tester, new Offset(200, 200));
         tester.Pump(TimeSpan.FromMilliseconds(50));
         Assert.Equal(1, _singleTapUpCount);
 
-        TestGesture gesture = tester.StartGesture(new Point(200, 200), PointerDeviceKind.Touch);
+        TestGesture gesture = tester.StartGesture(new Offset(200, 200), PointerDeviceKind.Touch);
         tester.Pump(TimeSpan.FromMilliseconds(200));
         Assert.Equal(1, _singleTapUpCount);
         // The double tap down is sent right away.
@@ -121,7 +121,7 @@ public sealed class TextSelectionGestureDetectorDartParityTests : IDisposable
     public void ALongPressFromATouchDeviceIsRecognizedAsALongSingleTap()
     {
         using FrameworkDartTester tester = PumpGestureDetector();
-        TestGesture gesture = tester.StartGesture(new Point(200, 200), PointerDeviceKind.Touch);
+        TestGesture gesture = tester.StartGesture(new Offset(200, 200), PointerDeviceKind.Touch);
         tester.Pump(TimeSpan.FromSeconds(2));
         gesture.Up();
         tester.Pump();
@@ -135,7 +135,7 @@ public sealed class TextSelectionGestureDetectorDartParityTests : IDisposable
     public void ALongPressFromAMouseIsJustATap()
     {
         using FrameworkDartTester tester = PumpGestureDetector();
-        TestGesture gesture = tester.StartGesture(new Point(200, 200), PointerDeviceKind.Mouse);
+        TestGesture gesture = tester.StartGesture(new Offset(200, 200), PointerDeviceKind.Mouse);
         tester.Pump(TimeSpan.FromSeconds(2));
         gesture.Up();
         tester.Pump();
@@ -151,9 +151,9 @@ public sealed class TextSelectionGestureDetectorDartParityTests : IDisposable
     public void ADragIsRecognizedForTextSelection(PointerDeviceKind kind)
     {
         using FrameworkDartTester tester = PumpGestureDetector();
-        TestGesture gesture = tester.StartGesture(new Point(200, 200), kind);
+        TestGesture gesture = tester.StartGesture(new Offset(200, 200), kind);
         tester.Pump();
-        gesture.MoveBy(new Vector(210.0, 200.0));
+        gesture.MoveBy(new Offset(210.0, 200.0));
         tester.Pump();
         gesture.Up();
         tester.Pump();
@@ -192,19 +192,19 @@ public sealed class TextSelectionGestureDetectorDartParityTests : IDisposable
         tester.AllElements().Select(element => element.RenderObject).OfType<RenderEditable>().Distinct().Single();
 
     // Dart's `textOffsetToPosition`.
-    private static Point TextOffsetToPosition(FrameworkDartTester tester, int offset)
+    private static Offset TextOffsetToPosition(FrameworkDartTester tester, int offset)
     {
         RenderEditable editable = FindRenderEditable(tester);
         IReadOnlyList<TextSelectionPoint> endpoints =
             editable.GetEndpointsForSelection(TextSelection.Collapsed(offset));
         Assert.Single(endpoints);
-        Point global = editable.LocalToGlobal(endpoints[0].Point);
-        return new Point(global.X, global.Y - 2.0);
+        Offset global = editable.LocalToGlobal(endpoints[0].Point);
+        return new Offset(global.Dx, global.Dy - 2.0);
     }
 
     private static void Tap(
         FrameworkDartTester tester,
-        Point location,
+        Offset location,
         PointerDeviceKind kind = PointerDeviceKind.Touch,
         bool shift = false)
     {
@@ -286,7 +286,7 @@ public sealed class TextSelectionGestureDetectorDartParityTests : IDisposable
     {
         _controller.Text = "Atwater Peel Sherbrooke Bonaventure";
         using FrameworkDartTester tester = PumpTextField(TargetPlatform.Android);
-        Point pPos = TextOffsetToPosition(tester, 9); // Index of 'P|eel'
+        Offset pPos = TextOffsetToPosition(tester, 9); // Index of 'P|eel'
 
         Tap(tester, pPos);
         tester.Pump(TimeSpan.FromMilliseconds(50));
@@ -302,7 +302,7 @@ public sealed class TextSelectionGestureDetectorDartParityTests : IDisposable
     {
         _controller.Text = "Atwater Peel Sherbrooke Bonaventure";
         using FrameworkDartTester tester = PumpTextField(TargetPlatform.IOS);
-        Point pPos = TextOffsetToPosition(tester, 9); // Index of 'P|eel'
+        Offset pPos = TextOffsetToPosition(tester, 9); // Index of 'P|eel'
 
         Tap(tester, pPos);
         tester.Pump(TimeSpan.FromMilliseconds(50));
@@ -356,8 +356,8 @@ public sealed class TextSelectionGestureDetectorDartParityTests : IDisposable
         using FrameworkDartTester tester = PumpTextField(
             TargetPlatform.Android,
             dragStartBehavior: DragStartBehavior.Down);
-        Point ePos = TextOffsetToPosition(tester, testValue.IndexOf('e', StringComparison.Ordinal));
-        Point gPos = TextOffsetToPosition(tester, testValue.IndexOf('g', StringComparison.Ordinal));
+        Offset ePos = TextOffsetToPosition(tester, testValue.IndexOf('e', StringComparison.Ordinal));
+        Offset gPos = TextOffsetToPosition(tester, testValue.IndexOf('g', StringComparison.Ordinal));
 
         // Tap on text field to gain focus, and set selection to '|e'. Wait for the double tap
         // timeout after the up event, so the next down event does not register as a double tap.
@@ -424,7 +424,7 @@ public sealed class TextSelectionGestureDetectorDartParityTests : IDisposable
         _controller.Text = "Now is the time for\nall good people";
         using FrameworkDartTester tester = PumpTextField(TargetPlatform.Android, maxLines: null);
         // Inside "time", clear of the handles the double tap shows at the word's edges.
-        Point position = TextOffsetToPosition(tester, 13);
+        Offset position = TextOffsetToPosition(tester, 13);
 
         Tap(tester, position);
         tester.Pump(TimeSpan.FromMilliseconds(50));
@@ -441,7 +441,7 @@ public sealed class TextSelectionGestureDetectorDartParityTests : IDisposable
     {
         _controller.Text = "Atwater Peel Sherbrooke Bonaventure";
         using FrameworkDartTester tester = PumpTextField(TargetPlatform.Android);
-        Point position = TextOffsetToPosition(tester, 4);
+        Offset position = TextOffsetToPosition(tester, 4);
 
         Tap(tester, position);
         tester.Pump(TimeSpan.FromMilliseconds(50));

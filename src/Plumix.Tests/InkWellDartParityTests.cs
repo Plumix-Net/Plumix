@@ -83,7 +83,7 @@ public sealed class InkWellDartParityTests : IDisposable
         log.Clear();
         gesture = StartGesture(tester, tester.GetRect(InkWellOf(tester)).Center);
         tester.Pump(TimeSpan.FromMilliseconds(100));
-        gesture.MoveBy(new Vector(0.0, 200.0));
+        gesture.MoveBy(new Offset(0.0, 200.0));
         gesture.Cancel();
         Assert.Equal(["tap-down", "tap-cancel"], log);
     }
@@ -951,7 +951,7 @@ public sealed class InkWellDartParityTests : IDisposable
     {
         using FrameworkDartTester tester = CreateTester();
         TestGesture gesture = tester.CreateGesture(PointerDeviceKind.Mouse);
-        gesture.AddPointer(location: new Point(1, 1));
+        gesture.AddPointer(location: new Offset(1, 1));
 
         // Test argument works
         tester.PumpWidget(
@@ -1114,9 +1114,9 @@ public sealed class InkWellDartParityTests : IDisposable
             tester.Pump();
             tester.Pump(TimeSpan.FromMilliseconds(10));
             PaintAssert.Paints(PhysicalModelChild(tester), PaintPattern.Paints.Circle());
-            tester.Drag(tester.ElementOfType<ListView>(), new Vector(0.0, -1000.0));
+            tester.Drag(tester.ElementOfType<ListView>(), new Offset(0.0, -1000.0));
             tester.Pump(TimeSpan.FromMilliseconds(10));
-            tester.Drag(tester.ElementOfType<ListView>(), new Vector(0.0, 1000.0));
+            tester.Drag(tester.ElementOfType<ListView>(), new Offset(0.0, 1000.0));
             tester.Pump(TimeSpan.FromMilliseconds(10));
             if (keepAlive)
             {
@@ -1424,7 +1424,7 @@ public sealed class InkWellDartParityTests : IDisposable
         // Press middle
         TestGesture gesture1 = StartGesture(
             tester,
-            tester.GetTopLeft(tester.ElementsWithKey(middleKey).Single()) + new Vector(1, 1));
+            tester.GetTopLeft(tester.ElementsWithKey(middleKey).Single()) + new Offset(1, 1));
         tester.Pump(TimeSpan.FromMilliseconds(200));
         Assert.Equal(1, CountCalls(material, "drawCircle"));
 
@@ -1475,7 +1475,7 @@ public sealed class InkWellDartParityTests : IDisposable
                                                 ]))))))))));
         RenderObject material = MaterialOf(tester.ElementsWithKey(leftKey).Single());
 
-        Point parentPosition = tester.GetTopLeft(tester.ElementsWithKey(parentKey).Single()) + new Vector(1, 1);
+        Offset parentPosition = tester.GetTopLeft(tester.ElementsWithKey(parentKey).Single()) + new Offset(1, 1);
 
         // Press left child
         TestGesture gesture1 = StartGesture(tester, tester.GetCenter(tester.ElementsWithKey(leftKey).Single()));
@@ -1577,7 +1577,7 @@ public sealed class InkWellDartParityTests : IDisposable
         RenderObject material = MaterialOf(tester.ElementsWithKey(innerKey).Single());
 
         // Press inner
-        TestGesture gesture = StartGesture(tester, new Point(100, 50));
+        TestGesture gesture = StartGesture(tester, new Offset(100, 50));
         tester.Pump(TimeSpan.FromMilliseconds(200));
         Assert.Equal(1, CountCalls(material, "drawCircle"));
 
@@ -1590,7 +1590,7 @@ public sealed class InkWellDartParityTests : IDisposable
         Assert.Equal(0, CountCalls(material, "drawCircle"));
 
         // A second pointer presses inner
-        TestGesture gesture2 = StartGesture(tester, new Point(100, 50));
+        TestGesture gesture2 = StartGesture(tester, new Offset(100, 50));
         tester.Pump(TimeSpan.FromMilliseconds(200));
         Assert.Equal(1, CountCalls(material, "drawCircle"));
 
@@ -1599,12 +1599,12 @@ public sealed class InkWellDartParityTests : IDisposable
         tester.PumpAndSettle();
 
         // Press inner
-        gesture.Down(new Point(100, 50));
+        gesture.Down(new Offset(100, 50));
         tester.Pump(TimeSpan.FromMilliseconds(200));
         Assert.Equal(1, CountCalls(material, "drawCircle"));
 
         // Press left
-        gesture2.Down(new Point(50, 50));
+        gesture2.Down(new Offset(50, 50));
         tester.Pump(TimeSpan.FromMilliseconds(200));
         Assert.Equal(2, CountCalls(material, "drawCircle"));
 
@@ -1643,7 +1643,7 @@ public sealed class InkWellDartParityTests : IDisposable
         Assert.Equal(1, CountCalls(material, "drawCircle"));
 
         // Scroll upward
-        gesture.MoveBy(new Vector(0, -100));
+        gesture.MoveBy(new Offset(0, -100));
         tester.PumpAndSettle();
         PaintAssert.PaintsNothing(material);
 
@@ -1694,7 +1694,7 @@ public sealed class InkWellDartParityTests : IDisposable
 
         tester.PumpWidget(BuildFrame(enabled: false));
         tester.PumpAndSettle();
-        gesture.MoveTo(new Point(0, 0));
+        gesture.MoveTo(new Offset(0, 0));
         // Even though the InkWell has been disabled, the mouse-exit still
         // causes onHover(false) to be called.
         Assert.Equal(2, onHoverCount);
@@ -1714,7 +1714,7 @@ public sealed class InkWellDartParityTests : IDisposable
         Assert.Equal(2, onHoverCount);
         Assert.False(hover);
 
-        gesture.MoveTo(tester.GetCenter(InkWellOf(tester)) - new Vector(1, 1));
+        gesture.MoveTo(tester.GetCenter(InkWellOf(tester)) - new Offset(1, 1));
         tester.PumpAndSettle();
         // Moving the mouse a little within the InkWell doesn't change anything.
         Assert.Equal(2, onHoverCount);
@@ -1787,7 +1787,7 @@ public sealed class InkWellDartParityTests : IDisposable
         tester.PumpAndSettle();
 
         // Rebuild again, with enabled:false
-        gesture.MoveBy(new Vector(1, 1));
+        gesture.MoveBy(new Offset(1, 1));
         tester.PumpWidget(BuildFrame(enabled: false));
         tester.PumpAndSettle();
         Assert.Null(tester.TakeException());
@@ -1859,7 +1859,7 @@ public sealed class InkWellDartParityTests : IDisposable
                             onTapDown: _ => log.Add("tap-down"),
                             onTapCancel: () => log.Add("tap-cancel"))))));
 
-        Point tapLocation = tester.GetRect(InkWellOf(tester)).Center;
+        Offset tapLocation = tester.GetRect(InkWellOf(tester)).Center;
 
         TestGesture gesture = StartGesture(tester, tapLocation);
         tester.Pump(TimeSpan.FromMilliseconds(100));
@@ -1893,7 +1893,7 @@ public sealed class InkWellDartParityTests : IDisposable
                             onTapDown: _ => log.Add("tap-down"),
                             onTapCancel: () => log.Add("tap-cancel"))))));
 
-        Point tapLocation = tester.GetRect(InkWellOf(tester)).Center;
+        Offset tapLocation = tester.GetRect(InkWellOf(tester)).Center;
 
         TestGesture gesture1 = StartGesture(tester, tapLocation);
         tester.Pump(TimeSpan.FromMilliseconds(100));
@@ -1983,7 +1983,7 @@ public sealed class InkWellDartParityTests : IDisposable
         gesture.AddPointer();
         gesture.MoveTo(tester.GetCenter(tester.ElementOfType<SizedBox>()));
         tester.PumpAndSettle();
-        gesture.MoveTo(new Point(10, 10)); // fade out the overlay
+        gesture.MoveTo(new Offset(10, 10)); // fade out the overlay
         tester.Pump(); // trigger the fade out animation
         RenderObject inkFeatures = GetInkFeatures(tester);
         // Fadeout begins with the MaterialStates.hovered overlay color
@@ -2021,7 +2021,7 @@ public sealed class InkWellDartParityTests : IDisposable
         log.Clear();
 
         TestGesture gesture = StartGesture(tester, tester.GetCenter(InkWellOf(tester)), PointerButtons.Secondary);
-        gesture.MoveTo(new Point(100, 100));
+        gesture.MoveTo(new Offset(100, 100));
         gesture.Up();
 
         Assert.Equal(["secondary-tap-down", "secondary-tap-cancel"], log);
@@ -2212,7 +2212,7 @@ public sealed class InkWellDartParityTests : IDisposable
     private static FrameworkDartTester CreateTester() => new(fakeGestureTimers: true);
 
     private static Rect Ltrb(double left, double top, double right, double bottom) =>
-        new(new Point(left, top), new Point(right, bottom));
+        DartGeometry.RectFromCorners(new Offset(left, top), new Offset(right, bottom));
 
     private static Path RoundedPath(Rect rect, double radius)
     {
@@ -2247,7 +2247,7 @@ public sealed class InkWellDartParityTests : IDisposable
     // `tester.startGesture(location, buttons: ...)`: a touch pointer, down.
     private static TestGesture StartGesture(
         FrameworkDartTester tester,
-        Point location,
+        Offset location,
         PointerButtons buttons = PointerButtons.Primary) =>
         tester.StartGesture(location, PointerDeviceKind.Touch, buttons);
 

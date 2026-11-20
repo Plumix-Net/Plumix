@@ -31,14 +31,14 @@ public class InkSparkle : InteractiveInkFeature
     // constant for every pixel in the animation, so the Flutter implementation
     // computes these animation values in software in order to simplify the shader
     // implementation and provide better performance on most devices.
-    private readonly Animation<Point> _center;
+    private readonly Animation<Offset> _center;
     private readonly Animation<double> _radiusScale;
     private readonly Animation<double> _alpha;
     private readonly Animation<double> _sparkleAlpha;
 
     private readonly double _turbulenceSeed;
     private readonly Color _color;
-    private readonly Point _position;
+    private readonly Offset _position;
     private readonly BorderRadius _borderRadius;
     private readonly double _targetRadius;
     private readonly RectCallback? _clipCallback;
@@ -55,7 +55,7 @@ public class InkSparkle : InteractiveInkFeature
         MaterialInkController controller,
         RenderBox referenceBox,
         Color color,
-        Point position,
+        Offset position,
         TextDirection textDirection,
         bool containedInkWell = true,
         RectCallback? rectCallback = null,
@@ -94,8 +94,8 @@ public class InkSparkle : InteractiveInkFeature
         // Functionally equivalent to Android 12's SkSL:
         //`return mix(u_touch, u_resolution, saturate(in_radius_scale * 2.0))`
         var centerTween = new Vector2Tween(
-            new Point(_position.X, _position.Y),
-            new Point(referenceBox.Size.Width / 2, referenceBox.Size.Height / 2));
+            new Offset(_position.Dx, _position.Dy),
+            new Offset(referenceBox.Size.Width / 2, referenceBox.Size.Height / 2));
         Animation<double> centerProgress = new TweenSequence<double>(
         [
             new TweenSequenceItem<double>(new Tween<double>(0.0, 1.0), 50),
@@ -221,8 +221,8 @@ public class InkSparkle : InteractiveInkFeature
         u[6] = 1.0;
         u[7] = _radiusScale.Value;
         // uCenter
-        u[8] = _center.Value.X;
-        u[9] = _center.Value.Y;
+        u[8] = _center.Value.Dx;
+        u[9] = _center.Value.Dy;
         // uMaxRadius
         u[10] = _targetRadius;
         // uResolutionScale
@@ -259,14 +259,14 @@ public class InkSparkle : InteractiveInkFeature
 
     private static void TransformCanvas(Canvas canvas, Matrix4 transform)
     {
-        Point? originOffset = MatrixUtils.GetAsTranslation(transform);
+        Offset? originOffset = MatrixUtils.GetAsTranslation(transform);
         if (originOffset is null)
         {
             canvas.Transform(transform);
         }
         else
         {
-            canvas.Translate(originOffset.Value.X, originOffset.Value.Y);
+            canvas.Translate(originOffset.Value.Dx, originOffset.Value.Dy);
         }
     }
 
@@ -295,11 +295,11 @@ public class InkSparkle : InteractiveInkFeature
 }
 
 // C#-only: Dart's `Tween<Vector2>`, whose default lerp is `begin + (end - begin) * t`.
-internal sealed class Vector2Tween(Point begin, Point end) : Tween<Point>(begin, end)
+internal sealed class Vector2Tween(Offset begin, Offset end) : Tween<Offset>(begin, end)
 {
-    public override Point Lerp(double t) => new(
-        Begin.X + ((End.X - Begin.X) * t),
-        Begin.Y + ((End.Y - Begin.Y) * t));
+    public override Offset Lerp(double t) => new(
+        Begin.Dx + ((End.Dx - Begin.Dx) * t),
+        Begin.Dy + ((End.Dy - Begin.Dy) * t));
 }
 
 internal sealed class InkSparkleFactory : InteractiveInkFeatureFactory
@@ -342,7 +342,7 @@ internal sealed class InkSparkleFactory : InteractiveInkFeatureFactory
     public override InteractiveInkFeature Create(
         MaterialInkController controller,
         RenderBox referenceBox,
-        Point position,
+        Offset position,
         Color color,
         TextDirection textDirection,
         bool containedInkWell = false,

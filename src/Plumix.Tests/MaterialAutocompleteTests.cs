@@ -770,9 +770,9 @@ public sealed class MaterialAutocompleteTests : IDisposable
         return Assert.Single(MaterialSurfaceProbe.FindAll(root), surface => surface.HasShadow);
     }
 
-    private static double VerticalCenter(RenderBox renderBox) => GlobalRect(renderBox).Center.Y;
+    private static double VerticalCenter(RenderBox renderBox) => GlobalRect(renderBox).Center.Dy;
 
-    private static void DispatchTap(RenderView renderView, Point position)
+    private static void DispatchTap(RenderView renderView, Offset position)
     {
         DateTime timestamp = DateTime.UtcNow;
         GestureBinding.Instance.HandlePointerEvent(
@@ -840,7 +840,7 @@ public sealed class MaterialAutocompleteTests : IDisposable
     private static Rect GlobalRect(RenderBox renderBox)
     {
         Assert.True(renderBox.TryGetTransformFromRoot(out Matrix4 transform));
-        return RenderObject.TransformRect(transform, new Rect(renderBox.Size));
+        return RenderObject.TransformRect(transform, DartGeometry.RectFromSize(renderBox.Size));
     }
 
     private static async Task PumpUntilAsync(

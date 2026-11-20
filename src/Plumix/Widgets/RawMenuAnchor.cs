@@ -13,7 +13,7 @@ public sealed record RawMenuOverlayInfo(
     Rect AnchorRect,
     Size OverlaySize,
     object TapRegionGroupId,
-    Vector? Position = null);
+    Offset? Position = null);
 
 public delegate Widget RawMenuAnchorOverlayBuilder(BuildContext context, RawMenuOverlayInfo info);
 
@@ -22,7 +22,7 @@ public delegate Widget RawMenuAnchorChildBuilder(
     MenuController controller,
     Widget? child);
 
-public delegate void RawMenuAnchorOpenRequestedCallback(Vector? position, Action showOverlay);
+public delegate void RawMenuAnchorOpenRequestedCallback(Offset? position, Action showOverlay);
 
 public delegate void RawMenuAnchorCloseRequestedCallback(Action hideOverlay);
 
@@ -35,7 +35,7 @@ public class MenuController
     public bool IsOpen => Anchor?.IsOpen ?? false;
 
     /// <summary>Opens the attached menu, optionally offset from the anchor's top-left corner.</summary>
-    public virtual void Open(Vector? position = null)
+    public virtual void Open(Offset? position = null)
     {
         if (Anchor is null)
         {
@@ -160,11 +160,11 @@ public abstract class RawMenuAnchorBaseState : State
 
     internal abstract bool IsOpen { get; }
 
-    internal abstract void Open(Vector? position = null);
+    internal abstract void Open(Offset? position = null);
 
     internal abstract void Close(bool inDispose = false);
 
-    internal abstract void HandleOpenRequest(Vector? position = null);
+    internal abstract void HandleOpenRequest(Offset? position = null);
 
     internal abstract void HandleCloseRequest();
 
@@ -398,7 +398,7 @@ public sealed class RawMenuAnchor : StatefulWidget
 
     public override State CreateState() => new RawMenuAnchorState();
 
-    private static void DefaultOnOpenRequested(Vector? position, Action showOverlay) => showOverlay();
+    private static void DefaultOnOpenRequested(Offset? position, Action showOverlay) => showOverlay();
 
     private static void DefaultOnCloseRequested(Action hideOverlay) => hideOverlay();
 }
@@ -406,7 +406,7 @@ public sealed class RawMenuAnchor : StatefulWidget
 public sealed class RawMenuAnchorState : RawMenuAnchorBaseState<RawMenuAnchor>
 {
     private readonly OverlayPortalController _overlayController = new("MenuAnchor controller");
-    private Vector? _menuPosition;
+    private Offset? _menuPosition;
 
     private RawMenuAnchor Current => (RawMenuAnchor)StateWidget;
 
@@ -431,12 +431,12 @@ public sealed class RawMenuAnchorState : RawMenuAnchorBaseState<RawMenuAnchor>
         }
     }
 
-    internal override void HandleOpenRequest(Vector? position = null)
+    internal override void HandleOpenRequest(Offset? position = null)
     {
         Current.OnOpenRequested(position, () => Open(position));
     }
 
-    internal override void Open(Vector? position = null)
+    internal override void Open(Offset? position = null)
     {
         if (!Mounted)
         {
@@ -541,7 +541,7 @@ public sealed class RawMenuAnchorState : RawMenuAnchorBaseState<RawMenuAnchor>
     {
         Rect anchorRect = RenderObject.TransformRect(
             layoutInfo.ChildPaintTransform,
-            new Rect(default, layoutInfo.ChildSize));
+            DartGeometry.RectFromOffsetAndSize(default, layoutInfo.ChildSize));
         return Current.OverlayBuilder(
             context,
             new RawMenuOverlayInfo(
@@ -586,11 +586,11 @@ public sealed class RawMenuAnchorGroupState : RawMenuAnchorBaseState<RawMenuAnch
         }
     }
 
-    internal override void Open(Vector? position = null)
+    internal override void Open(Offset? position = null)
     {
     }
 
-    internal override void HandleOpenRequest(Vector? position = null)
+    internal override void HandleOpenRequest(Offset? position = null)
     {
         Open(position);
     }

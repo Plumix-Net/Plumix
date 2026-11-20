@@ -117,7 +117,7 @@ public class MenuAnchor : StatefulWidget
         MenuController? controller = null,
         FocusNode? childFocusNode = null,
         MenuStyle? style = null,
-        Vector? alignmentOffset = null,
+        Offset? alignmentOffset = null,
         EdgeInsetsGeometry? reservedPadding = null,
         LayerLink? layerLink = null,
         Clip clipBehavior = Clip.HardEdge,
@@ -155,7 +155,7 @@ public class MenuAnchor : StatefulWidget
     public MenuController? Controller { get; }
     public FocusNode? ChildFocusNode { get; }
     public MenuStyle? Style { get; }
-    public Vector AlignmentOffset { get; }
+    public Offset AlignmentOffset { get; }
     public EdgeInsetsGeometry? ReservedPadding { get; }
     public LayerLink? LayerLink { get; }
     public Clip ClipBehavior { get; }
@@ -409,7 +409,7 @@ public class MenuAnchorState : State<MenuAnchor>
         }
     }
 
-    private void HandleMenuOpenRequest(Vector? position, Action showOverlay)
+    private void HandleMenuOpenRequest(Offset? position, Action showOverlay)
     {
         if (_anchorParent?.IsClosing ?? false)
         {
@@ -544,7 +544,7 @@ internal sealed class Submenu : StatelessWidget
         IReadOnlyList<Widget> menuChildren,
         bool crossAxisUnconstrained,
         RawMenuOverlayInfo menuPosition,
-        Vector alignmentOffset,
+        Offset alignmentOffset,
         EdgeInsetsGeometry reservedPadding,
         Key? key = null) : base(key)
     {
@@ -570,7 +570,7 @@ internal sealed class Submenu : StatelessWidget
     public IReadOnlyList<Widget> MenuChildren { get; }
     public bool CrossAxisUnconstrained { get; }
     public RawMenuOverlayInfo MenuPosition { get; }
-    public Vector AlignmentOffset { get; }
+    public Offset AlignmentOffset { get; }
     public EdgeInsetsGeometry ReservedPadding { get; }
 
     public override Widget Build(BuildContext context)
@@ -589,12 +589,12 @@ internal sealed class Submenu : StatelessWidget
         var cursor = new MenuMouseCursor(states => resolved.MouseCursor?.Resolve(states));
         EdgeInsetsGeometry menuPadding = resolved.Padding?.Resolve(new HashSet<WidgetState>())
                                          ?? EdgeInsetsGeometry.Zero;
-        double densityDx = Math.Max(0.0, visualDensity.BaseSizeAdjustment.X);
+        double densityDx = Math.Max(0.0, visualDensity.BaseSizeAdjustment.Dx);
         EdgeInsetsGeometry resolvedMenuPadding = menuPadding
             .Add(EdgeInsetsGeometry.Symmetric(horizontal: densityDx))
             .Clamp(EdgeInsetsGeometry.Zero, EdgeInsetsGeometry.Infinity);
         Rect layoutAnchorRect = LayerLink is null
-            ? new Rect(
+            ? DartGeometry.RectFromLTWH(
                 MenuPosition.AnchorRect.Left + densityDx,
                 MenuPosition.AnchorRect.Top,
                 Math.Max(0.0, MenuPosition.AnchorRect.Right - MenuPosition.AnchorRect.Left - densityDx),
@@ -750,7 +750,7 @@ internal sealed class MenuPanelState : State<MenuPanel>
 
         VisualDensity density = style.VisualDensity ?? VisualDensity.Standard;
         EdgeInsetsGeometry padding = style.Padding?.Resolve(states) ?? EdgeInsetsGeometry.Zero;
-        double horizontalDensityPadding = Math.Max(0.0, density.BaseSizeAdjustment.X);
+        double horizontalDensityPadding = Math.Max(0.0, density.BaseSizeAdjustment.Dx);
         EdgeInsetsGeometry resolvedPadding = padding
             .Add(EdgeInsetsGeometry.Symmetric(horizontal: horizontalDensityPadding))
             .Clamp(EdgeInsetsGeometry.Zero, EdgeInsetsGeometry.Infinity);
@@ -1312,7 +1312,7 @@ internal static class MenuButtonDefaults
         double fontSizeRatio = ButtonStyleButton.EffectiveTextScale(
             context,
             theme.TextTheme.LabelLarge.FontSize);
-        double densityDx = density.BaseSizeAdjustment.X;
+        double densityDx = density.BaseSizeAdjustment.Dx;
         return ButtonStyleButton.ScaledPadding(
             EdgeInsets.Symmetric(
                 horizontal: Math.Max(MenuConstants.MenuViewPadding, MenuConstants.LabelItemDefaultSpacing + densityDx)),
@@ -1823,7 +1823,7 @@ public sealed class SubmenuButton : StatefulWidget
         MenuController? controller = null,
         ButtonStyle? style = null,
         MenuStyle? menuStyle = null,
-        Vector? alignmentOffset = null,
+        Offset? alignmentOffset = null,
         Clip clipBehavior = Clip.HardEdge,
         FocusNode? focusNode = null,
         WidgetStatesController? statesController = null,
@@ -1872,7 +1872,7 @@ public sealed class SubmenuButton : StatefulWidget
     public MenuController? Controller { get; }
     public ButtonStyle? Style { get; }
     public MenuStyle? MenuStyle { get; }
-    public Vector? AlignmentOffset { get; }
+    public Offset? AlignmentOffset { get; }
     public Clip ClipBehavior { get; }
     public FocusNode? FocusNode { get; }
     public WidgetStatesController? StatesController { get; }
@@ -2004,7 +2004,7 @@ public sealed class SubmenuButtonState : State<SubmenuButton>
                 child: button);
         }
 
-        Vector menuPaddingOffset = ResolveMenuPaddingOffset(context);
+        Offset menuPaddingOffset = ResolveMenuPaddingOffset(context);
 
         Widget anchor = new MenuAnchor(
             menuChildren: Current.MenuChildren,
@@ -2063,9 +2063,9 @@ public sealed class SubmenuButtonState : State<SubmenuButton>
         }
     }
 
-    private Vector ResolveMenuPaddingOffset(BuildContext context)
+    private Offset ResolveMenuPaddingOffset(BuildContext context)
     {
-        Vector offset = Current.AlignmentOffset ?? default;
+        Offset offset = Current.AlignmentOffset ?? default;
         IReadOnlySet<WidgetState> states = Current.StatesController?.Value ?? new HashSet<WidgetState>();
         EdgeInsetsGeometry menuPaddingGeometry = Current.MenuStyle?.Padding?.Resolve(states)
                                                  ?? MenuTheme.Of(context).Style?.Padding?.Resolve(states)
@@ -2077,11 +2077,11 @@ public sealed class SubmenuButtonState : State<SubmenuButton>
         // Flutter's `_SubmenuButtonState.build` falls back to `Axis.vertical` here, unlike the
         // horizontal fallback the label decoration and the overlay theme switch use.
         Axis orientation = _parentAnchor?.Orientation ?? Axis.Vertical;
-        Vector delta = (orientation, direction) switch
+        Offset delta = (orientation, direction) switch
         {
-            (Axis.Horizontal, TextDirection.Rtl) => new Vector(menuPadding.Right, 0),
-            (Axis.Horizontal, TextDirection.Ltr) => new Vector(-menuPadding.Left, 0),
-            _ => new Vector(0, -menuPadding.Top),
+            (Axis.Horizontal, TextDirection.Rtl) => new Offset(menuPadding.Right, 0),
+            (Axis.Horizontal, TextDirection.Ltr) => new Offset(-menuPadding.Left, 0),
+            _ => new Offset(0, -menuPadding.Top),
         };
         return offset + delta;
     }
@@ -2363,8 +2363,8 @@ internal sealed class MenuLayout : SingleChildLayoutDelegate
         Rect anchorRect,
         TextDirection textDirection,
         AlignmentGeometry alignment,
-        Vector alignmentOffset,
-        Vector? menuPosition,
+        Offset alignmentOffset,
+        Offset? menuPosition,
         EdgeInsetsGeometry menuPadding,
         Axis orientation,
         Axis parentOrientation,
@@ -2396,10 +2396,10 @@ internal sealed class MenuLayout : SingleChildLayoutDelegate
 
     public AlignmentGeometry Alignment { get; }
 
-    public Vector AlignmentOffset { get; }
+    public Offset AlignmentOffset { get; }
 
     /// <summary>The position passed to <see cref="MenuController.Open"/>, if any.</summary>
-    public Vector? MenuPosition { get; }
+    public Offset? MenuPosition { get; }
 
     /// <summary>The menu panel's own padding. Only <see cref="ShouldRelayout"/> reads it, as in Dart.</summary>
     public EdgeInsetsGeometry MenuPadding { get; }
@@ -2426,32 +2426,32 @@ internal sealed class MenuLayout : SingleChildLayoutDelegate
         return BoxConstraints.Loose(constraints.Biggest).Deflate(ReservedPadding.Resolve(TextDirection));
     }
 
-    public override Point GetPositionForChild(Size size, Size childSize)
+    public override Offset GetPositionForChild(Size size, Size childSize)
     {
-        Rect overlayRect = DeflateRect(ViewPadding, DeflateRect(ViewInsets, new Rect(default, size)));
+        Rect overlayRect = DeflateRect(ViewPadding, DeflateRect(ViewInsets, DartGeometry.RectFromOffsetAndSize(default, size)));
 
         // Position the menu using its *unfolded* height so a growing panel does not slide across
         // the screen while it opens.
         double unconstrainedHeight = HeightFactor > 0.01 ? childSize.Height / HeightFactor : 0.0;
         double childHeightEstimate = Math.Min(unconstrainedHeight, size.Height);
         var childSizeEstimate = new Size(childSize.Width, childHeightEstimate);
-        Point finalPosition = PositionChild(childSizeEstimate, overlayRect);
+        Offset finalPosition = PositionChild(childSizeEstimate, overlayRect);
 
         if (MenuPosition.HasValue)
         {
             return finalPosition;
         }
 
-        bool growsUp = finalPosition.Y + childSizeEstimate.Height <= AnchorRect.Center.Y;
+        bool growsUp = finalPosition.Dy + childSizeEstimate.Height <= AnchorRect.Center.Dy;
         if (growsUp)
         {
-            return new Point(finalPosition.X, finalPosition.Y + (childHeightEstimate - childSize.Height));
+            return new Offset(finalPosition.Dx, finalPosition.Dy + (childHeightEstimate - childSize.Height));
         }
 
-        var initialPosition = new Point(finalPosition.X, AnchorRect.Bottom);
-        return new Point(
-            initialPosition.X + ((finalPosition.X - initialPosition.X) * HeightFactor),
-            initialPosition.Y + ((finalPosition.Y - initialPosition.Y) * HeightFactor));
+        var initialPosition = new Offset(finalPosition.Dx, AnchorRect.Bottom);
+        return new Offset(
+            initialPosition.Dx + ((finalPosition.Dx - initialPosition.Dx) * HeightFactor),
+            initialPosition.Dy + ((finalPosition.Dy - initialPosition.Dy) * HeightFactor));
     }
 
     public override bool ShouldRelayout(SingleChildLayoutDelegate oldDelegate)
@@ -2474,19 +2474,19 @@ internal sealed class MenuLayout : SingleChildLayoutDelegate
                || !AvoidBounds.SequenceEqual(oldLayout.AvoidBounds);
     }
 
-    private Point PositionChild(Size childSize, Rect overlayRect)
+    private Offset PositionChild(Size childSize, Rect overlayRect)
     {
         double x;
         double y;
         if (!MenuPosition.HasValue)
         {
             Alignment resolved = Alignment.Resolve(TextDirection);
-            Point desiredPosition = resolved.WithinRect(AnchorRect);
-            Vector directionalOffset = Alignment.IsDirectional && TextDirection == TextDirection.Rtl
-                ? new Vector(-AlignmentOffset.X, AlignmentOffset.Y)
+            Offset desiredPosition = resolved.WithinRect(AnchorRect);
+            Offset directionalOffset = Alignment.IsDirectional && TextDirection == TextDirection.Rtl
+                ? new Offset(-AlignmentOffset.Dx, AlignmentOffset.Dy)
                 : AlignmentOffset;
-            x = desiredPosition.X + directionalOffset.X;
-            y = desiredPosition.Y + directionalOffset.Y;
+            x = desiredPosition.Dx + directionalOffset.Dx;
+            y = desiredPosition.Dy + directionalOffset.Dy;
             if (TextDirection == TextDirection.Rtl)
             {
                 x -= childSize.Width;
@@ -2494,8 +2494,8 @@ internal sealed class MenuLayout : SingleChildLayoutDelegate
         }
         else
         {
-            x = MenuPosition.Value.X + AnchorRect.Left;
-            y = MenuPosition.Value.Y + AnchorRect.Top;
+            x = MenuPosition.Value.Dx + AnchorRect.Left;
+            y = MenuPosition.Value.Dy + AnchorRect.Top;
         }
 
         List<Rect> subScreens = DisplayFeatureSubScreen.SubScreensInBounds(overlayRect, AvoidBounds);
@@ -2518,7 +2518,7 @@ internal sealed class MenuLayout : SingleChildLayoutDelegate
             }
             else
             {
-                double newX = AnchorRect.Right + AlignmentOffset.X;
+                double newX = AnchorRect.Right + AlignmentOffset.Dx;
                 x = !OffRightSide(newX) ? newX : allowedRect.Left;
             }
         }
@@ -2530,7 +2530,7 @@ internal sealed class MenuLayout : SingleChildLayoutDelegate
             }
             else
             {
-                double newX = AnchorRect.Left - childSize.Width - AlignmentOffset.X;
+                double newX = AnchorRect.Left - childSize.Width - AlignmentOffset.Dx;
                 x = !OffLeftSide(newX) ? newX : allowedRect.Right - childSize.Width;
             }
         }
@@ -2549,7 +2549,7 @@ internal sealed class MenuLayout : SingleChildLayoutDelegate
             double newY = AnchorRect.Top - childSize.Height;
             if (!OffTop(newY))
             {
-                y = ParentOrientation == Axis.Horizontal ? newY - AlignmentOffset.Y : newY;
+                y = ParentOrientation == Axis.Horizontal ? newY - AlignmentOffset.Dy : newY;
             }
             else
             {
@@ -2557,10 +2557,10 @@ internal sealed class MenuLayout : SingleChildLayoutDelegate
             }
         }
 
-        return new Point(x, y);
+        return new Offset(x, y);
     }
 
-    private static Rect ClosestScreen(IReadOnlyList<Rect> screens, Point point)
+    private static Rect ClosestScreen(IReadOnlyList<Rect> screens, Offset point)
     {
         Rect closest = screens[0];
         foreach (Rect screen in screens)
@@ -2574,10 +2574,10 @@ internal sealed class MenuLayout : SingleChildLayoutDelegate
         return closest;
     }
 
-    private static double Distance(Point from, Point to)
+    private static double Distance(Offset from, Offset to)
     {
-        double dx = from.X - to.X;
-        double dy = from.Y - to.Y;
+        double dx = from.Dx - to.Dx;
+        double dy = from.Dy - to.Dy;
         return Math.Sqrt((dx * dx) + (dy * dy));
     }
 
@@ -2585,7 +2585,7 @@ internal sealed class MenuLayout : SingleChildLayoutDelegate
     {
         double left = rect.Left + insets.Left;
         double top = rect.Top + insets.Top;
-        return new Rect(
+        return DartGeometry.RectFromLTWH(
             left,
             top,
             Math.Max(0.0, rect.Right - insets.Right - left),

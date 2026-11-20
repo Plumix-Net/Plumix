@@ -15,7 +15,7 @@ public sealed class DisplayFeatureSubScreenTests : IDisposable
     private static readonly MediaQueryData VerticalHinge = new(
         Size: ScreenSize,
         Padding: EdgeInsets.All(10),
-        DisplayFeatures: [new DisplayFeature(new Rect(390, 0, 20, 600), DisplayFeatureType.Hinge)]);
+        DisplayFeatures: [new DisplayFeature(DartGeometry.RectFromLTWH(390, 0, 20, 600), DisplayFeatureType.Hinge)]);
 
     public DisplayFeatureSubScreenTests() => SchedulerBinding.ResetForTests();
 
@@ -26,27 +26,27 @@ public sealed class DisplayFeatureSubScreenTests : IDisposable
     {
         Rect bounds = MeasureChild(new MediaQueryData(Size: ScreenSize), anchorPoint: null, TextDirection.Ltr);
 
-        Assert.Equal(new Rect(default, ScreenSize), bounds);
+        Assert.Equal(DartGeometry.RectFromOffsetAndSize(default, ScreenSize), bounds);
     }
 
     [Fact]
     public void SubScreen_PicksTheHalfClosestToTheAnchorPoint()
     {
-        Rect leading = MeasureChild(VerticalHinge, new Point(0, 0), TextDirection.Ltr);
-        Assert.Equal(new Rect(0, 0, 390, 600), leading);
+        Rect leading = MeasureChild(VerticalHinge, new Offset(0, 0), TextDirection.Ltr);
+        Assert.Equal(DartGeometry.RectFromLTWH(0, 0, 390, 600), leading);
 
-        Rect trailing = MeasureChild(VerticalHinge, new Point(1000, 0), TextDirection.Ltr);
-        Assert.Equal(new Rect(410, 0, 390, 600), trailing);
+        Rect trailing = MeasureChild(VerticalHinge, new Offset(1000, 0), TextDirection.Ltr);
+        Assert.Equal(DartGeometry.RectFromLTWH(410, 0, 390, 600), trailing);
     }
 
     [Fact]
     public void SubScreen_FallsBackToTheDirectionalLeadingEdge()
     {
         Rect ltr = MeasureChild(VerticalHinge, anchorPoint: null, TextDirection.Ltr);
-        Assert.Equal(new Rect(0, 0, 390, 600), ltr);
+        Assert.Equal(DartGeometry.RectFromLTWH(0, 0, 390, 600), ltr);
 
         Rect rtl = MeasureChild(VerticalHinge, anchorPoint: null, TextDirection.Rtl);
-        Assert.Equal(new Rect(410, 0, 390, 600), rtl);
+        Assert.Equal(DartGeometry.RectFromLTWH(410, 0, 390, 600), rtl);
     }
 
     // Flutter: 'media_query_test.dart: MediaQuery.removeDisplayFeatures removes specified display
@@ -56,7 +56,7 @@ public sealed class DisplayFeatureSubScreenTests : IDisposable
     {
         MediaQueryData subScreenMediaQuery = SubScreenData(
             viewPadding: EdgeInsets.FromLTRB(10.0, 6.0, 8.0, 12.0),
-            subScreen: new Rect(new Point(20, 10), new Point(40, 20)));
+            subScreen: DartGeometry.RectFromCorners(new Offset(20, 10), new Offset(40, 20)));
 
         Assert.Equal(new Size(82.0, 40.0), subScreenMediaQuery.Size);
         Assert.Equal(2.0, subScreenMediaQuery.DevicePixelRatio);
@@ -75,7 +75,7 @@ public sealed class DisplayFeatureSubScreenTests : IDisposable
     {
         MediaQueryData subScreenMediaQuery = SubScreenData(
             viewPadding: EdgeInsets.FromLTRB(46.0, 6.0, 8.0, 12.0),
-            subScreen: new Rect(new Point(42, 0), new Point(82, 40)));
+            subScreen: DartGeometry.RectFromCorners(new Offset(42, 0), new Offset(82, 40)));
 
         Assert.Equal(new Size(82.0, 40.0), subScreenMediaQuery.Size);
         Assert.Equal(2.0, subScreenMediaQuery.DevicePixelRatio);
@@ -88,7 +88,7 @@ public sealed class DisplayFeatureSubScreenTests : IDisposable
     }
 
     private static readonly DisplayFeature CutoutDisplayFeature = new(
-        Bounds: new Rect(new Point(70, 10), new Point(74, 14)),
+        Bounds: DartGeometry.RectFromCorners(new Offset(70, 10), new Offset(74, 14)),
         Type: DisplayFeatureType.Cutout,
         State: DisplayFeatureState.Unknown);
 
@@ -105,7 +105,7 @@ public sealed class DisplayFeatureSubScreenTests : IDisposable
             DisplayFeatures:
             [
                 new DisplayFeature(
-                    Bounds: new Rect(new Point(40, 0), new Point(42, 40)),
+                    Bounds: DartGeometry.RectFromCorners(new Offset(40, 0), new Offset(42, 40)),
                     Type: DisplayFeatureType.Hinge,
                     State: DisplayFeatureState.PostureFlat),
                 CutoutDisplayFeature,
@@ -113,7 +113,7 @@ public sealed class DisplayFeatureSubScreenTests : IDisposable
         return data.RemoveDisplayFeatures(subScreen);
     }
 
-    private static Rect MeasureChild(MediaQueryData media, Point? anchorPoint, TextDirection direction)
+    private static Rect MeasureChild(MediaQueryData media, Offset? anchorPoint, TextDirection direction)
     {
         MediaQueryData? childMedia = null;
         using var harness = new Harness(new Directionality(
@@ -132,7 +132,7 @@ public sealed class DisplayFeatureSubScreenTests : IDisposable
         var box = Assert.Single(FindDescendants<RenderConstrainedBox>(harness.RenderView));
         // Dart's removeDisplayFeatures keeps the full screen size; only the box shrinks.
         Assert.Equal(media.Size, childMedia!.Size);
-        return new Rect(box.LocalToGlobal(default), box.Size);
+        return DartGeometry.RectFromOffsetAndSize(box.LocalToGlobal(default), box.Size);
     }
 
     private static List<T> FindDescendants<T>(RenderObject? root) where T : RenderObject

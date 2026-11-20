@@ -122,8 +122,8 @@ public class InkHighlight : InteractiveInkFeature
     protected override void PaintFeature(Canvas canvas, Matrix4 transform)
     {
         var paint = new Paint { Color = Color.WithAlpha(_alpha.Value) };
-        Avalonia.Point? originOffset = MatrixUtils.GetAsTranslation(transform);
-        Rect rect = _rectCallback is not null ? _rectCallback() : new Rect(ReferenceBox.Size);
+        Offset? originOffset = MatrixUtils.GetAsTranslation(transform);
+        Rect rect = _rectCallback is not null ? _rectCallback() : DartGeometry.RectFromSize(ReferenceBox.Size);
         if (originOffset is null)
         {
             canvas.Save();
@@ -133,7 +133,7 @@ public class InkHighlight : InteractiveInkFeature
         }
         else
         {
-            PaintHighlight(canvas, rect.Translate((Avalonia.Vector)originOffset.Value), paint);
+            PaintHighlight(canvas, rect.Shift((Offset)originOffset.Value), paint);
         }
     }
 }

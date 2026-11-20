@@ -62,11 +62,11 @@ public sealed class CupertinoSheetTransition : StatefulWidget
             secondaryAnimation,
             Navigator.Of(context).UserGestureInProgress ? Curves.Linear : Curves.LinearToEaseOut,
             Navigator.Of(context).UserGestureInProgress ? Curves.Linear : Curves.EaseInToLinear);
-        Animation<Vector> position = curved.Drive(new VectorTween(
-            begin: Vector.Zero,
+        Animation<Offset> position = curved.Drive(new VectorTween(
+            begin: DartGeometry.OffsetZero,
             end: CupertinoSheetRoute<dynamic>.HasParentSheet(context)
-                ? new Vector(0.0, -0.005)
-                : new Vector(0.0, 0.07)));
+                ? new Offset(0.0, -0.005)
+                : new Offset(0.0, 0.07)));
         Animation<double> scale = curved.Drive(new DoubleTween(begin: 1.0, end: 1.0 - SheetScaleFactor));
 
         if (CupertinoSheetRoute<dynamic>.HasParentSheet(context))
@@ -180,17 +180,17 @@ internal sealed class CupertinoSheetTransitionState : State<CupertinoSheetTransi
 
     public override Widget Build(BuildContext context)
     {
-        Animation<Vector> secondaryPosition = _secondaryCurve.Drive(new VectorTween(
-            begin: Vector.Zero,
-            end: new Vector(0.0, -0.005)));
+        Animation<Offset> secondaryPosition = _secondaryCurve.Drive(new VectorTween(
+            begin: DartGeometry.OffsetZero,
+            end: new Offset(0.0, -0.005)));
         Animation<double> secondaryScale = _secondaryCurve.Drive(new DoubleTween(
             begin: 1.0,
             end: 1.0 - CupertinoSheetTransition.SheetScaleFactor));
-        Animation<Vector> primaryPosition = _primaryCurve.Drive(new VectorTween(
-            begin: new Vector(0.0, 1.0),
+        Animation<Offset> primaryPosition = _primaryCurve.Drive(new VectorTween(
+            begin: new Offset(0.0, 1.0),
             end: CupertinoSheetRoute<dynamic>.HasParentSheet(context)
-                ? new Vector(0.0, -0.02)
-                : Vector.Zero));
+                ? new Offset(0.0, -0.02)
+                : DartGeometry.OffsetZero));
 
         return new CupertinoSheetStretchControllerProvider(
             controller: _stretchDragController,

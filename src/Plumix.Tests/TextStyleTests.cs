@@ -347,10 +347,10 @@ public sealed class TextStyleTests
     [Fact]
     public void TextStyleShadows()
     {
-        var shadow1 = new Shadow(blurRadius: 1.0, offset: new Point(1.0, 1.0));
-        var shadow2 = new Shadow(blurRadius: 2.0, color: new Color(0xFF111111), offset: new Point(2.0, 2.0));
-        var shadow3 = new Shadow(blurRadius: 3.0, color: new Color(0xFF222222), offset: new Point(3.0, 3.0));
-        var shadow4 = new Shadow(blurRadius: 4.0, color: new Color(0xFF333333), offset: new Point(4.0, 4.0));
+        var shadow1 = new Shadow(blurRadius: 1.0, offset: new Offset(1.0, 1.0));
+        var shadow2 = new Shadow(blurRadius: 2.0, color: new Color(0xFF111111), offset: new Offset(2.0, 2.0));
+        var shadow3 = new Shadow(blurRadius: 3.0, color: new Color(0xFF222222), offset: new Offset(3.0, 3.0));
+        var shadow4 = new Shadow(blurRadius: 4.0, color: new Color(0xFF333333), offset: new Offset(4.0, 4.0));
 
         var s1 = new TextStyle(Shadows: [shadow1, shadow2]);
         var s2 = new TextStyle(Shadows: [shadow3, shadow4]);
@@ -358,10 +358,10 @@ public sealed class TextStyleTests
         Assert.Equal(2, s3.Shadows!.Count);
         Assert.Equal(Shadow.Lerp(shadow1, shadow3, 0.5), s3.Shadows[0]);
         Assert.Equal(2.0, s3.Shadows[0].BlurRadius);
-        Assert.Equal(new Point(2.0, 2.0), s3.Shadows[0].Offset);
+        Assert.Equal(new Offset(2.0, 2.0), s3.Shadows[0].Offset);
         Assert.Equal(Shadow.Lerp(shadow2, shadow4, 0.5), s3.Shadows[1]);
         Assert.Equal(3.0, s3.Shadows[1].BlurRadius);
-        Assert.Equal(new Point(3.0, 3.0), s3.Shadows[1].Offset);
+        Assert.Equal(new Offset(3.0, 3.0), s3.Shadows[1].Offset);
     }
 
     [Fact]

@@ -1295,7 +1295,7 @@ public static class AboutDialogs
         string? barrierLabel = null,
         bool useRootNavigator = true,
         RouteSettings? routeSettings = null,
-        Point? anchorPoint = null)
+        Offset? anchorPoint = null)
     {
         _ = MaterialDialogs.ShowDialog<object>(
             context,
@@ -1326,7 +1326,7 @@ public static class AboutDialogs
         string? barrierLabel = null,
         bool useRootNavigator = true,
         RouteSettings? routeSettings = null,
-        Point? anchorPoint = null)
+        Offset? anchorPoint = null)
     {
         _ = MaterialDialogs.ShowAdaptiveDialog<object>(
             context,

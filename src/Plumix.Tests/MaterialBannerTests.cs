@@ -33,7 +33,7 @@ public sealed class MaterialBannerTests
         Assert.Equal(expectedX, painter.TranslationX(200), precision: 5);
         Assert.Equal(expectedY, painter.TranslationY(120), precision: 5);
         Assert.Equal(rotationSign * Math.PI / 4, painter.Rotation, precision: 10);
-        Assert.Equal(new Rect(-40, 28, 80, 12), BannerPainter.BannerRect);
+        Assert.Equal(DartGeometry.RectFromLTWH(-40, 28, 80, 12), BannerPainter.BannerRect);
         Assert.Equal(Color.FromARGB(0xA0, 0xB7, 0x1C, 0x1C), painter.Color);
         Assert.Equal(10.2, painter.TextStyle.FontSize!.Value, precision: 10);
         Assert.False(painter.HitTest(default));
@@ -199,8 +199,8 @@ public sealed class MaterialBannerTests
         var second = overflow.LastChild!;
         var firstOffset = ((OverflowBarParentData)first.parentData!).offset;
         var secondOffset = ((OverflowBarParentData)second.parentData!).offset;
-        Assert.True(secondOffset.Y > firstOffset.Y);
-        Assert.Equal(overflow.Size.Width - first.Size.Width, firstOffset.X, precision: 3);
+        Assert.True(secondOffset.Dy > firstOffset.Dy);
+        Assert.Equal(overflow.Size.Width - first.Size.Width, firstOffset.Dx, precision: 3);
         Assert.Contains(FindDescendants<RenderPadding>(narrow.RenderView),
             padding => padding.Padding == EdgeInsets.FromLTRB(16, 24, 16, 4));
     }
@@ -231,8 +231,8 @@ public sealed class MaterialBannerTests
 
         var overflow = Assert.Single(FindDescendants<RenderOverflowBar>(harness.RenderView));
         Assert.Equal(200, overflow.Size.Width);
-        Assert.Equal(firstX, ((OverflowBarParentData)overflow.FirstChild!.parentData!).offset.X, precision: 3);
-        Assert.Equal(secondX, ((OverflowBarParentData)overflow.LastChild!.parentData!).offset.X, precision: 3);
+        Assert.Equal(firstX, ((OverflowBarParentData)overflow.FirstChild!.parentData!).offset.Dx, precision: 3);
+        Assert.Equal(secondX, ((OverflowBarParentData)overflow.LastChild!.parentData!).offset.Dx, precision: 3);
     }
 
     [Fact]
@@ -310,7 +310,7 @@ public sealed class MaterialBannerTests
         harness.Pump(new Size(360, 180));
 
         Assert.Contains(FindDescendants<RenderFractionalTranslation>(harness.RenderView),
-            translation => translation.Translation == new Point(0, 0));
+            translation => translation.Translation == new Offset(0, 0));
         Assert.Contains(FindDescendants<RenderPositionedBox>(harness.RenderView),
             align => align.HeightFactor.HasValue
                      && Math.Abs(align.HeightFactor.Value - Curves.FastOutSlowIn.Transform(0.5)) < 0.001);
@@ -557,9 +557,9 @@ public sealed class MaterialBannerTests
         RenderBox banner = RequireSlot(scaffoldLayout, ScaffoldSlot.MaterialBanner);
 
         Assert.True(banner.Size.Height > 0);
-        double bodyTop = ((MultiChildLayoutParentData)body.parentData!).offset.Y;
+        double bodyTop = ((MultiChildLayoutParentData)body.parentData!).offset.Dy;
         Assert.Equal(bodyIsPushed ? banner.Size.Height : 0.0, bodyTop);
-        Assert.Equal(0.0, ((MultiChildLayoutParentData)banner.parentData!).offset.Y);
+        Assert.Equal(0.0, ((MultiChildLayoutParentData)banner.parentData!).offset.Dy);
     }
 
     private static RenderBox RequireSlot(RenderCustomMultiChildLayoutBox layout, ScaffoldSlot slot)

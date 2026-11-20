@@ -111,8 +111,8 @@ internal sealed class ScrollableSelectionContainerDelegate : MultiSelectableSele
     private readonly Dictionary<ISelectable, double> _selectableEndEdgeUpdateRecords = [];
 
     private bool _scheduledLayoutChange;
-    private Point? _currentDragStartRelatedToOrigin;
-    private Point? _currentDragEndRelatedToOrigin;
+    private Offset? _currentDragStartRelatedToOrigin;
+    private Offset? _currentDragEndRelatedToOrigin;
 
     /// The scrollable only auto scrolls if the selection starts in the scrollable.
     private bool _selectionStartsInScrollable;
@@ -207,17 +207,17 @@ internal sealed class ScrollableSelectionContainerDelegate : MultiSelectableSele
             _selectionStartsInScrollable = GlobalPositionInScrollable(@event.GlobalPosition);
         }
 
-        Point deltaToOrigin = GetDeltaToScrollOrigin(State);
+        Offset deltaToOrigin = GetDeltaToScrollOrigin(State);
         if (@event.Type == SelectionEventType.EndEdgeUpdate)
         {
             _currentDragEndRelatedToOrigin = InferPositionRelatedToOrigin(@event.GlobalPosition);
-            Point endOffset = Translate(_currentDragEndRelatedToOrigin.Value, -deltaToOrigin.X, -deltaToOrigin.Y);
+            Offset endOffset = Translate(_currentDragEndRelatedToOrigin.Value, -deltaToOrigin.Dx, -deltaToOrigin.Dy);
             @event = SelectionEdgeUpdateEvent.ForEnd(endOffset, @event.Granularity);
         }
         else
         {
             _currentDragStartRelatedToOrigin = InferPositionRelatedToOrigin(@event.GlobalPosition);
-            Point startOffset = Translate(_currentDragStartRelatedToOrigin.Value, -deltaToOrigin.X, -deltaToOrigin.Y);
+            Offset startOffset = Translate(_currentDragStartRelatedToOrigin.Value, -deltaToOrigin.Dx, -deltaToOrigin.Dy);
             @event = SelectionEdgeUpdateEvent.ForStart(startOffset, @event.Granularity);
         }
 
@@ -243,27 +243,27 @@ internal sealed class ScrollableSelectionContainerDelegate : MultiSelectableSele
         return result;
     }
 
-    private Point InferPositionRelatedToOrigin(Point globalPosition)
+    private Offset InferPositionRelatedToOrigin(Offset globalPosition)
     {
         var box = (RenderBox)State.Context.FindRenderObject()!;
-        Point localPosition = box.GlobalToLocal(globalPosition);
+        Offset localPosition = box.GlobalToLocal(globalPosition);
         if (!_selectionStartsInScrollable)
         {
             // If the selection starts outside of the scrollable, selecting across the entire
             // scrollable should select the entire content of the scrollable.
-            if (localPosition.Y < 0 || localPosition.X < 0)
+            if (localPosition.Dy < 0 || localPosition.Dx < 0)
             {
-                return box.LocalToGlobal(new Point());
+                return box.LocalToGlobal(new Offset());
             }
 
-            if (localPosition.Y > box.Size.Height || localPosition.X > box.Size.Width)
+            if (localPosition.Dy > box.Size.Height || localPosition.Dx > box.Size.Width)
             {
                 return Infinite;
             }
         }
 
-        Point deltaToOrigin = GetDeltaToScrollOrigin(State);
-        return box.LocalToGlobal(Translate(localPosition, deltaToOrigin.X, deltaToOrigin.Y));
+        Offset deltaToOrigin = GetDeltaToScrollOrigin(State);
+        return box.LocalToGlobal(Translate(localPosition, deltaToOrigin.Dx, deltaToOrigin.Dy));
     }
 
     /// Infers the <see cref="_currentDragStartRelatedToOrigin"/> and
@@ -271,7 +271,7 @@ internal sealed class ScrollableSelectionContainerDelegate : MultiSelectableSele
     /// not driven by a drag (select-all, select-word, keyboard extension).
     private void UpdateDragLocationsFromGeometries(bool forceUpdateStart = true, bool forceUpdateEnd = true)
     {
-        Point deltaToOrigin = GetDeltaToScrollOrigin(State);
+        Offset deltaToOrigin = GetDeltaToScrollOrigin(State);
         var box = (RenderBox)State.Context.FindRenderObject()!;
         Matrix4 transform = box.GetTransformTo(null);
         if (CurrentSelectionStartIndex != -1 && (_currentDragStartRelatedToOrigin is null || forceUpdateStart))
@@ -280,12 +280,12 @@ internal sealed class ScrollableSelectionContainerDelegate : MultiSelectableSele
             Debug.Assert(geometry.HasSelection);
             SelectionPoint start = geometry.StartSelectionPoint!;
             Matrix4 childTransform = Selectables[CurrentSelectionStartIndex].GetTransformTo(box);
-            Point localDragStart = MatrixUtils.TransformPoint(
+            Offset localDragStart = MatrixUtils.TransformPoint(
                 childTransform,
                 Translate(start.LocalPosition, 0, -start.LineHeight / 2));
             _currentDragStartRelatedToOrigin = MatrixUtils.TransformPoint(
                 transform,
-                Translate(localDragStart, deltaToOrigin.X, deltaToOrigin.Y));
+                Translate(localDragStart, deltaToOrigin.Dx, deltaToOrigin.Dy));
         }
 
         if (CurrentSelectionEndIndex != -1 && (_currentDragEndRelatedToOrigin is null || forceUpdateEnd))
@@ -294,12 +294,12 @@ internal sealed class ScrollableSelectionContainerDelegate : MultiSelectableSele
             Debug.Assert(geometry.HasSelection);
             SelectionPoint end = geometry.EndSelectionPoint!;
             Matrix4 childTransform = Selectables[CurrentSelectionEndIndex].GetTransformTo(box);
-            Point localDragEnd = MatrixUtils.TransformPoint(
+            Offset localDragEnd = MatrixUtils.TransformPoint(
                 childTransform,
                 Translate(end.LocalPosition, 0, -end.LineHeight / 2));
             _currentDragEndRelatedToOrigin = MatrixUtils.TransformPoint(
                 transform,
-                Translate(localDragEnd, deltaToOrigin.X, deltaToOrigin.Y));
+                Translate(localDragEnd, deltaToOrigin.Dx, deltaToOrigin.Dy));
         }
     }
 
@@ -375,8 +375,8 @@ internal sealed class ScrollableSelectionContainerDelegate : MultiSelectableSele
 
         var scrollableBox = (RenderBox)State.Context.FindRenderObject()!;
         Matrix4 transform = selectable.GetTransformTo(scrollableBox);
-        Point edgeOffsetInScrollableCoordinates = MatrixUtils.TransformPoint(transform, edge.LocalPosition);
-        var scrollableRect = new Rect(
+        Offset edgeOffsetInScrollableCoordinates = MatrixUtils.TransformPoint(transform, edge.LocalPosition);
+        var scrollableRect = DartGeometry.RectFromLTWH(
             0,
             0,
             scrollableBox.Size.Width,
@@ -385,8 +385,8 @@ internal sealed class ScrollableSelectionContainerDelegate : MultiSelectableSele
         {
             case AxisDirection.Up:
             {
-                double edgeBottom = edgeOffsetInScrollableCoordinates.Y;
-                double edgeTop = edgeOffsetInScrollableCoordinates.Y - lineHeight.Value;
+                double edgeBottom = edgeOffsetInScrollableCoordinates.Dy;
+                double edgeTop = edgeOffsetInScrollableCoordinates.Dy - lineHeight.Value;
                 if (edgeBottom >= scrollableRect.Bottom && edgeTop <= scrollableRect.Top)
                 {
                     return;
@@ -408,7 +408,7 @@ internal sealed class ScrollableSelectionContainerDelegate : MultiSelectableSele
 
             case AxisDirection.Right:
             {
-                double edge0 = edgeOffsetInScrollableCoordinates.X;
+                double edge0 = edgeOffsetInScrollableCoordinates.Dx;
                 if (edge0 >= scrollableRect.Right && edge0 <= scrollableRect.Left)
                 {
                     return;
@@ -430,8 +430,8 @@ internal sealed class ScrollableSelectionContainerDelegate : MultiSelectableSele
 
             case AxisDirection.Down:
             {
-                double edgeBottom = edgeOffsetInScrollableCoordinates.Y;
-                double edgeTop = edgeOffsetInScrollableCoordinates.Y - lineHeight.Value;
+                double edgeBottom = edgeOffsetInScrollableCoordinates.Dy;
+                double edgeTop = edgeOffsetInScrollableCoordinates.Dy - lineHeight.Value;
                 if (edgeBottom >= scrollableRect.Bottom && edgeTop <= scrollableRect.Top)
                 {
                     return;
@@ -453,7 +453,7 @@ internal sealed class ScrollableSelectionContainerDelegate : MultiSelectableSele
 
             case AxisDirection.Left:
             {
-                double edge0 = edgeOffsetInScrollableCoordinates.X;
+                double edge0 = edgeOffsetInScrollableCoordinates.Dx;
                 if (edge0 >= scrollableRect.Right && edge0 <= scrollableRect.Left)
                 {
                     return;
@@ -475,11 +475,11 @@ internal sealed class ScrollableSelectionContainerDelegate : MultiSelectableSele
         }
     }
 
-    private bool GlobalPositionInScrollable(Point globalPosition)
+    private bool GlobalPositionInScrollable(Offset globalPosition)
     {
         var box = (RenderBox)State.Context.FindRenderObject()!;
-        Point localPosition = box.GlobalToLocal(globalPosition);
-        var rect = new Rect(0, 0, box.Size.Width, box.Size.Height);
+        Offset localPosition = box.GlobalToLocal(globalPosition);
+        var rect = DartGeometry.RectFromLTWH(0, 0, box.Size.Width, box.Size.Height);
         return SelectionUtils.RectContains(rect, localPosition);
     }
 
@@ -533,8 +533,8 @@ internal sealed class ScrollableSelectionContainerDelegate : MultiSelectableSele
             && (previousStartRecord is null
                 || Math.Abs(newRecord - previousStartRecord.Value) > Constants.PrecisionErrorTolerance))
         {
-            Point deltaToOrigin = GetDeltaToScrollOrigin(State);
-            Point startOffset = Translate(dragStart, -deltaToOrigin.X, -deltaToOrigin.Y);
+            Offset deltaToOrigin = GetDeltaToScrollOrigin(State);
+            Offset startOffset = Translate(dragStart, -deltaToOrigin.Dx, -deltaToOrigin.Dy);
             selectable.DispatchSelectionEvent(SelectionEdgeUpdateEvent.ForStart(startOffset));
             _selectableStartEdgeUpdateRecords[selectable] = State.Position.Pixels;
         }
@@ -548,8 +548,8 @@ internal sealed class ScrollableSelectionContainerDelegate : MultiSelectableSele
             && (previousEndRecord is null
                 || Math.Abs(newRecord - previousEndRecord.Value) > Constants.PrecisionErrorTolerance))
         {
-            Point deltaToOrigin = GetDeltaToScrollOrigin(State);
-            Point endOffset = Translate(dragEnd, -deltaToOrigin.X, -deltaToOrigin.Y);
+            Offset deltaToOrigin = GetDeltaToScrollOrigin(State);
+            Offset endOffset = Translate(dragEnd, -deltaToOrigin.Dx, -deltaToOrigin.Dy);
             selectable.DispatchSelectionEvent(SelectionEdgeUpdateEvent.ForEnd(endOffset));
             _selectableEndEdgeUpdateRecords[selectable] = State.Position.Pixels;
         }
@@ -567,23 +567,23 @@ internal sealed class ScrollableSelectionContainerDelegate : MultiSelectableSele
     // -- Geometry helpers -----------------------------------------------------------------------
 
     /// Dart's `Offset.infinite`.
-    private static Point Infinite => new(double.PositiveInfinity, double.PositiveInfinity);
+    private static Offset Infinite => new(double.PositiveInfinity, double.PositiveInfinity);
 
-    private static Point Translate(Point point, double dx, double dy) => new(point.X + dx, point.Y + dy);
+    private static Offset Translate(Offset point, double dx, double dy) => new(point.Dx + dx, point.Dy + dy);
 
-    private static Rect RectFromCenter(Point center, double width, double height) =>
-        new(center.X - (width / 2), center.Y - (height / 2), width, height);
+    private static Rect RectFromCenter(Offset center, double width, double height) =>
+        DartGeometry.RectFromLTWH(center.Dx - (width / 2), center.Dy - (height / 2), width, height);
 
     /// Dart's free function `_getDeltaToScrollOrigin`, which the delegate uses in place of the
     /// identical <see cref="ScrollableState.DeltaToScrollOrigin"/> getter.
-    internal static Point GetDeltaToScrollOrigin(ScrollableState scrollableState)
+    internal static Offset GetDeltaToScrollOrigin(ScrollableState scrollableState)
     {
         return scrollableState.AxisDirection switch
         {
-            AxisDirection.Up => new Point(0, -scrollableState.Position.Pixels),
-            AxisDirection.Down => new Point(0, scrollableState.Position.Pixels),
-            AxisDirection.Left => new Point(-scrollableState.Position.Pixels, 0),
-            _ => new Point(scrollableState.Position.Pixels, 0),
+            AxisDirection.Up => new Offset(0, -scrollableState.Position.Pixels),
+            AxisDirection.Down => new Offset(0, scrollableState.Position.Pixels),
+            AxisDirection.Left => new Offset(-scrollableState.Position.Pixels, 0),
+            _ => new Offset(scrollableState.Position.Pixels, 0),
         };
     }
 }

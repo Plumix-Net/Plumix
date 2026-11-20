@@ -17,7 +17,7 @@ namespace Plumix.Tests;
 [Collection(SchedulerTestCollection.Name)]
 public sealed class CupertinoMagnifierTests : IDisposable
 {
-    private static readonly Rect ReasonableTextField = new(0, 100, 200, 100);
+    private static readonly Rect ReasonableTextField = DartGeometry.RectFromLTWH(0, 100, 200, 100);
     private static readonly Size ScreenSize = new(400, 300);
 
     public CupertinoMagnifierTests()
@@ -90,15 +90,15 @@ public sealed class CupertinoMagnifierTests : IDisposable
         animation.SetValue(0.5);
         using var harness = new CupertinoThemeTestHarness(Host(new CupertinoMagnifier(
             inOutAnimation: animation,
-            additionalFocalPointOffset: new Point(2, 3))));
+            additionalFocalPointOffset: new Offset(2, 3))));
         harness.Pump(ScreenSize);
 
         double expectedY = (CupertinoMagnifier.DefaultSize.Height / 2.0)
                            - CupertinoMagnifier.MagnifierAboveFocalPoint
                            + 3;
         RawMagnifier raw = Assert.Single(harness.FindWidgets<RawMagnifier>());
-        Assert.Equal(2.0, raw.FocalPointOffset.X, 3);
-        Assert.Equal(expectedY, raw.FocalPointOffset.Y, 3);
+        Assert.Equal(2.0, raw.FocalPointOffset.Dx, 3);
+        Assert.Equal(expectedY, raw.FocalPointOffset.Dy, 3);
         Assert.Equal(0.5, raw.Decoration.Opacity, 3);
 
         var render = (RenderTransform)harness.FindRenderObject<Plumix.Widgets.Transform>();
@@ -164,11 +164,11 @@ public sealed class CupertinoMagnifierTests : IDisposable
         Assert.Equal(TimeSpan.FromMilliseconds(45), positioned.Duration);
         Assert.Equal(Curves.EaseOut.Transform(0.25), positioned.Curve.Transform(0.25), 9);
         Assert.Equal(
-            ReasonableTextField.Center.X - (CupertinoMagnifier.DefaultSize.Width / 2.0),
+            ReasonableTextField.Center.Dx - (CupertinoMagnifier.DefaultSize.Width / 2.0),
             positioned.Left!.Value,
             3);
         Assert.Equal(
-            ReasonableTextField.Center.Y
+            ReasonableTextField.Center.Dy
             - (CupertinoMagnifier.DefaultSize.Height - CupertinoMagnifier.MagnifierAboveFocalPoint),
             positioned.Top!.Value,
             3);
@@ -178,7 +178,7 @@ public sealed class CupertinoMagnifierTests : IDisposable
     public void CupertinoTextMagnifier_NeverLeavesTheHorizontalScreenPadding()
     {
         var info = new ValueNotifier<MagnifierInfo>(new MagnifierInfo(
-            GlobalGesturePosition: new Point(ScreenSize.Width + 100, ReasonableTextField.Center.Y),
+            GlobalGesturePosition: new Offset(ScreenSize.Width + 100, ReasonableTextField.Center.Dy),
             CaretRect: ReasonableTextField,
             FieldBounds: ReasonableTextField,
             CurrentLineBoundaries: ReasonableTextField));
@@ -193,7 +193,7 @@ public sealed class CupertinoMagnifierTests : IDisposable
             3);
         Assert.True(positioned.Left!.Value < ScreenSize.Width);
 
-        info.Value = info.Value with { GlobalGesturePosition = new Point(-100, ReasonableTextField.Center.Y) };
+        info.Value = info.Value with { GlobalGesturePosition = new Offset(-100, ReasonableTextField.Center.Dy) };
         harness.Pump(ScreenSize);
 
         positioned = Assert.Single(harness.FindWidgets<AnimatedPositioned>());
@@ -203,9 +203,9 @@ public sealed class CupertinoMagnifierTests : IDisposable
     [Fact]
     public void CupertinoTextMagnifier_ResistsVerticalDragAndKeepsTheLensOnTheLine()
     {
-        double dragPositionBelowTextField = ReasonableTextField.Center.Y + 30;
+        double dragPositionBelowTextField = ReasonableTextField.Center.Dy + 30;
         var info = new ValueNotifier<MagnifierInfo>(new MagnifierInfo(
-            GlobalGesturePosition: new Point(ScreenSize.Width / 2.0, dragPositionBelowTextField),
+            GlobalGesturePosition: new Offset(ScreenSize.Width / 2.0, dragPositionBelowTextField),
             CaretRect: ReasonableTextField,
             FieldBounds: ReasonableTextField,
             CurrentLineBoundaries: ReasonableTextField));
@@ -217,7 +217,7 @@ public sealed class CupertinoMagnifierTests : IDisposable
         AnimatedPositioned positioned = Assert.Single(harness.FindWidgets<AnimatedPositioned>());
         double lensCenterLine = positioned.Top!.Value + basicOffsetY;
 
-        Assert.True(lensCenterLine > ReasonableTextField.Center.Y);
+        Assert.True(lensCenterLine > ReasonableTextField.Center.Dy);
         Assert.True(lensCenterLine < dragPositionBelowTextField);
 
         // The lens still points at the center of the line: 30 units of drag / 10 of resistance = 3.
@@ -227,12 +227,12 @@ public sealed class CupertinoMagnifierTests : IDisposable
         // Dragging upward is not resisted at all: the lens never goes above the line center.
         info.Value = info.Value with
         {
-            GlobalGesturePosition = new Point(ScreenSize.Width / 2.0, ReasonableTextField.Center.Y - 40),
+            GlobalGesturePosition = new Offset(ScreenSize.Width / 2.0, ReasonableTextField.Center.Dy - 40),
         };
         harness.Pump(ScreenSize);
 
         positioned = Assert.Single(harness.FindWidgets<AnimatedPositioned>());
-        Assert.Equal(ReasonableTextField.Center.Y - basicOffsetY, positioned.Top!.Value, 3);
+        Assert.Equal(ReasonableTextField.Center.Dy - basicOffsetY, positioned.Top!.Value, 3);
         Assert.Equal(0.0, state.VerticalFocalPointAdjustment, 3);
     }
 
@@ -240,7 +240,7 @@ public sealed class CupertinoMagnifierTests : IDisposable
     public async Task CupertinoTextMagnifier_HidesBelowThresholdAndReshowsWhenTheGestureMovesBackUp()
     {
         var info = new ValueNotifier<MagnifierInfo>(new MagnifierInfo(
-            GlobalGesturePosition: new Point(ScreenSize.Width / 2.0, ReasonableTextField.Top),
+            GlobalGesturePosition: new Offset(ScreenSize.Width / 2.0, ReasonableTextField.Top),
             CaretRect: ReasonableTextField,
             FieldBounds: ReasonableTextField,
             CurrentLineBoundaries: ReasonableTextField));
@@ -263,7 +263,7 @@ public sealed class CupertinoMagnifierTests : IDisposable
         // Move the gesture 100 units further down: past the 48 unit hide threshold.
         info.Value = info.Value with
         {
-            GlobalGesturePosition = info.Value.GlobalGesturePosition + new Point(0, 100),
+            GlobalGesturePosition = info.Value.GlobalGesturePosition + new Offset(0, 100),
         };
         harness.Pump(ScreenSize);
         PumpAnimation();
@@ -274,7 +274,7 @@ public sealed class CupertinoMagnifierTests : IDisposable
         // Return the gesture to one that shows it.
         info.Value = info.Value with
         {
-            GlobalGesturePosition = new Point(ScreenSize.Width / 2.0, ReasonableTextField.Top),
+            GlobalGesturePosition = new Offset(ScreenSize.Width / 2.0, ReasonableTextField.Top),
         };
         harness.Pump(ScreenSize);
         PumpAnimation();
@@ -323,7 +323,7 @@ public sealed class CupertinoMagnifierTests : IDisposable
         Assert.Null(controller.AnimationController);
 
         // The notifier no longer feeds the disposed state.
-        info.Value = info.Value with { GlobalGesturePosition = new Point(1, 1) };
+        info.Value = info.Value with { GlobalGesturePosition = new Offset(1, 1) };
         harness.Pump(ScreenSize);
     }
 

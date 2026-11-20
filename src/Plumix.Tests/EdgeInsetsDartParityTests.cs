@@ -45,10 +45,10 @@ public sealed class EdgeInsetsDartParityTests
         Assert.DoesNotContain('\n', insets.ToString());
         Assert.Equal(EdgeInsets.FromLTRB(5.0, 7.0, 11.0, 13.0).GetHashCode(), insets.GetHashCode());
 
-        Assert.Equal(new Point(5.0, 7.0), insets.TopLeft);
-        Assert.Equal(new Point(-11.0, 7.0), insets.TopRight);
-        Assert.Equal(new Point(5.0, -13.0), insets.BottomLeft);
-        Assert.Equal(new Point(-11.0, -13.0), insets.BottomRight);
+        Assert.Equal(new Offset(5.0, 7.0), insets.TopLeft);
+        Assert.Equal(new Offset(-11.0, 7.0), insets.TopRight);
+        Assert.Equal(new Offset(5.0, -13.0), insets.BottomLeft);
+        Assert.Equal(new Offset(-11.0, -13.0), insets.BottomRight);
 
         Assert.Equal(new Size(16.0, 20.0), insets.CollapsedSize);
         Assert.Equal(EdgeInsets.FromLTRB(11.0, 13.0, 5.0, 7.0), insets.Flipped);

@@ -373,7 +373,7 @@ public sealed class MaterialDropdownMenuTests : IDisposable
     [Fact]
     public void DropdownMenu_PassesTheSourceMenuAnchorArguments()
     {
-        var offset = new Vector(12, 34);
+        var offset = new Offset(12, 34);
         var menu = new DropdownMenu<string>(Entries("Item 0"), alignmentOffset: offset);
         using var harness = new WidgetRenderHarness(Wrap(menu));
         harness.Pump(new Size(500, 360));

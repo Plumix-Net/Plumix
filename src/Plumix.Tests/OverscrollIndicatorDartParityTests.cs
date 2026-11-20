@@ -23,16 +23,16 @@ public sealed partial class OverscrollIndicatorTests
                     new SliverToBoxAdapter(new SizedBox(height: 2000.0)),
                 ]))));
         Assert.DoesNotContain(tester.RecordPaint(Find.ByType<CustomPaint>()), call => call.Method == "drawCircle");
-        tester.Drag(tester.ElementOfType<Scrollable>(), new Vector(0.0, 100.0));
+        tester.Drag(tester.ElementOfType<Scrollable>(), new Offset(0.0, 100.0));
         tester.Pump();
         tester.Pump(TimeSpan.FromMilliseconds(100));
         Assert.DoesNotContain(tester.RecordPaint(Find.ByType<CustomPaint>()), call => call.Method == "drawCircle");
-        TestGesture stationary = tester.StartGesture(new Point(200.0, 200.0), PointerDeviceKind.Touch);
+        TestGesture stationary = tester.StartGesture(new Offset(200.0, 200.0), PointerDeviceKind.Touch);
         tester.Pump(TimeSpan.FromMilliseconds(100));
         stationary.Up();
         Assert.DoesNotContain(tester.RecordPaint(Find.ByType<CustomPaint>()), call => call.Method == "drawCircle");
 
-        SlowGlowDrag(tester, new Point(200.0, 200.0), new Vector(0.0, 5.0));
+        SlowGlowDrag(tester, new Offset(200.0, 200.0), new Offset(0.0, 5.0));
         CanvasCall circle = Assert.Single(tester.RecordPaint(Find.ByType<CustomPaint>()),
             call => call.Method == "drawCircle");
         Assert.Equal(new Color(0x0DFFFFFF), circle.Color);
@@ -54,7 +54,7 @@ public sealed partial class OverscrollIndicatorTests
                             [
                                 new SliverToBoxAdapter(new SizedBox(height: 2000.0)),
                             ])))))));
-        SlowGlowDrag(tester, new Point(200.0, 200.0), new Vector(0.0, 5.0));
+        SlowGlowDrag(tester, new Offset(200.0, 200.0), new Offset(0.0, 5.0));
         Element[] painters = tester.ElementsOfType<CustomPaint>().ToArray();
         Assert.Equal(3, painters.Length);
         Assert.Contains(PaintRecording.Record(painters[0].FindRenderObject()!), call => call.Method == "drawCircle");
@@ -62,7 +62,7 @@ public sealed partial class OverscrollIndicatorTests
         tester.PumpAndSettle(TimeSpan.FromSeconds(1));
     }
 
-    private static void SlowGlowDrag(FrameworkDartTester tester, Point start, Vector offset)
+    private static void SlowGlowDrag(FrameworkDartTester tester, Offset start, Offset offset)
     {
         TestGesture gesture = tester.StartGesture(start, PointerDeviceKind.Touch);
         for (int index = 0; index < 10; index++)
@@ -82,11 +82,11 @@ public sealed partial class OverscrollIndicatorTests
         var element = (StatefulElement)tester.ElementsOfType<GlowingOverscrollIndicator>().Single(
             candidate => ((GlowingOverscrollIndicator)candidate.Widget).Color == new Color(0xFF1565C0));
         var state = (GlowingOverscrollIndicatorState)element.State;
-        Point start = tester.GetCenter(element);
+        Offset start = tester.GetCenter(element);
         TestGesture gesture = tester.StartGesture(start, PointerDeviceKind.Mouse);
         for (int index = 0; index < 10; index++)
         {
-            gesture.MoveBy(new Vector(0.0, 5.0));
+            gesture.MoveBy(new Offset(0.0, 5.0));
             tester.Pump(TimeSpan.FromMilliseconds(20));
         }
 
@@ -257,7 +257,7 @@ public sealed partial class OverscrollIndicatorTests
             calls.Select(call => call.Method));
         Assert.Equal(expectedOffset, calls[1].Dy);
         Assert.Equal(800.0 * 1.5, calls[4].Radius);
-        Assert.Equal(400.0, calls[4].Center!.Value.X);
+        Assert.Equal(400.0, calls[4].Center!.Value.Dx);
         Assert.Equal(255, calls[4].Color!.Red);
         Assert.Equal(Colors.White.WithOpacity(controller.GlowOpacity).Alpha, calls[4].Color!.Alpha);
         context.DebugStopRecordingIfNeeded();
@@ -275,8 +275,8 @@ public sealed partial class OverscrollIndicatorTests
         harness.Pump(Viewport);
         NotificationEmitterState emitter = key.CurrentState!;
         var box = (RenderBox)emitter.Context.FindRenderObject()!;
-        Point global = box.LocalToGlobal(new Point(box.Size.Width * 0.25, 0.0));
-        var details = new DragUpdateDetails(global, new Point(10000.0, 10000.0), default, 20.0);
+        Offset global = box.LocalToGlobal(new Offset(box.Size.Width * 0.25, 0.0));
+        var details = new DragUpdateDetails(global, new Offset(10000.0, 10000.0), default, 20.0);
         emitter.Dispatch(new OverscrollNotification(Metrics(), -20.0, dragDetails: details));
         AnimationPump.Advance(0.016667);
         Assert.Equal(0.375, harness.FindState<GlowingOverscrollIndicatorState>().LeadingController.Displacement, 8);
@@ -294,7 +294,7 @@ public sealed partial class OverscrollIndicatorTests
         using var harness = new WidgetRenderHarness(Wrap(new GlowingOverscrollIndicator(
             direction, Colors.White, new NotificationEmitter(key))));
         harness.Pump(Viewport);
-        var details = new DragUpdateDetails(new Point(120.0, 100.0), default, default, 20.0);
+        var details = new DragUpdateDetails(new Offset(120.0, 100.0), default, default, 20.0);
         key.CurrentState!.Dispatch(new OverscrollNotification(Metrics(axisDirection: direction),
             -30.0, dragDetails: details));
         key.CurrentState.Dispatch(new OverscrollNotification(Metrics(axisDirection: direction),
@@ -375,7 +375,7 @@ public sealed partial class OverscrollIndicatorTests
             AxisDirection.Down, Colors.White, new NotificationEmitter(key),
             notificationPredicate: notification => notification.Depth == expectedDepth)));
         harness.Pump(Viewport);
-        var details = new DragUpdateDetails(new Point(100.0, 100.0), default, default, 20.0);
+        var details = new DragUpdateDetails(new Offset(100.0, 100.0), default, default, 20.0);
         key.CurrentState!.Dispatch(new OverscrollNotification(Metrics(), -30.0,
             depth: depth + 1, dragDetails: details));
         Assert.Equal(GlowState.Idle, harness.FindState<GlowingOverscrollIndicatorState>().LeadingController.State);
@@ -395,7 +395,7 @@ public sealed partial class OverscrollIndicatorTests
             onNotification: notification => { notification.PaintOffset = 50.0; return false; },
             child: new GlowingOverscrollIndicator(AxisDirection.Down, Colors.White, new NotificationEmitter(key)))));
         harness.Pump(Viewport);
-        var details = new DragUpdateDetails(new Point(120.0, 100.0), default, default, 20.0);
+        var details = new DragUpdateDetails(new Offset(120.0, 100.0), default, default, 20.0);
         key.CurrentState!.Dispatch(new OverscrollNotification(
             OffsetMetrics(leading ? -100.0 : 600.0), leading ? -30.0 : 30.0, dragDetails: details));
         GlowingOverscrollIndicatorState state = harness.FindState<GlowingOverscrollIndicatorState>();
@@ -429,7 +429,7 @@ public sealed partial class OverscrollIndicatorTests
             },
             child: new GlowingOverscrollIndicator(AxisDirection.Down, Colors.White, new NotificationEmitter(key)))));
         harness.Pump(Viewport);
-        var details = new DragUpdateDetails(new Point(120.0, 100.0), default, default, 20.0);
+        var details = new DragUpdateDetails(new Offset(120.0, 100.0), default, default, 20.0);
         GlowingOverscrollIndicatorState state = harness.FindState<GlowingOverscrollIndicatorState>();
         key.CurrentState!.Dispatch(new OverscrollNotification(Metrics(), -20.0, dragDetails: details));
         Assert.Equal(GlowState.Idle, state.LeadingController.State);

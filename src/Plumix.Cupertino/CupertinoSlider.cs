@@ -495,9 +495,9 @@ internal sealed class RenderCupertinoSlider : RenderBox, IMouseTrackerAnnotation
 
     private double SemanticActionUnit => Divisions is { } divisions ? 1.0 / divisions : AdjustmentUnit;
 
-    protected override bool HitTestSelf(Point position)
+    protected override bool HitTestSelf(Offset position)
     {
-        return Math.Abs(position.X - ThumbCenter) < CupertinoThumbPainter.Radius + Padding;
+        return Math.Abs(position.Dx - ThumbCenter) < CupertinoThumbPainter.Radius + Padding;
     }
 
     // Dart derives the render object from `RenderConstrainedBox`, whose childless layout is exactly
@@ -530,7 +530,7 @@ internal sealed class RenderCupertinoSlider : RenderBox, IMouseTrackerAnnotation
         }
     }
 
-    public override void Paint(PaintingContext context, Point offset)
+    public override void Paint(PaintingContext context, Offset offset)
     {
         double visualPosition;
         Color leftColor;
@@ -548,12 +548,12 @@ internal sealed class RenderCupertinoSlider : RenderBox, IMouseTrackerAnnotation
             rightColor = _activeColor;
         }
 
-        double trackCenter = offset.Y + (Size.Height / 2.0);
-        double trackLeft = offset.X + TrackLeft;
+        double trackCenter = offset.Dy + (Size.Height / 2.0);
+        double trackLeft = offset.Dx + TrackLeft;
         double trackTop = trackCenter - 1.0;
         double trackBottom = trackCenter + 1.0;
-        double trackRight = offset.X + TrackRight;
-        double trackActive = offset.X + ThumbCenter;
+        double trackRight = offset.Dx + TrackRight;
+        double trackActive = offset.Dx + ThumbCenter;
 
         if (visualPosition > 0.0)
         {
@@ -573,12 +573,12 @@ internal sealed class RenderCupertinoSlider : RenderBox, IMouseTrackerAnnotation
                 null);
         }
 
-        var thumbCenter = new Point(trackActive, trackCenter);
+        var thumbCenter = new Offset(trackActive, trackCenter);
         new CupertinoThumbPainter(color: ThumbColor).Paint(
             context,
-            new Rect(
-                thumbCenter.X - CupertinoThumbPainter.Radius,
-                thumbCenter.Y - CupertinoThumbPainter.Radius,
+            DartGeometry.RectFromLTWH(
+                thumbCenter.Dx - CupertinoThumbPainter.Radius,
+                thumbCenter.Dy - CupertinoThumbPainter.Radius,
                 2.0 * CupertinoThumbPainter.Radius,
                 2.0 * CupertinoThumbPainter.Radius));
     }

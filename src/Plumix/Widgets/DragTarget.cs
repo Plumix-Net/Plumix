@@ -13,17 +13,17 @@ public delegate Widget DragTargetBuilder<T>(
     IReadOnlyList<T?> candidateData,
     IReadOnlyList<object?> rejectedData);
 
-public delegate Point DragAnchorStrategy<T>(
+public delegate Offset DragAnchorStrategy<T>(
     Draggable<T> draggable,
     BuildContext context,
-    Point position);
+    Offset position);
 
 public readonly record struct DraggableDetails(
     bool WasAccepted,
     Velocity Velocity,
-    Point Offset)
+    Offset Offset)
 {
-    public DraggableDetails(Velocity velocity, Point offset) : this(
+    public DraggableDetails(Velocity velocity, Offset offset) : this(
         WasAccepted: false,
         Velocity: velocity,
         Offset: offset)
@@ -31,7 +31,7 @@ public readonly record struct DraggableDetails(
     }
 }
 
-public readonly record struct DragTargetDetails<T>(T Data, Point Offset);
+public readonly record struct DragTargetDetails<T>(T Data, Offset Offset);
 
 public class Draggable<T> : StatefulWidget
 {
@@ -41,13 +41,13 @@ public class Draggable<T> : StatefulWidget
         T? data = default,
         Axis? axis = null,
         Widget? childWhenDragging = null,
-        Point feedbackOffset = default,
+        Offset feedbackOffset = default,
         DragAnchorStrategy<T>? dragAnchorStrategy = null,
         Axis? affinity = null,
         int? maxSimultaneousDrags = null,
         Action? onDragStarted = null,
         Action<DragUpdateDetails>? onDragUpdate = null,
-        Action<Velocity, Point>? onDraggableCanceled = null,
+        Action<Velocity, Offset>? onDraggableCanceled = null,
         Action<DraggableDetails>? onDragEnd = null,
         Action? onDragCompleted = null,
         bool ignoringFeedbackSemantics = true,
@@ -93,7 +93,7 @@ public class Draggable<T> : StatefulWidget
 
     public Widget Feedback { get; }
 
-    public Point FeedbackOffset { get; }
+    public Offset FeedbackOffset { get; }
 
     public DragAnchorStrategy<T> DragAnchorStrategy { get; }
 
@@ -109,7 +109,7 @@ public class Draggable<T> : StatefulWidget
 
     public Action<DragUpdateDetails>? OnDragUpdate { get; }
 
-    public Action<Velocity, Point>? OnDraggableCanceled { get; }
+    public Action<Velocity, Offset>? OnDraggableCanceled { get; }
 
     public Action? OnDragCompleted { get; }
 
@@ -121,10 +121,10 @@ public class Draggable<T> : StatefulWidget
 
     public Func<PointerButtons, bool>? AllowedButtonsFilter { get; }
 
-    public static Point ChildDragAnchorStrategy(
+    public static Offset ChildDragAnchorStrategy(
         Draggable<T> draggable,
         BuildContext context,
-        Point position)
+        Offset position)
     {
         _ = draggable;
         if (context.FindRenderObject() is not RenderBox renderBox
@@ -137,10 +137,10 @@ public class Draggable<T> : StatefulWidget
         return MatrixUtils.TransformPoint(rootToLocal, position);
     }
 
-    public static Point PointerDragAnchorStrategy(
+    public static Offset PointerDragAnchorStrategy(
         Draggable<T> draggable,
         BuildContext context,
-        Point position)
+        Offset position)
     {
         _ = draggable;
         _ = context;
@@ -149,7 +149,7 @@ public class Draggable<T> : StatefulWidget
     }
 
     internal virtual DraggableGestureRecognizer CreateRecognizer(
-        Func<Point, IDragAvatar?> onStart)
+        Func<Offset, IDragAvatar?> onStart)
     {
         return new DraggableGestureRecognizer(
             affinity: Affinity,
@@ -168,12 +168,12 @@ public sealed class LongPressDraggable<T> : Draggable<T>
         T? data = default,
         Axis? axis = null,
         Widget? childWhenDragging = null,
-        Point feedbackOffset = default,
+        Offset feedbackOffset = default,
         DragAnchorStrategy<T>? dragAnchorStrategy = null,
         int? maxSimultaneousDrags = null,
         Action? onDragStarted = null,
         Action<DragUpdateDetails>? onDragUpdate = null,
-        Action<Velocity, Point>? onDraggableCanceled = null,
+        Action<Velocity, Offset>? onDraggableCanceled = null,
         Action<DraggableDetails>? onDragEnd = null,
         Action? onDragCompleted = null,
         bool hapticFeedbackOnStart = true,
@@ -213,7 +213,7 @@ public sealed class LongPressDraggable<T> : Draggable<T>
     public TimeSpan Delay { get; }
 
     internal override DraggableGestureRecognizer CreateRecognizer(
-        Func<Point, IDragAvatar?> onStart)
+        Func<Offset, IDragAvatar?> onStart)
     {
         return new DraggableGestureRecognizer(
             affinity: null,
@@ -274,7 +274,7 @@ internal sealed class DraggableState<T> : State<Draggable<T>>
         _recognizer?.AddPointer(@event);
     }
 
-    private DragAvatar<T>? StartDrag(Point position)
+    private DragAvatar<T>? StartDrag(Offset position)
     {
         var widget = CurrentWidget;
         if (widget.MaxSimultaneousDrags.HasValue
@@ -283,7 +283,7 @@ internal sealed class DraggableState<T> : State<Draggable<T>>
             return null;
         }
 
-        Point dragStartPoint = widget.DragAnchorStrategy(widget, Context, position);
+        Offset dragStartPoint = widget.DragAnchorStrategy(widget, Context, position);
         if (Mounted)
         {
             SetState(() => _activeCount += 1);
@@ -315,7 +315,7 @@ internal sealed class DraggableState<T> : State<Draggable<T>>
         return avatar;
     }
 
-    private void HandleDragEnd(Velocity velocity, Point offset, bool wasAccepted)
+    private void HandleDragEnd(Velocity velocity, Offset offset, bool wasAccepted)
     {
         if (Mounted)
         {
@@ -518,7 +518,7 @@ internal interface IDragAvatar
 {
     object? Data { get; }
 
-    Point LastOffset { get; }
+    Offset LastOffset { get; }
 
     void Update(DragUpdateDetails details);
 
@@ -531,32 +531,32 @@ internal sealed class DragAvatar<T> : IDragAvatar
 {
     private readonly OverlayState _overlayState;
     private readonly Axis? _axis;
-    private readonly Point _dragStartPoint;
+    private readonly Offset _dragStartPoint;
     private readonly Widget _feedback;
-    private readonly Point _feedbackOffset;
+    private readonly Offset _feedbackOffset;
     private readonly bool _ignoringFeedbackSemantics;
     private readonly bool _ignoringFeedbackPointer;
     private readonly Action<DragUpdateDetails>? _onDragUpdate;
-    private readonly Action<Velocity, Point, bool>? _onDragEnd;
+    private readonly Action<Velocity, Offset, bool>? _onDragEnd;
     private readonly List<IDragTargetState> _enteredTargets = [];
     private readonly OverlayEntry _entry;
     private IDragTargetState? _activeTarget;
-    private Point _position;
-    private Point _overlayOffset;
+    private Offset _position;
+    private Offset _overlayOffset;
     private bool _finished;
 
     public DragAvatar(
         OverlayState overlayState,
         T? data,
         Axis? axis,
-        Point initialPosition,
-        Point dragStartPoint,
+        Offset initialPosition,
+        Offset dragStartPoint,
         Widget feedback,
-        Point feedbackOffset,
+        Offset feedbackOffset,
         bool ignoringFeedbackSemantics,
         bool ignoringFeedbackPointer,
         Action<DragUpdateDetails>? onDragUpdate,
-        Action<Velocity, Point, bool>? onDragEnd)
+        Action<Velocity, Offset, bool>? onDragEnd)
     {
         _overlayState = overlayState;
         Data = data;
@@ -576,13 +576,13 @@ internal sealed class DragAvatar<T> : IDragAvatar
 
     public object? Data { get; }
 
-    public Point LastOffset { get; private set; }
+    public Offset LastOffset { get; private set; }
 
     public void Update(DragUpdateDetails details)
     {
-        Point oldPosition = _position;
-        Point restrictedDelta = RestrictAxis(details.Delta);
-        _position += new Vector(restrictedDelta.X, restrictedDelta.Y);
+        Offset oldPosition = _position;
+        Offset restrictedDelta = RestrictAxis(details.Delta);
+        _position += new Offset(restrictedDelta.Dx, restrictedDelta.Dy);
         UpdateDrag(_position);
         if (_position != oldPosition)
         {
@@ -600,15 +600,15 @@ internal sealed class DragAvatar<T> : IDragAvatar
         FinishDrag(dropped: false, Velocity.Zero);
     }
 
-    private void UpdateDrag(Point globalPosition)
+    private void UpdateDrag(Offset globalPosition)
     {
-        LastOffset = globalPosition - new Vector(_dragStartPoint.X, _dragStartPoint.Y);
+        LastOffset = globalPosition - new Offset(_dragStartPoint.Dx, _dragStartPoint.Dy);
         if (_overlayState.Context.FindRenderObject() is RenderBox overlayBox
             && overlayBox.TryGetTransformFromRoot(out Matrix4 overlayToRoot)
             && Matrix4.TryInvert(overlayToRoot) is { } rootToOverlay)
         {
-            Point overlayPosition = MatrixUtils.TransformPoint(rootToOverlay, globalPosition);
-            _overlayOffset = overlayPosition - new Vector(_dragStartPoint.X, _dragStartPoint.Y);
+            Offset overlayPosition = MatrixUtils.TransformPoint(rootToOverlay, globalPosition);
+            _overlayOffset = overlayPosition - new Offset(_dragStartPoint.Dx, _dragStartPoint.Dy);
             _entry.MarkNeedsBuild();
         }
 
@@ -619,7 +619,7 @@ internal sealed class DragAvatar<T> : IDragAvatar
         }
 
         var result = new HitTestResult();
-        Point targetPosition = globalPosition + new Vector(_feedbackOffset.X, _feedbackOffset.Y);
+        Offset targetPosition = globalPosition + new Offset(_feedbackOffset.Dx, _feedbackOffset.Dy);
         root.HitTest(result, targetPosition);
         List<IDragTargetState> targets = GetDragTargets(result.Path);
 
@@ -717,8 +717,8 @@ internal sealed class DragAvatar<T> : IDragAvatar
     {
         _ = context;
         return new Positioned(
-            left: _overlayOffset.X,
-            top: _overlayOffset.Y,
+            left: _overlayOffset.Dx,
+            top: _overlayOffset.Dy,
             child: new ExcludeSemantics(
                 excluding: _ignoringFeedbackSemantics,
                 child: new IgnorePointer(
@@ -728,21 +728,21 @@ internal sealed class DragAvatar<T> : IDragAvatar
 
     private Velocity RestrictVelocityAxis(Velocity velocity)
     {
-        Vector pixelsPerSecond = velocity.PixelsPerSecond;
+        Offset pixelsPerSecond = velocity.PixelsPerSecond;
         return _axis switch
         {
-            Axis.Horizontal => new Velocity(new Vector(pixelsPerSecond.X, 0.0)),
-            Axis.Vertical => new Velocity(new Vector(0.0, pixelsPerSecond.Y)),
+            Axis.Horizontal => new Velocity(new Offset(pixelsPerSecond.Dx, 0.0)),
+            Axis.Vertical => new Velocity(new Offset(0.0, pixelsPerSecond.Dy)),
             _ => velocity,
         };
     }
 
-    private Point RestrictAxis(Point offset)
+    private Offset RestrictAxis(Offset offset)
     {
         return _axis switch
         {
-            Axis.Horizontal => new Point(offset.X, 0.0),
-            Axis.Vertical => new Point(0.0, offset.Y),
+            Axis.Horizontal => new Offset(offset.Dx, 0.0),
+            Axis.Vertical => new Offset(0.0, offset.Dy),
             _ => offset,
         };
     }
@@ -755,7 +755,7 @@ internal class DraggableGestureRecognizer : GestureRecognizer
     private const double TouchSlop = 18.0;
     private readonly Axis? _affinity;
     private readonly Func<PointerButtons, bool>? _allowedButtonsFilter;
-    private readonly Func<Point, IDragAvatar?> _onStart;
+    private readonly Func<Offset, IDragAvatar?> _onStart;
     private readonly TimeSpan? _delay;
     private readonly Action? _onAvatarStarted;
     private readonly Dictionary<int, DragTracker> _trackers = [];
@@ -763,7 +763,7 @@ internal class DraggableGestureRecognizer : GestureRecognizer
     public DraggableGestureRecognizer(
         Axis? affinity,
         Func<PointerButtons, bool>? allowedButtonsFilter,
-        Func<Point, IDragAvatar?> onStart,
+        Func<Offset, IDragAvatar?> onStart,
         TimeSpan? delay = null,
         Action? onAvatarStarted = null)
     {
@@ -877,9 +877,9 @@ internal class DraggableGestureRecognizer : GestureRecognizer
             return;
         }
 
-        Point totalDelta = move.Position - new Vector(
-            tracker.InitialPosition.X,
-            tracker.InitialPosition.Y);
+        Offset totalDelta = move.Position - new Offset(
+            tracker.InitialPosition.Dx,
+            tracker.InitialPosition.Dy);
         if (!tracker.Accepted && _affinity.HasValue)
         {
             double primary = Math.Abs(PrimaryValue(totalDelta));
@@ -898,9 +898,9 @@ internal class DraggableGestureRecognizer : GestureRecognizer
 
         if (tracker.Avatar is not null)
         {
-            Point delta = move.Position - new Vector(
-                tracker.LastPosition.X,
-                tracker.LastPosition.Y);
+            Offset delta = move.Position - new Offset(
+                tracker.LastPosition.Dx,
+                tracker.LastPosition.Dy);
             tracker.Avatar.Update(
                 new DragUpdateDetails(
                     GlobalPosition: move.Position,
@@ -912,19 +912,14 @@ internal class DraggableGestureRecognizer : GestureRecognizer
         tracker.RecordPosition(move.Position, move.TimestampUtc);
     }
 
-    private double PrimaryValue(Point offset)
+    private double PrimaryValue(Offset offset)
     {
-        return _affinity == Axis.Vertical ? offset.Y : offset.X;
+        return _affinity == Axis.Vertical ? offset.Dy : offset.Dx;
     }
 
-    private double PrimaryValue(Vector offset)
+    private double CrossValue(Offset offset)
     {
-        return _affinity == Axis.Vertical ? offset.Y : offset.X;
-    }
-
-    private double CrossValue(Point offset)
-    {
-        return _affinity == Axis.Vertical ? offset.X : offset.Y;
+        return _affinity == Axis.Vertical ? offset.Dx : offset.Dy;
     }
 
     private void Cleanup(int pointer)
@@ -991,10 +986,10 @@ internal class DraggableGestureRecognizer : GestureRecognizer
         _onAvatarStarted?.Invoke();
     }
 
-    private static double Distance(Point first, Point second)
+    private static double Distance(Offset first, Offset second)
     {
-        double dx = first.X - second.X;
-        double dy = first.Y - second.Y;
+        double dx = first.Dx - second.Dx;
+        double dy = first.Dy - second.Dy;
         return Math.Sqrt(dx * dx + dy * dy);
     }
 
@@ -1003,7 +998,7 @@ internal class DraggableGestureRecognizer : GestureRecognizer
         private readonly List<VelocitySample> _samples = [];
 
         public DragTracker(
-            Point initialPosition,
+            Offset initialPosition,
             DateTime timestampUtc,
             GestureArenaEntry entry)
         {
@@ -1013,9 +1008,9 @@ internal class DraggableGestureRecognizer : GestureRecognizer
             _samples.Add(new VelocitySample(initialPosition, timestampUtc));
         }
 
-        public Point InitialPosition { get; }
+        public Offset InitialPosition { get; }
 
-        public Point LastPosition { get; private set; }
+        public Offset LastPosition { get; private set; }
 
         public GestureArenaEntry Entry { get; }
 
@@ -1027,7 +1022,7 @@ internal class DraggableGestureRecognizer : GestureRecognizer
 
         public bool DelayPassed { get; set; }
 
-        public void RecordPosition(Point position, DateTime timestampUtc)
+        public void RecordPosition(Offset position, DateTime timestampUtc)
         {
             LastPosition = position;
             if (_samples.Count > 0 && timestampUtc <= _samples[^1].TimestampUtc)
@@ -1046,7 +1041,7 @@ internal class DraggableGestureRecognizer : GestureRecognizer
             }
         }
 
-        public Vector EstimateVelocity()
+        public Offset EstimateVelocity()
         {
             if (_samples.Count < 2)
             {
@@ -1063,15 +1058,15 @@ internal class DraggableGestureRecognizer : GestureRecognizer
                     continue;
                 }
 
-                Vector delta = newest.Position - older.Position;
-                return new Vector(
-                    delta.X / elapsedSeconds,
-                    delta.Y / elapsedSeconds);
+                Offset delta = newest.Position - older.Position;
+                return new Offset(
+                    delta.Dx / elapsedSeconds,
+                    delta.Dy / elapsedSeconds);
             }
 
             return default;
         }
     }
 
-    private readonly record struct VelocitySample(Point Position, DateTime TimestampUtc);
+    private readonly record struct VelocitySample(Offset Position, DateTime TimestampUtc);
 }

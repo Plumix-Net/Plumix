@@ -732,7 +732,7 @@ public sealed class MemoryAllocationsDartParityTests
     {
         var recorder = new PictureRecorder();
         var canvas = new Canvas(recorder);
-        var rect = new Rect(0.0, 0.0, 100.0, 100.0);
+        var rect = DartGeometry.RectFromLTWH(0.0, 0.0, 100.0, 100.0);
         canvas.ClipRect(rect);
         return recorder.EndRecording();
     }
@@ -826,7 +826,7 @@ public sealed class MemoryAllocationsDartParityTests
         {
         }
 
-        public override void Paint(PaintingContext ctx, Point offset)
+        public override void Paint(PaintingContext ctx, Offset offset)
         {
         }
     }
@@ -866,7 +866,7 @@ public sealed class MemoryAllocationsDartParityTests
     }
 
     private sealed class TestMultiDragPointerState(
-        Point initialPosition,
+        Offset initialPosition,
         PointerDeviceKind kind,
         DeviceGestureSettings? gestureSettings) : MultiDragPointerState(initialPosition, kind, gestureSettings)
     {

@@ -78,7 +78,7 @@ public sealed class OverlayPortalTests
 
         RenderColoredBox positioned = harness.FindRenderObject<RenderColoredBox>();
         Assert.Equal(new Size(25, 15), positioned.Size);
-        Assert.Equal(new Point(70, 20), ((BoxParentData)positioned.parentData!).offset);
+        Assert.Equal(new Offset(70, 20), ((BoxParentData)positioned.parentData!).offset);
     }
 
     [Fact]
@@ -178,11 +178,11 @@ public sealed class OverlayPortalTests
         RenderColoredBox overlayChild = harness.FindRenderObject<RenderColoredBox>();
 
         var hitInside = new BoxHitTestResult();
-        harness.HitTest(hitInside, new Point(110, 70));
+        harness.HitTest(hitInside, new Offset(110, 70));
         Assert.Contains(hitInside.Path, entry => ReferenceEquals(entry.Target, overlayChild));
 
         var hitOutside = new BoxHitTestResult();
-        harness.HitTest(hitOutside, new Point(10, 10));
+        harness.HitTest(hitOutside, new Offset(10, 10));
         Assert.DoesNotContain(hitOutside.Path, entry => ReferenceEquals(entry.Target, overlayChild));
     }
 
@@ -221,8 +221,8 @@ public sealed class OverlayPortalTests
         Assert.Equal(new Size(40, 30), info.ChildSize);
         Assert.Equal(PortalHarness.ViewSize, info.OverlaySize);
         Assert.Equal(
-            new Point(20, 10),
-            MatrixUtils.TransformPoint(info.ChildPaintTransform, new Point()));
+            new Offset(20, 10),
+            MatrixUtils.TransformPoint(info.ChildPaintTransform, new Offset()));
 
         // Unchanged layout info does not rebuild the overlay child.
         harness.FindRenderObject<RenderOverlayPortalLayoutBuilder>().MarkNeedsLayout();
@@ -384,7 +384,7 @@ public sealed class OverlayPortalTests
         Assert.Equal(2, boxes.Count);
 
         var result = new BoxHitTestResult();
-        harness.HitTest(result, new Point(20, 20));
+        harness.HitTest(result, new Offset(20, 20));
 
         // Hit-test order is the exact reverse of the paint order, so the overlay child is reached
         // before the entry content it covers, and the theater stops there.
@@ -543,7 +543,7 @@ public sealed class OverlayPortalTests
     {
         public Action? OnPaint { get; set; }
 
-        public override void Paint(PaintingContext context, Point offset)
+        public override void Paint(PaintingContext context, Offset offset)
         {
             OnPaint?.Invoke();
             base.Paint(context, offset);
@@ -670,7 +670,7 @@ public sealed class OverlayPortalTests
             FlushPaint();
         }
 
-        public void HitTest(BoxHitTestResult result, Point position)
+        public void HitTest(BoxHitTestResult result, Offset position)
         {
             ((RenderBox)_renderView.Child!).HitTest(result, position);
         }

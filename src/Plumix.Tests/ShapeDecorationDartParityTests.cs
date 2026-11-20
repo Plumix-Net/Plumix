@@ -18,7 +18,7 @@ public sealed class ShapeDecorationDartParityTests
 
     private static IReadOnlyList<CanvasCall> PaintDecoration(
         BoxPainter painter,
-        Point offset,
+        Offset offset,
         ImageConfiguration configuration)
     {
         var context = new TestRecordingPaintingContext();
@@ -90,19 +90,19 @@ public sealed class ShapeDecorationDartParityTests
         Assert.Equal(b, Decoration.Lerp(b, c, 0.0));
         Assert.Equal(c, Decoration.Lerp(b, c, 1.0));
         var size = new Size(200.0, 100.0); // at t=0.5, width will be 150 (x=25 to x=175).
-        Assert.False(a.HitTest(size, new Point(20.0, 50.0)));
-        Assert.False(c.HitTest(size, new Point(50, 5.0)));
-        Assert.False(c.HitTest(size, new Point(5, 30.0)));
-        Assert.False(Decoration.Lerp(a, b, 0.1)!.HitTest(size, new Point(20.0, 50.0)));
-        Assert.False(Decoration.Lerp(a, b, 0.5)!.HitTest(size, new Point(20.0, 50.0)));
-        Assert.True(Decoration.Lerp(a, b, 0.9)!.HitTest(size, new Point(20.0, 50.0)));
-        Assert.False(Decoration.Lerp(a, c, 0.1)!.HitTest(size, new Point(30.0, 50.0)));
-        Assert.True(Decoration.Lerp(a, c, 0.5)!.HitTest(size, new Point(30.0, 50.0)));
-        Assert.True(Decoration.Lerp(a, c, 0.9)!.HitTest(size, new Point(30.0, 50.0)));
-        Assert.True(Decoration.Lerp(b, c, 0.1)!.HitTest(size, new Point(45.0, 10.0)));
-        Assert.True(Decoration.Lerp(b, c, 0.5)!.HitTest(size, new Point(30.0, 10.0)));
-        Assert.True(Decoration.Lerp(b, c, 0.9)!.HitTest(size, new Point(10.0, 30.0)));
-        Assert.True(b.HitTest(size, new Point(20.0, 50.0)));
+        Assert.False(a.HitTest(size, new Offset(20.0, 50.0)));
+        Assert.False(c.HitTest(size, new Offset(50, 5.0)));
+        Assert.False(c.HitTest(size, new Offset(5, 30.0)));
+        Assert.False(Decoration.Lerp(a, b, 0.1)!.HitTest(size, new Offset(20.0, 50.0)));
+        Assert.False(Decoration.Lerp(a, b, 0.5)!.HitTest(size, new Offset(20.0, 50.0)));
+        Assert.True(Decoration.Lerp(a, b, 0.9)!.HitTest(size, new Offset(20.0, 50.0)));
+        Assert.False(Decoration.Lerp(a, c, 0.1)!.HitTest(size, new Offset(30.0, 50.0)));
+        Assert.True(Decoration.Lerp(a, c, 0.5)!.HitTest(size, new Offset(30.0, 50.0)));
+        Assert.True(Decoration.Lerp(a, c, 0.9)!.HitTest(size, new Offset(30.0, 50.0)));
+        Assert.True(Decoration.Lerp(b, c, 0.1)!.HitTest(size, new Offset(45.0, 10.0)));
+        Assert.True(Decoration.Lerp(b, c, 0.5)!.HitTest(size, new Offset(30.0, 10.0)));
+        Assert.True(Decoration.Lerp(b, c, 0.9)!.HitTest(size, new Offset(10.0, 30.0)));
+        Assert.True(b.HitTest(size, new Offset(20.0, 50.0)));
     }
 
     [Fact]
@@ -142,22 +142,22 @@ public sealed class ShapeDecorationDartParityTests
     public void GetClipPath()
     {
         var decoration = new ShapeDecoration(new CircleBorder());
-        Path clipPath = decoration.GetClipPath(new Rect(0.0, 0.0, 100.0, 20.0), TextDirection.Ltr);
-        Assert.True(clipPath.Contains(new Point(50.0, 10.0)));
-        Assert.False(clipPath.Contains(new Point(1.0, 1.0)));
-        Assert.False(clipPath.Contains(new Point(30.0, 10.0)));
-        Assert.False(clipPath.Contains(new Point(99.0, 19.0)));
+        Path clipPath = decoration.GetClipPath(DartGeometry.RectFromLTWH(0.0, 0.0, 100.0, 20.0), TextDirection.Ltr);
+        Assert.True(clipPath.Contains(new Offset(50.0, 10.0)));
+        Assert.False(clipPath.Contains(new Offset(1.0, 1.0)));
+        Assert.False(clipPath.Contains(new Offset(30.0, 10.0)));
+        Assert.False(clipPath.Contains(new Offset(99.0, 19.0)));
     }
 
     [Fact]
     public void GetClipPath_ForOval()
     {
         var decoration = new ShapeDecoration(new OvalBorder());
-        Path clipPath = decoration.GetClipPath(new Rect(0.0, 0.0, 100.0, 50.0), TextDirection.Ltr);
-        Assert.True(clipPath.Contains(new Point(50.0, 10.0)));
-        Assert.False(clipPath.Contains(new Point(1.0, 1.0)));
-        Assert.False(clipPath.Contains(new Point(15.0, 1.0)));
-        Assert.False(clipPath.Contains(new Point(99.0, 19.0)));
+        Path clipPath = decoration.GetClipPath(DartGeometry.RectFromLTWH(0.0, 0.0, 100.0, 50.0), TextDirection.Ltr);
+        Assert.True(clipPath.Contains(new Offset(50.0, 10.0)));
+        Assert.False(clipPath.Contains(new Offset(1.0, 1.0)));
+        Assert.False(clipPath.Contains(new Offset(15.0, 1.0)));
+        Assert.False(clipPath.Contains(new Offset(99.0, 19.0)));
     }
 
     [Fact]
@@ -165,7 +165,7 @@ public sealed class ShapeDecorationDartParityTests
     {
         var shadow = new BoxShadow(
             color: new Color(0x80000000),
-            offset: new Point(0.0, 2.0),
+            offset: new Offset(0.0, 2.0),
             blurRadius: 4.0,
             spreadRadius: 1.0,
             blurStyle: BlurStyle.Inner);
@@ -179,10 +179,10 @@ public sealed class ShapeDecorationDartParityTests
             new ImageConfiguration(Size: new Size(40.0, 20.0)));
 
         Assert.Equal("drawRRect", calls[0].Method);
-        Assert.Equal(BorderRadius.Circular(6.0).ToRRect(new Rect(-1.0, 1.0, 42.0, 22.0)), calls[0].RRect);
+        Assert.Equal(BorderRadius.Circular(6.0).ToRRect(DartGeometry.RectFromLTWH(-1.0, 1.0, 42.0, 22.0)), calls[0].RRect);
         Assert.Equal(MaskFilter.Blur(BlurStyle.Inner, shadow.BlurSigma), calls[0].MaskFilter);
         Assert.Equal("drawRRect", calls[1].Method);
-        Assert.Equal(BorderRadius.Circular(6.0).ToRRect(new Rect(0.0, 0.0, 40.0, 20.0)), calls[1].RRect);
+        Assert.Equal(BorderRadius.Circular(6.0).ToRRect(DartGeometry.RectFromLTWH(0.0, 0.0, 40.0, 20.0)), calls[1].RRect);
         Assert.Null(calls[1].MaskFilter);
     }
 
@@ -194,10 +194,10 @@ public sealed class ShapeDecorationDartParityTests
         var decoration = new ShapeDecoration(
             new StarBorder(),
             Color: new Color(0xFF0000FF),
-            Shadows: [new BoxShadow(color: new Color(0x40000000), offset: new Point(3.0, 3.0), blurRadius: 2.0)]);
+            Shadows: [new BoxShadow(color: new Color(0x40000000), offset: new Offset(3.0, 3.0), blurRadius: 2.0)]);
         IReadOnlyList<CanvasCall> calls = PaintDecoration(
             decoration.CreateBoxPainter(),
-            new Point(10.0, 10.0),
+            new Offset(10.0, 10.0),
             new ImageConfiguration(Size: new Size(50.0, 50.0)));
 
         CanvasCall[] paths = calls.Where(call => call.Method == "drawPath").ToArray();
@@ -208,8 +208,8 @@ public sealed class ShapeDecorationDartParityTests
         Assert.Equal(new Color(0xFF0000FF), paths[1].Color);
         Rect shadowBounds = paths[0].Path!.GetBounds();
         Rect interiorBounds = paths[1].Path!.GetBounds();
-        Assert.Equal(interiorBounds.X + 3.0, shadowBounds.X, 6);
-        Assert.Equal(interiorBounds.Y + 3.0, shadowBounds.Y, 6);
+        Assert.Equal(interiorBounds.Left + 3.0, shadowBounds.Left, 6);
+        Assert.Equal(interiorBounds.Top + 3.0, shadowBounds.Top, 6);
     }
 
     [Fact]
@@ -222,7 +222,7 @@ public sealed class ShapeDecorationDartParityTests
             decoration.CreateBoxPainter(),
             default,
             new ImageConfiguration(Size: new Size(40.0, 20.0)));
-        PaintAssert.Paints(calls, PaintPattern.Paints.Rect(rect: new Rect(2.0, 2.0, 36.0, 16.0)));
+        PaintAssert.Paints(calls, PaintPattern.Paints.Rect(rect: DartGeometry.RectFromLTWH(2.0, 2.0, 36.0, 16.0)));
 
         var gradientDecoration = new ShapeDecoration(
             new RoundedRectangleBorder(new BorderSide(new Color(0xFF000000), 4.0)),
@@ -231,7 +231,7 @@ public sealed class ShapeDecorationDartParityTests
             gradientDecoration.CreateBoxPainter(),
             default,
             new ImageConfiguration(Size: new Size(40.0, 20.0)));
-        PaintAssert.Paints(gradientCalls, PaintPattern.Paints.Rect(rect: new Rect(0.0, 0.0, 40.0, 20.0)));
+        PaintAssert.Paints(gradientCalls, PaintPattern.Paints.Rect(rect: DartGeometry.RectFromLTWH(0.0, 0.0, 40.0, 20.0)));
     }
 
     [Fact]
@@ -267,8 +267,8 @@ public sealed class ShapeDecorationDartParityTests
                 calls,
                 PaintPattern.Paints.Save().ClipPath().Circle(x: 10.0, y: 10.0, radius: 10.0).Restore());
             CanvasCall clip = calls.Single(call => call.Method == "clipPath");
-            Assert.False(clip.Path!.Contains(new Point(10.0, 10.0)));
-            Assert.True(clip.Path.Contains(new Point(-5.0, -5.0)));
+            Assert.False(clip.Path!.Contains(new Offset(10.0, 10.0)));
+            Assert.True(clip.Path.Contains(new Offset(-5.0, -5.0)));
         }
         finally
         {

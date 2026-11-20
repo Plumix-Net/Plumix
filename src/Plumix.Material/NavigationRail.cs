@@ -476,7 +476,7 @@ internal sealed class NavigationRailDestinationTileState : State<NavigationRailD
         double indicatorVerticalOffset = iconTheme.Size is > 32.0
             ? (iconTheme.Size.Value - 32.0) / 2.0
             : 0.0;
-        Point indicatorOffset;
+        Offset indicatorOffset;
         bool applyXOffset = false;
         Widget content;
 
@@ -500,7 +500,7 @@ internal sealed class NavigationRailDestinationTileState : State<NavigationRailD
                 }
 
                 Widget iconPart = new Column(children: iconPartChildren);
-                indicatorOffset = new Point(
+                indicatorOffset = new Offset(
                     (widget.MinWidth / 2.0) + destinationPadding.Left,
                     6.0 + destinationPadding.Top + indicatorVerticalOffset);
                 if (widget.ExtendedProgress == 0.0)
@@ -669,7 +669,7 @@ internal sealed class NavigationRailDestinationTileState : State<NavigationRailD
             ]);
     }
 
-    private static Point ResolveLabelIndicatorOffset(
+    private static Offset ResolveLabelIndicatorOffset(
         double minWidth,
         EdgeInsets padding,
         double verticalOffset)
@@ -677,7 +677,7 @@ internal sealed class NavigationRailDestinationTileState : State<NavigationRailD
         double horizontalCenter = minWidth < 72.0
             ? (minWidth / 2.0) + 12.0
             : (minWidth / 2.0) + (padding.Left / 2.0) - (padding.Right / 2.0);
-        return new Point(horizontalCenter, padding.Top + verticalOffset);
+        return new Offset(horizontalCenter, padding.Top + verticalOffset);
     }
 
     private void HandleSelectionChanged() => SetState(() => { });
@@ -693,7 +693,7 @@ internal sealed class NavigationRailIndicatorInkWell : InkResponse
         Color splashColor,
         Color hoverColor,
         bool useMaterial3,
-        Point indicatorOffset,
+        Offset indicatorOffset,
         bool applyXOffset,
         TextDirection textDirection)
         : base(
@@ -713,7 +713,7 @@ internal sealed class NavigationRailIndicatorInkWell : InkResponse
     }
 
     public bool UseMaterial3 { get; }
-    public Point IndicatorOffset { get; }
+    public Offset IndicatorOffset { get; }
     public bool ApplyXOffset { get; }
     public TextDirection TextDirection { get; }
 
@@ -727,15 +727,15 @@ internal sealed class NavigationRailIndicatorInkWell : InkResponse
 
         return () =>
         {
-            double horizontalCenter = ApplyXOffset ? IndicatorOffset.X : referenceBox.Size.Width / 2.0;
+            double horizontalCenter = ApplyXOffset ? IndicatorOffset.Dx : referenceBox.Size.Width / 2.0;
             if (TextDirection == TextDirection.Rtl)
             {
                 horizontalCenter = referenceBox.Size.Width - horizontalCenter;
             }
 
-            return new Rect(
+            return DartGeometry.RectFromLTWH(
                 horizontalCenter - 28.0,
-                IndicatorOffset.Y,
+                IndicatorOffset.Dy,
                 56.0,
                 32.0);
         };

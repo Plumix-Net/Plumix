@@ -181,7 +181,7 @@ public sealed class IntrinsicWidgetsTests
             Size = Constraints.Constrain(_desiredSize);
         }
 
-        public override void Paint(PaintingContext context, Point offset)
+        public override void Paint(PaintingContext context, Offset offset)
         {
         }
     }

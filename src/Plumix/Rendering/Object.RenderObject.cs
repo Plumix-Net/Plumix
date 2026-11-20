@@ -1083,7 +1083,7 @@ public abstract partial class RenderObject : DiagnosticableTree, IRenderObject, 
 
     public virtual bool AlwaysNeedsCompositing => false;
 
-    protected virtual Rect SemanticBounds => new Rect();
+    protected virtual Rect SemanticBounds => DartGeometry.RectZero;
 
     internal Rect SemanticBoundsForSemantics => SemanticBounds;
 
@@ -1484,7 +1484,7 @@ public abstract partial class RenderObject : DiagnosticableTree, IRenderObject, 
     }
 
     /// The paint offset of this render object's origin in the coordinate space of the render tree root.
-    public Point GetPaintOffsetToRoot()
+    public Offset GetPaintOffsetToRoot()
     {
         return MatrixUtils.TransformPoint(ComputePaintTransformToRoot(), default);
     }
@@ -1622,14 +1622,14 @@ public abstract partial class RenderObject : DiagnosticableTree, IRenderObject, 
     /// <summary>
     /// Paint this render object into the given context at the given offset.
     /// </summary>
-    public abstract void Paint(PaintingContext ctx, Point offset);
+    public abstract void Paint(PaintingContext ctx, Offset offset);
 
     public virtual void HandleEvent(PointerEvent @event, HitTestEntry entry)
     {
     }
 
 
-    internal void _paintWithContext(PaintingContext context, Point offset)
+    internal void _paintWithContext(PaintingContext context, Offset offset)
     {
         EnsureNotDisposedMutation();
         if (_debugDoingThisPaint)
@@ -1745,13 +1745,13 @@ public abstract partial class RenderObject : DiagnosticableTree, IRenderObject, 
 
     /// <summary>Override point for debug-only paint overlays.</summary>
     /// <remarks>Flutter's <c>RenderObject.debugPaint</c>; a no-op by default.</remarks>
-    protected virtual void DebugPaint(PaintingContext context, Point offset)
+    protected virtual void DebugPaint(PaintingContext context, Offset offset)
     {
     }
 
     /// <summary>Calls <see cref="DebugPaint"/> from outside the render object.</summary>
     /// <remarks>Dart's <c>debugPaint</c> is public; the widget inspector's screenshot calls it.</remarks>
-    internal void InvokeDebugPaint(PaintingContext context, Point offset) => DebugPaint(context, offset);
+    internal void InvokeDebugPaint(PaintingContext context, Offset offset) => DebugPaint(context, offset);
 
     /// <remarks>Flutter's <c>RenderObject._reportException</c>.</remarks>
     private void ReportException(string method, Exception exception)

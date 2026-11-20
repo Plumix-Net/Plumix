@@ -496,9 +496,9 @@ public interface IRenderBoxContainerDefaultsMixin<TChild, TParentData>
     where TChild : RenderBox
     where TParentData : ContainerBoxParentData<TChild>
 {
-    void DefaultPaint(PaintingContext ctx, Point offset);
+    void DefaultPaint(PaintingContext ctx, Offset offset);
 
-    bool DefaultHitTestChildren(BoxHitTestResult result, Point position);
+    bool DefaultHitTestChildren(BoxHitTestResult result, Offset position);
 }
 
 /// <summary>
@@ -534,7 +534,7 @@ public class RenderBoxContainerDefaultsMixin<TChild, TParentData>(RenderObject o
             double? result = child.GetDistanceToActualBaseline(baseline);
             if (result != null)
             {
-                return result.Value + childParentData.offset.Y;
+                return result.Value + childParentData.offset.Dy;
             }
 
             child = childParentData.nextSibling;
@@ -557,7 +557,7 @@ public class RenderBoxContainerDefaultsMixin<TChild, TParentData>(RenderObject o
         {
             var childParentData = (TParentData)child.parentData!;
             BaselineOffset candidate =
-                new BaselineOffset(child.GetDistanceToActualBaseline(baseline)) + childParentData.offset.Y;
+                new BaselineOffset(child.GetDistanceToActualBaseline(baseline)) + childParentData.offset.Dy;
             minBaseline = minBaseline.MinOf(candidate);
             child = childParentData.nextSibling;
         }
@@ -570,7 +570,7 @@ public class RenderBoxContainerDefaultsMixin<TChild, TParentData>(RenderObject o
     /// Stops walking once after the first child reports that it contains the given point. Returns
     /// whether any children contain the given point.
     /// </remarks>
-    public bool DefaultHitTestChildren(BoxHitTestResult result, Point position)
+    public bool DefaultHitTestChildren(BoxHitTestResult result, Offset position)
     {
         TChild? child = LastChild;
         while (child != null)
@@ -602,7 +602,7 @@ public class RenderBoxContainerDefaultsMixin<TChild, TParentData>(RenderObject o
     }
 
     /// <summary>Paints each child by walking the child list forwards.</summary>
-    public void DefaultPaint(PaintingContext ctx, Point offset)
+    public void DefaultPaint(PaintingContext ctx, Offset offset)
     {
         TChild? child = FirstChild;
         while (child != null)

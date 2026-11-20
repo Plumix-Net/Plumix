@@ -56,7 +56,7 @@ public sealed class MaterialRadioExpansionTileTests : IDisposable
                     title: new Text("Option B")))));
 
         harness.Pump(new Size(360, 180));
-        Tap(harness.RenderView, new Point(140, 28), pointer: 701);
+        Tap(harness.RenderView, new Offset(140, 28), pointer: 701);
 
         Assert.Equal("b", changed);
     }
@@ -110,7 +110,7 @@ public sealed class MaterialRadioExpansionTileTests : IDisposable
                 onChanged: value => changed = value)));
 
         harness.Pump(new Size(360, 180));
-        Tap(harness.RenderView, new Point(140, 28), pointer: 702);
+        Tap(harness.RenderView, new Offset(140, 28), pointer: 702);
 
         Assert.Null(changed);
     }
@@ -127,7 +127,7 @@ public sealed class MaterialRadioExpansionTileTests : IDisposable
                 onChanged: _ => calls += 1)));
 
         harness.Pump(new Size(360, 180));
-        Tap(harness.RenderView, new Point(140, 28), pointer: 703);
+        Tap(harness.RenderView, new Offset(140, 28), pointer: 703);
 
         Assert.Equal(0, calls);
     }
@@ -444,7 +444,7 @@ public sealed class MaterialRadioExpansionTileTests : IDisposable
                 children: [new Text("Hidden body")])));
 
         harness.Pump(new Size(360, 200));
-        Tap(harness.RenderView, new Point(140, 28), pointer: 704);
+        Tap(harness.RenderView, new Offset(140, 28), pointer: 704);
 
         Assert.False(controller.IsExpanded);
         Assert.Null(FindParagraphByText(harness.RenderView, "Hidden body"));
@@ -782,7 +782,7 @@ public sealed class MaterialRadioExpansionTileTests : IDisposable
                 child: new SizedBox(width: 320, child: MaterialHost.Transparent(child))));
     }
 
-    private static void Tap(RenderView renderView, Point position, int pointer)
+    private static void Tap(RenderView renderView, Offset position, int pointer)
     {
         var timestamp = DateTime.UtcNow;
         GestureBinding.Instance.HandlePointerEvent(

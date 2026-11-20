@@ -366,8 +366,8 @@ internal sealed class HeroFlightManifest : IDisposable
 
     internal static bool IsFinite(Rect rect)
     {
-        return double.IsFinite(rect.X)
-               && double.IsFinite(rect.Y)
+        return double.IsFinite(rect.Left)
+               && double.IsFinite(rect.Top)
                && double.IsFinite(rect.Width)
                && double.IsFinite(rect.Height);
     }
@@ -388,7 +388,7 @@ internal sealed class HeroFlightManifest : IDisposable
 
         return MatrixUtils.TransformRect(
             box.GetTransformTo(ancestorContext?.FindRenderObject()),
-            new Rect(new Point(0, 0), box.Size));
+            DartGeometry.RectFromOffsetAndSize(new Offset(0, 0), box.Size));
     }
 }
 
@@ -671,18 +671,18 @@ internal sealed class HeroFlight : IDisposable
         RenderBox? toHeroBox = !_aborted && Manifest.ToHero.Mounted
             ? Manifest.ToHero.Context.FindRenderObject() as RenderBox
             : null;
-        Point? toHeroOrigin = toHeroBox is { Attached: true, HasSize: true }
+        Offset? toHeroOrigin = toHeroBox is { Attached: true, HasSize: true }
             ? toHeroBox.LocalToGlobal(
-                new Point(0, 0),
+                new Offset(0, 0),
                 Manifest.ToRoute.SubtreeContext?.FindRenderObject())
             : null;
 
-        if (toHeroOrigin is { } origin && double.IsFinite(origin.X) && double.IsFinite(origin.Y))
+        if (toHeroOrigin is { } origin && double.IsFinite(origin.Dx) && double.IsFinite(origin.Dy))
         {
             Rect end = HeroRectTween.End!.Value;
             if (origin != end.TopLeft)
             {
-                var heroRectEnd = new Rect(origin, end.Size);
+                var heroRectEnd = DartGeometry.RectFromOffsetAndSize(origin, end.Size);
                 HeroRectTween = Manifest.CreateHeroRectTween(HeroRectTween.Begin, heroRectEnd);
             }
         }
@@ -696,8 +696,8 @@ internal sealed class HeroFlight : IDisposable
 
         // Update _aborted for the next animation tick.
         _aborted = toHeroOrigin is not { } next
-                   || !double.IsFinite(next.X)
-                   || !double.IsFinite(next.Y);
+                   || !double.IsFinite(next.Dx)
+                   || !double.IsFinite(next.Dy);
     }
 }
 

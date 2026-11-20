@@ -187,8 +187,8 @@ public sealed class RenderParagraphSemanticsDartParityTests
         ]));
         SemanticsNode node = Assemble(paragraph);
         Assert.Equal(["", "Clickable"], node.Children.Select(child => child.Label));
-        Assert.Equal(new Rect(-4, -4, 98, 18), node.Children[0].Rect);
-        Assert.Equal(new Rect(86, -4, 98, 18), node.Children[1].Rect);
+        Assert.Equal(DartGeometry.RectFromLTWH(-4, -4, 98, 18), node.Children[0].Rect);
+        Assert.Equal(DartGeometry.RectFromLTWH(86, -4, 98, 18), node.Children[1].Rect);
     }
 
     [Fact]
@@ -200,12 +200,12 @@ public sealed class RenderParagraphSemanticsDartParityTests
             new TextSpan("B", recognizer: tap),
         ]));
         SemanticsNode node = Assemble(paragraph);
-        Assert.Equal(new Rect(10, -4, 24, 23), node.Children[1].Rect);
+        Assert.Equal(DartGeometry.RectFromLTWH(10, -4, 24, 23), node.Children[1].Rect);
         paragraph.SoftWrap = false;
         paragraph.Layout(new BoxConstraints(MaxWidth: 5, MaxHeight: 4));
         SemanticsNode clipped = Assemble(paragraph);
-        Assert.Equal(new Rect(-4, -4, 13, 12), clipped.Children[0].Rect);
-        Assert.Equal(new Rect(10, -4, 14, 12), clipped.Children[1].Rect);
+        Assert.Equal(DartGeometry.RectFromLTWH(-4, -4, 13, 12), clipped.Children[0].Rect);
+        Assert.Equal(DartGeometry.RectFromLTWH(10, -4, 14, 12), clipped.Children[1].Rect);
     }
 
     // text_test.dart: 'recognizers split semantic node - bidi'.
@@ -287,7 +287,7 @@ public sealed class RenderParagraphSemanticsDartParityTests
             ]))));
         SemanticsNode node = tester.GetSemantics(Find.ByType<RichText>().First);
         SemanticsNode scaled = Assert.Single(node.Children, child => child.Label == "scaled");
-        Assert.Equal(new Rect(0, 0, 20, 40), scaled.Rect);
+        Assert.Equal(DartGeometry.RectFromLTWH(0, 0, 20, 40), scaled.Rect);
         Assert.NotNull(scaled.Transform);
         Assert.Equal(2.0, scaled.Transform![0]);
         Assert.Equal(2.0, scaled.Transform[5]);
@@ -320,7 +320,7 @@ public sealed class RenderParagraphSemanticsDartParityTests
         var paragraph = Paragraph(new TextSpan("visible\nhidden", recognizer: tap));
         var parent = new ShowOnScreenBox(paragraph);
         parent.Layout(new BoxConstraints(MaxWidth: 800));
-        SemanticsNode node = Assemble(paragraph, clip: new Rect(0, 100, 800, 20));
+        SemanticsNode node = Assemble(paragraph, clip: DartGeometry.RectFromLTWH(0, 100, 800, 20));
         SemanticsNode run = Assert.Single(node.Children);
         Assert.True(run.IsHidden);
         run.ShowOnScreenRequest!();
@@ -334,7 +334,7 @@ public sealed class RenderParagraphSemanticsDartParityTests
         Assert.False(changed.IsHidden);
         run.ShowOnScreenRequest!();
         Assert.Equal(changed.Rect, parent.RequestedRect);
-        Assert.Equal(new Rect(-4, -4, 58, 18), parent.RequestedRect);
+        Assert.Equal(DartGeometry.RectFromLTWH(-4, -4, 58, 18), parent.RequestedRect);
     }
 
     // paragraph_test.dart: changing a recognizer causes exactly one semantics notification.

@@ -19,7 +19,7 @@ public sealed class Badge : StatelessWidget
         TextStyle? textStyle = null,
         EdgeInsetsGeometry? padding = null,
         AlignmentGeometry? alignment = null,
-        Vector? offset = null,
+        Offset? offset = null,
         Widget? label = null,
         bool isLabelVisible = true,
         Widget? child = null,
@@ -48,7 +48,7 @@ public sealed class Badge : StatelessWidget
         TextStyle? textStyle = null,
         EdgeInsetsGeometry? padding = null,
         AlignmentGeometry? alignment = null,
-        Vector? offset = null,
+        Offset? offset = null,
         bool isLabelVisible = true,
         Widget? child = null,
         Key? key = null)
@@ -85,7 +85,7 @@ public sealed class Badge : StatelessWidget
     public TextStyle? TextStyle { get; }
     public EdgeInsetsGeometry? Padding { get; }
     public AlignmentGeometry? Alignment { get; }
-    public Vector? Offset { get; }
+    public Offset? Offset { get; }
     public Widget? Label { get; }
     public bool IsLabelVisible { get; }
     public Widget? Child { get; }
@@ -142,9 +142,9 @@ public sealed class Badge : StatelessWidget
                                               ?? badgeTheme.Alignment
                                               ?? AlignmentDirectional.TopEnd;
         var defaultOffset = textDirection == TextDirection.Ltr
-            ? new Vector(4, -4)
-            : new Vector(-4, -4);
-        var effectiveOffset = (Offset ?? badgeTheme.Offset ?? defaultOffset) + new Vector(0, 8);
+            ? new Offset(4, -4)
+            : new Offset(-4, -4);
+        var effectiveOffset = (Offset ?? badgeTheme.Offset ?? defaultOffset) + new Offset(0, 8);
 
         return new Stack(
             clipBehavior: Clip.None,
@@ -171,7 +171,7 @@ internal sealed class BadgePositioner : SingleChildRenderObjectWidget
 {
     public BadgePositioner(
         AlignmentGeometry alignment,
-        Vector offset,
+        Offset offset,
         double widthOffset,
         bool hasLabel,
         TextDirection textDirection,
@@ -185,7 +185,7 @@ internal sealed class BadgePositioner : SingleChildRenderObjectWidget
     }
 
     public AlignmentGeometry Alignment { get; }
-    public Vector Offset { get; }
+    public Offset Offset { get; }
     public double WidthOffset { get; }
     public bool HasLabel { get; }
     public TextDirection TextDirection { get; }
@@ -213,13 +213,13 @@ internal sealed class BadgePositioner : SingleChildRenderObjectWidget
 
 internal sealed class RenderBadgePositioner : RenderAligningShiftedBox
 {
-    private Vector _offset;
+    private Offset _offset;
     private double _widthOffset;
     private bool _hasLabel;
 
     public RenderBadgePositioner(
         AlignmentGeometry alignment,
-        Vector offset,
+        Offset offset,
         double widthOffset,
         bool hasLabel,
         TextDirection textDirection) : base(alignment, textDirection)
@@ -229,7 +229,7 @@ internal sealed class RenderBadgePositioner : RenderAligningShiftedBox
         _hasLabel = hasLabel;
     }
 
-    public Vector Offset
+    public Offset Offset
     {
         get => _offset;
         set { if (_offset != value) { _offset = value; MarkNeedsLayout(); } }
@@ -265,7 +265,7 @@ internal sealed class RenderBadgePositioner : RenderAligningShiftedBox
         var location = ResolvedAlignment.AlongOffset(alignmentSpace, new Size()) + Offset;
         if (HasLabel)
         {
-            location -= new Vector(0, Child.Size.Height / 2.0);
+            location -= new Offset(0, Child.Size.Height / 2.0);
         }
 
         ((BoxParentData)Child.parentData!).offset = location;

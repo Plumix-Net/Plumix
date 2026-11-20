@@ -174,8 +174,8 @@ public sealed class MaterialInkResponseTests : IDisposable
                 onTap: () => { }))));
 
         Element well = Single<InkWell>(tester);
-        Point topLeft = tester.GetTopLeft(well);
-        TestGesture gesture = tester.StartGesture(topLeft + new Vector(10.0, 10.0), PointerDeviceKind.Touch);
+        Offset topLeft = tester.GetTopLeft(well);
+        TestGesture gesture = tester.StartGesture(topLeft + new Offset(10.0, 10.0), PointerDeviceKind.Touch);
         tester.Pump();
         var sparkle = Assert.IsType<InkSparkle>(Assert.Single(InkFeatureProbe.Splashes(Controller(well))));
         PaintRecording.Record(Controller(well));
@@ -260,7 +260,7 @@ public sealed class MaterialInkResponseTests : IDisposable
                 onTap: () => { }))));
 
         Element response = Single<InkResponse>(tester);
-        Point topLeft = tester.GetTopLeft(response);
+        Offset topLeft = tester.GetTopLeft(response);
         TestGesture gesture = tester.StartGesture(topLeft, PointerDeviceKind.Touch);
         tester.Pump();
         tester.Pump(TimeSpan.FromMilliseconds(500));
@@ -268,7 +268,7 @@ public sealed class MaterialInkResponseTests : IDisposable
         // target, centre halfway to the box centre.
         PaintAssert.Paints(
             Controller(response),
-            PaintPattern.Paints.Translate(topLeft.X, topLeft.Y).Circle(x: 25.0, y: 25.0, radius: 17.5));
+            PaintPattern.Paints.Translate(topLeft.Dx, topLeft.Dy).Circle(x: 25.0, y: 25.0, radius: 17.5));
         Assert.Equal(1, PaintRecording.Record(Controller(response)).CountCalls("clipRect"));
         gesture.Up();
         tester.PumpAndSettle();

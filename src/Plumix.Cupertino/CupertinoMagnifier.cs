@@ -70,7 +70,7 @@ public sealed class CupertinoTextMagnifier : StatefulWidget
     {
         // Initialize to dummy values for the event that the initial call to
         // DetermineMagnifierPositionAndFocalPoint calls hide, and thus does not set these values.
-        private Point _currentAdjustedMagnifierPosition;
+        private Offset _currentAdjustedMagnifierPosition;
         private double _verticalFocalPointAdjustment;
         private AnimationController? _ioAnimationController;
         private CurvedAnimation? _ioCurvedAnimation;
@@ -78,7 +78,7 @@ public sealed class CupertinoTextMagnifier : StatefulWidget
 
         private CupertinoTextMagnifier CurrentWidget => (CupertinoTextMagnifier)StateWidget;
 
-        internal Point CurrentAdjustedMagnifierPosition => _currentAdjustedMagnifierPosition;
+        internal Offset CurrentAdjustedMagnifierPosition => _currentAdjustedMagnifierPosition;
 
         internal double VerticalFocalPointAdjustment => _verticalFocalPointAdjustment;
 
@@ -123,11 +123,11 @@ public sealed class CupertinoTextMagnifier : StatefulWidget
             return new AnimatedPositioned(
                 duration: DragAnimationDuration,
                 curve: CurrentWidget.AnimationCurve,
-                left: _currentAdjustedMagnifierPosition.X,
-                top: _currentAdjustedMagnifierPosition.Y,
+                left: _currentAdjustedMagnifierPosition.Dx,
+                top: _currentAdjustedMagnifierPosition.Dy,
                 child: new CupertinoMagnifier(
                     inOutAnimation: _ioAnimation,
-                    additionalFocalPointOffset: new Point(0, _verticalFocalPointAdjustment),
+                    additionalFocalPointOffset: new Offset(0, _verticalFocalPointAdjustment),
                     borderSide: new BorderSide(themeData.PrimaryColor, 2.0)));
         }
 
@@ -153,10 +153,10 @@ public sealed class CupertinoTextMagnifier : StatefulWidget
             MagnifierInfo textEditingContext = CurrentWidget.MagnifierInfo.Value;
 
             // The exact Y of the center of the current line.
-            double verticalCenterOfCurrentLine = textEditingContext.CaretRect.Center.Y;
+            double verticalCenterOfCurrentLine = textEditingContext.CaretRect.Center.Dy;
 
             // If the magnifier is currently showing, but we have dragged out of threshold, hide it.
-            if (verticalCenterOfCurrentLine - textEditingContext.GlobalGesturePosition.Y
+            if (verticalCenterOfCurrentLine - textEditingContext.GlobalGesturePosition.Dy
                 < -CurrentWidget.HideBelowThreshold)
             {
                 // Only signal a hide if we are currently showing.
@@ -179,12 +179,12 @@ public sealed class CupertinoTextMagnifier : StatefulWidget
             double verticalPositionOfLens = Math.Max(
                 verticalCenterOfCurrentLine,
                 verticalCenterOfCurrentLine
-                - ((verticalCenterOfCurrentLine - textEditingContext.GlobalGesturePosition.Y)
+                - ((verticalCenterOfCurrentLine - textEditingContext.GlobalGesturePosition.Dy)
                    / CurrentWidget.DragResistance));
 
             // The raw position, tracking the gesture directly.
-            var rawMagnifierPosition = new Point(
-                textEditingContext.GlobalGesturePosition.X - (CupertinoMagnifier.DefaultSize.Width / 2.0),
+            var rawMagnifierPosition = new Offset(
+                textEditingContext.GlobalGesturePosition.Dx - (CupertinoMagnifier.DefaultSize.Width / 2.0),
                 verticalPositionOfLens
                 - (CupertinoMagnifier.DefaultSize.Height - CupertinoMagnifier.MagnifierAboveFocalPoint));
 
@@ -195,14 +195,14 @@ public sealed class CupertinoTextMagnifier : StatefulWidget
             // the whole magnifier out of bounds if need be.
             double verticalSlack =
                 CupertinoMagnifier.DefaultSize.Height + CupertinoMagnifier.MagnifierAboveFocalPoint;
-            var paddedBounds = new Rect(
+            var paddedBounds = DartGeometry.RectFromLTWH(
                 CurrentWidget.HorizontalScreenEdgePadding,
                 -verticalSlack,
                 Math.Max(0, screenSize.Width - (CurrentWidget.HorizontalScreenEdgePadding * 2.0)),
                 screenSize.Height + (verticalSlack * 2.0));
-            Point adjustedMagnifierPosition = MagnifierController.ShiftWithinBounds(
-                new Rect(rawMagnifierPosition, CupertinoMagnifier.DefaultSize),
-                paddedBounds).Position;
+            Offset adjustedMagnifierPosition = MagnifierController.ShiftWithinBounds(
+                DartGeometry.RectFromOffsetAndSize(rawMagnifierPosition, CupertinoMagnifier.DefaultSize),
+                paddedBounds).TopLeft;
 
             SetState(() =>
             {
@@ -242,7 +242,7 @@ public sealed class CupertinoMagnifier : StatelessWidget
     public CupertinoMagnifier(
         Size? size = null,
         BorderRadius? borderRadius = null,
-        Point additionalFocalPointOffset = default,
+        Offset additionalFocalPointOffset = default,
         IReadOnlyList<BoxShadow>? shadows = null,
         Clip clipBehavior = Clip.None,
         BorderSide? borderSide = null,
@@ -278,7 +278,7 @@ public sealed class CupertinoMagnifier : StatelessWidget
     /// Any additional focal point offset, applied over the regular offset defined in
     /// <see cref="MagnifierAboveFocalPoint"/>.
     /// </summary>
-    public Point AdditionalFocalPointOffset { get; }
+    public Offset AdditionalFocalPointOffset { get; }
 
     /// <summary>A list of shadows cast by the magnifier.</summary>
     public IReadOnlyList<BoxShadow> Shadows { get; }
@@ -320,10 +320,10 @@ public sealed class CupertinoMagnifier : StatelessWidget
         // Dart calls `focalPointOffset.scale(1, inOutAnimation?.value ?? 1)` and discards the result
         // (`Offset.scale` returns a new offset), so the focal point does not animate upstream either.
         var focalPointOffset =
-            new Point(0, (DefaultSize.Height / 2.0) - MagnifierAboveFocalPoint) + AdditionalFocalPointOffset;
+            new Offset(0, (DefaultSize.Height / 2.0) - MagnifierAboveFocalPoint) + AdditionalFocalPointOffset;
 
         return Widgets.Transform.Translate(
-            offset: LerpOffset(new Point(0, -MagnifierAboveFocalPoint), default, animationValue),
+            offset: LerpOffset(new Offset(0, -MagnifierAboveFocalPoint), default, animationValue),
             child: new RawMagnifier(
                 size: Size,
                 focalPointOffset: focalPointOffset,
@@ -335,8 +335,8 @@ public sealed class CupertinoMagnifier : StatelessWidget
                 magnificationScale: MagnificationScale));
     }
 
-    private static Point LerpOffset(Point a, Point b, double t)
+    private static Offset LerpOffset(Offset a, Offset b, double t)
     {
-        return new Point(a.X + ((b.X - a.X) * t), a.Y + ((b.Y - a.Y) * t));
+        return new Offset(a.Dx + ((b.Dx - a.Dx) * t), a.Dy + ((b.Dy - a.Dy) * t));
     }
 }

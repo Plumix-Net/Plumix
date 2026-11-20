@@ -44,17 +44,17 @@ public sealed class TextMagnifier : StatefulWidget
 
     internal sealed class TextMagnifierState : State<TextMagnifier>
     {
-        private Point? _magnifierPosition;
-        private Point _extraFocalPointOffset;
+        private Offset? _magnifierPosition;
+        private Offset _extraFocalPointOffset;
         // A timer that unsets itself after an animation duration. If the timer exists, then the
         // magnifier animates its position; if not, it tracks the gesture directly.
         private Timer? _positionShouldBeAnimatedTimer;
 
         private TextMagnifier CurrentWidget => (TextMagnifier)StateWidget;
 
-        internal Point? MagnifierPosition => _magnifierPosition;
+        internal Offset? MagnifierPosition => _magnifierPosition;
 
-        internal Point ExtraFocalPointOffset => _extraFocalPointOffset;
+        internal Offset ExtraFocalPointOffset => _extraFocalPointOffset;
 
         internal bool PositionShouldBeAnimated => _positionShouldBeAnimatedTimer != null;
 
@@ -85,10 +85,10 @@ public sealed class TextMagnifier : StatefulWidget
 
         public override Widget Build(BuildContext context)
         {
-            Point position = _magnifierPosition ?? default;
+            Offset position = _magnifierPosition ?? default;
             return new AnimatedPositioned(
-                left: position.X,
-                top: position.Y,
+                left: position.Dx,
+                top: position.Dy,
                 duration: PositionShouldBeAnimated
                     ? JumpBetweenLinesAnimationDuration
                     : TimeSpan.Zero,
@@ -106,38 +106,38 @@ public sealed class TextMagnifier : StatefulWidget
         {
             MagnifierInfo selectionInfo = CurrentWidget.MagnifierInfo.Value;
             Size screenSize = MediaQuery.Of(Context).Size;
-            var screenRect = new Rect(default, screenSize);
-            var basicMagnifierOffset = new Point(
+            var screenRect = DartGeometry.RectFromOffsetAndSize(default, screenSize);
+            var basicMagnifierOffset = new Offset(
                 Magnifier.DefaultMagnifierSize.Width / 2.0,
                 Magnifier.DefaultMagnifierSize.Height + Magnifier.StandardVerticalFocalPointShift);
 
             double magnifierX = Math.Clamp(
-                selectionInfo.GlobalGesturePosition.X,
+                selectionInfo.GlobalGesturePosition.Dx,
                 selectionInfo.CurrentLineBoundaries.Left,
                 selectionInfo.CurrentLineBoundaries.Right);
-            var unadjustedMagnifierRect = new Rect(
-                new Point(magnifierX, selectionInfo.CaretRect.Center.Y) - basicMagnifierOffset,
+            var unadjustedMagnifierRect = DartGeometry.RectFromOffsetAndSize(
+                new Offset(magnifierX, selectionInfo.CaretRect.Center.Dy) - basicMagnifierOffset,
                 Magnifier.DefaultMagnifierSize);
             Rect adjustedMagnifierRect = MagnifierController.ShiftWithinBounds(
                 unadjustedMagnifierRect,
                 screenRect);
-            Point finalMagnifierPosition = adjustedMagnifierRect.Position;
+            Offset finalMagnifierPosition = adjustedMagnifierRect.TopLeft;
 
             double horizontalFocalInset =
                 (Magnifier.DefaultMagnifierSize.Width / 2.0) / Magnifier.Magnification;
             double globalFocalPointX = selectionInfo.FieldBounds.Width < horizontalFocalInset * 2.0
-                ? selectionInfo.FieldBounds.Center.X
+                ? selectionInfo.FieldBounds.Center.Dx
                 : Math.Clamp(
-                    adjustedMagnifierRect.Center.X,
+                    adjustedMagnifierRect.Center.Dx,
                     selectionInfo.FieldBounds.Left + horizontalFocalInset,
                     selectionInfo.FieldBounds.Right - horizontalFocalInset);
-            double relativeFocalPointX = globalFocalPointX - adjustedMagnifierRect.Center.X;
-            var focalPointAdjustment = new Point(
+            double relativeFocalPointX = globalFocalPointX - adjustedMagnifierRect.Center.Dx;
+            var focalPointAdjustment = new Offset(
                 relativeFocalPointX,
                 unadjustedMagnifierRect.Top - adjustedMagnifierRect.Top);
 
             Timer? positionShouldBeAnimated = _positionShouldBeAnimatedTimer;
-            if (_magnifierPosition.HasValue && finalMagnifierPosition.Y != _magnifierPosition.Value.Y)
+            if (_magnifierPosition.HasValue && finalMagnifierPosition.Dy != _magnifierPosition.Value.Dy)
             {
                 if (_positionShouldBeAnimatedTimer is { IsActive: true })
                 {
@@ -168,7 +168,7 @@ public sealed class Magnifier : StatelessWidget
     public const double StandardVerticalFocalPointShift = 22.0;
 
     public Magnifier(
-        Point additionalFocalPointOffset = default,
+        Offset additionalFocalPointOffset = default,
         BorderRadius? borderRadius = null,
         Color? filmColor = null,
         IReadOnlyList<BoxShadow>? shadows = null,
@@ -184,7 +184,7 @@ public sealed class Magnifier : StatelessWidget
         Size = size ?? DefaultMagnifierSize;
     }
 
-    public Point AdditionalFocalPointOffset { get; }
+    public Offset AdditionalFocalPointOffset { get; }
 
     public BorderRadius BorderRadius { get; }
 
@@ -200,7 +200,7 @@ public sealed class Magnifier : StatelessWidget
     [
         new BoxShadow(
             color: Color.FromARGB(25, 0, 0, 0),
-            offset: new Point(0, 2.0),
+            offset: new Offset(0, 2.0),
             blurRadius: 1.5,
             spreadRadius: 0.75),
     ];
@@ -215,7 +215,7 @@ public sealed class Magnifier : StatelessWidget
                 shadows: Shadows),
             clipBehavior: ClipBehavior,
             magnificationScale: Magnification,
-            focalPointOffset: AdditionalFocalPointOffset + new Point(
+            focalPointOffset: AdditionalFocalPointOffset + new Offset(
                 0,
                 StandardVerticalFocalPointShift + (DefaultMagnifierSize.Height / 2.0)),
             child: new ColoredBox(FilmColor));

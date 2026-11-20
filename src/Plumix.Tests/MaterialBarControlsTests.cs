@@ -167,15 +167,15 @@ public sealed class MaterialBarControlsTests
         Assert.True(ltrSurface!.HasFloatingActionButton);
         var ltrGuest = Assert.IsType<Rect>(ltrSurface.GuestRect);
         Assert.Equal(64, ltrGuest.Width, 3);
-        Assert.Equal(356, ltrGuest.Center.X, 3);
-        Assert.Equal(0, ltrGuest.Center.Y, 3);
+        Assert.Equal(356, ltrGuest.Center.Dx, 3);
+        Assert.Equal(0, ltrGuest.Center.Dy, 3);
 
         using var rtl = new WidgetRenderHarness(Build(TextDirection.Rtl));
         rtl.Pump(new Size(400, 600));
         var rtlSurface = FindDescendant<RenderBottomAppBarSurface>(rtl.RenderView);
         Assert.NotNull(rtlSurface);
         var rtlGuest = Assert.IsType<Rect>(rtlSurface!.GuestRect);
-        Assert.Equal(44, rtlGuest.Center.X, 3);
+        Assert.Equal(44, rtlGuest.Center.Dx, 3);
     }
 
     [Fact]
@@ -198,10 +198,10 @@ public sealed class MaterialBarControlsTests
         var surface = FindDescendant<RenderBottomAppBarSurface>(harness.RenderView);
         Assert.NotNull(surface);
         var guest = Assert.IsType<Rect>(surface!.GuestRect);
-        Assert.Equal(200, guest.Center.X, 3);
-        Assert.Equal(0, guest.Center.Y, 3);
-        Assert.False(surface.HitTest(new BoxHitTestResult(), new Point(200, 1)));
-        Assert.True(surface.HitTest(new BoxHitTestResult(), new Point(20, 20)));
+        Assert.Equal(200, guest.Center.Dx, 3);
+        Assert.Equal(0, guest.Center.Dy, 3);
+        Assert.False(surface.HitTest(new BoxHitTestResult(), new Offset(200, 1)));
+        Assert.True(surface.HitTest(new BoxHitTestResult(), new Offset(20, 20)));
     }
 
     [Fact]
@@ -223,8 +223,8 @@ public sealed class MaterialBarControlsTests
         var surface = FindDescendant<RenderBottomAppBarSurface>(harness.RenderView);
         Assert.NotNull(surface);
         var guest = Assert.IsType<Rect>(surface!.GuestRect);
-        Assert.Equal(-44, guest.Center.Y, 3);
-        Assert.True(surface.HitTest(new BoxHitTestResult(), new Point(200, 20)));
+        Assert.Equal(-44, guest.Center.Dy, 3);
+        Assert.True(surface.HitTest(new BoxHitTestResult(), new Offset(200, 20)));
     }
 
     [Fact]
@@ -456,8 +456,8 @@ public sealed class MaterialBarControlsTests
         Assert.True(maxRow!.Size.Width > 200);
         var first = maxRow.FirstChild!;
         var second = maxRow.ChildAfter(first)!;
-        Assert.True(((FlexParentData)first.parentData!).offset.X > 100);
-        Assert.True(((FlexParentData)second.parentData!).offset.X > ((FlexParentData)first.parentData!).offset.X);
+        Assert.True(((FlexParentData)first.parentData!).offset.Dx > 100);
+        Assert.True(((FlexParentData)second.parentData!).offset.Dx > ((FlexParentData)first.parentData!).offset.Dx);
 
         using var minHarness = new WidgetRenderHarness(Wrap(new ButtonBar(
             mainAxisSize: MainAxisSize.Min,
@@ -489,8 +489,8 @@ public sealed class MaterialBarControlsTests
         Assert.Equal(50, down!.Size.Height, 3);
         var downFirst = down.FirstChild!;
         var downSecond = down.ChildAfter(downFirst)!;
-        Assert.Equal(0, ((FlexParentData)downFirst.parentData!).offset.Y, 3);
-        Assert.Equal(30, ((FlexParentData)downSecond.parentData!).offset.Y, 3);
+        Assert.Equal(0, ((FlexParentData)downFirst.parentData!).offset.Dy, 3);
+        Assert.Equal(30, ((FlexParentData)downSecond.parentData!).offset.Dy, 3);
 
         using var upHarness = new WidgetRenderHarness(Wrap(new ButtonBar(
             overflowDirection: VerticalDirection.Up,
@@ -505,8 +505,8 @@ public sealed class MaterialBarControlsTests
         Assert.NotNull(up);
         var upFirst = up!.FirstChild!;
         var upSecond = up.ChildAfter(upFirst)!;
-        Assert.Equal(30, ((FlexParentData)upFirst.parentData!).offset.Y, 3);
-        Assert.Equal(0, ((FlexParentData)upSecond.parentData!).offset.Y, 3);
+        Assert.Equal(30, ((FlexParentData)upFirst.parentData!).offset.Dy, 3);
+        Assert.Equal(0, ((FlexParentData)upSecond.parentData!).offset.Dy, 3);
     }
 
     [Theory]
@@ -539,7 +539,7 @@ public sealed class MaterialBarControlsTests
 
         RenderButtonBarRow row = Assert.IsType<RenderButtonBarRow>(
             FindDescendant<RenderButtonBarRow>(harness.RenderView));
-        Assert.Equal(expectedX, ((FlexParentData)row.FirstChild!.parentData!).offset.X, 3);
+        Assert.Equal(expectedX, ((FlexParentData)row.FirstChild!.parentData!).offset.Dx, 3);
         Assert.Equal(new Size(150, 40), row.GetDryLayout(new BoxConstraints(MaxWidth: 150, MaxHeight: 100)));
     }
 

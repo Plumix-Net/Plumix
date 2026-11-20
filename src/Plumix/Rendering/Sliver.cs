@@ -754,7 +754,7 @@ public class SliverHitTestResult : HitTestResult
     /// (the offset the child is painted at) only feeds the transform recorded on added entries.
     /// </remarks>
     public bool AddWithAxisOffset(
-        Point? paintOffset,
+        Offset? paintOffset,
         double mainAxisOffset,
         double crossAxisOffset,
         double mainAxisPosition,
@@ -764,7 +764,7 @@ public class SliverHitTestResult : HitTestResult
         ArgumentNullException.ThrowIfNull(hitTest);
         if (paintOffset is { } offset)
         {
-            PushOffset(new Point(-offset.X, -offset.Y));
+            PushOffset(new Offset(-offset.Dx, -offset.Dy));
         }
 
         bool isHit = hitTest(
@@ -910,8 +910,8 @@ public abstract class RenderSliver : RenderObject
     /// </remarks>
     public override Rect PaintBounds => Constraints.Axis switch
     {
-        Axis.Horizontal => new Rect(0.0, 0.0, Geometry!.PaintExtent, Constraints.CrossAxisExtent),
-        _ => new Rect(0.0, 0.0, Constraints.CrossAxisExtent, Geometry!.PaintExtent),
+        Axis.Horizontal => DartGeometry.RectFromLTWH(0.0, 0.0, Geometry!.PaintExtent, Constraints.CrossAxisExtent),
+        _ => DartGeometry.RectFromLTWH(0.0, 0.0, Constraints.CrossAxisExtent, Geometry!.PaintExtent),
     };
 
     /// <inheritdoc />
@@ -1177,20 +1177,20 @@ public abstract class RenderSliver : RenderObject
         double crossAxisExtent = sliverGeometry.CrossAxisExtent ?? constraints.CrossAxisExtent;
         Rect rect = constraints.Axis switch
         {
-            Axis.Horizontal => new Rect(-leadingOffset, 0.0, maxPaintExtent, crossAxisExtent),
-            _ => new Rect(0.0, -leadingOffset, crossAxisExtent, maxPaintExtent),
+            Axis.Horizontal => DartGeometry.RectFromLTWH(-leadingOffset, 0.0, maxPaintExtent, crossAxisExtent),
+            _ => DartGeometry.RectFromLTWH(0.0, -leadingOffset, crossAxisExtent, maxPaintExtent),
         };
 
         return ScrollDirectionUtils.ApplyGrowthDirectionToAxisDirection(
             constraints.AxisDirection,
             constraints.GrowthDirection) switch
         {
-            AxisDirection.Left => new Rect(
-                new Point(paintExtent - rect.Right, rect.Top),
-                new Point(paintExtent - rect.Left, rect.Bottom)),
-            AxisDirection.Up => new Rect(
-                new Point(rect.Left, paintExtent - rect.Bottom),
-                new Point(rect.Right, paintExtent - rect.Top)),
+            AxisDirection.Left => DartGeometry.RectFromCorners(
+                new Offset(paintExtent - rect.Right, rect.Top),
+                new Offset(paintExtent - rect.Left, rect.Bottom)),
+            AxisDirection.Up => DartGeometry.RectFromCorners(
+                new Offset(rect.Left, paintExtent - rect.Bottom),
+                new Offset(rect.Right, paintExtent - rect.Top)),
             _ => rect,
         };
     }
@@ -1200,7 +1200,7 @@ public abstract class RenderSliver : RenderObject
     /// Flutter's <c>RenderSliver.debugPaint</c>: a green arrow diagram showing this sliver's paint
     /// extent and growth direction, stroked through a <c>MaskFilter.blur(BlurStyle.solid, strokeWidth)</c>.
     /// </remarks>
-    protected override void DebugPaint(PaintingContext context, Point offset)
+    protected override void DebugPaint(PaintingContext context, Offset offset)
     {
         ArgumentNullException.ThrowIfNull(context);
         if (!RenderingDebug.PaintSizeEnabled || Geometry is null)
@@ -1219,38 +1219,38 @@ public abstract class RenderSliver : RenderObject
         double arrowExtent = Geometry!.PaintExtent;
         double padding = Math.Max(2.0, strokeWidth);
         SliverConstraints constraints = Constraints;
-        context.Canvas.DrawCircle(new Point(offset.X + padding, offset.Y + padding), padding * 0.5, pen);
+        context.Canvas.DrawCircle(new Offset(offset.Dx + padding, offset.Dy + padding), padding * 0.5, pen);
         double cross = constraints.CrossAxisExtent;
         if (constraints.Axis == Axis.Vertical)
         {
-            context.Canvas.DrawLine(offset, new Point(offset.X + cross, offset.Y), pen);
+            context.Canvas.DrawLine(offset, new Offset(offset.Dx + cross, offset.Dy), pen);
             DebugDrawArrow(
                 context,
                 pen,
-                new Point(offset.X + (cross * 1.0 / 4.0), offset.Y + padding),
-                new Point(offset.X + (cross * 1.0 / 4.0), offset.Y + arrowExtent - padding),
+                new Offset(offset.Dx + (cross * 1.0 / 4.0), offset.Dy + padding),
+                new Offset(offset.Dx + (cross * 1.0 / 4.0), offset.Dy + arrowExtent - padding),
                 constraints.NormalizedGrowthDirection);
             DebugDrawArrow(
                 context,
                 pen,
-                new Point(offset.X + (cross * 3.0 / 4.0), offset.Y + padding),
-                new Point(offset.X + (cross * 3.0 / 4.0), offset.Y + arrowExtent - padding),
+                new Offset(offset.Dx + (cross * 3.0 / 4.0), offset.Dy + padding),
+                new Offset(offset.Dx + (cross * 3.0 / 4.0), offset.Dy + arrowExtent - padding),
                 constraints.NormalizedGrowthDirection);
         }
         else
         {
-            context.Canvas.DrawLine(offset, new Point(offset.X, offset.Y + cross), pen);
+            context.Canvas.DrawLine(offset, new Offset(offset.Dx, offset.Dy + cross), pen);
             DebugDrawArrow(
                 context,
                 pen,
-                new Point(offset.X + padding, offset.Y + (cross * 1.0 / 4.0)),
-                new Point(offset.X + arrowExtent - padding, offset.Y + (cross * 1.0 / 4.0)),
+                new Offset(offset.Dx + padding, offset.Dy + (cross * 1.0 / 4.0)),
+                new Offset(offset.Dx + arrowExtent - padding, offset.Dy + (cross * 1.0 / 4.0)),
                 constraints.NormalizedGrowthDirection);
             DebugDrawArrow(
                 context,
                 pen,
-                new Point(offset.X + padding, offset.Y + (cross * 3.0 / 4.0)),
-                new Point(offset.X + arrowExtent - padding, offset.Y + (cross * 3.0 / 4.0)),
+                new Offset(offset.Dx + padding, offset.Dy + (cross * 3.0 / 4.0)),
+                new Offset(offset.Dx + arrowExtent - padding, offset.Dy + (cross * 3.0 / 4.0)),
                 constraints.NormalizedGrowthDirection);
         }
     }
@@ -1259,8 +1259,8 @@ public abstract class RenderSliver : RenderObject
     private static void DebugDrawArrow(
         PaintingContext context,
         Plumix.UI.Paint pen,
-        Point p0,
-        Point p1,
+        Offset p0,
+        Offset p1,
         GrowthDirection direction)
     {
         if (p0 == p1)
@@ -1268,9 +1268,9 @@ public abstract class RenderSliver : RenderObject
             return;
         }
 
-        Debug.Assert(p0.X == p1.X || p0.Y == p1.Y, "The arrow must be axis-aligned.");
-        Point delta = p1 - p0;
-        double d = Math.Sqrt((delta.X * delta.X) + (delta.Y * delta.Y)) * 0.2;
+        Debug.Assert(p0.Dx == p1.Dx || p0.Dy == p1.Dy, "The arrow must be axis-aligned.");
+        Offset delta = p1 - p0;
+        double d = Math.Sqrt((delta.Dx * delta.Dx) + (delta.Dy * delta.Dy)) * 0.2;
         double dx1;
         double dx2;
         double dy1;
@@ -1285,7 +1285,7 @@ public abstract class RenderSliver : RenderObject
             dx1 = dx2 = dy1 = dy2 = -d;
         }
 
-        if (p0.X == p1.X)
+        if (p0.Dx == p1.Dx)
         {
             dx2 = -dx2;
         }
@@ -1295,11 +1295,11 @@ public abstract class RenderSliver : RenderObject
         }
 
         var path = new Plumix.UI.Path();
-        path.MoveTo(p0.X, p0.Y);
-        path.LineTo(p1.X, p1.Y);
-        path.MoveTo(p1.X - dx1, p1.Y - dy1);
-        path.LineTo(p1.X, p1.Y);
-        path.LineTo(p1.X - dx2, p1.Y - dy2);
+        path.MoveTo(p0.Dx, p0.Dy);
+        path.LineTo(p1.Dx, p1.Dy);
+        path.MoveTo(p1.Dx - dx1, p1.Dy - dy1);
+        path.LineTo(p1.Dx, p1.Dy);
+        path.LineTo(p1.Dx - dx2, p1.Dy - dy2);
         context.Canvas.DrawPath(path, pen);
     }
 
@@ -1360,8 +1360,8 @@ public static class RenderSliverHelpers
         double crossAxisDelta = sliver.ChildCrossAxisPosition(child);
         double absolutePosition = mainAxisPosition - delta;
         double absoluteCrossAxisPosition = crossAxisPosition - crossAxisDelta;
-        Point paintOffset;
-        Point transformedPosition;
+        Offset paintOffset;
+        Offset transformedPosition;
         if (constraints.Axis == Axis.Horizontal)
         {
             if (!rightWayUp)
@@ -1370,8 +1370,8 @@ public static class RenderSliverHelpers
                 delta = sliver.Geometry!.PaintExtent - child.Size.Width - delta;
             }
 
-            paintOffset = new Point(delta, crossAxisDelta);
-            transformedPosition = new Point(absolutePosition, absoluteCrossAxisPosition);
+            paintOffset = new Offset(delta, crossAxisDelta);
+            transformedPosition = new Offset(absolutePosition, absoluteCrossAxisPosition);
         }
         else
         {
@@ -1381,8 +1381,8 @@ public static class RenderSliverHelpers
                 delta = sliver.Geometry!.PaintExtent - child.Size.Height - delta;
             }
 
-            paintOffset = new Point(crossAxisDelta, delta);
-            transformedPosition = new Point(absoluteCrossAxisPosition, absolutePosition);
+            paintOffset = new Offset(crossAxisDelta, delta);
+            transformedPosition = new Offset(absoluteCrossAxisPosition, absolutePosition);
         }
 
         return result.AddWithOutOfBandPosition(
@@ -1496,7 +1496,7 @@ public abstract class RenderProxySliver : RenderSliver, IRenderObjectSingleChild
         ((SliverPhysicalParentData)child.parentData!).ApplyPaintTransform(transform);
     }
 
-    public override void Paint(PaintingContext ctx, Point offset)
+    public override void Paint(PaintingContext ctx, Offset offset)
     {
         if (_child != null)
         {
@@ -1757,7 +1757,7 @@ public sealed class RenderSliverOffstage : RenderProxySliver
                && Child.HitTest(result, mainAxisPosition, crossAxisPosition);
     }
 
-    public override void Paint(PaintingContext ctx, Point offset)
+    public override void Paint(PaintingContext ctx, Offset offset)
     {
         if (_offstage)
         {
@@ -1848,7 +1848,7 @@ internal sealed class RenderSliverVisibility : RenderProxySliver
         }
     }
 
-    public override void Paint(PaintingContext ctx, Point offset)
+    public override void Paint(PaintingContext ctx, Offset offset)
     {
         if (_visible)
         {
@@ -1948,7 +1948,7 @@ public sealed class RenderSliverOpacity : RenderProxySliver
         }
     }
 
-    public override void Paint(PaintingContext context, Point offset)
+    public override void Paint(PaintingContext context, Offset offset)
     {
         if (Child != null && Child.Geometry!.Visible)
         {
@@ -2020,7 +2020,7 @@ public sealed class RenderSliverAnimatedOpacity : RenderProxySliver
 
     public override bool IsRepaintBoundary => _animatedOpacity.IsRepaintBoundary;
 
-    public override void Paint(PaintingContext ctx, Point offset)
+    public override void Paint(PaintingContext ctx, Offset offset)
     {
         if (_animatedOpacity.Alpha == 0)
         {
@@ -2139,14 +2139,14 @@ public abstract class RenderSliverSingleBoxAdapter : RenderSliver, IRenderObject
             constraints.AxisDirection,
             constraints.GrowthDirection) switch
         {
-            AxisDirection.Up => new Point(
+            AxisDirection.Up => new Offset(
                 0.0,
                 geometry.PaintExtent + constraints.ScrollOffset - geometry.ScrollExtent),
-            AxisDirection.Left => new Point(
+            AxisDirection.Left => new Offset(
                 geometry.PaintExtent + constraints.ScrollOffset - geometry.ScrollExtent,
                 0.0),
-            AxisDirection.Right => new Point(-constraints.ScrollOffset, 0.0),
-            _ => new Point(0.0, -constraints.ScrollOffset),
+            AxisDirection.Right => new Offset(-constraints.ScrollOffset, 0.0),
+            _ => new Offset(0.0, -constraints.ScrollOffset),
         };
     }
 
@@ -2179,7 +2179,7 @@ public abstract class RenderSliverSingleBoxAdapter : RenderSliver, IRenderObject
         ((SliverPhysicalParentData)child.parentData!).ApplyPaintTransform(transform);
     }
 
-    public override void Paint(PaintingContext ctx, Point offset)
+    public override void Paint(PaintingContext ctx, Offset offset)
     {
         if (Child != null && Geometry!.Visible)
         {
@@ -2461,8 +2461,8 @@ public abstract class RenderSliverEdgeInsetsPadding : RenderSliver, IRenderObjec
         var childParentData = (SliverPhysicalParentData)_child.parentData!;
         childParentData.PaintOffset = constraints.Axis switch
         {
-            Axis.Horizontal => new Point(calculatedOffset, resolvedPadding.Top),
-            _ => new Point(resolvedPadding.Left, calculatedOffset),
+            Axis.Horizontal => new Offset(calculatedOffset, resolvedPadding.Top),
+            _ => new Offset(resolvedPadding.Left, calculatedOffset),
         };
         Debug.Assert(beforePadding == BeforePadding);
         Debug.Assert(afterPadding == AfterPadding);
@@ -2515,7 +2515,7 @@ public abstract class RenderSliverEdgeInsetsPadding : RenderSliver, IRenderObjec
         ((SliverPhysicalParentData)child.parentData!).ApplyPaintTransform(transform);
     }
 
-    public override void Paint(PaintingContext ctx, Point offset)
+    public override void Paint(PaintingContext ctx, Offset offset)
     {
         if (_child != null && _child.Geometry!.Visible)
         {
@@ -2526,7 +2526,7 @@ public abstract class RenderSliverEdgeInsetsPadding : RenderSliver, IRenderObjec
 
     /// <inheritdoc />
     /// <remarks>Flutter's <c>RenderSliverEdgeInsetsPadding.debugPaint</c>.</remarks>
-    protected override void DebugPaint(PaintingContext context, Point offset)
+    protected override void DebugPaint(PaintingContext context, Offset offset)
     {
         ArgumentNullException.ThrowIfNull(context);
         base.DebugPaint(context, offset);
@@ -2535,13 +2535,13 @@ public abstract class RenderSliverEdgeInsetsPadding : RenderSliver, IRenderObjec
             return;
         }
 
-        var outerRect = new Rect(offset, GetAbsoluteSize());
+        var outerRect = DartGeometry.RectFromOffsetAndSize(offset, GetAbsoluteSize());
         Rect? innerRect = null;
         if (_child is not null)
         {
             Size childSize = _child.GetAbsoluteSize();
             var childParentData = (SliverPhysicalParentData)_child.parentData!;
-            Rect inner = new(offset + childParentData.PaintOffset, childSize);
+            Rect inner = DartGeometry.RectFromOffsetAndSize(offset + childParentData.PaintOffset, childSize);
             Debug.Assert(inner.Top >= outerRect.Top);
             Debug.Assert(inner.Left >= outerRect.Left);
             Debug.Assert(inner.Right <= outerRect.Right);
@@ -2861,7 +2861,7 @@ public abstract class RenderSliverMultiBoxAdaptor : RenderSliver,
     /// <see cref="RenderSliver.ChildCrossAxisPosition"/> against the resolved axis direction, so a
     /// reversed sliver paints its children from the trailing edge back.
     /// </remarks>
-    public override void Paint(PaintingContext ctx, Point offset)
+    public override void Paint(PaintingContext ctx, Offset offset)
     {
         if (FirstChild is null)
         {
@@ -2871,36 +2871,36 @@ public abstract class RenderSliverMultiBoxAdaptor : RenderSliver,
         // offset is to the top-left corner, regardless of our axis direction.
         // originOffset gives us the delta from the real origin to the origin in the axis direction.
         SliverConstraints constraints = Constraints;
-        Point mainAxisUnit;
-        Point crossAxisUnit;
-        Point originOffset;
+        Offset mainAxisUnit;
+        Offset crossAxisUnit;
+        Offset originOffset;
         bool addExtent;
         switch (ScrollDirectionUtils.ApplyGrowthDirectionToAxisDirection(
             constraints.AxisDirection,
             constraints.GrowthDirection))
         {
             case AxisDirection.Up:
-                mainAxisUnit = new Point(0.0, -1.0);
-                crossAxisUnit = new Point(1.0, 0.0);
-                originOffset = offset + new Point(0.0, Geometry!.PaintExtent);
+                mainAxisUnit = new Offset(0.0, -1.0);
+                crossAxisUnit = new Offset(1.0, 0.0);
+                originOffset = offset + new Offset(0.0, Geometry!.PaintExtent);
                 addExtent = true;
                 break;
             case AxisDirection.Right:
-                mainAxisUnit = new Point(1.0, 0.0);
-                crossAxisUnit = new Point(0.0, 1.0);
+                mainAxisUnit = new Offset(1.0, 0.0);
+                crossAxisUnit = new Offset(0.0, 1.0);
                 originOffset = offset;
                 addExtent = false;
                 break;
             case AxisDirection.Down:
-                mainAxisUnit = new Point(0.0, 1.0);
-                crossAxisUnit = new Point(1.0, 0.0);
+                mainAxisUnit = new Offset(0.0, 1.0);
+                crossAxisUnit = new Offset(1.0, 0.0);
                 originOffset = offset;
                 addExtent = false;
                 break;
             default:
-                mainAxisUnit = new Point(-1.0, 0.0);
-                crossAxisUnit = new Point(0.0, 1.0);
-                originOffset = offset + new Point(Geometry!.PaintExtent, 0.0);
+                mainAxisUnit = new Offset(-1.0, 0.0);
+                crossAxisUnit = new Offset(0.0, 1.0);
+                originOffset = offset + new Offset(Geometry!.PaintExtent, 0.0);
                 addExtent = true;
                 break;
         }
@@ -2910,13 +2910,13 @@ public abstract class RenderSliverMultiBoxAdaptor : RenderSliver,
         {
             double mainAxisDelta = ChildMainAxisPosition(child);
             double crossAxisDelta = ChildCrossAxisPosition(child);
-            var childOffset = new Point(
-                originOffset.X + (mainAxisUnit.X * mainAxisDelta) + (crossAxisUnit.X * crossAxisDelta),
-                originOffset.Y + (mainAxisUnit.Y * mainAxisDelta) + (crossAxisUnit.Y * crossAxisDelta));
+            var childOffset = new Offset(
+                originOffset.Dx + (mainAxisUnit.Dx * mainAxisDelta) + (crossAxisUnit.Dx * crossAxisDelta),
+                originOffset.Dy + (mainAxisUnit.Dy * mainAxisDelta) + (crossAxisUnit.Dy * crossAxisDelta));
             double childExtent = PaintExtentOf(child);
             if (addExtent)
             {
-                childOffset += new Point(mainAxisUnit.X * childExtent, mainAxisUnit.Y * childExtent);
+                childOffset += new Offset(mainAxisUnit.Dx * childExtent, mainAxisUnit.Dy * childExtent);
             }
 
             // If the child's visible interval (mainAxisDelta, mainAxisDelta + paintExtentOf(child))

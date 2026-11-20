@@ -56,7 +56,7 @@ public class RenderLeaderLayer : RenderProxyBox
         Link.LeaderSize = Size;
     }
 
-    public override void Paint(PaintingContext context, Point offset)
+    public override void Paint(PaintingContext context, Offset offset)
     {
         LeaderLayer leaderLayer;
         if (Layer == null)
@@ -100,14 +100,14 @@ public class RenderFollowerLayer : RenderProxyBox
 {
     private LayerLink _link;
     private bool _showWhenUnlinked;
-    private Point _offset;
+    private Offset _offset;
     private Alignment _leaderAnchor;
     private Alignment _followerAnchor;
 
     public RenderFollowerLayer(
         LayerLink link,
         bool showWhenUnlinked = true,
-        Point offset = default,
+        Offset offset = default,
         Alignment? leaderAnchor = null,
         Alignment? followerAnchor = null,
         RenderBox? child = null) : base(child)
@@ -149,7 +149,7 @@ public class RenderFollowerLayer : RenderProxyBox
         }
     }
 
-    public Point Offset
+    public Offset Offset
     {
         get => _offset;
         set
@@ -221,7 +221,7 @@ public class RenderFollowerLayer : RenderProxyBox
         return Layer?.GetLastTransform() ?? Matrix4.Identity();
     }
 
-    public override bool HitTest(BoxHitTestResult result, Point position)
+    public override bool HitTest(BoxHitTestResult result, Offset position)
     {
         // Disables the hit testing if this render object is hidden.
         if (Link.Leader == null && !ShowWhenUnlinked)
@@ -234,7 +234,7 @@ public class RenderFollowerLayer : RenderProxyBox
         return HitTestChildren(result, position);
     }
 
-    protected override bool HitTestChildren(BoxHitTestResult result, Point position)
+    protected override bool HitTestChildren(BoxHitTestResult result, Offset position)
     {
         return result.AddWithPaintTransform(
             GetCurrentTransform(),
@@ -242,7 +242,7 @@ public class RenderFollowerLayer : RenderProxyBox
             (hitResult, transformed) => base.HitTestChildren(hitResult, transformed));
     }
 
-    public override void Paint(PaintingContext context, Point offset)
+    public override void Paint(PaintingContext context, Offset offset)
     {
         Size? leaderSize = Link.LeaderSize;
         if (Constants.KDebugMode
@@ -254,7 +254,7 @@ public class RenderFollowerLayer : RenderProxyBox
                 + $"(current value is {LeaderAnchor}).");
         }
 
-        Point effectiveLinkedOffset = leaderSize == null
+        Offset effectiveLinkedOffset = leaderSize == null
             ? Offset
             : LeaderAnchor.AlongSize(leaderSize.Value) - FollowerAnchor.AlongSize(Size) + Offset;
         FollowerLayer? layer = Layer;
@@ -279,10 +279,10 @@ public class RenderFollowerLayer : RenderProxyBox
             layer,
             base.Paint,
             default,
-            childPaintBounds: new Rect(
+            childPaintBounds: DartGeometry.RectFromCorners(
                 // We don't know where we'll end up, so we have no idea what our cull rect should be.
-                new Point(double.NegativeInfinity, double.NegativeInfinity),
-                new Point(double.PositiveInfinity, double.PositiveInfinity)));
+                new Offset(double.NegativeInfinity, double.NegativeInfinity),
+                new Offset(double.PositiveInfinity, double.PositiveInfinity)));
         if (Constants.KDebugMode)
         {
             layer.DebugCreator = DebugCreator;
@@ -300,7 +300,7 @@ public class RenderFollowerLayer : RenderProxyBox
         base.DebugFillProperties(properties);
         properties.Add(new DiagnosticsProperty<LayerLink>("link", Link));
         properties.Add(new DiagnosticsProperty<bool>("showWhenUnlinked", ShowWhenUnlinked));
-        properties.Add(new DiagnosticsProperty<Point>("offset", Offset));
+        properties.Add(new DiagnosticsProperty<Offset>("offset", Offset));
         properties.Add(new TransformProperty("current transform matrix", GetCurrentTransform()));
     }
 }

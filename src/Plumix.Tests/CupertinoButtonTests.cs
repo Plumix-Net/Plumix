@@ -248,7 +248,7 @@ public sealed class CupertinoButtonTests : IDisposable
             harness.Pump(ViewSize);
 
             RenderBox box = ButtonBox(harness);
-            Rect bounds = new(box.LocalToGlobal(default), box.Size);
+            Rect bounds = DartGeometry.RectFromOffsetAndSize(box.LocalToGlobal(default), box.Size);
             TapGestureRecognizer recognizer = Recognizer<TapGestureRecognizer>(harness);
 
             recognizer.OnTapDown!(Down(bounds.Center));
@@ -258,12 +258,12 @@ public sealed class CupertinoButtonTests : IDisposable
             // Just past the bottom-right corner plus the whole slop: outside, so no tap.
             double slop = CupertinoButton.TapMoveSlop();
             recognizer.OnTapDown!(Down(bounds.Center));
-            recognizer.OnTapUp!(Up(new Point(bounds.Right, bounds.Bottom + slop)));
+            recognizer.OnTapUp!(Up(new Offset(bounds.Right, bounds.Bottom + slop)));
             Assert.Equal(1, taps);
 
             // One pixel back inside the inflated bounds: the tap counts.
             recognizer.OnTapDown!(Down(bounds.Center));
-            recognizer.OnTapUp!(Up(new Point(bounds.Right, bounds.Bottom + slop - 1.0)));
+            recognizer.OnTapUp!(Up(new Offset(bounds.Right, bounds.Bottom + slop - 1.0)));
             Assert.Equal(2, taps);
         }
         finally
@@ -314,7 +314,7 @@ public sealed class CupertinoButtonTests : IDisposable
             harness.Pump(ViewSize);
 
             RenderBox box = ButtonBox(harness);
-            Rect bounds = new(box.LocalToGlobal(default), box.Size);
+            Rect bounds = DartGeometry.RectFromOffsetAndSize(box.LocalToGlobal(default), box.Size);
             double slop = CupertinoButton.TapMoveSlop();
             TapGestureRecognizer recognizer = Recognizer<TapGestureRecognizer>(harness);
             FadeTransition transition = Assert.Single(harness.FindWidgets<FadeTransition>());
@@ -323,15 +323,15 @@ public sealed class CupertinoButtonTests : IDisposable
             Settle();
             Assert.Equal(0.4, transition.Opacity.Value, 3);
 
-            recognizer.OnTapMove!(Move(bounds.TopLeft - new Point(0.0, slop - 1.0)));
+            recognizer.OnTapMove!(Move(bounds.TopLeft - new Offset(0.0, slop - 1.0)));
             Settle();
             Assert.Equal(0.4, transition.Opacity.Value, 3);
 
-            recognizer.OnTapMove!(Move(bounds.TopLeft - new Point(0.0, slop + 1.0)));
+            recognizer.OnTapMove!(Move(bounds.TopLeft - new Offset(0.0, slop + 1.0)));
             Settle();
             Assert.Equal(1.0, transition.Opacity.Value, 3);
 
-            recognizer.OnTapMove!(Move(bounds.TopLeft - new Point(0.0, slop - 1.0)));
+            recognizer.OnTapMove!(Move(bounds.TopLeft - new Offset(0.0, slop - 1.0)));
             Settle();
             Assert.Equal(0.4, transition.Opacity.Value, 3);
         }
@@ -771,13 +771,13 @@ public sealed class CupertinoButtonTests : IDisposable
         SchedulerBinding.PumpFrameForTests(now + TimeSpan.FromMilliseconds(400));
     }
 
-    private static TapDownDetails Down(Point position) =>
+    private static TapDownDetails Down(Offset position) =>
         new(globalPosition: position, kind: PointerDeviceKind.Touch);
 
-    private static TapUpDetails Up(Point position) =>
+    private static TapUpDetails Up(Offset position) =>
         new(kind: PointerDeviceKind.Touch, globalPosition: position);
 
-    private static TapMoveDetails Move(Point position) =>
+    private static TapMoveDetails Move(Offset position) =>
         new(kind: PointerDeviceKind.Touch, globalPosition: position);
 
     private static Widget Box(double width, double height) =>

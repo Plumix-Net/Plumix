@@ -114,10 +114,10 @@ public sealed class ImplicitAnimationsDartParityTests
     [Fact]
     public void AnimatedSlideTransitionTest()
     {
-        RunTransitionTest<SlideTransition, Vector>(
+        RunTransitionTest<SlideTransition, Offset>(
             new TestAnimatedSlideWidgetState(),
             transition => transition.Position,
-            [new Vector(0, 0), new Vector(0.5, 0.5), new Vector(0.75, 0.75), new Vector(1, 1)]);
+            [new Offset(0, 0), new Offset(0.5, 0.5), new Offset(0.75, 0.75), new Offset(1, 1)]);
     }
 
     // Flutter: "AnimatedScale transition test"
@@ -222,7 +222,7 @@ public sealed class ImplicitAnimationsDartParityTests
     public void AnimatedSlideDoesNotCrashAtZeroArea()
     {
         AssertZeroArea<AnimatedSlide>(SizedBox.Shrink(new AnimatedSlide(
-            offset: new Vector(100, 0),
+            offset: new Offset(100, 0),
             duration: TimeSpan.FromMilliseconds(300))));
     }
 
@@ -463,7 +463,7 @@ public sealed class ImplicitAnimationsDartParityTests
             return new AnimatedSlide(
                 duration: Duration,
                 onEnd: Widget.Callback,
-                offset: Toggle ? new Vector(1, 1) : new Vector(0, 0),
+                offset: Toggle ? new Offset(1, 1) : new Offset(0, 0),
                 child: Child);
         }
     }
@@ -588,18 +588,18 @@ internal static class ImplicitAnimationsDartTestUtils
     public static Size GetSize(Element element) => Box(element).Size;
 
     /// <summary>Dart's <c>tester.getTopLeft</c>.</summary>
-    public static Point GetTopLeft(Element element) => Box(element).LocalToGlobal(new Point(0, 0));
+    public static Offset GetTopLeft(Element element) => Box(element).LocalToGlobal(new Offset(0, 0));
 
     /// <summary>Dart's <c>tester.getTopRight</c>.</summary>
-    public static Point GetTopRight(Element element)
+    public static Offset GetTopRight(Element element)
     {
         RenderBox box = Box(element);
-        return box.LocalToGlobal(new Point(box.Size.Width, 0));
+        return box.LocalToGlobal(new Offset(box.Size.Width, 0));
     }
 
     /// <summary>Dart's <c>box.localToGlobal(box.size.center(Offset.zero))</c>.</summary>
-    public static Point GetCenter(RenderBox box)
+    public static Offset GetCenter(RenderBox box)
     {
-        return box.LocalToGlobal(new Point(box.Size.Width / 2.0, box.Size.Height / 2.0));
+        return box.LocalToGlobal(new Offset(box.Size.Width / 2.0, box.Size.Height / 2.0));
     }
 }

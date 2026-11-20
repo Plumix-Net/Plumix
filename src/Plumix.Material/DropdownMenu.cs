@@ -112,7 +112,7 @@ public sealed class DropdownMenu<T> : StatefulWidget
         EdgeInsetsGeometry? expandedInsets = null,
         DropdownMenuFilterCallback<T>? filterCallback = null,
         DropdownMenuSearchCallback<T>? searchCallback = null,
-        Vector? alignmentOffset = null,
+        Offset? alignmentOffset = null,
         IReadOnlyList<TextInputFormatter>? inputFormatters = null,
         DropdownMenuCloseBehavior closeBehavior = DropdownMenuCloseBehavior.All,
         int? maxLines = 1,
@@ -211,7 +211,7 @@ public sealed class DropdownMenu<T> : StatefulWidget
     public EdgeInsetsGeometry? ExpandedInsets { get; }
     public DropdownMenuFilterCallback<T>? FilterCallback { get; }
     public DropdownMenuSearchCallback<T>? SearchCallback { get; }
-    public Vector AlignmentOffset { get; }
+    public Offset AlignmentOffset { get; }
     public IReadOnlyList<TextInputFormatter>? InputFormatters { get; }
     public DropdownMenuCloseBehavior CloseBehavior { get; }
     public int? MaxLines { get; }
@@ -1033,7 +1033,7 @@ internal sealed class RenderDropdownMenuBody : RenderBox,
         Size = constraints.Constrain(new Size(Width ?? maxWidth, maxHeight ?? 0.0));
     }
 
-    public override void Paint(PaintingContext context, Point offset)
+    public override void Paint(PaintingContext context, Offset offset)
     {
         if (FirstChild is not { } child) return;
         var parentData = (DropdownMenuBodyParentData)child.parentData!;
@@ -1117,7 +1117,7 @@ internal sealed class RenderDropdownMenuBody : RenderBox,
         return width;
     }
 
-    protected override bool HitTestChildren(BoxHitTestResult result, Point position)
+    protected override bool HitTestChildren(BoxHitTestResult result, Offset position)
     {
         if (FirstChild is not { } child) return false;
         var parentData = (DropdownMenuBodyParentData)child.parentData!;
@@ -1138,9 +1138,9 @@ internal sealed class RenderDropdownMenuBody : RenderBox,
         if (FirstChild is not null) visitor(FirstChild);
     }
 
-    public void DefaultPaint(PaintingContext ctx, Point offset) => _children.DefaultPaint(ctx, offset);
+    public void DefaultPaint(PaintingContext ctx, Offset offset) => _children.DefaultPaint(ctx, offset);
 
-    public bool DefaultHitTestChildren(BoxHitTestResult result, Point position) =>
+    public bool DefaultHitTestChildren(BoxHitTestResult result, Offset position) =>
         _children.DefaultHitTestChildren(result, position);
 
     public void Insert(RenderBox child, RenderBox? after = null) => _children.Insert(child, after);

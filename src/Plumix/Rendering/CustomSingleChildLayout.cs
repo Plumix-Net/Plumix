@@ -20,7 +20,7 @@ public abstract class SingleChildLayoutDelegate
 
     public virtual BoxConstraints GetConstraintsForChild(BoxConstraints constraints) => constraints;
 
-    public virtual Point GetPositionForChild(Size size, Size childSize) => default;
+    public virtual Offset GetPositionForChild(Size size, Size childSize) => default;
 
     public abstract bool ShouldRelayout(SingleChildLayoutDelegate oldDelegate);
 }
@@ -112,7 +112,7 @@ public sealed class RenderCustomSingleChildLayoutBox : RenderShiftedBox
         Size childSize = childConstraints.IsTight
             ? childConstraints.Smallest
             : child.GetDryLayout(childConstraints);
-        return result + _layoutDelegate.GetPositionForChild(GetSize(constraints), childSize).Y;
+        return result + _layoutDelegate.GetPositionForChild(GetSize(constraints), childSize).Dy;
     }
 
     protected override void PerformLayout()

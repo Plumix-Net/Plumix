@@ -66,7 +66,7 @@ public class RenderIgnorePointer : RenderProxyBox
         }
     }
 
-    public override bool HitTest(BoxHitTestResult result, Point position)
+    public override bool HitTest(BoxHitTestResult result, Offset position)
     {
         return !Ignoring && base.HitTest(result, position);
     }
@@ -165,7 +165,7 @@ public class RenderOffstage : RenderProxyBox
         }
     }
 
-    public override bool HitTest(BoxHitTestResult result, Point position)
+    public override bool HitTest(BoxHitTestResult result, Offset position)
     {
         return !Offstage && base.HitTest(result, position);
     }
@@ -177,7 +177,7 @@ public class RenderOffstage : RenderProxyBox
         return !Offstage;
     }
 
-    public override void Paint(PaintingContext context, Point offset)
+    public override void Paint(PaintingContext context, Offset offset)
     {
         if (Offstage)
         {
@@ -282,7 +282,7 @@ public class RenderAbsorbPointer : RenderProxyBox
     /// Flutter's <c>RenderAbsorbPointer.hitTest</c> reports the hit without adding itself to the
     /// path, so the absorber swallows the event rather than receiving it.
     /// </remarks>
-    public override bool HitTest(BoxHitTestResult result, Point position)
+    public override bool HitTest(BoxHitTestResult result, Offset position)
     {
         return Absorbing
             ? Size.Contains(position)

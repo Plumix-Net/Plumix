@@ -33,7 +33,7 @@ public sealed class ImplicitAnimationsWidgetsDartParityTests
         Assert.Equal(description.Trim(), description);
     }
 
-    private static Point Lerp(Point a, Point b, double t) => new(a.X + ((b.X - a.X) * t), a.Y + ((b.Y - a.Y) * t));
+    private static Offset Lerp(Offset a, Offset b, double t) => new(a.Dx + ((b.Dx - a.Dx) * t), a.Dy + ((b.Dy - a.Dy) * t));
 
     // ---- animated_container_test.dart ----
 
@@ -186,19 +186,19 @@ public sealed class ImplicitAnimationsWidgetsDartParityTests
 
         tester.PumpWidget(Build(Alignment.TopLeft));
         Assert.Equal(new Size(100.0, 200.0), GetSize(Target()));
-        Assert.Equal(new Point(350.0, 200.0), GetTopLeft(Target()));
+        Assert.Equal(new Offset(350.0, 200.0), GetTopLeft(Target()));
 
         tester.PumpWidget(Build(Alignment.BottomRight));
         Assert.Equal(new Size(100.0, 200.0), GetSize(Target()));
-        Assert.Equal(new Point(350.0, 200.0), GetTopLeft(Target()));
+        Assert.Equal(new Offset(350.0, 200.0), GetTopLeft(Target()));
 
         tester.Pump(TimeSpan.FromMilliseconds(100));
         Assert.Equal(new Size(100.0, 200.0), GetSize(Target()));
-        Assert.Equal(new Point(375.0, 250.0), GetTopLeft(Target()));
+        Assert.Equal(new Offset(375.0, 250.0), GetTopLeft(Target()));
 
         tester.Pump(TimeSpan.FromMilliseconds(500));
         Assert.Equal(new Size(100.0, 200.0), GetSize(Target()));
-        Assert.Equal(new Point(400.0, 300.0), GetTopLeft(Target()));
+        Assert.Equal(new Offset(400.0, 300.0), GetTopLeft(Target()));
     }
 
     // Flutter: "AnimatedContainer sets clipBehavior"
@@ -388,16 +388,16 @@ public sealed class ImplicitAnimationsWidgetsDartParityTests
 
         tester.PumpWidget(Build(EdgeInsets.Only(right: 50.0)));
         Assert.Equal(new Size(750.0, 600.0), GetSize(Target()));
-        Assert.Equal(new Point(750.0, 0.0), GetTopRight(Target()));
+        Assert.Equal(new Offset(750.0, 0.0), GetTopRight(Target()));
 
         tester.PumpWidget(Build(EdgeInsets.Zero));
         Assert.Equal(new Size(750.0, 600.0), GetSize(Target()));
-        Assert.Equal(new Point(750.0, 0.0), GetTopRight(Target()));
+        Assert.Equal(new Offset(750.0, 0.0), GetTopRight(Target()));
 
         tester.Pump(TimeSpan.FromMilliseconds(128));
         // Curve would take the padding negative; it is clamped to non-negative instead.
         Assert.Equal(new Size(800.0, 600.0), GetSize(Target()));
-        Assert.Equal(new Point(800.0, 0.0), GetTopRight(Target()));
+        Assert.Equal(new Offset(800.0, 0.0), GetTopRight(Target()));
     }
 
     // Flutter: "AnimatedPadding does not crash at zero area"
@@ -423,7 +423,7 @@ public sealed class ImplicitAnimationsWidgetsDartParityTests
     public void AnimatedPositionedFromRectControlTest()
     {
         var positioned = AnimatedPositioned.FromRect(
-            rect: new Rect(7.0, 5.0, 12.0, 16.0),
+            rect: DartGeometry.RectFromLTWH(7.0, 5.0, 12.0, 16.0),
             duration: Ms200,
             child: new Container());
         Assert.Equal(7.0, positioned.Left);
@@ -446,8 +446,8 @@ public sealed class ImplicitAnimationsWidgetsDartParityTests
                 height: height,
                 duration: TimeSpan.FromSeconds(2),
                 child: new Container(key: key)),
-            new Point(50.0 + (70.0 / 2.0), 30.0 + (110.0 / 2.0)),
-            new Point(37.0 + (59.0 / 2.0), 31.0 + (71.0 / 2.0)),
+            new Offset(50.0 + (70.0 / 2.0), 30.0 + (110.0 / 2.0)),
+            new Offset(37.0 + (59.0 / 2.0), 31.0 + (71.0 / 2.0)),
             "left=37.0",
             "Offset(37.0, 31.0)");
     }
@@ -465,8 +465,8 @@ public sealed class ImplicitAnimationsWidgetsDartParityTests
                 height: height,
                 duration: TimeSpan.FromSeconds(2),
                 child: new Container(key: key)),
-            new Point(50.0 + (70.0 / 2.0), 30.0 + (110.0 / 2.0)),
-            new Point(37.0 + (59.0 / 2.0), 31.0 + (71.0 / 2.0)),
+            new Offset(50.0 + (70.0 / 2.0), 30.0 + (110.0 / 2.0)),
+            new Offset(37.0 + (59.0 / 2.0), 31.0 + (71.0 / 2.0)),
             "left=37.0",
             "Offset(37.0, 31.0)");
     }
@@ -484,8 +484,8 @@ public sealed class ImplicitAnimationsWidgetsDartParityTests
                 height: height,
                 duration: TimeSpan.FromSeconds(2),
                 child: new Container(key: key)),
-            new Point(800.0 - 50.0 - (70.0 / 2.0), 30.0 + (110.0 / 2.0)),
-            new Point(800.0 - 37.0 - (59.0 / 2.0), 31.0 + (71.0 / 2.0)),
+            new Offset(800.0 - 50.0 - (70.0 / 2.0), 30.0 + (110.0 / 2.0)),
+            new Offset(800.0 - 37.0 - (59.0 / 2.0), 31.0 + (71.0 / 2.0)),
             "right=37.0",
             "Offset(704.0, 31.0)");
     }
@@ -963,7 +963,7 @@ public sealed class ImplicitAnimationsWidgetsDartParityTests
         tester.PumpWidget(new Directionality(
             textDirection: TextDirection.Ltr,
             child: new Center(child: new SlideTransition(
-                position: new VectorTween(new Vector(0, 0), new Vector(1.5, 0.0)).Animate(animation),
+                position: new VectorTween(new Offset(0, 0), new Offset(1.5, 0.0)).Animate(animation),
                 child: new Placeholder()))));
         Assert.Equal(new Size(0, 0), GetSize(tester.ElementOfType<SlideTransition>()));
     }
@@ -981,19 +981,19 @@ public sealed class ImplicitAnimationsWidgetsDartParityTests
 
         tester.PumpWidget(Tree(EdgeInsets.Only(right: 50.0)));
         Assert.Equal(new Size(750.0, 600.0), GetSize(Target()));
-        Assert.Equal(new Point(750.0, 0.0), GetTopRight(Target()));
+        Assert.Equal(new Offset(750.0, 0.0), GetTopRight(Target()));
 
         tester.PumpWidget(Tree(EdgeInsetsDirectional.Only(start: 100.0)));
         Assert.Equal(new Size(750.0, 600.0), GetSize(Target()));
-        Assert.Equal(new Point(750.0, 0.0), GetTopRight(Target()));
+        Assert.Equal(new Offset(750.0, 0.0), GetTopRight(Target()));
 
         tester.Pump(TimeSpan.FromMilliseconds(100));
         Assert.Equal(new Size(725.0, 600.0), GetSize(Target()));
-        Assert.Equal(new Point(725.0, 0.0), GetTopRight(Target()));
+        Assert.Equal(new Offset(725.0, 0.0), GetTopRight(Target()));
 
         tester.Pump(TimeSpan.FromMilliseconds(500));
         Assert.Equal(new Size(700.0, 600.0), GetSize(Target()));
-        Assert.Equal(new Point(700.0, 0.0), GetTopRight(Target()));
+        Assert.Equal(new Offset(700.0, 0.0), GetTopRight(Target()));
     }
 
     private static void RunAlignmentVisualToDirectional(Func<AlignmentGeometry, Widget, Widget> build)
@@ -1007,26 +1007,26 @@ public sealed class ImplicitAnimationsWidgetsDartParityTests
 
         tester.PumpWidget(Tree(Alignment.TopRight));
         Assert.Equal(new Size(100.0, 200.0), GetSize(Target()));
-        Assert.Equal(new Point(800.0, 0.0), GetTopRight(Target()));
+        Assert.Equal(new Offset(800.0, 0.0), GetTopRight(Target()));
 
         tester.PumpWidget(Tree(AlignmentDirectional.BottomStart));
         Assert.Equal(new Size(100.0, 200.0), GetSize(Target()));
-        Assert.Equal(new Point(800.0, 0.0), GetTopRight(Target()));
+        Assert.Equal(new Offset(800.0, 0.0), GetTopRight(Target()));
 
         tester.Pump(TimeSpan.FromMilliseconds(100));
         Assert.Equal(new Size(100.0, 200.0), GetSize(Target()));
-        Assert.Equal(new Point(800.0, 200.0), GetTopRight(Target()));
+        Assert.Equal(new Offset(800.0, 200.0), GetTopRight(Target()));
 
         tester.Pump(TimeSpan.FromMilliseconds(500));
         Assert.Equal(new Size(100.0, 200.0), GetSize(Target()));
-        Assert.Equal(new Point(800.0, 400.0), GetTopRight(Target()));
+        Assert.Equal(new Offset(800.0, 400.0), GetTopRight(Target()));
     }
 
     private static void RunPositionedBasics(
         TextDirection direction,
         Func<Key, double, double, double, double, Widget> build,
-        Point first,
-        Point last,
+        Offset first,
+        Offset last,
         string horizontalParentData,
         string offset)
     {
@@ -1080,24 +1080,24 @@ public sealed class ImplicitAnimationsWidgetsDartParityTests
         Widget Tree(double start, double top) => new Directionality(
             textDirection: direction,
             child: new Stack(children: [build(key, start, top)]));
-        Point Center() => GetCenter((RenderBox)key.CurrentContext!.FindRenderObject()!);
+        Offset Center() => GetCenter((RenderBox)key.CurrentContext!.FindRenderObject()!);
 
         tester.PumpWidget(Tree(0.0, 0.0));
-        Assert.Equal(new Point(centers[0].X, centers[0].Y), Center());
+        Assert.Equal(new Offset(centers[0].X, centers[0].Y), Center());
         tester.Pump(TimeSpan.FromSeconds(1));
-        Assert.Equal(new Point(centers[1].X, centers[1].Y), Center());
+        Assert.Equal(new Offset(centers[1].X, centers[1].Y), Center());
 
         tester.PumpWidget(Tree(100.0, 100.0));
-        Assert.Equal(new Point(centers[2].X, centers[2].Y), Center());
+        Assert.Equal(new Offset(centers[2].X, centers[2].Y), Center());
         tester.Pump(TimeSpan.FromSeconds(1));
-        Assert.Equal(new Point(centers[3].X, centers[3].Y), Center());
+        Assert.Equal(new Offset(centers[3].X, centers[3].Y), Center());
 
         tester.PumpWidget(Tree(150.0, 150.0));
-        Assert.Equal(new Point(centers[4].X, centers[4].Y), Center());
+        Assert.Equal(new Offset(centers[4].X, centers[4].Y), Center());
         tester.Pump(TimeSpan.FromSeconds(1));
-        Assert.Equal(new Point(centers[5].X, centers[5].Y), Center());
+        Assert.Equal(new Offset(centers[5].X, centers[5].Y), Center());
         tester.Pump(TimeSpan.FromSeconds(1));
-        Assert.Equal(new Point(centers[6].X, centers[6].Y), Center());
+        Assert.Equal(new Offset(centers[6].X, centers[6].Y), Center());
     }
 
     private static Widget DirectionalStart(Key key)
@@ -1133,18 +1133,18 @@ public sealed class ImplicitAnimationsWidgetsDartParityTests
         Widget Tree(Widget positioned) => new Directionality(
             textDirection: direction,
             child: new Stack(children: [positioned]));
-        Point Center() => GetCenter((RenderBox)key.CurrentContext!.FindRenderObject()!);
+        Offset Center() => GetCenter((RenderBox)key.CurrentContext!.FindRenderObject()!);
 
         tester.PumpWidget(Tree(buildStart(key)));
-        Assert.Equal(new Point(centers[0].X, centers[0].Y), Center());
+        Assert.Equal(new Offset(centers[0].X, centers[0].Y), Center());
         tester.Pump(TimeSpan.FromSeconds(1));
-        Assert.Equal(new Point(centers[1].X, centers[1].Y), Center());
+        Assert.Equal(new Offset(centers[1].X, centers[1].Y), Center());
 
         tester.PumpWidget(Tree(buildSwitched(key)));
-        Assert.Equal(new Point(centers[2].X, centers[2].Y), Center());
+        Assert.Equal(new Offset(centers[2].X, centers[2].Y), Center());
         tester.Pump(TimeSpan.FromSeconds(1));
-        Assert.Equal(new Point(centers[3].X, centers[3].Y), Center());
+        Assert.Equal(new Offset(centers[3].X, centers[3].Y), Center());
         tester.Pump(TimeSpan.FromSeconds(1));
-        Assert.Equal(new Point(centers[4].X, centers[4].Y), Center());
+        Assert.Equal(new Offset(centers[4].X, centers[4].Y), Center());
     }
 }

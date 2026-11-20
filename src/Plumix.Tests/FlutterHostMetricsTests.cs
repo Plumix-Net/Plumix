@@ -30,7 +30,7 @@ public sealed class FlutterHostMetricsTests
     {
         var host = new MetricsHost();
         var requests = new List<HitTestRequest>();
-        var answers = new List<(Point, bool)>();
+        var answers = new List<(Offset, bool)>();
         Func<HitTestRequest, HitTestResponse>? previous = PlatformDispatcher.Instance.OnHitTest;
         PlatformDispatcher.Instance.OnHitTest = request =>
         {
@@ -41,10 +41,10 @@ public sealed class FlutterHostMetricsTests
 
         try
         {
-            host.QueryNativeHitTest(new Point(3, 4));
+            host.QueryNativeHitTest(new Offset(3, 4));
 
-            Assert.Equal(new HitTestRequest(host.RootFlutterView.ViewId, new Point(3, 4)), Assert.Single(requests));
-            Assert.Equal((new Point(3, 4), true), Assert.Single(answers));
+            Assert.Equal(new HitTestRequest(host.RootFlutterView.ViewId, new Offset(3, 4)), Assert.Single(requests));
+            Assert.Equal((new Offset(3, 4), true), Assert.Single(answers));
         }
         finally
         {

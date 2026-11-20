@@ -293,13 +293,13 @@ public sealed class Scrollbar : StatelessWidget
             ScrollbarPainter.IgnorePointer = !EnableGestures;
         }
 
-        protected override void HandleThumbPressStart(Point localPosition)
+        protected override void HandleThumbPressStart(Offset localPosition)
         {
             base.HandleThumbPressStart(localPosition);
             SetState(() => _dragIsActive = true);
         }
 
-        protected override void HandleThumbPressEnd(Point localPosition, Velocity velocity)
+        protected override void HandleThumbPressEnd(Offset localPosition, Velocity velocity)
         {
             base.HandleThumbPressEnd(localPosition, velocity);
             SetState(() => _dragIsActive = false);

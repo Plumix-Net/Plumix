@@ -19,7 +19,7 @@ public sealed class TrackpadPanZoomDemoPage : StatefulWidget
 
 internal sealed class TrackpadPanZoomDemoPageState : State
 {
-    private Point _pan;
+    private Offset _pan;
     private double _scale = 1.0;
     private double _rotation;
     private int _updates;
@@ -39,7 +39,7 @@ internal sealed class TrackpadPanZoomDemoPageState : State
                     style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
                 BuildProbe(),
                 new Text(
-                    $"phase {_phase} — pan {Format(_pan.X)}, {Format(_pan.Y)} — "
+                    $"phase {_phase} — pan {Format(_pan.Dx)}, {Format(_pan.Dy)} — "
                     + $"scale {Format(_scale)} — rotation {Format(_rotation)} rad — {_updates} updates",
                     style: new TextStyle(FontSize: 13, Color: Colors.DimGray)),
             ]);
@@ -79,7 +79,7 @@ internal sealed class TrackpadPanZoomDemoPageState : State
 
     private Widget BuildTarget()
     {
-        Matrix4 transform = Matrix4.TranslationValues(_pan.X, _pan.Y, 0.0);
+        Matrix4 transform = Matrix4.TranslationValues(_pan.Dx, _pan.Dy, 0.0);
         transform = transform.Multiplied(Matrix4.RotationZ(_rotation));
         transform = transform.Multiplied(Matrix4.Diagonal3Values(_scale, _scale, 1.0));
 

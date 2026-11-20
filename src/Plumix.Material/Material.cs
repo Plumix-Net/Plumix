@@ -407,17 +407,17 @@ internal sealed class RenderInkFeatures : RenderProxyBox, MaterialInkController
         }
     }
 
-    protected override bool HitTestSelf(Point position) => AbsorbHitTest;
+    protected override bool HitTestSelf(Offset position) => AbsorbHitTest;
 
-    public override void Paint(PaintingContext context, Point offset)
+    public override void Paint(PaintingContext context, Offset offset)
     {
         List<InkFeature>? inkFeatures = _inkFeatures;
         if (inkFeatures is { Count: > 0 })
         {
             Canvas canvas = context.Canvas;
             canvas.Save();
-            canvas.Translate(offset.X, offset.Y);
-            canvas.ClipRect(new Rect(new Point(0, 0), Size));
+            canvas.Translate(offset.Dx, offset.Dy);
+            canvas.ClipRect(DartGeometry.RectFromOffsetAndSize(new Offset(0, 0), Size));
             foreach (InkFeature inkFeature in inkFeatures)
             {
                 inkFeature.PaintInternal(canvas);
@@ -794,7 +794,7 @@ internal sealed class ShapeBorderPainter(ShapeBorder border, TextDirection? text
 
     public override void Paint(PaintingContext context, Size size)
     {
-        Border.Paint(context, new Rect(new Point(0, 0), size), textDirection: TextDirection);
+        Border.Paint(context, DartGeometry.RectFromOffsetAndSize(new Offset(0, 0), size), textDirection: TextDirection);
     }
 
     public override bool ShouldRepaint(CustomPainter oldDelegate)

@@ -94,9 +94,9 @@ public sealed partial class OverscrollIndicatorTests : IDisposable
         harness.Pump(Viewport);
         NotificationEmitterState emitter = Assert.IsType<NotificationEmitterState>(emitterKey.CurrentState);
         var details = new DragUpdateDetails(
-            GlobalPosition: new Point(120, 20),
-            LocalPosition: new Point(120, 20),
-            Delta: new Point(0, 20),
+            GlobalPosition: new Offset(120, 20),
+            LocalPosition: new Offset(120, 20),
+            Delta: new Offset(0, 20),
             PrimaryDelta: 20);
 
         emitter.Dispatch(new OverscrollNotification(Metrics(), -30, dragDetails: details));
@@ -136,7 +136,7 @@ public sealed partial class OverscrollIndicatorTests : IDisposable
                     child: new NotificationEmitter(key: emitterKey)))));
         harness.Pump(Viewport);
         NotificationEmitterState emitter = Assert.IsType<NotificationEmitterState>(emitterKey.CurrentState);
-        var details = new DragUpdateDetails(default, new Point(40, 20), default, 20);
+        var details = new DragUpdateDetails(default, new Offset(40, 20), default, 20);
 
         emitter.Dispatch(new OverscrollNotification(Metrics(), -20, dragDetails: details));
         emitter.Dispatch(new OverscrollNotification(
@@ -203,7 +203,7 @@ public sealed partial class OverscrollIndicatorTests : IDisposable
                 child: new NotificationEmitter(key: emitterKey))));
         harness.Pump(Viewport);
         NotificationEmitterState emitter = Assert.IsType<NotificationEmitterState>(emitterKey.CurrentState);
-        var details = new DragUpdateDetails(default, new Point(120, 20), default, 40);
+        var details = new DragUpdateDetails(default, new Offset(120, 20), default, 40);
 
         emitter.Dispatch(new OverscrollNotification(
             Metrics(viewportDimension: 100),
@@ -250,7 +250,7 @@ public sealed partial class OverscrollIndicatorTests : IDisposable
                     child: new NotificationEmitter(key: emitterKey)))));
         harness.Pump(Viewport);
         NotificationEmitterState emitter = Assert.IsType<NotificationEmitterState>(emitterKey.CurrentState);
-        var details = new DragUpdateDetails(default, new Point(120, 20), default, 20);
+        var details = new DragUpdateDetails(default, new Offset(120, 20), default, 20);
 
         emitter.Dispatch(new OverscrollNotification(Metrics(), -20, dragDetails: details));
         emitter.Dispatch(new OverscrollNotification(
@@ -288,7 +288,7 @@ public sealed partial class OverscrollIndicatorTests : IDisposable
                     child: new NotificationEmitter(key: emitterKey)))));
         harness.Pump(Viewport);
         NotificationEmitterState emitter = Assert.IsType<NotificationEmitterState>(emitterKey.CurrentState);
-        var details = new DragUpdateDetails(default, new Point(120, 20), default, 40);
+        var details = new DragUpdateDetails(default, new Offset(120, 20), default, 40);
 
         // A disallowed gesture leaves the controller untouched, and the trailing ScrollEnd must not
         // start a recede animation for an overscroll that never happened.
@@ -404,7 +404,7 @@ public sealed partial class OverscrollIndicatorTests : IDisposable
             new PointerDownEvent(
                 712,
                 PointerDeviceKind.Mouse,
-                new Point(120, 80),
+                new Offset(120, 80),
                 PointerButtons.Primary,
                 now));
         binding.HandlePointerEvent(
@@ -412,7 +412,7 @@ public sealed partial class OverscrollIndicatorTests : IDisposable
             new PointerMoveEvent(
                 712,
                 PointerDeviceKind.Mouse,
-                new Point(120, 120),
+                new Offset(120, 120),
                 PointerButtons.Primary,
                 now.AddMilliseconds(16)));
         binding.HandlePointerEvent(
@@ -420,7 +420,7 @@ public sealed partial class OverscrollIndicatorTests : IDisposable
             new PointerMoveEvent(
                 712,
                 PointerDeviceKind.Mouse,
-                new Point(120, 210),
+                new Offset(120, 210),
                 PointerButtons.Primary,
                 now.AddMilliseconds(32)));
         PumpAnimation(harness, TimeSpan.FromMilliseconds(100));
@@ -434,7 +434,7 @@ public sealed partial class OverscrollIndicatorTests : IDisposable
             new PointerUpEvent(
                 712,
                 PointerDeviceKind.Mouse,
-                new Point(120, 210),
+                new Offset(120, 210),
                 PointerButtons.None,
                 now.AddMilliseconds(48)));
     }

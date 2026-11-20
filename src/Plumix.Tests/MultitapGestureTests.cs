@@ -29,7 +29,7 @@ public sealed class MultitapGestureTests : IDisposable
 
     private static PointerDownEvent Down(
         int pointer,
-        Point position,
+        Offset position,
         PointerButtons buttons = PointerButtons.Primary,
         PointerDeviceKind kind = PointerDeviceKind.Touch)
     {
@@ -38,25 +38,25 @@ public sealed class MultitapGestureTests : IDisposable
 
     private static PointerUpEvent Up(
         int pointer,
-        Point position,
+        Offset position,
         PointerDeviceKind kind = PointerDeviceKind.Touch)
     {
         return new PointerUpEvent(pointer, kind, position, PointerButtons.None, DateTime.UnixEpoch);
     }
 
-    private static PointerMoveEvent Move(int pointer, Point position)
+    private static PointerMoveEvent Move(int pointer, Offset position)
     {
         return new PointerMoveEvent(
             pointer, PointerDeviceKind.Touch, position, PointerButtons.Primary, DateTime.UnixEpoch);
     }
 
-    private static PointerCancelEvent Cancel(int pointer, Point position)
+    private static PointerCancelEvent Cancel(int pointer, Offset position)
     {
         return new PointerCancelEvent(
             pointer, PointerDeviceKind.Touch, position, PointerButtons.None, DateTime.UnixEpoch);
     }
 
-    private void Tap(GestureRecognizer recognizer, int pointer, Point position)
+    private void Tap(GestureRecognizer recognizer, int pointer, Offset position)
     {
         var down = Down(pointer, position);
         recognizer.AddPointer(down);
@@ -81,16 +81,16 @@ public sealed class MultitapGestureTests : IDisposable
 
         try
         {
-            Tap(doubleTap, 1, new Point(10.0, 10.0));
+            Tap(doubleTap, 1, new Offset(10.0, 10.0));
             Assert.Empty(events);
 
             _timers.Elapse(TimeSpan.FromMilliseconds(100));
-            var down2 = Down(2, new Point(12.0, 12.0));
+            var down2 = Down(2, new Offset(12.0, 12.0));
             doubleTap.AddPointer(down2);
             Assert.Equal(["doubleTapDown"], events);
             _binding.GestureArena.Close(2);
             Route(down2);
-            Route(Up(2, new Point(12.0, 12.0)));
+            Route(Up(2, new Offset(12.0, 12.0)));
             _binding.GestureArena.Sweep(2);
             Assert.Equal(["doubleTapDown", "doubleTap"], events);
         }
@@ -112,10 +112,10 @@ public sealed class MultitapGestureTests : IDisposable
 
         try
         {
-            Tap(doubleTap, 1, new Point(10.0, 10.0));
+            Tap(doubleTap, 1, new Offset(10.0, 10.0));
             _timers.Elapse(TimeSpan.FromMilliseconds(100));
             // 150 px away: past kDoubleTapSlop (100), the down is ignored entirely.
-            Tap(doubleTap, 2, new Point(160.0, 10.0));
+            Tap(doubleTap, 2, new Offset(160.0, 10.0));
             Assert.Empty(events);
         }
         finally
@@ -135,17 +135,17 @@ public sealed class MultitapGestureTests : IDisposable
 
         try
         {
-            var down1 = Down(1, new Point(10.0, 10.0));
+            var down1 = Down(1, new Offset(10.0, 10.0));
             doubleTap.AddPointer(down1);
             _binding.GestureArena.Close(1);
             Route(down1);
             // Past kDoubleTapTouchSlop (18): the first tap is rejected.
-            Route(Move(1, new Point(40.0, 10.0)));
-            Route(Up(1, new Point(40.0, 10.0)));
+            Route(Move(1, new Offset(40.0, 10.0)));
+            Route(Up(1, new Offset(40.0, 10.0)));
             _binding.GestureArena.Sweep(1);
 
             _timers.Elapse(TimeSpan.FromMilliseconds(100));
-            Tap(doubleTap, 2, new Point(10.0, 10.0));
+            Tap(doubleTap, 2, new Offset(10.0, 10.0));
             Assert.Empty(events);
         }
         finally
@@ -165,14 +165,14 @@ public sealed class MultitapGestureTests : IDisposable
 
         try
         {
-            Tap(doubleTap, 1, new Point(10.0, 10.0));
+            Tap(doubleTap, 1, new Offset(10.0, 10.0));
             _timers.Elapse(TimeSpan.FromMilliseconds(5000));
-            Tap(doubleTap, 2, new Point(10.0, 10.0));
+            Tap(doubleTap, 2, new Offset(10.0, 10.0));
             Assert.Empty(events);
 
             // The timed-out second tap became a fresh first tap: a third tap completes the pair.
             _timers.Elapse(TimeSpan.FromMilliseconds(100));
-            Tap(doubleTap, 3, new Point(10.0, 10.0));
+            Tap(doubleTap, 3, new Offset(10.0, 10.0));
             Assert.Equal(["doubleTap"], events);
         }
         finally
@@ -192,14 +192,14 @@ public sealed class MultitapGestureTests : IDisposable
 
         try
         {
-            Tap(doubleTap, 1, new Point(10.0, 10.0));
+            Tap(doubleTap, 1, new Offset(10.0, 10.0));
             // 10 ms < kDoubleTapMinTime (40 ms): the second tap restarts the sequence.
             _timers.Elapse(TimeSpan.FromMilliseconds(10));
-            Tap(doubleTap, 2, new Point(10.0, 10.0));
+            Tap(doubleTap, 2, new Offset(10.0, 10.0));
             Assert.Empty(events);
 
             _timers.Elapse(TimeSpan.FromMilliseconds(100));
-            Tap(doubleTap, 3, new Point(10.0, 10.0));
+            Tap(doubleTap, 3, new Offset(10.0, 10.0));
             Assert.Equal(["doubleTap"], events);
         }
         finally
@@ -222,10 +222,10 @@ public sealed class MultitapGestureTests : IDisposable
 
         try
         {
-            Tap(doubleTap, 1, new Point(10.0, 10.0));
+            Tap(doubleTap, 1, new Offset(10.0, 10.0));
             _timers.Elapse(TimeSpan.FromMilliseconds(100));
 
-            var down2 = Down(2, new Point(10.0, 10.0));
+            var down2 = Down(2, new Offset(10.0, 10.0));
             doubleTap.AddPointer(down2);
             GestureArenaEntry competitorEntry = _binding.GestureArena.Add(2, competitor);
             _binding.GestureArena.Close(2);
@@ -236,7 +236,7 @@ public sealed class MultitapGestureTests : IDisposable
             competitorEntry.Resolve(GestureDisposition.Accepted);
             Assert.Equal(["doubleTapDown", "doubleTapCancel"], events);
 
-            Route(Up(2, new Point(10.0, 10.0)));
+            Route(Up(2, new Offset(10.0, 10.0)));
             _binding.GestureArena.Sweep(2);
             Assert.Equal(["doubleTapDown", "doubleTapCancel"], events);
         }
@@ -258,13 +258,13 @@ public sealed class MultitapGestureTests : IDisposable
 
         try
         {
-            var down = Down(1, new Point(10.0, 10.0));
+            var down = Down(1, new Offset(10.0, 10.0));
             tap.AddPointer(down);
             doubleTap.AddPointer(down);
             _binding.GestureArena.Close(1);
             // The callback-less double tap refused the pointer, so the tap won at close.
             Route(down);
-            Route(Up(1, new Point(10.0, 10.0)));
+            Route(Up(1, new Offset(10.0, 10.0)));
             _binding.GestureArena.Sweep(1);
             Assert.Equal(["tap"], tapEvents);
         }
@@ -288,11 +288,11 @@ public sealed class MultitapGestureTests : IDisposable
 
         try
         {
-            Tap(serial, 1, new Point(10.0, 10.0));
+            Tap(serial, 1, new Offset(10.0, 10.0));
             _timers.Elapse(TimeSpan.FromMilliseconds(150));
-            Tap(serial, 2, new Point(10.0, 10.0));
+            Tap(serial, 2, new Offset(10.0, 10.0));
             _timers.Elapse(TimeSpan.FromMilliseconds(150));
-            Tap(serial, 3, new Point(10.0, 10.0));
+            Tap(serial, 3, new Offset(10.0, 10.0));
             Assert.Equal(["down#1", "up#1", "down#2", "up#2", "down#3", "up#3"], log);
         }
         finally
@@ -317,12 +317,12 @@ public sealed class MultitapGestureTests : IDisposable
 
         try
         {
-            var down = Down(1, new Point(10.0, 10.0));
+            var down = Down(1, new Offset(10.0, 10.0));
             tap.AddPointer(down);
             serial.AddPointer(down);
             _binding.GestureArena.Close(1);
             Route(down);
-            Route(Up(1, new Point(10.0, 10.0)));
+            Route(Up(1, new Offset(10.0, 10.0)));
             _binding.GestureArena.Sweep(1);
             Assert.Equal(["down#1", "up#1"], log);
         }
@@ -345,9 +345,9 @@ public sealed class MultitapGestureTests : IDisposable
 
         try
         {
-            Tap(serial, 1, new Point(10.0, 10.0));
+            Tap(serial, 1, new Offset(10.0, 10.0));
             _timers.Elapse(TimeSpan.FromMilliseconds(1000));
-            Tap(serial, 2, new Point(10.0, 10.0));
+            Tap(serial, 2, new Offset(10.0, 10.0));
             Assert.Equal(["down#1", "up#1", "down#1", "up#1"], log);
         }
         finally
@@ -368,9 +368,9 @@ public sealed class MultitapGestureTests : IDisposable
 
         try
         {
-            Tap(serial, 1, new Point(10.0, 10.0));
+            Tap(serial, 1, new Offset(10.0, 10.0));
             _timers.Elapse(TimeSpan.FromMilliseconds(150));
-            Tap(serial, 2, new Point(160.0, 10.0));
+            Tap(serial, 2, new Offset(160.0, 10.0));
             Assert.Equal(["down#1", "up#1", "down#1", "up#1"], log);
         }
         finally
@@ -392,16 +392,16 @@ public sealed class MultitapGestureTests : IDisposable
 
         try
         {
-            var down = Down(1, new Point(10.0, 10.0));
+            var down = Down(1, new Offset(10.0, 10.0));
             serial.AddPointer(down);
             _binding.GestureArena.Close(1);
             Route(down);
-            Route(Cancel(1, new Point(10.0, 10.0)));
+            Route(Cancel(1, new Offset(10.0, 10.0)));
             _binding.GestureArena.Sweep(1);
             Assert.Equal(["down#1", "cancel#1"], log);
 
             _timers.Elapse(TimeSpan.FromMilliseconds(150));
-            Tap(serial, 2, new Point(10.0, 10.0));
+            Tap(serial, 2, new Offset(10.0, 10.0));
             Assert.Equal(["down#1", "cancel#1", "down#1", "up#1"], log);
         }
         finally
@@ -423,16 +423,16 @@ public sealed class MultitapGestureTests : IDisposable
 
         try
         {
-            var down1 = Down(1, new Point(10.0, 10.0));
+            var down1 = Down(1, new Offset(10.0, 10.0));
             serial.AddPointer(down1);
             _binding.GestureArena.Close(1);
             Route(down1);
 
-            var down2 = Down(2, new Point(10.0, 10.0));
+            var down2 = Down(2, new Offset(10.0, 10.0));
             serial.AddPointer(down2);
             _binding.GestureArena.Close(2);
             Route(down2);
-            Route(Up(2, new Point(10.0, 10.0)));
+            Route(Up(2, new Offset(10.0, 10.0)));
             _binding.GestureArena.Sweep(2);
             Assert.Equal(["down#1", "cancel#1", "down#1", "up#1"], log);
         }
@@ -448,7 +448,7 @@ public sealed class MultitapGestureTests : IDisposable
         var serial = new SerialTapGestureRecognizer();
         try
         {
-            var down = Down(1, new Point(10.0, 10.0));
+            var down = Down(1, new Offset(10.0, 10.0));
             serial.AddPointer(down);
             Assert.False(serial.IsTrackingPointerInSeries);
         }
@@ -473,19 +473,19 @@ public sealed class MultitapGestureTests : IDisposable
 
         try
         {
-            var down5 = Down(5, new Point(10.0, 10.0));
+            var down5 = Down(5, new Offset(10.0, 10.0));
             multiTap.AddPointer(down5);
             _binding.GestureArena.Close(5);
             Assert.Equal(["tap-down 5"], log);
             Route(down5);
 
-            var down6 = Down(6, new Point(30.0, 30.0));
+            var down6 = Down(6, new Offset(30.0, 30.0));
             multiTap.AddPointer(down6);
             _binding.GestureArena.Close(6);
             Route(down6);
             Assert.Equal(["tap-down 5", "tap-down 6"], log);
 
-            Route(Up(5, new Point(10.0, 10.0)));
+            Route(Up(5, new Offset(10.0, 10.0)));
             _binding.GestureArena.Sweep(5);
             Assert.Equal(["tap-down 5", "tap-down 6", "tap-up 5", "tap 5"], log);
 
@@ -493,7 +493,7 @@ public sealed class MultitapGestureTests : IDisposable
             Assert.Equal(["tap-down 5", "tap-down 6", "tap-up 5", "tap 5", "long-tap-down 6"], log);
 
             // Past the hit slop: the remaining pointer's tap is canceled.
-            Route(Move(6, new Point(70.0, 30.0)));
+            Route(Move(6, new Offset(70.0, 30.0)));
             Assert.Equal(
                 ["tap-down 5", "tap-down 6", "tap-up 5", "tap 5", "long-tap-down 6", "tap-cancel 6"],
                 log);

@@ -501,8 +501,8 @@ public class RenderObjectPipelineParityTests
         pipeline.Attach(view);
         pipeline.FlushLayout(new Size(100, 100));
 
-        Assert.Equal(new Point(-20, 0), first.LocalToGlobal(default, second));
-        Assert.Equal(new Point(20, 0), second.LocalToGlobal(default, first));
+        Assert.Equal(new Offset(-20, 0), first.LocalToGlobal(default, second));
+        Assert.Equal(new Offset(20, 0), second.LocalToGlobal(default, first));
     }
 
     [DebugOnlyFact]
@@ -609,7 +609,7 @@ public class RenderObjectPipelineParityTests
 
         protected override void PerformLayout() => Size = Constraints.Constrain(_size);
 
-        public override void Paint(PaintingContext ctx, Point offset)
+        public override void Paint(PaintingContext ctx, Offset offset)
         {
             PaintCount += 1;
         }
@@ -639,7 +639,7 @@ public class RenderObjectPipelineParityTests
             Size = Constraints.Smallest;
         }
 
-        public override void Paint(PaintingContext ctx, Point offset)
+        public override void Paint(PaintingContext ctx, Offset offset)
         {
         }
     }
@@ -656,7 +656,7 @@ public class RenderObjectPipelineParityTests
 
         public override bool IsRepaintBoundary => true;
 
-        public override void Paint(PaintingContext ctx, Point offset)
+        public override void Paint(PaintingContext ctx, Offset offset)
         {
             PaintCount += 1;
             base.Paint(ctx, offset);
@@ -672,7 +672,7 @@ public class RenderObjectPipelineParityTests
             throw new InvalidOperationException("layout boom");
         }
 
-        public override void Paint(PaintingContext ctx, Point offset)
+        public override void Paint(PaintingContext ctx, Offset offset)
         {
         }
     }

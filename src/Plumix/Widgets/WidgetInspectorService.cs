@@ -1706,11 +1706,11 @@ public abstract partial class WidgetInspectorService
                             }
                             else if (parentData is BoxParentData boxParentData)
                             {
-                                Point offset = boxParentData.offset;
+                                Offset offset = boxParentData.offset;
                                 additionalJson["parentData"] = new Dictionary<string, object?>
                                 {
-                                    ["offsetX"] = BindingBase.DartDoubleToString(offset.X),
-                                    ["offsetY"] = BindingBase.DartDoubleToString(offset.Y),
+                                    ["offsetX"] = BindingBase.DartDoubleToString(offset.Dx),
+                                    ["offsetY"] = BindingBase.DartDoubleToString(offset.Dy),
                                 };
                             }
                         }

@@ -325,7 +325,7 @@ public abstract class TextSelectionControls
         Action? onTap = null);
 
     /// <summary>The anchor within the handle that is placed on the selection endpoint.</summary>
-    public abstract Point GetHandleAnchor(TextSelectionHandleType type, double textLineHeight);
+    public abstract Offset GetHandleAnchor(TextSelectionHandleType type, double textLineHeight);
 
     public abstract Size GetHandleSize(double textLineHeight);
 
@@ -334,11 +334,11 @@ public abstract class TextSelectionControls
         BuildContext context,
         Rect globalEditableRegion,
         double textLineHeight,
-        Point selectionMidpoint,
+        Offset selectionMidpoint,
         IReadOnlyList<TextSelectionPoint> endpoints,
         ITextSelectionDelegate @delegate,
         IValueListenable<ClipboardStatus>? clipboardStatus,
-        Point? lastSecondaryTapDownPosition);
+        Offset? lastSecondaryTapDownPosition);
 
     [Obsolete("Use a contextMenuBuilder instead. This feature was deprecated after Flutter v3.3.0-0.5.pre.")]
     public virtual bool CanCut(ITextSelectionDelegate @delegate)
@@ -419,18 +419,18 @@ public class EmptyTextSelectionControls : TextSelectionControls
         return new SizedBox();
     }
 
-    public override Point GetHandleAnchor(TextSelectionHandleType type, double textLineHeight) => default;
+    public override Offset GetHandleAnchor(TextSelectionHandleType type, double textLineHeight) => default;
 
     [Obsolete("Use a contextMenuBuilder instead. This feature was deprecated after Flutter v3.3.0-0.5.pre.")]
     public override Widget BuildToolbar(
         BuildContext context,
         Rect globalEditableRegion,
         double textLineHeight,
-        Point selectionMidpoint,
+        Offset selectionMidpoint,
         IReadOnlyList<TextSelectionPoint> endpoints,
         ITextSelectionDelegate @delegate,
         IValueListenable<ClipboardStatus>? clipboardStatus,
-        Point? lastSecondaryTapDownPosition)
+        Offset? lastSecondaryTapDownPosition)
     {
         return new SizedBox();
     }
@@ -655,7 +655,7 @@ public sealed class TextSelectionOverlay : IDisposable
 
     /// <summary>Shows the magnifier at <paramref name="positionToShow"/>, a global position.
     /// Does nothing if a magnifier is already shown.</summary>
-    public void ShowMagnifier(Point positionToShow)
+    public void ShowMagnifier(Offset positionToShow)
     {
         TextPosition position = RenderObject.GetPositionForPoint(positionToShow);
         UpdateSelectionOverlay();
@@ -667,7 +667,7 @@ public sealed class TextSelectionOverlay : IDisposable
 
     /// <summary>Moves the magnifier to <paramref name="positionToShow"/>, a global position, if one
     /// exists.</summary>
-    public void UpdateMagnifier(Point positionToShow)
+    public void UpdateMagnifier(Offset positionToShow)
     {
         TextPosition position = RenderObject.GetPositionForPoint(positionToShow);
         UpdateSelectionOverlay();
@@ -786,7 +786,7 @@ public sealed class TextSelectionOverlay : IDisposable
 
     private MagnifierInfo BuildMagnifier(
         RenderEditable renderEditable,
-        Point globalGesturePosition,
+        Offset globalGesturePosition,
         TextPosition currentTextPosition)
     {
         TextSelection lineAtOffset = renderEditable.GetLineAtOffset(currentTextPosition);
@@ -798,8 +798,8 @@ public sealed class TextSelectionOverlay : IDisposable
         Rect lineStartCaret = renderEditable.GetLocalRectForCaret(positionAtBeginningOfLine);
         Rect lineEndCaret = renderEditable.GetLocalRectForCaret(positionAtEndOfLine);
         Rect localLineBoundaries = RectFromPoints(
-            new Point(lineStartCaret.Center.X, lineStartCaret.Top),
-            new Point(lineEndCaret.Center.X, lineEndCaret.Bottom));
+            new Offset(lineStartCaret.Center.Dx, lineStartCaret.Top),
+            new Offset(lineEndCaret.Center.Dx, lineEndCaret.Bottom));
         var overlay = Overlay.Of(Context, rootOverlay: true).Context.FindRenderObject() as RenderBox;
         Matrix4 transformToOverlay = renderEditable.GetTransformTo(overlay);
         Rect overlayLineBoundaries = MatrixUtils.TransformRect(transformToOverlay, localLineBoundaries);
@@ -807,7 +807,7 @@ public sealed class TextSelectionOverlay : IDisposable
         Rect localCaretRect = renderEditable.GetLocalRectForCaret(currentTextPosition);
         Rect overlayCaretRect = MatrixUtils.TransformRect(transformToOverlay, localCaretRect);
 
-        Point overlayGesturePosition = overlay?.GlobalToLocal(globalGesturePosition) ?? globalGesturePosition;
+        Offset overlayGesturePosition = overlay?.GlobalToLocal(globalGesturePosition) ?? globalGesturePosition;
 
         return new MagnifierInfo(
             GlobalGesturePosition: overlayGesturePosition,
@@ -816,13 +816,13 @@ public sealed class TextSelectionOverlay : IDisposable
             CurrentLineBoundaries: overlayLineBoundaries);
     }
 
-    private static Rect RectFromPoints(Point a, Point b)
+    private static Rect RectFromPoints(Offset a, Offset b)
     {
-        return new Rect(
-            Math.Min(a.X, b.X),
-            Math.Min(a.Y, b.Y),
-            Math.Abs(a.X - b.X),
-            Math.Abs(a.Y - b.Y));
+        return DartGeometry.RectFromLTWH(
+            Math.Min(a.Dx, b.Dx),
+            Math.Min(a.Dy, b.Dy),
+            Math.Abs(a.Dx - b.Dx),
+            Math.Abs(a.Dy - b.Dy));
     }
 
     private static bool IsApplePlatform =>
@@ -837,16 +837,16 @@ public sealed class TextSelectionOverlay : IDisposable
 
         // This adjusts for the fact that the selection handles may not perfectly cover the
         // TextPosition that they correspond to.
-        _endHandleDragPosition = details.GlobalPosition.Y;
-        double centerOfLineLocal = SelectionOverlay.SelectionEndpoints[^1].Point.Y
+        _endHandleDragPosition = details.GlobalPosition.Dy;
+        double centerOfLineLocal = SelectionOverlay.SelectionEndpoints[^1].Point.Dy
                                    - RenderObject.PreferredLineHeight / 2;
-        double centerOfLineGlobal = RenderObject.LocalToGlobal(new Point(0.0, centerOfLineLocal)).Y;
-        _endHandleDragTarget = centerOfLineGlobal - details.GlobalPosition.Y;
+        double centerOfLineGlobal = RenderObject.LocalToGlobal(new Offset(0.0, centerOfLineLocal)).Dy;
+        _endHandleDragTarget = centerOfLineGlobal - details.GlobalPosition.Dy;
         // Instead of finding the TextPosition at the handle's location directly, use the vertical
         // center of the line that it points to. This is because selection handles typically hang
         // above or below the line that they point to.
         TextPosition position = RenderObject.GetPositionForPoint(
-            new Point(details.GlobalPosition.X, centerOfLineGlobal));
+            new Offset(details.GlobalPosition.Dx, centerOfLineGlobal));
         if (IsApplePlatform)
         {
             _dragStartSelection ??= Selection;
@@ -893,18 +893,18 @@ public sealed class TextSelectionOverlay : IDisposable
 
         // This is NOT the same as details.LocalPosition. That is relative to the selection handle,
         // whereas this is relative to the RenderEditable.
-        Point localPosition = RenderObject.GlobalToLocal(details.GlobalPosition);
+        Offset localPosition = RenderObject.GlobalToLocal(details.GlobalPosition);
         double? nextEndHandleDragPositionLocal = GetHandleDy(
-            localPosition.Y,
-            RenderObject.GlobalToLocal(new Point(0.0, _endHandleDragPosition)).Y);
+            localPosition.Dy,
+            RenderObject.GlobalToLocal(new Offset(0.0, _endHandleDragPosition)).Dy);
         if (nextEndHandleDragPositionLocal is not { } nextLocal)
         {
             return;
         }
 
-        _endHandleDragPosition = RenderObject.LocalToGlobal(new Point(0.0, nextLocal)).Y;
-        var handleTargetGlobal = new Point(
-            details.GlobalPosition.X,
+        _endHandleDragPosition = RenderObject.LocalToGlobal(new Offset(0.0, nextLocal)).Dy;
+        var handleTargetGlobal = new Offset(
+            details.GlobalPosition.Dx,
             _endHandleDragPosition + _endHandleDragTarget);
         TextPosition position = RenderObject.GetPositionForPoint(handleTargetGlobal);
 
@@ -968,16 +968,16 @@ public sealed class TextSelectionOverlay : IDisposable
 
         // This adjusts for the fact that the selection handles may not perfectly cover the
         // TextPosition that they correspond to.
-        _startHandleDragPosition = details.GlobalPosition.Y;
-        double centerOfLineLocal = SelectionOverlay.SelectionEndpoints[0].Point.Y
+        _startHandleDragPosition = details.GlobalPosition.Dy;
+        double centerOfLineLocal = SelectionOverlay.SelectionEndpoints[0].Point.Dy
                                    - RenderObject.PreferredLineHeight / 2;
-        double centerOfLineGlobal = RenderObject.LocalToGlobal(new Point(0.0, centerOfLineLocal)).Y;
-        _startHandleDragTarget = centerOfLineGlobal - details.GlobalPosition.Y;
+        double centerOfLineGlobal = RenderObject.LocalToGlobal(new Offset(0.0, centerOfLineLocal)).Dy;
+        _startHandleDragTarget = centerOfLineGlobal - details.GlobalPosition.Dy;
         // Instead of finding the TextPosition at the handle's location directly, use the vertical
         // center of the line that it points to. This is because selection handles typically hang
         // above or below the line that they point to.
         TextPosition position = RenderObject.GetPositionForPoint(
-            new Point(details.GlobalPosition.X, centerOfLineGlobal));
+            new Offset(details.GlobalPosition.Dx, centerOfLineGlobal));
         if (IsApplePlatform)
         {
             _dragStartSelection ??= Selection;
@@ -998,18 +998,18 @@ public sealed class TextSelectionOverlay : IDisposable
 
         // This is NOT the same as details.LocalPosition. That is relative to the selection handle,
         // whereas this is relative to the RenderEditable.
-        Point localPosition = RenderObject.GlobalToLocal(details.GlobalPosition);
+        Offset localPosition = RenderObject.GlobalToLocal(details.GlobalPosition);
         double? nextStartHandleDragPositionLocal = GetHandleDy(
-            localPosition.Y,
-            RenderObject.GlobalToLocal(new Point(0.0, _startHandleDragPosition)).Y);
+            localPosition.Dy,
+            RenderObject.GlobalToLocal(new Offset(0.0, _startHandleDragPosition)).Dy);
         if (nextStartHandleDragPositionLocal is not { } nextLocal)
         {
             return;
         }
 
-        _startHandleDragPosition = RenderObject.LocalToGlobal(new Point(0.0, nextLocal)).Y;
-        var handleTargetGlobal = new Point(
-            details.GlobalPosition.X,
+        _startHandleDragPosition = RenderObject.LocalToGlobal(new Offset(0.0, nextLocal)).Dy;
+        var handleTargetGlobal = new Offset(
+            details.GlobalPosition.Dx,
             _startHandleDragPosition + _startHandleDragTarget);
         TextPosition position = RenderObject.GetPositionForPoint(handleTargetGlobal);
 
@@ -1163,7 +1163,7 @@ public sealed class SelectionOverlay : IDisposable
     private bool _endHandleDragInProgress;
     private bool _isDraggingEndHandle;
     private IReadOnlyList<TextSelectionPoint> _selectionEndpoints;
-    private Point? _toolbarLocation;
+    private Offset? _toolbarLocation;
 
     // A pair of handles. If this is non-null, there are always 2, though the second is hidden when
     // the selection is collapsed. Dart's `_handles` record.
@@ -1203,7 +1203,7 @@ public sealed class SelectionOverlay : IDisposable
         IValueListenable<bool>? toolbarVisible = null,
         DragStartBehavior dragStartBehavior = DragStartBehavior.Start,
         Action? onSelectionHandleTapped = null,
-        Point? toolbarLocation = null,
+        Offset? toolbarLocation = null,
         TextMagnifierConfiguration? magnifierConfiguration = null)
     {
         Debug.Assert(WidgetsDebug.DebugCheckHasOverlay(context));
@@ -1625,7 +1625,7 @@ public sealed class SelectionOverlay : IDisposable
     /// <summary>The location of where the toolbar should be drawn in relative to the location of
     /// the toolbar layer link.</summary>
     [Obsolete(ToolbarLocationDeprecation)]
-    public Point? ToolbarLocation
+    public Offset? ToolbarLocation
     {
         get => _toolbarLocation;
         set
@@ -1902,18 +1902,18 @@ public sealed class SelectionOverlay : IDisposable
 
         Rect editingRegion = RectFromPoints(
             renderBox.LocalToGlobal(default),
-            renderBox.LocalToGlobal(new Point(renderBox.Size.Width, renderBox.Size.Height)));
+            renderBox.LocalToGlobal(new Offset(renderBox.Size.Width, renderBox.Size.Height)));
 
-        bool isMultiline = _selectionEndpoints[^1].Point.Y - _selectionEndpoints[0].Point.Y
+        bool isMultiline = _selectionEndpoints[^1].Point.Dy - _selectionEndpoints[0].Point.Dy
                            > _lineHeightAtEnd / 2;
 
         // If the selected text spans more than 1 line, horizontally center the toolbar. Derived
         // from both iOS and Android.
         double midX = isMultiline
             ? editingRegion.Width / 2
-            : (_selectionEndpoints[0].Point.X + _selectionEndpoints[^1].Point.X) / 2;
+            : (_selectionEndpoints[0].Point.Dx + _selectionEndpoints[^1].Point.Dx) / 2;
 
-        var midpoint = new Point(midX, _selectionEndpoints[0].Point.Y - _lineHeightAtStart);
+        var midpoint = new Offset(midX, _selectionEndpoints[0].Point.Dy - _lineHeightAtStart);
 
         return new SelectionToolbarWrapper(
             visibility: ToolbarVisible,
@@ -1946,13 +1946,13 @@ public sealed class SelectionOverlay : IDisposable
         _magnifierInfo.Value = magnifierInfo;
     }
 
-    private static Rect RectFromPoints(Point a, Point b)
+    private static Rect RectFromPoints(Offset a, Offset b)
     {
-        return new Rect(
-            Math.Min(a.X, b.X),
-            Math.Min(a.Y, b.Y),
-            Math.Abs(a.X - b.X),
-            Math.Abs(a.Y - b.Y));
+        return DartGeometry.RectFromLTWH(
+            Math.Min(a.Dx, b.Dx),
+            Math.Min(a.Dy, b.Dy),
+            Math.Abs(a.Dx - b.Dx),
+            Math.Abs(a.Dy - b.Dy));
     }
 }
 
@@ -1960,7 +1960,7 @@ internal sealed class SelectionToolbarWrapper : StatefulWidget
 {
     public SelectionToolbarWrapper(
         LayerLink layerLink,
-        Point offset,
+        Offset offset,
         Widget child,
         IValueListenable<bool>? visibility = null,
         Key? key = null) : base(key)
@@ -1973,7 +1973,7 @@ internal sealed class SelectionToolbarWrapper : StatefulWidget
 
     public LayerLink LayerLink { get; }
 
-    public Point Offset { get; }
+    public Offset Offset { get; }
 
     public Widget Child { get; }
 
@@ -2027,7 +2027,7 @@ internal sealed class SelectionToolbarWrapper : StatefulWidget
                             child: new CompositedTransformFollower(
                                 link: CurrentWidget.LayerLink,
                                 showWhenUnlinked: false,
-                                offset: new Point(CurrentWidget.Offset.X, CurrentWidget.Offset.Y),
+                                offset: new Offset(CurrentWidget.Offset.Dx, CurrentWidget.Offset.Dy),
                                 child: CurrentWidget.Child)))));
         }
 
@@ -2132,15 +2132,15 @@ internal sealed class SelectionHandleOverlay : StatefulWidget
         public override Widget Build(BuildContext context)
         {
             SelectionHandleOverlay widget = CurrentWidget;
-            Point handleAnchor = widget.SelectionControls.GetHandleAnchor(
+            Offset handleAnchor = widget.SelectionControls.GetHandleAnchor(
                 widget.Type,
                 widget.PreferredLineHeight);
             Size handleSize = widget.SelectionControls.GetHandleSize(widget.PreferredLineHeight);
 
-            Rect handleRect = new(0.0, 0.0, handleSize.Width, handleSize.Height);
+            Rect handleRect = DartGeometry.RectFromLTWH(0.0, 0.0, handleSize.Width, handleSize.Height);
             Rect interactiveRect = IsEmptyRect(handleRect)
                 ? handleRect
-                : handleRect.Union(RectFromCircle(
+                : handleRect.ExpandToInclude(RectFromCircle(
                     handleRect.Center,
                     WidgetConstants.MinInteractiveDimension / 2));
             Rendering.RelativeRect padding = IsEmptyRect(interactiveRect)
@@ -2157,7 +2157,7 @@ internal sealed class SelectionHandleOverlay : StatefulWidget
 
             return new CompositedTransformFollower(
                 link: widget.HandleLayerLink,
-                offset: new Point(-handleAnchor.X - padding.Left, -handleAnchor.Y - padding.Top),
+                offset: new Offset(-handleAnchor.Dx - padding.Left, -handleAnchor.Dy - padding.Top),
                 showWhenUnlinked: false,
                 child: new FadeTransition(
                     opacity: _controller!,
@@ -2205,9 +2205,9 @@ internal sealed class SelectionHandleOverlay : StatefulWidget
 
         private static bool IsEmptyRect(Rect rect) => rect.Width <= 0.0 || rect.Height <= 0.0;
 
-        private static Rect RectFromCircle(Point center, double radius)
+        private static Rect RectFromCircle(Offset center, double radius)
         {
-            return new Rect(center.X - radius, center.Y - radius, radius * 2, radius * 2);
+            return DartGeometry.RectFromLTWH(center.Dx - radius, center.Dy - radius, radius * 2, radius * 2);
         }
 
         private void HandleVisibilityChanged()

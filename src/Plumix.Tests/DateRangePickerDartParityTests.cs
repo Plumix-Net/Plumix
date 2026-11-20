@@ -142,46 +142,46 @@ public sealed class DateRangePickerDartParityTests : IDisposable
             Finds.OneWidget(saveText);
 
             // Test the close button position.
-            Point closeButtonBottomRight = tester.GetBottomRight(
+            Offset closeButtonBottomRight = tester.GetBottomRight(
                 Find.Ancestor(of: Find.ByType<IconButton>(), matching: Find.ByType<Center>()));
-            Point helpTextTopLeft = tester.GetTopLeft(helpText);
-            Assert.Equal(56.0, closeButtonBottomRight.X);
-            Assert.Equal(helpTextTopLeft.Y, closeButtonBottomRight.Y);
+            Offset helpTextTopLeft = tester.GetTopLeft(helpText);
+            Assert.Equal(56.0, closeButtonBottomRight.Dx);
+            Assert.Equal(helpTextTopLeft.Dy, closeButtonBottomRight.Dy);
 
             // Test the save and entry buttons position.
-            Point saveButtonBottomLeft = tester.GetBottomLeft(Find.ByType<TextButton>());
-            Point entryButtonBottomLeft = tester.GetBottomLeft(
+            Offset saveButtonBottomLeft = tester.GetBottomLeft(Find.ByType<TextButton>());
+            Offset entryButtonBottomLeft = tester.GetBottomLeft(
                 Find.WidgetWithIcon<IconButton>(Icons.EditOutlined));
-            AssertPoint(711.6, saveButtonBottomLeft.X);
-            Assert.Equal(helpTextTopLeft.Y, saveButtonBottomLeft.Y);
-            Assert.Equal(saveButtonBottomLeft.X - 48.0, entryButtonBottomLeft.X);
-            Assert.Equal(helpTextTopLeft.Y, entryButtonBottomLeft.Y);
+            AssertPoint(711.6, saveButtonBottomLeft.Dx);
+            Assert.Equal(helpTextTopLeft.Dy, saveButtonBottomLeft.Dy);
+            Assert.Equal(saveButtonBottomLeft.Dx - 48.0, entryButtonBottomLeft.Dx);
+            Assert.Equal(helpTextTopLeft.Dy, entryButtonBottomLeft.Dy);
 
             // Test help text position.
-            Point helpTextBottomLeft = tester.GetBottomLeft(helpText);
-            Assert.Equal(72.0, helpTextBottomLeft.X);
-            Assert.Equal(closeButtonBottomRight.Y + 20.0, helpTextBottomLeft.Y);
+            Offset helpTextBottomLeft = tester.GetBottomLeft(helpText);
+            Assert.Equal(72.0, helpTextBottomLeft.Dx);
+            Assert.Equal(closeButtonBottomRight.Dy + 20.0, helpTextBottomLeft.Dy);
 
             // Test the header position.
-            Point firstDateHeaderTopLeft = tester.GetTopLeft(firstDateHeaderText);
-            Point lastDateHeaderTopLeft = tester.GetTopLeft(lastDateHeaderText);
-            Assert.Equal(72.0, firstDateHeaderTopLeft.X);
-            Assert.Equal(helpTextBottomLeft.Y + 8.0, firstDateHeaderTopLeft.Y);
-            Point firstDateHeaderTopRight = tester.GetTopRight(firstDateHeaderText);
-            Assert.Equal(firstDateHeaderTopRight.X + 66.0, lastDateHeaderTopLeft.X);
-            Assert.Equal(helpTextBottomLeft.Y + 8.0, lastDateHeaderTopLeft.Y);
+            Offset firstDateHeaderTopLeft = tester.GetTopLeft(firstDateHeaderText);
+            Offset lastDateHeaderTopLeft = tester.GetTopLeft(lastDateHeaderText);
+            Assert.Equal(72.0, firstDateHeaderTopLeft.Dx);
+            Assert.Equal(helpTextBottomLeft.Dy + 8.0, firstDateHeaderTopLeft.Dy);
+            Offset firstDateHeaderTopRight = tester.GetTopRight(firstDateHeaderText);
+            Assert.Equal(firstDateHeaderTopRight.Dx + 66.0, lastDateHeaderTopLeft.Dx);
+            Assert.Equal(helpTextBottomLeft.Dy + 8.0, lastDateHeaderTopLeft.Dy);
 
             // Test the day headers position.
-            Point dayHeadersGridTopLeft = tester.GetTopLeft(Find.ByType<GridView>().First);
-            Point firstDateHeaderBottomLeft = tester.GetBottomLeft(firstDateHeaderText);
-            Assert.Equal((800 - 384) / 2.0, dayHeadersGridTopLeft.X);
-            Assert.Equal(firstDateHeaderBottomLeft.Y + 16.0, dayHeadersGridTopLeft.Y);
+            Offset dayHeadersGridTopLeft = tester.GetTopLeft(Find.ByType<GridView>().First);
+            Offset firstDateHeaderBottomLeft = tester.GetBottomLeft(firstDateHeaderText);
+            Assert.Equal((800 - 384) / 2.0, dayHeadersGridTopLeft.Dx);
+            Assert.Equal(firstDateHeaderBottomLeft.Dy + 16.0, dayHeadersGridTopLeft.Dy);
 
             // Test the calendar custom scroll view position.
-            Point calendarScrollViewTopLeft = tester.GetTopLeft(Find.ByType<CustomScrollView>());
-            Point dayHeadersGridBottomLeft = tester.GetBottomLeft(Find.ByType<GridView>().First);
-            Assert.Equal(0.0, calendarScrollViewTopLeft.X);
-            Assert.Equal(dayHeadersGridBottomLeft.Y, calendarScrollViewTopLeft.Y);
+            Offset calendarScrollViewTopLeft = tester.GetTopLeft(Find.ByType<CustomScrollView>());
+            Offset dayHeadersGridBottomLeft = tester.GetBottomLeft(Find.ByType<GridView>().First);
+            Assert.Equal(0.0, calendarScrollViewTopLeft.Dx);
+            Assert.Equal(dayHeadersGridBottomLeft.Dy, calendarScrollViewTopLeft.Dy);
         }, useMaterial3: true);
     }
 
@@ -801,15 +801,15 @@ public sealed class DateRangePickerDartParityTests : IDisposable
         }
 
         ShowOkCancelDialog(TextDirection.Ltr);
-        Assert.Equal(622, tester.GetBottomRight(Find.Text("OK")).X);
-        Assert.Equal(594, tester.GetBottomLeft(Find.Text("OK")).X);
-        Assert.Equal(560, tester.GetBottomRight(Find.Text("CANCEL")).X);
+        Assert.Equal(622, tester.GetBottomRight(Find.Text("OK")).Dx);
+        Assert.Equal(594, tester.GetBottomLeft(Find.Text("OK")).Dx);
+        Assert.Equal(560, tester.GetBottomRight(Find.Text("CANCEL")).Dx);
         DismissOkCancelDialog();
 
         ShowOkCancelDialog(TextDirection.Rtl);
-        Assert.Equal(206, tester.GetBottomRight(Find.Text("OK")).X);
-        Assert.Equal(178, tester.GetBottomLeft(Find.Text("OK")).X);
-        Assert.Equal(324, tester.GetBottomRight(Find.Text("CANCEL")).X);
+        Assert.Equal(206, tester.GetBottomRight(Find.Text("OK")).Dx);
+        Assert.Equal(178, tester.GetBottomLeft(Find.Text("OK")).Dx);
+        Assert.Equal(324, tester.GetBottomRight(Find.Text("CANCEL")).Dx);
         DismissOkCancelDialog();
     }
 
@@ -1538,7 +1538,7 @@ public sealed class DateRangePickerDartParityTests : IDisposable
                 DisplayFeatures:
                 [
                     new DisplayFeature(
-                        Bounds: new Rect(new Point(390, 0), new Point(410, 600)),
+                        Bounds: DartGeometry.RectFromCorners(new Offset(390, 0), new Offset(410, 600)),
                         Type: DisplayFeatureType.Hinge,
                         State: DisplayFeatureState.Unknown),
                 ]),
@@ -1558,12 +1558,12 @@ public sealed class DateRangePickerDartParityTests : IDisposable
             context: context,
             firstDate: new DateTime(2018, 1, 1),
             lastDate: new DateTime(2030, 1, 1),
-            anchorPoint: new Point(1000, 0));
+            anchorPoint: new Offset(1000, 0));
         tester.PumpAndSettle();
 
         // Should take the right side of the screen
-        Assert.Equal(new Point(410.0, 0.0), tester.GetTopLeft(Find.ByType<DateRangePickerDialog>()));
-        Assert.Equal(new Point(800.0, 600.0), tester.GetBottomRight(Find.ByType<DateRangePickerDialog>()));
+        Assert.Equal(new Offset(410.0, 0.0), tester.GetTopLeft(Find.ByType<DateRangePickerDialog>()));
+        Assert.Equal(new Offset(800.0, 600.0), tester.GetBottomRight(Find.ByType<DateRangePickerDialog>()));
     }
 
     // Flutter: 'date_range_picker_test.dart: showDateRangePicker avoids overlapping display features positioning
@@ -1579,12 +1579,12 @@ public sealed class DateRangePickerDartParityTests : IDisposable
             context: context,
             firstDate: new DateTime(2018, 1, 1),
             lastDate: new DateTime(2030, 1, 1),
-            anchorPoint: new Point(1000, 0));
+            anchorPoint: new Offset(1000, 0));
         tester.PumpAndSettle();
 
         // By default it should place the dialog on the right screen
-        Assert.Equal(new Point(410.0, 0.0), tester.GetTopLeft(Find.ByType<DateRangePickerDialog>()));
-        Assert.Equal(new Point(800.0, 600.0), tester.GetBottomRight(Find.ByType<DateRangePickerDialog>()));
+        Assert.Equal(new Offset(410.0, 0.0), tester.GetTopLeft(Find.ByType<DateRangePickerDialog>()));
+        Assert.Equal(new Offset(800.0, 600.0), tester.GetBottomRight(Find.ByType<DateRangePickerDialog>()));
     }
 
     // Flutter: 'date_range_picker_test.dart: showDateRangePicker avoids overlapping display features positioning
@@ -1603,8 +1603,8 @@ public sealed class DateRangePickerDartParityTests : IDisposable
         tester.PumpAndSettle();
 
         // By default it should place the dialog on the left screen
-        Assert.Equal(new Point(0, 0), tester.GetTopLeft(Find.ByType<DateRangePickerDialog>()));
-        Assert.Equal(new Point(390.0, 600.0), tester.GetBottomRight(Find.ByType<DateRangePickerDialog>()));
+        Assert.Equal(new Offset(0, 0), tester.GetTopLeft(Find.ByType<DateRangePickerDialog>()));
+        Assert.Equal(new Offset(390.0, 600.0), tester.GetBottomRight(Find.ByType<DateRangePickerDialog>()));
     }
 
     // Flutter: 'date_range_picker_test.dart: Semantics calendar mode'
@@ -1795,7 +1795,7 @@ public sealed class DateRangePickerDartParityTests : IDisposable
             PaintAssert.Paints(
                 buttonFinder,
                 PaintPattern.Paints.Rect(
-                    rect: new Rect(0.0, 0.0, 40.0, 40.0),
+                    rect: DartGeometry.RectFromLTWH(0.0, 0.0, 40.0, 40.0),
                     color: theme.ColorScheme.OnSurfaceVariant.WithOpacity(0.08)));
         }, useMaterial3: true);
     }
@@ -1823,44 +1823,44 @@ public sealed class DateRangePickerDartParityTests : IDisposable
             Finds.OneWidget(saveText);
 
             // Test the close button position.
-            Point closeButtonBottomRight = tester.GetBottomRight(Find.ByType<CloseButton>());
-            Point helpTextTopLeft = tester.GetTopLeft(helpText);
-            Assert.Equal(56.0, closeButtonBottomRight.X);
-            Assert.Equal(helpTextTopLeft.Y - 6.0, closeButtonBottomRight.Y);
+            Offset closeButtonBottomRight = tester.GetBottomRight(Find.ByType<CloseButton>());
+            Offset helpTextTopLeft = tester.GetTopLeft(helpText);
+            Assert.Equal(56.0, closeButtonBottomRight.Dx);
+            Assert.Equal(helpTextTopLeft.Dy - 6.0, closeButtonBottomRight.Dy);
 
             // Test the save and entry buttons position.
-            Point saveButtonBottomLeft = tester.GetBottomLeft(Find.ByType<TextButton>());
-            Point entryButtonBottomLeft = tester.GetBottomLeft(Find.WidgetWithIcon<IconButton>(Icons.Edit));
-            Assert.Equal(800 - 80.0, saveButtonBottomLeft.X);
-            Assert.Equal(helpTextTopLeft.Y - 6.0, saveButtonBottomLeft.Y);
-            Assert.Equal(saveButtonBottomLeft.X - 48.0, entryButtonBottomLeft.X);
-            Assert.Equal(helpTextTopLeft.Y - 6.0, entryButtonBottomLeft.Y);
+            Offset saveButtonBottomLeft = tester.GetBottomLeft(Find.ByType<TextButton>());
+            Offset entryButtonBottomLeft = tester.GetBottomLeft(Find.WidgetWithIcon<IconButton>(Icons.Edit));
+            Assert.Equal(800 - 80.0, saveButtonBottomLeft.Dx);
+            Assert.Equal(helpTextTopLeft.Dy - 6.0, saveButtonBottomLeft.Dy);
+            Assert.Equal(saveButtonBottomLeft.Dx - 48.0, entryButtonBottomLeft.Dx);
+            Assert.Equal(helpTextTopLeft.Dy - 6.0, entryButtonBottomLeft.Dy);
 
             // Test help text position.
-            Point helpTextBottomLeft = tester.GetBottomLeft(helpText);
-            Assert.Equal(72.0, helpTextBottomLeft.X);
-            Assert.Equal(closeButtonBottomRight.Y + 16.0, helpTextBottomLeft.Y);
+            Offset helpTextBottomLeft = tester.GetBottomLeft(helpText);
+            Assert.Equal(72.0, helpTextBottomLeft.Dx);
+            Assert.Equal(closeButtonBottomRight.Dy + 16.0, helpTextBottomLeft.Dy);
 
             // Test the header position.
-            Point firstDateHeaderTopLeft = tester.GetTopLeft(firstDateHeaderText);
-            Point lastDateHeaderTopLeft = tester.GetTopLeft(lastDateHeaderText);
-            Assert.Equal(72.0, firstDateHeaderTopLeft.X);
-            Assert.Equal(helpTextBottomLeft.Y + 8.0, firstDateHeaderTopLeft.Y);
-            Point firstDateHeaderTopRight = tester.GetTopRight(firstDateHeaderText);
-            Assert.Equal(firstDateHeaderTopRight.X + 72.0, lastDateHeaderTopLeft.X);
-            Assert.Equal(helpTextBottomLeft.Y + 8.0, lastDateHeaderTopLeft.Y);
+            Offset firstDateHeaderTopLeft = tester.GetTopLeft(firstDateHeaderText);
+            Offset lastDateHeaderTopLeft = tester.GetTopLeft(lastDateHeaderText);
+            Assert.Equal(72.0, firstDateHeaderTopLeft.Dx);
+            Assert.Equal(helpTextBottomLeft.Dy + 8.0, firstDateHeaderTopLeft.Dy);
+            Offset firstDateHeaderTopRight = tester.GetTopRight(firstDateHeaderText);
+            Assert.Equal(firstDateHeaderTopRight.Dx + 72.0, lastDateHeaderTopLeft.Dx);
+            Assert.Equal(helpTextBottomLeft.Dy + 8.0, lastDateHeaderTopLeft.Dy);
 
             // Test the day headers position.
-            Point dayHeadersGridTopLeft = tester.GetTopLeft(Find.ByType<GridView>().First);
-            Point firstDateHeaderBottomLeft = tester.GetBottomLeft(firstDateHeaderText);
-            Assert.Equal((800 - 384) / 2.0, dayHeadersGridTopLeft.X);
-            Assert.Equal(firstDateHeaderBottomLeft.Y + 16.0, dayHeadersGridTopLeft.Y);
+            Offset dayHeadersGridTopLeft = tester.GetTopLeft(Find.ByType<GridView>().First);
+            Offset firstDateHeaderBottomLeft = tester.GetBottomLeft(firstDateHeaderText);
+            Assert.Equal((800 - 384) / 2.0, dayHeadersGridTopLeft.Dx);
+            Assert.Equal(firstDateHeaderBottomLeft.Dy + 16.0, dayHeadersGridTopLeft.Dy);
 
             // Test the calendar custom scroll view position.
-            Point calendarScrollViewTopLeft = tester.GetTopLeft(Find.ByType<CustomScrollView>());
-            Point dayHeadersGridBottomLeft = tester.GetBottomLeft(Find.ByType<GridView>().First);
-            Assert.Equal(0.0, calendarScrollViewTopLeft.X);
-            Assert.Equal(dayHeadersGridBottomLeft.Y, calendarScrollViewTopLeft.Y);
+            Offset calendarScrollViewTopLeft = tester.GetTopLeft(Find.ByType<CustomScrollView>());
+            Offset dayHeadersGridBottomLeft = tester.GetBottomLeft(Find.ByType<GridView>().First);
+            Assert.Equal(0.0, calendarScrollViewTopLeft.Dx);
+            Assert.Equal(dayHeadersGridBottomLeft.Dy, calendarScrollViewTopLeft.Dy);
         });
     }
 

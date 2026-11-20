@@ -253,7 +253,7 @@ internal sealed class RenderButtonBarRow : RenderFlex
         {
             var childParentData = (FlexParentData)child.parentData!;
             child.Layout(childConstraints, parentUsesSize: true);
-            childParentData.offset = new Point(ResolveOverflowX(child.Size.Width), currentHeight);
+            childParentData.offset = new Offset(ResolveOverflowX(child.Size.Width), currentHeight);
             currentHeight += child.Size.Height;
             child = VerticalDirection == VerticalDirection.Down
                 ? ChildAfter(child)

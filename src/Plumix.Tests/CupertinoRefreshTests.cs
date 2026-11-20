@@ -259,7 +259,7 @@ public sealed class CupertinoRefreshTests
             Size = Constraints.Constrain(new Size(Constraints.MaxWidth, height));
         }
 
-        public override void Paint(PaintingContext context, Point offset)
+        public override void Paint(PaintingContext context, Offset offset)
         {
         }
     }

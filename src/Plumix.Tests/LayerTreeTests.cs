@@ -307,7 +307,7 @@ public sealed class LayerTreeTests
     public void PictureLayer_PrintsPictureAndRasterCacheHintsInDebugInfo()
     {
         Picture picture = new PictureRecorder().EndRecording();
-        var layer = new PictureLayer(new Rect(0, 0, 100, 100))
+        var layer = new PictureLayer(DartGeometry.RectFromLTWH(0, 0, 100, 100))
         {
             Picture = picture,
             IsComplexHint = true,
@@ -332,7 +332,7 @@ public sealed class LayerTreeTests
     [DebugOnlyFact]
     public void MutatingPictureLayerFields_TriggersNeedsAddToScene()
     {
-        var pictureLayer = new PictureLayer(new Rect(0, 0, 10, 10));
+        var pictureLayer = new PictureLayer(DartGeometry.RectFromLTWH(0, 0, 10, 10));
         CheckNeedsAddToScene(pictureLayer, () => pictureLayer.Picture = new PictureRecorder().EndRecording());
 
         pictureLayer.IsComplexHint = false;
@@ -345,45 +345,45 @@ public sealed class LayerTreeTests
     [DebugOnlyFact]
     public void MutatingOffsetAndOpacityLayerFields_TriggersNeedsAddToScene()
     {
-        var offsetLayer = new OffsetLayer(new Point(0, 0));
-        CheckNeedsAddToScene(offsetLayer, () => offsetLayer.Offset = new Point(1, 1));
+        var offsetLayer = new OffsetLayer(new Offset(0, 0));
+        CheckNeedsAddToScene(offsetLayer, () => offsetLayer.Offset = new Offset(1, 1));
 
-        var opacityLayer = new OpacityLayer(alpha: 0, offset: new Point(0, 0));
+        var opacityLayer = new OpacityLayer(alpha: 0, offset: new Offset(0, 0));
         CheckNeedsAddToScene(opacityLayer, () => opacityLayer.Alpha = 1);
-        CheckNeedsAddToScene(opacityLayer, () => opacityLayer.Offset = new Point(1, 1));
+        CheckNeedsAddToScene(opacityLayer, () => opacityLayer.Offset = new Offset(1, 1));
     }
 
     [DebugOnlyFact]
     public void MutatingClipLayerFields_TriggersNeedsAddToScene()
     {
-        var clipRectLayer = new ClipRectLayer { ClipRect = new Rect(0, 0, 10, 10) };
-        CheckNeedsAddToScene(clipRectLayer, () => clipRectLayer.ClipRect = new Rect(1, 1, 10, 10));
+        var clipRectLayer = new ClipRectLayer { ClipRect = DartGeometry.RectFromLTWH(0, 0, 10, 10) };
+        CheckNeedsAddToScene(clipRectLayer, () => clipRectLayer.ClipRect = DartGeometry.RectFromLTWH(1, 1, 10, 10));
         CheckNeedsAddToScene(clipRectLayer, () => clipRectLayer.ClipBehavior = Clip.AntiAlias);
 
         var clipRRectLayer = new ClipRRectLayer
         {
-            ClipRRect = RRect.FromRectAndRadius(new Rect(0, 0, 10, 10), Radius.Zero),
+            ClipRRect = RRect.FromRectAndRadius(DartGeometry.RectFromLTWH(0, 0, 10, 10), Radius.Zero),
         };
         CheckNeedsAddToScene(
             clipRRectLayer,
-            () => clipRRectLayer.ClipRRect = RRect.FromRectAndRadius(new Rect(1, 1, 10, 10), Radius.Zero));
+            () => clipRRectLayer.ClipRRect = RRect.FromRectAndRadius(DartGeometry.RectFromLTWH(1, 1, 10, 10), Radius.Zero));
         CheckNeedsAddToScene(clipRRectLayer, () => clipRRectLayer.ClipBehavior = Clip.HardEdge);
 
         var clipRSuperellipseLayer = new ClipRSuperellipseLayer
         {
-            ClipRSuperellipse = RSuperellipse.FromRectAndRadius(new Rect(0, 0, 10, 10), Radius.Zero),
+            ClipRSuperellipse = RSuperellipse.FromRectAndRadius(DartGeometry.RectFromLTWH(0, 0, 10, 10), Radius.Zero),
         };
         CheckNeedsAddToScene(
             clipRSuperellipseLayer,
             () => clipRSuperellipseLayer.ClipRSuperellipse =
-                RSuperellipse.FromRectAndRadius(new Rect(1, 1, 10, 10), Radius.Zero));
+                RSuperellipse.FromRectAndRadius(DartGeometry.RectFromLTWH(1, 1, 10, 10), Radius.Zero));
         CheckNeedsAddToScene(clipRSuperellipseLayer, () => clipRSuperellipseLayer.ClipBehavior = Clip.HardEdge);
 
         var clipPathLayer = new ClipPathLayer { ClipPath = new Plumix.UI.Path() };
         CheckNeedsAddToScene(clipPathLayer, () =>
         {
             var newPath = new Plumix.UI.Path();
-            newPath.AddRect(new Rect(0, 0, 10, 10));
+            newPath.AddRect(DartGeometry.RectFromLTWH(0, 0, 10, 10));
             clipPathLayer.ClipPath = newPath;
         });
         CheckNeedsAddToScene(clipPathLayer, () => clipPathLayer.ClipBehavior = Clip.AntiAliasWithSaveLayer);
@@ -400,8 +400,8 @@ public sealed class LayerTreeTests
             colorFilterLayer,
             () => colorFilterLayer.ColorFilter = new ColorFilter.Mode(Colors.Blue, BlendMode.Color));
 
-        var shaderMaskLayer = new ShaderMaskLayer { MaskRect = new Rect(0, 0, 10, 10) };
-        CheckNeedsAddToScene(shaderMaskLayer, () => shaderMaskLayer.MaskRect = new Rect(1, 1, 10, 10));
+        var shaderMaskLayer = new ShaderMaskLayer { MaskRect = DartGeometry.RectFromLTWH(0, 0, 10, 10) };
+        CheckNeedsAddToScene(shaderMaskLayer, () => shaderMaskLayer.MaskRect = DartGeometry.RectFromLTWH(1, 1, 10, 10));
         CheckNeedsAddToScene(shaderMaskLayer, () => shaderMaskLayer.BlendMode = BlendMode.Source);
         CheckNeedsAddToScene(
             shaderMaskLayer,
@@ -445,7 +445,7 @@ public sealed class LayerTreeTests
     [Fact]
     public void Layers_DescribeClipBounds()
     {
-        var bounds = new Rect(10, 10, 20, 20);
+        var bounds = DartGeometry.RectFromLTWH(10, 10, 20, 20);
         RRect rrBounds = RRect.FromRectAndRadius(bounds, new Radius(2, 2));
         RSuperellipse rseBounds = RSuperellipse.FromRectAndRadius(bounds, new Radius(2, 2));
         var path = new Plumix.UI.Path();
@@ -657,7 +657,7 @@ public sealed class LayerTreeTests
     public void PaintingContext_AddCompositionCallback_ObservesItsContainerLayer()
     {
         var root = new OffsetLayer();
-        var context = new PaintingContext(root, new Rect(0, 0, 10, 10));
+        var context = new PaintingContext(root, DartGeometry.RectFromLTWH(0, 0, 10, 10));
         Layer? observed = null;
         context.AddCompositionCallback(layer => observed = layer);
         root.BuildScene(new SceneBuilder()).Dispose();
@@ -691,16 +691,16 @@ public sealed class LayerTreeTests
         var child = new ContainerLayer();
 
         Matrix4 offsetTransform = Matrix4.Identity();
-        new OffsetLayer(new Point(3, 4)).ApplyTransform(child, offsetTransform);
+        new OffsetLayer(new Offset(3, 4)).ApplyTransform(child, offsetTransform);
         Assert.Equal(Matrix4.TranslationValues(3, 4, 0), offsetTransform);
 
         Matrix4 clipTransform = Matrix4.Identity();
-        new ClipRectLayer { ClipRect = new Rect(0, 0, 1, 1) }.ApplyTransform(child, clipTransform);
+        new ClipRectLayer { ClipRect = DartGeometry.RectFromLTWH(0, 0, 1, 1) }.ApplyTransform(child, clipTransform);
         Assert.Equal(Matrix4.Identity(), clipTransform);
 
         // Before the first composite a TransformLayer applies its transform without its offset; after it,
         // the effective transform T(offset) * transform.
-        var transformLayer = new TransformLayer(Matrix4.Diagonal3Values(2, 3, 1), new Point(5, 7));
+        var transformLayer = new TransformLayer(Matrix4.Diagonal3Values(2, 3, 1), new Offset(5, 7));
         transformLayer.Append(new ContainerLayer());
         Matrix4 beforeComposite = Matrix4.Identity();
         transformLayer.ApplyTransform(child, beforeComposite);
@@ -714,7 +714,7 @@ public sealed class LayerTreeTests
         Assert.Equal(expected, afterComposite);
 
         Matrix4 leaderTransform = Matrix4.Identity();
-        new LeaderLayer(new LayerLink(), new Point(9, 11)).ApplyTransform(null, leaderTransform);
+        new LeaderLayer(new LayerLink(), new Offset(9, 11)).ApplyTransform(null, leaderTransform);
         Assert.Equal(Matrix4.TranslationValues(9, 11, 0), leaderTransform);
     }
 
@@ -725,14 +725,14 @@ public sealed class LayerTreeTests
         const int outsideLayer = 1000;
         var root = new ContainerLayer();
         root.Append(new AnnotatedRegionLayer<int>(outsideLayer));
-        var leader = new LeaderLayer(new LayerLink(), new Point(-10, 0));
+        var leader = new LeaderLayer(new LayerLink(), new Offset(-10, 0));
         leader.Append(new AnnotatedRegionLayer<int>(insideLayer, size: new Size(10, 10), opaque: true));
         root.Append(leader);
 
-        AnnotationEntry<int> inside = Assert.Single(root.FindAllAnnotations<int>(new Point(-5, 5)).Entries);
-        Assert.Equal(new AnnotationEntry<int>(insideLayer, new Point(5, 5)), inside);
-        AnnotationEntry<int> outside = Assert.Single(root.FindAllAnnotations<int>(new Point(5, 5)).Entries);
-        Assert.Equal(new AnnotationEntry<int>(outsideLayer, new Point(5, 5)), outside);
+        AnnotationEntry<int> inside = Assert.Single(root.FindAllAnnotations<int>(new Offset(-5, 5)).Entries);
+        Assert.Equal(new AnnotationEntry<int>(insideLayer, new Offset(5, 5)), inside);
+        AnnotationEntry<int> outside = Assert.Single(root.FindAllAnnotations<int>(new Offset(5, 5)).Entries);
+        Assert.Equal(new AnnotationEntry<int>(outsideLayer, new Offset(5, 5)), outside);
     }
 
     [Fact]
@@ -741,12 +741,12 @@ public sealed class LayerTreeTests
         var link = new LayerLink();
         var root = new OffsetLayer();
         root.Attach(new object());
-        var leaderParent = new TransformLayer(Matrix4.Diagonal3Values(2, 2, 1), new Point(10, 20));
-        var leader = new LeaderLayer(link, new Point(3, 4));
+        var leaderParent = new TransformLayer(Matrix4.Diagonal3Values(2, 2, 1), new Offset(10, 20));
+        var leader = new LeaderLayer(link, new Offset(3, 4));
         leaderParent.Append(leader);
         root.Append(leaderParent);
-        var followerParent = new OffsetLayer(new Point(100, 200));
-        var follower = new FollowerLayer(link, unlinkedOffset: new Point(7, 9), linkedOffset: new Point(1, 1));
+        var followerParent = new OffsetLayer(new Offset(100, 200));
+        var follower = new FollowerLayer(link, unlinkedOffset: new Offset(7, 9), linkedOffset: new Offset(1, 1));
         followerParent.Append(follower);
         root.Append(followerParent);
 
@@ -819,7 +819,7 @@ public sealed class LayerTreeTests
         pipeline.Attach(renderView);
         PumpFrame(pipeline);
 
-        Assert.Equal(new Point(20, 30), followerChild.LocalToGlobal(default));
+        Assert.Equal(new Offset(20, 30), followerChild.LocalToGlobal(default));
         int followerPaints = followerBoundary.PaintCount;
 
         targetData.Left = 50;
@@ -829,7 +829,7 @@ public sealed class LayerTreeTests
 
         // The follower's repaint boundary was not repainted, yet the composite moved it with the leader.
         Assert.Equal(followerPaints, followerBoundary.PaintCount);
-        Assert.Equal(new Point(50, 60), followerChild.LocalToGlobal(default));
+        Assert.Equal(new Offset(50, 60), followerChild.LocalToGlobal(default));
     }
 
     [DebugOnlyFact]
@@ -975,7 +975,7 @@ public sealed class LayerTreeTests
             Size = Constraints.Constrain(preferredSize);
         }
 
-        public override void Paint(PaintingContext context, Point offset)
+        public override void Paint(PaintingContext context, Offset offset)
         {
         }
     }
@@ -986,7 +986,7 @@ public sealed class LayerTreeTests
 
         public override bool IsRepaintBoundary => true;
 
-        public override void Paint(PaintingContext context, Point offset)
+        public override void Paint(PaintingContext context, Offset offset)
         {
             PaintCount += 1;
             base.Paint(context, offset);
@@ -1005,7 +1005,7 @@ public sealed class LayerTreeTests
 
     private sealed class GlobalToLocalWhileCompositingRenderObject : RenderProxyBox
     {
-        public override void Paint(PaintingContext context, Point offset)
+        public override void Paint(PaintingContext context, Offset offset)
         {
             if (Layer == null)
             {
@@ -1061,7 +1061,7 @@ public sealed class LayerTreeTests
 
         public override bool IsRepaintBoundary => true;
 
-        public override void Paint(PaintingContext context, Point offset)
+        public override void Paint(PaintingContext context, Offset offset)
         {
             if (LayerLink != null)
             {

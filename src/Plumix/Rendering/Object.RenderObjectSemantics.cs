@@ -174,11 +174,11 @@ internal sealed record SemanticsGeometry(
 
     internal static Rect Intersect(Rect a, Rect b)
     {
-        double left = Math.Max(a.X, b.X);
-        double top = Math.Max(a.Y, b.Y);
+        double left = Math.Max(a.Left, b.Left);
+        double top = Math.Max(a.Top, b.Top);
         double right = Math.Min(a.Right, b.Right);
         double bottom = Math.Min(a.Bottom, b.Bottom);
-        return new Rect(left, top, Math.Max(0.0, right - left), Math.Max(0.0, bottom - top));
+        return DartGeometry.RectFromLTWH(left, top, Math.Max(0.0, right - left), Math.Max(0.0, bottom - top));
     }
 
     internal static bool IsEmpty(Rect rect) => rect.Width <= 0 || rect.Height <= 0;
@@ -1181,11 +1181,11 @@ internal sealed class RenderObjectSemantics : DiagnosticableTree, ISemanticsFrag
 
     private static Rect ExpandToInclude(Rect current, Rect addition)
     {
-        double minX = Math.Min(current.X, addition.X);
-        double minY = Math.Min(current.Y, addition.Y);
+        double minX = Math.Min(current.Left, addition.Left);
+        double minY = Math.Min(current.Top, addition.Top);
         double maxX = Math.Max(current.Right, addition.Right);
         double maxY = Math.Max(current.Bottom, addition.Bottom);
-        return new Rect(minX, minY, maxX - minX, maxY - minY);
+        return DartGeometry.RectFromLTWH(minX, minY, maxX - minX, maxY - minY);
     }
 
     // ---- invalidation --------------------------------------------------------------------------

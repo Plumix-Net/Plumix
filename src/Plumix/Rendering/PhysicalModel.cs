@@ -173,7 +173,7 @@ public class RenderPhysicalModel : RenderPhysicalModelBase<RRect>
         get
         {
             Debug.Assert(HasSize);
-            var rect = new Rect(new Point(0, 0), Size);
+            var rect = DartGeometry.RectFromOffsetAndSize(new Offset(0, 0), Size);
             return _shape switch
             {
                 BoxShape.Rectangle => (BorderRadius ?? Rendering.BorderRadius.Zero).ToRRect(rect),
@@ -184,7 +184,7 @@ public class RenderPhysicalModel : RenderPhysicalModelBase<RRect>
     }
 
     /// <inheritdoc />
-    public override bool HitTest(BoxHitTestResult result, Point position)
+    public override bool HitTest(BoxHitTestResult result, Offset position)
     {
         if (Clipper is not null)
         {
@@ -199,7 +199,7 @@ public class RenderPhysicalModel : RenderPhysicalModelBase<RRect>
     }
 
     /// <inheritdoc />
-    public override void Paint(PaintingContext context, Point offset)
+    public override void Paint(PaintingContext context, Offset offset)
     {
         if (Child is null)
         {
@@ -243,7 +243,7 @@ public class RenderPhysicalModel : RenderPhysicalModelBase<RRect>
         Layer = context.PushClipRRect(
             NeedsCompositing,
             offset,
-            new Rect(new Point(0, 0), Size),
+            DartGeometry.RectFromOffsetAndSize(new Offset(0, 0), Size),
             _clip,
             (clippedContext, clippedOffset) =>
             {
@@ -306,13 +306,13 @@ public class RenderPhysicalShape : RenderPhysicalModelBase<Path>
         get
         {
             var path = new Path();
-            path.AddRect(new Rect(new Point(0, 0), Size));
+            path.AddRect(DartGeometry.RectFromOffsetAndSize(new Offset(0, 0), Size));
             return path;
         }
     }
 
     /// <inheritdoc />
-    public override bool HitTest(BoxHitTestResult result, Point position)
+    public override bool HitTest(BoxHitTestResult result, Offset position)
     {
         if (Clipper is not null)
         {
@@ -327,7 +327,7 @@ public class RenderPhysicalShape : RenderPhysicalModelBase<Path>
     }
 
     /// <inheritdoc />
-    public override void Paint(PaintingContext context, Point offset)
+    public override void Paint(PaintingContext context, Offset offset)
     {
         if (Child is null)
         {
@@ -369,7 +369,7 @@ public class RenderPhysicalShape : RenderPhysicalModelBase<Path>
         Layer = context.PushClipPath(
             NeedsCompositing,
             offset,
-            new Rect(new Point(0, 0), Size),
+            DartGeometry.RectFromOffsetAndSize(new Offset(0, 0), Size),
             _clip,
             (clippedContext, clippedOffset) =>
             {

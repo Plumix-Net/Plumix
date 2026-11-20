@@ -361,7 +361,7 @@ public sealed class RenderImage : RenderBox
 
     protected override Size ComputeDryLayout(BoxConstraints constraints) => SizeForConstraints(constraints);
 
-    protected override bool HitTestSelf(Point position) => true;
+    protected override bool HitTestSelf(Offset position) => true;
 
     protected override void OnAttach()
     {
@@ -375,7 +375,7 @@ public sealed class RenderImage : RenderBox
         base.OnDetach();
     }
 
-    public override void Paint(PaintingContext context, Point offset)
+    public override void Paint(PaintingContext context, Offset offset)
     {
         if (_image is null)
         {
@@ -388,7 +388,7 @@ public sealed class RenderImage : RenderBox
             : null;
         ImagePainting.PaintImage(
             canvas: context.Canvas,
-            rect: new Rect(offset, Size),
+            rect: DartGeometry.RectFromOffsetAndSize(offset, Size),
             image: _image,
             debugImageLabel: DebugImageLabel,
             scale: _scale,

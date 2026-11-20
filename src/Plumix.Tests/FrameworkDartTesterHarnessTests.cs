@@ -104,22 +104,22 @@ public sealed class FrameworkDartTesterHarnessTests : IDisposable
                     child: new GestureDetector(
                         onTap: () => taps++,
                         onLongPress: () => longPresses++,
-                        onPanUpdate: details => dragged += details.Delta.X,
+                        onPanUpdate: details => dragged += details.Delta.Dx,
                         behavior: HitTestBehavior.Opaque,
                         child: new SizedBox(width: 100, height: 50))))));
         Finder box = Find.ByType<SizedBox>();
 
-        Assert.Equal(new Point(10, 20), tester.GetTopLeft(box));
-        Assert.Equal(new Point(110, 20), tester.GetTopRight(box));
-        Assert.Equal(new Point(10, 70), tester.GetBottomLeft(box));
-        Assert.Equal(new Point(110, 70), tester.GetBottomRight(box));
-        Assert.Equal(new Point(60, 45), tester.GetCenter(box));
-        Assert.Equal(new Rect(10, 20, 100, 50), tester.GetRect(box));
+        Assert.Equal(new Offset(10, 20), tester.GetTopLeft(box));
+        Assert.Equal(new Offset(110, 20), tester.GetTopRight(box));
+        Assert.Equal(new Offset(10, 70), tester.GetBottomLeft(box));
+        Assert.Equal(new Offset(110, 70), tester.GetBottomRight(box));
+        Assert.Equal(new Offset(60, 45), tester.GetCenter(box));
+        Assert.Equal(DartGeometry.RectFromLTWH(10, 20, 100, 50), tester.GetRect(box));
         Assert.Equal(new Size(100, 50), tester.GetSize(box));
 
         tester.Tap(box);
         tester.PumpAndSettle();
-        tester.TapAt(new Point(20, 30));
+        tester.TapAt(new Offset(20, 30));
         tester.PumpAndSettle();
         Assert.Equal(2, taps);
 
@@ -127,7 +127,7 @@ public sealed class FrameworkDartTesterHarnessTests : IDisposable
         tester.PumpAndSettle();
         Assert.Equal(1, longPresses);
 
-        tester.Drag(box, new Vector(40, 0));
+        tester.Drag(box, new Offset(40, 0));
         tester.PumpAndSettle();
         Assert.True(dragged > 0);
     }

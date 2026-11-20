@@ -164,8 +164,8 @@ internal sealed class SelectionHandlesDemoPageState : State
             startHandleLayerLink: _startHandleLink,
             endHandleLayerLink: _endHandleLink,
             toolbarLayerLink: _toolbarLink,
-            onStartHandleDragUpdate: details => MoveStart(details.Delta.X),
-            onEndHandleDragUpdate: details => MoveEnd(details.Delta.X));
+            onStartHandleDragUpdate: details => MoveStart(details.Delta.Dx),
+            onEndHandleDragUpdate: details => MoveEnd(details.Delta.Dx));
         SyncOverlay();
         return _overlay;
     }
@@ -203,8 +203,8 @@ internal sealed class SelectionHandlesDemoPageState : State
     {
         return
         [
-            new TextSelectionPoint(new Point(EffectiveStartX, LineTop), TextDirection.Ltr),
-            new TextSelectionPoint(new Point(_endX, LineTop), TextDirection.Ltr),
+            new TextSelectionPoint(new Offset(EffectiveStartX, LineTop), TextDirection.Ltr),
+            new TextSelectionPoint(new Offset(_endX, LineTop), TextDirection.Ltr),
         ];
     }
 

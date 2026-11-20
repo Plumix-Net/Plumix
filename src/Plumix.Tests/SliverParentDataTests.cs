@@ -32,15 +32,15 @@ public class SliverParentDataTests
         SliverLogicalParentData logical = new SliverLogicalContainerParentData();
         SliverPhysicalParentData physical = new SliverPhysicalContainerParentData();
         logical.LayoutOffset = 12.5;
-        physical.PaintOffset = new Point(3, 7);
+        physical.PaintOffset = new Offset(3, 7);
         physical.CrossAxisFlex = 2;
 
         Assert.Equal("layoutOffset=12.5", logical.ToString());
         Assert.Equal("paintOffset=Offset(3.0, 7.0)", physical.ToString());
         Assert.Equal(2, physical.CrossAxisFlex);
         Assert.Equal(physical.PaintOffset, physical.PaintOffset);
-        physical.PaintOffset = new Point(9, 11);
-        Assert.Equal(new Point(9, 11), physical.PaintOffset);
+        physical.PaintOffset = new Offset(9, 11);
+        Assert.Equal(new Offset(9, 11), physical.PaintOffset);
     }
 
     [Theory]
@@ -51,11 +51,11 @@ public class SliverParentDataTests
         SliverPhysicalParentData data = container
             ? new SliverPhysicalContainerParentData()
             : new SliverPhysicalParentData();
-        data.PaintOffset = new Point(3, 7);
+        data.PaintOffset = new Offset(3, 7);
         var transform = Matrix4.Diagonal3Values(2, 4, 1);
         data.ApplyPaintTransform(transform);
 
-        Assert.Equal(new Point(6, 28), MatrixUtils.TransformPoint(transform, default));
+        Assert.Equal(new Offset(6, 28), MatrixUtils.TransformPoint(transform, default));
         Assert.NotEqual(0, transform.Determinant());
     }
 
@@ -122,11 +122,11 @@ public class SliverParentDataTests
         Assert.Equal(1, data.CrossAxisFlex);
 
         data.CrossAxisFlex = null;
-        data.PaintOffset = new Point(4, 8);
+        data.PaintOffset = new Offset(4, 8);
         group.SetupParentData(child);
         Assert.Same(data, child.parentData);
         Assert.Null(data.CrossAxisFlex);
-        Assert.Equal(new Point(4, 8), data.PaintOffset);
+        Assert.Equal(new Offset(4, 8), data.PaintOffset);
     }
 
     [Fact]

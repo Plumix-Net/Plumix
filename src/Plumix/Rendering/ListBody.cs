@@ -96,7 +96,7 @@ public class RenderListBody : RenderBox,
             while (child is not null)
             {
                 child.Layout(childConstraints, parentUsesSize: true);
-                ((ListBodyParentData)child.parentData!).offset = new Point(mainAxisExtent, 0);
+                ((ListBodyParentData)child.parentData!).offset = new Offset(mainAxisExtent, 0);
                 mainAxisExtent += child.Size.Width;
                 child = ChildAfter(child);
             }
@@ -113,7 +113,7 @@ public class RenderListBody : RenderBox,
         while (child is not null)
         {
             child.Layout(verticalChildConstraints, parentUsesSize: true);
-            ((ListBodyParentData)child.parentData!).offset = new Point(0, mainAxisExtent);
+            ((ListBodyParentData)child.parentData!).offset = new Offset(0, mainAxisExtent);
             mainAxisExtent += child.Size.Height;
             child = ChildAfter(child);
         }
@@ -122,14 +122,14 @@ public class RenderListBody : RenderBox,
         if (AxisDirection == AxisDirection.Up) ReverseOffsets(horizontal: false, mainAxisExtent);
     }
 
-    public override void Paint(PaintingContext ctx, Point offset) => _container.DefaultPaint(ctx, offset);
+    public override void Paint(PaintingContext ctx, Offset offset) => _container.DefaultPaint(ctx, offset);
 
-    protected override bool HitTestChildren(BoxHitTestResult result, Point position) =>
+    protected override bool HitTestChildren(BoxHitTestResult result, Offset position) =>
         _container.DefaultHitTestChildren(result, position);
 
-    public void DefaultPaint(PaintingContext ctx, Point offset) => _container.DefaultPaint(ctx, offset);
+    public void DefaultPaint(PaintingContext ctx, Offset offset) => _container.DefaultPaint(ctx, offset);
 
-    public bool DefaultHitTestChildren(BoxHitTestResult result, Point position) =>
+    public bool DefaultHitTestChildren(BoxHitTestResult result, Offset position) =>
         _container.DefaultHitTestChildren(result, position);
 
     public override void VisitChildren(Action<RenderObject> visitor)
@@ -212,8 +212,8 @@ public class RenderListBody : RenderBox,
         {
             var parentData = (ListBodyParentData)child.parentData!;
             parentData.offset = horizontal
-                ? new Point(mainAxisExtent - parentData.offset.X - child.Size.Width, 0)
-                : new Point(0, mainAxisExtent - parentData.offset.Y - child.Size.Height);
+                ? new Offset(mainAxisExtent - parentData.offset.Dx - child.Size.Width, 0)
+                : new Offset(0, mainAxisExtent - parentData.offset.Dy - child.Size.Height);
         }
     }
 

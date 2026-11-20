@@ -52,15 +52,15 @@ public sealed class DragBoundary : InheritedWidget
                 throw new InvalidOperationException("DragBoundary is not attached to the render tree.");
             }
 
-            Point topLeft = MatrixUtils.TransformPoint(transform, default);
-            Point bottomRight = MatrixUtils.TransformPoint(
+            Offset topLeft = MatrixUtils.TransformPoint(transform, default);
+            Offset bottomRight = MatrixUtils.TransformPoint(
                 transform,
-                new Point(renderBox.Size.Width, renderBox.Size.Height));
-            boundary = new Rect(topLeft, bottomRight);
+                new Offset(renderBox.Size.Width, renderBox.Size.Height));
+            boundary = DartGeometry.RectFromCorners(topLeft, bottomRight);
         }
         else
         {
-            boundary = new Rect(default, renderBox.Size);
+            boundary = DartGeometry.RectFromOffsetAndSize(default, renderBox.Size);
         }
 
         return new RectDragBoundaryDelegate(boundary);
@@ -113,15 +113,15 @@ public sealed class DragBoundary : InheritedWidget
                 draggedObject.Top,
                 boundary.Top,
                 boundary.Bottom - draggedObject.Height);
-            return new Rect(left, top, draggedObject.Width, draggedObject.Height);
+            return DartGeometry.RectFromLTWH(left, top, draggedObject.Width, draggedObject.Height);
         }
 
-        private static bool Contains(Rect rect, Point point)
+        private static bool Contains(Rect rect, Offset point)
         {
-            return point.X >= rect.Left
-                   && point.X < rect.Right
-                   && point.Y >= rect.Top
-                   && point.Y < rect.Bottom;
+            return point.Dx >= rect.Left
+                   && point.Dx < rect.Right
+                   && point.Dy >= rect.Top
+                   && point.Dy < rect.Bottom;
         }
     }
 }

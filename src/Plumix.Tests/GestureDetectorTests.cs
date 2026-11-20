@@ -375,7 +375,7 @@ public sealed class GestureDetectorTests
     [Fact]
     public void Build_ConfiguresTheScaleRecognizerIncludingTheTrackpadKnobs()
     {
-        var factor = new Point(0.0, -0.01);
+        var factor = new Offset(0.0, -0.01);
         var detector = new GestureDetector(
             onScaleStart: _ => { },
             onScaleUpdate: _ => { },
@@ -399,7 +399,7 @@ public sealed class GestureDetectorTests
         var detector = new GestureDetector(onScaleUpdate: _ => { });
         Assert.Equal(ScaleGestureRecognizer.KDefaultTrackpadScrollToScaleFactor,
             detector.TrackpadScrollToScaleFactor);
-        Assert.Equal(new Point(0.0, -1.0 / 200.0), detector.TrackpadScrollToScaleFactor);
+        Assert.Equal(new Offset(0.0, -1.0 / 200.0), detector.TrackpadScrollToScaleFactor);
         Assert.False(detector.TrackpadScrollCausesScale);
         Assert.Equal(DragStartBehavior.Start, detector.DragStartBehavior);
         Assert.False(detector.ExcludeFromSemantics);
@@ -853,8 +853,8 @@ public sealed class GestureDetectorTests
     public void DefaultDelegate_ReplaysTapAtTheRenderObjectCentre()
     {
         var log = new List<string>();
-        Point downGlobal = default;
-        Point downLocal = default;
+        Offset downGlobal = default;
+        Offset downLocal = default;
         var harness = new ScrollSemanticsHarness(CenteredDetector(new RawGestureDetector(
             gestures: new Dictionary<Type, IGestureRecognizerFactory>
             {
@@ -882,16 +882,16 @@ public sealed class GestureDetectorTests
         Assert.True(harness.PerformSemanticsAction(node.Id, SemanticsActions.Tap));
 
         Assert.Equal(["tapDown", "tapUp", "tap"], log);
-        Assert.Equal(new Point(10.0, 10.0), downLocal);
-        Assert.Equal(new Point(400.0, 300.0), downGlobal);
+        Assert.Equal(new Offset(10.0, 10.0), downLocal);
+        Assert.Equal(new Offset(400.0, 300.0), downGlobal);
     }
 
     [Fact]
     public void DefaultDelegate_ReplaysTheLongPressSequenceWithoutMoveUpdates()
     {
         var log = new List<string>();
-        Point startLocal = default;
-        Point startGlobal = default;
+        Offset startLocal = default;
+        Offset startGlobal = default;
         var harness = new ScrollSemanticsHarness(CenteredDetector(new RawGestureDetector(
             gestures: new Dictionary<Type, IGestureRecognizerFactory>
             {
@@ -920,8 +920,8 @@ public sealed class GestureDetectorTests
         Assert.True(harness.PerformSemanticsAction(node.Id, SemanticsActions.LongPress));
 
         Assert.Equal(["LPDown", "LPStart", "LP", "LPEnd", "LPUp"], log);
-        Assert.Equal(new Point(10.0, 10.0), startLocal);
-        Assert.Equal(new Point(400.0, 300.0), startGlobal);
+        Assert.Equal(new Offset(10.0, 10.0), startLocal);
+        Assert.Equal(new Offset(400.0, 300.0), startGlobal);
     }
 
     [Fact]
@@ -976,7 +976,7 @@ public sealed class GestureDetectorTests
         Assert.Null(panEnd.PrimaryVelocity);
         Assert.Equal(Velocity.Zero, horizontalEnd.Velocity);
         // The end position is the centre plus the update delta the scroll action synthesized.
-        Assert.Equal(new Point(10.0 + (20.0 * -0.8), 10.0), horizontalEnd.LocalPosition);
+        Assert.Equal(new Offset(10.0 + (20.0 * -0.8), 10.0), horizontalEnd.LocalPosition);
 
         // Running the action again produces the identical sequence — no state carries over.
         log.Clear();

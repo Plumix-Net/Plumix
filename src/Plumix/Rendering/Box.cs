@@ -25,7 +25,7 @@ public delegate BoxConstraints BoxConstraintsTransform(BoxConstraints constraint
 public class BoxParentData : ParentData
 {
     /// The offset at which to paint the child in the parent's coordinate system.
-    public Point offset = new Point();
+    public Offset offset = new Offset();
 
     /// <inheritdoc />
     public override string ToString() => $"offset={DartFormat.Offset(offset)}";

@@ -125,7 +125,7 @@ public sealed class CupertinoListTileTests : IDisposable
             0xFF636366u,
             Assert.IsType<SolidColorBrush>(chevron.Foreground).Color.ToUInt32());
 
-        Tap(harness.RenderView, new Point(160.0, 120.0), 801);
+        Tap(harness.RenderView, new Offset(160.0, 120.0), 801);
         harness.Pump(ViewSize);
         Assert.Equal(0xFF445566u, BackgroundColor(harness.RenderView).ToARGB32());
 
@@ -155,7 +155,7 @@ public sealed class CupertinoListTileTests : IDisposable
         SemanticsNode active = Assert.IsType<SemanticsNode>(FindSemantics(root, "Active"));
         Assert.True(active.Actions.HasFlag(SemanticsActions.Tap));
 
-        Tap(activeHarness.RenderView, new Point(160.0, 120.0), 802);
+        Tap(activeHarness.RenderView, new Offset(160.0, 120.0), 802);
         Assert.Equal(1, calls);
     }
 
@@ -231,7 +231,7 @@ public sealed class CupertinoListTileTests : IDisposable
         return Assert.Single(FindAll<RenderColoredBox>(root)).Color;
     }
 
-    private static double GlobalX(RenderBox box) => box.LocalToGlobal(default).X;
+    private static double GlobalX(RenderBox box) => box.LocalToGlobal(default).Dx;
 
     private static RenderParagraph? FindParagraph(RenderObject? root, string text)
     {
@@ -280,7 +280,7 @@ public sealed class CupertinoListTileTests : IDisposable
         return null;
     }
 
-    private static void Tap(RenderView renderView, Point position, int pointer)
+    private static void Tap(RenderView renderView, Offset position, int pointer)
     {
         DateTime timestamp = DateTime.UtcNow;
         GestureBinding.Instance.HandlePointerEvent(

@@ -54,7 +54,7 @@ public sealed class SliderDartParityTestsC : IDisposable
         // Slider does not have overlay when enabled and not tapped.
         tester.PumpAndSettle();
         PaintAssert.DoesNotPaint(MaterialOf(tester), PaintPattern.Paints.Circle(color: overlayColor));
-        Point sliderCenter = tester.GetCenter(tester.ElementOfType<Slider>());
+        Offset sliderCenter = tester.GetCenter(tester.ElementOfType<Slider>());
         // Tap and hold down on the thumb to keep it active.
         TestGesture gesture = tester.CreateGesture();
         gesture.AddPointer();
@@ -144,8 +144,8 @@ public sealed class SliderDartParityTestsC : IDisposable
         Assert.False(focusNode.HasFocus);
         PaintAssert.DoesNotPaint(MaterialOf(tester), PaintPattern.Paints.Circle(color: overlayColor));
 
-        Point sliderCenter = tester.GetCenter(tester.ElementOfType<Slider>());
-        var tapLocation = new Point(sliderCenter.X + 50, sliderCenter.Y);
+        Offset sliderCenter = tester.GetCenter(tester.ElementOfType<Slider>());
+        var tapLocation = new Offset(sliderCenter.Dx + 50, sliderCenter.Dy);
 
         // Tap somewhere to bring overlay.
         TestGesture gesture = tester.CreateGesture(kind: PointerDeviceKind.Mouse);
@@ -157,7 +157,7 @@ public sealed class SliderDartParityTestsC : IDisposable
         Assert.True(focusNode.HasFocus);
         PaintAssert.Paints(MaterialOf(tester), PaintPattern.Paints.Circle(color: overlayColor));
 
-        tapLocation = new Point(sliderCenter.X - 50, sliderCenter.Y);
+        tapLocation = new Offset(sliderCenter.Dx - 50, sliderCenter.Dy);
         gesture.Down(tapLocation);
         gesture.Up();
         tester.PumpAndSettle();
@@ -193,8 +193,8 @@ public sealed class SliderDartParityTestsC : IDisposable
             valueIndicatorBox,
             PaintPattern.Paints.Scale().Path(color: theme.ColorScheme.Primary));
 
-        Point sliderCenter = tester.GetCenter(tester.ElementOfType<Slider>());
-        var tapLocation = new Point(sliderCenter.X + 50, sliderCenter.Y);
+        Offset sliderCenter = tester.GetCenter(tester.ElementOfType<Slider>());
+        var tapLocation = new Offset(sliderCenter.Dx + 50, sliderCenter.Dy);
 
         // Tap the slider by mouse to bring up the value indicator.
         TapAt(tester, tapLocation, PointerDeviceKind.Mouse);
@@ -247,8 +247,8 @@ public sealed class SliderDartParityTestsC : IDisposable
             valueIndicatorBox,
             PaintPattern.Paints.Path(color: new Color(0xff000000)).Paragraph());
 
-        Point sliderCenter = tester.GetCenter(tester.ElementOfType<Slider>());
-        var tapLocation = new Point(sliderCenter.X + 50, sliderCenter.Y);
+        Offset sliderCenter = tester.GetCenter(tester.ElementOfType<Slider>());
+        var tapLocation = new Offset(sliderCenter.Dx + 50, sliderCenter.Dy);
 
         // Tap somewhere to bring value indicator.
         TestGesture gesture = tester.CreateGesture(kind: PointerDeviceKind.Mouse);
@@ -348,7 +348,7 @@ public sealed class SliderDartParityTestsC : IDisposable
         TestGesture gesture = tester.StartGesture(
             RectCenter(tester.GetRect(tester.ElementOfType<Slider>())),
             PointerDeviceKind.Touch);
-        gesture.MoveBy(new Vector(1.0, 0.0));
+        gesture.MoveBy(new Offset(1.0, 0.0));
         tester.PumpAndSettle();
 
         // Hide Slider. Slider will dispose and unmount.
@@ -356,7 +356,7 @@ public sealed class SliderDartParityTestsC : IDisposable
         tester.PumpAndSettle();
 
         // Move Slider after unmounted.
-        gesture.MoveBy(new Vector(1.0, 0.0));
+        gesture.MoveBy(new Offset(1.0, 0.0));
         tester.PumpAndSettle();
 
         Assert.Null(tester.TakeException());
@@ -483,7 +483,7 @@ public sealed class SliderDartParityTestsC : IDisposable
         tester.Pump(GestureConstants.PressTimeout);
 
         // Less than configured touch slop, more than default touch slop
-        drag.MoveBy(new Vector(19.0, 0));
+        drag.MoveBy(new Offset(19.0, 0));
         tester.Pump();
 
         // Slider has overlay when enabled and dragged.
@@ -508,8 +508,8 @@ public sealed class SliderDartParityTestsC : IDisposable
         double value = 1.0;
         Key sliderKey = new UniqueKey();
         // (slider's left padding (overlayRadius), windowHeight / 2)
-        var startOfTheSliderTrack = new Point(24, 300);
-        var centerOfTheSlideTrack = new Point(400, 300);
+        var startOfTheSliderTrack = new Offset(24, 300);
+        var centerOfTheSlideTrack = new Offset(400, 300);
         var logs = new List<string>();
 
         Widget BuildWidget() => new MaterialApp(
@@ -561,9 +561,9 @@ public sealed class SliderDartParityTestsC : IDisposable
         double value = 1.0;
         Key sliderKey = new UniqueKey();
         // (slider's left padding (overlayRadius), windowHeight / 2)
-        var startOfTheSliderTrack = new Point(24, 300);
-        var centerOfTheSlideTrack = new Point(400, 300);
-        var endOfTheSliderTrack = new Point(800 - 24, 300);
+        var startOfTheSliderTrack = new Offset(24, 300);
+        var centerOfTheSlideTrack = new Offset(400, 300);
+        var endOfTheSliderTrack = new Offset(800 - 24, 300);
         var logs = new List<string>();
 
         Widget BuildWidget() => new MaterialApp(
@@ -620,12 +620,12 @@ public sealed class SliderDartParityTestsC : IDisposable
         double value = 1.0;
         Key sliderKey = new UniqueKey();
         // (slider's left padding (overlayRadius), windowHeight / 2)
-        var startOfTheSliderTrack = new Point(overlayRadius, 300);
-        var centerOfTheSliderTrack = new Point(400, 300);
-        var endOfTheSliderTrack = new Point(800 - overlayRadius, 300);
+        var startOfTheSliderTrack = new Offset(overlayRadius, 300);
+        var centerOfTheSliderTrack = new Offset(400, 300);
+        var endOfTheSliderTrack = new Offset(800 - overlayRadius, 300);
         // Dart's `Tween<double>(begin: start.dx, end: end.dx).transform`.
         double XPosThumb(double t) =>
-            startOfTheSliderTrack.X + (endOfTheSliderTrack.X - startOfTheSliderTrack.X) * t;
+            startOfTheSliderTrack.Dx + (endOfTheSliderTrack.Dx - startOfTheSliderTrack.Dx) * t;
         var logs = new List<string>();
 
         Widget BuildApp() => new MaterialApp(
@@ -724,9 +724,9 @@ public sealed class SliderDartParityTestsC : IDisposable
         double value = 1.0;
         Key sliderKey = new UniqueKey();
         // (slider's left padding (overlayRadius), windowHeight / 2)
-        var startOfTheSliderTrack = new Point(24, 300);
-        var centerOfTheSliderTrack = new Point(400, 300);
-        var endOfTheSliderTrack = new Point(800 - 24, 300);
+        var startOfTheSliderTrack = new Offset(24, 300);
+        var centerOfTheSliderTrack = new Offset(400, 300);
+        var endOfTheSliderTrack = new Offset(800 - 24, 300);
         var logs = new List<string>();
 
         Widget BuildApp() => new MaterialApp(
@@ -780,13 +780,13 @@ public sealed class SliderDartParityTestsC : IDisposable
         // test tap inside overlay but not on thumb, then slide
         gesture.Up();
         // default overlay radius is 12, so 10 is inside the overlay
-        gesture.Down(centerOfTheSliderTrack + new Vector(-10, 0));
+        gesture.Down(centerOfTheSliderTrack + new Offset(-10, 0));
         tester.Pump();
         // changes from 1.0 -> 0.5
         Assert.Equal(0.5, value);
         Assert.Equal(["onChangeStart", "onChanged", "onChangeEnd", "onChangeStart"], logs);
 
-        gesture.MoveTo(endOfTheSliderTrack + new Vector(-10, 0));
+        gesture.MoveTo(endOfTheSliderTrack + new Offset(-10, 0));
         tester.Pump();
         // changes from 0.5 -> 1.0
         Assert.Equal(1.0, value);
@@ -821,9 +821,9 @@ public sealed class SliderDartParityTestsC : IDisposable
             tester.GetTopLeft(tester.ElementOfType<Slider>()),
             PointerDeviceKind.Touch);
         tester.Pump(GestureConstants.LongPressTimeout);
-        gesture.MoveBy(new Vector(160.0, 0.0));
-        gesture.MoveBy(new Vector(1.0, 0.0));
-        gesture.MoveBy(new Vector(1.0, 0.0));
+        gesture.MoveBy(new Offset(160.0, 0.0));
+        gesture.MoveBy(new Offset(1.0, 0.0));
+        gesture.MoveBy(new Offset(1.0, 0.0));
         Assert.Equal(1, onChangeCallbackCount);
     }
 
@@ -849,8 +849,8 @@ public sealed class SliderDartParityTestsC : IDisposable
 
         // Calculate a specific position on the Slider.
         Rect sliderRect = tester.GetRect(tester.ElementOfType<Slider>());
-        var tapPositionLeft = new Point(sliderRect.Left + sliderRect.Width * 0.25, RectCenter(sliderRect).Y);
-        var tapPositionRight = new Point(sliderRect.Left + sliderRect.Width * 0.75, RectCenter(sliderRect).Y);
+        var tapPositionLeft = new Offset(sliderRect.Left + sliderRect.Width * 0.25, RectCenter(sliderRect).Dy);
+        var tapPositionRight = new Offset(sliderRect.Left + sliderRect.Width * 0.75, RectCenter(sliderRect).Dy);
 
         // Tap on the 25% position of the Slider.
         TapAt(tester, tapPositionLeft, PointerDeviceKind.Touch);
@@ -1188,7 +1188,7 @@ public sealed class SliderDartParityTestsC : IDisposable
             tester.PumpWidget(BuildApp(divisions: 3));
             tester.PumpAndSettle();
 
-            Point center = tester.GetCenter(tester.ElementOfType<Slider>());
+            Offset center = tester.GetCenter(tester.ElementOfType<Slider>());
             TestGesture gesture = tester.StartGesture(center, PointerDeviceKind.Touch);
             // Wait for value indicator animation to finish.
             tester.PumpAndSettle();
@@ -1228,7 +1228,7 @@ public sealed class SliderDartParityTestsC : IDisposable
 
         // Normal text
         tester.PumpWidget(BuildSlider());
-        Point center = tester.GetCenter(tester.ElementOfType<Slider>());
+        Offset center = tester.GetCenter(tester.ElementOfType<Slider>());
         TestGesture gesture = tester.StartGesture(center, PointerDeviceKind.Touch);
         tester.PumpAndSettle();
 
@@ -1246,7 +1246,7 @@ public sealed class SliderDartParityTestsC : IDisposable
     {
         using IDisposable platform = TargetPlatformVariant.Override(TargetPlatform.Android);
         using var tester = new FrameworkDartTester(fakeGestureTimers: true);
-        var log = new List<Point?>();
+        var log = new List<Offset?>();
         var loggingTrackShape = new LoggingRoundedRectSliderTrackShape(secondaryOffsetLog: log);
         var theme = new ThemeData(sliderTheme: new SliderThemeData(TrackShape: loggingTrackShape));
 
@@ -1265,11 +1265,11 @@ public sealed class SliderDartParityTestsC : IDisposable
 
         tester.PumpWidget(BuildSlider(0.2));
         tester.PumpAndSettle();
-        Assert.Equal(new Point(174.4, 300.0), log[^1]);
+        Assert.Equal(new Offset(174.4, 300.0), log[^1]);
 
         tester.PumpWidget(BuildSlider(0.5));
         tester.PumpAndSettle();
-        Assert.Equal(new Point(400.0, 300.0), log[^1]);
+        Assert.Equal(new Offset(400.0, 300.0), log[^1]);
     }
 
     // Regression test for hhttps://github.com/flutter/flutter/issues/161805
@@ -1351,10 +1351,10 @@ public sealed class SliderDartParityTestsC : IDisposable
     private static IEnumerable<RenderObject> AllRenderObjects(FrameworkDartTester tester) =>
         tester.AllElements().OfType<RenderObjectElement>().Select(element => element.RenderObject);
 
-    private static Point RectCenter(Rect rect) => new(rect.X + rect.Width / 2, rect.Y + rect.Height / 2);
+    private static Offset RectCenter(Rect rect) => new(rect.Left + rect.Width / 2, rect.Top + rect.Height / 2);
 
     // `tester.tapAt(location, kind: kind)`.
-    private static void TapAt(FrameworkDartTester tester, Point location, PointerDeviceKind kind)
+    private static void TapAt(FrameworkDartTester tester, Offset location, PointerDeviceKind kind)
     {
         TestGesture gesture = tester.StartGesture(location, kind);
         gesture.Up();
@@ -1374,18 +1374,18 @@ public sealed class SliderDartParityTestsC : IDisposable
 
 
     /// <summary>A <see cref="RoundedRectSliderTrackShape"/> that logs its paint.</summary>
-    private sealed class LoggingRoundedRectSliderTrackShape(List<Point?>? secondaryOffsetLog = null)
+    private sealed class LoggingRoundedRectSliderTrackShape(List<Offset?>? secondaryOffsetLog = null)
         : RoundedRectSliderTrackShape
     {
         public override void Paint(
             PaintingContext context,
-            Point offset,
+            Offset offset,
             RenderBox parentBox,
             SliderThemeData sliderTheme,
             Animation<double> enableAnimation,
-            Point thumbCenter,
+            Offset thumbCenter,
             TextDirection textDirection,
-            Point? secondaryOffset = null,
+            Offset? secondaryOffset = null,
             bool isEnabled = false,
             bool isDiscrete = false)
         {
@@ -1411,7 +1411,7 @@ public sealed class SliderDartParityTestsC : IDisposable
 
         public override void Paint(
             PaintingContext context,
-            Point center,
+            Offset center,
             Animation<double> activationAnimation,
             Animation<double> enableAnimation,
             bool isDiscrete,

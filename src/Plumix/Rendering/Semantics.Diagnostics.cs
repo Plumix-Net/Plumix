@@ -66,12 +66,12 @@ public sealed partial class SemanticsNode : DiagnosticableTree
             properties.Add(new StringProperty("locale", Locale.ToString()));
         }
 
-        Point? offset = Transform is { } translation ? MatrixUtils.GetAsTranslation(translation) : null;
+        Offset? offset = Transform is { } translation ? MatrixUtils.GetAsTranslation(translation) : null;
         if (offset is { } shift)
         {
             properties.Add(new DiagnosticsProperty<Rect>(
                 "rect",
-                Rect.Translate(new Vector(shift.X, shift.Y)),
+                Rect.Shift(new Offset(shift.Dx, shift.Dy)),
                 showName: false));
         }
         else

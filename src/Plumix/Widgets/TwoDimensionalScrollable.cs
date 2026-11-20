@@ -350,7 +350,7 @@ internal sealed class VerticalOuterDimension : Scrollable
 internal sealed class VerticalOuterDimensionState : ScrollableState
 {
     private Axis? _lockedAxis;
-    private Point? _lastDragOffset;
+    private Offset? _lastDragOffset;
 
     private VerticalOuterDimension TypedWidget => (VerticalOuterDimension)CurrentWidget;
 
@@ -375,12 +375,12 @@ internal sealed class VerticalOuterDimensionState : ScrollableState
         return ([], this);
     }
 
-    private void EvaluateLockedAxis(Point offset)
+    private void EvaluateLockedAxis(Offset offset)
     {
         Debug.Assert(_lastDragOffset != null);
-        Point last = _lastDragOffset!.Value;
-        double deltaX = last.X - offset.X;
-        double deltaY = last.Y - offset.Y;
+        Offset last = _lastDragOffset!.Value;
+        double deltaX = last.Dx - offset.Dx;
+        double deltaY = last.Dy - offset.Dy;
         double axisDifferential = Math.Abs(deltaX) - Math.Abs(deltaY);
         if (Math.Abs(axisDifferential) >= GestureConstants.TouchSlop)
         {
@@ -442,14 +442,14 @@ internal sealed class VerticalOuterDimensionState : ScrollableState
         var verticalDragDetails = new DragUpdateDetails(
             GlobalPosition: details.GlobalPosition,
             LocalPosition: details.LocalPosition,
-            Delta: new Point(0.0, details.Delta.Y),
-            PrimaryDelta: details.Delta.Y,
+            Delta: new Offset(0.0, details.Delta.Dy),
+            PrimaryDelta: details.Delta.Dy,
             SourceTimeStampUtc: details.SourceTimeStampUtc);
         var horizontalDragDetails = new DragUpdateDetails(
             GlobalPosition: details.GlobalPosition,
             LocalPosition: details.LocalPosition,
-            Delta: new Point(details.Delta.X, 0.0),
-            PrimaryDelta: details.Delta.X,
+            Delta: new Offset(details.Delta.Dx, 0.0),
+            PrimaryDelta: details.Delta.Dx,
             SourceTimeStampUtc: details.SourceTimeStampUtc);
 
         switch (DiagonalDragBehavior)
@@ -494,13 +494,13 @@ internal sealed class VerticalOuterDimensionState : ScrollableState
     {
         _lastDragOffset = null;
         _lockedAxis = null;
-        double dx = details.Velocity.PixelsPerSecond.X;
-        double dy = details.Velocity.PixelsPerSecond.Y;
+        double dx = details.Velocity.PixelsPerSecond.Dx;
+        double dy = details.Velocity.PixelsPerSecond.Dy;
         var verticalDragDetails = new DragEndDetails(
-            velocity: new Velocity(new Vector(0.0, dy)),
+            velocity: new Velocity(new Offset(0.0, dy)),
             primaryVelocity: dy);
         var horizontalDragDetails = new DragEndDetails(
-            velocity: new Velocity(new Vector(dx, 0.0)),
+            velocity: new Velocity(new Offset(dx, 0.0)),
             primaryVelocity: dx);
 
         if (DiagonalDragBehavior != DiagonalDragBehavior.None)

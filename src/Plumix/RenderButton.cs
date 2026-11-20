@@ -131,18 +131,18 @@ public sealed class RenderButton : RenderBox
         Size = Constraints.Constrain(desired);
     }
 
-    public override void Paint(PaintingContext ctx, Point offset)
+    public override void Paint(PaintingContext ctx, Offset offset)
     {
         var background = OnPressed == null
             ? new SolidColorBrush(Background, 0.45)
             : new SolidColorBrush(Background);
 
-        var rect = new Rect(offset, Size);
+        var rect = DartGeometry.RectFromOffsetAndSize(offset, Size);
         ctx.Canvas.DrawRectangle(background, null, rect, 10, 10);
 
-        double textX = offset.X + (Size.Width - _textPainter.Width) / 2;
-        double textY = offset.Y + (Size.Height - _textPainter.Height) / 2;
-        _textPainter.Paint(ctx.Canvas, new Point(textX, textY));
+        double textX = offset.Dx + (Size.Width - _textPainter.Width) / 2;
+        double textY = offset.Dy + (Size.Height - _textPainter.Height) / 2;
+        _textPainter.Paint(ctx.Canvas, new Offset(textX, textY));
     }
 
     public override void Dispose()
@@ -151,7 +151,7 @@ public sealed class RenderButton : RenderBox
         base.Dispose();
     }
 
-    protected override bool HitTestSelf(Point position)
+    protected override bool HitTestSelf(Offset position)
     {
         return OnPressed != null;
     }

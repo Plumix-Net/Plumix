@@ -178,7 +178,7 @@ public sealed class CupertinoRouteTests : IDisposable
             new SizedBox()));
         Assert.Equal(Alignment.BottomCenter, transition.Alignment.Resolve(TextDirection.Ltr));
         var translation = Assert.IsType<FractionalTranslation>(transition.Child);
-        Assert.Equal(new Vector(0.0, 0.75), translation.Translation);
+        Assert.Equal(new Offset(0.0, 0.75), translation.Translation);
     }
 
     [Fact]

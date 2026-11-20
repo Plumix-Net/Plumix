@@ -275,7 +275,7 @@ public sealed class BottomSheet : StatefulWidget
             SetState(() => _dragHandleStates.Remove(WidgetState.Dragged));
             bool isClosing = false;
             double childHeight = ChildHeight;
-            double verticalVelocity = details.Velocity.PixelsPerSecond.Y;
+            double verticalVelocity = details.Velocity.PixelsPerSecond.Dy;
             if (verticalVelocity > MinFlingVelocity)
             {
                 double flingVelocity = childHeight > 0.0 ? -verticalVelocity / childHeight : -1.0;
@@ -524,7 +524,7 @@ internal sealed class RenderBottomSheetLayoutWithSizeListener : RenderShiftedBox
             ? constraints.MaxHeight
             : constraints.MaxHeight * ScrollControlDisabledMaxHeightRatio);
 
-    private Point GetPositionForChild(Size size, Size childSize) =>
+    private Offset GetPositionForChild(Size size, Size childSize) =>
         new(0.0, size.Height - (childSize.Height * AnimationValue));
 }
 
@@ -699,7 +699,7 @@ public sealed class ModalBottomSheetRoute<T> : PopupRoute
         bool enableDrag = true,
         bool? showDragHandle = null,
         bool useSafeArea = false,
-        Point? anchorPoint = null,
+        Offset? anchorPoint = null,
         RouteSettings? settings = null,
         AnimationController? transitionAnimationController = null,
         AnimationStyle? sheetAnimationStyle = null) : base(settings)
@@ -745,7 +745,7 @@ public sealed class ModalBottomSheetRoute<T> : PopupRoute
     public bool EnableDrag { get; }
     public bool? ShowDragHandle { get; }
     public bool UseSafeArea { get; }
-    public Point? AnchorPoint { get; }
+    public Offset? AnchorPoint { get; }
     public override string? BarrierLabel { get; }
     public string BarrierOnTapHint { get; }
     private Task<T?>? _typedCompleted;
@@ -876,7 +876,7 @@ public static class MaterialBottomSheets
         bool enableDrag = true,
         bool? showDragHandle = null,
         bool useSafeArea = false,
-        Point? anchorPoint = null,
+        Offset? anchorPoint = null,
         RouteSettings? routeSettings = null,
         AnimationController? transitionAnimationController = null,
         AnimationStyle? sheetAnimationStyle = null)

@@ -25,8 +25,8 @@ public sealed class TransitionsTests : IDisposable
     [Fact]
     public void SlideTransition_ExposesFlutterDefaultsAndResolvesTextDirection()
     {
-        var animation = new TestValueAnimation<Vector>(
-            new Vector(0.25, -0.5),
+        var animation = new TestValueAnimation<Offset>(
+            new Offset(0.25, -0.5),
             AnimationStatus.Forward);
         var child = new SizedBox(width: 40, height: 20);
         var transition = new SlideTransition(animation, child: child);
@@ -47,15 +47,15 @@ public sealed class TransitionsTests : IDisposable
         Mount(root, owner);
 
         var translation = Assert.IsType<RenderFractionalTranslation>(root.ChildElement!.RenderObject);
-        Assert.Equal(new Point(-0.25, -0.5), translation.Translation);
+        Assert.Equal(new Offset(-0.25, -0.5), translation.Translation);
         Assert.False(translation.TransformHitTests);
         Assert.Equal(1, animation.ListenerCount);
 
-        animation.Set(new Vector(-0.4, 0.75), AnimationStatus.Reverse);
+        animation.Set(new Offset(-0.4, 0.75), AnimationStatus.Reverse);
         owner.PumpFrame();
 
         translation = Assert.IsType<RenderFractionalTranslation>(root.ChildElement.RenderObject);
-        Assert.Equal(new Point(0.4, 0.75), translation.Translation);
+        Assert.Equal(new Offset(0.4, 0.75), translation.Translation);
 
         root.UnmountRoot();
         Assert.Equal(0, animation.ListenerCount);
@@ -64,8 +64,8 @@ public sealed class TransitionsTests : IDisposable
     [Fact]
     public void SlideTransition_RebindsAnimationAndPreservesFractionalHitTestPolicy()
     {
-        var first = new TestValueAnimation<Vector>(new Vector(0.2, 0.3), AnimationStatus.Forward);
-        var second = new TestValueAnimation<Vector>(new Vector(-0.5, 0.1), AnimationStatus.Reverse);
+        var first = new TestValueAnimation<Offset>(new Offset(0.2, 0.3), AnimationStatus.Forward);
+        var second = new TestValueAnimation<Offset>(new Offset(-0.5, 0.1), AnimationStatus.Reverse);
         var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new SlideTransition(
             position: first,
@@ -75,7 +75,7 @@ public sealed class TransitionsTests : IDisposable
 
         var translation = Assert.IsType<RenderFractionalTranslation>(root.ChildElement!.RenderObject);
         translation.Layout(BoxConstraints.Tight(new Size(80, 40)));
-        Assert.Equal(new Point(0.2, 0.3), translation.Translation);
+        Assert.Equal(new Offset(0.2, 0.3), translation.Translation);
         Assert.False(translation.TransformHitTests);
         Assert.Equal(1, first.ListenerCount);
 
@@ -86,7 +86,7 @@ public sealed class TransitionsTests : IDisposable
         owner.PumpFrame();
 
         translation = Assert.IsType<RenderFractionalTranslation>(root.ChildElement.RenderObject);
-        Assert.Equal(new Point(-0.5, 0.1), translation.Translation);
+        Assert.Equal(new Offset(-0.5, 0.1), translation.Translation);
         Assert.False(translation.TransformHitTests);
         Assert.Equal(0, first.ListenerCount);
         Assert.Equal(1, second.ListenerCount);
@@ -112,9 +112,9 @@ public sealed class TransitionsTests : IDisposable
         }
 
         var tween = new VectorTween(
-            begin: new Vector(2.0, -4.0),
-            end: new Vector(10.0, 8.0));
-        Assert.Equal(new Vector(4.0, -1.0), tween.Transform(0.25));
+            begin: new Offset(2.0, -4.0),
+            end: new Offset(10.0, 8.0));
+        Assert.Equal(new Offset(4.0, -1.0), tween.Transform(0.25));
         Assert.False(AnimationStatus.Forward.IsCompleted());
         Assert.True(AnimationStatus.Completed.IsCompleted());
     }
@@ -183,7 +183,7 @@ public sealed class TransitionsTests : IDisposable
         Assert.Equal(0.5, align.WidthFactor);
         Assert.Equal(0.0, align.HeightFactor);
         Assert.Equal(new Size(40, 0), clip.Size);
-        Assert.Equal(new Point(0, -40), ((BoxParentData)align.Child!.parentData!).offset);
+        Assert.Equal(new Offset(0, -40), ((BoxParentData)align.Child!.parentData!).offset);
 
         animation.Set(0.5, AnimationStatus.Forward);
         owner.PumpFrame();
@@ -191,7 +191,7 @@ public sealed class TransitionsTests : IDisposable
 
         Assert.Equal(0.5, align.HeightFactor);
         Assert.Equal(new Size(40, 20), clip.Size);
-        Assert.Equal(new Point(0, -20), ((BoxParentData)align.Child!.parentData!).offset);
+        Assert.Equal(new Offset(0, -20), ((BoxParentData)align.Child!.parentData!).offset);
 
         root.UnmountRoot();
         Assert.Equal(0, animation.ListenerCount);
@@ -220,7 +220,7 @@ public sealed class TransitionsTests : IDisposable
         Assert.Equal(0.25, align.WidthFactor);
         Assert.Null(align.HeightFactor);
         Assert.Equal(new Size(20, 200), clip.Size);
-        Assert.Equal(new Point(-15, 0), ((BoxParentData)align.Child!.parentData!).offset);
+        Assert.Equal(new Offset(-15, 0), ((BoxParentData)align.Child!.parentData!).offset);
         Assert.Equal(1, first.ListenerCount);
 
         root.Update(new Directionality(
@@ -421,7 +421,7 @@ public sealed class TransitionsTests : IDisposable
         Assert.Same(child, positioned.Child);
 
         var rectAnimation = new TestValueAnimation<Rect?>(
-            new Rect(20, 24, 40, 32),
+            DartGeometry.RectFromLTWH(20, 24, 40, 32),
             AnimationStatus.Forward);
         var relative = new RelativePositionedTransition(
             rect: rectAnimation,
@@ -478,7 +478,7 @@ public sealed class TransitionsTests : IDisposable
         Assert.Equal(12, parentData.Top);
         Assert.Equal(30, parentData.Right);
         Assert.Equal(32, parentData.Bottom);
-        Assert.Equal(new Point(10, 12), parentData.offset);
+        Assert.Equal(new Offset(10, 12), parentData.offset);
         Assert.Equal(new Size(160, 76), renderStack.FirstChild.Size);
         Assert.Equal(1, firstAnimation.ListenerCount);
 
@@ -491,7 +491,7 @@ public sealed class TransitionsTests : IDisposable
         Assert.Equal(22, parentData.Top);
         Assert.Equal(40, parentData.Right);
         Assert.Equal(42, parentData.Bottom);
-        Assert.Equal(new Point(20, 22), parentData.offset);
+        Assert.Equal(new Offset(20, 22), parentData.offset);
         Assert.Equal(new Size(140, 56), renderStack.FirstChild.Size);
 
         root.Update(new Stack(
@@ -520,7 +520,7 @@ public sealed class TransitionsTests : IDisposable
     public void RelativePositionedTransition_ConvertsAnimatedRectAgainstDeclaredSize()
     {
         var animation = new TestValueAnimation<Rect?>(
-            new Rect(20, 15, 50, 30),
+            DartGeometry.RectFromLTWH(20, 15, 50, 30),
             AnimationStatus.Forward);
         var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new Stack(
@@ -541,7 +541,7 @@ public sealed class TransitionsTests : IDisposable
         Assert.Equal(15, parentData.Top);
         Assert.Equal(130, parentData.Right);
         Assert.Equal(75, parentData.Bottom);
-        Assert.Equal(new Point(20, 15), parentData.offset);
+        Assert.Equal(new Offset(20, 15), parentData.offset);
         Assert.Equal(new Size(50, 30), renderStack.FirstChild.Size);
 
         animation.Set(null, AnimationStatus.Completed);
@@ -553,7 +553,7 @@ public sealed class TransitionsTests : IDisposable
         Assert.Equal(0, parentData.Top);
         Assert.Equal(200, parentData.Right);
         Assert.Equal(120, parentData.Bottom);
-        Assert.Equal(new Point(), parentData.offset);
+        Assert.Equal(new Offset(), parentData.offset);
         Assert.Equal(new Size(), renderStack.FirstChild.Size);
 
         root.UnmountRoot();

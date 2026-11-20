@@ -302,7 +302,7 @@ public class Cubic : Curve
 /// </summary>
 public class ThreePointCubic : Curve
 {
-    public ThreePointCubic(Point a1, Point b1, Point midpoint, Point a2, Point b2)
+    public ThreePointCubic(Offset a1, Offset b1, Offset midpoint, Offset a2, Offset b2)
     {
         A1 = a1;
         B1 = b1;
@@ -312,40 +312,40 @@ public class ThreePointCubic : Curve
     }
 
     /// <summary>The coordinates of the first control point of the first curve.</summary>
-    public Point A1 { get; }
+    public Offset A1 { get; }
 
     /// <summary>The coordinates of the second control point of the first curve.</summary>
-    public Point B1 { get; }
+    public Offset B1 { get; }
 
     /// <summary>The coordinates of the middle shared point.</summary>
-    public Point Midpoint { get; }
+    public Offset Midpoint { get; }
 
     /// <summary>The coordinates of the first control point of the second curve.</summary>
-    public Point A2 { get; }
+    public Offset A2 { get; }
 
     /// <summary>The coordinates of the second control point of the second curve.</summary>
-    public Point B2 { get; }
+    public Offset B2 { get; }
 
     public override double TransformInternal(double t)
     {
-        bool firstCurve = t < Midpoint.X;
-        double scaleX = firstCurve ? Midpoint.X : 1.0 - Midpoint.X;
-        double scaleY = firstCurve ? Midpoint.Y : 1.0 - Midpoint.Y;
-        double scaledT = (t - (firstCurve ? 0.0 : Midpoint.X)) / scaleX;
+        bool firstCurve = t < Midpoint.Dx;
+        double scaleX = firstCurve ? Midpoint.Dx : 1.0 - Midpoint.Dx;
+        double scaleY = firstCurve ? Midpoint.Dy : 1.0 - Midpoint.Dy;
+        double scaledT = (t - (firstCurve ? 0.0 : Midpoint.Dx)) / scaleX;
         if (firstCurve)
         {
-            return new Cubic(A1.X / scaleX, A1.Y / scaleY, B1.X / scaleX, B1.Y / scaleY).Transform(scaledT)
+            return new Cubic(A1.Dx / scaleX, A1.Dy / scaleY, B1.Dx / scaleX, B1.Dy / scaleY).Transform(scaledT)
                    * scaleY;
         }
         else
         {
             return (new Cubic(
-                        (A2.X - Midpoint.X) / scaleX,
-                        (A2.Y - Midpoint.Y) / scaleY,
-                        (B2.X - Midpoint.X) / scaleX,
-                        (B2.Y - Midpoint.Y) / scaleY).Transform(scaledT)
+                        (A2.Dx - Midpoint.Dx) / scaleX,
+                        (A2.Dy - Midpoint.Dy) / scaleY,
+                        (B2.Dx - Midpoint.Dx) / scaleX,
+                        (B2.Dy - Midpoint.Dy) / scaleY).Transform(scaledT)
                     * scaleY)
-                   + Midpoint.Y;
+                   + Midpoint.Dy;
         }
     }
 
@@ -361,7 +361,7 @@ public class ThreePointCubic : Curve
 /// Abstract class that defines an API for evaluating 2D parametric curves, whose values are Dart's
 /// <c>Offset</c> (Avalonia's <see cref="Point"/>).
 /// </summary>
-public abstract class Curve2D : ParametricCurve<Point>
+public abstract class Curve2D : ParametricCurve<Offset>
 {
     protected Curve2D()
     {
@@ -375,11 +375,11 @@ public abstract class Curve2D : ParametricCurve<Point>
         DebugAssertions.Assert(end > start);
         var rand = new DartRandom(SamplingSeed);
 
-        bool IsFlat(Point p, Point q, Point r)
+        bool IsFlat(Offset p, Offset q, Offset r)
         {
-            Point pr = CurveFormat.Sub(p, r);
-            Point qr = CurveFormat.Sub(q, r);
-            double z = (pr.X * qr.Y) - (qr.X * pr.Y);
+            Offset pr = CurveFormat.Sub(p, r);
+            Offset qr = CurveFormat.Sub(q, r);
+            double z = (pr.Dx * qr.Dy) - (qr.Dx * pr.Dy);
             return (z * z) < tolerance;
         }
 
@@ -406,8 +406,8 @@ public abstract class Curve2D : ParametricCurve<Point>
         Sample(
             first,
             last,
-            forceSubdivide: Math.Abs(first.Value.X - last.Value.X) < tolerance
-                            && Math.Abs(first.Value.Y - last.Value.Y) < tolerance);
+            forceSubdivide: Math.Abs(first.Value.Dx - last.Value.Dx) < tolerance
+                            && Math.Abs(first.Value.Dy - last.Value.Dy) < tolerance);
         return samples;
     }
 
@@ -420,7 +420,7 @@ public abstract class Curve2D : ParametricCurve<Point>
         double start = 0.0;
         double end = 1.0;
         double mid = double.NaN;
-        double OffsetToOrigin(double pos) => x - Transform(pos).X;
+        double OffsetToOrigin(double pos) => x - Transform(pos).Dx;
 
         const double errorLimit = 1e-6;
         int count = 100;
@@ -448,7 +448,7 @@ public abstract class Curve2D : ParametricCurve<Point>
 /// <summary>A class that holds a sample of a 2D parametric curve, containing the value and the parameter.</summary>
 public class Curve2DSample
 {
-    public Curve2DSample(double t, Point value)
+    public Curve2DSample(double t, Offset value)
     {
         T = t;
         Value = value;
@@ -458,11 +458,11 @@ public class Curve2DSample
     public double T { get; }
 
     /// <summary>The value (the output of the curve function) at <see cref="T"/>.</summary>
-    public Point Value { get; }
+    public Offset Value { get; }
 
     public override string ToString()
     {
-        return $"[({Diagnostics.ToStringAsFixed(Value.X, 2)}, {Diagnostics.ToStringAsFixed(Value.Y, 2)}), "
+        return $"[({Diagnostics.ToStringAsFixed(Value.Dx, 2)}, {Diagnostics.ToStringAsFixed(Value.Dy, 2)}), "
                + $"{Diagnostics.ToStringAsFixed(T, 2)}]";
     }
 }
@@ -473,18 +473,18 @@ public class Curve2DSample
 /// </summary>
 public class CatmullRomSpline : Curve2D
 {
-    private readonly List<List<Point>> _cubicSegments;
-    private readonly IReadOnlyList<Point>? _controlPoints;
-    private readonly Point? _startHandle;
-    private readonly Point? _endHandle;
+    private readonly List<List<Offset>> _cubicSegments;
+    private readonly IReadOnlyList<Offset>? _controlPoints;
+    private readonly Offset? _startHandle;
+    private readonly Offset? _endHandle;
     private readonly double? _tension;
 
     /// <summary>Constructs a centripetal Catmull-Rom spline curve; segments are computed on first use.</summary>
     public CatmullRomSpline(
-        IReadOnlyList<Point> controlPoints,
+        IReadOnlyList<Offset> controlPoints,
         double tension = 0.0,
-        Point? startHandle = null,
-        Point? endHandle = null)
+        Offset? startHandle = null,
+        Offset? endHandle = null)
     {
         AssertArguments(controlPoints, tension);
         _controlPoints = controlPoints;
@@ -494,17 +494,17 @@ public class CatmullRomSpline : Curve2D
         _cubicSegments = [];
     }
 
-    private CatmullRomSpline(List<List<Point>> cubicSegments)
+    private CatmullRomSpline(List<List<Offset>> cubicSegments)
     {
         _cubicSegments = cubicSegments;
     }
 
     /// <summary>Constructs a centripetal Catmull-Rom spline curve with its segments precomputed.</summary>
     public static CatmullRomSpline Precompute(
-        IReadOnlyList<Point> controlPoints,
+        IReadOnlyList<Offset> controlPoints,
         double tension = 0.0,
-        Point? startHandle = null,
-        Point? endHandle = null)
+        Offset? startHandle = null,
+        Offset? endHandle = null)
     {
         AssertArguments(controlPoints, tension);
         return new CatmullRomSpline(
@@ -512,7 +512,7 @@ public class CatmullRomSpline : Curve2D
     }
 
     // The initializer-list asserts shared by both Dart constructors.
-    private static void AssertArguments(IReadOnlyList<Point> controlPoints, double tension)
+    private static void AssertArguments(IReadOnlyList<Offset> controlPoints, double tension)
     {
         DebugAssertions.Assert(tension <= 1.0, $"tension {CurveFormat.D(tension)} must not be greater than 1.0.");
         DebugAssertions.Assert(tension >= 0.0, $"tension {CurveFormat.D(tension)} must not be negative.");
@@ -521,11 +521,11 @@ public class CatmullRomSpline : Curve2D
             "There must be at least four control points to create a CatmullRomSpline.");
     }
 
-    private static List<List<Point>> ComputeSegments(
-        IReadOnlyList<Point> controlPoints,
+    private static List<List<Offset>> ComputeSegments(
+        IReadOnlyList<Offset> controlPoints,
         double tension,
-        Point? startHandle = null,
-        Point? endHandle = null)
+        Offset? startHandle = null,
+        Offset? endHandle = null)
     {
         DebugAssertions.Assert(
             startHandle is null || CurveFormat.IsFinite(startHandle.Value),
@@ -551,13 +551,13 @@ public class CatmullRomSpline : Curve2D
         // If not specified, select the first and last control points (which are
         // handles: they are not intersected by the resulting curve) so that they
         // extend the first and last segments, respectively.
-        Point start = startHandle
+        Offset start = startHandle
                       ?? CurveFormat.Sub(CurveFormat.Mul(controlPoints[0], 2.0), controlPoints[1]);
-        Point end = endHandle
+        Offset end = endHandle
                     ?? CurveFormat.Sub(
                         CurveFormat.Mul(controlPoints[^1], 2.0),
                         controlPoints[controlPoints.Count - 2]);
-        var allPoints = new List<Point>(controlPoints.Count + 2) { start };
+        var allPoints = new List<Offset>(controlPoints.Count + 2) { start };
         allPoints.AddRange(controlPoints);
         allPoints.Add(end);
 
@@ -568,18 +568,18 @@ public class CatmullRomSpline : Curve2D
         // segment.
         const double alpha = 0.5;
         double reverseTension = 1.0 - tension;
-        var result = new List<List<Point>>();
+        var result = new List<List<Offset>>();
         for (int i = 0; i < allPoints.Count - 3; ++i)
         {
-            Point[] curve = [allPoints[i], allPoints[i + 1], allPoints[i + 2], allPoints[i + 3]];
-            Point diffCurve10 = CurveFormat.Sub(curve[1], curve[0]);
-            Point diffCurve21 = CurveFormat.Sub(curve[2], curve[1]);
-            Point diffCurve32 = CurveFormat.Sub(curve[3], curve[2]);
+            Offset[] curve = [allPoints[i], allPoints[i + 1], allPoints[i + 2], allPoints[i + 3]];
+            Offset diffCurve10 = CurveFormat.Sub(curve[1], curve[0]);
+            Offset diffCurve21 = CurveFormat.Sub(curve[2], curve[1]);
+            Offset diffCurve32 = CurveFormat.Sub(curve[3], curve[2]);
             double t01 = Math.Pow(CurveFormat.Distance(diffCurve10), alpha);
             double t12 = Math.Pow(CurveFormat.Distance(diffCurve21), alpha);
             double t23 = Math.Pow(CurveFormat.Distance(diffCurve32), alpha);
 
-            Point m1 = CurveFormat.Mul(
+            Offset m1 = CurveFormat.Mul(
                 CurveFormat.Add(
                     diffCurve21,
                     CurveFormat.Mul(
@@ -588,7 +588,7 @@ public class CatmullRomSpline : Curve2D
                             CurveFormat.Div(CurveFormat.Sub(curve[2], curve[0]), t01 + t12)),
                         t12)),
                 reverseTension);
-            Point m2 = CurveFormat.Mul(
+            Offset m2 = CurveFormat.Mul(
                 CurveFormat.Add(
                     diffCurve21,
                     CurveFormat.Mul(
@@ -597,9 +597,9 @@ public class CatmullRomSpline : Curve2D
                             CurveFormat.Div(CurveFormat.Sub(curve[3], curve[1]), t12 + t23)),
                         t12)),
                 reverseTension);
-            Point sumM12 = CurveFormat.Add(m1, m2);
+            Offset sumM12 = CurveFormat.Add(m1, m2);
 
-            var segment = new List<Point>
+            var segment = new List<Offset>
             {
                 CurveFormat.Add(CurveFormat.Mul(diffCurve21, -2.0), sumM12),
                 CurveFormat.Sub(CurveFormat.Sub(CurveFormat.Mul(diffCurve21, 3.0), m1), sumM12),
@@ -628,12 +628,12 @@ public class CatmullRomSpline : Curve2D
         get
         {
             InitializeIfNeeded();
-            Point seedPoint = _cubicSegments[0][1];
-            return (long)Math.Round((seedPoint.X + seedPoint.Y) * 10000, MidpointRounding.AwayFromZero);
+            Offset seedPoint = _cubicSegments[0][1];
+            return (long)Math.Round((seedPoint.Dx + seedPoint.Dy) * 10000, MidpointRounding.AwayFromZero);
         }
     }
 
-    public override Point TransformInternal(double t)
+    public override Offset TransformInternal(double t)
     {
         InitializeIfNeeded();
         double length = _cubicSegments.Count;
@@ -653,7 +653,7 @@ public class CatmullRomSpline : Curve2D
             index = _cubicSegments.Count - 1;
         }
 
-        List<Point> cubicControlPoints = _cubicSegments[index];
+        List<Offset> cubicControlPoints = _cubicSegments[index];
         double localT2 = localT * localT;
         return CurveFormat.Add(
             CurveFormat.Add(
@@ -677,7 +677,7 @@ public class CatmullRomCurve : Curve
     private readonly List<Curve2DSample> _precomputedSamples;
 
     /// <summary>Constructs a centripetal <see cref="CatmullRomCurve"/>; samples are computed on first use.</summary>
-    public CatmullRomCurve(IReadOnlyList<Point> controlPoints, double tension = 0.0)
+    public CatmullRomCurve(IReadOnlyList<Offset> controlPoints, double tension = 0.0)
     {
         AssertValid(controlPoints, tension);
         ControlPoints = controlPoints;
@@ -685,7 +685,7 @@ public class CatmullRomCurve : Curve
         _precomputedSamples = [];
     }
 
-    private CatmullRomCurve(IReadOnlyList<Point> controlPoints, double tension, List<Curve2DSample> samples)
+    private CatmullRomCurve(IReadOnlyList<Offset> controlPoints, double tension, List<Curve2DSample> samples)
     {
         ControlPoints = controlPoints;
         Tension = tension;
@@ -693,19 +693,19 @@ public class CatmullRomCurve : Curve
     }
 
     /// <summary>Constructs a centripetal <see cref="CatmullRomCurve"/> with its samples precomputed.</summary>
-    public static CatmullRomCurve Precompute(IReadOnlyList<Point> controlPoints, double tension = 0.0)
+    public static CatmullRomCurve Precompute(IReadOnlyList<Offset> controlPoints, double tension = 0.0)
     {
         AssertValid(controlPoints, tension);
         return new CatmullRomCurve(controlPoints, tension, ComputeSamples(controlPoints, tension));
     }
 
     /// <summary>The control points used to create this curve.</summary>
-    public IReadOnlyList<Point> ControlPoints { get; }
+    public IReadOnlyList<Offset> ControlPoints { get; }
 
     /// <summary>The "tension" of the curve.</summary>
     public double Tension { get; }
 
-    private static void AssertValid(IReadOnlyList<Point> controlPoints, double tension)
+    private static void AssertValid(IReadOnlyList<Offset> controlPoints, double tension)
     {
         if (!Constants.KDebugMode)
         {
@@ -721,11 +721,11 @@ public class CatmullRomCurve : Curve
         }
     }
 
-    private static List<Curve2DSample> ComputeSamples(IReadOnlyList<Point> controlPoints, double tension)
+    private static List<Curve2DSample> ComputeSamples(IReadOnlyList<Offset> controlPoints, double tension)
     {
-        var points = new List<Point>(controlPoints.Count + 2) { new Point(0.0, 0.0) };
+        var points = new List<Offset>(controlPoints.Count + 2) { new Offset(0.0, 0.0) };
         points.AddRange(controlPoints);
-        points.Add(new Point(1.0, 1.0));
+        points.Add(new Offset(1.0, 1.0));
         return CatmullRomSpline.Precompute(points, tension: tension).GenerateSamples(tolerance: 1e-12).ToList();
     }
 
@@ -735,7 +735,7 @@ public class CatmullRomCurve : Curve
     /// debug builds.
     /// </summary>
     public static bool ValidateControlPoints(
-        IReadOnlyList<Point>? controlPoints,
+        IReadOnlyList<Offset>? controlPoints,
         double tension = 0.0,
         List<string>? reasons = null)
     {
@@ -759,44 +759,44 @@ public class CatmullRomCurve : Curve
             return false;
         }
 
-        var withEnds = new List<Point>(controlPoints.Count + 2) { new Point(0.0, 0.0) };
+        var withEnds = new List<Offset>(controlPoints.Count + 2) { new Offset(0.0, 0.0) };
         withEnds.AddRange(controlPoints);
-        withEnds.Add(new Point(1.0, 1.0));
-        Point startHandle = CurveFormat.Sub(CurveFormat.Mul(withEnds[0], 2.0), withEnds[1]);
-        Point endHandle = CurveFormat.Sub(CurveFormat.Mul(withEnds[^1], 2.0), withEnds[withEnds.Count - 2]);
-        var points = new List<Point>(withEnds.Count + 2) { startHandle };
+        withEnds.Add(new Offset(1.0, 1.0));
+        Offset startHandle = CurveFormat.Sub(CurveFormat.Mul(withEnds[0], 2.0), withEnds[1]);
+        Offset endHandle = CurveFormat.Sub(CurveFormat.Mul(withEnds[^1], 2.0), withEnds[withEnds.Count - 2]);
+        var points = new List<Offset>(withEnds.Count + 2) { startHandle };
         points.AddRange(withEnds);
         points.Add(endHandle);
         double lastX = double.NegativeInfinity;
         for (int i = 0; i < points.Count; ++i)
         {
-            if (i > 1 && i < points.Count - 2 && (points[i].X <= 0.0 || points[i].X >= 1.0))
+            if (i > 1 && i < points.Count - 2 && (points[i].Dx <= 0.0 || points[i].Dx >= 1.0))
             {
                 if (Constants.KDebugMode)
                 {
                     reasons?.Add(
                         "Control points must have X values between 0.0 and 1.0, exclusive. "
-                        + $"Point {i} has an x value ({CurveFormat.D(points[i].X)}) which is outside the range.");
+                        + $"Point {i} has an x value ({CurveFormat.D(points[i].Dx)}) which is outside the range.");
                 }
 
                 return false;
             }
 
-            if (points[i].X <= lastX)
+            if (points[i].Dx <= lastX)
             {
                 if (Constants.KDebugMode)
                 {
                     reasons?.Add(
                         "Each X coordinate must be greater than the preceding X coordinate "
                         + "(i.e. must be monotonically increasing in X). Point "
-                        + $"{i} has an x value of {CurveFormat.D(points[i].X)}, which is not greater than "
+                        + $"{i} has an x value of {CurveFormat.D(points[i].Dx)}, which is not greater than "
                         + CurveFormat.D(lastX));
                 }
 
                 return false;
             }
 
-            lastX = points[i].X;
+            lastX = points[i].Dx;
         }
 
         bool success = true;
@@ -812,14 +812,14 @@ public class CatmullRomCurve : Curve
 
         // If the first and last points in the samples aren't at (0,0) or (1,1)
         // respectively, then the curve is multi-valued at the ends.
-        if (Math.Abs(samplePoints[0].Value.Y) > tolerance || Math.Abs(1.0 - samplePoints[^1].Value.Y) > tolerance)
+        if (Math.Abs(samplePoints[0].Value.Dy) > tolerance || Math.Abs(1.0 - samplePoints[^1].Value.Dy) > tolerance)
         {
             bool bail = true;
             success = false;
             if (Constants.KDebugMode)
             {
                 reasons?.Add(
-                    $"The curve has more than one Y value at X = {CurveFormat.D(samplePoints[0].Value.X)}. "
+                    $"The curve has more than one Y value at X = {CurveFormat.D(samplePoints[0].Value.Dx)}. "
                     + "Try moving some control points further away from this value of X, or increasing "
                     + "the tension.");
                 bail = reasons is null;
@@ -833,9 +833,9 @@ public class CatmullRomCurve : Curve
 
         foreach (Curve2DSample sample in samplePoints)
         {
-            Point point = sample.Value;
+            Offset point = sample.Value;
             double t = sample.T;
-            double x = point.X;
+            double x = point.Dx;
             if (t >= start && t <= end && (x < -1e-3 || x > 1.0 + 1e-3))
             {
                 bool bail = true;
@@ -891,16 +891,16 @@ public class CatmullRomCurve : Curve
         int start = 0;
         int end = _precomputedSamples.Count - 1;
         int mid;
-        Point value;
-        Point startValue = _precomputedSamples[start].Value;
-        Point endValue = _precomputedSamples[end].Value;
+        Offset value;
+        Offset startValue = _precomputedSamples[start].Value;
+        Offset endValue = _precomputedSamples[end].Value;
         // Use a binary search to find the index of the sample point that is just
         // before t.
         while (end - start > 1)
         {
             mid = (end + start) / 2;
             value = _precomputedSamples[mid].Value;
-            if (t >= value.X)
+            if (t >= value.Dx)
             {
                 start = mid;
                 startValue = value;
@@ -913,8 +913,8 @@ public class CatmullRomCurve : Curve
         }
 
         // Now interpolate between the found sample and the next one.
-        double t2 = (t - startValue.X) / (endValue.X - startValue.X);
-        return CurveFormat.LerpDouble(startValue.Y, endValue.Y, t2);
+        double t2 = (t - startValue.Dx) / (endValue.Dx - startValue.Dx);
+        return CurveFormat.LerpDouble(startValue.Dy, endValue.Dy, t2);
     }
 }
 
@@ -1109,11 +1109,11 @@ public static class Curves
 
     /// <summary>A curve that starts slowly, speeds up very quickly, and then ends slowly.</summary>
     public static readonly ThreePointCubic FastEaseInToSlowEaseOut = new(
-        new Point(0.056, 0.024),
-        new Point(0.108, 0.3085),
-        new Point(0.198, 0.541),
-        new Point(0.3655, 1.0),
-        new Point(0.5465, 0.989));
+        new Offset(0.056, 0.024),
+        new Offset(0.108, 0.3085),
+        new Offset(0.198, 0.541),
+        new Offset(0.3655, 1.0),
+        new Offset(0.5465, 0.989));
 
     /// <summary>A cubic animation curve that speeds up quickly and ends slowly (CSS <c>ease</c>).</summary>
     public static readonly Cubic Ease = new(0.25, 0.1, 0.25, 1.0);
@@ -1196,11 +1196,11 @@ public static class Curves
     /// A cubic animation curve that starts slowly, speeds up shortly thereafter, and then ends slowly.
     /// </summary>
     public static readonly ThreePointCubic EaseInOutCubicEmphasized = new(
-        new Point(0.05, 0),
-        new Point(0.133333, 0.06),
-        new Point(0.166666, 0.4),
-        new Point(0.208333, 0.82),
-        new Point(0.25, 1));
+        new Offset(0.05, 0),
+        new Offset(0.133333, 0.06),
+        new Offset(0.166666, 0.4),
+        new Offset(0.208333, 0.82),
+        new Offset(0.25, 1));
 
     /// <summary>A cubic animation curve (Penner's quartic ease-in-out).</summary>
     public static readonly Cubic EaseInOutQuart = new(0.77, 0.0, 0.175, 1.0);
@@ -1253,9 +1253,9 @@ internal static class CurveFormat
     public static string D(double value) => BindingBase.DartDoubleToString(value);
 
     // dart:ui `Offset.toString()`.
-    public static string O(Point? value) => Diagnostics.DescribeValue(value);
+    public static string O(Offset? value) => Diagnostics.DescribeValue(value);
 
-    public static string O(Point value) => Diagnostics.DescribeValue(value);
+    public static string O(Offset value) => Diagnostics.DescribeValue(value);
 
     // dart:ui `clampDouble`.
     public static double ClampDouble(double x, double min, double max)
@@ -1303,15 +1303,15 @@ internal static class CurveFormat
         return result < 0.0 ? result + 1.0 : result;
     }
 
-    public static Point Add(Point a, Point b) => new(a.X + b.X, a.Y + b.Y);
+    public static Offset Add(Offset a, Offset b) => new(a.Dx + b.Dx, a.Dy + b.Dy);
 
-    public static Point Sub(Point a, Point b) => new(a.X - b.X, a.Y - b.Y);
+    public static Offset Sub(Offset a, Offset b) => new(a.Dx - b.Dx, a.Dy - b.Dy);
 
-    public static Point Mul(Point a, double k) => new(a.X * k, a.Y * k);
+    public static Offset Mul(Offset a, double k) => new(a.Dx * k, a.Dy * k);
 
-    public static Point Div(Point a, double k) => new(a.X / k, a.Y / k);
+    public static Offset Div(Offset a, double k) => new(a.Dx / k, a.Dy / k);
 
-    public static double Distance(Point a) => Math.Sqrt((a.X * a.X) + (a.Y * a.Y));
+    public static double Distance(Offset a) => Math.Sqrt((a.Dx * a.Dx) + (a.Dy * a.Dy));
 
-    public static bool IsFinite(Point a) => double.IsFinite(a.X) && double.IsFinite(a.Y);
+    public static bool IsFinite(Offset a) => double.IsFinite(a.Dx) && double.IsFinite(a.Dy);
 }

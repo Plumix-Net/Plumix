@@ -12,8 +12,8 @@ namespace Plumix.Widgets;
 public sealed class TextSelectionToolbarLayoutDelegate : SingleChildLayoutDelegate
 {
     public TextSelectionToolbarLayoutDelegate(
-        Point anchorAbove,
-        Point anchorBelow,
+        Offset anchorAbove,
+        Offset anchorBelow,
         bool? fitsAbove = null)
     {
         AnchorAbove = anchorAbove;
@@ -21,9 +21,9 @@ public sealed class TextSelectionToolbarLayoutDelegate : SingleChildLayoutDelega
         FitsAbove = fitsAbove;
     }
 
-    public Point AnchorAbove { get; }
+    public Offset AnchorAbove { get; }
 
-    public Point AnchorBelow { get; }
+    public Offset AnchorBelow { get; }
 
     public bool? FitsAbove { get; }
 
@@ -44,13 +44,13 @@ public sealed class TextSelectionToolbarLayoutDelegate : SingleChildLayoutDelega
 
     public override BoxConstraints GetConstraintsForChild(BoxConstraints constraints) => constraints.Loosen();
 
-    public override Point GetPositionForChild(Size size, Size childSize)
+    public override Offset GetPositionForChild(Size size, Size childSize)
     {
-        bool fitsAbove = FitsAbove ?? AnchorAbove.Y >= childSize.Height;
-        Point anchor = fitsAbove ? AnchorAbove : AnchorBelow;
-        return new Point(
-            CenterOn(anchor.X, childSize.Width, size.Width),
-            fitsAbove ? Math.Max(0.0, anchor.Y - childSize.Height) : anchor.Y);
+        bool fitsAbove = FitsAbove ?? AnchorAbove.Dy >= childSize.Height;
+        Offset anchor = fitsAbove ? AnchorAbove : AnchorBelow;
+        return new Offset(
+            CenterOn(anchor.Dx, childSize.Width, size.Width),
+            fitsAbove ? Math.Max(0.0, anchor.Dy - childSize.Height) : anchor.Dy);
     }
 
     public override bool ShouldRelayout(SingleChildLayoutDelegate oldDelegate)

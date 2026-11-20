@@ -282,7 +282,7 @@ public class InkDecoration : InkFeature
             return;
         }
 
-        Point? originOffset = MatrixUtils.GetAsTranslation(transform);
+        Offset? originOffset = MatrixUtils.GetAsTranslation(transform);
         ImageConfiguration sizedConfiguration = Configuration.CopyWith(size: ReferenceBox.Size);
         // C#-only: Plumix's BoxPainter paints into a PaintingContext (see CanvasPaintingContext).
         var context = new CanvasPaintingContext(canvas);

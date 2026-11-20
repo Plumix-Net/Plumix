@@ -89,17 +89,17 @@ public static class PointerEventUtils
     }
 
     /// <summary>The straight-line length of the offset, Dart's `Offset.distance`.</summary>
-    public static double Distance(this Point offset)
+    public static double Distance(this Offset offset)
     {
-        return Math.Sqrt((offset.X * offset.X) + (offset.Y * offset.Y));
+        return Math.Sqrt((offset.Dx * offset.Dx) + (offset.Dy * offset.Dy));
     }
 
     /// <summary>
     /// The square of <see cref="Distance"/>, Dart's `Offset.distanceSquared`. Cheaper than
     /// <see cref="Distance"/> when only comparisons against a squared threshold are needed.
     /// </summary>
-    public static double DistanceSquared(this Point offset)
+    public static double DistanceSquared(this Offset offset)
     {
-        return (offset.X * offset.X) + (offset.Y * offset.Y);
+        return (offset.Dx * offset.Dx) + (offset.Dy * offset.Dy);
     }
 }

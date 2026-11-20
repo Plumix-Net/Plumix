@@ -123,7 +123,7 @@ public sealed class FocusableActionDetectorTests : IDisposable
         harness.SendPointer(new PointerHoverEvent(
             pointer: 1,
             kind: PointerDeviceKind.Mouse,
-            position: new Point(20, 20),
+            position: new Offset(20, 20),
             buttons: PointerButtons.None,
             timestampUtc: DateTime.UtcNow));
         Assert.Equal([true], hoverHighlights);
@@ -131,7 +131,7 @@ public sealed class FocusableActionDetectorTests : IDisposable
         harness.SendPointer(new PointerDownEvent(
             pointer: 2,
             kind: PointerDeviceKind.Touch,
-            position: new Point(20, 20),
+            position: new Offset(20, 20),
             buttons: PointerButtons.Primary,
             timestampUtc: DateTime.UtcNow));
         Assert.Equal(FocusHighlightMode.Touch, FocusManager.Instance.HighlightMode);

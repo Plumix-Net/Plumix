@@ -49,7 +49,7 @@ public class RenderAnnotatedRegion<T> : RenderProxyBox where T : notnull
 
     public override bool AlwaysNeedsCompositing => true;
 
-    public override void Paint(PaintingContext context, Point offset)
+    public override void Paint(PaintingContext context, Offset offset)
     {
         // Annotated region layers are not retained because they do not create engine layers.
         var layer = new AnnotatedRegionLayer<T>(

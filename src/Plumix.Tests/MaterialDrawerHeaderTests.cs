@@ -239,7 +239,7 @@ public sealed class MaterialDrawerHeaderTests
         var others = Assert.IsAssignableFrom<RenderBox>(pictures.FirstChild);
         var current = Assert.IsAssignableFrom<RenderBox>(pictures.ChildAfter(others));
         Assert.True(
-            ((StackParentData)current.parentData!).offset.X > ((StackParentData)others.parentData!).offset.X);
+            ((StackParentData)current.parentData!).offset.Dx > ((StackParentData)others.parentData!).offset.Dx);
     }
 
     [Theory]
@@ -262,26 +262,26 @@ public sealed class MaterialDrawerHeaderTests
         RenderBox name = FindLayoutChild(layout, "accountName");
         RenderBox email = FindLayoutChild(layout, "accountEmail");
         RenderBox icon = FindLayoutChild(layout, "dropdownIcon");
-        Point nameOffset = ((MultiChildLayoutParentData)name.parentData!).offset;
-        Point emailOffset = ((MultiChildLayoutParentData)email.parentData!).offset;
-        Point iconOffset = ((MultiChildLayoutParentData)icon.parentData!).offset;
+        Offset nameOffset = ((MultiChildLayoutParentData)name.parentData!).offset;
+        Offset emailOffset = ((MultiChildLayoutParentData)email.parentData!).offset;
+        Offset iconOffset = ((MultiChildLayoutParentData)icon.parentData!).offset;
 
-        Assert.Equal(emailOffset.Y - name.Size.Height, nameOffset.Y, precision: 6);
+        Assert.Equal(emailOffset.Dy - name.Size.Height, nameOffset.Dy, precision: 6);
         Assert.Equal(
             layout.Size.Height - (icon.Size.Height / 2.0) - (email.Size.Height / 2.0),
-            emailOffset.Y,
+            emailOffset.Dy,
             precision: 6);
         if (direction == TextDirection.Ltr)
         {
-            Assert.Equal(0.0, nameOffset.X);
-            Assert.Equal(0.0, emailOffset.X);
-            Assert.Equal(layout.Size.Width - icon.Size.Width, iconOffset.X, precision: 6);
+            Assert.Equal(0.0, nameOffset.Dx);
+            Assert.Equal(0.0, emailOffset.Dx);
+            Assert.Equal(layout.Size.Width - icon.Size.Width, iconOffset.Dx, precision: 6);
         }
         else
         {
-            Assert.Equal(layout.Size.Width - name.Size.Width, nameOffset.X, precision: 6);
-            Assert.Equal(layout.Size.Width - email.Size.Width, emailOffset.X, precision: 6);
-            Assert.Equal(0.0, iconOffset.X);
+            Assert.Equal(layout.Size.Width - name.Size.Width, nameOffset.Dx, precision: 6);
+            Assert.Equal(layout.Size.Width - email.Size.Width, emailOffset.Dx, precision: 6);
+            Assert.Equal(0.0, iconOffset.Dx);
         }
     }
 

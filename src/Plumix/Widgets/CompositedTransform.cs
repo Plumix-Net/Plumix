@@ -33,7 +33,7 @@ public sealed class CompositedTransformFollower : SingleChildRenderObjectWidget
         LayerLink link,
         Widget? child = null,
         bool showWhenUnlinked = true,
-        Point offset = default,
+        Offset offset = default,
         Alignment? targetAnchor = null,
         Alignment? followerAnchor = null,
         Key? key = null) : base(child, key)
@@ -49,7 +49,7 @@ public sealed class CompositedTransformFollower : SingleChildRenderObjectWidget
 
     public bool ShowWhenUnlinked { get; }
 
-    public Point Offset { get; }
+    public Offset Offset { get; }
 
     public Alignment TargetAnchor { get; }
 

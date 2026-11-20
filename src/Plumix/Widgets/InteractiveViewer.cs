@@ -351,10 +351,10 @@ public sealed class InteractiveViewer : StatefulWidget
     }
 
     // Return the translation from the given Matrix4 as an Offset.
-    private static Point GetMatrixTranslation(Matrix4 matrix)
+    private static Offset GetMatrixTranslation(Matrix4 matrix)
     {
         Vector3 nextTranslation = matrix.GetTranslation();
-        return new Point(nextTranslation.X, nextTranslation.Y);
+        return new Offset(nextTranslation.X, nextTranslation.Y);
     }
 
     // Transform the four corners of the viewport by the inverse of the given matrix. This gives the
@@ -365,10 +365,10 @@ public sealed class InteractiveViewer : StatefulWidget
         Matrix4 inverseMatrix = matrix.Clone();
         inverseMatrix.Invert();
         return Quad.Points(
-            inverseMatrix.Transform3(new Vector3(viewport.TopLeft.X, viewport.TopLeft.Y, 0.0)),
-            inverseMatrix.Transform3(new Vector3(viewport.TopRight.X, viewport.TopRight.Y, 0.0)),
-            inverseMatrix.Transform3(new Vector3(viewport.BottomRight.X, viewport.BottomRight.Y, 0.0)),
-            inverseMatrix.Transform3(new Vector3(viewport.BottomLeft.X, viewport.BottomLeft.Y, 0.0)));
+            inverseMatrix.Transform3(new Vector3(viewport.TopLeft.Dx, viewport.TopLeft.Dy, 0.0)),
+            inverseMatrix.Transform3(new Vector3(viewport.TopRight.Dx, viewport.TopRight.Dy, 0.0)),
+            inverseMatrix.Transform3(new Vector3(viewport.BottomRight.Dx, viewport.BottomRight.Dy, 0.0)),
+            inverseMatrix.Transform3(new Vector3(viewport.BottomLeft.Dx, viewport.BottomLeft.Dy, 0.0)));
     }
 
     // Find the axis aligned bounding box for the rect rotated about its center by the given amount.
@@ -388,22 +388,22 @@ public sealed class InteractiveViewer : StatefulWidget
 
     // Return the amount that viewport lies outside of boundary. If the viewport is completely
     // contained within the boundary (inclusively), then returns Offset.zero.
-    private static Point ExceedsBy(Quad boundary, Quad viewport)
+    private static Offset ExceedsBy(Quad boundary, Quad viewport)
     {
         Vector3[] viewportPoints = [viewport.Point0, viewport.Point1, viewport.Point2, viewport.Point3];
-        Point largestExcess = default;
+        Offset largestExcess = default;
         foreach (Vector3 point in viewportPoints)
         {
             Vector3 pointInside = GetNearestPointInside(point, boundary);
-            var excess = new Point(pointInside.X - point.X, pointInside.Y - point.Y);
-            if (Math.Abs(excess.X) > Math.Abs(largestExcess.X))
+            var excess = new Offset(pointInside.X - point.X, pointInside.Y - point.Y);
+            if (Math.Abs(excess.Dx) > Math.Abs(largestExcess.Dx))
             {
-                largestExcess = new Point(excess.X, largestExcess.Y);
+                largestExcess = new Offset(excess.Dx, largestExcess.Dy);
             }
 
-            if (Math.Abs(excess.Y) > Math.Abs(largestExcess.Y))
+            if (Math.Abs(excess.Dy) > Math.Abs(largestExcess.Dy))
             {
-                largestExcess = new Point(largestExcess.X, excess.Y);
+                largestExcess = new Offset(largestExcess.Dx, excess.Dy);
             }
         }
 
@@ -412,32 +412,32 @@ public sealed class InteractiveViewer : StatefulWidget
 
     // Round the output values. This works around a precision problem where values that should have
     // been zero were given as within 10^-10 of zero.
-    private static Point Round(Point offset)
+    private static Offset Round(Offset offset)
     {
-        return new Point(
-            double.Parse(Diagnostics.ToStringAsFixed(offset.X, 9), CultureInfo.InvariantCulture),
-            double.Parse(Diagnostics.ToStringAsFixed(offset.Y, 9), CultureInfo.InvariantCulture));
+        return new Offset(
+            double.Parse(Diagnostics.ToStringAsFixed(offset.Dx, 9), CultureInfo.InvariantCulture),
+            double.Parse(Diagnostics.ToStringAsFixed(offset.Dy, 9), CultureInfo.InvariantCulture));
     }
 
     // Align the given offset to the given axis by allowing movement only in the axis direction.
-    private static Point AlignAxis(Point offset, Axis axis) => axis switch
+    private static Offset AlignAxis(Offset offset, Axis axis) => axis switch
     {
-        Axis.Horizontal => new Point(offset.X, 0.0),
-        Axis.Vertical => new Point(0.0, offset.Y),
+        Axis.Horizontal => new Offset(offset.Dx, 0.0),
+        Axis.Vertical => new Offset(0.0, offset.Dy),
         _ => throw new ArgumentOutOfRangeException(nameof(axis)),
     };
 
     // Given two points, return the axis where the distance between the points is greatest. If they
     // are equal, return null.
-    private static Axis? GetPanAxis(Point point1, Point point2)
+    private static Axis? GetPanAxis(Offset point1, Offset point2)
     {
         if (point1 == point2)
         {
             return null;
         }
 
-        double x = point2.X - point1.X;
-        double y = point2.Y - point1.Y;
+        double x = point2.Dx - point1.Dx;
+        double y = point2.Dy - point1.Dy;
         return Math.Abs(x) > Math.Abs(y) ? Axis.Horizontal : Axis.Vertical;
     }
 
@@ -478,13 +478,13 @@ public sealed class InteractiveViewer : StatefulWidget
         private TransformationController? _transformerField;
         private readonly GlobalKey _childKey = new LabeledGlobalKey<State>(null);
         private readonly GlobalKey _parentKey = new LabeledGlobalKey<State>(null);
-        private Animation<Point>? _animation;
+        private Animation<Offset>? _animation;
         private Animation<double>? _scaleAnimation;
-        private Point _scaleAnimationFocalPoint;
+        private Offset _scaleAnimationFocalPoint;
         private AnimationController _controller = null!;
         private AnimationController _scaleController = null!;
         private Axis? _currentAxis; // Used with panAxis.
-        private Point? _referenceFocalPoint; // Point where the current gesture began.
+        private Offset? _referenceFocalPoint; // Point where the current gesture began.
         private double? _scaleStart; // Scale value at start of scaling gesture.
         private double? _rotationStart = 0.0; // Rotation at start of rotation gesture.
         private double _currentRotation; // Rotation of _transformationController.value.
@@ -548,19 +548,19 @@ public sealed class InteractiveViewer : StatefulWidget
             {
                 DebugAssertions.Assert(_parentKey.CurrentContext is not null);
                 var parentRenderBox = (RenderBox)_parentKey.CurrentContext!.FindRenderObject()!;
-                return new Rect(parentRenderBox.Size);
+                return DartGeometry.RectFromSize(parentRenderBox.Size);
             }
         }
 
         // Return a new matrix representing the given matrix after applying the given translation.
-        private Matrix4 MatrixTranslate(Matrix4 matrix, Point translation)
+        private Matrix4 MatrixTranslate(Matrix4 matrix, Offset translation)
         {
             if (translation == default)
             {
                 return matrix.Clone();
             }
 
-            Point alignedTranslation;
+            Offset alignedTranslation;
 
             if (_currentAxis is not null)
             {
@@ -579,7 +579,7 @@ public sealed class InteractiveViewer : StatefulWidget
             }
 
             Matrix4 nextMatrix = matrix.Clone();
-            nextMatrix.TranslateByDouble(alignedTranslation.X, alignedTranslation.Y, 0, 1);
+            nextMatrix.TranslateByDouble(alignedTranslation.Dx, alignedTranslation.Dy, 0, 1);
 
             // Transform the viewport to determine where its four corners will be after the child has
             // been transformed.
@@ -598,7 +598,7 @@ public sealed class InteractiveViewer : StatefulWidget
             Quad boundariesAabbQuad = GetAxisAlignedBoundingBoxWithRotation(BoundaryRect, _currentRotation);
 
             // If the given translation fits completely within the boundaries, allow it.
-            Point offendingDistance = ExceedsBy(boundariesAabbQuad, nextViewport);
+            Offset offendingDistance = ExceedsBy(boundariesAabbQuad, nextViewport);
             if (offendingDistance == default)
             {
                 return nextMatrix;
@@ -606,19 +606,19 @@ public sealed class InteractiveViewer : StatefulWidget
 
             // Desired translation goes out of bounds, so translate to the nearest in-bounds point
             // instead.
-            Point nextTotalTranslation = GetMatrixTranslation(nextMatrix);
+            Offset nextTotalTranslation = GetMatrixTranslation(nextMatrix);
             double currentScale = matrix.GetMaxScaleOnAxis();
-            var correctedTotalTranslation = new Point(
-                nextTotalTranslation.X - (offendingDistance.X * currentScale),
-                nextTotalTranslation.Y - (offendingDistance.Y * currentScale));
+            var correctedTotalTranslation = new Offset(
+                nextTotalTranslation.Dx - (offendingDistance.Dx * currentScale),
+                nextTotalTranslation.Dy - (offendingDistance.Dy * currentScale));
             // TODO(justinmc): This needs some work to handle rotation properly. The translation
             // should align with the corrected rotation.
             Matrix4 correctedMatrix = matrix.Clone();
-            correctedMatrix.SetTranslation(new Vector3(correctedTotalTranslation.X, correctedTotalTranslation.Y, 0.0));
+            correctedMatrix.SetTranslation(new Vector3(correctedTotalTranslation.Dx, correctedTotalTranslation.Dy, 0.0));
 
             // Double check that the corrected translation fits.
             Quad correctedViewport = TransformViewport(correctedMatrix, Viewport);
-            Point offendingCorrectedDistance = ExceedsBy(boundariesAabbQuad, correctedViewport);
+            Offset offendingCorrectedDistance = ExceedsBy(boundariesAabbQuad, correctedViewport);
             if (offendingCorrectedDistance == default)
             {
                 return correctedMatrix;
@@ -626,20 +626,20 @@ public sealed class InteractiveViewer : StatefulWidget
 
             // If the corrected translation doesn't fit in either direction, don't allow any
             // translation at all. This happens when the viewport is larger than the entire boundary.
-            if (offendingCorrectedDistance.X != 0.0 && offendingCorrectedDistance.Y != 0.0)
+            if (offendingCorrectedDistance.Dx != 0.0 && offendingCorrectedDistance.Dy != 0.0)
             {
                 return matrix.Clone();
             }
 
             // Otherwise, allow translation in only the direction that fits. This happens when the
             // viewport is larger than the boundary in one direction.
-            var unidirectionalCorrectedTotalTranslation = new Point(
-                offendingCorrectedDistance.X == 0.0 ? correctedTotalTranslation.X : 0.0,
-                offendingCorrectedDistance.Y == 0.0 ? correctedTotalTranslation.Y : 0.0);
+            var unidirectionalCorrectedTotalTranslation = new Offset(
+                offendingCorrectedDistance.Dx == 0.0 ? correctedTotalTranslation.Dx : 0.0,
+                offendingCorrectedDistance.Dy == 0.0 ? correctedTotalTranslation.Dy : 0.0);
             Matrix4 unidirectionalMatrix = matrix.Clone();
             unidirectionalMatrix.SetTranslation(new Vector3(
-                unidirectionalCorrectedTotalTranslation.X,
-                unidirectionalCorrectedTotalTranslation.Y,
+                unidirectionalCorrectedTotalTranslation.Dx,
+                unidirectionalCorrectedTotalTranslation.Dy,
                 0.0));
             return unidirectionalMatrix;
         }
@@ -669,18 +669,18 @@ public sealed class InteractiveViewer : StatefulWidget
         }
 
         // Return a new matrix representing the given matrix after applying the given rotation.
-        private Matrix4 MatrixRotate(Matrix4 matrix, double rotation, Point focalPoint)
+        private Matrix4 MatrixRotate(Matrix4 matrix, double rotation, Offset focalPoint)
         {
             if (rotation == 0)
             {
                 return matrix.Clone();
             }
 
-            Point focalPointScene = Transformer.ToScene(focalPoint);
+            Offset focalPointScene = Transformer.ToScene(focalPoint);
             Matrix4 result = matrix.Clone();
-            result.TranslateByDouble(focalPointScene.X, focalPointScene.Y, 0, 1);
+            result.TranslateByDouble(focalPointScene.Dx, focalPointScene.Dy, 0, 1);
             result.RotateZ(-rotation);
-            result.TranslateByDouble(-focalPointScene.X, -focalPointScene.Y, 0, 1);
+            result.TranslateByDouble(-focalPointScene.Dx, -focalPointScene.Dy, 0, 1);
             return result;
         }
 
@@ -748,7 +748,7 @@ public sealed class InteractiveViewer : StatefulWidget
         {
             double scale = Transformer.Value.GetMaxScaleOnAxis();
             _scaleAnimationFocalPoint = details.LocalFocalPoint;
-            Point focalPointScene = Transformer.ToScene(details.LocalFocalPoint);
+            Offset focalPointScene = Transformer.ToScene(details.LocalFocalPoint);
 
             if (_gestureType == GestureType.Pan)
             {
@@ -782,7 +782,7 @@ public sealed class InteractiveViewer : StatefulWidget
                     // While scaling, translate such that the user's two fingers stay on the same
                     // places in the scene. That means that the focal point of the scale should be on
                     // the same place in the scene before and after the scale.
-                    Point focalPointSceneScaled = Transformer.ToScene(details.LocalFocalPoint);
+                    Offset focalPointSceneScaled = Transformer.ToScene(details.LocalFocalPoint);
                     Transformer.Value = MatrixTranslate(
                         Transformer.Value,
                         focalPointSceneScaled - _referenceFocalPoint!.Value);
@@ -791,7 +791,7 @@ public sealed class InteractiveViewer : StatefulWidget
                     // _referenceFocalPoint point. If it's not, that's because the translate came in
                     // contact with a boundary. In that case, update _referenceFocalPoint so
                     // subsequent updates happen in relation to the new effective focal point.
-                    Point focalPointSceneCheck = Transformer.ToScene(details.LocalFocalPoint);
+                    Offset focalPointSceneCheck = Transformer.ToScene(details.LocalFocalPoint);
                     if (Round(_referenceFocalPoint.Value) != Round(focalPointSceneCheck))
                     {
                         _referenceFocalPoint = focalPointSceneCheck;
@@ -832,7 +832,7 @@ public sealed class InteractiveViewer : StatefulWidget
                     _currentAxis ??= GetPanAxis(_referenceFocalPoint!.Value, focalPointScene);
                     // Translate so that the same point in the scene is underneath the focal point
                     // before and after the movement.
-                    Point translationChange = focalPointScene - _referenceFocalPoint!.Value;
+                    Offset translationChange = focalPointScene - _referenceFocalPoint!.Value;
                     Transformer.Value = MatrixTranslate(Transformer.Value, translationChange);
                     _referenceFocalPoint = Transformer.ToScene(details.LocalFocalPoint);
                     break;
@@ -866,28 +866,28 @@ public sealed class InteractiveViewer : StatefulWidget
             {
                 case GestureType.Pan:
                 {
-                    if (details.Velocity.PixelsPerSecond.Length < GestureConstants.MinFlingVelocity)
+                    if (details.Velocity.PixelsPerSecond.DartDistance < GestureConstants.MinFlingVelocity)
                     {
                         _currentAxis = null;
                         return;
                     }
 
                     Vector3 translationVector = Transformer.Value.GetTranslation();
-                    var translation = new Point(translationVector.X, translationVector.Y);
+                    var translation = new Offset(translationVector.X, translationVector.Y);
                     var frictionSimulationX = new FrictionSimulation(
                         Widget.InteractionEndFrictionCoefficient,
-                        translation.X,
-                        details.Velocity.PixelsPerSecond.X);
+                        translation.Dx,
+                        details.Velocity.PixelsPerSecond.Dx);
                     var frictionSimulationY = new FrictionSimulation(
                         Widget.InteractionEndFrictionCoefficient,
-                        translation.Y,
-                        details.Velocity.PixelsPerSecond.Y);
+                        translation.Dy,
+                        details.Velocity.PixelsPerSecond.Dy);
                     double tFinal = GetFinalTime(
-                        details.Velocity.PixelsPerSecond.Length,
+                        details.Velocity.PixelsPerSecond.DartDistance,
                         Widget.InteractionEndFrictionCoefficient);
-                    _animation = new Tween<Point>(
+                    _animation = new Tween<Offset>(
                             begin: translation,
-                            end: new Point(frictionSimulationX.FinalX, frictionSimulationY.FinalX))
+                            end: new Offset(frictionSimulationX.FinalX, frictionSimulationY.FinalX))
                         .Chain(new CurveTween(curve: Curves.Decelerate))
                         .Animate(_controller);
                     _controller.Duration = TimeSpan.FromMilliseconds(Math.Round(tFinal * 1000));
@@ -931,8 +931,8 @@ public sealed class InteractiveViewer : StatefulWidget
         // Handle mousewheel and web trackpad scroll events.
         private void ReceivedPointerSignal(PointerSignalEvent @event)
         {
-            Point local = @event.LocalPosition;
-            Point global = @event.Position;
+            Offset local = @event.LocalPosition;
+            Offset global = @event.Position;
             double scaleChange;
             if (@event is PointerScrollEvent scrollEvent)
             {
@@ -942,7 +942,7 @@ public sealed class InteractiveViewer : StatefulWidget
                     Widget.OnInteractionStart?.Invoke(
                         new ScaleStartDetails(focalPoint: global, localFocalPoint: local));
 
-                    Point localDelta = PointerEvent.TransformDeltaViaPositions(
+                    Offset localDelta = PointerEvent.TransformDeltaViaPositions(
                         untransformedEndPosition: global + scrollEvent.ScrollDelta,
                         untransformedDelta: scrollEvent.ScrollDelta,
                         transform: @event.Transform);
@@ -957,8 +957,8 @@ public sealed class InteractiveViewer : StatefulWidget
                         return;
                     }
 
-                    Point focalPointScene = Transformer.ToScene(local);
-                    Point newFocalPointScene = Transformer.ToScene(local - localDelta);
+                    Offset focalPointScene = Transformer.ToScene(local);
+                    Offset newFocalPointScene = Transformer.ToScene(local - localDelta);
 
                     Transformer.Value = MatrixTranslate(Transformer.Value, newFocalPointScene - focalPointScene);
 
@@ -971,12 +971,12 @@ public sealed class InteractiveViewer : StatefulWidget
                 }
 
                 // Ignore left and right mouse wheel scroll.
-                if (scrollEvent.ScrollDelta.Y == 0.0)
+                if (scrollEvent.ScrollDelta.Dy == 0.0)
                 {
                     return;
                 }
 
-                scaleChange = Math.Exp(-scrollEvent.ScrollDelta.Y / Widget.ScaleFactor);
+                scaleChange = Math.Exp(-scrollEvent.ScrollDelta.Dy / Widget.ScaleFactor);
             }
             else if (@event is PointerScaleEvent scaleEvent)
             {
@@ -999,13 +999,13 @@ public sealed class InteractiveViewer : StatefulWidget
                 return;
             }
 
-            Point focalPointSceneBefore = Transformer.ToScene(local);
+            Offset focalPointSceneBefore = Transformer.ToScene(local);
 
             Transformer.Value = MatrixScale(Transformer.Value, scaleChange);
 
             // After scaling, translate such that the event's position is at the same scene point
             // before and after the scale.
-            Point focalPointSceneScaled = Transformer.ToScene(local);
+            Offset focalPointSceneScaled = Transformer.ToScene(local);
             Transformer.Value = MatrixTranslate(Transformer.Value, focalPointSceneScaled - focalPointSceneBefore);
 
             Widget.OnInteractionUpdate?.Invoke(new ScaleUpdateDetails(
@@ -1029,7 +1029,7 @@ public sealed class InteractiveViewer : StatefulWidget
 
             // Translate such that the resulting translation is _animation.value.
             Vector3 translationVector = Transformer.Value.GetTranslation();
-            var translation = new Point(translationVector.X, translationVector.Y);
+            var translation = new Offset(translationVector.X, translationVector.Y);
             Transformer.Value = MatrixTranslate(
                 Transformer.Value,
                 Transformer.ToScene(_animation!.Value) - Transformer.ToScene(translation));
@@ -1049,13 +1049,13 @@ public sealed class InteractiveViewer : StatefulWidget
 
             double desiredScale = _scaleAnimation!.Value;
             double scaleChange = desiredScale / Transformer.Value.GetMaxScaleOnAxis();
-            Point referenceFocalPoint = Transformer.ToScene(_scaleAnimationFocalPoint);
+            Offset referenceFocalPoint = Transformer.ToScene(_scaleAnimationFocalPoint);
             Transformer.Value = MatrixScale(Transformer.Value, scaleChange);
 
             // While scaling, translate such that the user's two fingers stay on the same places in
             // the scene. That means that the focal point of the scale should be on the same place in
             // the scene before and after the scale.
-            Point focalPointSceneScaled = Transformer.ToScene(_scaleAnimationFocalPoint);
+            Offset focalPointSceneScaled = Transformer.ToScene(_scaleAnimationFocalPoint);
             Transformer.Value = MatrixTranslate(Transformer.Value, focalPointSceneScaled - referenceFocalPoint);
         }
 
@@ -1138,7 +1138,7 @@ public sealed class InteractiveViewer : StatefulWidget
                             matrix: matrix,
                             child: Widget.Builder_!(
                                 builderContext,
-                                TransformViewport(matrix, new Rect(constraints.Biggest))));
+                                TransformViewport(matrix, DartGeometry.RectFromSize(constraints.Biggest))));
                     });
             }
 
@@ -1152,7 +1152,7 @@ public sealed class InteractiveViewer : StatefulWidget
                     onScaleStart: OnScaleStart,
                     onScaleUpdate: OnScaleUpdate,
                     trackpadScrollCausesScale: Widget.TrackpadScrollCausesScale,
-                    trackpadScrollToScaleFactor: new Point(0, -1 / Widget.ScaleFactor),
+                    trackpadScrollToScaleFactor: new Offset(0, -1 / Widget.ScaleFactor),
                     child: child));
         }
     }
@@ -1227,13 +1227,13 @@ public class TransformationController : ValueNotifier<Matrix4>
     /// Return the scene point at the given viewport point: the inverse of the current transformation
     /// applied to it.
     /// </summary>
-    public Point ToScene(Point viewportPoint)
+    public Offset ToScene(Offset viewportPoint)
     {
         // On viewportPoint, perform the inverse transformation of the scene to get where the point
         // would be in the scene before the transformation.
         Matrix4 inverseMatrix = Matrix4.Inverted(Value);
-        Vector3 untransformed = inverseMatrix.Transform3(new Vector3(viewportPoint.X, viewportPoint.Y, 0));
-        return new Point(untransformed.X, untransformed.Y);
+        Vector3 untransformed = inverseMatrix.Transform3(new Vector3(viewportPoint.Dx, viewportPoint.Dy, 0));
+        return new Offset(untransformed.X, untransformed.Y);
     }
 }
 

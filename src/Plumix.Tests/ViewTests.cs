@@ -711,12 +711,12 @@ public sealed class ViewTests
                 ])));
         using var tree = new ViewTree(Build());
         var box = (RenderBox)leaf!;
-        Assert.Equal(new Point(790, 590), ((BoxParentData)box.parentData!).offset);
+        Assert.Equal(new Offset(790, 590), ((BoxParentData)box.parentData!).offset);
 
         tree.Update(Build());
 
         box = (RenderBox)leaf!;
-        Assert.Equal(new Point(790, 590), ((BoxParentData)box.parentData!).offset);
+        Assert.Equal(new Offset(790, 590), ((BoxParentData)box.parentData!).offset);
     }
 
     [Fact]
@@ -923,7 +923,7 @@ public sealed class ViewTests
             Size = Constraints.Smallest;
         }
 
-        public override void Paint(PaintingContext ctx, Point offset)
+        public override void Paint(PaintingContext ctx, Offset offset)
         {
         }
     }

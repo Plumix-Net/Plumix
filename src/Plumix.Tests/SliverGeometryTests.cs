@@ -225,7 +225,7 @@ public sealed class SliverGeometryTests
 
         protected override bool HitTestSelf(double mainAxisPosition, double crossAxisPosition) => true;
 
-        public override void Paint(PaintingContext context, Point offset)
+        public override void Paint(PaintingContext context, Offset offset)
         {
             PaintCount += 1;
         }

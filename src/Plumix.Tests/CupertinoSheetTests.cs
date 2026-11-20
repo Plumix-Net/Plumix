@@ -145,7 +145,7 @@ public sealed class CupertinoSheetTests : IDisposable
 
             SlideTransition covered = FindWidgets<SlideTransition>(root)
                 .Single(slide => !slide.TransformHitTests);
-            Assert.InRange(covered.Position.Value.Y, -0.005, 0.0);
+            Assert.InRange(covered.Position.Value.Dy, -0.005, 0.0);
         }
         finally
         {
@@ -162,7 +162,7 @@ public sealed class CupertinoSheetTests : IDisposable
             VerticalDragGestureRecognizer recognizer = Assert.IsType<VerticalDragGestureRecognizer>(
                 FindSheetDragRecognizer(partial.Root));
             recognizer.OnStart!(new DragStartDetails(default));
-            recognizer.OnUpdate!(new DragUpdateDetails(default, default, new Point(0.0, 200.0), 200.0));
+            recognizer.OnUpdate!(new DragUpdateDetails(default, default, new Offset(0.0, 200.0), 200.0));
             recognizer.OnEnd!(new DragEndDetails(0.0));
             Settle(partial.Root.TestOwner);
 
@@ -179,7 +179,7 @@ public sealed class CupertinoSheetTests : IDisposable
             VerticalDragGestureRecognizer recognizer = Assert.IsType<VerticalDragGestureRecognizer>(
                 FindSheetDragRecognizer(longDrag.Root));
             recognizer.OnStart!(new DragStartDetails(default));
-            recognizer.OnUpdate!(new DragUpdateDetails(default, default, new Point(0.0, 400.0), 400.0));
+            recognizer.OnUpdate!(new DragUpdateDetails(default, default, new Offset(0.0, 400.0), 400.0));
             recognizer.OnEnd!(new DragEndDetails(0.0));
             Settle(longDrag.Root.TestOwner);
 

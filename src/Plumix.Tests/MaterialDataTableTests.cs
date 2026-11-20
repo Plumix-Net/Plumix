@@ -366,7 +366,7 @@ public sealed class MaterialDataTableTests : IDisposable
         harness.Pump(new Size(240.0, 100.0));
 
         InkResponseProbe paint = Assert.Single(InkFeatureProbe.Responses(harness.RenderView));
-        Assert.Equal(new Rect(-100.0, 0.0, 200.0, 48.0), paint.ResolvedInkRect);
+        Assert.Equal(DartGeometry.RectFromLTWH(-100.0, 0.0, 200.0, 48.0), paint.ResolvedInkRect);
     }
 
     [DebugOnlyFact]

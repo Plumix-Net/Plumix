@@ -83,7 +83,7 @@ public sealed class ImageTexture : EngineTexture
                    },
                }))
         {
-            context.DrawImage(image, new Rect(size), bounds);
+            context.DrawImage(image, DartGeometry.RectFromSize(size), bounds);
         }
     }
 

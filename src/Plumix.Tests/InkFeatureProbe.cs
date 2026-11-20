@@ -104,7 +104,7 @@ internal sealed record InkResponseProbe(InkResponseStateWidget Widget, RenderBox
 {
     /// <summary>The rect the response's highlight paints (its rect callback, else the reference box).</summary>
     public Rect ResolvedInkRect =>
-        Widget.GetRectCallback?.Invoke(ReferenceBox)?.Invoke() ?? new Rect(ReferenceBox.Size);
+        Widget.GetRectCallback?.Invoke(ReferenceBox)?.Invoke() ?? DartGeometry.RectFromSize(ReferenceBox.Size);
 
     public Size Size => ReferenceBox.Size;
 }

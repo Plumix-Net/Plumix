@@ -19,7 +19,7 @@ public sealed class SpellCheckSuggestionsToolbar : StatelessWidget
     internal const double ToolbarWidth = 165.0;
 
     public SpellCheckSuggestionsToolbar(
-        Point anchor,
+        Offset anchor,
         IReadOnlyList<ContextMenuButtonItem> buttonItems,
         Key? key = null) : base(key)
     {
@@ -33,7 +33,7 @@ public sealed class SpellCheckSuggestionsToolbar : StatelessWidget
         ButtonItems = buttonItems;
     }
 
-    public Point Anchor { get; }
+    public Offset Anchor { get; }
 
     public IReadOnlyList<ContextMenuButtonItem> ButtonItems { get; }
 
@@ -64,7 +64,7 @@ public sealed class SpellCheckSuggestionsToolbar : StatelessWidget
         return items;
     }
 
-    public static Point GetToolbarAnchor(TextSelectionToolbarAnchors anchors)
+    public static Offset GetToolbarAnchor(TextSelectionToolbarAnchors anchors)
     {
         return anchors.SecondaryAnchor ?? anchors.PrimaryAnchor;
     }
@@ -80,7 +80,7 @@ public sealed class SpellCheckSuggestionsToolbar : StatelessWidget
         MediaQueryData mediaQuery = MediaQuery.Of(context);
         double paddingAbove = mediaQuery.Padding.Top + TextSelectionToolbar.ToolbarScreenPadding;
         double screenPadding = TextSelectionToolbar.ToolbarScreenPadding;
-        var localAdjustment = new Vector(screenPadding, paddingAbove);
+        var localAdjustment = new Offset(screenPadding, paddingAbove);
         var children = new List<Widget>(ButtonItems.Count);
         foreach (ContextMenuButtonItem item in ButtonItems)
         {
@@ -147,22 +147,22 @@ public sealed class SpellCheckSuggestionsToolbar : StatelessWidget
 
 public sealed class SpellCheckSuggestionsToolbarLayoutDelegate : SingleChildLayoutDelegate
 {
-    public SpellCheckSuggestionsToolbarLayoutDelegate(Point anchor)
+    public SpellCheckSuggestionsToolbarLayoutDelegate(Offset anchor)
     {
         Anchor = anchor;
     }
 
-    public Point Anchor { get; }
+    public Offset Anchor { get; }
 
     public override BoxConstraints GetConstraintsForChild(BoxConstraints constraints) => constraints.Loosen();
 
-    public override Point GetPositionForChild(Size size, Size childSize)
+    public override Offset GetPositionForChild(Size size, Size childSize)
     {
-        return new Point(
-            TextSelectionToolbarLayoutDelegate.CenterOn(Anchor.X, childSize.Width, size.Width),
-            Anchor.Y + childSize.Height > size.Height
+        return new Offset(
+            TextSelectionToolbarLayoutDelegate.CenterOn(Anchor.Dx, childSize.Width, size.Width),
+            Anchor.Dy + childSize.Height > size.Height
                 ? size.Height - childSize.Height
-                : Anchor.Y);
+                : Anchor.Dy);
     }
 
     public override bool ShouldRelayout(SingleChildLayoutDelegate oldDelegate)

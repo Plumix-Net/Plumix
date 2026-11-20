@@ -20,7 +20,7 @@ namespace Plumix.Material;
 /// Since the value indicator is painted on the Overlay; this method paints the value indicator in a
 /// [RenderBox] that appears in the [Overlay].
 /// </remarks>
-public delegate void PaintValueIndicator(PaintingContext context, Point offset);
+public delegate void PaintValueIndicator(PaintingContext context, Offset offset);
 
 /// <summary>Dart's private <c>_SliderType</c>.</summary>
 internal enum SliderType
@@ -1622,10 +1622,10 @@ internal sealed class RenderSlider : RenderBox
         };
     }
 
-    private double GetValueFromGlobalPosition(Point globalPosition)
+    private double GetValueFromGlobalPosition(Offset globalPosition)
     {
         Rect trackRect = TrackRect;
-        double visualPosition = (GlobalToLocal(globalPosition).X - trackRect.Left) / trackRect.Width;
+        double visualPosition = (GlobalToLocal(globalPosition).Dx - trackRect.Left) / trackRect.Width;
         return GetValueFromVisualPosition(visualPosition);
     }
 
@@ -1640,7 +1640,7 @@ internal sealed class RenderSlider : RenderBox
         return result;
     }
 
-    private void StartInteraction(Point globalPosition)
+    private void StartInteraction(Offset globalPosition)
     {
         if (!_state.Mounted)
         {
@@ -1767,12 +1767,12 @@ internal sealed class RenderSlider : RenderBox
         EndInteraction();
     }
 
-    private bool IsPointerOnOverlay(Point globalPosition)
+    private bool IsPointerOnOverlay(Offset globalPosition)
     {
         return OverlayRect!.Value.ContainsHalfOpen(GlobalToLocal(globalPosition));
     }
 
-    protected override bool HitTestSelf(Point position) => true;
+    protected override bool HitTestSelf(Offset position) => true;
 
     public override void HandleEvent(PointerEvent @event, HitTestEntry entry)
     {
@@ -1820,7 +1820,7 @@ internal sealed class RenderSlider : RenderBox
                 : Math.Max(MinPreferredTrackHeight, MaxSliderPartHeight));
     }
 
-    public override void Paint(PaintingContext context, Point offset)
+    public override void Paint(PaintingContext context, Offset offset)
     {
         double controllerValue = _state.PositionController.Value;
 
@@ -1839,18 +1839,18 @@ internal sealed class RenderSlider : RenderBox
             sliderTheme: _sliderTheme,
             isDiscrete: IsDiscrete);
 
-        Point thumbCenter = CalcThumbCenter(trackRect: trackRect, visualPosition: visualPosition);
+        Offset thumbCenter = CalcThumbCenter(trackRect: trackRect, visualPosition: visualPosition);
 
         if (IsInteractive)
         {
             Size overlaySize = SliderTheme.OverlayShape!.GetPreferredSize(IsInteractive, false);
             double radius = overlaySize.Width / 2.0;
             // Dart's `Rect.fromCircle(center: thumbCenter, radius: radius)`.
-            OverlayRect = new Rect(thumbCenter.X - radius, thumbCenter.Y - radius, radius * 2.0, radius * 2.0);
+            OverlayRect = DartGeometry.RectFromLTWH(thumbCenter.Dx - radius, thumbCenter.Dy - radius, radius * 2.0, radius * 2.0);
         }
 
-        Point? secondaryOffset = secondaryVisualPosition != null
-            ? new Point(trackRect.Left + secondaryVisualPosition.Value * trackRect.Width, trackRect.Center.Y)
+        Offset? secondaryOffset = secondaryVisualPosition != null
+            ? new Offset(trackRect.Left + secondaryVisualPosition.Value * trackRect.Width, trackRect.Center.Dy)
             : null;
 
         // If [Slider.year2023] is false, the thumb uses handle thumb shape and gapped track shape.
@@ -1915,14 +1915,14 @@ internal sealed class RenderSlider : RenderBox
             // If the tick marks would be too dense, don't bother painting them.
             if (adjustedTrackWidth / Divisions!.Value >= 3.0 * tickMarkWidth)
             {
-                double dy = trackRect.Center.Y;
+                double dy = trackRect.Center.Dy;
                 for (int i = 0; i <= Divisions!.Value; i++)
                 {
                     double value = (double)i / Divisions!.Value;
                     // The ticks are mapped to be within the track, so the tick mark width must be
                     // subtracted from the track width.
                     double dx = trackRect.Left + value * adjustedTrackWidth + discreteTrackPadding / 2;
-                    var tickMarkOffset = new Point(dx, dy);
+                    var tickMarkOffset = new Offset(dx, dy);
                     _sliderTheme.TickMarkShape!.Paint(
                         context,
                         tickMarkOffset,
@@ -1941,7 +1941,7 @@ internal sealed class RenderSlider : RenderBox
             && ((ShouldShowValueIndicatorWhenDragged && !_valueIndicatorAnimation.Status.IsDismissed())
                 || ShouldAlwaysShowValueIndicator))
         {
-            _state.PaintValueIndicator = (PaintingContext paintingContext, Point paintOffset) =>
+            _state.PaintValueIndicator = (PaintingContext paintingContext, Offset paintOffset) =>
             {
                 if (Attached && _labelPainter.Text != null)
                 {
@@ -1996,7 +1996,7 @@ internal sealed class RenderSlider : RenderBox
     /// The [visualPosition] is provided by the caller so semantics can use the raw logical value while
     /// paint can use the smoothly animated value.
     /// </remarks>
-    private Point CalcThumbCenter(Rect trackRect, double visualPosition)
+    private Offset CalcThumbCenter(Rect trackRect, double visualPosition)
     {
         double padding = _sliderTheme.TrackShape!.IsRounded ? trackRect.Height : 0.0;
         double thumbPosition = IsDiscrete
@@ -2006,12 +2006,12 @@ internal sealed class RenderSlider : RenderBox
         // thumb radius to ensure the thumb is drawn within the track.
         Size thumbPreferredSize = _sliderTheme.ThumbShape!.GetPreferredSize(IsInteractive, IsDiscrete);
         double thumbPadding = padding > thumbPreferredSize.Width / 2 ? padding / 2 : 0;
-        return new Point(
+        return new Offset(
             ClampDouble(thumbPosition, trackRect.Left + thumbPadding, trackRect.Right - thumbPadding),
-            trackRect.Center.Y);
+            trackRect.Center.Dy);
     }
 
-    private Point SemanticThumbCenter
+    private Offset SemanticThumbCenter
     {
         get
         {
@@ -2029,10 +2029,10 @@ internal sealed class RenderSlider : RenderBox
         SemanticsConfiguration config,
         IReadOnlyList<SemanticsNode> children)
     {
-        Point center = SemanticThumbCenter;
+        Offset center = SemanticThumbCenter;
         const double extent = WidgetConstants.MinInteractiveDimension;
         // Dart's `Rect.fromCenter(center: ..., width: kMinInteractiveDimension, height: ...)`.
-        node.Rect = new Rect(center.X - extent / 2.0, center.Y - extent / 2.0, extent, extent);
+        node.Rect = DartGeometry.RectFromLTWH(center.Dx - extent / 2.0, center.Dy - extent / 2.0, extent, extent);
 
         node.UpdateWith(config: config);
     }
@@ -2272,7 +2272,7 @@ internal sealed partial class SliderState
             base.OnDetach();
         }
 
-        public override void Paint(PaintingContext context, Point offset)
+        public override void Paint(PaintingContext context, Offset offset)
         {
             State.PaintValueIndicator?.Invoke(context, offset);
         }

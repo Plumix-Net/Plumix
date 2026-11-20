@@ -20,8 +20,8 @@ public sealed class ViewportRevealTests
     [Fact]
     public void RevealedOffset_ClampOffsetReturnsNullWhenAlreadyVisible()
     {
-        var leading = new RevealedOffset(500.0, new Rect(0, 0, 300, 100));
-        var trailing = new RevealedOffset(400.0, new Rect(0, 100, 300, 100));
+        var leading = new RevealedOffset(500.0, DartGeometry.RectFromLTWH(0, 0, 300, 100));
+        var trailing = new RevealedOffset(400.0, DartGeometry.RectFromLTWH(0, 100, 300, 100));
 
         Assert.Null(RevealedOffset.ClampOffset(leading, trailing, currentOffset: 450.0));
         Assert.Same(leading, RevealedOffset.ClampOffset(leading, trailing, currentOffset: 600.0));
@@ -32,8 +32,8 @@ public sealed class ViewportRevealTests
     public void RevealedOffset_ClampOffsetHandlesInvertedEdges()
     {
         // A reversed axis makes the leading edge offset the smaller one.
-        var leading = new RevealedOffset(400.0, new Rect(0, 100, 300, 100));
-        var trailing = new RevealedOffset(500.0, new Rect(0, 0, 300, 100));
+        var leading = new RevealedOffset(400.0, DartGeometry.RectFromLTWH(0, 100, 300, 100));
+        var trailing = new RevealedOffset(500.0, DartGeometry.RectFromLTWH(0, 0, 300, 100));
 
         Assert.Null(RevealedOffset.ClampOffset(leading, trailing, currentOffset: 450.0));
         Assert.Same(trailing, RevealedOffset.ClampOffset(leading, trailing, currentOffset: 600.0));
@@ -83,20 +83,20 @@ public sealed class ViewportRevealTests
 
         RevealedOffset leading = viewport.GetOffsetToReveal(target.RequireRenderObject(), 0.0);
         Assert.Equal(500.0, leading.Offset, Tolerance);
-        Assert.Equal(new Rect(0, 0, 300, 100), leading.Rect);
+        Assert.Equal(DartGeometry.RectFromLTWH(0, 0, 300, 100), leading.Rect);
 
         RevealedOffset trailing = viewport.GetOffsetToReveal(target.RequireRenderObject(), 1.0);
         Assert.Equal(400.0, trailing.Offset, Tolerance);
-        Assert.Equal(new Rect(0, 100, 300, 100), trailing.Rect);
+        Assert.Equal(DartGeometry.RectFromLTWH(0, 100, 300, 100), trailing.Rect);
 
-        var rect = new Rect(40, 40, 10, 10);
+        var rect = DartGeometry.RectFromLTWH(40, 40, 10, 10);
         RevealedOffset leadingRect = viewport.GetOffsetToReveal(target.RequireRenderObject(), 0.0, rect);
         Assert.Equal(540.0, leadingRect.Offset, Tolerance);
-        Assert.Equal(new Rect(40, 0, 10, 10), leadingRect.Rect);
+        Assert.Equal(DartGeometry.RectFromLTWH(40, 0, 10, 10), leadingRect.Rect);
 
         RevealedOffset trailingRect = viewport.GetOffsetToReveal(target.RequireRenderObject(), 1.0, rect);
         Assert.Equal(350.0, trailingRect.Offset, Tolerance);
-        Assert.Equal(new Rect(40, 190, 10, 10), trailingRect.Rect);
+        Assert.Equal(DartGeometry.RectFromLTWH(40, 190, 10, 10), trailingRect.Rect);
 
         controller.Dispose();
     }
@@ -118,13 +118,13 @@ public sealed class ViewportRevealTests
 
         RevealedOffset leading = viewport.GetOffsetToReveal(target.RequireRenderObject(), 0.0);
         Assert.Equal(500.0, leading.Offset, Tolerance);
-        Assert.Equal(new Rect(0, 0, 100, 300), leading.Rect);
+        Assert.Equal(DartGeometry.RectFromLTWH(0, 0, 100, 300), leading.Rect);
 
         RevealedOffset trailing = viewport.GetOffsetToReveal(target.RequireRenderObject(), 1.0);
         Assert.Equal(400.0, trailing.Offset, Tolerance);
-        Assert.Equal(new Rect(100, 0, 100, 300), trailing.Rect);
+        Assert.Equal(DartGeometry.RectFromLTWH(100, 0, 100, 300), trailing.Rect);
 
-        var rect = new Rect(40, 40, 10, 10);
+        var rect = DartGeometry.RectFromLTWH(40, 40, 10, 10);
         Assert.Equal(
             540.0,
             viewport.GetOffsetToReveal(target.RequireRenderObject(), 0.0, rect).Offset,
@@ -194,20 +194,20 @@ public sealed class ViewportRevealTests
 
         RevealedOffset leading = viewport.GetOffsetToReveal(target.RequireRenderObject(), 0.0);
         Assert.Equal(500.0, leading.Offset, Tolerance);
-        Assert.Equal(new Rect(0, 0, 300, 100), leading.Rect);
+        Assert.Equal(DartGeometry.RectFromLTWH(0, 0, 300, 100), leading.Rect);
 
         RevealedOffset trailing = viewport.GetOffsetToReveal(target.RequireRenderObject(), 1.0);
         Assert.Equal(400.0, trailing.Offset, Tolerance);
-        Assert.Equal(new Rect(0, 100, 300, 100), trailing.Rect);
+        Assert.Equal(DartGeometry.RectFromLTWH(0, 100, 300, 100), trailing.Rect);
 
-        var rect = new Rect(40, 40, 10, 10);
+        var rect = DartGeometry.RectFromLTWH(40, 40, 10, 10);
         RevealedOffset leadingRect = viewport.GetOffsetToReveal(target.RequireRenderObject(), 0.0, rect);
         Assert.Equal(540.0, leadingRect.Offset, Tolerance);
-        Assert.Equal(new Rect(40, 0, 10, 10), leadingRect.Rect);
+        Assert.Equal(DartGeometry.RectFromLTWH(40, 0, 10, 10), leadingRect.Rect);
 
         RevealedOffset trailingRect = viewport.GetOffsetToReveal(target.RequireRenderObject(), 1.0, rect);
         Assert.Equal(350.0, trailingRect.Offset, Tolerance);
-        Assert.Equal(new Rect(40, 190, 10, 10), trailingRect.Rect);
+        Assert.Equal(DartGeometry.RectFromLTWH(40, 190, 10, 10), trailingRect.Rect);
 
         controller.Dispose();
     }
@@ -803,7 +803,7 @@ public sealed class ViewportRevealTests
             Geometry = SliverGeometry.Zero;
         }
 
-        public override void Paint(PaintingContext ctx, Point offset)
+        public override void Paint(PaintingContext ctx, Offset offset)
         {
         }
     }

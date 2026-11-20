@@ -1436,7 +1436,7 @@ public class AnimatedSlide : ImplicitlyAnimatedWidget
 {
     /// <summary>Creates a widget that animates its offset translation implicitly.</summary>
     public AnimatedSlide(
-        Vector offset,
+        Offset offset,
         TimeSpan duration,
         Widget? child = null,
         Curve? curve = null,
@@ -1451,7 +1451,7 @@ public class AnimatedSlide : ImplicitlyAnimatedWidget
     public Widget? Child { get; }
 
     /// <summary>The target offset, a fraction of the child's size.</summary>
-    public Vector Offset { get; }
+    public Offset Offset { get; }
 
     /// <inheritdoc />
     public override State CreateState() => new AnimatedSlideState();
@@ -1460,13 +1460,13 @@ public class AnimatedSlide : ImplicitlyAnimatedWidget
     public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
     {
         base.DebugFillProperties(properties);
-        properties.Add(new DiagnosticsProperty<Vector>("offset", Offset));
+        properties.Add(new DiagnosticsProperty<Offset>("offset", Offset));
     }
 
     private sealed class AnimatedSlideState : ImplicitlyAnimatedWidgetState<AnimatedSlide>
     {
         private VectorTween? _offset;
-        private Animation<Vector> _offsetAnimation = null!;
+        private Animation<Offset> _offsetAnimation = null!;
 
         protected override void ForEachTween(TweenVisitor visitor)
         {

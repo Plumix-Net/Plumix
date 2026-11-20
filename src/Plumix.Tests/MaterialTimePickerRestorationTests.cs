@@ -283,7 +283,7 @@ public sealed partial class MaterialTimePickerDialogTests
         harness.Pump(ViewSize);
         var dial = FindDescendants<RenderCustomPaint>(harness.RenderView)
             .Single(paint => paint.Painter is TimeDialPainter);
-        Point point = dial.LocalToGlobal(new Point(dial.Size.Width / 2 + 50, dial.Size.Height / 2));
+        Offset point = dial.LocalToGlobal(new Offset(dial.Size.Width / 2 + 50, dial.Size.Height / 2));
         DispatchPointerDown(GestureBinding.Instance, harness.RenderView, 1, point);
         DispatchPointerUp(GestureBinding.Instance, harness.RenderView, 1, point);
         harness.Pump(ViewSize);
@@ -305,7 +305,7 @@ public sealed partial class MaterialTimePickerDialogTests
             observers: [rootObserver]));
         harness.Pump(ViewSize);
         var settings = new RouteSettings("time-picker");
-        var anchor = new Point(400, 100);
+        var anchor = new Offset(400, 100);
         _ = MaterialTimePickers.ShowTimePicker(
             captured,
             new TimeOfDay(7, 0),

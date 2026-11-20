@@ -31,8 +31,8 @@ public sealed class InteractiveViewerDartParityTests
 
         // Attempting to drag to pan doesn't work because the child fits inside the viewport and has
         // a tight boundary.
-        Point childOffset = tester.GetTopLeft(Find.ByType<SizedBox>());
-        Point childInterior = childOffset + new Point(20.0, 20.0);
+        Offset childOffset = tester.GetTopLeft(Find.ByType<SizedBox>());
+        Offset childInterior = childOffset + new Offset(20.0, 20.0);
         Drag(tester, childInterior, childOffset);
         Assert.Equal(Matrix4.Identity(), controller.Value);
 
@@ -40,9 +40,9 @@ public sealed class InteractiveViewerDartParityTests
         Pinch(
             tester,
             childInterior,
-            childInterior + new Point(10.0, 0.0),
-            childInterior + new Point(-10.0, 0.0),
-            childInterior + new Point(20.0, 0.0));
+            childInterior + new Offset(10.0, 0.0),
+            childInterior + new Offset(-10.0, 0.0),
+            childInterior + new Offset(20.0, 0.0));
         Assert.NotEqual(Matrix4.Identity(), controller.Value);
     }
 
@@ -58,22 +58,22 @@ public sealed class InteractiveViewerDartParityTests
         Assert.Equal(Matrix4.Identity(), controller.Value);
 
         // Dragging to pan works only until it hits the boundary.
-        Point childOffset = tester.GetTopLeft(Find.ByType<SizedBox>());
-        Point childInterior = childOffset + new Point(20.0, 20.0);
+        Offset childOffset = tester.GetTopLeft(Find.ByType<SizedBox>());
+        Offset childInterior = childOffset + new Offset(20.0, 20.0);
         Drag(tester, childInterior, childOffset);
         Vector3 translation = controller.Value.GetTranslation();
         Assert.Equal(-boundaryMargin, translation.X);
         Assert.Equal(-boundaryMargin, translation.Y);
 
         // Pinch to zoom also only works until it expands to the boundary.
-        Point scaleStart1 = childInterior;
-        Point scaleStart2 = childInterior + new Point(20.0, 0.0);
+        Offset scaleStart1 = childInterior;
+        Offset scaleStart2 = childInterior + new Offset(20.0, 0.0);
         Pinch(
             tester,
             scaleStart1,
             scaleStart2,
-            scaleStart1 + new Point(5.0, 0.0),
-            scaleStart2 + new Point(-5.0, 0.0));
+            scaleStart1 + new Offset(5.0, 0.0),
+            scaleStart2 + new Offset(-5.0, 0.0));
         Assert.Equal(200.0 / 220.0, controller.Value.GetMaxScaleOnAxis());
     }
 
@@ -92,8 +92,8 @@ public sealed class InteractiveViewerDartParityTests
         Assert.Equal(Matrix4.Identity(), controller.Value);
 
         // Attempting to move against the boundary doesn't work.
-        Point childOffset = tester.GetTopLeft(Find.ByType<SizedBox>());
-        Point childInterior = childOffset + new Point(20.0, 20.0);
+        Offset childOffset = tester.GetTopLeft(Find.ByType<SizedBox>());
+        Offset childInterior = childOffset + new Offset(20.0, 20.0);
         Drag(tester, childOffset, childInterior);
         Assert.Equal(Matrix4.Identity(), controller.Value);
 
@@ -101,18 +101,18 @@ public sealed class InteractiveViewerDartParityTests
         StartedPinch(
             tester,
             childInterior,
-            childInterior + new Point(10.0, 0.0),
-            childInterior + new Point(-10.0, 0.0),
-            childInterior + new Point(20.0, 0.0));
+            childInterior + new Offset(10.0, 0.0),
+            childInterior + new Offset(-10.0, 0.0),
+            childInterior + new Offset(20.0, 0.0));
         Assert.Equal(Matrix4.Identity(), controller.Value);
 
         // Attempting to pinch to rotate doesn't work because it's disabled.
         StartedPinch(
             tester,
             childInterior,
-            childInterior + new Point(10.0, 0.0),
-            childInterior + new Point(5.0, 5.0),
-            childInterior + new Point(-5.0, -5.0));
+            childInterior + new Offset(10.0, 0.0),
+            childInterior + new Offset(5.0, 5.0),
+            childInterior + new Offset(-5.0, -5.0));
         Assert.Equal(Matrix4.Identity(), controller.Value);
 
         // Drag to pan away from the boundary.
@@ -134,8 +134,8 @@ public sealed class InteractiveViewerDartParityTests
         Assert.Equal(Matrix4.Identity(), controller.Value);
 
         // Interacting throws an error because the child has no size.
-        Point childOffset = tester.GetTopLeft(Find.ByType<SizedBox>());
-        Point childInterior = childOffset + new Point(20.0, 20.0);
+        Offset childOffset = tester.GetTopLeft(Find.ByType<SizedBox>());
+        Offset childInterior = childOffset + new Offset(20.0, 20.0);
         Drag(tester, childOffset, childInterior);
 
         Assert.Equal(Matrix4.Identity(), controller.Value);
@@ -155,22 +155,22 @@ public sealed class InteractiveViewerDartParityTests
 
         // Drag to pan works because even though the viewport fits perfectly around the child, there
         // is no boundary.
-        Point childOffset = tester.GetTopLeft(Find.ByType<SizedBox>());
-        Point childInterior = childOffset + new Point(20.0, 20.0);
+        Offset childOffset = tester.GetTopLeft(Find.ByType<SizedBox>());
+        Offset childInterior = childOffset + new Offset(20.0, 20.0);
         Drag(tester, childInterior, childOffset);
         Vector3 translation = controller.Value.GetTranslation();
-        Assert.Equal(childOffset.X - childInterior.X, translation.X);
-        Assert.Equal(childOffset.Y - childInterior.Y, translation.Y);
+        Assert.Equal(childOffset.Dx - childInterior.Dx, translation.X);
+        Assert.Equal(childOffset.Dy - childInterior.Dy, translation.Y);
 
         // It's also possible to zoom out and view beyond the child because there is no boundary.
-        Point scaleStart1 = childInterior;
-        Point scaleStart2 = childInterior + new Point(20.0, 0.0);
+        Offset scaleStart1 = childInterior;
+        Offset scaleStart2 = childInterior + new Offset(20.0, 0.0);
         Pinch(
             tester,
             scaleStart1,
             scaleStart2,
-            childInterior + new Point(5.0, 0.0),
-            childInterior + new Point(-5.0, 0.0));
+            childInterior + new Offset(5.0, 0.0),
+            childInterior + new Offset(-5.0, 0.0));
         Assert.Equal(minScale, controller.Value.GetMaxScaleOnAxis());
     }
 
@@ -206,13 +206,13 @@ public sealed class InteractiveViewerDartParityTests
 
         Assert.Equal(Matrix4.Identity(), controller.Value);
 
-        Point childOffset = tester.GetTopLeft(Find.ByType<SizedBox>());
-        Point childInterior = childOffset + new Point(dx, dy);
+        Offset childOffset = tester.GetTopLeft(Find.ByType<SizedBox>());
+        Offset childInterior = childOffset + new Offset(dx, dy);
         Drag(tester, childInterior, childOffset);
 
         Vector3 translation = controller.Value.GetTranslation();
-        Assert.Equal(movesX ? childOffset.X - childInterior.X : 0.0, translation.X);
-        Assert.Equal(movesY ? childOffset.Y - childInterior.Y : 0.0, translation.Y);
+        Assert.Equal(movesX ? childOffset.Dx - childInterior.Dx : 0.0, translation.X);
+        Assert.Equal(movesY ? childOffset.Dy - childInterior.Dy : 0.0, translation.Y);
     }
 
     // Flutter: "inertia fling and boundary sliding"
@@ -227,21 +227,21 @@ public sealed class InteractiveViewerDartParityTests
         Assert.Equal(Matrix4.Identity(), controller.Value);
 
         // Fling the child.
-        Point childOffset = tester.GetTopLeft(Find.ByType<SizedBox>());
-        var flingEnd = new Vector(20.0, 15.0);
+        Offset childOffset = tester.GetTopLeft(Find.ByType<SizedBox>());
+        var flingEnd = new Offset(20.0, 15.0);
         tester.FlingFrom(childOffset, flingEnd, 1000.0);
         tester.Pump();
 
         // Immediately after the gesture, the child has moved to exactly follow the gesture.
         Vector3 translation = controller.Value.GetTranslation();
-        Assert.Equal(flingEnd.X, translation.X);
-        Assert.Equal(flingEnd.Y, translation.Y);
+        Assert.Equal(flingEnd.Dx, translation.X);
+        Assert.Equal(flingEnd.Dy, translation.Y);
 
         // A short time after the gesture was released, it continues to move with inertia.
         tester.Pump(TimeSpan.FromMilliseconds(10));
         translation = controller.Value.GetTranslation();
-        Assert.True(translation.X > flingEnd.X);
-        Assert.True(translation.Y > flingEnd.Y);
+        Assert.True(translation.X > flingEnd.Dx);
+        Assert.True(translation.Y > flingEnd.Dy);
         Assert.True(translation.X < boundaryMargin);
         Assert.True(translation.Y < boundaryMargin);
 
@@ -288,18 +288,18 @@ public sealed class InteractiveViewerDartParityTests
         Assert.Equal(0.0, translation.Y);
 
         // Pan into the corner of the boundaries.
-        Point childOffset = tester.GetTopLeft(Find.ByType<SizedBox>());
+        Offset childOffset = tester.GetTopLeft(Find.ByType<SizedBox>());
         if (aligned)
         {
-            tester.FlingFrom(childOffset, new Vector(20.0, 0.0), 1000.0);
+            tester.FlingFrom(childOffset, new Offset(20.0, 0.0), 1000.0);
             tester.PumpAndSettle();
             tester.Pump(TimeSpan.FromSeconds(5));
-            Point childOffset2 = tester.GetTopLeft(Find.ByType<SizedBox>());
-            tester.FlingFrom(childOffset2, new Vector(0.0, 15.0), 1000.0);
+            Offset childOffset2 = tester.GetTopLeft(Find.ByType<SizedBox>());
+            tester.FlingFrom(childOffset2, new Offset(0.0, 15.0), 1000.0);
         }
         else
         {
-            tester.FlingFrom(childOffset, new Vector(20.0, 15.0), 1000.0);
+            tester.FlingFrom(childOffset, new Offset(20.0, 15.0), 1000.0);
         }
 
         tester.PumpAndSettle();
@@ -309,13 +309,13 @@ public sealed class InteractiveViewerDartParityTests
 
         // Zoom out so the entire child is visible. The child will also be translated in order to
         // keep it inside the boundaries.
-        Point childCenter = tester.GetCenter(Find.ByType<SizedBox>());
+        Offset childCenter = tester.GetCenter(Find.ByType<SizedBox>());
         Pinch(
             tester,
-            childCenter + new Point(-40.0, 0.0),
-            childCenter + new Point(40.0, 0.0),
-            childCenter + new Point(-10.0, 0.0),
-            childCenter + new Point(10.0, 0.0));
+            childCenter + new Offset(-40.0, 0.0),
+            childCenter + new Offset(40.0, 0.0),
+            childCenter + new Offset(-10.0, 0.0),
+            childCenter + new Offset(10.0, 0.0));
         Assert.True(controller.Value.GetMaxScaleOnAxis() < 1.0);
         translation = controller.Value.GetTranslation();
         Assert.True(translation.X < boundaryMargin);
@@ -326,17 +326,17 @@ public sealed class InteractiveViewerDartParityTests
 
         // Zoom in on a point that's not the center, and see that it remains at roughly the same
         // location in the viewport after the zoom.
-        var viewportFocalPoint = new Point(childCenter.X - 40.0 - childOffset.X, childCenter.Y - childOffset.Y);
-        Point sceneFocalPoint = controller.ToScene(viewportFocalPoint);
+        var viewportFocalPoint = new Offset(childCenter.Dx - 40.0 - childOffset.Dx, childCenter.Dy - childOffset.Dy);
+        Offset sceneFocalPoint = controller.ToScene(viewportFocalPoint);
         Pinch(
             tester,
-            childCenter + new Point(-50.0, 0.0),
-            childCenter + new Point(-30.0, 0.0),
-            childCenter + new Point(-51.0, 0.0),
-            childCenter + new Point(-29.0, 0.0));
-        Point newSceneFocalPoint = controller.ToScene(viewportFocalPoint);
-        AssertMoreOrLessEquals(sceneFocalPoint.X, newSceneFocalPoint.X, 1.0);
-        AssertMoreOrLessEquals(sceneFocalPoint.Y, newSceneFocalPoint.Y, 1.0);
+            childCenter + new Offset(-50.0, 0.0),
+            childCenter + new Offset(-30.0, 0.0),
+            childCenter + new Offset(-51.0, 0.0),
+            childCenter + new Offset(-29.0, 0.0));
+        Offset newSceneFocalPoint = controller.ToScene(viewportFocalPoint);
+        AssertMoreOrLessEquals(sceneFocalPoint.Dx, newSceneFocalPoint.Dx, 1.0);
+        AssertMoreOrLessEquals(sceneFocalPoint.Dy, newSceneFocalPoint.Dy, 1.0);
     }
 
     // Flutter: "Can scale with mouse"
@@ -347,8 +347,8 @@ public sealed class InteractiveViewerDartParityTests
         using var tester = new FrameworkDartTester();
         tester.PumpWidget(Standard(controller));
 
-        Point center = tester.GetCenter(Find.ByType<InteractiveViewer>());
-        ScrollAt(center, tester, new Vector(0.0, -20.0));
+        Offset center = tester.GetCenter(Find.ByType<InteractiveViewer>());
+        ScrollAt(center, tester, new Offset(0.0, -20.0));
         tester.PumpAndSettle();
 
         Assert.True(controller.Value.GetMaxScaleOnAxis() > 1.0);
@@ -362,8 +362,8 @@ public sealed class InteractiveViewerDartParityTests
         using var tester = new FrameworkDartTester();
         tester.PumpWidget(Standard(controller, scaleEnabled: false));
 
-        Point center = tester.GetCenter(Find.ByType<InteractiveViewer>());
-        ScrollAt(center, tester, new Vector(0.0, -20.0));
+        Offset center = tester.GetCenter(Find.ByType<InteractiveViewer>());
+        ScrollAt(center, tester, new Offset(0.0, -20.0));
         tester.PumpAndSettle();
 
         Assert.Equal(1.0, controller.Value.GetMaxScaleOnAxis());
@@ -378,8 +378,8 @@ public sealed class InteractiveViewerDartParityTests
         var recorder = new InteractionRecorder();
         tester.PumpWidget(Standard(controller, recorder: recorder));
 
-        Point center = tester.GetCenter(Find.ByType<InteractiveViewer>());
-        ScrollAt(center, tester, new Vector(0.0, -20.0));
+        Offset center = tester.GetCenter(Find.ByType<InteractiveViewer>());
+        ScrollAt(center, tester, new Offset(0.0, -20.0));
         tester.PumpAndSettle();
         double afterScaling = controller.Value.GetMaxScaleOnAxis();
 
@@ -388,8 +388,8 @@ public sealed class InteractiveViewerDartParityTests
         Assert.Equal(Velocity.Zero, recorder.CurrentVelocity);
         Assert.True(recorder.CalledStart);
         Assert.Equal(center, recorder.FocalPoint);
-        Assert.Equal(new Point(100, 100), recorder.LocalFocalPoint);
-        Assert.Equal(new Point(100, 100), controller.ToScene(recorder.LocalFocalPoint!.Value));
+        Assert.Equal(new Offset(100, 100), recorder.LocalFocalPoint);
+        Assert.Equal(new Offset(100, 100), controller.ToScene(recorder.LocalFocalPoint!.Value));
     }
 
     // Flutter: "Scaling amount is equal forth and back with a mouse scroll"
@@ -405,13 +405,13 @@ public sealed class InteractiveViewerDartParityTests
             transformationController: controller,
             child: new SizedBox(width: 1000.0, height: 1000.0))));
 
-        Point center = tester.GetCenter(Find.ByType<InteractiveViewer>());
-        ScrollAt(center, tester, new Vector(0.0, -200.0));
+        Offset center = tester.GetCenter(Find.ByType<InteractiveViewer>());
+        ScrollAt(center, tester, new Offset(0.0, -200.0));
         tester.PumpAndSettle();
         // Scaling in here.
         Assert.Equal(Math.Exp(200 / 200.0), controller.Value.GetMaxScaleOnAxis());
 
-        ScrollAt(center, tester, new Vector(0.0, -200.0));
+        ScrollAt(center, tester, new Offset(0.0, -200.0));
         tester.PumpAndSettle();
         // Scaling in again here.
         Assert.InRange(
@@ -419,8 +419,8 @@ public sealed class InteractiveViewerDartParityTests
             Math.Exp(400 / 200.0) - 0.000000000000001,
             Math.Exp(400 / 200.0) + 0.000000000000001);
 
-        ScrollAt(center, tester, new Vector(0.0, 200.0));
-        ScrollAt(center, tester, new Vector(0.0, 200.0));
+        ScrollAt(center, tester, new Offset(0.0, 200.0));
+        ScrollAt(center, tester, new Offset(0.0, 200.0));
         tester.PumpAndSettle();
         // Scaling out here, back to the original scale.
         Assert.Equal(1.0, controller.Value.GetMaxScaleOnAxis());
@@ -435,9 +435,9 @@ public sealed class InteractiveViewerDartParityTests
         var recorder = new InteractionRecorder();
         tester.PumpWidget(Standard(controller, recorder: recorder));
 
-        Point center = tester.GetCenter(Find.ByType<InteractiveViewer>());
-        Point offCenter = center + new Point(-20.0, -20.0);
-        ScrollAt(offCenter, tester, new Vector(0.0, -20.0));
+        Offset center = tester.GetCenter(Find.ByType<InteractiveViewer>());
+        Offset offCenter = center + new Offset(-20.0, -20.0);
+        ScrollAt(offCenter, tester, new Offset(0.0, -20.0));
         tester.PumpAndSettle();
         double afterScaling = controller.Value.GetMaxScaleOnAxis();
 
@@ -446,12 +446,12 @@ public sealed class InteractiveViewerDartParityTests
         Assert.Equal(Velocity.Zero, recorder.CurrentVelocity);
         Assert.True(recorder.CalledStart);
         Assert.Equal(offCenter, recorder.FocalPoint);
-        Assert.Equal(new Point(80, 80), recorder.LocalFocalPoint);
+        Assert.Equal(new Offset(80, 80), recorder.LocalFocalPoint);
 
         // The top left corner of the viewport is not at the top left corner of the scene.
-        Point scenePoint = controller.ToScene(default);
-        Assert.True(scenePoint.X > 0.0);
-        Assert.True(scenePoint.Y > 0.0);
+        Offset scenePoint = controller.ToScene(default);
+        Assert.True(scenePoint.Dx > 0.0);
+        Assert.True(scenePoint.Dy > 0.0);
     }
 
     // Flutter: "onInteraction is called even when disabled (touch)"
@@ -473,8 +473,8 @@ public sealed class InteractiveViewerDartParityTests
             onInteractionEnd: _ => recorder.CalledEnd = true,
             child: sizedBox)));
 
-        Point childOffset = tester.GetTopLeft(Find.ByWidget(sizedBox));
-        Point childInterior = childOffset + new Point(20.0, 20.0);
+        Offset childOffset = tester.GetTopLeft(Find.ByWidget(sizedBox));
+        Offset childInterior = childOffset + new Offset(20.0, 20.0);
 
         // Pan does nothing against the tight boundary, but the callbacks are called.
         Drag(tester, childOffset, childInterior);
@@ -491,9 +491,9 @@ public sealed class InteractiveViewerDartParityTests
         StartedPinch(
             tester,
             childInterior,
-            childInterior + new Point(10.0, 0.0),
-            childInterior + new Point(-10.0, 0.0),
-            childInterior + new Point(20.0, 0.0));
+            childInterior + new Offset(10.0, 0.0),
+            childInterior + new Offset(-10.0, 0.0),
+            childInterior + new Offset(20.0, 0.0));
         Assert.Equal(Matrix4.Identity(), controller.Value);
         Assert.True(recorder.CalledStart);
         Assert.True(recorder.CalledUpdate);
@@ -520,8 +520,8 @@ public sealed class InteractiveViewerDartParityTests
             onInteractionEnd: _ => recorder.CalledEnd = true,
             child: sizedBox)));
 
-        Point childOffset = tester.GetTopLeft(Find.ByWidget(sizedBox));
-        Point childInterior = childOffset + new Point(20.0, 20.0);
+        Offset childOffset = tester.GetTopLeft(Find.ByWidget(sizedBox));
+        Offset childInterior = childOffset + new Offset(20.0, 20.0);
 
         // Pan does nothing against the tight boundary, but the callbacks are called.
         TestGesture gesture = tester.StartGesture(childOffset, PointerDeviceKind.Mouse);
@@ -540,7 +540,7 @@ public sealed class InteractiveViewerDartParityTests
         recorder.CalledEnd = false;
 
         // Mouse scroll is disabled, but the callbacks are called.
-        ScrollAt(childInterior, tester, new Vector(0.0, -20.0));
+        ScrollAt(childInterior, tester, new Offset(0.0, -20.0));
         tester.PumpAndSettle();
         Assert.Equal(Matrix4.Identity(), controller.Value);
         Assert.True(recorder.CalledStart);
@@ -562,8 +562,8 @@ public sealed class InteractiveViewerDartParityTests
 
         // Attempting to drag to pan doesn't work because the child fits inside the viewport and has
         // a tight boundary.
-        Point childOffset = tester.GetTopLeft(Find.ByType<Container>());
-        Point childInterior = childOffset + new Point(20.0, 20.0);
+        Offset childOffset = tester.GetTopLeft(Find.ByType<Container>());
+        Offset childInterior = childOffset + new Offset(20.0, 20.0);
         Drag(tester, childInterior, childOffset);
         Assert.Equal(Matrix4.Identity(), controller.Value);
 
@@ -593,11 +593,11 @@ public sealed class InteractiveViewerDartParityTests
         Assert.Equal(0.0, translation.Y);
 
         // Start a pan gesture.
-        Point childCenter = tester.GetCenter(Find.ByType<SizedBox>());
+        Offset childCenter = tester.GetCenter(Find.ByType<SizedBox>());
         TestGesture gesture = tester.CreateGesture();
         gesture.Down(childCenter);
         tester.Pump();
-        gesture.MoveTo(childCenter + new Point(5.0, 5.0));
+        gesture.MoveTo(childCenter + new Offset(5.0, 5.0));
         tester.Pump();
         translation = controller.Value.GetTranslation();
         Assert.True(translation.X > 0.0);
@@ -605,10 +605,10 @@ public sealed class InteractiveViewerDartParityTests
 
         // Put another finger down and turn it into a scale gesture.
         TestGesture gesture2 = tester.CreateGesture();
-        gesture2.Down(childCenter + new Point(-5.0, -5.0));
+        gesture2.Down(childCenter + new Offset(-5.0, -5.0));
         tester.Pump();
-        gesture.MoveTo(childCenter + new Point(25.0, 25.0));
-        gesture2.MoveTo(childCenter + new Point(-25.0, -25.0));
+        gesture.MoveTo(childCenter + new Offset(25.0, 25.0));
+        gesture2.MoveTo(childCenter + new Offset(-25.0, -25.0));
         tester.Pump();
         gesture.Up();
         gesture2.Up();
@@ -633,13 +633,13 @@ public sealed class InteractiveViewerDartParityTests
         Assert.Equal(Matrix4.Identity(), controller.Value);
 
         // Pinch to zoom doesn't cause a jump; the child stays where it is.
-        Point center = tester.GetCenter(Find.ByType<SizedBox>());
+        Offset center = tester.GetCenter(Find.ByType<SizedBox>());
         Pinch(
             tester,
-            center + new Point(-10.0, -10.0),
-            center + new Point(10.0, 10.0),
-            center + new Point(-20.0, -20.0),
-            center + new Point(20.0, 20.0));
+            center + new Offset(-10.0, -10.0),
+            center + new Offset(10.0, 10.0),
+            center + new Offset(-20.0, -20.0),
+            center + new Offset(20.0, 20.0));
         Assert.Equal(Matrix4.Identity(), controller.Value);
     }
 
@@ -668,14 +668,14 @@ public sealed class InteractiveViewerDartParityTests
 
         // Pinch to zoom isn't immediately detected for a small amount of movement due to the
         // GestureDetector.
-        Point childOffset = tester.GetTopLeft(Find.ByType<SizedBox>());
-        Point childInterior = childOffset + new Point(20.0, 20.0);
+        Offset childOffset = tester.GetTopLeft(Find.ByType<SizedBox>());
+        Offset childInterior = childOffset + new Offset(20.0, 20.0);
         Pinch(
             tester,
             childInterior,
-            childInterior + new Point(10.0, 0.0),
-            childInterior + new Point(-10.0, 0.0),
-            childInterior + new Point(20.0, 0.0));
+            childInterior + new Offset(10.0, 0.0),
+            childInterior + new Offset(-10.0, 0.0),
+            childInterior + new Offset(20.0, 0.0));
         Assert.Equal(Matrix4.Identity(), controller.Value);
         Assert.Null(initialScale);
         Assert.Null(scale);
@@ -685,9 +685,9 @@ public sealed class InteractiveViewerDartParityTests
         Pinch(
             tester,
             childInterior,
-            childInterior + new Point(10.0, 0.0),
-            childInterior + new Point(-38.0, 0.0),
-            childInterior + new Point(48.0, 0.0));
+            childInterior + new Offset(10.0, 0.0),
+            childInterior + new Offset(-38.0, 0.0),
+            childInterior + new Offset(48.0, 0.0));
         Assert.Equal(1.0, initialScale);
         Assert.True(scale > 1.0);
         Assert.True(controller.Value.GetMaxScaleOnAxis() > 1.0);
@@ -763,9 +763,9 @@ public sealed class InteractiveViewerDartParityTests
         }
 
         // Drag on the InteractiveViewer to move it upwards.
-        Point childOffset = tester.GetTopLeft(Find.ByKey(outerKey));
+        Offset childOffset = tester.GetTopLeft(Find.ByKey(outerKey));
         const double translationY = 15.0;
-        var childInterior = new Point(childOffset.X, childOffset.Y + translationY);
+        var childInterior = new Offset(childOffset.Dx, childOffset.Dy + translationY);
         Drag(tester, childInterior, childOffset);
 
         Assert.NotEqual(Matrix4.Identity(), controller.Value);
@@ -821,14 +821,14 @@ public sealed class InteractiveViewerDartParityTests
         Assert.Equal(Matrix4.Identity(), controller.Value);
 
         // Zoom out. The scale decreases.
-        Point center = tester.GetCenter(Find.ByType<InteractiveViewer>());
-        ScrollAt(center, tester, new Vector(0.0, scrollAmount));
+        Offset center = tester.GetCenter(Find.ByType<InteractiveViewer>());
+        ScrollAt(center, tester, new Offset(0.0, scrollAmount));
         tester.PumpAndSettle();
         double scaleZoomedOut = controller.Value.GetMaxScaleOnAxis();
         Assert.True(scaleZoomedOut < 1.0);
 
         // Zoom in. The scale increases.
-        ScrollAt(center, tester, new Vector(0.0, -scrollAmount));
+        ScrollAt(center, tester, new Offset(0.0, -scrollAmount));
         tester.PumpAndSettle();
         double scaleZoomedIn = controller.Value.GetMaxScaleOnAxis();
         Assert.True(scaleZoomedIn > scaleZoomedOut);
@@ -839,14 +839,14 @@ public sealed class InteractiveViewerDartParityTests
         PumpScaleFactor(100.0);
 
         // Zoom out. The scale decreases more quickly than with the default (higher) scaleFactor.
-        ScrollAt(center, tester, new Vector(0.0, scrollAmount));
+        ScrollAt(center, tester, new Offset(0.0, scrollAmount));
         tester.PumpAndSettle();
         double scaleLowZoomedOut = controller.Value.GetMaxScaleOnAxis();
         Assert.True(scaleLowZoomedOut < 1.0);
         Assert.True(scaleLowZoomedOut < scaleZoomedOut);
 
         // Zoom in. The scale increases more quickly than with the default (higher) scaleFactor.
-        ScrollAt(center, tester, new Vector(0.0, -scrollAmount));
+        ScrollAt(center, tester, new Offset(0.0, -scrollAmount));
         tester.PumpAndSettle();
         double scaleLowZoomedIn = controller.Value.GetMaxScaleOnAxis();
         Assert.True(scaleLowZoomedIn > scaleLowZoomedOut);
@@ -858,7 +858,7 @@ public sealed class InteractiveViewerDartParityTests
 
         // Zoom out. The scale decreases, but not by as much as with the default (higher)
         // scaleFactor.
-        ScrollAt(center, tester, new Vector(0.0, scrollAmount));
+        ScrollAt(center, tester, new Offset(0.0, scrollAmount));
         tester.PumpAndSettle();
         double scaleHighZoomedOut = controller.Value.GetMaxScaleOnAxis();
         Assert.True(scaleHighZoomedOut < 1.0);
@@ -866,7 +866,7 @@ public sealed class InteractiveViewerDartParityTests
 
         // Zoom in. The scale increases, but not by as much as with the default (higher)
         // scaleFactor.
-        ScrollAt(center, tester, new Vector(0.0, -scrollAmount));
+        ScrollAt(center, tester, new Offset(0.0, -scrollAmount));
         tester.PumpAndSettle();
         double scaleHighZoomedIn = controller.Value.GetMaxScaleOnAxis();
         Assert.True(scaleHighZoomedIn > scaleHighZoomedOut);
@@ -902,7 +902,7 @@ public sealed class InteractiveViewerDartParityTests
 
             Assert.Equal(Matrix4.Identity(), controller1.Value);
 
-            tester.FlingFrom(new Point(100, 100), new Vector(0, -50), 100.0);
+            tester.FlingFrom(new Offset(100, 100), new Offset(0, -50), 100.0);
             tester.PumpAndSettle();
             translation1Y = controller1.Value.GetTranslation().Y;
             Assert.True(translation1Y < -58.0);
@@ -922,7 +922,7 @@ public sealed class InteractiveViewerDartParityTests
 
             Assert.Equal(Matrix4.Identity(), controller2.Value);
 
-            tester.FlingFrom(new Point(100, 100), new Vector(0, -50), 100.0);
+            tester.FlingFrom(new Offset(100, 100), new Offset(0, -50), 100.0);
             tester.PumpAndSettle();
 
             // The coefficient 0.01 is greater than the default of 0.0000135, so the translation
@@ -948,7 +948,7 @@ public sealed class InteractiveViewerDartParityTests
         // Send a mouse scroll event, it should cause a scale.
         var mouse = new TestPointer(tester, 1, PointerDeviceKind.Mouse);
         tester.SendEventToBinding(mouse.Hover(tester.GetCenter(Find.ByType<SizedBox>())));
-        tester.SendEventToBinding(mouse.Scroll(new Vector(300, -200)));
+        tester.SendEventToBinding(mouse.Scroll(new Offset(300, -200)));
         tester.Pump();
         Assert.Equal(2.5, controller.Value.GetMaxScaleOnAxis());
         translation = controller.Value.GetTranslation();
@@ -959,7 +959,7 @@ public sealed class InteractiveViewerDartParityTests
         // Send a trackpad scroll event, it should cause a pan and no scale.
         var trackpad = new TestPointer(tester, 1, PointerDeviceKind.Trackpad);
         tester.SendEventToBinding(trackpad.Hover(tester.GetCenter(Find.ByType<SizedBox>())));
-        tester.SendEventToBinding(trackpad.Scroll(new Vector(100, -25)));
+        tester.SendEventToBinding(trackpad.Scroll(new Offset(100, -25)));
         tester.Pump();
         Assert.Equal(2.5, controller.Value.GetMaxScaleOnAxis());
         translation = controller.Value.GetTranslation();
@@ -1010,16 +1010,16 @@ public sealed class InteractiveViewerDartParityTests
 
         // Send a vertical scroll.
         var pointer = new TestPointer(tester, 1, PointerDeviceKind.Trackpad);
-        Point center = tester.GetCenter(Find.ByType<SizedBox>());
+        Offset center = tester.GetCenter(Find.ByType<SizedBox>());
         tester.SendEventToBinding(pointer.PanZoomStart(center));
         tester.Pump();
         Assert.Equal(1.0, controller.Value.GetMaxScaleOnAxis());
-        tester.SendEventToBinding(pointer.PanZoomUpdate(center, pan: new Point(0, -81)));
+        tester.SendEventToBinding(pointer.PanZoomUpdate(center, pan: new Offset(0, -81)));
         tester.Pump();
         AssertMoreOrLessEquals(1.499302500056767, controller.Value.GetMaxScaleOnAxis());
 
         // Send a horizontal scroll (should have no effect).
-        tester.SendEventToBinding(pointer.PanZoomUpdate(center, pan: new Point(81, -81)));
+        tester.SendEventToBinding(pointer.PanZoomUpdate(center, pan: new Offset(81, -81)));
         tester.Pump();
         AssertMoreOrLessEquals(1.499302500056767, controller.Value.GetMaxScaleOnAxis());
     }
@@ -1039,11 +1039,11 @@ public sealed class InteractiveViewerDartParityTests
 
         // Send a vertical scroll.
         var pointer = new TestPointer(tester, 1, PointerDeviceKind.Trackpad);
-        Point center = tester.GetCenter(Find.ByType<SizedBox>());
+        Offset center = tester.GetCenter(Find.ByType<SizedBox>());
         tester.SendEventToBinding(pointer.Hover(center));
         tester.Pump();
         Assert.Equal(1.0, controller.Value.GetMaxScaleOnAxis());
-        tester.SendEventToBinding(pointer.Scroll(new Vector(0, -138.0)));
+        tester.SendEventToBinding(pointer.Scroll(new Offset(0, -138.0)));
         tester.Pump();
         AssertMoreOrLessEquals(1.9937155332430823, controller.Value.GetMaxScaleOnAxis());
         Vector3 translation = controller.Value.GetTranslation();
@@ -1051,7 +1051,7 @@ public sealed class InteractiveViewerDartParityTests
         AssertMoreOrLessEquals(-99.37155332430822, translation.Y);
 
         // Send a horizontal scroll (should have no effect).
-        tester.SendEventToBinding(pointer.Scroll(new Vector(-138, 0)));
+        tester.SendEventToBinding(pointer.Scroll(new Offset(-138, 0)));
         tester.Pump();
         AssertMoreOrLessEquals(1.9937155332430823, controller.Value.GetMaxScaleOnAxis());
         translation = controller.Value.GetTranslation();
@@ -1073,7 +1073,7 @@ public sealed class InteractiveViewerDartParityTests
         Assert.Equal(1.0, controller.Value.GetMaxScaleOnAxis());
 
         // Send a vertical scroll fling, which will cause inertia.
-        tester.TrackpadFling(tester.Element(Find.ByType<InteractiveViewer>()), new Vector(0, -100), 3000);
+        tester.TrackpadFling(tester.Element(Find.ByType<InteractiveViewer>()), new Offset(0, -100), 3000);
         tester.Pump();
         AssertMoreOrLessEquals(1.6487212707001282, controller.Value.GetMaxScaleOnAxis());
         tester.Pump(TimeSpan.FromMilliseconds(80));
@@ -1108,7 +1108,7 @@ public sealed class InteractiveViewerDartParityTests
         {
             for (int i = 0; i < 10; i++)
             {
-                tester.Fling(Find.ByType<InteractiveViewer>(), new Vector(0, -100), 3000);
+                tester.Fling(Find.ByType<InteractiveViewer>(), new Offset(0, -100), 3000);
                 tester.Pump();
             }
         }
@@ -1329,13 +1329,13 @@ public sealed class InteractiveViewerDartParityTests
     {
         using var controller = new TransformationController();
         Assert.Equal(Matrix4.Identity(), controller.Value);
-        Assert.Equal(new Point(10.0, 20.0), controller.ToScene(new Point(10.0, 20.0)));
+        Assert.Equal(new Offset(10.0, 20.0), controller.ToScene(new Offset(10.0, 20.0)));
 
         Matrix4 matrix = Matrix4.Identity();
         matrix.TranslateByDouble(50.0, -10.0, 0.0, 1.0);
         matrix.ScaleByDouble(2.0, 2.0, 2.0, 1.0);
         controller.Value = matrix;
-        Assert.Equal(new Point(25.0, 15.0), controller.ToScene(new Point(100.0, 20.0)));
+        Assert.Equal(new Offset(25.0, 15.0), controller.ToScene(new Offset(100.0, 20.0)));
     }
 
     // ------------------------------------------------------------------------------- helpers
@@ -1370,7 +1370,7 @@ public sealed class InteractiveViewerDartParityTests
     }
 
     // The test's standard one-finger drag: down, pump, move, pump, up, settle.
-    private static void Drag(FrameworkDartTester tester, Point from, Point to)
+    private static void Drag(FrameworkDartTester tester, Offset from, Offset to)
     {
         TestGesture gesture = tester.StartGesture(from, PointerDeviceKind.Touch);
         tester.Pump();
@@ -1382,7 +1382,7 @@ public sealed class InteractiveViewerDartParityTests
 
     // The test's standard two-finger gesture through createGesture: both downs, pump, both moves,
     // pump, both ups, settle.
-    private static void Pinch(FrameworkDartTester tester, Point start1, Point start2, Point end1, Point end2)
+    private static void Pinch(FrameworkDartTester tester, Offset start1, Offset start2, Offset end1, Offset end2)
     {
         TestGesture gesture = tester.CreateGesture();
         TestGesture gesture2 = tester.CreateGesture();
@@ -1398,7 +1398,7 @@ public sealed class InteractiveViewerDartParityTests
     }
 
     // The same two-finger gesture through startGesture, which sends each down as it is created.
-    private static void StartedPinch(FrameworkDartTester tester, Point start1, Point start2, Point end1, Point end2)
+    private static void StartedPinch(FrameworkDartTester tester, Offset start1, Offset start2, Offset end1, Offset end2)
     {
         TestGesture gesture = tester.StartGesture(start1, PointerDeviceKind.Touch);
         TestGesture gesture2 = tester.StartGesture(start2, PointerDeviceKind.Touch);
@@ -1413,7 +1413,7 @@ public sealed class InteractiveViewerDartParityTests
 
     // gesture_utils.dart's scrollAt: a fresh mouse pointer whose hover only sets its location, then
     // one scroll event.
-    private static void ScrollAt(Point position, FrameworkDartTester tester, Vector offset)
+    private static void ScrollAt(Offset position, FrameworkDartTester tester, Offset offset)
     {
         var testPointer = new TestPointer(tester, 1, PointerDeviceKind.Mouse);
         testPointer.Hover(position);
@@ -1450,7 +1450,7 @@ public sealed class InteractiveViewerDartParityTests
             }
         }
 
-        return new Rect(new Point(xMin!.Value, yMin!.Value), new Point(xMax!.Value, yMax!.Value));
+        return DartGeometry.RectFromCorners(new Offset(xMin!.Value, yMin!.Value), new Offset(xMax!.Value, yMax!.Value));
     }
 
     private static void AssertMoreOrLessEquals(double expected, double actual, double epsilon = Eps)
@@ -1470,9 +1470,9 @@ public sealed class InteractiveViewerDartParityTests
 
         public double? ScaleChange { get; set; }
 
-        public Point? FocalPoint { get; set; }
+        public Offset? FocalPoint { get; set; }
 
-        public Point? LocalFocalPoint { get; set; }
+        public Offset? LocalFocalPoint { get; set; }
 
         public Velocity? CurrentVelocity { get; set; }
     }

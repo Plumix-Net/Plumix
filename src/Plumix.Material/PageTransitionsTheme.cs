@@ -64,7 +64,7 @@ public sealed class FadeForwardsPageTransitionsBuilder : PageTransitionsBuilder
                 child: new SlideTransition(
                     position: Map(
                         forwardAnimation,
-                        value => new Vector(
+                        value => new Offset(
                             0.25 * (1.0 - Curves.EaseInOutCubicEmphasized.Transform(value)),
                             0.0)),
                     child: transitionChild)),
@@ -75,7 +75,7 @@ public sealed class FadeForwardsPageTransitionsBuilder : PageTransitionsBuilder
                     child: new SlideTransition(
                         position: Map(
                             reverseAnimation,
-                            value => new Vector(
+                            value => new Offset(
                                 0.25 * Curves.EaseInOutCubicEmphasized.Transform(value),
                                 0.0)),
                         child: transitionChild))),
@@ -107,7 +107,7 @@ public sealed class FadeForwardsPageTransitionsBuilder : PageTransitionsBuilder
                 child: new SlideTransition(
                     position: Map(
                         animation,
-                        value => new Vector(
+                        value => new Offset(
                             -0.25 * (1.0 - Curves.EaseInOutCubicEmphasized.Transform(value)),
                             0.0)),
                     child: transitionChild)),
@@ -116,7 +116,7 @@ public sealed class FadeForwardsPageTransitionsBuilder : PageTransitionsBuilder
                 child: new SlideTransition(
                     position: Map(
                         animation,
-                        value => new Vector(
+                        value => new Offset(
                             -0.25 * Curves.EaseInOutCubicEmphasized.Transform(value),
                             0.0)),
                     child: transitionChild)),
@@ -147,9 +147,9 @@ public sealed class FadeForwardsPageTransitionsBuilder : PageTransitionsBuilder
         return new MappedAnimation<double>(parent, transform);
     }
 
-    private static Animation<Vector> Map(Animation<double> parent, Func<double, Vector> transform)
+    private static Animation<Offset> Map(Animation<double> parent, Func<double, Offset> transform)
     {
-        return new MappedAnimation<Vector>(parent, transform);
+        return new MappedAnimation<Offset>(parent, transform);
     }
 
     private static double Interval(double value, double begin, double end)
@@ -164,7 +164,7 @@ public sealed class FadeForwardsPageTransitionsBuilder : PageTransitionsBuilder
 /// </summary>
 internal sealed class FadeUpwardsPageTransition : StatelessWidget
 {
-    private static readonly VectorTween BottomUpTween = new(begin: new Vector(0.0, 0.25), end: default(Vector));
+    private static readonly VectorTween BottomUpTween = new(begin: new Offset(0.0, 0.25), end: default(Offset));
     private static readonly CurveTween FastOutSlowInTween = new(Curves.FastOutSlowIn);
     private static readonly CurveTween EaseInTween = new(Curves.EaseIn);
 
@@ -178,7 +178,7 @@ internal sealed class FadeUpwardsPageTransition : StatelessWidget
         Child = child;
     }
 
-    public Animation<Vector> PositionAnimation { get; }
+    public Animation<Offset> PositionAnimation { get; }
 
     public Animation<double> OpacityAnimation { get; }
 
@@ -858,7 +858,7 @@ internal sealed class PredictiveBackGestureDetector : StatefulWidget
         private PredictiveBackEvent? _currentEvent;
         private SwipeEdge _swipeEdge = SwipeEdge.Left;
         private double _lastGestureProgress;
-        private Vector _lastGestureOffset;
+        private Offset _lastGestureOffset;
 
         private PredictiveBackGestureDetector CurrentWidget =>
             (PredictiveBackGestureDetector)StateWidget;
@@ -970,7 +970,7 @@ internal sealed class PredictiveBackGestureDetector : StatefulWidget
                     double scale;
                     double opacity;
                     double radius;
-                    Vector offset;
+                    Offset offset;
                     if (_phase == PredictiveBackPhase.Commit)
                     {
                         progress = Curves.EaseInOutCubicEmphasized.Transform(
@@ -980,7 +980,7 @@ internal sealed class PredictiveBackGestureDetector : StatefulWidget
                         scale = Lerp(startScale, 1.0, progress);
                         opacity = 1.0 - progress;
                         radius = Lerp(32.0 * _lastGestureProgress, 0.0, progress);
-                        offset = Lerp(_lastGestureOffset, new Vector(screenSize.Height * 0.1, 0.0), progress);
+                        offset = Lerp(_lastGestureOffset, new Offset(screenSize.Height * 0.1, 0.0), progress);
                     }
                     else
                     {
@@ -997,7 +997,7 @@ internal sealed class PredictiveBackGestureDetector : StatefulWidget
                     Widget clipped = new ClipRRect(effectiveRadius, child: child);
                     Widget faded = new Opacity(opacity, clipped);
                     Widget translated = new Plumix.Widgets.Transform(
-                        Matrix4.TranslationValues(offset.X, offset.Y, 0.0),
+                        Matrix4.TranslationValues(offset.Dx, offset.Dy, 0.0),
                         child: faded);
                     return new ScaleTransition(
                         new ConstantAnimation<double>(scale),
@@ -1064,28 +1064,28 @@ internal sealed class PredictiveBackGestureDetector : StatefulWidget
                 Curves.EaseInOutCubicEmphasized.Transform(_lastGestureProgress));
         }
 
-        private Vector CalculateGestureOffset(Size screenSize, double progress)
+        private Offset CalculateGestureOffset(Size screenSize, double progress)
         {
             double xShift = screenSize.Width / 20.0 - 8.0;
             double x = (_swipeEdge == SwipeEdge.Left ? 1.0 : -1.0) * xShift * progress;
-            if (_startEvent?.TouchOffset is not Point start
-                || _currentEvent?.TouchOffset is not Point current
+            if (_startEvent?.TouchOffset is not Offset start
+                || _currentEvent?.TouchOffset is not Offset current
                 || screenSize.Height <= 0.0)
             {
                 if (_phase == PredictiveBackPhase.Cancel && _lastGestureProgress > 0.0)
                 {
                     double factor = Math.Clamp(progress / _lastGestureProgress, 0.0, 1.0);
-                    return new Vector(_lastGestureOffset.X * factor, _lastGestureOffset.Y * factor);
+                    return new Offset(_lastGestureOffset.Dx * factor, _lastGestureOffset.Dy * factor);
                 }
 
-                return new Vector(x, 0.0);
+                return new Offset(x, 0.0);
             }
 
             double yShiftMax = screenSize.Height / 20.0 - 8.0;
-            double rawYShift = current.Y - start.Y;
+            double rawYShift = current.Dy - start.Dy;
             double normalized = Math.Clamp(Math.Abs(rawYShift) / screenSize.Height, 0.0, 1.0);
             double y = Curves.EaseOut.Transform(normalized) * Math.Sign(rawYShift) * yShiftMax;
-            return new Vector(x, Math.Clamp(y, -yShiftMax, yShiftMax));
+            return new Offset(x, Math.Clamp(y, -yShiftMax, yShiftMax));
         }
 
         private static double Lerp(double begin, double end, double t)
@@ -1093,12 +1093,12 @@ internal sealed class PredictiveBackGestureDetector : StatefulWidget
             return begin + ((end - begin) * Math.Clamp(t, 0.0, 1.0));
         }
 
-        private static Vector Lerp(Vector begin, Vector end, double t)
+        private static Offset Lerp(Offset begin, Offset end, double t)
         {
             double clamped = Math.Clamp(t, 0.0, 1.0);
-            return new Vector(
-                begin.X + ((end.X - begin.X) * clamped),
-                begin.Y + ((end.Y - begin.Y) * clamped));
+            return new Offset(
+                begin.Dx + ((end.Dx - begin.Dx) * clamped),
+                begin.Dy + ((end.Dy - begin.Dy) * clamped));
         }
     }
 

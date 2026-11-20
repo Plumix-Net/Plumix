@@ -28,20 +28,20 @@ public sealed class InkSparkleDartParityTests
         Element well = tester.ElementsOfType<Ink>().Single(element => ((Ink)element.Widget).Width == 150);
         Element stadium = tester.ElementsOfType<Ink>().Single(element => ((Ink)element.Widget).Width == 220);
         using Bitmap before = Assert.IsAssignableFrom<OffsetLayer>(tester.RenderView.Layer)
-            .ToImageSync(new Rect(0, 0, 800, 600));
-        AssertGalleryColor(before, tester.GetTopLeft(circle) + new Vector(56, 20), 0xEA, 0xDD, 0xFF);
-        AssertGalleryColor(before, tester.GetTopLeft(well) + new Vector(20, 20), 0xD7, 0xE3, 0xFF);
-        AssertGalleryColor(before, tester.GetTopLeft(stadium) + new Vector(15, 26), 0xFF, 0xD8, 0xE4);
+            .ToImageSync(DartGeometry.RectFromLTWH(0, 0, 800, 600));
+        AssertGalleryColor(before, tester.GetTopLeft(circle) + new Offset(56, 20), 0xEA, 0xDD, 0xFF);
+        AssertGalleryColor(before, tester.GetTopLeft(well) + new Offset(20, 20), 0xD7, 0xE3, 0xFF);
+        AssertGalleryColor(before, tester.GetTopLeft(stadium) + new Offset(15, 26), 0xFF, 0xD8, 0xE4);
 
         tester.Tap(Find.Text("Splash factory: InkRipple"));
         tester.PumpAndSettle();
-        TestGesture gesture = tester.StartGesture(tester.GetTopLeft(well) + new Vector(20, 20),
+        TestGesture gesture = tester.StartGesture(tester.GetTopLeft(well) + new Offset(20, 20),
             PointerDeviceKind.Touch);
         tester.Pump();
         tester.Pump(TimeSpan.FromMilliseconds(100));
         Assert.Contains(InkFeatureProbe.Splashes(tester.RenderView), feature => feature is InkSparkle);
         using Bitmap after = Assert.IsAssignableFrom<OffsetLayer>(tester.RenderView.Layer)
-            .ToImageSync(new Rect(0, 0, 800, 600));
+            .ToImageSync(DartGeometry.RectFromLTWH(0, 0, 800, 600));
         Assert.NotEqual(RasterBackend.ReadPixels(before), RasterBackend.ReadPixels(after));
         gesture.Up();
         tester.PumpAndSettle();
@@ -54,9 +54,9 @@ public sealed class InkSparkleDartParityTests
         Assert.Null(tester.TakeException());
     }
 
-    private static void AssertGalleryColor(Bitmap image, Point point, int r, int g, int b)
+    private static void AssertGalleryColor(Bitmap image, Offset point, int r, int g, int b)
     {
-        var pixel = RasterBackend.PixelAt(image, (int)point.X, (int)point.Y);
+        var pixel = RasterBackend.PixelAt(image, (int)point.Dx, (int)point.Dy);
         Assert.Equal((r, g, b, 255), ((int)pixel.R, (int)pixel.G, (int)pixel.B, (int)pixel.A));
     }
 
@@ -187,8 +187,8 @@ public sealed class InkSparkleDartParityTests
                     splashColor: new Color(0x80FF0000),
                     onTap: () => { }))))));
         Element well = Assert.Single(tester.ElementsOfType<InkWell>());
-        Point topLeft = tester.GetTopLeft(well);
-        TestGesture gesture = tester.StartGesture(topLeft + new Vector(160 * fraction, 80 * fraction),
+        Offset topLeft = tester.GetTopLeft(well);
+        TestGesture gesture = tester.StartGesture(topLeft + new Offset(160 * fraction, 80 * fraction),
             PointerDeviceKind.Touch);
         tester.Pump();
         var controller = (RenderInkFeatures)MaterialWidget.Of(well);

@@ -20,7 +20,7 @@ public sealed class SceneBuilderTests
         Picture picture = recorder.EndRecording();
         var builder = new SceneBuilder();
         builder.PushOffset(10, 10);
-        builder.AddPicture(new Point(5, 5), picture);
+        builder.AddPicture(new Offset(5, 5), picture);
         Scene scene = builder.Build();
 
         Bitmap image = scene.ToImageSync(6, 8);
@@ -359,7 +359,7 @@ public sealed class SceneBuilderTests
         Assert.False(builder.AddedPicture);
         Assert.Null(layer.EngineLayer);
 
-        layer.Append(new PictureLayer(new Rect(-1e9, -1e9, 2e9, 2e9))
+        layer.Append(new PictureLayer(DartGeometry.RectFromLTWH(-1e9, -1e9, 2e9, 2e9))
         {
             Picture = new PictureRecorder().EndRecording(),
         });
@@ -404,7 +404,7 @@ public sealed class SceneBuilderTests
         layer.AddToScene(builder);
         Assert.Null(layer.EngineLayer);
 
-        layer.Append(new PictureLayer(new Rect(-1e9, -1e9, 2e9, 2e9))
+        layer.Append(new PictureLayer(DartGeometry.RectFromLTWH(-1e9, -1e9, 2e9, 2e9))
         {
             Picture = new PictureRecorder().EndRecording(),
         });
@@ -448,7 +448,7 @@ public sealed class SceneBuilderTests
         layer.DebugMarkClean();
         layer.UpdateSubtreeNeedsAddToScene();
         Assert.False(layer.DebugSubtreeNeedsAddToScene);
-        layer.OverlayRect = new Rect(0, 0, 1, 1);
+        layer.OverlayRect = DartGeometry.RectFromLTWH(0, 0, 1, 1);
         layer.UpdateSubtreeNeedsAddToScene();
         Assert.True(layer.DebugSubtreeNeedsAddToScene);
     }
@@ -467,7 +467,7 @@ public sealed class SceneBuilderTests
         parent.BuildScene(new SceneBuilder()).Dispose();
 
         // Causes grandChild to pass its engine layer as `oldLayer`.
-        Bitmap image = await grandChild.ToImage(new Rect(0, 0, 10, 10));
+        Bitmap image = await grandChild.ToImage(DartGeometry.RectFromLTWH(0, 0, 10, 10));
         Assert.Equal(new PixelSize(10, 10), image.PixelSize);
 
         // Ensure we can render the same scene again after rendering an interior layer.
@@ -485,7 +485,7 @@ public sealed class SceneBuilderTests
         parent.Append(child);
 
         parent.BuildScene(new SceneBuilder()).Dispose();
-        Bitmap image = grandChild.ToImageSync(new Rect(0, 0, 10, 10));
+        Bitmap image = grandChild.ToImageSync(DartGeometry.RectFromLTWH(0, 0, 10, 10));
         Assert.Equal(new PixelSize(10, 10), image.PixelSize);
         parent.BuildScene(new SceneBuilder()).Dispose();
     }
@@ -493,11 +493,11 @@ public sealed class SceneBuilderTests
     [Fact]
     public void OffsetLayerToImageSync_CropsToTheBoundsAtThePixelRatio()
     {
-        var layer = new OffsetLayer(new Point(100, 100));
-        var picture = new PictureLayer(new Rect(0, 0, 20, 20)) { Picture = DrawRectPicture(new Rect(5, 5, 5, 5)) };
+        var layer = new OffsetLayer(new Offset(100, 100));
+        var picture = new PictureLayer(DartGeometry.RectFromLTWH(0, 0, 20, 20)) { Picture = DrawRectPicture(DartGeometry.RectFromLTWH(5, 5, 5, 5)) };
         layer.Append(picture);
 
-        Bitmap image = layer.ToImageSync(new Rect(5, 5, 10, 10), pixelRatio: 2.0);
+        Bitmap image = layer.ToImageSync(DartGeometry.RectFromLTWH(5, 5, 10, 10), pixelRatio: 2.0);
 
         Assert.Equal(new PixelSize(20, 20), image.PixelSize);
         // The rect starts at the bounds' origin: the top-left image pixels are covered...
@@ -511,7 +511,7 @@ public sealed class SceneBuilderTests
     public void BuildScene_AddsACleanSubtreeRetained()
     {
         var root = new OffsetLayer();
-        var clean = new OffsetLayer(new Point(1, 2));
+        var clean = new OffsetLayer(new Offset(1, 2));
         clean.Append(new PictureLayer(default) { Picture = new PictureRecorder().EndRecording() });
         root.Append(clean);
 
@@ -569,14 +569,14 @@ public sealed class SceneBuilderTests
     public void ASceneThatOnlyReAddsRetainedLayersPaintsTheSameAsThePreviousOne()
     {
         var root = new TransformLayer(Matrix4.Diagonal3Values(3.0, 3.0, 1.0));
-        var looseLayer = new PictureLayer(new Rect(0, 0, 20, 20))
+        var looseLayer = new PictureLayer(DartGeometry.RectFromLTWH(0, 0, 20, 20))
         {
-            Picture = DrawRectPicture(new Rect(0, 0, 20, 20)),
+            Picture = DrawRectPicture(DartGeometry.RectFromLTWH(0, 0, 20, 20)),
         };
-        var boundary = new OffsetLayer(new Point(0, 20));
-        var nestedLayer = new PictureLayer(new Rect(0, 0, 10, 10))
+        var boundary = new OffsetLayer(new Offset(0, 20));
+        var nestedLayer = new PictureLayer(DartGeometry.RectFromLTWH(0, 0, 10, 10))
         {
-            Picture = DrawRectPicture(new Rect(0, 0, 10, 10)),
+            Picture = DrawRectPicture(DartGeometry.RectFromLTWH(0, 0, 10, 10)),
         };
         boundary.Append(nestedLayer);
         root.Append(looseLayer);
@@ -593,11 +593,11 @@ public sealed class SceneBuilderTests
         Assert.NotSame(first, unchanged);
         Assert.True(ContainerFlowLayer.PaintsSameAs(unchanged, first));
 
-        nestedLayer.Picture = DrawRectPicture(new Rect(0, 0, 10, 10), 0xFFFF0000);
+        nestedLayer.Picture = DrawRectPicture(DartGeometry.RectFromLTWH(0, 0, 10, 10), 0xFFFF0000);
         ContainerFlowLayer repainted = Build();
         Assert.False(ContainerFlowLayer.PaintsSameAs(repainted, unchanged));
 
-        boundary.Offset = new Point(0, 30);
+        boundary.Offset = new Offset(0, 30);
         ContainerFlowLayer moved = Build();
         Assert.False(ContainerFlowLayer.PaintsSameAs(moved, repainted));
 
@@ -632,7 +632,7 @@ public sealed class SceneBuilderTests
 
         public override OpacityEngineLayer PushOpacity(
             int alpha,
-            Point offset = default,
+            Offset offset = default,
             OpacityEngineLayer? oldLayer = null)
         {
             PushedOpacity = true;
@@ -646,7 +646,7 @@ public sealed class SceneBuilderTests
         }
 
         public override void AddPicture(
-            Point offset,
+            Offset offset,
             Picture picture,
             bool isComplexHint = false,
             bool willChangeHint = false)

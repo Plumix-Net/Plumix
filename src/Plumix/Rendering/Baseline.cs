@@ -91,7 +91,7 @@ public sealed class RenderBaseline : RenderShiftedBox
         Size = size;
         if (Child?.parentData is BoxParentData parentData)
         {
-            parentData.offset = new Point(0.0, top);
+            parentData.offset = new Offset(0.0, top);
         }
     }
 

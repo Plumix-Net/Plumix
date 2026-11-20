@@ -9,23 +9,23 @@ namespace Plumix.Widgets;
 /// <summary>Positions a desktop selection toolbar at its anchor while keeping it inside the viewport.</summary>
 public sealed class DesktopTextSelectionToolbarLayoutDelegate : SingleChildLayoutDelegate
 {
-    public DesktopTextSelectionToolbarLayoutDelegate(Point anchor)
+    public DesktopTextSelectionToolbarLayoutDelegate(Offset anchor)
     {
         Anchor = anchor;
     }
 
-    public Point Anchor { get; }
+    public Offset Anchor { get; }
 
     public override BoxConstraints GetConstraintsForChild(BoxConstraints constraints) => constraints.Loosen();
 
-    public override Point GetPositionForChild(Size size, Size childSize)
+    public override Offset GetPositionForChild(Size size, Size childSize)
     {
-        var overhang = new Vector(
-            Anchor.X + childSize.Width - size.Width,
-            Anchor.Y + childSize.Height - size.Height);
-        return new Point(
-            overhang.X > 0.0 ? Anchor.X - overhang.X : Anchor.X,
-            overhang.Y > 0.0 ? Anchor.Y - overhang.Y : Anchor.Y);
+        var overhang = new Offset(
+            Anchor.Dx + childSize.Width - size.Width,
+            Anchor.Dy + childSize.Height - size.Height);
+        return new Offset(
+            overhang.Dx > 0.0 ? Anchor.Dx - overhang.Dx : Anchor.Dx,
+            overhang.Dy > 0.0 ? Anchor.Dy - overhang.Dy : Anchor.Dy);
     }
 
     public override bool ShouldRelayout(SingleChildLayoutDelegate oldDelegate)

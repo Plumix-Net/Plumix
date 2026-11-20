@@ -118,7 +118,7 @@ public sealed class MediaQueryAnnounceAndTextScalingDartParityTests
         Assert.Equal(1, buildCount);
         Assert.True(observed);
 
-        setPageState!(() => data = data.CopyWith(size: new Avalonia.Size(1, 1)));
+        setPageState!(() => data = data.CopyWith(size: new Size(1, 1)));
         tester.PumpAndSettle();
         Assert.Equal(1, buildCount);
     }

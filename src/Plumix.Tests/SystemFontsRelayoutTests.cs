@@ -127,6 +127,6 @@ public sealed class SystemFontsRelayoutTests : IDisposable
             Size = Constraints.Smallest;
         }
 
-        public override void Paint(PaintingContext context, Point offset) { }
+        public override void Paint(PaintingContext context, Offset offset) { }
     }
 }

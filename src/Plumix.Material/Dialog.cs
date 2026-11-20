@@ -771,7 +771,7 @@ public sealed class DialogRoute<T> : RawDialogRoute<T>
         bool useSafeArea = true,
         RouteSettings? settings = null,
         bool? requestFocus = null,
-        Point? anchorPoint = null,
+        Offset? anchorPoint = null,
         TraversalEdgeBehavior? traversalEdgeBehavior = null,
         bool fullscreenDialog = false,
         AnimationStyle? animationStyle = null) : base(
@@ -990,7 +990,7 @@ public static class MaterialDialogs
         RouteSettings? routeSettings = null,
         bool fullscreenDialog = false,
         bool useRootNavigator = true,
-        Point? anchorPoint = null,
+        Offset? anchorPoint = null,
         TraversalEdgeBehavior? traversalEdgeBehavior = null,
         bool? requestFocus = null,
         AnimationStyle? animationStyle = null)
@@ -1074,7 +1074,7 @@ public static class MaterialDialogs
         bool useSafeArea = true,
         bool useRootNavigator = true,
         RouteSettings? routeSettings = null,
-        Point? anchorPoint = null,
+        Offset? anchorPoint = null,
         TraversalEdgeBehavior? traversalEdgeBehavior = null,
         bool? requestFocus = null,
         AnimationStyle? animationStyle = null)

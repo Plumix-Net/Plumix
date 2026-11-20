@@ -105,13 +105,13 @@ internal sealed class VisualDensityDemoPageState : State
 
     private Widget BuildDensityFacts(VisualDensity density)
     {
-        Vector adjustment = density.BaseSizeAdjustment;
+        Offset adjustment = density.BaseSizeAdjustment;
         BoxConstraints effective = density.EffectiveConstraints(
             BoxConstraints.TightFor(width: 48, height: 48));
         return BuildCard(
             $"{density}",
             [
-                BuildFactRow("baseSizeAdjustment", $"({adjustment.X:0.#}, {adjustment.Y:0.#})"),
+                BuildFactRow("baseSizeAdjustment", $"({adjustment.Dx:0.#}, {adjustment.Dy:0.#})"),
                 BuildFactRow(
                     "effectiveConstraints(48x48)",
                     $"min {effective.MinWidth:0.#}x{effective.MinHeight:0.#}, "

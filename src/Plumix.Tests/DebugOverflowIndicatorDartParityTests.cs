@@ -74,14 +74,14 @@ public sealed class DebugOverflowIndicatorDartParityTests
         PaintAssert.Paints(
             RenderOf<UnconstrainedBox>(tester),
             PaintPattern.Paints
-                .Rect(rect: new Avalonia.Rect(0.0, 0.0, 100.0, 10.0))
+                .Rect(rect: DartGeometry.RectFromLTWH(0.0, 0.0, 100.0, 10.0))
                 .Save()
                 .Translate(x: 50.0, y: 1.0)
                 .Rotate(angle: 0.0)
                 .Rect(color: new Plumix.UI.Color(0xFFFFFFFF))
                 .Paragraph()
                 .Restore()
-                .Rect(rect: new Avalonia.Rect(0.0, 90.0, 100.0, 10.0))
+                .Rect(rect: DartGeometry.RectFromLTWH(0.0, 90.0, 100.0, 10.0))
                 .Save()
                 .Translate(x: 50.0, y: 91.5)
                 .Rotate(angle: 0.0)

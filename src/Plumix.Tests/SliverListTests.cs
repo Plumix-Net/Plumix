@@ -138,7 +138,7 @@ public sealed class SliverListTests
             tester.PumpWidget(BuildSliverList([.. items], controller, itemHeight: 50, viewportHeight: 200));
             tester.PumpAndSettle();
 
-            tester.Drag(FindTile(tester, 2).Single(), new Vector(0.0, -1000.0));
+            tester.Drag(FindTile(tester, 2).Single(), new Offset(0.0, -1000.0));
             tester.PumpAndSettle();
 
             // Viewport should be scrolled to the end of list.
@@ -158,7 +158,7 @@ public sealed class SliverListTests
             AssertTiles(tester, found: [15, 16, 17, 18], missing: [14, 19]);
 
             // Drags back to beginning and newly added item is visible.
-            tester.Drag(FindTile(tester, 16).Single(), new Vector(0.0, 1000.0));
+            tester.Drag(FindTile(tester, 16).Single(), new Offset(0.0, 1000.0));
             tester.PumpAndSettle();
             Assert.Equal(0.0, controller.Offset);
             AssertTiles(tester, found: [-1, 0, 1, 2], missing: [3]);

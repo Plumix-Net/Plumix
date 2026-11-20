@@ -17,10 +17,10 @@ public sealed class AlignmentGeometryTests
         Assert.Equal(new Alignment(4.0, 7.0), new Alignment(1.0, 2.0) + new Alignment(3.0, 5.0));
         Assert.Equal(new Alignment(-2.0, -3.0), new Alignment(1.0, 2.0) - new Alignment(3.0, 5.0));
         Assert.Equal(new Alignment(1.0, 0.0), new Alignment(-1.0, -2.0) % 2.0);
-        Assert.Equal(new Point(75.0, 62.5), value.AlongOffset(new Vector(100.0, 100.0)));
-        Assert.Equal(new Point(75.0, 62.5), value.AlongOffset(new Point(100.0, 100.0)));
-        Assert.Equal(new Point(75.0, 62.5), value.AlongSize(new Size(100.0, 100.0)));
-        Assert.Equal(new Point(85.0, 82.5), value.WithinRect(new Rect(10.0, 20.0, 100.0, 100.0)));
+        Assert.Equal(new Offset(75.0, 62.5), value.AlongOffset(new Offset(100.0, 100.0)));
+        Assert.Equal(new Offset(75.0, 62.5), value.AlongOffset(new Offset(100.0, 100.0)));
+        Assert.Equal(new Offset(75.0, 62.5), value.AlongSize(new Size(100.0, 100.0)));
+        Assert.Equal(new Offset(85.0, 82.5), value.WithinRect(DartGeometry.RectFromLTWH(10.0, 20.0, 100.0, 100.0)));
     }
 
     [Fact]

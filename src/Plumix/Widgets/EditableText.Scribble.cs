@@ -296,7 +296,7 @@ internal sealed class ScribbleFocusableState : State<ScribbleFocusable>, IScribb
 
     public string ElementIdentifier => _elementIdentifier;
 
-    public void OnScribbleFocus(Point offset)
+    public void OnScribbleFocus(Offset offset)
     {
         Widget.FocusNode.RequestFocus();
         RenderEditable?.SelectPositionAt(from: offset, cause: SelectionChangedCause.StylusHandwriting);
@@ -316,7 +316,7 @@ internal sealed class ScribbleFocusableState : State<ScribbleFocusable>, IScribb
             return false;
         }
 
-        if (!calculatedBounds.Intersects(rect))
+        if (!calculatedBounds.Overlaps(rect))
         {
             return false;
         }
@@ -337,7 +337,7 @@ internal sealed class ScribbleFocusableState : State<ScribbleFocusable>, IScribb
             }
 
             Matrix4 transform = box.GetTransformTo(null);
-            return MatrixUtils.TransformRect(transform, new Rect(0, 0, box.Size.Width, box.Size.Height));
+            return MatrixUtils.TransformRect(transform, DartGeometry.RectFromLTWH(0, 0, box.Size.Width, box.Size.Height));
         }
     }
 

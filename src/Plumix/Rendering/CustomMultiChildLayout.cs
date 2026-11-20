@@ -60,7 +60,7 @@ public abstract class MultiChildLayoutDelegate
         return child.Size;
     }
 
-    public void PositionChild(object childId, Point offset)
+    public void PositionChild(object childId, Offset offset)
     {
         ArgumentNullException.ThrowIfNull(childId);
         Dictionary<object, RenderBox> children = RequireChildMap();
@@ -248,12 +248,12 @@ public sealed class RenderCustomMultiChildLayoutBox : RenderBox,
         return double.IsFinite(height) ? height : 0.0;
     }
 
-    public override void Paint(PaintingContext context, Point offset)
+    public override void Paint(PaintingContext context, Offset offset)
     {
         DefaultPaint(context, offset);
     }
 
-    protected override bool HitTestChildren(BoxHitTestResult result, Point position)
+    protected override bool HitTestChildren(BoxHitTestResult result, Offset position)
     {
         return DefaultHitTestChildren(result, position);
     }
@@ -275,9 +275,9 @@ public sealed class RenderCustomMultiChildLayoutBox : RenderBox,
         }
     }
 
-    public void DefaultPaint(PaintingContext context, Point offset) => _container.DefaultPaint(context, offset);
+    public void DefaultPaint(PaintingContext context, Offset offset) => _container.DefaultPaint(context, offset);
 
-    public bool DefaultHitTestChildren(BoxHitTestResult result, Point position)
+    public bool DefaultHitTestChildren(BoxHitTestResult result, Offset position)
     {
         return _container.DefaultHitTestChildren(result, position);
     }

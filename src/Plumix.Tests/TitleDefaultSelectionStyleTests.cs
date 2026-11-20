@@ -109,7 +109,7 @@ public sealed class TitleDefaultSelectionStyleTests : IDisposable
                     child: new Title(color: new Color(0xFFFFFFFF), child: new Placeholder())))));
 
         var box = (RenderBox)tester.ElementOfType<Title>().RenderObject!;
-        Assert.Equal(new Avalonia.Size(0, 0), box.Size);
+        Assert.Equal(new Size(0, 0), box.Size);
     }
 
     [Fact]

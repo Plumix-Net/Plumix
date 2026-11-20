@@ -26,21 +26,21 @@ internal sealed partial class FrameworkDartTester
     private static int _nextGesturePointer = 9000;
 
     /// <summary>Dart's <c>tester.getTopLeft</c>.</summary>
-    public Point GetTopLeft(Element element)
+    public Offset GetTopLeft(Element element)
     {
         var box = (RenderBox)element.FindRenderObject()!;
         return box.LocalToGlobal(default);
     }
 
     /// <summary>Dart's <c>tester.getBottomRight</c>.</summary>
-    public Point GetBottomRight(Element element)
+    public Offset GetBottomRight(Element element)
     {
         var box = (RenderBox)element.FindRenderObject()!;
-        return box.LocalToGlobal(new Point(box.Size.Width, box.Size.Height));
+        return box.LocalToGlobal(new Offset(box.Size.Width, box.Size.Height));
     }
 
     /// <summary>Dart's <c>tester.getRect</c>.</summary>
-    public Rect GetRect(Element element) => new(GetTopLeft(element), GetBottomRight(element));
+    public Rect GetRect(Element element) => DartGeometry.RectFromCorners(GetTopLeft(element), GetBottomRight(element));
 
     /// <summary>Dart's <c>tester.getSize</c>.</summary>
     public Size GetSize(Element element) => ((RenderBox)element.FindRenderObject()!).Size;
@@ -55,7 +55,7 @@ internal sealed partial class FrameworkDartTester
 
     /// <summary>Dart's <c>tester.startGesture</c> with a <c>kind</c>.</summary>
     public TestGesture StartGesture(
-        Point downLocation,
+        Offset downLocation,
         PointerDeviceKind kind,
         PointerButtons buttons = PointerButtons.Primary)
     {
@@ -75,7 +75,7 @@ internal sealed partial class FrameworkDartTester
     /// <summary>Dart's <c>tester.drag(finder, offset)</c>.</summary>
     public void Drag(
         Element element,
-        Vector offset,
+        Offset offset,
         PointerDeviceKind kind = PointerDeviceKind.Touch,
         double touchSlopX = DragSlopDefault,
         double touchSlopY = DragSlopDefault)
@@ -89,17 +89,17 @@ internal sealed partial class FrameworkDartTester
     /// slop break exactly where a real finger would.
     /// </summary>
     public void DragFrom(
-        Point startLocation,
-        Vector offset,
+        Offset startLocation,
+        Offset offset,
         PointerDeviceKind kind = PointerDeviceKind.Touch,
         double touchSlopX = DragSlopDefault,
         double touchSlopY = DragSlopDefault)
     {
         TestGesture gesture = StartGesture(startLocation, kind);
-        double xSign = Math.Sign(offset.X);
-        double ySign = Math.Sign(offset.Y);
-        double offsetX = offset.X;
-        double offsetY = offset.Y;
+        double xSign = Math.Sign(offset.Dx);
+        double ySign = Math.Sign(offset.Dy);
+        double offsetX = offset.Dx;
+        double offsetY = offset.Dy;
         bool separateX = Math.Abs(offsetX) > touchSlopX && touchSlopX > 0;
         bool separateY = Math.Abs(offsetY) > touchSlopY && touchSlopY > 0;
         if (separateX || separateY)
@@ -116,42 +116,42 @@ internal sealed partial class FrameworkDartTester
                 {
                     // The drag goes through the vertical edge of the box.
                     double diffY = Math.Abs(offsetSlope) * touchSlopX * ySign;
-                    gesture.MoveBy(new Vector(signedSlopX, diffY));
+                    gesture.MoveBy(new Offset(signedSlopX, diffY));
                     if (Math.Abs(offsetY) <= touchSlopY)
                     {
-                        gesture.MoveBy(new Vector(offsetX - signedSlopX, offsetY - diffY));
+                        gesture.MoveBy(new Offset(offsetX - signedSlopX, offsetY - diffY));
                     }
                     else
                     {
                         double diffY2 = signedSlopY - diffY;
                         double diffX2 = inverseOffsetSlope * diffY2;
-                        gesture.MoveBy(new Vector(diffX2, diffY2));
-                        gesture.MoveBy(new Vector(offsetX - diffX2 - signedSlopX, offsetY - signedSlopY));
+                        gesture.MoveBy(new Offset(diffX2, diffY2));
+                        gesture.MoveBy(new Offset(offsetX - diffX2 - signedSlopX, offsetY - signedSlopY));
                     }
                 }
                 else
                 {
                     // The drag goes through the horizontal edge of the box.
                     double diffX = Math.Abs(inverseOffsetSlope) * touchSlopY * xSign;
-                    gesture.MoveBy(new Vector(diffX, signedSlopY));
+                    gesture.MoveBy(new Offset(diffX, signedSlopY));
                     if (Math.Abs(offsetX) <= touchSlopX)
                     {
-                        gesture.MoveBy(new Vector(offsetX - diffX, offsetY - signedSlopY));
+                        gesture.MoveBy(new Offset(offsetX - diffX, offsetY - signedSlopY));
                     }
                     else
                     {
                         double diffX2 = signedSlopX - diffX;
                         double diffY2 = offsetSlope * diffX2;
-                        gesture.MoveBy(new Vector(diffX2, diffY2));
-                        gesture.MoveBy(new Vector(offsetX - signedSlopX, offsetY - diffY2 - signedSlopY));
+                        gesture.MoveBy(new Offset(diffX2, diffY2));
+                        gesture.MoveBy(new Offset(offsetX - signedSlopX, offsetY - diffY2 - signedSlopY));
                     }
                 }
             }
             else
             {
                 // The drag goes through the corner of the box.
-                gesture.MoveBy(new Vector(signedSlopX, signedSlopY));
-                gesture.MoveBy(new Vector(offsetX - signedSlopX, offsetY - signedSlopY));
+                gesture.MoveBy(new Offset(signedSlopX, signedSlopY));
+                gesture.MoveBy(new Offset(offsetX - signedSlopX, offsetY - signedSlopY));
             }
         }
         else
@@ -163,7 +163,7 @@ internal sealed partial class FrameworkDartTester
     }
 
     /// <summary>Dart's <c>tester.timedDrag(finder, offset, duration)</c>.</summary>
-    public void TimedDrag(Element element, Vector offset, TimeSpan duration, double frequency = 60.0)
+    public void TimedDrag(Element element, Offset offset, TimeSpan duration, double frequency = 60.0)
     {
         TimedDragFrom(GetCenter(element), offset, duration, frequency);
     }
@@ -172,7 +172,7 @@ internal sealed partial class FrameworkDartTester
     /// Dart's <c>tester.timedDragFrom</c>: a down, <c>duration * frequency + 1</c> evenly timed
     /// moves and an up, replayed through <see cref="HandlePointerEventRecord"/>.
     /// </summary>
-    public void TimedDragFrom(Point startLocation, Vector offset, TimeSpan duration, double frequency = 60.0)
+    public void TimedDragFrom(Offset startLocation, Offset offset, TimeSpan duration, double frequency = 60.0)
     {
         int intervals = (int)(duration.Ticks / TimeSpan.TicksPerMicrosecond * frequency / 1E6);
         if (intervals <= 1)
@@ -186,7 +186,7 @@ internal sealed partial class FrameworkDartTester
             timeStamps.Add(TimeSpan.FromTicks(duration.Ticks * t / intervals));
         }
 
-        var offsets = new List<Point> { startLocation };
+        var offsets = new List<Offset> { startLocation };
         for (int t = 0; t <= intervals; t += 1)
         {
             offsets.Add(startLocation + offset * ((double)t / intervals));
@@ -247,11 +247,11 @@ internal sealed partial class FrameworkDartTester
     /// <summary>Dart's <c>tester.fling(finder, offset, speed)</c>.</summary>
     public void Fling(
         Element element,
-        Vector offset,
+        Offset offset,
         double speed,
         PointerButtons buttons = PointerButtons.Primary,
         TimeSpan? frameInterval = null,
-        Vector initialOffset = default,
+        Offset initialOffset = default,
         TimeSpan? initialOffsetDelay = null)
     {
         FlingFrom(GetCenter(element), offset, speed, buttons, frameInterval, initialOffset, initialOffsetDelay);
@@ -262,23 +262,23 @@ internal sealed partial class FrameworkDartTester
     /// pumping whenever more than a frame interval elapsed, then an up.
     /// </summary>
     public void FlingFrom(
-        Point startLocation,
-        Vector offset,
+        Offset startLocation,
+        Offset offset,
         double speed,
         PointerButtons buttons = PointerButtons.Primary,
         TimeSpan? frameInterval = null,
-        Vector initialOffset = default,
+        Offset initialOffset = default,
         TimeSpan? initialOffsetDelay = null)
     {
         const int moveCount = 50;
         double frameMicroseconds = (frameInterval ?? TimeSpan.FromMilliseconds(16)).TotalMicroseconds;
         TimeSpan delay = initialOffsetDelay ?? TimeSpan.FromSeconds(1);
         TestGesture gesture = CreateGesture(PointerDeviceKind.Touch, buttons);
-        double timeStampDelta = 1000000.0 * offset.Length / (moveCount * speed);
+        double timeStampDelta = 1000000.0 * offset.DartDistance / (moveCount * speed);
         double timeStamp = 0.0;
         double lastTimeStamp = timeStamp;
         gesture.Down(startLocation, Microseconds(timeStamp));
-        if (initialOffset.Length > 0.0)
+        if (initialOffset.DartDistance > 0.0)
         {
             gesture.MoveTo(startLocation + initialOffset, Microseconds(timeStamp));
             timeStamp += delay.TotalMicroseconds;
@@ -287,7 +287,7 @@ internal sealed partial class FrameworkDartTester
 
         for (int i = 0; i <= moveCount; i += 1)
         {
-            Point location = startLocation + initialOffset + (offset * i / moveCount);
+            Offset location = startLocation + initialOffset + (offset * i / moveCount);
             gesture.MoveTo(location, Microseconds(timeStamp));
             timeStamp += timeStampDelta;
             if (timeStamp - lastTimeStamp > frameMicroseconds)
@@ -305,15 +305,15 @@ internal sealed partial class FrameworkDartTester
     /// kind); returns the <c>allowPlatformDefault</c> values the event was answered with.
     /// </summary>
     public List<bool> SendPointerScroll(
-        Point location,
-        Vector scrollDelta,
+        Offset location,
+        Offset scrollDelta,
         PointerDeviceKind kind = PointerDeviceKind.Mouse)
     {
         var responses = new List<bool>();
         SendEventToBinding(new PointerScrollEvent(
             kind: kind,
             position: location,
-            scrollDelta: new Point(scrollDelta.X, scrollDelta.Y),
+            scrollDelta: new Offset(scrollDelta.Dx, scrollDelta.Dy),
             timestampUtc: EventTimeOrigin,
             onRespond: responses.Add,
             viewId: View.ViewId));
@@ -321,7 +321,7 @@ internal sealed partial class FrameworkDartTester
     }
 
     /// <summary>Dart's <c>testPointer.scrollInertiaCancel()</c>.</summary>
-    public void SendScrollInertiaCancel(Point location, PointerDeviceKind kind = PointerDeviceKind.Trackpad)
+    public void SendScrollInertiaCancel(Offset location, PointerDeviceKind kind = PointerDeviceKind.Trackpad)
     {
         SendEventToBinding(new PointerScrollInertiaCancelEvent(
             kind: kind,
@@ -333,10 +333,10 @@ internal sealed partial class FrameworkDartTester
     /// <summary>Dart's <c>tester.trackpadFling(finder, offset, speed)</c>.</summary>
     public void TrackpadFling(
         Element element,
-        Vector offset,
+        Offset offset,
         double speed,
         TimeSpan? frameInterval = null,
-        Vector initialOffset = default,
+        Offset initialOffset = default,
         TimeSpan? initialOffsetDelay = null)
     {
         TrackpadFlingFrom(GetCenter(element), offset, speed, frameInterval, initialOffset, initialOffsetDelay);
@@ -348,26 +348,26 @@ internal sealed partial class FrameworkDartTester
     /// pumping whenever more than a frame interval elapsed, then a pan/zoom end.
     /// </summary>
     public void TrackpadFlingFrom(
-        Point startLocation,
-        Vector offset,
+        Offset startLocation,
+        Offset offset,
         double speed,
         TimeSpan? frameInterval = null,
-        Vector initialOffset = default,
+        Offset initialOffset = default,
         TimeSpan? initialOffsetDelay = null)
     {
         const int moveCount = 50;
         double frameMicroseconds = (frameInterval ?? TimeSpan.FromMilliseconds(16)).TotalMicroseconds;
         TimeSpan delay = initialOffsetDelay ?? TimeSpan.FromSeconds(1);
         var pointer = new TestPointer(this, Interlocked.Increment(ref _nextGesturePointer), PointerDeviceKind.Trackpad);
-        double timeStampDelta = 1000000.0 * offset.Length / (moveCount * speed);
+        double timeStampDelta = 1000000.0 * offset.DartDistance / (moveCount * speed);
         double timeStamp = 0.0;
         double lastTimeStamp = timeStamp;
         SendEventToBinding(pointer.PanZoomStart(startLocation, Microseconds(timeStamp)));
-        if (initialOffset.Length > 0.0)
+        if (initialOffset.DartDistance > 0.0)
         {
             SendEventToBinding(pointer.PanZoomUpdate(
                 startLocation,
-                pan: (Point)initialOffset,
+                pan: (Offset)initialOffset,
                 timeStamp: Microseconds(timeStamp)));
             timeStamp += delay.TotalMicroseconds;
             Pump(delay);
@@ -375,9 +375,9 @@ internal sealed partial class FrameworkDartTester
 
         for (int i = 0; i <= moveCount; i += 1)
         {
-            Vector pan = initialOffset + (offset * i / moveCount);
+            Offset pan = initialOffset + (offset * i / moveCount);
             SendEventToBinding(
-                pointer.PanZoomUpdate(startLocation, pan: (Point)pan, timeStamp: Microseconds(timeStamp)));
+                pointer.PanZoomUpdate(startLocation, pan: (Offset)pan, timeStamp: Microseconds(timeStamp)));
             timeStamp += timeStampDelta;
             if (timeStamp - lastTimeStamp > frameMicroseconds)
             {
@@ -400,7 +400,7 @@ internal sealed partial class FrameworkDartTester
 internal sealed class TestPointer
 {
     private readonly FrameworkDartTester _tester;
-    private Point? _pan;
+    private Offset? _pan;
 
     public TestPointer(FrameworkDartTester tester, int pointer = 1, PointerDeviceKind kind = PointerDeviceKind.Touch)
     {
@@ -417,12 +417,12 @@ internal sealed class TestPointer
     public int Device { get; }
 
     /// <summary>The last location the pointer was given.</summary>
-    public Point? Location { get; private set; }
+    public Offset? Location { get; private set; }
 
     /// <summary>Dart's <c>TestPointer.hover</c>.</summary>
-    public PointerHoverEvent Hover(Point newLocation, TimeSpan timeStamp = default)
+    public PointerHoverEvent Hover(Offset newLocation, TimeSpan timeStamp = default)
     {
-        Point delta = Location is { } location ? (Point)(newLocation - location) : default;
+        Offset delta = Location is { } location ? (Offset)(newLocation - location) : default;
         Location = newLocation;
         return new PointerHoverEvent(
             pointer: Pointer,
@@ -435,13 +435,13 @@ internal sealed class TestPointer
     }
 
     /// <summary>Dart's <c>TestPointer.scroll</c>: a scroll signal at the current location.</summary>
-    public PointerScrollEvent Scroll(Vector scrollDelta, TimeSpan timeStamp = default)
+    public PointerScrollEvent Scroll(Offset scrollDelta, TimeSpan timeStamp = default)
     {
-        Point location = Location ?? throw new InvalidOperationException("scroll needs a location (hover first).");
+        Offset location = Location ?? throw new InvalidOperationException("scroll needs a location (hover first).");
         return new PointerScrollEvent(
             kind: Kind,
             position: location,
-            scrollDelta: new Point(scrollDelta.X, scrollDelta.Y),
+            scrollDelta: new Offset(scrollDelta.Dx, scrollDelta.Dy),
             timestampUtc: Stamp(timeStamp),
             viewId: _tester.View.ViewId,
             device: Device);
@@ -450,7 +450,7 @@ internal sealed class TestPointer
     /// <summary>Dart's <c>TestPointer.scale</c>: a scale signal at the current location.</summary>
     public PointerScaleEvent Scale(double scale, TimeSpan timeStamp = default)
     {
-        Point location = Location ?? throw new InvalidOperationException("scale needs a location (hover first).");
+        Offset location = Location ?? throw new InvalidOperationException("scale needs a location (hover first).");
         return new PointerScaleEvent(
             kind: Kind,
             position: location,
@@ -461,10 +461,10 @@ internal sealed class TestPointer
     }
 
     /// <summary>Dart's <c>TestPointer.panZoomStart</c>.</summary>
-    public PointerPanZoomStartEvent PanZoomStart(Point location, TimeSpan timeStamp = default)
+    public PointerPanZoomStartEvent PanZoomStart(Offset location, TimeSpan timeStamp = default)
     {
         Location = location;
-        _pan = default(Point);
+        _pan = default(Offset);
         return new PointerPanZoomStartEvent(
             pointer: Pointer,
             position: location,
@@ -475,13 +475,13 @@ internal sealed class TestPointer
 
     /// <summary>Dart's <c>TestPointer.panZoomUpdate</c>: <paramref name="pan"/> is cumulative.</summary>
     public PointerPanZoomUpdateEvent PanZoomUpdate(
-        Point location,
-        Point pan = default,
+        Offset location,
+        Offset pan = default,
         double scale = 1.0,
         double rotation = 0.0,
         TimeSpan timeStamp = default)
     {
-        Point previousPan = _pan ?? throw new InvalidOperationException("panZoomUpdate needs panZoomStart.");
+        Offset previousPan = _pan ?? throw new InvalidOperationException("panZoomUpdate needs panZoomStart.");
         Location = location;
         _pan = pan;
         return new PointerPanZoomUpdateEvent(
@@ -489,7 +489,7 @@ internal sealed class TestPointer
             position: location,
             timestampUtc: Stamp(timeStamp),
             pan: pan,
-            panDelta: new Point(pan.X - previousPan.X, pan.Y - previousPan.Y),
+            panDelta: new Offset(pan.Dx - previousPan.Dx, pan.Dy - previousPan.Dy),
             scale: scale,
             rotation: rotation,
             viewId: _tester.View.ViewId,
@@ -522,7 +522,7 @@ internal sealed class TestGesture
     private readonly PointerButtons _buttons;
     private bool _isDown;
     private bool _isAdded;
-    private Point? _pan;
+    private Offset? _pan;
 
     public TestGesture(FrameworkDartTester tester, int pointer, PointerDeviceKind kind, PointerButtons buttons)
     {
@@ -535,10 +535,10 @@ internal sealed class TestGesture
     public int Pointer { get; }
 
     /// <summary>The pointer's last location.</summary>
-    public Point Location { get; private set; }
+    public Offset Location { get; private set; }
 
     /// <summary>Dart's <c>TestGesture.addPointer</c>.</summary>
-    public void AddPointer(Point location = default, TimeSpan timeStamp = default)
+    public void AddPointer(Offset location = default, TimeSpan timeStamp = default)
     {
         Location = location;
         _isAdded = true;
@@ -565,7 +565,7 @@ internal sealed class TestGesture
     }
 
     /// <summary>Dart's <c>TestGesture.down</c>.</summary>
-    public void Down(Point location, TimeSpan timeStamp = default)
+    public void Down(Offset location, TimeSpan timeStamp = default)
     {
         Location = location;
         _isDown = true;
@@ -581,10 +581,10 @@ internal sealed class TestGesture
     }
 
     /// <summary>Dart's <c>TestGesture.moveBy</c>.</summary>
-    public void MoveBy(Vector offset, TimeSpan timeStamp = default) => MoveTo(Location + offset, timeStamp);
+    public void MoveBy(Offset offset, TimeSpan timeStamp = default) => MoveTo(Location + offset, timeStamp);
 
     /// <summary>Dart's <c>TestGesture.moveTo</c>: a move while down, a hover otherwise.</summary>
-    public void MoveTo(Point location, TimeSpan timeStamp = default)
+    public void MoveTo(Offset location, TimeSpan timeStamp = default)
     {
         Location = location;
         if (_isDown)
@@ -643,7 +643,7 @@ internal sealed class TestGesture
 
     /// <summary>Dart's <c>TestGesture.panZoomStart</c>: begins a trackpad pan/zoom at <paramref name="location"/>.
     /// </summary>
-    public void PanZoomStart(Point location, TimeSpan timeStamp = default)
+    public void PanZoomStart(Offset location, TimeSpan timeStamp = default)
     {
         if (_kind != PointerDeviceKind.Trackpad || _pan is not null)
         {
@@ -656,7 +656,7 @@ internal sealed class TestGesture
         }
 
         Location = location;
-        _pan = default(Point);
+        _pan = default(Offset);
         Send(new PointerPanZoomStartEvent(
             pointer: Pointer,
             position: location,
@@ -667,13 +667,13 @@ internal sealed class TestGesture
 
     /// <summary>Dart's <c>TestGesture.panZoomUpdate</c>.</summary>
     public void PanZoomUpdate(
-        Point location,
-        Point pan = default,
+        Offset location,
+        Offset pan = default,
         double scale = 1.0,
         double rotation = 0.0,
         TimeSpan timeStamp = default)
     {
-        Point previousPan = _pan ?? throw new InvalidOperationException("panZoomUpdate needs panZoomStart.");
+        Offset previousPan = _pan ?? throw new InvalidOperationException("panZoomUpdate needs panZoomStart.");
         Location = location;
         _pan = pan;
         Send(new PointerPanZoomUpdateEvent(
@@ -681,7 +681,7 @@ internal sealed class TestGesture
             position: location,
             timestampUtc: Stamp(timeStamp),
             pan: pan,
-            panDelta: new Point(pan.X - previousPan.X, pan.Y - previousPan.Y),
+            panDelta: new Offset(pan.Dx - previousPan.Dx, pan.Dy - previousPan.Dy),
             scale: scale,
             rotation: rotation,
             viewId: _tester.View.ViewId,

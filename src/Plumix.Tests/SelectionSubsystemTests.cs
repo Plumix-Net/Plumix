@@ -12,7 +12,7 @@ namespace Plumix.Tests;
 /// and the `_SelectableFragment` half of `rendering/paragraph.dart`.
 public sealed class SelectionSubsystemTests
 {
-    private static readonly Rect TargetRect = new(100, 100, 200, 500);
+    private static readonly Rect TargetRect = DartGeometry.RectFromLTWH(100, 100, 200, 500);
 
     [Theory]
     // The exact table from Flutter's `selection_test.dart` > `selectionBasedOnRect works`.
@@ -27,7 +27,7 @@ public sealed class SelectionSubsystemTests
     [InlineData(150, 300, SelectionResult.End)]
     public void SelectionUtils_GetResultBasedOnRectMatchesFlutterTable(double x, double y, SelectionResult expected)
     {
-        Assert.Equal(expected, SelectionUtils.GetResultBasedOnRect(TargetRect, new Point(x, y)));
+        Assert.Equal(expected, SelectionUtils.GetResultBasedOnRect(TargetRect, new Offset(x, y)));
     }
 
     [Theory]
@@ -42,7 +42,7 @@ public sealed class SelectionSubsystemTests
     [InlineData(200, 700, false)]
     public void SelectionUtils_AdjustDragOffsetClampsPerAreaAndDirection(double x, double y, bool leading)
     {
-        var point = new Point(x, y);
+        var point = new Offset(x, y);
         Assert.Equal(
             leading ? TargetRect.TopLeft : TargetRect.BottomRight,
             SelectionUtils.AdjustDragOffset(TargetRect, point));
@@ -54,7 +54,7 @@ public sealed class SelectionSubsystemTests
     [Fact]
     public void SelectionUtils_AdjustDragOffsetKeepsPointsInsideTheRect()
     {
-        var inside = new Point(150, 300);
+        var inside = new Offset(150, 300);
         Assert.Equal(inside, SelectionUtils.AdjustDragOffset(TargetRect, inside));
         Assert.Equal(inside, SelectionUtils.AdjustDragOffset(TargetRect, inside, TextDirection.Rtl));
     }
@@ -76,17 +76,17 @@ public sealed class SelectionSubsystemTests
     [Fact]
     public void SelectionGeometry_ComparesRectsElementWiseAndCopiesWithoutClearing()
     {
-        var start = new SelectionPoint(new Point(1, 2), 12, TextSelectionHandleType.Left);
+        var start = new SelectionPoint(new Offset(1, 2), 12, TextSelectionHandleType.Left);
         var first = new SelectionGeometry(
             SelectionStatus.Uncollapsed,
             hasContent: true,
             startSelectionPoint: start,
-            selectionRects: [new Rect(0, 0, 4, 4)]);
+            selectionRects: [DartGeometry.RectFromLTWH(0, 0, 4, 4)]);
         var second = new SelectionGeometry(
             SelectionStatus.Uncollapsed,
             hasContent: true,
-            startSelectionPoint: new SelectionPoint(new Point(1, 2), 12, TextSelectionHandleType.Left),
-            selectionRects: [new Rect(0, 0, 4, 4)]);
+            startSelectionPoint: new SelectionPoint(new Offset(1, 2), 12, TextSelectionHandleType.Left),
+            selectionRects: [DartGeometry.RectFromLTWH(0, 0, 4, 4)]);
 
         Assert.Equal(first, second);
         Assert.NotEqual(first, first.CopyWith(status: SelectionStatus.Collapsed));
@@ -106,11 +106,11 @@ public sealed class SelectionSubsystemTests
     [Fact]
     public void SelectionEvents_CarryFlutterDefaults()
     {
-        SelectionEdgeUpdateEvent start = SelectionEdgeUpdateEvent.ForStart(new Point(1, 2));
+        SelectionEdgeUpdateEvent start = SelectionEdgeUpdateEvent.ForStart(new Offset(1, 2));
         Assert.Equal(SelectionEventType.StartEdgeUpdate, start.Type);
         Assert.Equal(TextGranularity.Character, start.Granularity);
 
-        SelectionEdgeUpdateEvent end = SelectionEdgeUpdateEvent.ForEnd(new Point(1, 2), TextGranularity.Word);
+        SelectionEdgeUpdateEvent end = SelectionEdgeUpdateEvent.ForEnd(new Offset(1, 2), TextGranularity.Word);
         Assert.Equal(SelectionEventType.EndEdgeUpdate, end.Type);
         Assert.Equal(TextGranularity.Word, end.Granularity);
 

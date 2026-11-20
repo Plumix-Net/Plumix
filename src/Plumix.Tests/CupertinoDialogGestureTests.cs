@@ -40,21 +40,21 @@ public sealed class CupertinoDialogGestureTests : IDisposable
         using var controller = new ScrollController();
         using var harness = Harness(Control(sheet, () => presses++, controller, 20));
         harness.Pump(ViewSize);
-        Point start = Center(Paragraph(harness, "Action 0"));
+        Offset start = Center(Paragraph(harness, "Action 0"));
         harness.HandlePointerEvent(Down(1, start));
         harness.Pump(ViewSize);
         Assert.True(HasPressedFill(harness, sheet));
 
-        Point sideways = start + new Vector(100, 0);
+        Offset sideways = start + new Offset(100, 0);
         harness.HandlePointerEvent(Move(1, sideways));
         harness.Pump(ViewSize);
         Assert.True(HasPressedFill(harness, sheet));
-        harness.HandlePointerEvent(Move(1, sideways + new Vector(0, -30)));
-        harness.HandlePointerEvent(Move(1, sideways + new Vector(0, -80)));
+        harness.HandlePointerEvent(Move(1, sideways + new Offset(0, -30)));
+        harness.HandlePointerEvent(Move(1, sideways + new Offset(0, -80)));
         harness.Pump(ViewSize);
         Assert.True(controller.Offset > 0);
         Assert.False(HasPressedFill(harness, sheet));
-        harness.HandlePointerEvent(Up(1, sideways + new Vector(0, -80)));
+        harness.HandlePointerEvent(Up(1, sideways + new Offset(0, -80)));
         Assert.Equal(0, presses);
     }
 
@@ -67,15 +67,15 @@ public sealed class CupertinoDialogGestureTests : IDisposable
         using var controller = new ScrollController();
         using var harness = Harness(Control(sheet, () => presses++, controller, 20));
         harness.Pump(ViewSize);
-        Point start = Center(Paragraph(harness, "Action 0"));
+        Offset start = Center(Paragraph(harness, "Action 0"));
         harness.HandlePointerEvent(Down(1, start));
         harness.HandlePointerEvent(Down(2, start));
-        harness.HandlePointerEvent(Move(2, start + new Vector(0, -30)));
-        harness.HandlePointerEvent(Move(2, start + new Vector(0, -80)));
+        harness.HandlePointerEvent(Move(2, start + new Offset(0, -30)));
+        harness.HandlePointerEvent(Move(2, start + new Offset(0, -80)));
         harness.Pump(ViewSize);
         Assert.True(controller.Offset > 0);
         Assert.False(HasPressedFill(harness, sheet));
-        harness.HandlePointerEvent(Up(2, start + new Vector(0, -80)));
+        harness.HandlePointerEvent(Up(2, start + new Offset(0, -80)));
         harness.HandlePointerEvent(Up(1, start));
         Assert.Equal(0, presses);
     }
@@ -97,11 +97,11 @@ public sealed class CupertinoDialogGestureTests : IDisposable
         using var harness = Harness(control);
         harness.Pump(ViewSize);
         RenderBox second = ActionBox(Paragraph(harness, "Second"));
-        Point origin = second.GetPaintOffsetToRoot();
-        Point start = sheet
-            ? new Point(origin.X + 20, origin.Y - 5)
-            : new Point(origin.X - 5, origin.Y + 20);
-        Point end = start + (sheet ? new Vector(0, 10) : new Vector(10, 0));
+        Offset origin = second.GetPaintOffsetToRoot();
+        Offset start = sheet
+            ? new Offset(origin.Dx + 20, origin.Dy - 5)
+            : new Offset(origin.Dx - 5, origin.Dy + 20);
+        Offset end = start + (sheet ? new Offset(0, 10) : new Offset(10, 0));
         harness.HandlePointerEvent(Down(1, start));
         harness.HandlePointerEvent(Move(1, end));
         harness.Pump(ViewSize);
@@ -138,7 +138,7 @@ public sealed class CupertinoDialogGestureTests : IDisposable
         int presses = 0;
         using var harness = Harness(Control(sheet, () => presses++, count: 20));
         harness.Pump(ViewSize);
-        Point position = Center(Paragraph(harness, "Action 0"));
+        Offset position = Center(Paragraph(harness, "Action 0"));
         harness.HandlePointerEvent(Down(1, position, PointerButtons.Secondary));
         harness.Pump(ViewSize);
         Assert.False(HasPressedFill(harness, sheet));
@@ -164,7 +164,7 @@ public sealed class CupertinoDialogGestureTests : IDisposable
         Widget control = Control(sheet, () => presses++);
         using var harness = Harness(new Stack(children: [control, new SizedBox(width: 0, height: 0)]));
         harness.Pump(ViewSize);
-        Point start = Center(Paragraph(harness, "Action 0"));
+        Offset start = Center(Paragraph(harness, "Action 0"));
         harness.HandlePointerEvent(Down(1, start));
         harness.PumpWidget(Wrap(new Stack(children:
         [
@@ -192,7 +192,7 @@ public sealed class CupertinoDialogGestureTests : IDisposable
             ? new CupertinoActionSheet(actions: [legacy])
             : new CupertinoAlertDialog(actions: [legacy]));
         harness.Pump(ViewSize);
-        Point start = Center(Paragraph(harness, "Legacy"));
+        Offset start = Center(Paragraph(harness, "Legacy"));
         harness.HandlePointerEvent(Down(1, start));
         harness.Pump(ViewSize);
         Assert.True(HasPressedFill(harness, sheet));
@@ -228,7 +228,7 @@ public sealed class CupertinoDialogGestureTests : IDisposable
         GestureBinding.Instance.GestureArena.Close(1);
         GestureBinding.Instance.GestureArena.FlushDefaultResolutions();
         includeOuter = false;
-        GestureBinding.Instance.PointerRouter.Route(Move(1, new Point(1, 0)));
+        GestureBinding.Instance.PointerRouter.Route(Move(1, new Offset(1, 0)));
         recognizer.Dispose();
         Assert.Equal(["inner:enter:True:True", "outer:enter:True:True"], log);
     }
@@ -238,22 +238,22 @@ public sealed class CupertinoDialogGestureTests : IDisposable
     {
         var log = new List<string>();
         var targets = Enumerable.Range(0, 5).Select(index => new SlideTarget($"target{index}", log)).ToArray();
-        using var recognizer = new TargetSelectionGestureRecognizer(position => Path(targets[(int)position.X]));
+        using var recognizer = new TargetSelectionGestureRecognizer(position => Path(targets[(int)position.Dx]));
         void Begin(int pointer, int target)
         {
-            recognizer.AddPointer(Down(pointer, new Point(target, 0)));
+            recognizer.AddPointer(Down(pointer, new Offset(target, 0)));
             GestureBinding.Instance.GestureArena.Close(pointer);
             GestureBinding.Instance.GestureArena.FlushDefaultResolutions();
         }
 
         Begin(1, 0);
         Begin(2, 1);
-        GestureBinding.Instance.PointerRouter.Route(Move(1, new Point(2, 0)));
-        GestureBinding.Instance.PointerRouter.Route(Up(1, new Point(2, 0)));
+        GestureBinding.Instance.PointerRouter.Route(Move(1, new Offset(2, 0)));
+        GestureBinding.Instance.PointerRouter.Route(Up(1, new Offset(2, 0)));
         Begin(3, 3);
-        GestureBinding.Instance.PointerRouter.Route(Move(2, new Point(4, 0)));
-        GestureBinding.Instance.PointerRouter.Route(Up(3, new Point(3, 0)));
-        GestureBinding.Instance.PointerRouter.Route(Up(2, new Point(4, 0)));
+        GestureBinding.Instance.PointerRouter.Route(Move(2, new Offset(4, 0)));
+        GestureBinding.Instance.PointerRouter.Route(Up(3, new Offset(3, 0)));
+        GestureBinding.Instance.PointerRouter.Route(Up(2, new Offset(4, 0)));
         Assert.Equal(["target2:confirm", "target3:confirm"], log.Where(entry => entry.EndsWith(":confirm")));
     }
 
@@ -269,8 +269,8 @@ public sealed class CupertinoDialogGestureTests : IDisposable
             new Align(alignment: Alignment.BottomCenter, child: Control(sheet, () => presses++)),
         ]));
         harness.Pump(ViewSize);
-        Point end = Center(Paragraph(harness, "Action 0"));
-        harness.HandlePointerEvent(Down(1, new Point(1, 1)));
+        Offset end = Center(Paragraph(harness, "Action 0"));
+        harness.HandlePointerEvent(Down(1, new Offset(1, 1)));
         harness.HandlePointerEvent(Move(1, end));
         harness.HandlePointerEvent(Up(1, end));
         Assert.Equal(0, presses);
@@ -352,19 +352,19 @@ public sealed class CupertinoDialogGestureTests : IDisposable
         return result;
     }
 
-    private static Point Center(RenderBox box) => box.GetPaintOffsetToRoot()
-        + new Vector(box.Size.Width / 2, box.Size.Height / 2);
+    private static Offset Center(RenderBox box) => box.GetPaintOffsetToRoot()
+        + new Offset(box.Size.Width / 2, box.Size.Height / 2);
 
     private static PointerDownEvent Down(
         int pointer,
-        Point position,
+        Offset position,
         PointerButtons buttons = PointerButtons.Primary) =>
         new(pointer, PointerDeviceKind.Touch, position, buttons, EventTime);
 
-    private static PointerMoveEvent Move(int pointer, Point position) =>
+    private static PointerMoveEvent Move(int pointer, Offset position) =>
         new(pointer, PointerDeviceKind.Touch, position, PointerButtons.Primary,
             EventTime.AddMilliseconds(20));
 
-    private static PointerUpEvent Up(int pointer, Point position) =>
+    private static PointerUpEvent Up(int pointer, Offset position) =>
         new(pointer, PointerDeviceKind.Touch, position, PointerButtons.None, EventTime.AddMilliseconds(40));
 }

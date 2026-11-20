@@ -31,7 +31,7 @@ internal static class ParagraphDecorations
         }
 
         Color color = style.DecorationColor ?? style.Color;
-        double baseline = run.GlyphRun.BaselineOrigin.Y;
+        double baseline = run.GlyphRun.BaselineOrigin.Dy;
         if (style.Decoration.HasFlag(TextDecoration.Underline))
         {
             Draw(baseline + (metrics.UnderlinePosition > 0 ? metrics.UnderlinePosition : thickness));
@@ -102,7 +102,7 @@ internal static class ParagraphDecorations
             }
 
             void Rectangle(double x, double length, double centerY) =>
-                canvas.DrawRect(new Rect(x, centerY - thickness / 2.0, length, thickness), fill);
+                canvas.DrawRect(DartGeometry.RectFromLTWH(x, centerY - thickness / 2.0, length, thickness), fill);
         }
     }
 

@@ -224,10 +224,10 @@ public sealed class MaterialNavigationSurfacesTests
                 onDestinationSelected: index => selected = index))));
         harness.Pump(new Size(320, 160));
 
-        Tap(harness.RenderView, new Point(80, 120), 100);
+        Tap(harness.RenderView, new Offset(80, 120), 100);
         Assert.Equal(0, selected);
         selected = null;
-        Tap(harness.RenderView, new Point(240, 120), 101);
+        Tap(harness.RenderView, new Offset(240, 120), 101);
         Assert.Null(selected);
     }
 
@@ -295,10 +295,10 @@ public sealed class MaterialNavigationSurfacesTests
         Assert.All(alwaysShow, rect => Assert.Equal(new Size(64.0, 32.0), rect.Size));
         Assert.All(alwaysHide, rect => Assert.Equal(new Size(64.0, 32.0), rect.Size));
         Assert.All(selectedOnly, rect => Assert.Equal(new Size(64.0, 32.0), rect.Size));
-        Assert.True(alwaysShow[0].Y < alwaysHide[0].Y);
-        Assert.Equal(alwaysShow[0].Y, selectedOnly[0].Y, precision: 3);
-        Assert.Equal(alwaysHide[1].Y, selectedOnly[1].Y, precision: 3);
-        Assert.Equal(alwaysShow[0].X, alwaysHide[0].X, precision: 3);
+        Assert.True(alwaysShow[0].Top < alwaysHide[0].Top);
+        Assert.Equal(alwaysShow[0].Top, selectedOnly[0].Top, precision: 3);
+        Assert.Equal(alwaysHide[1].Top, selectedOnly[1].Top, precision: 3);
+        Assert.Equal(alwaysShow[0].Left, alwaysHide[0].Left, precision: 3);
     }
 
     private static void CollectSemantics(
@@ -561,10 +561,10 @@ public sealed class MaterialNavigationSurfacesTests
 
         Assert.NotNull(FindParagraph(harness.RenderView, "Header"));
         Assert.NotNull(FindParagraph(harness.RenderView, "Footer"));
-        Tap(harness.RenderView, new Point(150, 92), 104);
+        Tap(harness.RenderView, new Offset(150, 92), 104);
         Assert.Equal(0, selected);
         selected = null;
-        Tap(harness.RenderView, new Point(150, 224), 105);
+        Tap(harness.RenderView, new Offset(150, 224), 105);
         Assert.Null(selected);
 
         var root = harness.PumpAndGetSemantics(new Size(420, 360));
@@ -650,8 +650,8 @@ public sealed class MaterialNavigationSurfacesTests
             selectedIndex: 0,
             minWidth: 50.0));
 
-        Assert.All(allLabels, rect => Assert.Equal(new Rect(12.0, 0.0, 56.0, 32.0), rect));
-        Assert.All(compact, rect => Assert.Equal(new Rect(-3.0, 6.0, 56.0, 32.0), rect));
+        Assert.All(allLabels, rect => Assert.Equal(DartGeometry.RectFromLTWH(12.0, 0.0, 56.0, 32.0), rect));
+        Assert.All(compact, rect => Assert.Equal(DartGeometry.RectFromLTWH(-3.0, 6.0, 56.0, 32.0), rect));
     }
 
     [Fact]
@@ -695,7 +695,7 @@ public sealed class MaterialNavigationSurfacesTests
                 extended: true),
             textDirection);
 
-        Assert.All(rects, rect => Assert.Equal(new Rect(expectedLeft, 6.0, 56.0, 32.0), rect));
+        Assert.All(rects, rect => Assert.Equal(DartGeometry.RectFromLTWH(expectedLeft, 6.0, 56.0, 32.0), rect));
     }
 
     [Fact]
@@ -711,7 +711,7 @@ public sealed class MaterialNavigationSurfacesTests
             selectedIconTheme: new IconThemeData(Size: 50.0),
             unselectedIconTheme: new IconThemeData(Size: 50.0)));
 
-        Assert.All(rects, rect => Assert.Equal(new Rect(12.0, 15.0, 56.0, 32.0), rect));
+        Assert.All(rects, rect => Assert.Equal(DartGeometry.RectFromLTWH(12.0, 15.0, 56.0, 32.0), rect));
     }
 
     [Fact]
@@ -894,10 +894,10 @@ public sealed class MaterialNavigationSurfacesTests
                 labelType: NavigationRailLabelType.All))));
         harness.Pump(new Size(420, 320));
 
-        Tap(harness.RenderView, new Point(40, 35), 102);
+        Tap(harness.RenderView, new Offset(40, 35), 102);
         Assert.Equal(0, selected);
         selected = null;
-        Tap(harness.RenderView, new Point(40, 110), 103);
+        Tap(harness.RenderView, new Offset(40, 110), 103);
         Assert.Null(selected);
 
         var root = harness.PumpAndGetSemantics(new Size(420, 320));
@@ -989,7 +989,7 @@ public sealed class MaterialNavigationSurfacesTests
             .ToArray();
     }
 
-    private static void Tap(RenderView view, Point point, int pointer)
+    private static void Tap(RenderView view, Offset point, int pointer)
     {
         var binding = GestureBinding.Instance;
         binding.ResetForTests();

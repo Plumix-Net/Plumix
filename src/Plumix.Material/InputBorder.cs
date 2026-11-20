@@ -135,7 +135,7 @@ public record UnderlineInputBorder : InputBorder
     public override Path GetInnerPath(Rect rect, TextDirection? textDirection = null)
     {
         var path = new Path();
-        path.AddRect(new Rect(rect.Left, rect.Top, rect.Width, Math.Max(0.0, rect.Height - BorderSide.Width)));
+        path.AddRect(DartGeometry.RectFromLTWH(rect.Left, rect.Top, rect.Width, Math.Max(0.0, rect.Height - BorderSide.Width)));
         return path;
     }
 
@@ -199,7 +199,7 @@ public record UnderlineInputBorder : InputBorder
             return;
         }
 
-        var alignInsideOffset = new Point(0, BorderSide.Width / 2.0);
+        var alignInsideOffset = new Offset(0, BorderSide.Width / 2.0);
         context.Canvas.DrawLine(
             BorderSide.ToPen()!,
             rect.BottomLeft - alignInsideOffset,
@@ -512,9 +512,9 @@ public record ShapedInputBorder : InputBorder
         var gapRect = new Path();
         // The band extends slightly beyond the top edge to ensure a clean cut, and is kept short so
         // that only the top edge is affected.
-        gapRect.AddRect(new Rect(
-            new Point(Math.Clamp(start, rect.Left, rect.Right), rect.Top - 1.0),
-            new Point(Math.Clamp(gapRight, rect.Left, rect.Right), rect.Top + 1.0)));
+        gapRect.AddRect(DartGeometry.RectFromCorners(
+            new Offset(Math.Clamp(start, rect.Left, rect.Right), rect.Top - 1.0),
+            new Offset(Math.Clamp(gapRight, rect.Left, rect.Right), rect.Top + 1.0)));
         return Path.Combine(PathOperation.Difference, outerPath, gapRect);
     }
 }

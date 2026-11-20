@@ -68,7 +68,7 @@ public sealed class CupertinoFormRowTests
         RenderParagraph helperParagraph = Assert.IsType<RenderParagraph>(FindParagraph(harness.RenderView, "Helper"));
         RenderParagraph errorParagraph = Assert.IsType<RenderParagraph>(FindParagraph(harness.RenderView, "Error"));
         Assert.True(
-            errorParagraph.LocalToGlobal(default).Y > helperParagraph.LocalToGlobal(default).Y,
+            errorParagraph.LocalToGlobal(default).Dy > helperParagraph.LocalToGlobal(default).Dy,
             "The helper must be laid out above the error.");
     }
 
@@ -87,7 +87,7 @@ public sealed class CupertinoFormRowTests
 
         RenderParagraph prefix = Assert.IsType<RenderParagraph>(FindParagraph(harness.RenderView, "Prefix"));
         RenderParagraph child = Assert.IsType<RenderParagraph>(FindParagraph(harness.RenderView, "Child"));
-        bool actualPrefixAfterChild = prefix.LocalToGlobal(default).X > child.LocalToGlobal(default).X;
+        bool actualPrefixAfterChild = prefix.LocalToGlobal(default).Dx > child.LocalToGlobal(default).Dx;
         Assert.Equal(prefixAfterChild, actualPrefixAfterChild);
     }
 

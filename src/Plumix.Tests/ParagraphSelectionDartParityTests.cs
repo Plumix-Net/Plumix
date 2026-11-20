@@ -96,7 +96,7 @@ public sealed class ParagraphSelectionDartParityTests
         RenderParagraph Find(string text) => paragraphs.Single(p => p.Text.ToPlainText() == text);
         RenderParagraph paragraphE = Find("Text E.");
         RenderParagraph paragraphB = Find("Text B.");
-        Point start = TextOffsetToPosition(paragraphE, 2);
+        Offset start = TextOffsetToPosition(paragraphE, 2);
         TestGesture gesture = tester.StartGesture(start, PointerDeviceKind.Mouse);
         tester.Pump();
         gesture.Up();
@@ -153,8 +153,8 @@ public sealed class ParagraphSelectionDartParityTests
         SelectableFragment selectable = Assert.Single(inner.LastSelectableFragments!);
         selectable.DispatchSelectionEvent(new SelectParagraphSelectionEvent(default, absorb: true));
         selectable.DebugSetSelection(reversed ? 5 : 0, reversed ? 0 : 5);
-        Point target = outside
-            ? outer.LocalToGlobal(new Point(0, outer.Size.Height + 100))
+        Offset target = outside
+            ? outer.LocalToGlobal(new Offset(0, outer.Size.Height + 100))
             : TextOffsetToPosition(outer, 13);
         SelectionResult result = selectable.DispatchSelectionEvent(isEnd
             ? SelectionEdgeUpdateEvent.ForEnd(target, TextGranularity.Paragraph)
@@ -163,7 +163,7 @@ public sealed class ParagraphSelectionDartParityTests
         Assert.Equal([isEnd ? new TextSelection(0, 5) : new TextSelection(5, 0)], inner.Selections);
 
         // Cross the other side of the ancestor. Both edge algorithms must keep the whole origin.
-        Point before = outer.LocalToGlobal(new Point(0, -100));
+        Offset before = outer.LocalToGlobal(new Offset(0, -100));
         result = selectable.DispatchSelectionEvent(isEnd
             ? SelectionEdgeUpdateEvent.ForEnd(before, TextGranularity.Paragraph)
             : SelectionEdgeUpdateEvent.ForStart(before, TextGranularity.Paragraph));
@@ -179,10 +179,10 @@ public sealed class ParagraphSelectionDartParityTests
             new WidgetSpan(new Text(third)),
         ]));
 
-    private static Point TextOffsetToPosition(RenderParagraph paragraph, int offset)
+    private static Offset TextOffsetToPosition(RenderParagraph paragraph, int offset)
     {
-        Point caret = paragraph.GetOffsetForCaret(new TextPosition(offset), new Rect(0, 0, 2, 20));
-        return paragraph.LocalToGlobal(caret + new Vector(0, paragraph.PreferredLineHeight - 2));
+        Offset caret = paragraph.GetOffsetForCaret(new TextPosition(offset), DartGeometry.RectFromLTWH(0, 0, 2, 20));
+        return paragraph.LocalToGlobal(caret + new Offset(0, paragraph.PreferredLineHeight - 2));
     }
 
     private static Paragraph BuildParagraph(string text)

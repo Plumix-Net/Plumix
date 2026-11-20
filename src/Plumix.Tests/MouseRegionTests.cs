@@ -78,24 +78,24 @@ public sealed class MouseRegionTests : IDisposable
                 child: new MouseRegion(
                     child: new SizedBox(width: 60, height: 40),
                     onEnter: _ => _log.Add("enter"),
-                    onHover: e => _log.Add($"hover:{e.Position.X}"),
+                    onHover: e => _log.Add($"hover:{e.Position.Dx}"),
                     onExit: _ => _log.Add("exit"))));
 
-        harness.SendPointer(MouseTrackingHarness.Hover(new Point(10, 10)));
+        harness.SendPointer(MouseTrackingHarness.Hover(new Offset(10, 10)));
         Assert.Equal(["enter", "hover:10"], _log);
 
-        harness.SendPointer(MouseTrackingHarness.Hover(new Point(20, 10)));
+        harness.SendPointer(MouseTrackingHarness.Hover(new Offset(20, 10)));
         Assert.Equal(["enter", "hover:10", "hover:20"], _log);
 
-        harness.SendPointer(MouseTrackingHarness.Hover(new Point(120, 10)));
+        harness.SendPointer(MouseTrackingHarness.Hover(new Offset(120, 10)));
         Assert.Equal(["enter", "hover:10", "hover:20", "exit"], _log);
     }
 
     [Fact]
     public void ExitEvent_CarriesTheNewOutsidePositionAndTheMatchingNegativeLocalPosition()
     {
-        Point? exitPosition = null;
-        Point? exitLocalPosition = null;
+        Offset? exitPosition = null;
+        Offset? exitLocalPosition = null;
         using var harness = new MouseTrackingHarness(
             new Align(
                 alignment: Alignment.TopLeft,
@@ -109,11 +109,11 @@ public sealed class MouseRegionTests : IDisposable
                             exitLocalPosition = e.LocalPosition;
                         }))));
 
-        harness.SendPointer(MouseTrackingHarness.Hover(new Point(20, 20)));
-        harness.SendPointer(MouseTrackingHarness.Hover(new Point(5, 5)));
+        harness.SendPointer(MouseTrackingHarness.Hover(new Offset(20, 20)));
+        harness.SendPointer(MouseTrackingHarness.Hover(new Offset(5, 5)));
 
-        Assert.Equal(new Point(5, 5), exitPosition);
-        Assert.Equal(new Point(-5, -5), exitLocalPosition);
+        Assert.Equal(new Offset(5, 5), exitPosition);
+        Assert.Equal(new Offset(-5, -5), exitLocalPosition);
     }
 
     [Fact]
@@ -128,11 +128,11 @@ public sealed class MouseRegionTests : IDisposable
                     onExit: _ => _log.Add("exit"))));
 
         harness.SendPointer(new PointerDownEvent(
-            1, PointerDeviceKind.Mouse, new Point(10, 10), PointerButtons.Primary, DateTime.UtcNow));
+            1, PointerDeviceKind.Mouse, new Offset(10, 10), PointerButtons.Primary, DateTime.UtcNow));
         Assert.Equal(["enter"], _log);
 
         harness.SendPointer(new PointerMoveEvent(
-            1, PointerDeviceKind.Mouse, new Point(400, 400), PointerButtons.Primary, DateTime.UtcNow));
+            1, PointerDeviceKind.Mouse, new Offset(400, 400), PointerButtons.Primary, DateTime.UtcNow));
         Assert.Equal(["enter", "exit"], _log);
     }
 
@@ -144,12 +144,12 @@ public sealed class MouseRegionTests : IDisposable
                 hitTestBehavior: HitTestBehavior.DeferToChild,
                 onEnter: _ => _log.Add("enter")));
 
-        harness.SendPointer(MouseTrackingHarness.Hover(new Point(10, 10)));
+        harness.SendPointer(MouseTrackingHarness.Hover(new Offset(10, 10)));
         Assert.Empty(_log);
 
         // Rebuilding with the opaque default makes the very same region hit-testable.
         harness.Update(new MouseRegion(onEnter: _ => _log.Add("enter")));
-        harness.SendPointer(MouseTrackingHarness.Hover(new Point(12, 10)));
+        harness.SendPointer(MouseTrackingHarness.Hover(new Offset(12, 10)));
         Assert.Equal(["enter"], _log);
     }
 
@@ -162,7 +162,7 @@ public sealed class MouseRegionTests : IDisposable
                 hitTestBehavior: HitTestBehavior.Translucent,
                 onEnter: _ => _log.Add("enter:front"))));
 
-        harness.SendPointer(MouseTrackingHarness.Hover(new Point(10, 10)));
+        harness.SendPointer(MouseTrackingHarness.Hover(new Offset(10, 10)));
 
         Assert.Equal(["enter:behind", "enter:front"], _log);
     }
@@ -174,7 +174,7 @@ public sealed class MouseRegionTests : IDisposable
             behind: new MouseRegion(onEnter: _ => _log.Add("enter:behind")),
             front: new MouseRegion(onEnter: _ => _log.Add("enter:front"))));
 
-        harness.SendPointer(MouseTrackingHarness.Hover(new Point(10, 10)));
+        harness.SendPointer(MouseTrackingHarness.Hover(new Offset(10, 10)));
 
         Assert.Equal(["enter:front"], _log);
     }
@@ -186,7 +186,7 @@ public sealed class MouseRegionTests : IDisposable
             behind: new MouseRegion(onEnter: _ => _log.Add("enter:behind")),
             front: new MouseRegion(opaque: false, onEnter: _ => _log.Add("enter:front"))));
 
-        harness.SendPointer(MouseTrackingHarness.Hover(new Point(10, 10)));
+        harness.SendPointer(MouseTrackingHarness.Hover(new Offset(10, 10)));
 
         // Enters run back to front, so the region behind enters first.
         Assert.Equal(["enter:behind", "enter:front"], _log);
@@ -200,7 +200,7 @@ public sealed class MouseRegionTests : IDisposable
             front: new MouseRegion(opaque: opaque, onEnter: _ => _log.Add("enter:front")));
 
         using var harness = new MouseTrackingHarness(Tree(opaque: true));
-        harness.SendPointer(MouseTrackingHarness.Hover(new Point(10, 10)));
+        harness.SendPointer(MouseTrackingHarness.Hover(new Offset(10, 10)));
         Assert.Equal(["enter:front"], _log);
 
         _log.Clear();
@@ -219,9 +219,9 @@ public sealed class MouseRegionTests : IDisposable
                 child: new MouseRegion(
                     child: new SizedBox(width: 60, height: 40),
                     onEnter: _ => _log.Add("enter"),
-                    onHover: e => first.Add(e.Position.X))));
+                    onHover: e => first.Add(e.Position.Dx))));
 
-        harness.SendPointer(MouseTrackingHarness.Hover(new Point(10, 10)));
+        harness.SendPointer(MouseTrackingHarness.Hover(new Offset(10, 10)));
         Assert.Equal(["enter"], _log);
 
         harness.Update(
@@ -230,8 +230,8 @@ public sealed class MouseRegionTests : IDisposable
                 child: new MouseRegion(
                     child: new SizedBox(width: 60, height: 40),
                     onEnter: _ => _log.Add("enter"),
-                    onHover: e => second.Add(e.Position.X))));
-        harness.SendPointer(MouseTrackingHarness.Hover(new Point(30, 10)));
+                    onHover: e => second.Add(e.Position.Dx))));
+        harness.SendPointer(MouseTrackingHarness.Hover(new Offset(30, 10)));
 
         Assert.Equal([10.0], first);
         Assert.Equal([30.0], second);
@@ -244,7 +244,7 @@ public sealed class MouseRegionTests : IDisposable
         Widget Tree(MouseCursor cursor) => new MouseRegion(cursor: cursor, onEnter: _ => _log.Add("enter"));
 
         using var harness = new MouseTrackingHarness(Tree(SystemMouseCursors.Forbidden));
-        harness.SendPointer(MouseTrackingHarness.Added(new Point(10, 10)));
+        harness.SendPointer(MouseTrackingHarness.Added(new Offset(10, 10)));
         Assert.Equal(SystemMouseCursors.Forbidden, harness.MouseTracker.DebugDeviceActiveCursor(1));
         Assert.Equal(["enter"], _log);
 

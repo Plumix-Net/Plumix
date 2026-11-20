@@ -440,14 +440,14 @@ public sealed class MaterialChipTests : IDisposable
             ThemeData.Light,
             new ActionChip(new Text("Action"), () => actionCount++)));
         actionHarness.Pump(new Size(320, 120));
-        Tap(actionHarness.RenderView, new Point(160, 60), 21);
+        Tap(actionHarness.RenderView, new Offset(160, 60), 21);
         Assert.Equal(1, actionCount);
 
         using var choiceHarness = new WidgetRenderHarness(Root(
             ThemeData.Light,
             new ChoiceChip(new Text("Choice"), selected: true, onSelected: value => selected = value)));
         choiceHarness.Pump(new Size(320, 120));
-        Tap(choiceHarness.RenderView, new Point(160, 60), 22);
+        Tap(choiceHarness.RenderView, new Offset(160, 60), 22);
         Assert.False(selected);
     }
 
@@ -641,9 +641,9 @@ public sealed class MaterialChipTests : IDisposable
         Assert.NotNull(delete);
 
         Rect deleteRect = delete!.GlobalRect;
-        var deleteCenter = new Point(
-            deleteRect.X + (deleteRect.Width / 2),
-            deleteRect.Y + (deleteRect.Height / 2));
+        var deleteCenter = new Offset(
+            deleteRect.Left + (deleteRect.Width / 2),
+            deleteRect.Top + (deleteRect.Height / 2));
         Tap(harness.RenderView, deleteCenter, 31);
         Assert.Equal(1, deleted);
         Assert.Null(selected);
@@ -807,11 +807,11 @@ public sealed class MaterialChipTests : IDisposable
         using var ltrHarness = new WidgetRenderHarness(Root(ThemeData.Light, Chip()));
         ltrHarness.Pump(new Size(320, 120));
         RenderChip ltr = FindChipRender(ltrHarness.RenderView);
-        Point ltrAvatar = ParentOffset(ltr.Avatar!);
-        Point ltrLabel = ParentOffset(ltr.Label);
-        Point ltrDelete = ParentOffset(ltr.DeleteIcon!);
-        Assert.True(ltrAvatar.X < ltrLabel.X);
-        Assert.True(ltrLabel.X < ltrDelete.X);
+        Offset ltrAvatar = ParentOffset(ltr.Avatar!);
+        Offset ltrLabel = ParentOffset(ltr.Label);
+        Offset ltrDelete = ParentOffset(ltr.DeleteIcon!);
+        Assert.True(ltrAvatar.Dx < ltrLabel.Dx);
+        Assert.True(ltrLabel.Dx < ltrDelete.Dx);
         Assert.Equal(avatarConstraints, ltr.AvatarBoxConstraints);
         Assert.Equal(deleteConstraints, ltr.DeleteIconBoxConstraints);
         Assert.True(ltr.DeleteButtonRect.Width <= ltr.Size.Width * 0.5);
@@ -821,11 +821,11 @@ public sealed class MaterialChipTests : IDisposable
             new Directionality(TextDirection.Rtl, Chip())));
         rtlHarness.Pump(new Size(320, 120));
         RenderChip rtl = FindChipRender(rtlHarness.RenderView);
-        Point rtlAvatar = ParentOffset(rtl.Avatar!);
-        Point rtlLabel = ParentOffset(rtl.Label);
-        Point rtlDelete = ParentOffset(rtl.DeleteIcon!);
-        Assert.True(rtlDelete.X < rtlLabel.X);
-        Assert.True(rtlLabel.X < rtlAvatar.X);
+        Offset rtlAvatar = ParentOffset(rtl.Avatar!);
+        Offset rtlLabel = ParentOffset(rtl.Label);
+        Offset rtlDelete = ParentOffset(rtl.DeleteIcon!);
+        Assert.True(rtlDelete.Dx < rtlLabel.Dx);
+        Assert.True(rtlLabel.Dx < rtlAvatar.Dx);
     }
 
     [Fact]
@@ -975,7 +975,7 @@ public sealed class MaterialChipTests : IDisposable
         return FindDescendants<RenderChip>(root).Single();
     }
 
-    private static Point ParentOffset(RenderBox child)
+    private static Offset ParentOffset(RenderBox child)
     {
         return ((BoxParentData)child.parentData!).offset;
     }
@@ -999,7 +999,7 @@ public sealed class MaterialChipTests : IDisposable
             color.Blue);
     }
 
-    private static void Tap(RenderView view, Point point, int pointer)
+    private static void Tap(RenderView view, Offset point, int pointer)
     {
         var binding = GestureBinding.Instance;
         binding.ResetForTests();

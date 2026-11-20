@@ -472,7 +472,7 @@ public sealed class SegmentedButtonState<T> : State<SegmentedButton<T>>
         VisualDensity density = widget.Style?.VisualDensity
                                 ?? segmentedThemeStyle?.VisualDensity
                                 ?? theme.VisualDensity;
-        Vector densityAdjustment = density.BaseSizeAdjustment;
+        Offset densityAdjustment = density.BaseSizeAdjustment;
         EdgeInsetsGeometry paddingGeometry = ResolveValue(
             static style => style.Padding,
             states,
@@ -487,15 +487,15 @@ public sealed class SegmentedButtonState<T> : State<SegmentedButton<T>>
             segmentedThemeStyle,
             defaults);
         double fontSize = textStyle?.FontSize ?? 20.0;
-        double adjustedMinimumHeight = 40.0 + densityAdjustment.Y;
-        double effectiveVerticalPadding = padding.Top + padding.Bottom + (densityAdjustment.Y * 2.0);
+        double adjustedMinimumHeight = 40.0 + densityAdjustment.Dy;
+        double effectiveVerticalPadding = padding.Top + padding.Bottom + (densityAdjustment.Dy * 2.0);
         double buttonHeight = Math.Max(fontSize + effectiveVerticalPadding, adjustedMinimumHeight);
         MaterialTapTargetSize tapTargetSize = widget.Style?.TapTargetSize
                                                ?? segmentedThemeStyle?.TapTargetSize
                                                ?? theme.MaterialTapTargetSize;
         return tapTargetSize == MaterialTapTargetSize.ShrinkWrap
             ? 0.0
-            : Math.Max(0.0, 48.0 + densityAdjustment.Y - buttonHeight);
+            : Math.Max(0.0, 48.0 + densityAdjustment.Dy - buttonHeight);
     }
 
     private static ButtonStyle DefaultStyle(ThemeData theme)

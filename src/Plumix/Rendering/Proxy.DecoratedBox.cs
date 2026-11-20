@@ -102,13 +102,13 @@ public class RenderDecoratedBox : RenderProxyBox
     }
 
     /// <inheritdoc />
-    protected override bool HitTestSelf(Point position)
+    protected override bool HitTestSelf(Offset position)
     {
         return _decoration.HitTest(Size, position, textDirection: Configuration.TextDirection);
     }
 
     /// <inheritdoc />
-    public override void Paint(PaintingContext context, Point offset)
+    public override void Paint(PaintingContext context, Offset offset)
     {
         _painter ??= _decoration.CreateBoxPainter(MarkNeedsPaint);
         ImageConfiguration filledConfiguration = Configuration.CopyWith(size: Size);

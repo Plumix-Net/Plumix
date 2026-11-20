@@ -158,9 +158,9 @@ internal sealed class RenderScrollSemantics : RenderProxyBox
         }
     }
 
-    private void HandleScrollToOffset(Point targetOffset)
+    private void HandleScrollToOffset(Offset targetOffset)
     {
-        _position.JumpTo(Axis == Axis.Horizontal ? targetOffset.X : targetOffset.Y);
+        _position.JumpTo(Axis == Axis.Horizontal ? targetOffset.Dx : targetOffset.Dy);
     }
 
     protected override void ClearOwnSemantics()

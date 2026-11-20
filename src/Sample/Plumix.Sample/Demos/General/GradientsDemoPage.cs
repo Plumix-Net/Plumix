@@ -153,12 +153,12 @@ internal sealed class GradientsDemoPageState : State
         IReadOnlyList<BoxShadow> shadows = _blended
             ?
             [
-                new BoxShadow(color: Color.FromARGB(90, 29, 53, 87), offset: new Point(0, 10), blurRadius: 18),
-                new BoxShadow(color: Color.FromARGB(50, 29, 53, 87), offset: new Point(0, 2), blurRadius: 4),
+                new BoxShadow(color: Color.FromARGB(90, 29, 53, 87), offset: new Offset(0, 10), blurRadius: 18),
+                new BoxShadow(color: Color.FromARGB(50, 29, 53, 87), offset: new Offset(0, 2), blurRadius: 4),
             ]
             :
             [
-                new BoxShadow(color: Color.FromARGB(40, 0, 0, 0), offset: new Point(0, 2), blurRadius: 6),
+                new BoxShadow(color: Color.FromARGB(40, 0, 0, 0), offset: new Offset(0, 2), blurRadius: 6),
             ];
 
         return new BoxDecoration(

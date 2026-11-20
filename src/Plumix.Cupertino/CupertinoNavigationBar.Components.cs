@@ -507,7 +507,7 @@ internal sealed class RenderLargeTitle : RenderShiftedBox
         }
 
         var childParentData = (BoxParentData)Child!.parentData!;
-        return childParentData.offset.Y + (distance.Value * _scale);
+        return childParentData.offset.Dy + (distance.Value * _scale);
     }
 
     protected override double? ComputeDryBaseline(BoxConstraints constraints, TextBaseline baseline)
@@ -528,7 +528,7 @@ internal sealed class RenderLargeTitle : RenderShiftedBox
         Size childSize = child.GetDryLayout(childConstraints);
         double scale = ComputeTitleScale(childSize, constraints, _height);
         var scaledChildSize = new Size(childSize.Width * scale, childSize.Height * scale);
-        return (result.Value * scale) + _alignment.AlongOffset(constraints.Biggest, scaledChildSize).Y;
+        return (result.Value * scale) + _alignment.AlongOffset(constraints.Biggest, scaledChildSize).Dy;
     }
 
     protected override void PerformLayout()
@@ -555,7 +555,7 @@ internal sealed class RenderLargeTitle : RenderShiftedBox
         transform.ScaleByDouble(_scale, _scale, _scale, 1.0);
     }
 
-    public override void Paint(PaintingContext ctx, Point offset)
+    public override void Paint(PaintingContext ctx, Offset offset)
     {
         RenderBox? child = Child;
         if (child == null)
@@ -565,8 +565,8 @@ internal sealed class RenderLargeTitle : RenderShiftedBox
 
         var childParentData = (BoxParentData)child.parentData!;
         Matrix4 transform = Matrix4.TranslationValues(
-            childParentData.offset.X,
-            childParentData.offset.Y,
+            childParentData.offset.Dx,
+            childParentData.offset.Dy,
             0.0);
         transform.ScaleByDouble(_scale, _scale, 1.0, 1.0);
         Layer = ctx.PushTransform(
@@ -577,7 +577,7 @@ internal sealed class RenderLargeTitle : RenderShiftedBox
             Layer as TransformLayer);
     }
 
-    protected override bool HitTestChildren(BoxHitTestResult result, Point position)
+    protected override bool HitTestChildren(BoxHitTestResult result, Offset position)
     {
         RenderBox? child = Child;
         if (child == null)
@@ -585,11 +585,11 @@ internal sealed class RenderLargeTitle : RenderShiftedBox
             return false;
         }
 
-        Point childOffset = ((BoxParentData)child.parentData!).offset;
+        Offset childOffset = ((BoxParentData)child.parentData!).offset;
 
         Matrix4 transform = Matrix4.Identity();
         transform.ScaleByDouble(1.0 / _scale, 1.0 / _scale, 1.0, 1.0);
-        transform.TranslateByDouble(-childOffset.X, -childOffset.Y, 0.0, 1.0);
+        transform.TranslateByDouble(-childOffset.Dx, -childOffset.Dy, 0.0, 1.0);
 
         return result.AddWithRawTransform(
             transform: transform,

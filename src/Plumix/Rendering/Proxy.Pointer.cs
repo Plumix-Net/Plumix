@@ -187,7 +187,7 @@ public class RenderMouseRegion : RenderProxyBoxWithHitTestBehavior, IMouseTracke
     }
 
     /// <inheritdoc />
-    public override bool HitTest(BoxHitTestResult result, Point position)
+    public override bool HitTest(BoxHitTestResult result, Offset position)
     {
         return base.HitTest(result, position) && _opaque;
     }

@@ -131,7 +131,7 @@ public class RenderProxyBox : RenderBox, IRenderObjectSingleChildContainer
         return constraints.Smallest;
     }
 
-    protected override bool HitTestChildren(BoxHitTestResult result, Point position)
+    protected override bool HitTestChildren(BoxHitTestResult result, Offset position)
     {
         return Child?.HitTest(result, position) ?? false;
     }
@@ -142,7 +142,7 @@ public class RenderProxyBox : RenderBox, IRenderObjectSingleChildContainer
     {
     }
 
-    public override void Paint(PaintingContext context, Point offset)
+    public override void Paint(PaintingContext context, Offset offset)
     {
         RenderBox? child = Child;
         if (child == null)
@@ -174,7 +174,7 @@ public abstract class RenderProxyBoxWithHitTestBehavior : RenderProxyBox
     /// and whether to consider targets behind this one.</summary>
     public HitTestBehavior Behavior { get; set; }
 
-    public override bool HitTest(BoxHitTestResult result, Point position)
+    public override bool HitTest(BoxHitTestResult result, Offset position)
     {
         bool hitTarget = false;
         if (Size.Contains(position))
@@ -189,7 +189,7 @@ public abstract class RenderProxyBoxWithHitTestBehavior : RenderProxyBox
         return hitTarget;
     }
 
-    protected override bool HitTestSelf(Point position) => Behavior == HitTestBehavior.Opaque;
+    protected override bool HitTestSelf(Offset position) => Behavior == HitTestBehavior.Opaque;
 
     /// <inheritdoc />
     public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
@@ -334,7 +334,7 @@ public class RenderConstrainedBox : RenderProxyBox
     }
 
     /// <inheritdoc />
-    protected internal override void DebugPaintSize(PaintingContext context, Point offset)
+    protected internal override void DebugPaintSize(PaintingContext context, Offset offset)
     {
         base.DebugPaintSize(context, offset);
         if (Constants.KDebugMode)
@@ -345,7 +345,7 @@ public class RenderConstrainedBox : RenderProxyBox
                 context.Canvas.DrawRectangle(
                     new SolidColorBrush(new Color(0x90909090)),
                     null,
-                    new Rect(offset, Size));
+                    DartGeometry.RectFromOffsetAndSize(offset, Size));
             }
         }
     }
@@ -1024,7 +1024,7 @@ public class RenderOpacity : RenderProxyBox
         ((OpacityLayer)layer).Alpha = _alpha;
     }
 
-    public override void Paint(PaintingContext context, Point offset)
+    public override void Paint(PaintingContext context, Offset offset)
     {
         if (Child == null || _alpha == 0)
         {

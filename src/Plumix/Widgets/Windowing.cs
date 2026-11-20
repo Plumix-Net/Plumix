@@ -467,7 +467,7 @@ public abstract class PopupWindowController : BaseWindowController
     public abstract void UpdatePosition(Rect? anchorRect = null, WindowPositioner? positioner = null);
 
     /// <summary>The popup's top-left corner in the parent's client area, in logical coordinates.</summary>
-    public abstract Point OffsetFromParent { get; }
+    public abstract Offset OffsetFromParent { get; }
 
     /// <summary>
     /// Activates the closest regular or dialog window ancestor, since a popup cannot be activated itself.

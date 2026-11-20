@@ -44,20 +44,20 @@ public sealed class SystemContextMenuFieldsDartParityTests : IDisposable
         return new FrameworkDartTester(fakeGestureTimers: true);
     }
 
-    private static Point TextOffsetToPosition(FrameworkDartTester tester, int offset)
+    private static Offset TextOffsetToPosition(FrameworkDartTester tester, int offset)
     {
         RenderEditable editable = tester.State<EditableText.EditableTextState>().RenderEditableObject;
         IReadOnlyList<TextSelectionPoint> endpoints =
             editable.GetEndpointsForSelection(TextSelection.Collapsed(offset));
         Assert.Single(endpoints);
-        Point global = editable.LocalToGlobal(endpoints[0].Point);
-        return new Point(global.X, global.Y - 2.0);
+        Offset global = editable.LocalToGlobal(endpoints[0].Point);
+        return new Offset(global.Dx, global.Dy - 2.0);
     }
 
     // Double tap to select a word and show the menu.
     private static void DoubleTapAt(FrameworkDartTester tester, int offset, TimeSpan between, TimeSpan after)
     {
-        Point position = TextOffsetToPosition(tester, offset);
+        Offset position = TextOffsetToPosition(tester, offset);
         tester.TapAt(position);
         tester.Pump(between);
         tester.TapAt(position);

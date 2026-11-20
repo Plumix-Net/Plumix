@@ -560,7 +560,7 @@ public partial class PlumixHost : Control, ICustomHitTest
             device: unchecked((int)e.Pointer.Id),
             kind: ToPointerKind(e.Pointer.Type),
             position: e.GetPosition(this),
-            scrollDelta: new Point(-e.Delta.X * 40.0, -e.Delta.Y * 40.0),
+            scrollDelta: new Offset(-e.Delta.X * 40.0, -e.Delta.Y * 40.0),
             timestampUtc: FrameClock.UtcNow,
             onRespond: allow => allowPlatformDefault = allow));
         if (!allowPlatformDefault)
@@ -589,7 +589,7 @@ public partial class PlumixHost : Control, ICustomHitTest
     /// Avalonia otherwise hit-tests the drawn content, and native draws (exact solid paths, shadows,
     /// hairlines) are not hit-testable, so the pointer over them would fall through to the controls behind.
     /// </remarks>
-    public bool HitTest(Point point) => new Rect(Bounds.Size).Contains(point);
+    public bool HitTest(Offset point) => DartGeometry.RectFromSize(Bounds.Size).Contains(point);
 
     /// <summary>
     /// The engine's rasterizer: draws the layer tree <see cref="FlutterView.Render"/> last handed to this
@@ -988,9 +988,9 @@ public partial class PlumixHost : Control, ICustomHitTest
         // Avalonia assigns Bounds after ArrangeOverride returns; metrics published during that
         // callback must use its finalSize, including the first layout and subsequent resizes.
         var size = _lastArrangedSize;
-        Point origin = _attachedTopLevel is null ? default : this.TranslatePoint(default, _attachedTopLevel) ?? default;
+        Offset origin = _attachedTopLevel is null ? default : this.TranslatePoint(default, _attachedTopLevel) ?? default;
         EdgeInsets viewInsets = ResolveViewInsets(
-            _inputPane?.State ?? InputPaneState.Closed, _inputPane?.OccludedRect ?? default, new Rect(origin, size));
+            _inputPane?.State ?? InputPaneState.Closed, _inputPane?.OccludedRect ?? default, DartGeometry.RectFromOffsetAndSize(origin, size));
         double scale = _attachedTopLevel?.RenderScaling ?? 1.0;
         if (!double.IsFinite(scale) || scale <= 0)
         {
@@ -1852,7 +1852,7 @@ public partial class PlumixHost : Control, ICustomHitTest
     /// the engine makes through <see cref="PlatformDispatcher.OnHitTest"/> before it hands a touch
     /// sequence to a native view, and publishes the answer as <see cref="PlatformViewHitTested"/>.
     /// </summary>
-    internal void QueryNativeHitTest(Point position)
+    internal void QueryNativeHitTest(Offset position)
     {
         HitTestResponse? response = PlatformDispatcher.Instance.OnHitTest?.Invoke(
             new HitTestRequest(_view.ViewId, position));
@@ -1866,7 +1866,7 @@ public partial class PlumixHost : Control, ICustomHitTest
     /// Raised when a pointer goes down, with its position and whether the framework's hit-test path there
     /// contains a native platform view (the engine's <c>HitTestResponse.hasPlatformView</c>).
     /// </summary>
-    public event Action<Point, bool>? PlatformViewHitTested;
+    public event Action<Offset, bool>? PlatformViewHitTested;
 
     /// <summary>
     /// Republishes every semantics update of this host's view, which <c>RendererBinding.DrawFrame</c>'s
@@ -2041,9 +2041,9 @@ public partial class PlumixHost : Control, ICustomHitTest
 
                 double devicePixelRatio = _host._view.DevicePixelRatio;
                 return devicePixelRatio > 0
-                    ? new Rect(
-                        rect.X / devicePixelRatio,
-                        rect.Y / devicePixelRatio,
+                    ? DartGeometry.RectFromLTWH(
+                        rect.Left / devicePixelRatio,
+                        rect.Top / devicePixelRatio,
                         rect.Width / devicePixelRatio,
                         rect.Height / devicePixelRatio)
                     : rect;

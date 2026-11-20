@@ -297,7 +297,7 @@ public sealed class SliverHeaderTests
             Size = Constraints.Constrain(naturalSize);
         }
 
-        public override void Paint(PaintingContext ctx, Point offset)
+        public override void Paint(PaintingContext ctx, Offset offset)
         {
         }
     }

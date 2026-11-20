@@ -44,7 +44,7 @@ public sealed class WidgetInspectorButtonTests
         using var tester = new FrameworkDartTester();
         tester.PumpWidget(new Center(child: Button(log)));
         TestGesture mouse = tester.CreateGesture(kind: PointerDeviceKind.Mouse);
-        mouse.AddPointer(location: new Avalonia.Point(1, 1));
+        mouse.AddPointer(location: new Offset(1, 1));
         tester.Pump();
 
         mouse.MoveTo(tester.GetCenter(Find.Text("button")));
@@ -54,7 +54,7 @@ public sealed class WidgetInspectorButtonTests
         Assert.Equal(["visible"], log);
 
         // Leaving starts the hidden timer, which fires one delay later.
-        mouse.MoveTo(new Avalonia.Point(1, 1));
+        mouse.MoveTo(new Offset(1, 1));
         tester.Pump(Delay - TimeSpan.FromMilliseconds(1));
         Assert.Equal(["visible"], log);
         tester.Pump(TimeSpan.FromMilliseconds(1));

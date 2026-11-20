@@ -207,7 +207,7 @@ public sealed class BoxTests
         var paddedBox = new RenderPadding(EdgeInsets.All(10.0), coloredBox);
         new RenderingHarness(paddedBox);
         var parentData = (BoxParentData)coloredBox.parentData!;
-        Assert.NotEqual(0.0, parentData.offset.X);
+        Assert.NotEqual(0.0, parentData.offset.Dx);
 
         paddedBox.Child = null;
         var constrainedBox = new RenderConstrainedBox(BoxConstraints.Unbounded, coloredBox);
@@ -302,7 +302,7 @@ public sealed class BoxTests
     public void HitTesting_AddWithPaintTransform()
     {
         var result = new BoxHitTestResult();
-        var positions = new List<Point>();
+        var positions = new List<Offset>();
 
         bool isHit = result.AddWithPaintTransform(null, default, Record(positions, true));
         Assert.True(isHit);
@@ -311,30 +311,30 @@ public sealed class BoxTests
 
         isHit = result.AddWithPaintTransform(Matrix4.TranslationValues(20, 30, 0), default, Record(positions, true));
         Assert.True(isHit);
-        Assert.Equal([new Point(-20.0, -30.0)], positions);
+        Assert.Equal([new Offset(-20.0, -30.0)], positions);
         positions.Clear();
 
-        isHit = result.AddWithPaintTransform(null, new Point(3, 4), Record(positions, false));
+        isHit = result.AddWithPaintTransform(null, new Offset(3, 4), Record(positions, false));
         Assert.False(isHit);
-        Assert.Equal([new Point(3.0, 4.0)], positions);
+        Assert.Equal([new Offset(3.0, 4.0)], positions);
         positions.Clear();
 
-        isHit = result.AddWithPaintTransform(Matrix4.Identity(), new Point(3, 4), Record(positions, true));
+        isHit = result.AddWithPaintTransform(Matrix4.Identity(), new Offset(3, 4), Record(positions, true));
         Assert.True(isHit);
-        Assert.Equal([new Point(3.0, 4.0)], positions);
+        Assert.Equal([new Offset(3.0, 4.0)], positions);
         positions.Clear();
 
         isHit = result.AddWithPaintTransform(
             Matrix4.TranslationValues(20, 30, 0),
-            new Point(3, 4),
+            new Offset(3, 4),
             Record(positions, true));
         Assert.True(isHit);
-        Assert.Equal([new Point(3.0, 4.0) - new Point(20.0, 30.0)], positions);
+        Assert.Equal([new Offset(3.0, 4.0) - new Offset(20.0, 30.0)], positions);
         positions.Clear();
 
         isHit = result.AddWithPaintTransform(
-            MatrixUtils.ForceToPoint(new Point(3.0, 4.0)),
-            new Point(3, 4),
+            MatrixUtils.ForceToPoint(new Offset(3.0, 4.0)),
+            new Offset(3, 4),
             Record(positions, true));
         Assert.False(isHit);
         Assert.Empty(positions);
@@ -344,33 +344,33 @@ public sealed class BoxTests
     public void HitTesting_AddWithPaintOffset()
     {
         var result = new BoxHitTestResult();
-        var positions = new List<Point>();
+        var positions = new List<Offset>();
 
         Assert.True(result.AddWithPaintOffset(null, default, Record(positions, true)));
         Assert.Equal([default], positions);
         positions.Clear();
 
-        Assert.True(result.AddWithPaintOffset(new Point(55, 32), default, Record(positions, true)));
-        Assert.Equal([new Point(-55.0, -32.0)], positions);
+        Assert.True(result.AddWithPaintOffset(new Offset(55, 32), default, Record(positions, true)));
+        Assert.Equal([new Offset(-55.0, -32.0)], positions);
         positions.Clear();
 
-        Assert.False(result.AddWithPaintOffset(null, new Point(3, 4), Record(positions, false)));
-        Assert.Equal([new Point(3.0, 4.0)], positions);
+        Assert.False(result.AddWithPaintOffset(null, new Offset(3, 4), Record(positions, false)));
+        Assert.Equal([new Offset(3.0, 4.0)], positions);
         positions.Clear();
 
-        Assert.True(result.AddWithPaintOffset(default(Point), new Point(3, 4), Record(positions, true)));
-        Assert.Equal([new Point(3.0, 4.0)], positions);
+        Assert.True(result.AddWithPaintOffset(default(Offset), new Offset(3, 4), Record(positions, true)));
+        Assert.Equal([new Offset(3.0, 4.0)], positions);
         positions.Clear();
 
-        Assert.True(result.AddWithPaintOffset(new Point(20, 30), new Point(3, 4), Record(positions, true)));
-        Assert.Equal([new Point(3.0, 4.0) - new Point(20.0, 30.0)], positions);
+        Assert.True(result.AddWithPaintOffset(new Offset(20, 30), new Offset(3, 4), Record(positions, true)));
+        Assert.Equal([new Offset(3.0, 4.0) - new Offset(20.0, 30.0)], positions);
     }
 
     [Fact]
     public void HitTesting_AddWithRawTransform()
     {
         var result = new BoxHitTestResult();
-        var positions = new List<Point>();
+        var positions = new List<Offset>();
 
         Assert.True(result.AddWithRawTransform(null, default, Record(positions, true)));
         Assert.Equal([default], positions);
@@ -380,22 +380,22 @@ public sealed class BoxTests
             Matrix4.TranslationValues(20, 30, 0),
             default,
             Record(positions, true)));
-        Assert.Equal([new Point(20.0, 30.0)], positions);
+        Assert.Equal([new Offset(20.0, 30.0)], positions);
         positions.Clear();
 
-        Assert.False(result.AddWithRawTransform(null, new Point(3, 4), Record(positions, false)));
-        Assert.Equal([new Point(3.0, 4.0)], positions);
+        Assert.False(result.AddWithRawTransform(null, new Offset(3, 4), Record(positions, false)));
+        Assert.Equal([new Offset(3.0, 4.0)], positions);
         positions.Clear();
 
-        Assert.True(result.AddWithRawTransform(Matrix4.Identity(), new Point(3, 4), Record(positions, true)));
-        Assert.Equal([new Point(3.0, 4.0)], positions);
+        Assert.True(result.AddWithRawTransform(Matrix4.Identity(), new Offset(3, 4), Record(positions, true)));
+        Assert.Equal([new Offset(3.0, 4.0)], positions);
         positions.Clear();
 
         Assert.True(result.AddWithRawTransform(
             Matrix4.TranslationValues(20, 30, 0),
-            new Point(3, 4),
+            new Offset(3, 4),
             Record(positions, true)));
-        Assert.Equal([new Point(3.0, 4.0) + new Point(20.0, 30.0)], positions);
+        Assert.Equal([new Offset(3.0, 4.0) + new Offset(20.0, 30.0)], positions);
     }
 
     [Fact]
@@ -410,7 +410,7 @@ public sealed class BoxTests
                 ran = true;
                 return true;
             },
-            paintOffset: new Point(20, 30));
+            paintOffset: new Offset(20, 30));
         Assert.True(isHit);
         Assert.True(ran);
         ran = false;
@@ -541,7 +541,7 @@ public sealed class BoxTests
 
         new RenderingHarness(outerCentered);
 
-        Assert.Equal(25.0, innerConstrained.LocalToGlobal(default, ancestor: outerConstrained).Y);
+        Assert.Equal(25.0, innerConstrained.LocalToGlobal(default, ancestor: outerConstrained).Dy);
     }
 
     [Fact]
@@ -672,7 +672,7 @@ public sealed class BoxTests
         }
     }
 
-    private static BoxHitTest Record(List<Point> positions, bool returnValue) => (_, position) =>
+    private static BoxHitTest Record(List<Offset> positions, bool returnValue) => (_, position) =>
     {
         positions.Add(position);
         return returnValue;
@@ -714,7 +714,7 @@ public sealed class BoxTests
 
         public void CallPerformLayout() => PerformLayout();
 
-        public override void Paint(PaintingContext context, Point offset)
+        public override void Paint(PaintingContext context, Offset offset)
         {
         }
     }
@@ -727,7 +727,7 @@ public sealed class BoxTests
 
         protected override void PerformLayout() => Size = Constraints.Biggest;
 
-        public override void Paint(PaintingContext context, Point offset)
+        public override void Paint(PaintingContext context, Offset offset)
         {
         }
     }
@@ -738,7 +738,7 @@ public sealed class BoxTests
         {
         }
 
-        public override void Paint(PaintingContext context, Point offset)
+        public override void Paint(PaintingContext context, Offset offset)
         {
         }
     }
@@ -750,7 +750,7 @@ public sealed class BoxTests
         protected override double? ComputeDistanceToActualBaseline(TextBaseline baseline) =>
             throw new InvalidOperationException();
 
-        public override void Paint(PaintingContext context, Point offset)
+        public override void Paint(PaintingContext context, Offset offset)
         {
         }
     }
@@ -762,7 +762,7 @@ public sealed class BoxTests
 
         protected override void PerformLayout() => Size = GetDryLayout(Constraints);
 
-        public override void Paint(PaintingContext context, Point offset)
+        public override void Paint(PaintingContext context, Offset offset)
         {
         }
     }
@@ -805,7 +805,7 @@ public sealed class BoxTests
         protected override void PerformLayout() =>
             Size = new Size(double.PositiveInfinity, Constraints.MaxHeight);
 
-        public override void Paint(PaintingContext context, Point offset)
+        public override void Paint(PaintingContext context, Offset offset)
         {
         }
     }
@@ -814,7 +814,7 @@ public sealed class BoxTests
     {
         protected override void PerformLayout() => Size = Constraints.Smallest;
 
-        public override void Paint(PaintingContext context, Point offset)
+        public override void Paint(PaintingContext context, Offset offset)
         {
         }
     }

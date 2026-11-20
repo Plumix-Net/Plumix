@@ -530,7 +530,7 @@ internal sealed class TabLabelBarRenderer : RenderFlex
         var xOffsets = new List<double>();
         for (RenderBox? child = FirstChild; child is not null; child = ChildAfter(child))
         {
-            xOffsets.Add(((FlexParentData)child.parentData!).offset.X);
+            xOffsets.Add(((FlexParentData)child.parentData!).offset.Dx);
         }
 
         TextDirection direction = TextDirection ?? Plumix.UI.TextDirection.Ltr;
@@ -605,8 +605,8 @@ internal sealed class DividerPainter : CustomPainter
         double y = size.Height - (DividerHeight / 2);
         context.Canvas.DrawLine(
             new Pen(new SolidColorBrush(DividerColor), DividerHeight),
-            new Point(0, y),
-            new Point(size.Width, y));
+            new Offset(0, y),
+            new Offset(size.Width, y));
     }
 
     public override bool ShouldRepaint(CustomPainter oldDelegate)
@@ -780,7 +780,7 @@ internal sealed class IndicatorPainter : CustomPainter
 
         EdgeInsets indicatorInsets = IndicatorPadding
             .Resolve(_currentTextDirection ?? Plumix.UI.TextDirection.Ltr);
-        var rect = new Rect(tabLeft, 0.0, tabRight - tabLeft, tabBarSize.Height);
+        var rect = DartGeometry.RectFromLTWH(tabLeft, 0.0, tabRight - tabLeft, tabBarSize.Height);
         if (rect.Width < indicatorInsets.Left + indicatorInsets.Right
             || rect.Height < indicatorInsets.Top + indicatorInsets.Bottom)
         {
@@ -789,7 +789,7 @@ internal sealed class IndicatorPainter : CustomPainter
                 + $"Insets: {indicatorInsets}");
         }
 
-        return new Rect(
+        return DartGeometry.RectFromLTWH(
             rect.Left + indicatorInsets.Left,
             rect.Top + indicatorInsets.Top,
             rect.Width - indicatorInsets.Left - indicatorInsets.Right,
@@ -815,15 +815,15 @@ internal sealed class IndicatorPainter : CustomPainter
             double y = size.Height - (DividerHeight.Value / 2);
             context.Canvas.DrawLine(
                 new Pen(new SolidColorBrush(DividerColor!), DividerHeight.Value),
-                new Point(0, y),
-                new Point(size.Width, y));
+                new Offset(0, y),
+                new Offset(size.Width, y));
         }
 
         var configuration = new ImageConfiguration(
             Size: CurrentRect!.Value.Size,
             TextDirection: _currentTextDirection,
             DevicePixelRatio: DevicePixelRatio);
-        _painter.Paint(context, CurrentRect.Value.Position, configuration);
+        _painter.Paint(context, CurrentRect.Value.TopLeft, configuration);
     }
 
     public override bool ShouldRepaint(CustomPainter oldDelegate)
@@ -941,7 +941,7 @@ internal sealed class IndicatorPainter : CustomPainter
                 : Lerp(toRect.Right, fromRect.Right, rightFraction);
         }
 
-        return new Rect(
+        return DartGeometry.RectFromLTWH(
             lerpRectLeft,
             rect.Top,
             Math.Max(0.0, lerpRectRight - lerpRectLeft),
@@ -973,7 +973,7 @@ internal sealed class IndicatorPainter : CustomPainter
 
     private static double Lerp(double a, double b, double t) => a + ((b - a) * t);
 
-    private static Rect LerpRect(Rect a, Rect b, double t) => new(
+    private static Rect LerpRect(Rect a, Rect b, double t) => DartGeometry.RectFromLTWH(
         Lerp(a.Left, b.Left, t),
         Lerp(a.Top, b.Top, t),
         Math.Max(0.0, Lerp(a.Right, b.Right, t) - Lerp(a.Left, b.Left, t)),

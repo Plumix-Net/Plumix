@@ -15,6 +15,6 @@ public class App : PlumixApplication
     protected override PlumixOptions CreateOptions() => new PlumixOptions
     {
         Title = "Plumix Sample",
-        InitialWindowSize = new Avalonia.Size(350, 700)
+        InitialWindowSize = new Size(350, 700)
     };
 }

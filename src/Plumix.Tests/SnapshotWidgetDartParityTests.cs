@@ -389,9 +389,9 @@ public sealed class SnapshotWidgetDartParityTests
 
     private sealed class RenderTestPlatformView : RenderProxyBox
     {
-        public override void Paint(PaintingContext context, Point offset)
+        public override void Paint(PaintingContext context, Offset offset)
         {
-            context.AddLayer(new PlatformViewLayer(new Rect(offset, Size), viewId: 1));
+            context.AddLayer(new PlatformViewLayer(DartGeometry.RectFromOffsetAndSize(offset, Size), viewId: 1));
         }
     }
 
@@ -421,7 +421,7 @@ public sealed class SnapshotWidgetDartParityTests
 
         public override void PaintSnapshot(
             PaintingContext context,
-            Point offset,
+            Offset offset,
             Size size,
             IImage image,
             Size sourceSize,
@@ -431,7 +431,7 @@ public sealed class SnapshotWidgetDartParityTests
             LastImage = image;
         }
 
-        public override void Paint(PaintingContext context, Point offset, Size size, PaintingContextCallback painter)
+        public override void Paint(PaintingContext context, Offset offset, Size size, PaintingContextCallback painter)
         {
             Count += 1;
         }

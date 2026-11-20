@@ -332,7 +332,7 @@ public sealed class CupertinoSearchTextFieldTests : IDisposable
             paragraph.PlainText == prefixGlyph);
         RenderParagraph suffix = Assert.Single(FindAll<RenderParagraph>(harness.RenderView), paragraph =>
             paragraph.PlainText == suffixGlyph);
-        Assert.Equal(prefixAfterSuffix, prefix.LocalToGlobal(default).X > suffix.LocalToGlobal(default).X);
+        Assert.Equal(prefixAfterSuffix, prefix.LocalToGlobal(default).Dx > suffix.LocalToGlobal(default).Dx);
     }
 
     [Fact]

@@ -24,7 +24,7 @@ internal sealed class DesktopTextSelectionToolbarDemoPageState : State
 
     public override Widget Build(BuildContext context)
     {
-        var anchor = _nearViewportEdge ? new Point(360, 260) : new Point(24, 24);
+        var anchor = _nearViewportEdge ? new Offset(360, 260) : new Offset(24, 24);
         Widget toolbar = _toolbarKind switch
         {
             1 => BuildMaterialToolbar(context, anchor),
@@ -64,7 +64,7 @@ internal sealed class DesktopTextSelectionToolbarDemoPageState : State
             ]);
     }
 
-    private Widget BuildDesktopToolbar(BuildContext context, Point anchor)
+    private Widget BuildDesktopToolbar(BuildContext context, Offset anchor)
     {
         return new DesktopTextSelectionToolbar(
             anchor: anchor,
@@ -77,7 +77,7 @@ internal sealed class DesktopTextSelectionToolbarDemoPageState : State
             ]);
     }
 
-    private Widget BuildMaterialToolbar(BuildContext context, Point anchor)
+    private Widget BuildMaterialToolbar(BuildContext context, Offset anchor)
     {
         string[] labels = ["Cut", "Copy", "Paste", "Select all", "Share", "Translate", "Search web"];
         var children = new List<Widget>(labels.Length);
@@ -92,11 +92,11 @@ internal sealed class DesktopTextSelectionToolbarDemoPageState : State
 
         return new TextSelectionToolbar(
             anchorAbove: anchor,
-            anchorBelow: anchor + new Vector(0, 20),
+            anchorBelow: anchor + new Offset(0, 20),
             children: children);
     }
 
-    private Widget BuildAdaptiveToolbar(BuildContext context, Point anchor)
+    private Widget BuildAdaptiveToolbar(BuildContext context, Offset anchor)
     {
         ContextMenuButtonItem[] items =
         [
@@ -110,10 +110,10 @@ internal sealed class DesktopTextSelectionToolbarDemoPageState : State
             windowsTheme,
             AdaptiveTextSelectionToolbar.FromButtonItems(
                 items,
-                new TextSelectionToolbarAnchors(anchor, anchor + new Vector(0, 20))));
+                new TextSelectionToolbarAnchors(anchor, anchor + new Offset(0, 20))));
     }
 
-    private Widget BuildSpellCheckToolbar(Point anchor)
+    private Widget BuildSpellCheckToolbar(Offset anchor)
     {
         return new SpellCheckSuggestionsToolbar(
             anchor: anchor,
@@ -125,11 +125,11 @@ internal sealed class DesktopTextSelectionToolbarDemoPageState : State
             ]);
     }
 
-    private Widget BuildCupertinoToolbar(Point anchor)
+    private Widget BuildCupertinoToolbar(Offset anchor)
     {
         return new CupertinoTextSelectionToolbar(
             anchorAbove: anchor,
-            anchorBelow: anchor + new Vector(0, 20),
+            anchorBelow: anchor + new Offset(0, 20),
             children:
             [
                 CupertinoTextSelectionToolbarButton.TextButton(() => SetAction("Cut"), "Cut"),
@@ -139,7 +139,7 @@ internal sealed class DesktopTextSelectionToolbarDemoPageState : State
             ]);
     }
 
-    private Widget BuildCupertinoOverflowToolbar(Point anchor)
+    private Widget BuildCupertinoOverflowToolbar(Offset anchor)
     {
         string[] labels =
         [
@@ -154,11 +154,11 @@ internal sealed class DesktopTextSelectionToolbarDemoPageState : State
 
         return new CupertinoTextSelectionToolbar(
             anchorAbove: anchor,
-            anchorBelow: anchor + new Vector(0, 20),
+            anchorBelow: anchor + new Offset(0, 20),
             children: children);
     }
 
-    private Widget BuildCupertinoDesktopToolbar(Point anchor)
+    private Widget BuildCupertinoDesktopToolbar(Offset anchor)
     {
         return new CupertinoDesktopTextSelectionToolbar(
             anchor: anchor,
@@ -171,10 +171,10 @@ internal sealed class DesktopTextSelectionToolbarDemoPageState : State
             ]);
     }
 
-    private Widget BuildCupertinoSpellCheckToolbar(Point anchor)
+    private Widget BuildCupertinoSpellCheckToolbar(Offset anchor)
     {
         return new CupertinoSpellCheckSuggestionsToolbar(
-            anchors: new TextSelectionToolbarAnchors(anchor, anchor + new Vector(0, 20)),
+            anchors: new TextSelectionToolbarAnchors(anchor, anchor + new Offset(0, 20)),
             buttonItems:
             [
                 new ContextMenuButtonItem(() => SetAction("framework"), label: "framework"),

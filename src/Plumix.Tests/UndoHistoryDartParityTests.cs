@@ -170,7 +170,7 @@ public sealed class UndoHistoryDartParityTests : IDisposable
         Assert.Equal(initial, value.Value);
         controller.Redo();
         Assert.Equal(edited, value.Value);
-        Assert.Equal(new Avalonia.Size(80, 30), tester.GetSize(Find.ByKey(childKey)));
+        Assert.Equal(new Size(80, 30), tester.GetSize(Find.ByKey(childKey)));
         Assert.Same(
             tester.Widget<UndoHistory<TextEditingValue>>(Find.ByType<UndoHistory<TextEditingValue>>()).Child,
             tester.Widget<Actions>(Find.ByType<Actions>()).Child);

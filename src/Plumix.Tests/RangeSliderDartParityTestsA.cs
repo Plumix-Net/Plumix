@@ -60,7 +60,7 @@ public sealed class RangeSliderDartParityTestsA : IDisposable
         tester.Pump(GestureConstants.PressTimeout);
 
         // Less than configured touch slop, more than default touch slop
-        drag.MoveBy(new Vector(19.0, 0));
+        drag.MoveBy(new Offset(19.0, 0));
         tester.Pump();
 
         Assert.Equal(new RangeValues(0.1, 0.5), values);
@@ -96,7 +96,7 @@ public sealed class RangeSliderDartParityTestsA : IDisposable
                                     onChangeEnd: _ => sliderEnd = true)))))))));
 
         // More than touch slop.
-        drag.MoveBy(new Vector(12.0, 0));
+        drag.MoveBy(new Offset(12.0, 0));
 
         drag.Up();
         tester.PumpAndSettle();
@@ -123,17 +123,17 @@ public sealed class RangeSliderDartParityTestsA : IDisposable
 
         // Get the bounds of the track by finding the slider edges and translating
         // inwards by the overlay radius.
-        (Point topLeft, Point bottomRight) = TrackBounds(tester);
+        (Offset topLeft, Offset bottomRight) = TrackBounds(tester);
 
         // The start thumb is selected when tapping the left inactive track.
-        Point leftTarget = topLeft + ((bottomRight - topLeft) * 0.1);
+        Offset leftTarget = topLeft + ((bottomRight - topLeft) * 0.1);
         TapAt(tester, leftTarget);
         Near(0.1, holder.Values.Start, 0.01);
         Assert.Equal(0.8, holder.Values.End);
 
         // The end thumb is selected when tapping the right inactive track.
         tester.Pump();
-        Point rightTarget = topLeft + ((bottomRight - topLeft) * 0.9);
+        Offset rightTarget = topLeft + ((bottomRight - topLeft) * 0.9);
         TapAt(tester, rightTarget);
         Near(0.1, holder.Values.Start, 0.01);
         Near(0.9, holder.Values.End, 0.01);
@@ -157,17 +157,17 @@ public sealed class RangeSliderDartParityTestsA : IDisposable
 
         // Get the bounds of the track by finding the slider edges and translating
         // inwards by the overlay radius.
-        (Point topLeft, Point bottomRight) = TrackBounds(tester);
+        (Offset topLeft, Offset bottomRight) = TrackBounds(tester);
 
         // The end thumb is selected when tapping the left inactive track.
-        Point leftTarget = topLeft + ((bottomRight - topLeft) * 0.1);
+        Offset leftTarget = topLeft + ((bottomRight - topLeft) * 0.1);
         TapAt(tester, leftTarget);
         Assert.Equal(0.5, holder.Values.Start);
         Near(0.9, holder.Values.End, 0.01);
 
         // The start thumb is selected when tapping the right inactive track.
         tester.Pump();
-        Point rightTarget = topLeft + ((bottomRight - topLeft) * 0.9);
+        Offset rightTarget = topLeft + ((bottomRight - topLeft) * 0.9);
         TapAt(tester, rightTarget);
         Near(0.1, holder.Values.Start, 0.01);
         Near(0.9, holder.Values.End, 0.01);
@@ -191,10 +191,10 @@ public sealed class RangeSliderDartParityTestsA : IDisposable
 
         // Get the bounds of the track by finding the slider edges and translating
         // inwards by the overlay radius.
-        (Point topLeft, Point bottomRight) = TrackBounds(tester);
+        (Offset topLeft, Offset bottomRight) = TrackBounds(tester);
 
         // The start thumb is selected when tapping the left inactive track.
-        Point leftTarget = topLeft + ((bottomRight - topLeft) * 0.1);
+        Offset leftTarget = topLeft + ((bottomRight - topLeft) * 0.1);
         TapAt(tester, leftTarget);
         tester.PumpAndSettle();
         Assert.Equal(10, DartRound(holder.Values.Start));
@@ -202,7 +202,7 @@ public sealed class RangeSliderDartParityTestsA : IDisposable
 
         // The end thumb is selected when tapping the right inactive track.
         tester.Pump();
-        Point rightTarget = topLeft + ((bottomRight - topLeft) * 0.9);
+        Offset rightTarget = topLeft + ((bottomRight - topLeft) * 0.9);
         TapAt(tester, rightTarget);
         tester.PumpAndSettle();
         Assert.Equal(10, DartRound(holder.Values.Start));
@@ -227,10 +227,10 @@ public sealed class RangeSliderDartParityTestsA : IDisposable
 
         // Get the bounds of the track by finding the slider edges and translating
         // inwards by the overlay radius.
-        (Point topLeft, Point bottomRight) = TrackBounds(tester);
+        (Offset topLeft, Offset bottomRight) = TrackBounds(tester);
 
         // The start thumb is selected when tapping the left inactive track.
-        Point leftTarget = topLeft + ((bottomRight - topLeft) * 0.1);
+        Offset leftTarget = topLeft + ((bottomRight - topLeft) * 0.1);
         TapAt(tester, leftTarget);
         tester.PumpAndSettle();
         Assert.Equal(50, DartRound(holder.Values.Start));
@@ -238,7 +238,7 @@ public sealed class RangeSliderDartParityTestsA : IDisposable
 
         // The end thumb is selected when tapping the right inactive track.
         tester.Pump();
-        Point rightTarget = topLeft + ((bottomRight - topLeft) * 0.9);
+        Offset rightTarget = topLeft + ((bottomRight - topLeft) * 0.9);
         TapAt(tester, rightTarget);
         tester.PumpAndSettle();
         Assert.Equal(10, DartRound(holder.Values.Start));
@@ -253,16 +253,16 @@ public sealed class RangeSliderDartParityTestsA : IDisposable
         var holder = new ValuesHolder(new RangeValues(0.3, 0.7));
         tester.PumpWidget(SimpleApp(TextDirection.Ltr, holder));
 
-        (Point topLeft, Point bottomRight) = TrackBounds(tester);
+        (Offset topLeft, Offset bottomRight) = TrackBounds(tester);
 
         // Drag the start thumb to the min.
-        Point leftTarget = topLeft + ((bottomRight - topLeft) * 0.3);
+        Offset leftTarget = topLeft + ((bottomRight - topLeft) * 0.3);
         tester.DragFrom(leftTarget, topLeft + ((bottomRight - topLeft) * -0.4));
         Assert.Equal(0, holder.Values.Start);
 
         // Drag the end thumb to the max.
         tester.PumpAndSettle();
-        Point rightTarget = topLeft + ((bottomRight - topLeft) * 0.7);
+        Offset rightTarget = topLeft + ((bottomRight - topLeft) * 0.7);
         tester.DragFrom(rightTarget, topLeft + ((bottomRight - topLeft) * 0.4));
         Assert.Equal(1, holder.Values.End);
     }
@@ -275,16 +275,16 @@ public sealed class RangeSliderDartParityTestsA : IDisposable
         var holder = new ValuesHolder(new RangeValues(0.3, 0.7));
         tester.PumpWidget(SimpleApp(TextDirection.Rtl, holder));
 
-        (Point topLeft, Point bottomRight) = TrackBounds(tester);
+        (Offset topLeft, Offset bottomRight) = TrackBounds(tester);
 
         // Drag the end thumb to the max.
-        Point leftTarget = topLeft + ((bottomRight - topLeft) * 0.3);
+        Offset leftTarget = topLeft + ((bottomRight - topLeft) * 0.3);
         tester.DragFrom(leftTarget, topLeft + ((bottomRight - topLeft) * -0.4));
         Assert.Equal(1, holder.Values.End);
 
         // Drag the start thumb to the min.
         tester.PumpAndSettle();
-        Point rightTarget = topLeft + ((bottomRight - topLeft) * 0.7);
+        Offset rightTarget = topLeft + ((bottomRight - topLeft) * 0.7);
         tester.DragFrom(rightTarget, topLeft + ((bottomRight - topLeft) * 0.4));
         Assert.Equal(0, holder.Values.Start);
     }
@@ -297,16 +297,16 @@ public sealed class RangeSliderDartParityTestsA : IDisposable
         var holder = new ValuesHolder(new RangeValues(30, 70));
         tester.PumpWidget(SimpleApp(TextDirection.Ltr, holder, max: 100, divisions: 10));
 
-        (Point topLeft, Point bottomRight) = TrackBounds(tester);
+        (Offset topLeft, Offset bottomRight) = TrackBounds(tester);
 
         // Drag the start thumb to the min.
-        Point leftTarget = topLeft + ((bottomRight - topLeft) * 0.3);
+        Offset leftTarget = topLeft + ((bottomRight - topLeft) * 0.3);
         tester.DragFrom(leftTarget, topLeft + ((bottomRight - topLeft) * -0.4));
         Assert.Equal(0, holder.Values.Start);
 
         // Drag the end thumb to the max.
         tester.PumpAndSettle();
-        Point rightTarget = topLeft + ((bottomRight - topLeft) * 0.7);
+        Offset rightTarget = topLeft + ((bottomRight - topLeft) * 0.7);
         tester.DragFrom(rightTarget, topLeft + ((bottomRight - topLeft) * 0.4));
         Assert.Equal(100, holder.Values.End);
     }
@@ -319,16 +319,16 @@ public sealed class RangeSliderDartParityTestsA : IDisposable
         var holder = new ValuesHolder(new RangeValues(30, 70));
         tester.PumpWidget(SimpleApp(TextDirection.Rtl, holder, max: 100, divisions: 10));
 
-        (Point topLeft, Point bottomRight) = TrackBounds(tester);
+        (Offset topLeft, Offset bottomRight) = TrackBounds(tester);
 
         // Drag the end thumb to the max.
-        Point leftTarget = topLeft + ((bottomRight - topLeft) * 0.3);
+        Offset leftTarget = topLeft + ((bottomRight - topLeft) * 0.3);
         tester.DragFrom(leftTarget, topLeft + ((bottomRight - topLeft) * -0.4));
         Assert.Equal(100, holder.Values.End);
 
         // Drag the start thumb to the min.
         tester.PumpAndSettle();
-        Point rightTarget = topLeft + ((bottomRight - topLeft) * 0.7);
+        Offset rightTarget = topLeft + ((bottomRight - topLeft) * 0.7);
         tester.DragFrom(rightTarget, topLeft + ((bottomRight - topLeft) * 0.4));
         Assert.Equal(0, holder.Values.Start);
     }
@@ -356,17 +356,17 @@ public sealed class RangeSliderDartParityTestsA : IDisposable
         var holder = new ValuesHolder(new RangeValues(0.3, 0.7));
         tester.PumpWidget(SimpleApp(TextDirection.Ltr, holder));
 
-        (Point topLeft, Point bottomRight) = TrackBounds(tester);
-        Point middle = topLeft + (bottomRight / 2);
+        (Offset topLeft, Offset bottomRight) = TrackBounds(tester);
+        Offset middle = topLeft + (bottomRight / 2);
 
         // Drag the start thumb towards the center.
-        Point leftTarget = topLeft + ((bottomRight - topLeft) * 0.3);
+        Offset leftTarget = topLeft + ((bottomRight - topLeft) * 0.3);
         tester.DragFrom(leftTarget, middle - leftTarget);
         Near(0.5, holder.Values.Start, 0.05);
 
         // Drag the end thumb towards the center.
         tester.PumpAndSettle();
-        Point rightTarget = topLeft + ((bottomRight - topLeft) * 0.7);
+        Offset rightTarget = topLeft + ((bottomRight - topLeft) * 0.7);
         tester.DragFrom(rightTarget, middle - rightTarget);
         Near(0.5, holder.Values.End, 0.05);
 
@@ -385,17 +385,17 @@ public sealed class RangeSliderDartParityTestsA : IDisposable
         var holder = new ValuesHolder(new RangeValues(0.3, 0.7));
         tester.PumpWidget(SimpleApp(TextDirection.Rtl, holder));
 
-        (Point topLeft, Point bottomRight) = TrackBounds(tester);
-        Point middle = topLeft + (bottomRight / 2);
+        (Offset topLeft, Offset bottomRight) = TrackBounds(tester);
+        Offset middle = topLeft + (bottomRight / 2);
 
         // Drag the end thumb towards the center.
-        Point leftTarget = topLeft + ((bottomRight - topLeft) * 0.3);
+        Offset leftTarget = topLeft + ((bottomRight - topLeft) * 0.3);
         tester.DragFrom(leftTarget, middle - leftTarget);
         Near(0.5, holder.Values.End, 0.05);
 
         // Drag the start thumb towards the center.
         tester.PumpAndSettle();
-        Point rightTarget = topLeft + ((bottomRight - topLeft) * 0.7);
+        Offset rightTarget = topLeft + ((bottomRight - topLeft) * 0.7);
         tester.DragFrom(rightTarget, middle - rightTarget);
         Near(0.5, holder.Values.Start, 0.05);
 
@@ -414,17 +414,17 @@ public sealed class RangeSliderDartParityTestsA : IDisposable
         var holder = new ValuesHolder(new RangeValues(30, 70));
         tester.PumpWidget(SimpleApp(TextDirection.Ltr, holder, max: 100, divisions: 10));
 
-        (Point topLeft, Point bottomRight) = TrackBounds(tester);
-        Point middle = topLeft + (bottomRight / 2);
+        (Offset topLeft, Offset bottomRight) = TrackBounds(tester);
+        Offset middle = topLeft + (bottomRight / 2);
 
         // Drag the start thumb towards the center.
-        Point leftTarget = topLeft + ((bottomRight - topLeft) * 0.3);
+        Offset leftTarget = topLeft + ((bottomRight - topLeft) * 0.3);
         tester.DragFrom(leftTarget, middle - leftTarget);
         Near(50, holder.Values.Start, 0.01);
 
         // Drag the end thumb towards the center.
         tester.PumpAndSettle();
-        Point rightTarget = topLeft + ((bottomRight - topLeft) * 0.7);
+        Offset rightTarget = topLeft + ((bottomRight - topLeft) * 0.7);
         tester.DragFrom(rightTarget, middle - rightTarget);
         Near(50, holder.Values.End, 0.01);
 
@@ -443,17 +443,17 @@ public sealed class RangeSliderDartParityTestsA : IDisposable
         var holder = new ValuesHolder(new RangeValues(30, 70));
         tester.PumpWidget(SimpleApp(TextDirection.Rtl, holder, max: 100, divisions: 10));
 
-        (Point topLeft, Point bottomRight) = TrackBounds(tester);
-        Point middle = topLeft + (bottomRight / 2);
+        (Offset topLeft, Offset bottomRight) = TrackBounds(tester);
+        Offset middle = topLeft + (bottomRight / 2);
 
         // Drag the end thumb towards the center.
-        Point leftTarget = topLeft + ((bottomRight - topLeft) * 0.3);
+        Offset leftTarget = topLeft + ((bottomRight - topLeft) * 0.3);
         tester.DragFrom(leftTarget, middle - leftTarget);
         Near(50, holder.Values.End, 0.01);
 
         // Drag the start thumb towards the center.
         tester.PumpAndSettle();
-        Point rightTarget = topLeft + ((bottomRight - topLeft) * 0.7);
+        Offset rightTarget = topLeft + ((bottomRight - topLeft) * 0.7);
         tester.DragFrom(rightTarget, middle - rightTarget);
         Near(50, holder.Values.Start, 0.01);
         Near(50, holder.Values.End, 0.01);
@@ -473,17 +473,17 @@ public sealed class RangeSliderDartParityTestsA : IDisposable
         var holder = new ValuesHolder(new RangeValues(0.3, 0.7));
         tester.PumpWidget(SimpleApp(TextDirection.Ltr, holder));
 
-        (Point topLeft, Point bottomRight) = TrackBounds(tester);
-        Point middle = topLeft + (bottomRight / 2);
+        (Offset topLeft, Offset bottomRight) = TrackBounds(tester);
+        Offset middle = topLeft + (bottomRight / 2);
 
         // Drag the start thumb towards the center.
-        Point leftTarget = topLeft + ((bottomRight - topLeft) * 0.3);
+        Offset leftTarget = topLeft + ((bottomRight - topLeft) * 0.3);
         tester.DragFrom(leftTarget, middle - leftTarget);
         Near(0.5, holder.Values.Start, 0.05);
 
         // Drag the end thumb towards the center.
         tester.PumpAndSettle();
-        Point rightTarget = topLeft + ((bottomRight - topLeft) * 0.7);
+        Offset rightTarget = topLeft + ((bottomRight - topLeft) * 0.7);
         tester.DragFrom(rightTarget, middle - rightTarget);
         Near(0.5, holder.Values.End, 0.05);
 
@@ -502,17 +502,17 @@ public sealed class RangeSliderDartParityTestsA : IDisposable
         var holder = new ValuesHolder(new RangeValues(0.3, 0.7));
         tester.PumpWidget(SimpleApp(TextDirection.Rtl, holder));
 
-        (Point topLeft, Point bottomRight) = TrackBounds(tester);
-        Point middle = topLeft + (bottomRight / 2);
+        (Offset topLeft, Offset bottomRight) = TrackBounds(tester);
+        Offset middle = topLeft + (bottomRight / 2);
 
         // Drag the end thumb towards the center.
-        Point leftTarget = topLeft + ((bottomRight - topLeft) * 0.3);
+        Offset leftTarget = topLeft + ((bottomRight - topLeft) * 0.3);
         tester.DragFrom(leftTarget, middle - leftTarget);
         Near(0.5, holder.Values.End, 0.05);
 
         // Drag the start thumb towards the center.
         tester.PumpAndSettle();
-        Point rightTarget = topLeft + ((bottomRight - topLeft) * 0.7);
+        Offset rightTarget = topLeft + ((bottomRight - topLeft) * 0.7);
         tester.DragFrom(rightTarget, middle - rightTarget);
         Near(0.5, holder.Values.Start, 0.05);
 
@@ -531,17 +531,17 @@ public sealed class RangeSliderDartParityTestsA : IDisposable
         var holder = new ValuesHolder(new RangeValues(30, 70));
         tester.PumpWidget(SimpleApp(TextDirection.Ltr, holder, max: 100, divisions: 10));
 
-        (Point topLeft, Point bottomRight) = TrackBounds(tester);
-        Point middle = topLeft + (bottomRight / 2);
+        (Offset topLeft, Offset bottomRight) = TrackBounds(tester);
+        Offset middle = topLeft + (bottomRight / 2);
 
         // Drag the start thumb towards the center.
-        Point leftTarget = topLeft + ((bottomRight - topLeft) * 0.3);
+        Offset leftTarget = topLeft + ((bottomRight - topLeft) * 0.3);
         tester.DragFrom(leftTarget, middle - leftTarget);
         Near(50, holder.Values.Start, 0.01);
 
         // Drag the end thumb towards the center.
         tester.PumpAndSettle();
-        Point rightTarget = topLeft + ((bottomRight - topLeft) * 0.7);
+        Offset rightTarget = topLeft + ((bottomRight - topLeft) * 0.7);
         tester.DragFrom(rightTarget, middle - rightTarget);
         Near(50, holder.Values.End, 0.01);
 
@@ -560,17 +560,17 @@ public sealed class RangeSliderDartParityTestsA : IDisposable
         var holder = new ValuesHolder(new RangeValues(30, 70));
         tester.PumpWidget(SimpleApp(TextDirection.Rtl, holder, max: 100, divisions: 10));
 
-        (Point topLeft, Point bottomRight) = TrackBounds(tester);
-        Point middle = topLeft + (bottomRight / 2);
+        (Offset topLeft, Offset bottomRight) = TrackBounds(tester);
+        Offset middle = topLeft + (bottomRight / 2);
 
         // Drag the end thumb towards the center.
-        Point leftTarget = topLeft + ((bottomRight - topLeft) * 0.3);
+        Offset leftTarget = topLeft + ((bottomRight - topLeft) * 0.3);
         tester.DragFrom(leftTarget, middle - leftTarget);
         Near(50, holder.Values.End, 0.01);
 
         // Drag the start thumb towards the center.
         tester.PumpAndSettle();
-        Point rightTarget = topLeft + ((bottomRight - topLeft) * 0.7);
+        Offset rightTarget = topLeft + ((bottomRight - topLeft) * 0.7);
         tester.DragFrom(rightTarget, middle - rightTarget);
         Near(50, holder.Values.Start, 0.01);
 
@@ -601,10 +601,10 @@ public sealed class RangeSliderDartParityTestsA : IDisposable
                             onChangeStart: newValues => startValues = newValues,
                             onChangeEnd: newValues => endValues = newValues)))))));
 
-        (Point topLeft, Point bottomRight) = TrackBounds(tester);
+        (Offset topLeft, Offset bottomRight) = TrackBounds(tester);
 
         // Drag the start thumb towards the center.
-        Point leftTarget = topLeft + ((bottomRight - topLeft) * 0.3);
+        Offset leftTarget = topLeft + ((bottomRight - topLeft) * 0.3);
         Assert.Null(startValues);
         Assert.Null(endValues);
         tester.DragFrom(leftTarget, (bottomRight - topLeft) * 0.2);
@@ -639,20 +639,20 @@ public sealed class RangeSliderDartParityTestsA : IDisposable
 
         // Get the bounds of the track by finding the slider edges and translating
         // inwards by the overlay radius
-        (Point topLeft, Point bottomRight) = TrackBounds(tester);
+        (Offset topLeft, Offset bottomRight) = TrackBounds(tester);
 
         // Drag the thumbs together.
-        Point leftTarget = topLeft + ((bottomRight - topLeft) * 0.3);
+        Offset leftTarget = topLeft + ((bottomRight - topLeft) * 0.3);
         tester.DragFrom(leftTarget, (bottomRight - topLeft) * 0.2);
         tester.PumpAndSettle();
-        Point rightTarget = topLeft + ((bottomRight - topLeft) * 0.7);
+        Offset rightTarget = topLeft + ((bottomRight - topLeft) * 0.7);
         tester.DragFrom(rightTarget, (bottomRight - topLeft) * -0.2);
         tester.PumpAndSettle();
         Near(50, values.Start, 1);
         Near(51, values.End, 1);
 
         // Drag the end thumb to the right.
-        Point middleTarget = topLeft + ((bottomRight - topLeft) * 0.5);
+        Offset middleTarget = topLeft + ((bottomRight - topLeft) * 0.5);
         tester.DragFrom(middleTarget, (bottomRight - topLeft) * 0.4);
         tester.PumpAndSettle();
         Near(50, startValues!.Start, 1);
@@ -941,7 +941,7 @@ public sealed class RangeSliderDartParityTestsA : IDisposable
 
         RenderObject valueIndicatorBox = OverlayBox(tester);
 
-        Point topRight = TopRight(tester, Slider(tester)) + new Vector(-24, 0);
+        Offset topRight = TopRight(tester, Slider(tester)) + new Offset(-24, 0);
         TestGesture gesture = tester.StartGesture(topRight, PointerDeviceKind.Touch);
         // Wait for value indicator animation to finish.
         tester.PumpAndSettle();
@@ -1001,7 +1001,7 @@ public sealed class RangeSliderDartParityTestsA : IDisposable
         tester.PumpWidget(BuildApp(divisions: 5));
 
         RenderObject valueIndicatorBox = OverlayBox(tester);
-        Point topRight = TopRight(tester, Slider(tester)) + new Vector(-24, 0);
+        Offset topRight = TopRight(tester, Slider(tester)) + new Offset(-24, 0);
         TestGesture gesture = tester.StartGesture(topRight, PointerDeviceKind.Touch);
         // Wait for value indicator animation to finish.
         tester.PumpAndSettle();
@@ -1071,14 +1071,14 @@ public sealed class RangeSliderDartParityTestsA : IDisposable
 
         RenderObject sliderBox = SliderBox(tester);
 
-        (Point topLeft, Point bottomRight) = TrackBounds(tester);
-        Point middle = topLeft + (bottomRight / 2);
+        (Offset topLeft, Offset bottomRight) = TrackBounds(tester);
+        Offset middle = topLeft + (bottomRight / 2);
 
         // Drag the thumbs towards the center.
-        Point leftTarget = topLeft + ((bottomRight - topLeft) * 0.3);
+        Offset leftTarget = topLeft + ((bottomRight - topLeft) * 0.3);
         tester.DragFrom(leftTarget, middle - leftTarget);
         tester.PumpAndSettle();
-        Point rightTarget = topLeft + ((bottomRight - topLeft) * 0.7);
+        Offset rightTarget = topLeft + ((bottomRight - topLeft) * 0.7);
         tester.DragFrom(rightTarget, middle - rightTarget);
         Near(0.5, values.Start, 0.03);
         Near(0.5, values.End, 0.03);
@@ -1134,14 +1134,14 @@ public sealed class RangeSliderDartParityTestsA : IDisposable
                                 labels: new RangeLabels(Fixed2(values.Start), Fixed2(values.End)),
                                 onChanged: newValues => setState(() => values = newValues)))))))));
 
-        (Point topLeft, Point bottomRight) = TrackBounds(tester);
-        Point middle = topLeft + (bottomRight / 2);
+        (Offset topLeft, Offset bottomRight) = TrackBounds(tester);
+        Offset middle = topLeft + (bottomRight / 2);
 
         // Drag the thumbs towards the center.
-        Point leftTarget = topLeft + ((bottomRight - topLeft) * 0.3);
+        Offset leftTarget = topLeft + ((bottomRight - topLeft) * 0.3);
         tester.DragFrom(leftTarget, middle - leftTarget);
         tester.PumpAndSettle();
-        Point rightTarget = topLeft + ((bottomRight - topLeft) * 0.7);
+        Offset rightTarget = topLeft + ((bottomRight - topLeft) * 0.7);
         tester.DragFrom(rightTarget, middle - rightTarget);
         tester.PumpAndSettle();
         Near(0.5, values.Start, 0.03);
@@ -1234,14 +1234,14 @@ public sealed class RangeSliderDartParityTestsA : IDisposable
 
         RenderObject valueIndicatorBox = OverlayBox(tester);
 
-        (Point topLeft, Point bottomRight) = TrackBounds(tester);
-        Point middle = topLeft + (bottomRight / 2);
+        (Offset topLeft, Offset bottomRight) = TrackBounds(tester);
+        Offset middle = topLeft + (bottomRight / 2);
 
         // Drag the thumbs towards the center.
-        Point leftTarget = topLeft + ((bottomRight - topLeft) * 0.3);
+        Offset leftTarget = topLeft + ((bottomRight - topLeft) * 0.3);
         tester.DragFrom(leftTarget, middle - leftTarget);
         tester.PumpAndSettle();
-        Point rightTarget = topLeft + ((bottomRight - topLeft) * 0.7);
+        Offset rightTarget = topLeft + ((bottomRight - topLeft) * 0.7);
         tester.DragFrom(rightTarget, middle - rightTarget);
         tester.PumpAndSettle();
         Near(0.5, values.Start, 0.03);
@@ -1345,22 +1345,22 @@ public sealed class RangeSliderDartParityTestsA : IDisposable
         tester.ElementOfType<Overlay>().FindRenderObject()!;
 
     // `tester.getTopRight`.
-    private static Point TopRight(FrameworkDartTester tester, Element element)
+    private static Offset TopRight(FrameworkDartTester tester, Element element)
     {
         var box = (RenderBox)element.FindRenderObject()!;
-        return box.LocalToGlobal(new Point(box.Size.Width, 0));
+        return box.LocalToGlobal(new Offset(box.Size.Width, 0));
     }
 
     // The track bounds: the slider edges translated inwards by the overlay radius.
-    private static (Point TopLeft, Point BottomRight) TrackBounds(FrameworkDartTester tester)
+    private static (Offset TopLeft, Offset BottomRight) TrackBounds(FrameworkDartTester tester)
     {
-        Point topLeft = tester.GetTopLeft(Slider(tester)) + new Vector(24, 0);
-        Point bottomRight = tester.GetBottomRight(Slider(tester)) + new Vector(-24, 0);
+        Offset topLeft = tester.GetTopLeft(Slider(tester)) + new Offset(24, 0);
+        Offset bottomRight = tester.GetBottomRight(Slider(tester)) + new Offset(-24, 0);
         return (topLeft, bottomRight);
     }
 
     // `tester.tapAt(location)`.
-    private static void TapAt(FrameworkDartTester tester, Point location)
+    private static void TapAt(FrameworkDartTester tester, Offset location)
     {
         TestGesture gesture = tester.StartGesture(location, PointerDeviceKind.Touch);
         gesture.Up();

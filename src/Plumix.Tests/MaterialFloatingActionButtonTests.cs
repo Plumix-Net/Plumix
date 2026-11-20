@@ -702,7 +702,7 @@ public sealed class MaterialFloatingActionButtonTests
             new PointerHoverEvent(
                 pointer: 700,
                 kind: PointerDeviceKind.Mouse,
-                position: new Point(28, 28),
+                position: new Offset(28, 28),
                 buttons: PointerButtons.None,
                 timestampUtc: DateTime.UtcNow));
         // Dart's `Material` animates elevation over `animationDuration`, so the shadow only reaches
@@ -718,7 +718,7 @@ public sealed class MaterialFloatingActionButtonTests
             new PointerDownEvent(
                 700,
                 PointerDeviceKind.Mouse,
-                new Point(28, 28),
+                new Offset(28, 28),
                 PointerButtons.Primary,
                 DateTime.UtcNow));
         harness.Settle(size, TimeSpan.FromSeconds(3));

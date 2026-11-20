@@ -525,7 +525,7 @@ public sealed class MaterialCheckboxListTileTests
             string glyph = char.ConvertFromUtf32(Icons.InfoOutline.CodePoint);
             RenderParagraph icon = Assert.IsType<RenderParagraph>(
                 ListTileControlHarness.FindText(harness.RenderView, glyph));
-            return ListTileControlHarness.GlobalOffsetOf(icon).Y;
+            return ListTileControlHarness.GlobalOffsetOf(icon).Dy;
         }
     }
 

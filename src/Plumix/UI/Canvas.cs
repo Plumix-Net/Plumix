@@ -124,11 +124,11 @@ internal readonly record struct CanvasCall(
     RRect? RRect = null,
     IBrush? Brush = null,
     IPen? Pen = null,
-    Point? Offset = null,
+    Offset? Offset = null,
     Path? Path = null,
-    Point? Center = null,
+    Offset? Center = null,
     double? Radius = null,
-    Point? EndOffset = null,
+    Offset? EndOffset = null,
     Color? ShadowColor = null,
     double? Elevation = null,
     double? Dx = null,
@@ -277,7 +277,7 @@ public sealed class Picture
         Task.FromResult(ToImageSync(width, height));
 
     /// <summary>Replays the recorded operations, translated by <paramref name="offset"/>.</summary>
-    public void Playback(DrawingContext context, Point offset)
+    public void Playback(DrawingContext context, Offset offset)
     {
         Playback(context, offset, PaintRasterizer.RasterScale);
     }
@@ -286,7 +286,7 @@ public sealed class Picture
     /// Replays the recorded operations, translated by <paramref name="offset"/>, rasterizing any layer that
     /// needs it at <paramref name="deviceScale"/> device pixels per picture unit.
     /// </summary>
-    internal void Playback(DrawingContext context, Point offset, double deviceScale)
+    internal void Playback(DrawingContext context, Offset offset, double deviceScale)
     {
         ArgumentNullException.ThrowIfNull(context);
         if (_commands.Count == 0)
@@ -297,9 +297,9 @@ public sealed class Picture
         DrawingContext.PushedState? translation = null;
         try
         {
-            if (offset.X != 0.0 || offset.Y != 0.0)
+            if (offset.Dx != 0.0 || offset.Dy != 0.0)
             {
-                translation = context.PushTransform(Matrix.CreateTranslation(offset.X, offset.Y));
+                translation = context.PushTransform(Matrix.CreateTranslation(offset.Dx, offset.Dy));
             }
 
             PlayRange(context, 0, _commands.Count, deviceScale);
@@ -488,7 +488,7 @@ public sealed class PictureRecorder
 public partial class Canvas
 {
     // Dart's Rect.largest: the default cull rect of a recording canvas.
-    internal static readonly Rect LargestRect = new(-1.0e9, -1.0e9, 2.0e9, 2.0e9);
+    internal static readonly Rect LargestRect = DartGeometry.RectFromLTWH(-1.0e9, -1.0e9, 2.0e9, 2.0e9);
 
     private readonly List<CanvasCommand> _commands;
     private readonly List<CanvasCall> _debugCalls;
@@ -764,20 +764,20 @@ public partial class Canvas
     /// Dart clips through <c>Path</c> only; Plumix models a few shapes (notched app bars, decoration
     /// outlines) as backend geometry, which cannot be shifted, so the offset is applied around it.
     /// </remarks>
-    public virtual void ClipGeometry(Geometry geometry, bool doAntiAlias = true, Point geometryOffset = default)
+    public virtual void ClipGeometry(Geometry geometry, bool doAntiAlias = true, Offset geometryOffset = default)
     {
         ArgumentNullException.ThrowIfNull(geometry);
         Rect geometryBounds = geometry.Bounds;
         IntersectClipBounds(
-            new Rect(geometryBounds.Position + geometryOffset, geometryBounds.Size),
+            DartGeometry.RectFromOffsetAndSize(geometryBounds.TopLeft + geometryOffset, geometryBounds.Size),
             doAntiAlias);
-        if (geometryOffset.X != 0.0 || geometryOffset.Y != 0.0)
+        if (geometryOffset.Dx != 0.0 || geometryOffset.Dy != 0.0)
         {
             _commands.Add(CanvasCommand.ForPush(context =>
-                context.PushTransform(Matrix.CreateTranslation(geometryOffset.X, geometryOffset.Y))));
+                context.PushTransform(Matrix.CreateTranslation(geometryOffset.Dx, geometryOffset.Dy))));
             _commands.Add(CanvasCommand.ForPush(context => context.PushGeometryClip(geometry)));
             _commands.Add(CanvasCommand.ForPush(context =>
-                context.PushTransform(Matrix.CreateTranslation(-geometryOffset.X, -geometryOffset.Y))));
+                context.PushTransform(Matrix.CreateTranslation(-geometryOffset.Dx, -geometryOffset.Dy))));
             return;
         }
 
@@ -793,7 +793,7 @@ public partial class Canvas
         {
             double left = Math.Floor(bounds.Left);
             double top = Math.Floor(bounds.Top);
-            bounds = new Rect(left, top, Math.Ceiling(bounds.Right) - left, Math.Ceiling(bounds.Bottom) - top);
+            bounds = DartGeometry.RectFromLTWH(left, top, Math.Ceiling(bounds.Right) - left, Math.Ceiling(bounds.Bottom) - top);
         }
 
         Rect intersection = _destinationClipBounds.Intersect(bounds);
@@ -808,7 +808,7 @@ public partial class Canvas
     /// Dart's <c>Canvas.drawParagraph</c>. The paragraph's current layout is captured when the call is
     /// recorded, so a later relayout of the same paragraph does not change the recorded picture.
     /// </remarks>
-    public virtual void DrawParagraph(Paragraph paragraph, Point offset)
+    public virtual void DrawParagraph(Paragraph paragraph, Offset offset)
     {
         ArgumentNullException.ThrowIfNull(paragraph);
         DebugRecordCall(new CanvasCall("drawParagraph", Offset: offset));

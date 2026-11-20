@@ -24,8 +24,8 @@ public sealed class TextSelectionToolbar : StatelessWidget
     public const double ToolbarContentDistanceBelow = HandleSize - 2.0;
 
     public TextSelectionToolbar(
-        Point anchorAbove,
-        Point anchorBelow,
+        Offset anchorAbove,
+        Offset anchorBelow,
         IReadOnlyList<Widget> children,
         ToolbarBuilder? toolbarBuilder = null,
         Key? key = null) : base(key)
@@ -42,9 +42,9 @@ public sealed class TextSelectionToolbar : StatelessWidget
         ToolbarBuilder = toolbarBuilder ?? DefaultToolbarBuilder;
     }
 
-    public Point AnchorAbove { get; }
+    public Offset AnchorAbove { get; }
 
-    public Point AnchorBelow { get; }
+    public Offset AnchorBelow { get; }
 
     public IReadOnlyList<Widget> Children { get; }
 
@@ -52,12 +52,12 @@ public sealed class TextSelectionToolbar : StatelessWidget
 
     public override Widget Build(BuildContext context)
     {
-        var anchorAbovePadded = AnchorAbove - new Vector(0.0, ToolbarContentDistance);
-        var anchorBelowPadded = AnchorBelow + new Vector(0.0, ToolbarContentDistanceBelow);
+        var anchorAbovePadded = AnchorAbove - new Offset(0.0, ToolbarContentDistance);
+        var anchorBelowPadded = AnchorBelow + new Offset(0.0, ToolbarContentDistanceBelow);
         double paddingAbove = MediaQuery.PaddingOf(context).Top + ToolbarScreenPadding;
-        double availableHeight = anchorAbovePadded.Y - ToolbarContentDistance - paddingAbove;
+        double availableHeight = anchorAbovePadded.Dy - ToolbarContentDistance - paddingAbove;
         bool fitsAbove = ToolbarHeight <= availableHeight;
-        var localAdjustment = new Vector(ToolbarScreenPadding, paddingAbove);
+        var localAdjustment = new Offset(ToolbarScreenPadding, paddingAbove);
 
         return new Padding(
             EdgeInsets.FromLTRB(ToolbarScreenPadding, paddingAbove, ToolbarScreenPadding, ToolbarScreenPadding),
@@ -382,13 +382,13 @@ internal sealed class RenderTextSelectionToolbarTrailingEdgeAlign : RenderProxyB
 
         // Set the offset in the parent data such that the child will be aligned to the trailing
         // edge, depending on the text direction.
-        ((ToolbarItemsParentData)Child.parentData!).offset = new Point(
+        ((ToolbarItemsParentData)Child.parentData!).offset = new Offset(
             TextDirection == TextDirection.Rtl ? 0.0 : Size.Width - Child.Size.Width,
             0.0);
     }
 
     // Paint at the offset set in the parent data.
-    public override void Paint(PaintingContext context, Point offset)
+    public override void Paint(PaintingContext context, Offset offset)
     {
         ArgumentNullException.ThrowIfNull(context);
         RenderBox child = Child!;
@@ -397,7 +397,7 @@ internal sealed class RenderTextSelectionToolbarTrailingEdgeAlign : RenderProxyB
     }
 
     // Include the parent data offset in the hit test.
-    protected override bool HitTestChildren(BoxHitTestResult result, Point position)
+    protected override bool HitTestChildren(BoxHitTestResult result, Offset position)
     {
         RenderBox child = Child!;
         var childParentData = (ToolbarItemsParentData)child.parentData!;
@@ -412,8 +412,8 @@ internal sealed class RenderTextSelectionToolbarTrailingEdgeAlign : RenderProxyB
     {
         ArgumentNullException.ThrowIfNull(child);
         ArgumentNullException.ThrowIfNull(transform);
-        Point childOffset = ((ToolbarItemsParentData)child.parentData!).offset;
-        transform.TranslateByDouble(childOffset.X, childOffset.Y, 0, 1);
+        Offset childOffset = ((ToolbarItemsParentData)child.parentData!).offset;
+        transform.TranslateByDouble(childOffset.Dx, childOffset.Dy, 0, 1);
     }
 }
 
@@ -639,7 +639,7 @@ internal sealed class RenderTextSelectionToolbarItemsLayout : RenderBox,
             foreach (RenderBox item in contentItems)
             {
                 rightEdge -= item.Size.Width;
-                ((ToolbarItemsParentData)item.parentData!).offset = new Point(rightEdge, 0.0);
+                ((ToolbarItemsParentData)item.parentData!).offset = new Offset(rightEdge, 0.0);
             }
         }
         else
@@ -647,13 +647,13 @@ internal sealed class RenderTextSelectionToolbarItemsLayout : RenderBox,
             double currentX = 0.0;
             foreach (RenderBox item in contentItems)
             {
-                ((ToolbarItemsParentData)item.parentData!).offset = new Point(currentX, 0.0);
+                ((ToolbarItemsParentData)item.parentData!).offset = new Offset(currentX, 0.0);
                 currentX += item.Size.Width;
             }
 
             if (showNavigationButton)
             {
-                ((ToolbarItemsParentData)navigationButton.parentData!).offset = new Point(currentX, 0.0);
+                ((ToolbarItemsParentData)navigationButton.parentData!).offset = new Offset(currentX, 0.0);
             }
         }
 
@@ -690,14 +690,14 @@ internal sealed class RenderTextSelectionToolbarItemsLayout : RenderBox,
                 continue;
             }
 
-            parentData.offset = new Point(0.0, currentY);
+            parentData.offset = new Offset(0.0, currentY);
             currentY += child.Size.Height;
             maxWidth = Math.Max(maxWidth, child.Size.Width);
         }
 
         if (IsAbove && navigationParentData.ShouldPaint)
         {
-            navigationParentData.offset = new Point(0.0, currentY);
+            navigationParentData.offset = new Offset(0.0, currentY);
             currentY += navigationButton.Size.Height;
             maxWidth = Math.Max(maxWidth, navigationButton.Size.Width);
         }
@@ -726,7 +726,7 @@ internal sealed class RenderTextSelectionToolbarItemsLayout : RenderBox,
         }
     }
 
-    public override void Paint(PaintingContext context, Point offset)
+    public override void Paint(PaintingContext context, Offset offset)
     {
         for (RenderBox? child = FirstChild; child is not null; child = ChildAfter(child))
         {
@@ -738,7 +738,7 @@ internal sealed class RenderTextSelectionToolbarItemsLayout : RenderBox,
         }
     }
 
-    protected override bool HitTestChildren(BoxHitTestResult result, Point position)
+    protected override bool HitTestChildren(BoxHitTestResult result, Offset position)
     {
         for (RenderBox? child = LastChild; child is not null; child = ChildBefore(child))
         {
@@ -788,9 +788,9 @@ internal sealed class RenderTextSelectionToolbarItemsLayout : RenderBox,
 
     public void Remove(RenderBox child) => _container.Remove(child);
 
-    public void DefaultPaint(PaintingContext context, Point offset) => _container.DefaultPaint(context, offset);
+    public void DefaultPaint(PaintingContext context, Offset offset) => _container.DefaultPaint(context, offset);
 
-    public bool DefaultHitTestChildren(BoxHitTestResult result, Point position) =>
+    public bool DefaultHitTestChildren(BoxHitTestResult result, Offset position) =>
         _container.DefaultHitTestChildren(result, position);
 
     void IRenderObjectContainer.Insert(RenderObject child, RenderObject? after) =>

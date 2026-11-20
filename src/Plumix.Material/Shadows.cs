@@ -98,11 +98,11 @@ public static class MaterialShadows
         Table.TryGetValue(elevation, out IReadOnlyList<BoxShadow>? shadows) ? shadows : null;
 
     private static BoxShadow Umbra(double dy, double blurRadius, double spreadRadius) =>
-        new(KeyUmbraOpacity, new Point(0.0, dy), blurRadius, spreadRadius);
+        new(KeyUmbraOpacity, new Offset(0.0, dy), blurRadius, spreadRadius);
 
     private static BoxShadow Penumbra(double dy, double blurRadius, double spreadRadius) =>
-        new(KeyPenumbraOpacity, new Point(0.0, dy), blurRadius, spreadRadius);
+        new(KeyPenumbraOpacity, new Offset(0.0, dy), blurRadius, spreadRadius);
 
     private static BoxShadow Ambient(double dy, double blurRadius, double spreadRadius) =>
-        new(AmbientShadowOpacity, new Point(0.0, dy), blurRadius, spreadRadius);
+        new(AmbientShadowOpacity, new Offset(0.0, dy), blurRadius, spreadRadius);
 }

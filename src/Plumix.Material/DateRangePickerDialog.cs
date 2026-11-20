@@ -48,7 +48,7 @@ public static partial class MaterialDatePickers
         RouteSettings? routeSettings = null,
         TextDirection? textDirection = null,
         TransitionBuilder? builder = null,
-        Point? anchorPoint = null,
+        Offset? anchorPoint = null,
         TextInputType? keyboardType = null,
         Icon? switchToInputEntryModeIcon = null,
         Icon? switchToCalendarEntryModeIcon = null,
@@ -1881,14 +1881,14 @@ internal sealed class HighlightPainter : CustomPainter
         {
             case HighlightPainterStyle.HighlightLeading when rtl:
             case HighlightPainterStyle.HighlightTrailing when !rtl:
-                context.Canvas.DrawRect(new Rect(size.Width / 2, 0, size.Width / 2, size.Height), paint);
+                context.Canvas.DrawRect(DartGeometry.RectFromLTWH(size.Width / 2, 0, size.Width / 2, size.Height), paint);
                 break;
             case HighlightPainterStyle.HighlightLeading:
             case HighlightPainterStyle.HighlightTrailing:
-                context.Canvas.DrawRect(new Rect(0, 0, size.Width / 2, size.Height), paint);
+                context.Canvas.DrawRect(DartGeometry.RectFromLTWH(0, 0, size.Width / 2, size.Height), paint);
                 break;
             case HighlightPainterStyle.HighlightAll:
-                context.Canvas.DrawRect(new Rect(0, 0, size.Width, size.Height), paint);
+                context.Canvas.DrawRect(DartGeometry.RectFromLTWH(0, 0, size.Width, size.Height), paint);
                 break;
             case HighlightPainterStyle.None:
                 break;

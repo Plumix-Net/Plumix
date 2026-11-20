@@ -23,7 +23,7 @@ public sealed class BannerPainter : CustomPainter
     public const double Offset = 40.0;
     public const double Height = 12.0;
     public static double BottomOffset => Offset + (Math.Sqrt(0.5) * Height);
-    public static Rect BannerRect { get; } = new(-Offset, Offset - Height, Offset * 2.0, Height);
+    public static Rect BannerRect { get; } = DartGeometry.RectFromLTWH(-Offset, Offset - Height, Offset * 2.0, Height);
     public static Color DefaultColor { get; } = Color.FromARGB(0xA0, 0xB7, 0x1C, 0x1C);
     public static TextStyle DefaultTextStyle { get; } = new(
         FontSize: Height * 0.85,
@@ -119,7 +119,7 @@ public sealed class BannerPainter : CustomPainter
         _textPainter!.Layout(minWidth: width, maxWidth: width);
         _textPainter.Paint(
             canvas,
-            BannerRect.TopLeft + new Vector(0.0, (BannerRect.Height - _textPainter.Height) / 2.0));
+            BannerRect.TopLeft + new Offset(0.0, (BannerRect.Height - _textPainter.Height) / 2.0));
     }
 
     public bool ShouldRepaint(BannerPainter oldDelegate)
@@ -133,7 +133,7 @@ public sealed class BannerPainter : CustomPainter
     public override bool ShouldRepaint(CustomPainter oldDelegate) =>
         oldDelegate is not BannerPainter bannerPainter || ShouldRepaint(bannerPainter);
 
-    public override bool? HitTest(Point position) => false;
+    public override bool? HitTest(Offset position) => false;
 
     public override void Dispose()
     {
