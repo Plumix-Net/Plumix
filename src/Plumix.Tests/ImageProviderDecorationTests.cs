@@ -58,14 +58,14 @@ public sealed class ImageProviderDecorationTests : IDisposable
         var firstListener = new ImageStreamListener((info, synchronous) =>
         {
             Assert.False(synchronous);
-            Assert.Same(image, info.Image);
+            Assert.Same(image, info.Image.Native);
             info.Dispose();
             firstCall.TrySetResult(true);
         });
         stream.AddListener(firstListener);
         stream.SetCompleter(new OneFrameImageStreamCompleter(completion.Task));
 
-        completion.SetResult(new ImageInfo(image, scale: 2, debugLabel: "queued"));
+        completion.SetResult(new ImageInfo(new RasterImage(image), scale: 2, debugLabel: "queued"));
         await EventLoopPump.WaitFor(firstCall.Task);
 
         bool synchronousCall = false;
@@ -86,7 +86,7 @@ public sealed class ImageProviderDecorationTests : IDisposable
     [Fact]
     public async Task ImageProvider_UsesGlobalCacheAndEvictionReloadsKey()
     {
-        var provider = new TestImageProvider("same", () => Task.FromResult(new ImageInfo(new FakeImage(new Size(10, 10)))));
+        var provider = new TestImageProvider("same", () => Task.FromResult(new ImageInfo(new RasterImage(new FakeImage(new Size(10, 10))))));
 
         var first = provider.Resolve(ImageConfiguration.Empty);
         var second = provider.Resolve(ImageConfiguration.Empty);
@@ -171,7 +171,7 @@ public sealed class ImageProviderDecorationTests : IDisposable
 
         Assert.Equal(new ImageCacheStatus(Pending: true, KeepAlive: false, Live: true), cache.StatusForKey("image"));
 
-        completion.SetResult(new ImageInfo(new FakeImage(new Size(2, 3))));
+        completion.SetResult(new ImageInfo(new RasterImage(new FakeImage(new Size(2, 3)))));
         var completedStatus = new ImageCacheStatus(Pending: false, KeepAlive: true, Live: false);
         Assert.True(EventLoopPump.SpinUntil(() => cache.StatusForKey("image") == completedStatus));
         Assert.Equal(completedStatus, cache.StatusForKey("image"));
@@ -207,7 +207,7 @@ public sealed class ImageProviderDecorationTests : IDisposable
     [Fact]
     public async Task ResizeImage_ValidatesDimensionsAndKeysUnderlyingProvider()
     {
-        var provider = new TestImageProvider("source", () => Task.FromResult(new ImageInfo(new FakeImage(new Size(10, 10)))));
+        var provider = new TestImageProvider("source", () => Task.FromResult(new ImageInfo(new RasterImage(new FakeImage(new Size(10, 10))))));
         Assert.Same(provider, ResizeImage.ResizeIfNeeded(null, null, provider));
         Assert.Throws<ArgumentException>(() => new ResizeImage(provider));
         Assert.Throws<ArgumentOutOfRangeException>(() => new ResizeImage(provider, width: 0));
@@ -269,7 +269,7 @@ public sealed class ImageProviderDecorationTests : IDisposable
         painter.Paint(canvas, Rect.FromLTWH(0, 0, 40, 20), null, new ImageConfiguration(TextDirection: TextDirection.Rtl));
         Assert.Empty(canvas.DebugCalls);
 
-        completion.SetResult(new ImageInfo(image));
+        completion.SetResult(new ImageInfo(new RasterImage(image)));
         await EventLoopPump.WaitFor(repaint.Task);
         painter.Paint(canvas, Rect.FromLTWH(0, 0, 40, 20), null, new ImageConfiguration(TextDirection: TextDirection.Rtl));
 
@@ -280,8 +280,8 @@ public sealed class ImageProviderDecorationTests : IDisposable
     [Fact]
     public void BoxDecoration_ImageUpdateDisposesOldPainterListener()
     {
-        var first = new TestImageProvider("first", () => Task.FromResult(new ImageInfo(new FakeImage(new Size(10, 10)))));
-        var second = new TestImageProvider("second", () => Task.FromResult(new ImageInfo(new FakeImage(new Size(10, 10)))));
+        var first = new TestImageProvider("first", () => Task.FromResult(new ImageInfo(new RasterImage(new FakeImage(new Size(10, 10))))));
+        var second = new TestImageProvider("second", () => Task.FromResult(new ImageInfo(new RasterImage(new FakeImage(new Size(10, 10))))));
         var render = new RenderDecoratedBox(
             new BoxDecoration(Image: new DecorationImage(first)),
             configuration: new ImageConfiguration(TextDirection: TextDirection.Ltr));
@@ -296,7 +296,7 @@ public sealed class ImageProviderDecorationTests : IDisposable
 
     private static OneFrameImageStreamCompleter CompletedCompleter(FakeImage image)
     {
-        return new OneFrameImageStreamCompleter(Task.FromResult(new ImageInfo(image)));
+        return new OneFrameImageStreamCompleter(Task.FromResult(new ImageInfo(new RasterImage(image))));
     }
 
     private sealed class FakeImage : IImage, IDisposable

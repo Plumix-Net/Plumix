@@ -101,7 +101,7 @@ public sealed class SampleScreenCaptureTests : IDisposable
                         $"{origin.Dx:0.0000} {origin.Dy:0.0000} {box.Size.Width:0.0000} {box.Size.Height:0.0000}");
                 }));
             using Bitmap image = Assert.IsAssignableFrom<OffsetLayer>(tester.RenderView.Layer)
-                .ToImageSync(Rect.FromLTWH(0, 0, 800, 600));
+                .ToImageSync(Rect.FromLTWH(0, 0, 800, 600)).NativeBitmap;
             image.Save(System.IO.Path.Combine(OutputDir!, name + ".png"));
             tester.PumpWidget(new SizedBox());
             tester.Pump(TimeSpan.FromMinutes(1));

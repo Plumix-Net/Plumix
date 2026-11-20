@@ -23,7 +23,7 @@ public sealed class SceneBuilderTests
         builder.AddPicture(new Offset(5, 5), picture);
         Scene scene = builder.Build();
 
-        Bitmap image = scene.ToImageSync(6, 8);
+        Bitmap image = scene.ToImageSync(6, 8).NativeBitmap;
         picture.Dispose();
         scene.Dispose();
 
@@ -41,7 +41,7 @@ public sealed class SceneBuilderTests
         builder.AddTexture(0, width: 10, height: 10);
         Scene scene = builder.Build();
 
-        Bitmap image = scene.ToImageSync(20, 20);
+        Bitmap image = scene.ToImageSync(20, 20).NativeBitmap;
         scene.Dispose();
 
         Assert.Equal(new PixelSize(20, 20), image.PixelSize);
@@ -72,7 +72,7 @@ public sealed class SceneBuilderTests
         builder.AddPicture(default, DrawPaintPicture(0xFF00FF00));
         using Scene scene = builder.Build();
 
-        Bitmap image = await scene.ToImage(3, 2);
+        Bitmap image = (await scene.ToImage(3, 2)).NativeBitmap;
 
         Assert.Equal(new PixelSize(3, 2), image.PixelSize);
         Assert.Equal(((byte)0, (byte)0xFF, (byte)0, (byte)0xFF), RasterBackend.PixelAt(image, 2, 1));
@@ -467,7 +467,7 @@ public sealed class SceneBuilderTests
         parent.BuildScene(new SceneBuilder()).Dispose();
 
         // Causes grandChild to pass its engine layer as `oldLayer`.
-        Bitmap image = await grandChild.ToImage(Rect.FromLTWH(0, 0, 10, 10));
+        Bitmap image = (await grandChild.ToImage(Rect.FromLTWH(0, 0, 10, 10))).NativeBitmap;
         Assert.Equal(new PixelSize(10, 10), image.PixelSize);
 
         // Ensure we can render the same scene again after rendering an interior layer.
@@ -485,7 +485,7 @@ public sealed class SceneBuilderTests
         parent.Append(child);
 
         parent.BuildScene(new SceneBuilder()).Dispose();
-        Bitmap image = grandChild.ToImageSync(Rect.FromLTWH(0, 0, 10, 10));
+        Bitmap image = grandChild.ToImageSync(Rect.FromLTWH(0, 0, 10, 10)).NativeBitmap;
         Assert.Equal(new PixelSize(10, 10), image.PixelSize);
         parent.BuildScene(new SceneBuilder()).Dispose();
     }
@@ -497,7 +497,7 @@ public sealed class SceneBuilderTests
         var picture = new PictureLayer(Rect.FromLTWH(0, 0, 20, 20)) { Picture = DrawRectPicture(Rect.FromLTWH(5, 5, 5, 5)) };
         layer.Append(picture);
 
-        Bitmap image = layer.ToImageSync(Rect.FromLTWH(5, 5, 10, 10), pixelRatio: 2.0);
+        Bitmap image = layer.ToImageSync(Rect.FromLTWH(5, 5, 10, 10), pixelRatio: 2.0).NativeBitmap;
 
         Assert.Equal(new PixelSize(20, 20), image.PixelSize);
         // The rect starts at the bounds' origin: the top-left image pixels are covered...

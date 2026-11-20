@@ -1,4 +1,5 @@
 using Plumix.Foundation;
+using Plumix.UI;
 
 // Dart parity source: flutter/packages/flutter/lib/src/rendering/proxy_box.dart
 
@@ -22,7 +23,7 @@ public class RenderRepaintBoundary : RenderProxyBox
     /// system of this object, with <paramref name="pixelRatio"/> image pixels per logical pixel; this
     /// object must have painted (it may not need paint) and be composited into its own layer.
     /// </remarks>
-    public Task<Avalonia.Media.Imaging.Bitmap> ToImage(double pixelRatio = 1.0)
+    public Task<RasterImage> ToImage(double pixelRatio = 1.0)
     {
         if (Constants.KDebugMode && DebugNeedsPaint)
         {
@@ -35,7 +36,7 @@ public class RenderRepaintBoundary : RenderProxyBox
 
     /// <summary>Capture an image of the current state of this render object and its children, synchronously.</summary>
     /// <remarks>Flutter's <c>RenderRepaintBoundary.toImageSync</c>; see <see cref="ToImage"/>.</remarks>
-    public Avalonia.Media.Imaging.Bitmap ToImageSync(double pixelRatio = 1.0)
+    public RasterImage ToImageSync(double pixelRatio = 1.0)
     {
         if (Constants.KDebugMode && DebugNeedsPaint)
         {

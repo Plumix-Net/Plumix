@@ -69,7 +69,7 @@ public sealed class DecorationImageDartParityTests : IDisposable
         List<CanvasCall> calls = Record(canvas => ImagePainting.PaintImage(
             canvas: canvas,
             rect: Rect.FromLTWH(50.0, 75.0, 200.0, 100.0),
-            image: image,
+            image: new RasterImage(image),
             fit: BoxFit.Cover,
             alignment: Alignment.CenterLeft));
 
@@ -95,7 +95,7 @@ public sealed class DecorationImageDartParityTests : IDisposable
             calls = Record(canvas => ImagePainting.PaintImage(
                 canvas: canvas,
                 rect: rect,
-                image: new TestImage(300, 300),
+                image: new RasterImage(new TestImage(300, 300)),
                 debugImageLabel: "TestImage",
                 fit: BoxFit.Fill));
         }
@@ -137,7 +137,7 @@ public sealed class DecorationImageDartParityTests : IDisposable
             Record(canvas => ImagePainting.PaintImage(
                 canvas: canvas,
                 rect: Rect.FromLTWH(50.0, 50.0, 290.0, 290.0),
-                image: new TestImage(300, 300),
+                image: new RasterImage(new TestImage(300, 300)),
                 debugImageLabel: "TestImage",
                 fit: BoxFit.Fill));
         }
@@ -155,7 +155,7 @@ public sealed class DecorationImageDartParityTests : IDisposable
         List<CanvasCall> calls = Record(canvas => ImagePainting.PaintImage(
             canvas: canvas,
             rect: LTRB(10, 20, 430, 420),
-            image: new TestImage(300, 300),
+            image: new RasterImage(new TestImage(300, 300)),
             scale: 2.0,
             centerSlice: LTRB(50, 40, 250, 260)));
 
@@ -175,7 +175,7 @@ public sealed class DecorationImageDartParityTests : IDisposable
         var image = new TestImage(300, 300);
         var rect = Rect.FromLTWH(50.0, 75.0, 200.0, 100.0);
 
-        Record(canvas => ImagePainting.PaintImage(canvas: canvas, rect: rect, image: image, debugImageLabel: "test.png"));
+        Record(canvas => ImagePainting.PaintImage(canvas: canvas, rect: rect, image: new RasterImage(image), debugImageLabel: "test.png"));
 
         ImageSizeInfo info = Assert.Single(imageSizeInfos);
         Assert.Equal("test.png", info.Source);
@@ -186,7 +186,7 @@ public sealed class DecorationImageDartParityTests : IDisposable
         SchedulerBinding.Instance.ScheduleForcedFrame();
         tester.Pump();
 
-        Record(canvas => ImagePainting.PaintImage(canvas: canvas, rect: rect, image: image, debugImageLabel: "test.png"));
+        Record(canvas => ImagePainting.PaintImage(canvas: canvas, rect: rect, image: new RasterImage(image), debugImageLabel: "test.png"));
         Assert.Single(imageSizeInfos);
     }
 
@@ -203,7 +203,7 @@ public sealed class DecorationImageDartParityTests : IDisposable
         Record(canvas => ImagePainting.PaintImage(
             canvas: canvas,
             rect: Rect.FromLTWH(50.0, 75.0, 200.0, 100.0),
-            image: image,
+            image: new RasterImage(image),
             debugImageLabel: "test.png"));
         Assert.Single(imageSizeInfos);
 
@@ -214,7 +214,7 @@ public sealed class DecorationImageDartParityTests : IDisposable
         Record(canvas => ImagePainting.PaintImage(
             canvas: canvas,
             rect: Rect.FromLTWH(50.0, 75.0, 200.0, 150.0),
-            image: image,
+            image: new RasterImage(image),
             debugImageLabel: "test.png"));
 
         Assert.Equal(2, imageSizeInfos.Count);
@@ -235,7 +235,7 @@ public sealed class DecorationImageDartParityTests : IDisposable
         Record(canvas => ImagePainting.PaintImage(
             canvas: canvas,
             rect: Rect.FromLTWH(50.0, 75.0, 200.0, 100.0),
-            image: new TestImage(300, 200)));
+            image: new RasterImage(new TestImage(300, 200))));
 
         ImageSizeInfo info = Assert.Single(imageSizeInfos);
         Assert.Equal("<Unknown Image(300×200)>", info.Source);
@@ -272,7 +272,7 @@ public sealed class DecorationImageDartParityTests : IDisposable
         var configuration = new ImageConfiguration(Size: new Size(100, 100));
 
         boxPainter.Paint(new TestRecordingPaintingContext(), default, configuration);
-        var info1 = new ImageInfo(image1);
+        var info1 = new ImageInfo(new RasterImage(image1));
         completer.SetImageForTest(info1.Clone());
         Assert.True(onChangedCalled);
 
@@ -280,7 +280,7 @@ public sealed class DecorationImageDartParityTests : IDisposable
         completer.SetImageForTest(info1.Clone());
         Assert.False(onChangedCalled);
 
-        completer.SetImageForTest(new ImageInfo(image2));
+        completer.SetImageForTest(new ImageInfo(new RasterImage(image2)));
         Assert.True(onChangedCalled);
     }
 
@@ -426,7 +426,7 @@ public sealed class DecorationImageDartParityTests : IDisposable
                 List<CanvasCall> calls = Record(canvas => ImagePainting.PaintImage(
                     canvas: canvas,
                     rect: outputRect,
-                    image: image,
+                    image: new RasterImage(image),
                     scale: scale,
                     alignment: Alignment.BottomRight,
                     fit: fit));
@@ -448,7 +448,7 @@ public sealed class DecorationImageDartParityTests : IDisposable
         List<CanvasCall> calls = Record(canvas => ImagePainting.PaintImage(
             canvas: canvas,
             rect: outputRect,
-            image: new TestImage(100, 100),
+            image: new RasterImage(new TestImage(100, 100)),
             scale: 2.0,
             alignment: Alignment.BottomRight,
             fit: BoxFit.ScaleDown));
@@ -472,7 +472,7 @@ public sealed class DecorationImageDartParityTests : IDisposable
             List<CanvasCall> calls = Record(canvas => ImagePainting.PaintImage(
                 canvas: canvas,
                 rect: outputRect,
-                image: new TestImage(100, 100),
+                image: new RasterImage(new TestImage(100, 100)),
                 scale: 3.0,
                 fit: boxFit));
 
@@ -490,7 +490,7 @@ public sealed class DecorationImageDartParityTests : IDisposable
         List<CanvasCall> calls = Record(canvas => ImagePainting.PaintImage(
             canvas: canvas,
             rect: Rect.FromLTWH(30.0, 30.0, 400.0, 200.0),
-            image: new TestImage(100, 100),
+            image: new RasterImage(new TestImage(100, 100)),
             alignment: Alignment.TopLeft,
             repeat: ImageRepeat.RepeatX,
             fit: BoxFit.FitHeight));
@@ -509,7 +509,7 @@ public sealed class DecorationImageDartParityTests : IDisposable
         List<CanvasCall> calls = Record(canvas => ImagePainting.PaintImage(
             canvas: canvas,
             rect: Rect.FromLTWH(30.0, 30.0, 200.0, 400.0),
-            image: new TestImage(100, 100),
+            image: new RasterImage(new TestImage(100, 100)),
             alignment: Alignment.TopLeft,
             repeat: ImageRepeat.RepeatY,
             fit: BoxFit.FitWidth));
@@ -871,7 +871,7 @@ public sealed class DecorationImageDartParityTests : IDisposable
         var recorder = new PictureRecorder();
         var canvas = new Canvas(recorder);
         painter.Paint(canvas, Rect.FromLTWH(0, 0, 20, 20), null, new ImageConfiguration(TextDirection: TextDirection.Ltr));
-        Bitmap bitmap = recorder.EndRecording().ToImageSync(20, 20);
+        Bitmap bitmap = recorder.EndRecording().ToImageSync(20, 20).NativeBitmap;
         painter.Dispose();
         return RasterBackend.PixelAt(bitmap, 10, 10);
     }
@@ -919,7 +919,7 @@ public sealed class DecorationImageDartParityTests : IDisposable
 
         public override ValueTask<string> ObtainKey(ImageConfiguration configuration) => ValueTask.FromResult(_key);
 
-        protected override ImageStreamCompleter LoadImage(string key) => new SynchronousCompleter(new ImageInfo(_image));
+        protected override ImageStreamCompleter LoadImage(string key) => new SynchronousCompleter(new ImageInfo(new RasterImage(_image)));
 
         public override string ToString() => "SynchronousTestImageProvider()";
     }
@@ -930,7 +930,7 @@ public sealed class DecorationImageDartParityTests : IDisposable
 
         public override ValueTask<string> ObtainKey(ImageConfiguration configuration) => ValueTask.FromResult(_key);
 
-        protected override ImageStreamCompleter LoadImage(string key) => new SynchronousCompleter(new ImageInfo(image));
+        protected override ImageStreamCompleter LoadImage(string key) => new SynchronousCompleter(new ImageInfo(new RasterImage(image)));
     }
 
     private sealed class SynchronousErrorTestImageProvider(string message) : ImageProvider<string>

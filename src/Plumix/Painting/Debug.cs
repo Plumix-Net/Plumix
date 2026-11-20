@@ -82,7 +82,7 @@ public sealed class ImageSizeInfo : IEquatable<ImageSizeInfo>
 }
 
 public delegate bool ShaderWarmUpPictureCallback(Picture picture);
-public delegate bool ShaderWarmUpImageCallback(Bitmap image);
+public delegate bool ShaderWarmUpImageCallback(RasterImage image);
 
 /// <summary>The painting library's debug variables (Dart's top-level <c>painting/debug.dart</c>).</summary>
 public static class PaintingDebug

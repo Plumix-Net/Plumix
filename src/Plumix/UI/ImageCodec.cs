@@ -81,7 +81,7 @@ public sealed class TargetImageSize
 public delegate TargetImageSize TargetImageSizeCallback(int intrinsicWidth, int intrinsicHeight);
 
 /// <summary>A decoded frame. The recipient owns and must dispose its image.</summary>
-public sealed record FrameInfo(TimeSpan Duration, Bitmap Image);
+public sealed record FrameInfo(TimeSpan Duration, RasterImage Image);
 
 /// <summary>The platform image decoder contract.</summary>
 public abstract class Codec : IDisposable
@@ -211,7 +211,7 @@ public static class ImageDecoding
         {
             Bitmap source = _image ?? throw new ObjectDisposedException(nameof(Codec));
             Task<FrameInfo> frame = Task.FromResult(new FrameInfo(TimeSpan.Zero,
-                source.CreateScaledBitmap(source.PixelSize, BitmapInterpolationMode.HighQuality)));
+                new RasterImage(source.CreateScaledBitmap(source.PixelSize, BitmapInterpolationMode.HighQuality))));
             // SingleFrameCodec decodes on the first call only; later calls answer from its cached image.
             if (_decoded)
             {
@@ -269,7 +269,15 @@ public static class ImageByteData
     /// which transcodes the bitmap's own pixel and alpha format; channel floats of
     /// <see cref="ImageByteFormat.RawExtendedRgba128"/> are written in host byte order, as the engine's are.
     /// </remarks>
-    public static Task<ByteData?> ToByteData(this Bitmap image, ImageByteFormat format = ImageByteFormat.RawRgba)
+    public static Task<ByteData?> ToByteData(this RasterImage image, ImageByteFormat format = ImageByteFormat.RawRgba)
+    {
+        ArgumentNullException.ThrowIfNull(image);
+        return image.Native is Bitmap bitmap
+            ? ToByteData(bitmap, format)
+            : throw new NotSupportedException("Only bitmap-backed images can be read back.");
+    }
+
+    internal static Task<ByteData?> ToByteData(this Bitmap image, ImageByteFormat format = ImageByteFormat.RawRgba)
     {
         ArgumentNullException.ThrowIfNull(image);
         if (format == ImageByteFormat.Png)

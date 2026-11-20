@@ -241,7 +241,7 @@ public sealed class TableBorderTests
         var builder = new SceneBuilder();
         builder.AddPicture(default, picture);
         using Scene scene = builder.Build();
-        using Bitmap image = scene.ToImageSync(140, 100);
+        using Bitmap image = scene.ToImageSync(140, 100).NativeBitmap;
         Assert.Equal((byte)0, RasterBackend.PixelAt(image, 21, 21).A);
         Assert.Equal((byte)255, RasterBackend.PixelAt(image, 117, 21).A);
         Assert.Equal((byte)255, RasterBackend.PixelAt(image, 122, 45).A);
@@ -266,7 +266,7 @@ public sealed class TableBorderTests
         var builder = new SceneBuilder();
         builder.AddPicture(default, picture);
         using Scene scene = builder.Build();
-        using Bitmap image = scene.ToImageSync(100, 80);
+        using Bitmap image = scene.ToImageSync(100, 80).NativeBitmap;
         Assert.Equal(((byte)255, (byte)0, (byte)0, (byte)255), RasterBackend.PixelAt(image, 30, 25));
         Assert.Equal(((byte)255, (byte)0, (byte)0, (byte)255), RasterBackend.PixelAt(image, 70, 25));
         Assert.Equal(((byte)0, (byte)0, (byte)255, (byte)255), RasterBackend.PixelAt(image, 30, 40));

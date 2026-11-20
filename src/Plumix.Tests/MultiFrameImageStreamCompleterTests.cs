@@ -249,7 +249,7 @@ public sealed class MultiFrameImageStreamCompleterTests : IDisposable
         listener = new ImageStreamListener((image, _) =>
         {
             completer.RemoveListener(listener!);
-            Assert.NotEmpty(RasterBackend.ReadPixels((Bitmap)image.Image));
+            Assert.NotEmpty(RasterBackend.ReadPixels(image.Image.NativeBitmap));
             image.Dispose();
         });
         completer.AddListener(listener);
@@ -430,11 +430,11 @@ public sealed class MultiFrameImageStreamCompleterTests : IDisposable
         ImageStreamCompleterHandle handle;
         try
         {
-            image = new ImageInfo(NewBitmap(), 2, "test");
+            image = new ImageInfo(new RasterImage(NewBitmap()), 2, "test");
             clone = image.Clone();
             Assert.True(image.IsCloneOf(clone));
             image.Dispose();
-            Assert.NotEmpty(RasterBackend.ReadPixels((Bitmap)clone.Image));
+            Assert.NotEmpty(RasterBackend.ReadPixels(clone.Image.NativeBitmap));
             clone.Dispose();
             var completer = new TestCompleter();
             handle = completer.KeepAlive();
@@ -494,7 +494,7 @@ public sealed class MultiFrameImageStreamCompleterTests : IDisposable
         }
 
         public void Complete(int milliseconds) => _pending.Dequeue().SetResult(new FrameInfo(
-            TimeSpan.FromMilliseconds(milliseconds), NewBitmap()));
+            TimeSpan.FromMilliseconds(milliseconds), new RasterImage(NewBitmap())));
         public void Fail(Exception exception) => _pending.Dequeue().SetException(exception);
         public override void Dispose() => Disposed = true;
     }
@@ -503,7 +503,7 @@ public sealed class MultiFrameImageStreamCompleterTests : IDisposable
 
     private sealed class TestCompleter : ImageStreamCompleter
     {
-        public void Emit() => SetImage(new ImageInfo(NewBitmap()));
+        public void Emit() => SetImage(new ImageInfo(new RasterImage(NewBitmap())));
     }
 
     private sealed class ChunkSource : IObservable<ImageChunkEvent>, IDisposable

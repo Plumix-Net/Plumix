@@ -616,7 +616,7 @@ public abstract partial class WidgetInspectorService
                 Debug.Assert(parameters.ContainsKey("width"));
                 Debug.Assert(parameters.ContainsKey("height"));
 
-                Bitmap? image = await Screenshot(
+                RasterImage? image = await Screenshot(
                     ToObject(parameters.GetValueOrDefault("id")),
                     width: ParseDouble(parameters["width"]),
                     height: ParseDouble(parameters["height"]),
@@ -631,7 +631,7 @@ public abstract partial class WidgetInspectorService
                 }
 
                 using var stream = new MemoryStream();
-                image.Save(stream, PngBitmapEncoderOptions.Default);
+                ((Bitmap)image.Native).Save(stream, PngBitmapEncoderOptions.Default);
                 image.Dispose();
 
                 return new Dictionary<string, object?> { ["result"] = Convert.ToBase64String(stream.ToArray()) };
@@ -1543,7 +1543,7 @@ public abstract partial class WidgetInspectorService
     /// <paramref name="maxPixelRatio"/> pixels per logical pixel; <paramref name="margin"/> grows the
     /// captured bounds, and <paramref name="debugPaint"/> adds the target's debug paint.
     /// </remarks>
-    protected internal async Task<Bitmap?> Screenshot(
+    protected internal async Task<RasterImage?> Screenshot(
         object? @object,
         double width,
         double height,

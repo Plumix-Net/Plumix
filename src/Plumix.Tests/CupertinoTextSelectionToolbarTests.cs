@@ -311,7 +311,7 @@ public sealed class CupertinoTextSelectionToolbarTests : IDisposable
         double coverage = 0.0;
         for (int x = (int)(ChildWidth * pixelRatio) - 2; x <= (ChildWidth * pixelRatio) + 2; x++)
         {
-            coverage += RasterBackend.PixelAt(image, x, y).A / 255.0;
+            coverage += RasterBackend.PixelAt(image.NativeBitmap, x, y).A / 255.0;
         }
 
         Assert.InRange(coverage, 0.98, 1.02);

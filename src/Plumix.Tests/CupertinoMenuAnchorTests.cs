@@ -624,7 +624,7 @@ public sealed class CupertinoMenuAnchorTests : IDisposable
         var canvas = new Canvas(recorder);
         canvas.DrawRect(Rect.FromLTWH(0.0, 0.0, 100.0, 100.0), new Paint { Color = new Color(0xFF204060) });
         canvas.DrawParagraph(paragraph, default);
-        using Bitmap image = recorder.EndRecording().ToImageSync(100, 100);
+        using Bitmap image = recorder.EndRecording().ToImageSync(100, 100).NativeBitmap;
 
         var pixel = RasterBackend.PixelAt(image, 7, 10);
         Assert.InRange((int)pixel.R, red - 1, red + 1);

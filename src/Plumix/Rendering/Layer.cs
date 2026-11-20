@@ -1733,7 +1733,7 @@ public class OffsetLayer : ContainerLayer
     /// in this layer's coordinate system, and holds <paramref name="pixelRatio"/> pixels per logical
     /// pixel.
     /// </remarks>
-    public async Task<Avalonia.Media.Imaging.Bitmap> ToImage(Rect bounds, double pixelRatio = 1.0)
+    public async Task<RasterImage> ToImage(Rect bounds, double pixelRatio = 1.0)
     {
         Scene scene = CreateSceneForImage(bounds, pixelRatio);
         try
@@ -1752,7 +1752,7 @@ public class OffsetLayer : ContainerLayer
 
     /// <summary>Capture an image of the current state of this layer and its children, synchronously.</summary>
     /// <remarks>Flutter's <c>OffsetLayer.toImageSync</c>; see <see cref="ToImage"/>.</remarks>
-    public Avalonia.Media.Imaging.Bitmap ToImageSync(Rect bounds, double pixelRatio = 1.0)
+    public RasterImage ToImageSync(Rect bounds, double pixelRatio = 1.0)
     {
         Scene scene = CreateSceneForImage(bounds, pixelRatio);
         try

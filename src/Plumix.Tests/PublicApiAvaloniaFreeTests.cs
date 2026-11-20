@@ -18,8 +18,6 @@ public sealed class PublicApiAvaloniaFreeTests
         {
             ["Application"] = 1,
             ["AutomationPeer"] = 1,
-            ["Bitmap"] = 18,
-            ["BitmapBlendingMode"] = 17,
             ["BoxShadows"] = 1,
             ["Color"] = 2,
             ["Control"] = 1,
@@ -35,7 +33,6 @@ public sealed class PublicApiAvaloniaFreeTests
             ["IDataTemplateHost"] = 3,
             ["IGlobalDataTemplates"] = 1,
             ["IGlobalStyles"] = 1,
-            ["IImage"] = 12,
             ["IInputElement"] = 2,
             ["ILogical"] = 4,
             ["INamed"] = 2,

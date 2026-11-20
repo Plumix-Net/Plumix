@@ -2,6 +2,7 @@ using Avalonia;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Plumix.Foundation;
+using Plumix.UI;
 using Plumix.Rendering;
 
 namespace Plumix.Widgets;
@@ -39,7 +40,7 @@ public sealed class Image : StatefulWidget
         double? height = null,
         Color? color = null,
         IValueListenable<double>? opacity = null,
-        BitmapBlendingMode? colorBlendMode = null,
+        BlendMode? colorBlendMode = null,
         BoxFit? fit = null,
         AlignmentGeometry alignment = default,
         ImageRepeat repeat = ImageRepeat.NoRepeat,
@@ -83,7 +84,7 @@ public sealed class Image : StatefulWidget
     public double? Height { get; }
     public Color? Color { get; }
     public IValueListenable<double>? Opacity { get; }
-    public BitmapBlendingMode? ColorBlendMode { get; }
+    public BlendMode? ColorBlendMode { get; }
     public BoxFit? Fit { get; }
     public AlignmentGeometry Alignment { get; }
     public ImageRepeat Repeat { get; }
@@ -108,7 +109,7 @@ public sealed class Image : StatefulWidget
         double? height = null,
         Color? color = null,
         IValueListenable<double>? opacity = null,
-        BitmapBlendingMode? colorBlendMode = null,
+        BlendMode? colorBlendMode = null,
         BoxFit? fit = null,
         AlignmentGeometry alignment = default,
         ImageRepeat repeat = ImageRepeat.NoRepeat,
@@ -159,7 +160,7 @@ public sealed class Image : StatefulWidget
         double? height = null,
         Color? color = null,
         IValueListenable<double>? opacity = null,
-        BitmapBlendingMode? colorBlendMode = null,
+        BlendMode? colorBlendMode = null,
         BoxFit? fit = null,
         AlignmentGeometry alignment = default,
         ImageRepeat repeat = ImageRepeat.NoRepeat,
@@ -208,7 +209,7 @@ public sealed class Image : StatefulWidget
         double? height = null,
         Color? color = null,
         IValueListenable<double>? opacity = null,
-        BitmapBlendingMode? colorBlendMode = null,
+        BlendMode? colorBlendMode = null,
         BoxFit? fit = null,
         AlignmentGeometry alignment = default,
         ImageRepeat repeat = ImageRepeat.NoRepeat,
@@ -258,7 +259,7 @@ public sealed class Image : StatefulWidget
         double? height = null,
         Color? color = null,
         IValueListenable<double>? opacity = null,
-        BitmapBlendingMode? colorBlendMode = null,
+        BlendMode? colorBlendMode = null,
         BoxFit? fit = null,
         AlignmentGeometry alignment = default,
         ImageRepeat repeat = ImageRepeat.NoRepeat,
@@ -565,14 +566,14 @@ public sealed class Image : StatefulWidget
 public sealed class RawImage : LeafRenderObjectWidget
 {
     public RawImage(
-        IImage? image = null,
+        RasterImage? image = null,
         string? debugImageLabel = null,
         double? width = null,
         double? height = null,
         double scale = 1.0,
         Color? color = null,
         IValueListenable<double>? opacity = null,
-        BitmapBlendingMode? colorBlendMode = null,
+        BlendMode? colorBlendMode = null,
         BoxFit? fit = null,
         AlignmentGeometry alignment = default,
         ImageRepeat repeat = ImageRepeat.NoRepeat,
@@ -601,14 +602,14 @@ public sealed class RawImage : LeafRenderObjectWidget
         IsAntiAlias = isAntiAlias;
     }
 
-    public IImage? Image { get; }
+    public RasterImage? Image { get; }
     public string? DebugImageLabel { get; }
     public double? Width { get; }
     public double? Height { get; }
     public double Scale { get; }
     public Color? Color { get; }
     public IValueListenable<double>? Opacity { get; }
-    public BitmapBlendingMode? ColorBlendMode { get; }
+    public BlendMode? ColorBlendMode { get; }
     public BoxFit? Fit { get; }
     public AlignmentGeometry Alignment { get; }
     public ImageRepeat Repeat { get; }

@@ -178,19 +178,19 @@ public sealed class ImageWidgetTests : IDisposable
 
         await PumpUntilAsync(
             harness,
-            () => FindRenderImages(harness.RenderView).Any(image => ReferenceEquals(image.Image, placeholderImage)));
+            () => FindRenderImages(harness.RenderView).Any(image => ReferenceEquals(image.Image?.Native, placeholderImage)));
         IReadOnlyList<RenderImage> initialImages = FindRenderImages(harness.RenderView);
         RenderImage initialTarget = Assert.Single(initialImages, image => image.Image is null);
         RenderImage placeholder = Assert.Single(
             initialImages,
-            image => ReferenceEquals(image.Image, placeholderImage));
+            image => ReferenceEquals(image.Image?.Native, placeholderImage));
         Assert.Equal(0.0, initialTarget.Opacity!.Value, 6);
         Assert.Equal(1.0, placeholder.Opacity!.Value, 6);
 
-        targetCompletion.SetResult(new ImageInfo(targetImage));
+        targetCompletion.SetResult(new ImageInfo(new RasterImage(targetImage)));
         await PumpUntilAsync(
             harness,
-            () => FindRenderImages(harness.RenderView).Any(image => ReferenceEquals(image.Image, targetImage)));
+            () => FindRenderImages(harness.RenderView).Any(image => ReferenceEquals(image.Image?.Native, targetImage)));
         double start = AnimationPump.CurrentSeconds;
         AnimationPump.Prime();
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(start + 0.15));
@@ -199,27 +199,27 @@ public sealed class ImageWidgetTests : IDisposable
         IReadOnlyList<RenderImage> fadeOutImages = FindRenderImages(harness.RenderView);
         RenderImage fadingTarget = Assert.Single(
             fadeOutImages,
-            image => ReferenceEquals(image.Image, targetImage));
+            image => ReferenceEquals(image.Image?.Native, targetImage));
         RenderImage fadingPlaceholder = Assert.Single(
             fadeOutImages,
-            image => ReferenceEquals(image.Image, placeholderImage));
+            image => ReferenceEquals(image.Image?.Native, placeholderImage));
         Assert.Equal(0.0, fadingTarget.Opacity!.Value, 6);
         Assert.InRange(fadingPlaceholder.Opacity!.Value, 0.27, 0.35);
 
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(start + 0.65));
         harness.PumpFrame();
         IReadOnlyList<RenderImage> fadeInImages = FindRenderImages(harness.RenderView);
-        fadingTarget = Assert.Single(fadeInImages, image => ReferenceEquals(image.Image, targetImage));
+        fadingTarget = Assert.Single(fadeInImages, image => ReferenceEquals(image.Image?.Native, targetImage));
         fadingPlaceholder = Assert.Single(
             fadeInImages,
-            image => ReferenceEquals(image.Image, placeholderImage));
+            image => ReferenceEquals(image.Image?.Native, placeholderImage));
         Assert.InRange(fadingTarget.Opacity!.Value, 0.27, 0.35);
         Assert.Equal(0.0, fadingPlaceholder.Opacity!.Value, 6);
 
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(start + 1.1));
         harness.PumpFrame();
         RenderImage finalImage = Assert.Single(FindRenderImages(harness.RenderView));
-        Assert.Same(targetImage, finalImage.Image);
+        Assert.Same(targetImage, finalImage.Image!.Native);
         Assert.Equal(1.0, finalImage.Opacity!.Value, 6);
 
         harness.Pump(new Size(80, 80));
@@ -240,7 +240,7 @@ public sealed class ImageWidgetTests : IDisposable
         using var harness = new WidgetRenderHarness(fade);
 
         RenderImage image = Assert.Single(FindRenderImages(harness.RenderView));
-        Assert.Same(targetImage, image.Image);
+        Assert.Same(targetImage, image.Image!.Native);
         Assert.Equal(1.0, image.Opacity!.Value, 6);
     }
 
@@ -248,7 +248,7 @@ public sealed class ImageWidgetTests : IDisposable
     public void RenderImage_PreservesIntrinsicAspectRatioAndHonorsExplicitDimensions()
     {
         var image = new FakeImage(new Size(240, 120));
-        var renderImage = new RenderImage(image: image, scale: 2.0);
+        var renderImage = new RenderImage(image: new RasterImage(image), scale: 2.0);
 
         renderImage.Layout(new BoxConstraints(MaxWidth: 80, MaxHeight: 80));
         Assert.Equal(new Size(80, 40), renderImage.Size);
@@ -273,7 +273,7 @@ public sealed class ImageWidgetTests : IDisposable
     {
         using var opacity = new ValueNotifier<double>(1.0);
         var renderImage = new RenderImage(
-            image: new FakeImage(new Size(20, 10)),
+            image: new RasterImage(new FakeImage(new Size(20, 10))),
             width: 40,
             height: 20,
             opacity: opacity,
@@ -329,7 +329,7 @@ public sealed class ImageWidgetTests : IDisposable
 
         Assert.Null(observedFrame);
         Assert.True(loadingReceivedFrameResult);
-        completion.SetResult(new ImageInfo(new FakeImage(new Size(16, 12)), scale: 1.0, debugLabel: "test"));
+        completion.SetResult(new ImageInfo(new RasterImage(new FakeImage(new Size(16, 12))), scale: 1.0, debugLabel: "test"));
         await PumpUntilAsync(harness, () => observedFrame == 0);
 
         Assert.False(observedSynchronous);
@@ -363,11 +363,11 @@ public sealed class ImageWidgetTests : IDisposable
         }
 
         using var harness = new WidgetRenderHarness(Build(firstProvider, gapless: true));
-        firstCompletion.SetResult(new ImageInfo(firstImage));
+        firstCompletion.SetResult(new ImageInfo(new RasterImage(firstImage)));
         await PumpUntilAsync(harness, () => FindRenderImage(harness.RenderView)?.Image is not null);
 
         harness.Update(Build(secondProvider, gapless: true));
-        Assert.Same(firstImage, FindRenderImage(harness.RenderView)!.Image);
+        Assert.Same(firstImage, FindRenderImage(harness.RenderView)!.Image!.Native);
 
         secondCompletion.SetException(new InvalidOperationException("failed"));
         await PumpUntilAsync(harness, () => errorBuilt);
@@ -385,7 +385,7 @@ public sealed class ImageWidgetTests : IDisposable
         using var harness = new WidgetRenderHarness(image);
 
         Assert.True(provider.LastCompleter!.HasListeners);
-        completion.SetResult(new ImageInfo(new FakeImage(new Size(20, 20))));
+        completion.SetResult(new ImageInfo(new RasterImage(new FakeImage(new Size(20, 20)))));
         await PumpUntilAsync(
             harness,
             () => FindRenderImage(harness.RenderView)?.Image is not null
@@ -489,7 +489,7 @@ public sealed class ImageWidgetTests : IDisposable
         public SynchronousImageCompleter(IImage image, string debugLabel)
         {
             DebugLabel = debugLabel;
-            SetImage(new ImageInfo(image, debugLabel: debugLabel));
+            SetImage(new ImageInfo(new RasterImage(image), debugLabel: debugLabel));
         }
     }
 

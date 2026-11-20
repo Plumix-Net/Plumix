@@ -25,7 +25,7 @@ public sealed class CanvasDrawShadowTests
         {
             var recorder = new PictureRecorder();
             paint(new Canvas(recorder));
-            return recorder.EndRecording().ToImageSync(100, 100);
+            return recorder.EndRecording().ToImageSync(100, 100).NativeBitmap;
         }
         finally
         {

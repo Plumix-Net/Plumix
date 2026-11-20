@@ -176,15 +176,15 @@ public sealed class FilterWidgetsTests
     [Fact]
     public void FilterWidgets_RequireFiltersAndExposeFlutterDefaults()
     {
-        var colorFilter = new ColorFilter.Mode(Colors.Red, BitmapBlendingMode.Multiply);
+        var colorFilter = new ColorFilter.Mode(Colors.Red, BlendMode.Modulate);
         var dartColorFilter = new ColorFilter.Mode(Colors.Blue, BlendMode.Modulate);
         var imageFilter = new ImageFilter.Blur(4.0, 6.0, Plumix.Rendering.TileMode.Decal);
         var colorWidget = new ColorFiltered(colorFilter);
         var imageWidget = new ImageFiltered(imageFilter);
 
         Assert.Same(colorFilter, colorWidget.ColorFilter);
-        Assert.Equal(BlendMode.Modulate, dartColorFilter.FlutterBlendMode);
-        Assert.Equal(BitmapBlendingMode.Multiply, dartColorFilter.BlendMode);
+        Assert.Equal(BlendMode.Modulate, dartColorFilter.BlendMode);
+        Assert.Equal(Avalonia.Media.Imaging.BitmapBlendingMode.Multiply, dartColorFilter.AvaloniaBlendMode);
         Assert.Null(colorWidget.Child);
         Assert.Same(imageFilter, imageWidget.ImageFilter);
         Assert.True(imageWidget.Enabled);
@@ -196,7 +196,7 @@ public sealed class FilterWidgetsTests
     [Fact]
     public void FilterWidgets_UpdateExistingRenderObjects()
     {
-        var initialColorFilter = new ColorFilter.Mode(Colors.Red, BitmapBlendingMode.SourceIn);
+        var initialColorFilter = new ColorFilter.Mode(Colors.Red, BlendMode.SourceIn);
         var updatedColorFilter = new ColorFilter.Matrix(
         [
             1.0, 0.0, 0.0, 0.0, 0.0,
@@ -284,7 +284,7 @@ public sealed class FilterWidgetsTests
     public void RenderColorFilter_RetainsLayerAndRepaintsForFilterChanges()
     {
         var child = new PaintProbeRenderBox();
-        var initialFilter = new ColorFilter.Mode(Colors.Red, BitmapBlendingMode.SourceIn);
+        var initialFilter = new ColorFilter.Mode(Colors.Red, BlendMode.SourceIn);
         var renderObject = new RenderColorFilter(initialFilter, child);
         var renderView = new RenderView(new FlutterView(new Size(800, 600))) { Child = renderObject };
         var pipeline = new PipelineOwner(renderView);
@@ -298,7 +298,7 @@ public sealed class FilterWidgetsTests
         Assert.IsType<PictureLayer>(Assert.Single(layer.Children));
         Assert.Equal(1, child.PaintCount);
 
-        var updatedFilter = new ColorFilter.Mode(Colors.Blue, BitmapBlendingMode.Multiply);
+        var updatedFilter = new ColorFilter.Mode(Colors.Blue, BlendMode.Modulate);
         renderObject.ColorFilter = updatedFilter;
         pipeline.FlushCompositingBits();
         pipeline.FlushPaint();

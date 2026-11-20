@@ -459,7 +459,7 @@ public static class ImagePainting
     public static void PaintImage(
         Canvas canvas,
         Rect rect,
-        IImage image,
+        RasterImage image,
         string? debugImageLabel = null,
         double scale = 1.0,
         double opacity = 1.0,
@@ -481,7 +481,7 @@ public static class ImagePainting
             return;
         }
 
-        Size imagePixels = Canvas.ImageSize(image);
+        Size imagePixels = Canvas.ImageSize(image.Native);
         double outputWidth = rect.Width;
         double outputHeight = rect.Height;
         double inputWidth = imagePixels.Width;

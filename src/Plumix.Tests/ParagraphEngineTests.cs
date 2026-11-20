@@ -523,7 +523,7 @@ public sealed class ParagraphEngineTests
         var canvas = new Canvas(recorder);
         canvas.DrawRect(Rect.FromLTWH(0, 0, 80, 60), new Paint { Color = new Color(0xFFFFFFFF) });
         canvas.DrawParagraph(paragraph, offset);
-        using Avalonia.Media.Imaging.Bitmap image = recorder.EndRecording().ToImageSync(80, 60);
+        using Avalonia.Media.Imaging.Bitmap image = recorder.EndRecording().ToImageSync(80, 60).NativeBitmap;
         return RasterBackend.PixelAt(image, x, y);
     }
 

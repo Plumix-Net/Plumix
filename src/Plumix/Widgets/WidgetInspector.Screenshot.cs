@@ -116,19 +116,19 @@ internal sealed class InspectorMulticastCanvas : Canvas
         _screenshot.DrawDRRect(outer, inner, brush);
     }
 
-    public override void DrawImage(IImage image, Offset offset, Paint paint)
+    public override void DrawImage(RasterImage image, Offset offset, Paint paint)
     {
         _main.DrawImage(image, offset, paint);
         _screenshot.DrawImage(image, offset, paint);
     }
 
-    public override void DrawImageNine(IImage image, Rect center, Rect dst, Paint paint)
+    public override void DrawImageNine(RasterImage image, Rect center, Rect dst, Paint paint)
     {
         _main.DrawImageNine(image, center, dst, paint);
         _screenshot.DrawImageNine(image, center, dst, paint);
     }
 
-    public override void DrawImageRect(IImage image, Rect src, Rect dst, Paint paint)
+    public override void DrawImageRect(RasterImage image, Rect src, Rect dst, Paint paint)
     {
         _main.DrawImageRect(image, src, dst, paint);
         _screenshot.DrawImageRect(image, src, dst, paint);
@@ -598,7 +598,7 @@ internal sealed class InspectorScreenshotPaintingContext : PaintingContext
     /// With <paramref name="debugPaint"/>, the debug paint of <paramref name="renderObject"/> is drawn
     /// into the screenshot only.
     /// </remarks>
-    public static async Task<Bitmap> ToImage(
+    public static async Task<RasterImage> ToImage(
         RenderObject renderObject,
         Rect renderBounds,
         double pixelRatio = 1.0,
@@ -662,7 +662,7 @@ internal sealed class InspectorScreenshotPaintingContext : PaintingContext
         // been called successfully for all layers in the regular scene.
         ((ContainerLayer)repaintBoundary.DebugLayer!).BuildScene(new SceneBuilder());
 
-        Bitmap image;
+        RasterImage image;
         try
         {
             image = await data.ContainerLayer.ToImage(renderBounds, pixelRatio: pixelRatio).ConfigureAwait(true);

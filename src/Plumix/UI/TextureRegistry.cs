@@ -39,7 +39,7 @@ public abstract class EngineTexture
 /// <summary>An <see cref="EngineTexture"/> whose frames are Avalonia images pushed by the producer.</summary>
 /// <remarks>
 /// Plumix-only: the engine's platform textures (<c>EmbedderExternalTextureGL</c>, the Android/iOS
-/// external textures) wrap a GPU texture; this one wraps the latest <see cref="IImage"/> a producer set.
+/// external textures) wrap a GPU texture; this one wraps the latest <see cref="RasterImage"/> a producer set.
 /// </remarks>
 public sealed class ImageTexture : EngineTexture
 {
@@ -51,9 +51,9 @@ public sealed class ImageTexture : EngineTexture
     }
 
     /// <summary>Sets the image the next unfrozen paint shows, then marks a new frame available.</summary>
-    public void SetImage(IImage? image)
+    public void SetImage(RasterImage? image)
     {
-        _pending = image;
+        _pending = image?.Native;
         TextureRegistry.Instance.MarkTextureFrameAvailable(Id);
     }
 

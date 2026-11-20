@@ -78,7 +78,7 @@ public sealed class AnimatedImageProviderTests : IDisposable
             var listener = new ImageStreamListener((image, _) =>
             {
                 Assert.Equal(2, image.Scale);
-                var bitmap = Assert.IsAssignableFrom<Bitmap>(image.Image);
+                var bitmap = image.Image.NativeBitmap;
                 Assert.Equal(resize ? new PixelSize(24, 16) : new PixelSize(1, 1), bitmap.PixelSize);
                 colors.Add(RasterBackend.PixelAt(bitmap, 0, 0));
                 image.Dispose();

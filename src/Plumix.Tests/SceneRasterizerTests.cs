@@ -223,7 +223,7 @@ public sealed class SceneRasterizerTests
 
         root.MarkNeedsAddToScene();
         using Scene scene = root.BuildScene(new SceneBuilder());
-        Bitmap image = scene.ToImageSync(6, 6);
+        Bitmap image = scene.ToImageSync(6, 6).NativeBitmap;
 
         Assert.Equal((byte)0xFF, RasterBackend.PixelAt(image, 3, 3).A);
         Assert.Equal((byte)0, RasterBackend.PixelAt(image, 1, 1).A);
@@ -246,7 +246,7 @@ public sealed class SceneRasterizerTests
         pipeline.FlushPaint();
         pipeline.CompositeFrame();
 
-        Bitmap image = boundary.ToImageSync(pixelRatio: 2.0);
+        Bitmap image = boundary.ToImageSync(pixelRatio: 2.0).NativeBitmap;
 
         Assert.Equal(new PixelSize(20, 12), image.PixelSize);
         Assert.Equal(((byte)0xFF, (byte)0, (byte)0, (byte)0xFF), RasterBackend.PixelAt(image, 0, 0));
@@ -269,7 +269,7 @@ public sealed class SceneRasterizerTests
         pipeline.FlushCompositingBits();
         pipeline.FlushPaint();
 
-        Bitmap image = await boundary.ToImage();
+        Bitmap image = (await boundary.ToImage()).NativeBitmap;
 
         Assert.Equal(new PixelSize(4, 4), image.PixelSize);
         Assert.Equal(((byte)0, (byte)0, (byte)0xFF, (byte)0xFF), RasterBackend.PixelAt(image, 2, 2));
@@ -283,11 +283,11 @@ public sealed class SceneRasterizerTests
         TextureRegistry.Instance.RegisterTexture(texture);
         try
         {
-            texture.SetImage(SolidImage(Red));
+            texture.SetImage(new RasterImage(SolidImage(Red)));
             var red = ((byte)0xFF, (byte)0, (byte)0, (byte)0xFF);
             Assert.Equal(red, RasterBackend.PixelAt(TextureScene(textureId, false), 5, 5));
 
-            texture.SetImage(SolidImage(0xFF0000FF));
+            texture.SetImage(new RasterImage(SolidImage(0xFF0000FF)));
             Assert.Equal(red, RasterBackend.PixelAt(TextureScene(textureId, true), 5, 5));
             var blue = ((byte)0, (byte)0, (byte)0xFF, (byte)0xFF);
             Assert.Equal(blue, RasterBackend.PixelAt(TextureScene(textureId, false), 5, 5));
@@ -312,7 +312,7 @@ public sealed class SceneRasterizerTests
         try
         {
             TextureRegistry.Instance.RegisterTexture(texture);
-            texture.SetImage(SolidImage(Red));
+            texture.SetImage(new RasterImage(SolidImage(Red)));
             TextureRegistry.Instance.MarkTextureFrameAvailable(textureId);
         }
         finally
@@ -330,14 +330,14 @@ public sealed class SceneRasterizerTests
         var builder = new SceneBuilder();
         builder.AddPerformanceOverlay(0x0F, Rect.FromLTWH(0, 0, 200, 160));
         using Scene enabled = builder.Build();
-        Bitmap image = enabled.ToImageSync(200, 160);
+        Bitmap image = enabled.ToImageSync(200, 160).NativeBitmap;
         // The graph background is the engine's semi-transparent white.
         Assert.InRange(RasterBackend.PixelAt(image, 10, 10).A, 0x90, 0xA0);
 
         var emptyBuilder = new SceneBuilder();
         emptyBuilder.AddPerformanceOverlay(0, Rect.FromLTWH(0, 0, 200, 160));
         using Scene disabled = emptyBuilder.Build();
-        Assert.Equal(0, RasterBackend.PixelAt(disabled.ToImageSync(200, 160), 10, 10).A);
+        Assert.Equal(0, RasterBackend.PixelAt(disabled.ToImageSync(200, 160).NativeBitmap, 10, 10).A);
     }
 
     [Fact]
@@ -525,7 +525,7 @@ public sealed class SceneRasterizerTests
     private static Bitmap ToImage(ContainerLayer root, int width, int height)
     {
         using Scene scene = root.BuildScene(new SceneBuilder());
-        return scene.ToImageSync(width, height);
+        return scene.ToImageSync(width, height).NativeBitmap;
     }
 
     // Draws through the host path: the backdrop and magnifier captures need a target-sized surface.
@@ -558,7 +558,7 @@ public sealed class SceneRasterizerTests
         var builder = new SceneBuilder();
         builder.AddTexture(textureId, width: 10, height: 10, freeze: freeze);
         using Scene scene = builder.Build();
-        return scene.ToImageSync(10, 10);
+        return scene.ToImageSync(10, 10).NativeBitmap;
     }
 
     private static RenderTargetBitmap SolidImage(uint argb)

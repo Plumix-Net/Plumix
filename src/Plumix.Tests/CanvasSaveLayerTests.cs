@@ -21,7 +21,7 @@ public sealed class CanvasSaveLayerTests
     {
         var recorder = new PictureRecorder();
         paint(new Canvas(recorder));
-        return recorder.EndRecording().ToImageSync(width, height);
+        return recorder.EndRecording().ToImageSync(width, height).NativeBitmap;
     }
 
     [Fact]
@@ -182,7 +182,7 @@ public sealed class CanvasSaveLayerTests
             clipLayer.Append(new PictureLayer(default) { Picture = recorder.EndRecording() });
             root.Append(clipLayer);
             using Scene scene = root.BuildScene(new SceneBuilder());
-            return scene.ToImageSync(20, 20);
+            return scene.ToImageSync(20, 20).NativeBitmap;
         }
 
         Assert.Equal(0xFF, RasterBackend.PixelAt(Scene(Clip.AntiAliasWithSaveLayer), 5, 10).A);
@@ -195,17 +195,17 @@ public sealed class CanvasSaveLayerTests
         WriteableBitmap white = SolidBitmap(4, 4, 0xFFFFFFFF);
 
         Bitmap faded = Render(canvas => canvas.DrawImageRect(
-            white,
+            new RasterImage(white),
             Rect.FromLTWH(0, 0, 4, 4),
             Rect.FromLTWH(0, 0, 20, 20),
             new Paint { Color = Color.FromRGBO(0, 0, 0, 0.5) }));
         Bitmap filtered = Render(canvas => canvas.DrawImageRect(
-            white,
+            new RasterImage(white),
             Rect.FromLTWH(0, 0, 4, 4),
             Rect.FromLTWH(0, 0, 20, 20),
             new Paint { ColorFilter = new ColorFilter.Mode(Red, BlendMode.SourceIn) }));
         Bitmap inverted = Render(canvas => canvas.DrawImageRect(
-            white,
+            new RasterImage(white),
             Rect.FromLTWH(0, 0, 4, 4),
             Rect.FromLTWH(0, 0, 20, 20),
             new Paint { InvertColors = true }));
@@ -224,11 +224,11 @@ public sealed class CanvasSaveLayerTests
         Bitmap image = Render(canvas =>
         {
             canvas.SaveLayer(null, new Paint());
-            canvas.DrawImageRect(green, Rect.FromLTWH(0, 0, 2, 2), Rect.FromLTWH(0, 0, 20, 20), new Paint
+            canvas.DrawImageRect(new RasterImage(green), Rect.FromLTWH(0, 0, 2, 2), Rect.FromLTWH(0, 0, 20, 20), new Paint
             {
                 Color = Color.FromRGBO(0, 0, 0, 0.5),
             });
-            canvas.DrawImageRect(red, Rect.FromLTWH(0, 0, 2, 2), Rect.FromLTWH(0, 0, 20, 20), new Paint
+            canvas.DrawImageRect(new RasterImage(red), Rect.FromLTWH(0, 0, 2, 2), Rect.FromLTWH(0, 0, 20, 20), new Paint
             {
                 Color = Color.FromRGBO(0, 0, 0, 0.5),
                 BlendMode = BlendMode.Plus,
@@ -278,7 +278,7 @@ public sealed class CanvasSaveLayerTests
         var paint = new Paint { Color = Color.FromRGBO(0, 0, 0, 0.25), FilterQuality = FilterQuality.High };
         WriteableBitmap image = SolidBitmap(4, 2, 0xFFFFFFFF);
 
-        canvas.DrawImage(image, new Offset(3, 4), paint);
+        canvas.DrawImage(new RasterImage(image), new Offset(3, 4), paint);
         paint.FilterQuality = FilterQuality.None;
 
         CanvasCall call = Assert.Single(canvas.DebugCalls);

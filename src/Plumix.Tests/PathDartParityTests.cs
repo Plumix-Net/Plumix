@@ -343,8 +343,8 @@ public sealed class PathDartParityTests
         canvas.DrawPath(path, new Paint { Color = new Color(0xFFFF0000) });
         var picture = recorder.EndRecording();
         using var image = picture.ToImageSync(800, 420);
-        Assert.True(RasterBackend.PixelAt(image, 425, 397).A > 0);
-        Assert.Equal(0, RasterBackend.PixelAt(image, 425, 403).A);
+        Assert.True(RasterBackend.PixelAt(image.NativeBitmap, 425, 397).A > 0);
+        Assert.Equal(0, RasterBackend.PixelAt(image.NativeBitmap, 425, 403).A);
     }
 
     [DebugOnlyFact]

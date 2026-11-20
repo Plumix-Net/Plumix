@@ -28,7 +28,7 @@ public sealed class InkSparkleDartParityTests
         Element well = tester.ElementsOfType<Ink>().Single(element => ((Ink)element.Widget).Width == 150);
         Element stadium = tester.ElementsOfType<Ink>().Single(element => ((Ink)element.Widget).Width == 220);
         using Bitmap before = Assert.IsAssignableFrom<OffsetLayer>(tester.RenderView.Layer)
-            .ToImageSync(Rect.FromLTWH(0, 0, 800, 600));
+            .ToImageSync(Rect.FromLTWH(0, 0, 800, 600)).NativeBitmap;
         AssertGalleryColor(before, tester.GetTopLeft(circle) + new Offset(56, 20), 0xEA, 0xDD, 0xFF);
         AssertGalleryColor(before, tester.GetTopLeft(well) + new Offset(20, 20), 0xD7, 0xE3, 0xFF);
         AssertGalleryColor(before, tester.GetTopLeft(stadium) + new Offset(15, 26), 0xFF, 0xD8, 0xE4);
@@ -41,7 +41,7 @@ public sealed class InkSparkleDartParityTests
         tester.Pump(TimeSpan.FromMilliseconds(100));
         Assert.Contains(InkFeatureProbe.Splashes(tester.RenderView), feature => feature is InkSparkle);
         using Bitmap after = Assert.IsAssignableFrom<OffsetLayer>(tester.RenderView.Layer)
-            .ToImageSync(Rect.FromLTWH(0, 0, 800, 600));
+            .ToImageSync(Rect.FromLTWH(0, 0, 800, 600)).NativeBitmap;
         Assert.NotEqual(RasterBackend.ReadPixels(before), RasterBackend.ReadPixels(after));
         gesture.Up();
         tester.PumpAndSettle();

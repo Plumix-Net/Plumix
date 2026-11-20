@@ -11,13 +11,13 @@ namespace Plumix.Rendering;
 
 public sealed class RenderImage : RenderBox
 {
-    private IImage? _image;
+    private RasterImage? _image;
     private double? _width;
     private double? _height;
     private double _scale;
     private Color? _color;
     private IValueListenable<double>? _opacity;
-    private BitmapBlendingMode? _colorBlendMode;
+    private BlendMode? _colorBlendMode;
     private BoxFit? _fit;
     private AlignmentGeometry _alignment;
     private ImageRepeat _repeat;
@@ -31,14 +31,14 @@ public sealed class RenderImage : RenderBox
     private bool? _flipHorizontally;
 
     public RenderImage(
-        IImage? image = null,
+        RasterImage? image = null,
         string? debugImageLabel = null,
         double? width = null,
         double? height = null,
         double scale = 1.0,
         Color? color = null,
         IValueListenable<double>? opacity = null,
-        BitmapBlendingMode? colorBlendMode = null,
+        BlendMode? colorBlendMode = null,
         BoxFit? fit = null,
         AlignmentGeometry alignment = default,
         ImageRepeat repeat = ImageRepeat.NoRepeat,
@@ -70,7 +70,7 @@ public sealed class RenderImage : RenderBox
         _filterQuality = filterQuality;
     }
 
-    public IImage? Image
+    public RasterImage? Image
     {
         get => _image;
         set
@@ -80,7 +80,7 @@ public sealed class RenderImage : RenderBox
                 return;
             }
 
-            bool sizeChanged = _image?.Size != value?.Size;
+            bool sizeChanged = _image?.Width != value?.Width || _image?.Height != value?.Height;
             _image = value;
             MarkNeedsPaint();
             if (sizeChanged && (!_width.HasValue || !_height.HasValue))
@@ -180,7 +180,7 @@ public sealed class RenderImage : RenderBox
         }
     }
 
-    public BitmapBlendingMode? ColorBlendMode
+    public BlendMode? ColorBlendMode
     {
         get => _colorBlendMode;
         set
@@ -384,7 +384,7 @@ public sealed class RenderImage : RenderBox
 
         Resolve();
         ColorFilter? colorFilter = _color != null
-            ? new ColorFilter.Mode(_color!, _colorBlendMode ?? BitmapBlendingMode.SourceIn)
+            ? new ColorFilter.Mode(_color!, _colorBlendMode ?? BlendMode.SourceIn)
             : null;
         ImagePainting.PaintImage(
             canvas: context.Canvas,
@@ -413,7 +413,7 @@ public sealed class RenderImage : RenderBox
         }
 
         return effective.ConstrainSizeAndAttemptToPreserveAspectRatio(
-            new Size(_image.Size.Width / _scale, _image.Size.Height / _scale));
+            new Size(_image.Width / _scale, _image.Height / _scale));
     }
 
     private static void ValidateDimension(double? value, string parameterName)
@@ -455,7 +455,7 @@ public sealed class RenderImage : RenderBox
     public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
     {
         base.DebugFillProperties(properties);
-        properties.Add(new DiagnosticsProperty<IImage>("image", Image));
+        properties.Add(new DiagnosticsProperty<RasterImage>("image", Image));
         properties.Add(new DoubleProperty("width", Width, defaultValue: DiagnosticsDefaults.NullValue));
         properties.Add(new DoubleProperty("height", Height, defaultValue: DiagnosticsDefaults.NullValue));
         properties.Add(new DoubleProperty("scale", Scale, defaultValue: 1.0));
@@ -464,7 +464,7 @@ public sealed class RenderImage : RenderBox
             "opacity",
             Opacity,
             defaultValue: DiagnosticsDefaults.NullValue));
-        properties.Add(new EnumProperty<BitmapBlendingMode>(
+        properties.Add(new EnumProperty<BlendMode>(
             "colorBlendMode",
             ColorBlendMode,
             defaultValue: DiagnosticsDefaults.NullValue));

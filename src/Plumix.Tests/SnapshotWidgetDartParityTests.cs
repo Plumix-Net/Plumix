@@ -118,7 +118,7 @@ public sealed class SnapshotWidgetDartParityTests
                             painter: painter,
                             child: new SizedBox(width: 100, height: 100))));
             }));
-            IImage? raster = painter.LastImage;
+            RasterImage? raster = painter.LastImage;
 
             Assert.NotNull(raster);
             Assert.Equal(1, painter.Count);
@@ -126,7 +126,7 @@ public sealed class SnapshotWidgetDartParityTests
             localSetState!(() => devicePixelRatio = 2.0);
             tester.Pump();
 
-            IImage? newRaster = painter.LastImage;
+            RasterImage? newRaster = painter.LastImage;
 
             Assert.Equal(2, painter.Count);
             Assert.NotSame(raster, newRaster);
@@ -313,13 +313,13 @@ public sealed class SnapshotWidgetDartParityTests
                                 color: KBlueColor))))));
 
             using Bitmap imageWhenDisabled =
-                tester.RenderObject<RenderRepaintBoundary>(Find.ByKey(repaintBoundaryKey)).ToImageSync();
+                tester.RenderObject<RenderRepaintBoundary>(Find.ByKey(repaintBoundaryKey)).ToImageSync().NativeBitmap;
 
             controller.AllowSnapshotting = true;
             tester.Pump();
 
             using Bitmap imageWhenEnabled =
-                tester.RenderObject<RenderRepaintBoundary>(Find.ByKey(repaintBoundaryKey)).ToImageSync();
+                tester.RenderObject<RenderRepaintBoundary>(Find.ByKey(repaintBoundaryKey)).ToImageSync().NativeBitmap;
             Assert.Equal(imageWhenDisabled.PixelSize, imageWhenEnabled.PixelSize);
             Assert.Equal(RasterBackend.ReadPixels(imageWhenDisabled), RasterBackend.ReadPixels(imageWhenEnabled));
         }
@@ -374,7 +374,7 @@ public sealed class SnapshotWidgetDartParityTests
 
     private static void AssertBoundaryColor(FrameworkDartTester tester, Key key, Color expected)
     {
-        using Bitmap image = tester.RenderObject<RenderRepaintBoundary>(Find.ByKey(key)).ToImageSync();
+        using Bitmap image = tester.RenderObject<RenderRepaintBoundary>(Find.ByKey(key)).ToImageSync().NativeBitmap;
         Assert.Equal((expected.Red, expected.Green, expected.Blue, expected.Alpha), RasterBackend.PixelAt(image, 50, 50));
     }
 
@@ -401,7 +401,7 @@ public sealed class SnapshotWidgetDartParityTests
 
         public bool ShouldRepaintValue { get; set; }
 
-        public IImage? LastImage { get; private set; }
+        public RasterImage? LastImage { get; private set; }
 
         public int AddedListenerCount { get; private set; }
 
@@ -423,7 +423,7 @@ public sealed class SnapshotWidgetDartParityTests
             PaintingContext context,
             Offset offset,
             Size size,
-            IImage image,
+            RasterImage image,
             Size sourceSize,
             double pixelRatio)
         {

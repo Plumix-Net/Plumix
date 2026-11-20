@@ -341,7 +341,7 @@ public sealed class Scene : IDisposable
     /// Synchronously creates a <paramref name="width"/> by <paramref name="height"/> image of this scene.
     /// </summary>
     /// <remarks>Dart's <c>Scene.toImageSync</c>; the scene's physical pixels map 1:1 to image pixels.</remarks>
-    public Bitmap ToImageSync(int width, int height)
+    public RasterImage ToImageSync(int width, int height)
     {
         if (width <= 0 || height <= 0)
         {
@@ -350,7 +350,7 @@ public sealed class Scene : IDisposable
 
         ContainerFlowLayer root = _rootLayer
             ?? throw new PictureRasterizationException("Scene has been disposed.");
-        return SceneRasterizer.RasterizeToImage(root, width, height);
+        return new RasterImage(SceneRasterizer.RasterizeToImage(root, width, height));
     }
 
     /// <summary>Creates a <paramref name="width"/> by <paramref name="height"/> image of this scene.</summary>
@@ -358,7 +358,7 @@ public sealed class Scene : IDisposable
     /// Dart's <c>Scene.toImage</c>. Dart's <c>_futurize</c> throws a synchronous error synchronously; the
     /// Plumix rasterizer renders on the calling thread, so the task is already complete when it returns.
     /// </remarks>
-    public Task<Bitmap> ToImage(int width, int height)
+    public Task<RasterImage> ToImage(int width, int height)
     {
         if (width <= 0 || height <= 0)
         {
@@ -370,7 +370,7 @@ public sealed class Scene : IDisposable
             throw new InvalidOperationException("Scene has been disposed.");
         }
 
-        return Task.FromResult(SceneRasterizer.RasterizeToImage(_rootLayer, width, height));
+        return Task.FromResult(new RasterImage(SceneRasterizer.RasterizeToImage(_rootLayer, width, height)));
     }
 
     /// <summary>

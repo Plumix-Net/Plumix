@@ -2,6 +2,7 @@ using Avalonia;
 using Avalonia.Media;
 using Plumix.Material;
 using Plumix.Rendering;
+using Plumix.UI;
 using Plumix.Widgets;
 using Xunit;
 
@@ -254,7 +255,7 @@ public sealed class MaterialCircleAvatarTests : IDisposable
         protected override ImageStreamCompleter LoadImage(string key)
         {
             return new OneFrameImageStreamCompleter(
-                Task.FromResult(new ImageInfo(new FakeImage(new Size(10, 10)), debugLabel: key)));
+                Task.FromResult(new ImageInfo(new RasterImage(new FakeImage(new Size(10, 10))), debugLabel: key)));
         }
     }
 

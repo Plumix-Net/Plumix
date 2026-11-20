@@ -289,7 +289,7 @@ public sealed class AvaloniaParagraphDartParityTests
             var recorder = new PictureRecorder();
             new Canvas(recorder).DrawTextGeometry(
                 variable.Outline(run), new Paint { Color = new Plumix.UI.Color(0xFF000000) });
-            using Bitmap image = recorder.EndRecording().ToImageSync(60, 60);
+            using Bitmap image = recorder.EndRecording().ToImageSync(60, 60).NativeBitmap;
             return RasterBackend.ReadPixels(image).Where((value, index) => index % 4 == 3 && value > 200).Count();
         }
     }
@@ -329,7 +329,7 @@ public sealed class AvaloniaParagraphDartParityTests
         var canvas = new Canvas(recorder);
         canvas.DrawRect(Rect.FromLTWH(0, 0, 100, 100), new Paint { Color = new Color(0xFFFF0000) });
         canvas.DrawParagraph(erase, default);
-        using Bitmap erased = recorder.EndRecording().ToImageSync(100, 100);
+        using Bitmap erased = recorder.EndRecording().ToImageSync(100, 100).NativeBitmap;
         Assert.Equal(0, RasterBackend.PixelAt(erased, 10, 10).A);
     }
 
@@ -343,7 +343,7 @@ public sealed class AvaloniaParagraphDartParityTests
         Picture picture = recorder.EndRecording();
         paragraph.Layout(new ParagraphConstraints(20));
         paragraph.Dispose();
-        using Bitmap image = picture.ToImageSync(100, 100);
+        using Bitmap image = picture.ToImageSync(100, 100).NativeBitmap;
         Assert.Equal(255, RasterBackend.PixelAt(image, 10, 10).A);
     }
 
@@ -542,6 +542,6 @@ public sealed class AvaloniaParagraphDartParityTests
     {
         var recorder = new PictureRecorder();
         new Canvas(recorder).DrawParagraph(paragraph, default);
-        return recorder.EndRecording().ToImageSync(240, 100);
+        return recorder.EndRecording().ToImageSync(240, 100).NativeBitmap;
     }
 }

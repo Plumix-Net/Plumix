@@ -323,7 +323,7 @@ internal static partial class FilterLayerRasterizer
                 ApplyColorMatrix(pixels, matrix.Values);
                 break;
             case ColorFilter.Mode mode:
-                ApplyColorMode(pixels, mode.Color, mode.FlutterBlendMode);
+                ApplyColorMode(pixels, mode.Color, mode.BlendMode);
                 break;
             default:
                 throw new NotSupportedException($"Unsupported color filter: {colorFilter.GetType().Name}.");

@@ -1,4 +1,5 @@
 using Avalonia;
+using Plumix.UI;
 using Avalonia.Media;
 using Plumix.Foundation;
 using Plumix.Widgets;
@@ -18,7 +19,7 @@ public sealed class RenderSnapshotWidget : RenderProxyBox
     private SnapshotController _controller;
     private SnapshotMode _mode;
     private bool _autoresize;
-    private IImage? _childRaster;
+    private RasterImage? _childRaster;
     private Size? _childRasterSize;
 
     // Set to true if the snapshot mode was not forced and a platform view
@@ -151,7 +152,7 @@ public sealed class RenderSnapshotWidget : RenderProxyBox
     }
 
     /// <summary>The current snapshot of the child, if one is held.</summary>
-    internal IImage? DebugChildRaster => _childRaster;
+    internal RasterImage? DebugChildRaster => _childRaster;
 
     protected override void OnAttach()
     {
@@ -189,7 +190,7 @@ public sealed class RenderSnapshotWidget : RenderProxyBox
 
     // Paint [child] with this painting context, then convert to a raster and detach all
     // children from this layer.
-    private IImage? PaintAndDetachToImage()
+    private RasterImage? PaintAndDetachToImage()
     {
         var offsetLayer = new OffsetLayer();
         var context = new PaintingContext(offsetLayer, (Offset.Zero & Size));
@@ -208,7 +209,7 @@ public sealed class RenderSnapshotWidget : RenderProxyBox
             return null;
         }
 
-        IImage image = offsetLayer.ToImageSync((Offset.Zero & Size), pixelRatio: DevicePixelRatio);
+        RasterImage image = offsetLayer.ToImageSync((Offset.Zero & Size), pixelRatio: DevicePixelRatio);
         offsetLayer.Dispose();
         _lastCachedSize = Size;
         return image;
@@ -264,7 +265,7 @@ public sealed class RenderSnapshotWidget : RenderProxyBox
     // the bitmap is released once the next frame has been rendered.
     private void DisposeChildRaster()
     {
-        IImage? raster = _childRaster;
+        RasterImage? raster = _childRaster;
         _childRaster = null;
         if (raster is IDisposable disposable)
         {

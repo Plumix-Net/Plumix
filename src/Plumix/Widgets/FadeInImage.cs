@@ -1,6 +1,7 @@
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Plumix.Foundation;
+using Plumix.UI;
 using Plumix.Rendering;
 
 namespace Plumix.Widgets;
@@ -24,9 +25,9 @@ public sealed class FadeInImage : StatefulWidget
         TimeSpan? fadeInDuration = null,
         Curve? fadeInCurve = null,
         Color? color = null,
-        BitmapBlendingMode? colorBlendMode = null,
+        BlendMode? colorBlendMode = null,
         Color? placeholderColor = null,
-        BitmapBlendingMode? placeholderColorBlendMode = null,
+        BlendMode? placeholderColorBlendMode = null,
         double? width = null,
         double? height = null,
         BoxFit? fit = null,
@@ -92,11 +93,11 @@ public sealed class FadeInImage : StatefulWidget
 
     public Color? Color { get; }
 
-    public BitmapBlendingMode? ColorBlendMode { get; }
+    public BlendMode? ColorBlendMode { get; }
 
     public Color? PlaceholderColor { get; }
 
-    public BitmapBlendingMode? PlaceholderColorBlendMode { get; }
+    public BlendMode? PlaceholderColorBlendMode { get; }
 
     public double? Width { get; }
 
@@ -133,9 +134,9 @@ public sealed class FadeInImage : StatefulWidget
         double? height = null,
         BoxFit? fit = null,
         Color? color = null,
-        BitmapBlendingMode? colorBlendMode = null,
+        BlendMode? colorBlendMode = null,
         Color? placeholderColor = null,
-        BitmapBlendingMode? placeholderColorBlendMode = null,
+        BlendMode? placeholderColorBlendMode = null,
         BoxFit? placeholderFit = null,
         FilterQuality filterQuality = FilterQuality.Medium,
         FilterQuality? placeholderFilterQuality = null,
@@ -199,9 +200,9 @@ public sealed class FadeInImage : StatefulWidget
         double? height = null,
         BoxFit? fit = null,
         Color? color = null,
-        BitmapBlendingMode? colorBlendMode = null,
+        BlendMode? colorBlendMode = null,
         Color? placeholderColor = null,
-        BitmapBlendingMode? placeholderColorBlendMode = null,
+        BlendMode? placeholderColorBlendMode = null,
         BoxFit? placeholderFit = null,
         FilterQuality filterQuality = FilterQuality.Medium,
         FilterQuality? placeholderFilterQuality = null,
@@ -331,7 +332,7 @@ public sealed class FadeInImage : StatefulWidget
             Animation<double> opacity,
             BoxFit? fit,
             Color? color,
-            BitmapBlendingMode? colorBlendMode,
+            BlendMode? colorBlendMode,
             FilterQuality filterQuality,
             ImageFrameBuilder? frameBuilder = null)
         {

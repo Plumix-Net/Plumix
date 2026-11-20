@@ -5,6 +5,7 @@ using Avalonia.Media.Imaging;
 using Plumix.Foundation;
 using Plumix.Painting;
 using Plumix.Rendering;
+using Plumix.UI;
 using Plumix.Widgets;
 
 namespace Plumix;
@@ -31,7 +32,7 @@ internal sealed class ImageDemoPageState : State
     private readonly byte[] _animatedBytes = Convert.FromBase64String(
         "R0lGODlhAQABAIAAAP88PChk/yH/C05FVFNDQVBFMi4wAwEAAAAh+QQEIwAAACwAAAAAAQABAAACAkQB" +
         "ACH5BAQjAAAALAAAAAABAAEAAAICTAEAOw==");
-    private Bitmap? _rawImage;
+    private RasterImage? _rawImage;
     private bool _cover;
     private bool _rtl;
     private bool _dimmed;
@@ -281,7 +282,7 @@ internal sealed class ImageDemoPageState : State
                 new Text(
                     _rawImage is null
                         ? "Raw image: decoding..."
-                        : $"Raw image: {_rawImage.PixelSize.Width} × {_rawImage.PixelSize.Height} px; "
+                        : $"Raw image: {_rawImage.Width} × {_rawImage.Height} px; "
                           + $"cache: {ImageCache.Shared.CurrentSize}; live: {ImageCache.Shared.LiveImageCount}",
                     style: new TextStyle(FontSize: 12, Color: MaterialColors.BlueGrey)),
             ]);

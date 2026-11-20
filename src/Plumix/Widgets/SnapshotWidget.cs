@@ -149,7 +149,7 @@ public abstract class SnapshotPainter : ChangeNotifier
         PaintingContext context,
         Offset offset,
         Size size,
-        IImage image,
+        RasterImage image,
         Size sourceSize,
         double pixelRatio);
 
@@ -194,7 +194,7 @@ internal sealed class DefaultSnapshotPainter : SnapshotPainter
         PaintingContext context,
         Offset offset,
         Size size,
-        IImage image,
+        RasterImage image,
         Size sourceSize,
         double pixelRatio)
     {

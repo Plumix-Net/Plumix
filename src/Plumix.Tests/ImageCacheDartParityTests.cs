@@ -8,6 +8,7 @@ using System.Diagnostics;
 using Avalonia;
 using Avalonia.Media;
 using Plumix.Rendering;
+using Plumix.UI;
 using Xunit;
 
 namespace Plumix.Tests;
@@ -735,7 +736,7 @@ public sealed class ImageCacheDartParityTests : IDisposable
         {
             // TestImageInfo(imageValue, image: image.clone()).
             return new OneFrameImageStreamCompleter(Task.FromResult(new ImageInfo(
-                Image,
+                new RasterImage(Image),
                 debugLabel: imageValue.ToString(System.Globalization.CultureInfo.InvariantCulture))));
         }
 
@@ -768,6 +769,6 @@ public sealed class ImageCacheDartParityTests : IDisposable
     // mocks_for_image_cache.dart `TestImageStreamCompleter`.
     private sealed class TestImageStreamCompleter : ImageStreamCompleter
     {
-        public void TestSetImage(TestImage image) => SetImage(new ImageInfo(image));
+        public void TestSetImage(TestImage image) => SetImage(new ImageInfo(new RasterImage(image)));
     }
 }

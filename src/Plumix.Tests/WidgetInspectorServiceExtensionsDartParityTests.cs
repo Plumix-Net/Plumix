@@ -1155,7 +1155,7 @@ public sealed class WidgetInspectorServiceExtensionsDartParityTests : IDisposabl
         double maxPixelRatio = 1.0,
         bool debugPaint = false)
     {
-        Task<Bitmap?> task = Service.Screenshot(
+        Task<RasterImage?> task = Service.Screenshot(
             target,
             width: width,
             height: height,
@@ -1163,7 +1163,7 @@ public sealed class WidgetInspectorServiceExtensionsDartParityTests : IDisposabl
             maxPixelRatio: maxPixelRatio,
             debugPaint: debugPaint);
         EventLoop.FlushMicrotasks();
-        return task.GetAwaiter().GetResult()!;
+        return task.GetAwaiter().GetResult()!.NativeBitmap;
     }
 
     [Fact]

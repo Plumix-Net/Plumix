@@ -3,6 +3,7 @@ using Avalonia;
 using Avalonia.Media.Imaging;
 using Plumix.Foundation;
 using Plumix.Rendering;
+using Plumix.UI;
 using Plumix.Widgets;
 
 namespace Plumix;
@@ -22,7 +23,7 @@ internal sealed class SceneCompositingDemoPageState : State
     private readonly LabeledGlobalKey<State> _boundaryKey = new("scene compositing boundary");
     private bool _showOverlay;
     private int _tint;
-    private Bitmap? _capture;
+    private RasterImage? _capture;
 
     public override void Dispose()
     {
@@ -33,7 +34,7 @@ internal sealed class SceneCompositingDemoPageState : State
     private async void CaptureBoundary()
     {
         var boundary = (RenderRepaintBoundary)_boundaryKey.CurrentContext!.FindRenderObject()!;
-        Bitmap image = await boundary.ToImage(pixelRatio: 2.0);
+        RasterImage image = await boundary.ToImage(pixelRatio: 2.0);
         if (!Mounted)
         {
             image.Dispose();
@@ -100,7 +101,7 @@ internal sealed class SceneCompositingDemoPageState : State
                                 [
                                     new RawImage(image: capture, width: 160, height: 96),
                                     new Text(
-                                        $"{capture.PixelSize.Width} x {capture.PixelSize.Height} px",
+                                        $"{capture.Width} x {capture.Height} px",
                                         style: new TextStyle(FontSize: 12, Color: new Color(0xFF2F4F4F))),
                                 ])
                             : new Text(

@@ -319,7 +319,7 @@ public abstract class ContrastEvaluation : AccessibilityEvaluation
             var layer = (OffsetLayer)renderView.DebugLayer!;
             SemanticsNode root = RootSemanticsNodeOf(renderView);
             double ratio = 1 / renderView.FlutterView.DevicePixelRatio;
-            Bitmap image = await layer.ToImage(renderView.PaintBounds, pixelRatio: ratio).ConfigureAwait(true);
+            RasterImage image = await layer.ToImage(renderView.PaintBounds, pixelRatio: ratio).ConfigureAwait(true);
             ByteData byteData = (await image.ToByteData().ConfigureAwait(true))!;
             violations.AddRange(await EvaluateNode(root, image, byteData, renderView).ConfigureAwait(true));
             image.Dispose();
@@ -330,7 +330,7 @@ public abstract class ContrastEvaluation : AccessibilityEvaluation
 
     private async Task<List<Violation>> EvaluateNode(
         SemanticsNode node,
-        Bitmap image,
+        RasterImage image,
         ByteData byteData,
         RenderView renderView)
     {
@@ -378,7 +378,7 @@ public abstract class ContrastEvaluation : AccessibilityEvaluation
     public abstract Task<List<Violation>> EvaluateNodeContent(
         SemanticsNode node,
         SemanticsData data,
-        Bitmap image,
+        RasterImage image,
         ByteData byteData,
         RenderView renderView);
 
@@ -475,7 +475,7 @@ public class MinimumTextContrastEvaluation : ContrastEvaluation
     public override async Task<List<Violation>> EvaluateNodeContent(
         SemanticsNode node,
         SemanticsData data,
-        Bitmap image,
+        RasterImage image,
         ByteData byteData,
         RenderView renderView)
     {
@@ -494,7 +494,7 @@ public class MinimumTextContrastEvaluation : ContrastEvaluation
     private Task<List<Violation>> EvaluateElement(
         SemanticsNode node,
         Element element,
-        Bitmap image,
+        RasterImage image,
         ByteData byteData,
         RenderView renderView)
     {
@@ -569,8 +569,8 @@ public class MinimumTextContrastEvaluation : ContrastEvaluation
         OrderedDictionary<Color, int> colorHistogram = ColorsWithinRect(
             byteData,
             paintBoundsWithOffset,
-            image.PixelSize.Width,
-            image.PixelSize.Height);
+            image.Width,
+            image.Height);
 
         // Node was too far off screen.
         if (colorHistogram.Count == 0)
@@ -672,7 +672,7 @@ public class MinimumNonTextContrastEvaluation : ContrastEvaluation
     public override Task<List<Violation>> EvaluateNodeContent(
         SemanticsNode node,
         SemanticsData data,
-        Bitmap image,
+        RasterImage image,
         ByteData byteData,
         RenderView renderView)
     {
@@ -707,8 +707,8 @@ public class MinimumNonTextContrastEvaluation : ContrastEvaluation
         OrderedDictionary<Color, int> colorHistogram = ColorsWithinRect(
             byteData,
             inflatedBounds,
-            image.PixelSize.Width,
-            image.PixelSize.Height);
+            image.Width,
+            image.Height);
 
         if (colorHistogram.Count <= 1)
         {

@@ -331,7 +331,7 @@ public sealed class UpstreamDelta347Tests : IDisposable
 
         protected override ImageStreamCompleter LoadImage(string key) =>
             new OneFrameImageStreamCompleter(
-                Task.FromResult(new ImageInfo(new FakeImage(new Size(10, 10)), debugLabel: key)));
+                Task.FromResult(new ImageInfo(new RasterImage(new FakeImage(new Size(10, 10))), debugLabel: key)));
     }
 
     private sealed class FakeImage : Avalonia.Media.IImage

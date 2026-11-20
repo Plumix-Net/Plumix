@@ -336,7 +336,7 @@ public sealed class RenderParagraphTests
             paragraph.Paint(context, default);
             context.DebugStopRecordingIfNeeded();
             Picture picture = Assert.IsType<PictureLayer>(Assert.Single(root.Children)).Picture!;
-            using Avalonia.Media.Imaging.Bitmap image = picture.ToImageSync(40, 40);
+            using Avalonia.Media.Imaging.Bitmap image = picture.ToImageSync(40, 40).NativeBitmap;
             (byte r, byte g, byte b, _) = RasterBackend.PixelAt(image, 10, 10);
             return (r, g, b);
         }

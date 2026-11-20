@@ -84,7 +84,7 @@ public sealed class PaintingBindingTests : IDisposable
         var listener = new ImageStreamListener((image, _) => image.Dispose());
         completer.AddListener(listener);
         cache.PutIfAbsent(1, () => completer);
-        completer.Emit(new ImageInfo(NewImage(8, 4)));
+        completer.Emit(new ImageInfo(new RasterImage(NewImage(8, 4))));
         Assert.Equal(1, cache.CurrentSize);
         Assert.True(cache.StatusForKey(1).Live);
         var pending = new TestCompleter();
@@ -143,8 +143,8 @@ public sealed class PaintingBindingTests : IDisposable
         };
         PaintingDebug.DebugCaptureShaderWarmUpImage = image =>
         {
-            Assert.Equal(new PixelSize(11, 7), image.PixelSize);
-            Assert.Equal(((byte)255, (byte)0, (byte)0, (byte)255), RasterBackend.PixelAt(image, 2, 2));
+            Assert.Equal((11, 7), (image.Width, image.Height));
+            Assert.Equal(((byte)255, (byte)0, (byte)0, (byte)255), RasterBackend.PixelAt(image.NativeBitmap, 2, 2));
             captures++;
             return true;
         };
@@ -185,7 +185,7 @@ public sealed class PaintingBindingTests : IDisposable
         using Codec codec = await binding.InstantiateImageCodecFromBuffer(buffer, width, height, upscale);
 #pragma warning restore CS0618
         FrameInfo frame = await EventLoopPump.WaitFor(codec.GetNextFrame());
-        using Bitmap image = frame.Image;
+        using Bitmap image = frame.Image.NativeBitmap;
         Assert.Equal(new PixelSize(expectedWidth, expectedHeight), image.PixelSize);
         Assert.Equal(TimeSpan.Zero, frame.Duration);
         Assert.Equal(1, codec.FrameCount);
@@ -210,8 +210,8 @@ public sealed class PaintingBindingTests : IDisposable
         FrameInfo second = await EventLoopPump.WaitFor(codec.GetNextFrame());
         codec.Dispose();
         Assert.Equal(1, calls);
-        Assert.Equal(RasterBackend.ReadPixels(first.Image), RasterBackend.ReadPixels(second.Image));
-        Assert.Equal(new PixelSize(15, 10), first.Image.PixelSize);
+        Assert.Equal(RasterBackend.ReadPixels(first.Image.NativeBitmap), RasterBackend.ReadPixels(second.Image.NativeBitmap));
+        Assert.Equal((15, 10), (first.Image.Width, first.Image.Height));
         first.Image.Dispose();
         second.Image.Dispose();
         Assert.Throws<ObjectDisposedException>(() => { _ = codec.GetNextFrame(); });
@@ -270,13 +270,13 @@ public sealed class PaintingBindingTests : IDisposable
         Assert.Equal(1, binding.DecodeCalls);
         Assert.Equal(1, binding.ImageCache.CurrentSize);
         Assert.Equal(2, decoded!.Scale);
-        Assert.Equal(new PixelSize(6, 4), Assert.IsType<Bitmap>(decoded.Image).PixelSize);
+        Assert.Equal(new PixelSize(6, 4), decoded.Image.NativeBitmap.PixelSize);
         decoded.Dispose();
         stream.RemoveListener(listener);
     }
 
     private static Bitmap NewImage(int width, int height) =>
-        SceneBuilderTests.DrawPaintPicture(0xFFFF0000).ToImageSync(width, height);
+        SceneBuilderTests.DrawPaintPicture(0xFFFF0000).ToImageSync(width, height).NativeBitmap;
 
     private static byte[] PngBytes(int width, int height)
     {

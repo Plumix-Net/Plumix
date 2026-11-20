@@ -858,16 +858,16 @@ public partial class Canvas
     /// with the given <see cref="Paint"/>.
     /// </summary>
     /// <remarks>Dart's <c>Canvas.drawImage(image, offset, paint)</c>; the image is an Avalonia
-    /// <see cref="IImage"/> (see <c>docs/ai/DIVERGENCES.md</c>).</remarks>
-    public virtual void DrawImage(IImage image, Offset offset, Paint paint)
+    /// <see cref="RasterImage"/> (see <c>docs/ai/DIVERGENCES.md</c>).</remarks>
+    public virtual void DrawImage(RasterImage image, Offset offset, Paint paint)
     {
         ArgumentNullException.ThrowIfNull(image);
         ArgumentNullException.ThrowIfNull(paint);
-        Size size = ImageSize(image);
+        Size size = ImageSize(image.Native);
         var destination = offset & size;
         RecordImageDraw(
-            new CanvasCall("drawImage", Offset: offset, Image: image),
-            image,
+            new CanvasCall("drawImage", Offset: offset, Image: image.Native),
+            image.Native,
             paint,
             destination,
             (context, source) => context.DrawImage(source, (Offset.Zero & source.Size.ToPlumix()).ToAvalonia(), destination.ToAvalonia()));
@@ -882,13 +882,13 @@ public partial class Canvas
     /// quality and anti-alias flag apply to the draw; its colour filter and inverted colours filter the
     /// image's pixels, and an image filter composites the draw through a rasterized layer.
     /// </remarks>
-    public virtual void DrawImageRect(IImage image, Rect src, Rect dst, Paint paint)
+    public virtual void DrawImageRect(RasterImage image, Rect src, Rect dst, Paint paint)
     {
         ArgumentNullException.ThrowIfNull(image);
         ArgumentNullException.ThrowIfNull(paint);
         RecordImageDraw(
-            new CanvasCall("drawImageRect", Rect: dst, SourceRect: src, Image: image),
-            image,
+            new CanvasCall("drawImageRect", Rect: dst, SourceRect: src, Image: image.Native),
+            image.Native,
             paint,
             dst,
             (context, source) =>
@@ -912,14 +912,14 @@ public partial class Canvas
     /// <paramref name="dst"/> is too small for the fixed corners they shrink proportionally and the middle
     /// collapses.
     /// </remarks>
-    public virtual void DrawImageNine(IImage image, Rect center, Rect dst, Paint paint)
+    public virtual void DrawImageNine(RasterImage image, Rect center, Rect dst, Paint paint)
     {
         ArgumentNullException.ThrowIfNull(image);
         ArgumentNullException.ThrowIfNull(paint);
-        Size size = ImageSize(image);
+        Size size = ImageSize(image.Native);
         RecordImageDraw(
-            new CanvasCall("drawImageNine", Rect: dst, SourceRect: center, Image: image),
-            image,
+            new CanvasCall("drawImageNine", Rect: dst, SourceRect: center, Image: image.Native),
+            image.Native,
             paint,
             dst,
             (context, source) =>

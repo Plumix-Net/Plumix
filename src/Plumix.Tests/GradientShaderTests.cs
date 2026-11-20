@@ -253,7 +253,7 @@ public sealed class GradientShaderTests
                 colors: [Colors.Red, Colors.Blue], radius: 0.4,
                 focal: Alignment.Center, focalRadius: 0.1, tileMode: TileMode.Decal)))));
         using Bitmap image = Assert.IsAssignableFrom<OffsetLayer>(tester.RenderView.Layer)
-            .ToImageSync(Rect.FromLTWH(0, 0, 100, 100));
+            .ToImageSync(Rect.FromLTWH(0, 0, 100, 100)).NativeBitmap;
         AssertPixel(image, 75, 50, 123, 0, 132, 255);
         Assert.Equal(0, RasterBackend.PixelAt(image, 51, 51).A);
         Assert.Equal(0, RasterBackend.PixelAt(image, 99, 99).A);
@@ -379,7 +379,7 @@ public sealed class GradientShaderTests
         Assert.Equal(Math.PI, sweep.EndAngle);
         Assert.Equal(TileMode.Decal, sweep.TileMode);
         using Bitmap image = Assert.IsAssignableFrom<OffsetLayer>(tester.RenderView.Layer)
-            .ToImageSync(Rect.FromLTWH(0, 0, 800, 600));
+            .ToImageSync(Rect.FromLTWH(0, 0, 800, 600)).NativeBitmap;
         Assert.Contains(RasterBackend.ReadPixels(image), value => value != 0);
         Assert.Null(tester.TakeException());
     }

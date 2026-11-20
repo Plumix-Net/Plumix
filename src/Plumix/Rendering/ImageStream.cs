@@ -2,6 +2,7 @@ using System.Diagnostics;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Plumix.Foundation;
+using Plumix.UI;
 
 namespace Plumix.Rendering;
 
@@ -41,43 +42,32 @@ public sealed record ImageStreamListener(
 
 public sealed class ImageInfo : IDisposable
 {
-    private readonly SharedImage _sharedImage;
     private int _disposed;
 
-    public ImageInfo(IImage image, double scale = 1.0, string? debugLabel = null)
-        : this(new SharedImage(image ?? throw new ArgumentNullException(nameof(image))), scale, debugLabel)
-    {
-    }
-
-    private ImageInfo(SharedImage sharedImage, double scale, string? debugLabel)
+    /// <summary>Takes ownership of <paramref name="image"/>: disposing the info disposes the handle.</summary>
+    public ImageInfo(RasterImage image, double scale = 1.0, string? debugLabel = null)
     {
         if (!double.IsFinite(scale) || scale <= 0)
         {
             throw new ArgumentOutOfRangeException(nameof(scale), "Image scale must be finite and positive.");
         }
 
-        _sharedImage = sharedImage;
+        Image = image ?? throw new ArgumentNullException(nameof(image));
         Scale = scale;
         DebugLabel = debugLabel;
         FoundationDebug.DebugMaybeDispatchCreated("painting", "ImageInfo", this);
     }
 
-    public IImage Image => _sharedImage.Image;
+    public RasterImage Image { get; }
     public double Scale { get; }
     public string? DebugLabel { get; }
-    public long SizeBytes => Image is Bitmap bitmap
-        ? checked((long)bitmap.PixelSize.Width * bitmap.PixelSize.Height * 4L)
-        : checked((long)Math.Ceiling(Image.Size.Width) * (long)Math.Ceiling(Image.Size.Height) * 4L);
+    public long SizeBytes => checked((long)Image.Width * Image.Height * 4L);
 
-    public ImageInfo Clone()
-    {
-        _sharedImage.AddReference();
-        return new ImageInfo(_sharedImage, Scale, DebugLabel);
-    }
+    public ImageInfo Clone() => new(Image.Clone(), Scale, DebugLabel);
 
     public bool IsCloneOf(ImageInfo other)
     {
-        return ReferenceEquals(Image, other.Image)
+        return Image.IsCloneOf(other.Image)
                && Scale.Equals(other.Scale)
                && string.Equals(DebugLabel, other.DebugLabel, StringComparison.Ordinal);
     }
@@ -86,40 +76,12 @@ public sealed class ImageInfo : IDisposable
     {
         if (Interlocked.Exchange(ref _disposed, 1) == 0)
         {
-            _sharedImage.Release();
+            Image.Dispose();
             FoundationDebug.DebugMaybeDispatchDisposed(this);
         }
     }
 
     public override string ToString() => $"{DebugLabel ?? Image.ToString()} @ {Scale:0.0}x";
-
-    private sealed class SharedImage
-    {
-        private int _references = 1;
-
-        public SharedImage(IImage image)
-        {
-            Image = image;
-        }
-
-        public IImage Image { get; }
-
-        public void AddReference()
-        {
-            if (Interlocked.Increment(ref _references) <= 1)
-            {
-                throw new ObjectDisposedException(nameof(ImageInfo));
-            }
-        }
-
-        public void Release()
-        {
-            if (Interlocked.Decrement(ref _references) == 0 && Image is IDisposable disposable)
-            {
-                disposable.Dispose();
-            }
-        }
-    }
 }
 
 public sealed class ImageStream
