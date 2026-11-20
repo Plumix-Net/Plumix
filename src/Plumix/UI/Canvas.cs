@@ -363,7 +363,7 @@ public sealed class Picture
     {
         var mask = new Avalonia.Media.Immutable.ImmutableSolidColorBrush(
             Avalonia.Media.Color.FromArgb(layer.Alpha, 0xFF, 0xFF, 0xFF));
-        return context.PushOpacityMask(mask, ClampLayerBounds(layer.Bounds));
+        return context.PushOpacityMask(mask, ClampLayerBounds(layer.Bounds).ToAvalonia());
     }
 
     // Avalonia needs finite group bounds; an unbounded layer is bounded by the largest finite rect instead.
@@ -723,14 +723,14 @@ public partial class Canvas
             Geometry? difference = null;
             Geometry Difference() => difference ??= new CombinedGeometry(
                 GeometryCombineMode.Exclude,
-                new RectangleGeometry(LargestRect),
-                new RectangleGeometry(rect));
+                new RectangleGeometry(LargestRect.ToAvalonia()),
+                new RectangleGeometry(rect.ToAvalonia()));
             _commands.Add(CanvasCommand.ForPush(context => context.PushGeometryClip(Difference())));
             return;
         }
 
         IntersectClipBounds(rect, doAntiAlias);
-        _commands.Add(CanvasCommand.ForPush(context => context.PushClip(rect)));
+        _commands.Add(CanvasCommand.ForPush(context => context.PushClip(rect.ToAvalonia())));
     }
 
     /// <summary>Reduces the clip region to the intersection of the current clip and the given rounded rect.</summary>
@@ -767,7 +767,7 @@ public partial class Canvas
     public virtual void ClipGeometry(Geometry geometry, bool doAntiAlias = true, Offset geometryOffset = default)
     {
         ArgumentNullException.ThrowIfNull(geometry);
-        Rect geometryBounds = geometry.Bounds;
+        Rect geometryBounds = geometry.Bounds.ToPlumix();
         IntersectClipBounds(
             DartGeometry.RectFromOffsetAndSize(geometryBounds.TopLeft + geometryOffset, geometryBounds.Size),
             doAntiAlias);
@@ -827,7 +827,7 @@ public partial class Canvas
     internal virtual void PushOpacityMask(IBrush mask, Rect bounds)
     {
         ArgumentNullException.ThrowIfNull(mask);
-        _commands.Add(CanvasCommand.ForPush(context => context.PushOpacityMask(mask, bounds)));
+        _commands.Add(CanvasCommand.ForPush(context => context.PushOpacityMask(mask, bounds.ToAvalonia())));
     }
 
     /// <summary>Plumix-only: records a draw call that renders itself onto the backend context.</summary>

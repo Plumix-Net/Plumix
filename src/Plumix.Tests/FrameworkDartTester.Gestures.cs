@@ -274,11 +274,11 @@ internal sealed partial class FrameworkDartTester
         double frameMicroseconds = (frameInterval ?? TimeSpan.FromMilliseconds(16)).TotalMicroseconds;
         TimeSpan delay = initialOffsetDelay ?? TimeSpan.FromSeconds(1);
         TestGesture gesture = CreateGesture(PointerDeviceKind.Touch, buttons);
-        double timeStampDelta = 1000000.0 * offset.DartDistance / (moveCount * speed);
+        double timeStampDelta = 1000000.0 * offset.Distance / (moveCount * speed);
         double timeStamp = 0.0;
         double lastTimeStamp = timeStamp;
         gesture.Down(startLocation, Microseconds(timeStamp));
-        if (initialOffset.DartDistance > 0.0)
+        if (initialOffset.Distance > 0.0)
         {
             gesture.MoveTo(startLocation + initialOffset, Microseconds(timeStamp));
             timeStamp += delay.TotalMicroseconds;
@@ -359,11 +359,11 @@ internal sealed partial class FrameworkDartTester
         double frameMicroseconds = (frameInterval ?? TimeSpan.FromMilliseconds(16)).TotalMicroseconds;
         TimeSpan delay = initialOffsetDelay ?? TimeSpan.FromSeconds(1);
         var pointer = new TestPointer(this, Interlocked.Increment(ref _nextGesturePointer), PointerDeviceKind.Trackpad);
-        double timeStampDelta = 1000000.0 * offset.DartDistance / (moveCount * speed);
+        double timeStampDelta = 1000000.0 * offset.Distance / (moveCount * speed);
         double timeStamp = 0.0;
         double lastTimeStamp = timeStamp;
         SendEventToBinding(pointer.PanZoomStart(startLocation, Microseconds(timeStamp)));
-        if (initialOffset.DartDistance > 0.0)
+        if (initialOffset.Distance > 0.0)
         {
             SendEventToBinding(pointer.PanZoomUpdate(
                 startLocation,

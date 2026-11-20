@@ -270,9 +270,9 @@ public sealed class MaterialCircleAvatarTests : IDisposable
 
     private sealed class FakeImage : IImage, IDisposable
     {
-        public FakeImage(Size size) => Size = size;
-        public Size Size { get; }
-        public void Draw(DrawingContext context, Rect sourceRect, Rect destRect) { }
+        public FakeImage(Size size) => Size = size.ToAvalonia();
+        public global::Avalonia.Size Size { get; }
+        public void Draw(DrawingContext context, global::Avalonia.Rect sourceRect, global::Avalonia.Rect destRect) { }
         public void Dispose() { }
     }
 

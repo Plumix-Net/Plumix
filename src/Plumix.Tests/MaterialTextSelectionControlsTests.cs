@@ -101,8 +101,8 @@ public sealed class MaterialTextSelectionControlsTests : IDisposable
         // double-blends where the two shapes overlap. `radius` comes from the width alone.
         var combined = Assert.IsType<CombinedGeometry>(TextSelectionHandlePainter.BuildPath(new Size(22, 40)));
         Assert.Equal(GeometryCombineMode.Union, combined.GeometryCombineMode);
-        Assert.Equal(DartGeometry.RectFromLTWH(0, 0, 22, 22), Assert.IsType<EllipseGeometry>(combined.Geometry1).Rect);
-        Assert.Equal(DartGeometry.RectFromLTWH(0, 0, 11, 11), Assert.IsType<RectangleGeometry>(combined.Geometry2).Rect);
+        Assert.Equal(DartGeometry.RectFromLTWH(0, 0, 22, 22), Assert.IsType<EllipseGeometry>(combined.Geometry1).Rect.ToPlumix());
+        Assert.Equal(DartGeometry.RectFromLTWH(0, 0, 11, 11), Assert.IsType<RectangleGeometry>(combined.Geometry2).Rect.ToPlumix());
 
         var root = new ContainerLayer();
         var context = new PaintingContext(root);

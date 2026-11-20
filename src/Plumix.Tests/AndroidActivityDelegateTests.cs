@@ -378,6 +378,6 @@ public sealed class AndroidActivityDelegateTests : IDisposable
 
     private sealed class MetricsHost : PlumixHost
     {
-        public void ArrangeContent(Size size) => ArrangeOverride(size);
+        public void ArrangeContent(Size size) => ArrangeOverride(size.ToAvalonia());
     }
 }

@@ -208,9 +208,9 @@ internal sealed class WindowViewHost : PlumixHost
         Dispatcher.UIThread.Post(() => ApplyRenderedSize(logical));
     }
 
-    protected override Size MeasureOverride(Size availableSize)
+    protected override global::Avalonia.Size MeasureOverride(global::Avalonia.Size availableSize)
     {
-        return IsSizedToContent ? _renderedLogicalSize : base.MeasureOverride(availableSize);
+        return IsSizedToContent ? _renderedLogicalSize.ToAvalonia() : base.MeasureOverride(availableSize);
     }
 
     private void ApplyRenderedSize(Size logical)
@@ -294,7 +294,7 @@ internal sealed class AvaloniaNativeWindow
     public bool IsDestroyed { get; private set; }
 
     /// <summary>The window's client size in logical pixels.</summary>
-    public Size ContentSize => Window.ClientSize;
+    public Size ContentSize => Window.ClientSize.ToPlumix();
 
     /// <summary>
     /// Shows the window: at once for a window with a size, on its view's first frame for one sized to its
@@ -738,7 +738,7 @@ internal sealed class AvaloniaAnchoredWindow
     {
         get
         {
-            PixelPoint parentOrigin = _parentWindow.PointToScreen(new Offset(0, 0));
+            PixelPoint parentOrigin = _parentWindow.PointToScreen(new Offset(0, 0).ToAvalonia());
             PixelPoint position = _native.Window.Position;
             double ratio = _parentWindow.RenderScaling;
             return new Offset((position.X - parentOrigin.X) / ratio, (position.Y - parentOrigin.Y) / ratio);
@@ -765,8 +765,8 @@ internal sealed class AvaloniaAnchoredWindow
         }
 
         double ratio = _parentWindow.RenderScaling;
-        PixelPoint parentOrigin = _parentWindow.PointToScreen(new Offset(0, 0));
-        Size parentClient = _parentWindow.ClientSize;
+        PixelPoint parentOrigin = _parentWindow.PointToScreen(new Offset(0, 0).ToAvalonia());
+        Size parentClient = _parentWindow.ClientSize.ToPlumix();
         var parentRect = DartGeometry.RectFromLTWH(
             parentOrigin.X,
             parentOrigin.Y,

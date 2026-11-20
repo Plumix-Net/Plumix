@@ -1591,7 +1591,7 @@ internal sealed class HeadlessParagraph : Paragraph
             {
                 open.Items.Add(item);
                 open.Right = offset.Dx + item.X + item.Width;
-                open.Clip = open.Clip.WithWidth(open.Right - open.Left);
+                open.Clip = Rect.FromLTWH(open.Clip.Left, open.Clip.Top, open.Right - open.Left, open.Clip.Height);
                 continue;
             }
 
@@ -1753,17 +1753,17 @@ internal sealed class HeadlessParagraph : Paragraph
         switch (shape)
         {
             case GlyphShape.DescentOnly:
-                return new RectangleGeometry(DartGeometry.RectFromLTWH(x, baseline, Math.Max(width, 0.0), descent));
+                return new RectangleGeometry(DartGeometry.RectFromLTWH(x, baseline, Math.Max(width, 0.0), descent).ToAvalonia());
             case GlyphShape.AscentOnly:
-                return new RectangleGeometry(DartGeometry.RectFromLTWH(x, baseline - ascent, Math.Max(width, 0.0), ascent));
+                return new RectangleGeometry(DartGeometry.RectFromLTWH(x, baseline - ascent, Math.Max(width, 0.0), ascent).ToAvalonia());
             case GlyphShape.NotDef:
                 double unit = fontSize / 1024.0;
                 var outer = DartGeometry.RectFromLTWH(x + (128 * unit), baseline - (768 * unit), 768 * unit, 768 * unit);
                 var inner = DartGeometry.RectFromLTWH(x + (256 * unit), baseline - (640 * unit), 512 * unit, 512 * unit);
                 return new CombinedGeometry(GeometryCombineMode.Exclude,
-                    new RectangleGeometry(outer), new RectangleGeometry(inner));
+                    new RectangleGeometry(outer.ToAvalonia()), new RectangleGeometry(inner.ToAvalonia()));
             default:
-                return new RectangleGeometry(DartGeometry.RectFromLTWH(x, baseline - ascent, Math.Max(width, 0.0), ascent + descent));
+                return new RectangleGeometry(DartGeometry.RectFromLTWH(x, baseline - ascent, Math.Max(width, 0.0), ascent + descent).ToAvalonia());
         }
     }
 

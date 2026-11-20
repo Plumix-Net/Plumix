@@ -559,7 +559,7 @@ public abstract class RenderViewportBase<TParentData> : RenderBox,
                 ? new Size(child.Constraints.CrossAxisExtent, child.Geometry!.LayoutExtent)
                 : new Size(child.Geometry!.LayoutExtent, child.Constraints.CrossAxisExtent);
             var rect = DartGeometry.RectFromOffsetAndSize(offset + PaintOffsetOf(child), size);
-            context.Canvas.DrawGeometry(null, pen, new RectangleGeometry(rect.Deflate(0.5)));
+            context.Canvas.DrawGeometry(null, pen, new RectangleGeometry(rect.Deflate(0.5).ToAvalonia()));
         }
     }
 

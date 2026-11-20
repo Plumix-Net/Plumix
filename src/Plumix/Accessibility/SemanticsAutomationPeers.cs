@@ -109,7 +109,7 @@ internal sealed class PlumixHostAutomationPeer : ControlAutomationPeer
     {
         if (TopLevel.GetTopLevel(Owner) is { } root && Owner.TransformToVisual(root) is { } transform)
         {
-            return viewRect.TransformToAABB(transform);
+            return viewRect.ToAvalonia().TransformToAABB(transform).ToPlumix();
         }
 
         return viewRect;
@@ -430,8 +430,8 @@ internal abstract class SemanticsNodeAutomationPeer : AutomationPeer
     // The engine's `kIdentifier`, exposed as the author unique id.
     protected override string? GetAutomationIdCore() => Node.Identifier.Length == 0 ? null : Node.Identifier;
 
-    protected override Rect GetBoundingRectangleCore() =>
-        Node.IsAttached ? Host.ToVisualRoot(Node.GetBoundsInView()) : default;
+    protected override global::Avalonia.Rect GetBoundingRectangleCore() =>
+        Node.IsAttached ? Host.ToVisualRoot(Node.GetBoundsInView()).ToAvalonia() : default;
 
     protected override IReadOnlyList<AutomationPeer> GetOrCreateChildrenCore()
     {
@@ -980,7 +980,7 @@ internal sealed class AnnouncementAutomationPeer(PlumixHostAutomationPeer host) 
 
     protected override string? GetAutomationIdCore() => null;
 
-    protected override Rect GetBoundingRectangleCore() => default;
+    protected override global::Avalonia.Rect GetBoundingRectangleCore() => default;
 
     protected override IReadOnlyList<AutomationPeer> GetOrCreateChildrenCore() => [];
 

@@ -298,7 +298,7 @@ public static class ImageByteData
     private static byte[] ReadRgba(Bitmap image, AlphaFormat alphaFormat)
     {
         PixelSize size = image.PixelSize;
-        using var readable = new WriteableBitmap(size, Dpi, PixelFormats.Rgba8888, alphaFormat);
+        using var readable = new WriteableBitmap(size, Dpi.ToAvaloniaVector(), PixelFormats.Rgba8888, alphaFormat);
         using ILockedFramebuffer framebuffer = readable.Lock();
         image.CopyPixels(framebuffer);
         int rowBytes = checked(size.Width * 4);

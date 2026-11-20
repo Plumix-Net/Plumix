@@ -299,7 +299,7 @@ public sealed partial class DragGestureRecognizerTests
         drag.MinFlingVelocity = 30;
         drag.MaxFlingVelocity = 40;
         DragEndDetails fling = Assert.IsType<DragEndDetails>(drag.ConsiderFling(estimate, PointerDeviceKind.Touch));
-        Assert.Equal(40, fling.Velocity.PixelsPerSecond.DartDistance, 8);
+        Assert.Equal(40, fling.Velocity.PixelsPerSecond.Distance, 8);
         Route(Up(1, default));
     }
 

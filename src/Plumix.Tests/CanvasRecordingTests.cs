@@ -385,7 +385,7 @@ public sealed class CanvasRecordingTests
             true,
             default,
             bounds,
-            new RectangleGeometry(bounds),
+            new RectangleGeometry(bounds.ToAvalonia()),
             (_, _) => painted++,
             clipBehavior));
 

@@ -287,11 +287,11 @@ public partial class PlumixHost : Control, ICustomHitTest
         }
     }
 
-    protected override Size ArrangeOverride(Size finalSize)
+    protected override global::Avalonia.Size ArrangeOverride(global::Avalonia.Size finalSize)
     {
-        if (!_lastArrangedSize.Equals(finalSize))
+        if (!_lastArrangedSize.Equals(finalSize.ToPlumix()))
         {
-            _lastArrangedSize = finalSize;
+            _lastArrangedSize = finalSize.ToPlumix();
             OnMetricsChanged();
         }
 
@@ -307,7 +307,7 @@ public partial class PlumixHost : Control, ICustomHitTest
         _panZoom.End();
         Focus();
         e.Pointer.Capture(this);
-        QueryNativeHitTest(e.GetPosition(this));
+        QueryNativeHitTest(e.GetPosition(this).ToPlumix());
         DispatchPointerEvent(ToPointerDownEvent(e));
     }
 
@@ -471,7 +471,7 @@ public partial class PlumixHost : Control, ICustomHitTest
         DispatchPointerEvent(new PointerAddedEvent(
             pointer: unchecked((int)e.Pointer.Id),
             kind: ToPointerKind(e.Pointer.Type),
-            position: e.GetPosition(this),
+            position: e.GetPosition(this).ToPlumix(),
             timestampUtc: FrameClock.UtcNow));
     }
 
@@ -482,7 +482,7 @@ public partial class PlumixHost : Control, ICustomHitTest
         DispatchPointerEvent(new PointerRemovedEvent(
             pointer: unchecked((int)e.Pointer.Id),
             kind: ToPointerKind(e.Pointer.Type),
-            position: e.GetPosition(this),
+            position: e.GetPosition(this).ToPlumix(),
             timestampUtc: FrameClock.UtcNow));
     }
 
@@ -500,7 +500,7 @@ public partial class PlumixHost : Control, ICustomHitTest
             DispatchPointerEvent(new PointerHoverEvent(
                 pointer: unchecked((int)e.Pointer.Id),
                 kind: kind,
-                position: position,
+                position: position.ToPlumix(),
                 buttons: buttons,
                 timestampUtc: FrameClock.UtcNow));
             return;
@@ -509,7 +509,7 @@ public partial class PlumixHost : Control, ICustomHitTest
         DispatchPointerEvent(new PointerMoveEvent(
             pointer: unchecked((int)e.Pointer.Id),
             kind: kind,
-            position: position,
+            position: position.ToPlumix(),
             buttons: buttons,
             timestampUtc: FrameClock.UtcNow));
     }
@@ -521,7 +521,7 @@ public partial class PlumixHost : Control, ICustomHitTest
         DispatchPointerEvent(new PointerUpEvent(
             pointer: unchecked((int)e.Pointer.Id),
             kind: ToPointerKind(e.Pointer.Type),
-            position: e.GetPosition(this),
+            position: e.GetPosition(this).ToPlumix(),
             buttons: ToPointerButtons(e.GetCurrentPoint(this).Properties),
             timestampUtc: FrameClock.UtcNow));
 
@@ -538,7 +538,7 @@ public partial class PlumixHost : Control, ICustomHitTest
     /// </summary>
     private void HandleTouchPadMagnify(object? sender, PointerDeltaEventArgs e)
     {
-        _panZoom.Zoom(e.GetPosition(this), 1.0 + e.Delta.Y, FrameClock.UtcNow);
+        _panZoom.Zoom(e.GetPosition(this).ToPlumix(), 1.0 + e.Delta.Y, FrameClock.UtcNow);
     }
 
     /// <summary>
@@ -548,7 +548,7 @@ public partial class PlumixHost : Control, ICustomHitTest
     /// </summary>
     private void HandleTouchPadRotate(object? sender, PointerDeltaEventArgs e)
     {
-        _panZoom.Rotate(e.GetPosition(this), -e.Delta.Y * Math.PI / 180.0, FrameClock.UtcNow);
+        _panZoom.Rotate(e.GetPosition(this).ToPlumix(), -e.Delta.Y * Math.PI / 180.0, FrameClock.UtcNow);
     }
 
     protected override void OnPointerWheelChanged(PointerWheelEventArgs e)
@@ -559,7 +559,7 @@ public partial class PlumixHost : Control, ICustomHitTest
         DispatchPointerEvent(new PointerScrollEvent(
             device: unchecked((int)e.Pointer.Id),
             kind: ToPointerKind(e.Pointer.Type),
-            position: e.GetPosition(this),
+            position: e.GetPosition(this).ToPlumix(),
             scrollDelta: new Offset(-e.Delta.X * 40.0, -e.Delta.Y * 40.0),
             timestampUtc: FrameClock.UtcNow,
             onRespond: allow => allowPlatformDefault = allow));
@@ -589,7 +589,7 @@ public partial class PlumixHost : Control, ICustomHitTest
     /// Avalonia otherwise hit-tests the drawn content, and native draws (exact solid paths, shadows,
     /// hairlines) are not hit-testable, so the pointer over them would fall through to the controls behind.
     /// </remarks>
-    public bool HitTest(Offset point) => DartGeometry.RectFromSize(Bounds.Size).Contains(point);
+    public bool HitTest(global::Avalonia.Point point) => new global::Avalonia.Rect(Bounds.Size).Contains(point);
 
     /// <summary>
     /// The engine's rasterizer: draws the layer tree <see cref="FlutterView.Render"/> last handed to this
@@ -988,9 +988,9 @@ public partial class PlumixHost : Control, ICustomHitTest
         // Avalonia assigns Bounds after ArrangeOverride returns; metrics published during that
         // callback must use its finalSize, including the first layout and subsequent resizes.
         var size = _lastArrangedSize;
-        Offset origin = _attachedTopLevel is null ? default : this.TranslatePoint(default, _attachedTopLevel) ?? default;
+        Offset origin = (_attachedTopLevel is null ? default : this.TranslatePoint(default, _attachedTopLevel) ?? default).ToPlumix();
         EdgeInsets viewInsets = ResolveViewInsets(
-            _inputPane?.State ?? InputPaneState.Closed, _inputPane?.OccludedRect ?? default, DartGeometry.RectFromOffsetAndSize(origin, size));
+            _inputPane?.State ?? InputPaneState.Closed, (_inputPane?.OccludedRect ?? default).ToPlumix(), DartGeometry.RectFromOffsetAndSize(origin, size));
         double scale = _attachedTopLevel?.RenderScaling ?? 1.0;
         if (!double.IsFinite(scale) || scale <= 0)
         {
@@ -1900,7 +1900,7 @@ public partial class PlumixHost : Control, ICustomHitTest
             : Matrix.Identity;
         Size targetSize = devicePixelRatio > 0.0
             ? new Size(physical.Width / devicePixelRatio, physical.Height / devicePixelRatio)
-            : Bounds.Size;
+            : Bounds.Size.ToPlumix();
         // A frame that repainted nothing (a ticker between the iOS caret's key frames) re-adds the shown tree's
         // retained layers. The engine redraws it cheaply; Avalonia would record and composite the whole scene
         // again, so the shown frame stays and only the frame's timings are reported.
@@ -1959,7 +1959,7 @@ public partial class PlumixHost : Control, ICustomHitTest
         return new PointerDownEvent(
             pointer: unchecked((int)e.Pointer.Id),
             kind: ToPointerKind(e.Pointer.Type),
-            position: e.GetPosition(this),
+            position: e.GetPosition(this).ToPlumix(),
             buttons: ToPointerButtons(e.GetCurrentPoint(this).Properties),
             timestampUtc: FrameClock.UtcNow);
     }
@@ -2030,7 +2030,7 @@ public partial class PlumixHost : Control, ICustomHitTest
 
         /// <summary>The caret rect in this host's coordinates: the plugin reports it in the view's
         /// physical pixels, the space the framework's editable transform maps into.</summary>
-        public override Rect CursorRectangle
+        public override global::Avalonia.Rect CursorRectangle
         {
             get
             {
@@ -2040,13 +2040,13 @@ public partial class PlumixHost : Control, ICustomHitTest
                 }
 
                 double devicePixelRatio = _host._view.DevicePixelRatio;
-                return devicePixelRatio > 0
-                    ? DartGeometry.RectFromLTWH(
+                return (devicePixelRatio > 0
+                    ? Rect.FromLTWH(
                         rect.Left / devicePixelRatio,
                         rect.Top / devicePixelRatio,
                         rect.Width / devicePixelRatio,
                         rect.Height / devicePixelRatio)
-                    : rect;
+                    : rect).ToAvalonia();
             }
         }
 

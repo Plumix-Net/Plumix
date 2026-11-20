@@ -368,7 +368,7 @@ internal sealed class RenderBottomAppBarSurface : RenderProxyBox
 
         try
         {
-            return Shape.GetOuterPath(host, guest).FillContains(position);
+            return Shape.GetOuterPath(host, guest).FillContains(position.ToAvalonia());
         }
         catch (InvalidOperationException)
         {
@@ -406,7 +406,7 @@ internal sealed class RenderBottomAppBarSurface : RenderProxyBox
     {
         if (Size.Width <= 0 || Size.Height <= 0) return;
         var host = DartGeometry.RectFromSize(Size);
-        var geometry = Shape?.GetOuterPath(host, ResolveGuestRect()) ?? new RectangleGeometry(host);
+        var geometry = Shape?.GetOuterPath(host, ResolveGuestRect()) ?? new RectangleGeometry(host.ToAvalonia());
         if (Elevation > 0.0 && ShadowColor.Alpha > 0)
         {
             context.Canvas.DrawShadow(

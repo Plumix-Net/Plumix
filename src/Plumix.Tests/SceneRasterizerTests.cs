@@ -454,7 +454,7 @@ public sealed class SceneRasterizerTests
         }
 
         Assert.NotNull(layerTree);
-        var image = new RenderTargetBitmap(new PixelSize(100, 60), new Offset(96, 96));
+        var image = new RenderTargetBitmap(new PixelSize(100, 60), new Offset(96, 96).ToAvaloniaVector());
         List<IDisposable> resources;
         using (Avalonia.Media.DrawingContext context = image.CreateDrawingContext())
         {
@@ -487,7 +487,7 @@ public sealed class SceneRasterizerTests
         var root = new ContainerFlowLayer();
         root.Add(new ProbeFlowLayer(context => context.Track(tracked)));
         root.Add(new ProbeFlowLayer(_ => throw new InvalidOperationException("raster failure")));
-        var image = new RenderTargetBitmap(new PixelSize(10, 10), new Offset(96, 96));
+        var image = new RenderTargetBitmap(new PixelSize(10, 10), new Offset(96, 96).ToAvaloniaVector());
         try
         {
             List<IDisposable> resources;
@@ -532,7 +532,7 @@ public sealed class SceneRasterizerTests
     private static Bitmap RasterizeScene(ContainerLayer root, int width, int height)
     {
         using Scene scene = root.BuildScene(new SceneBuilder());
-        var image = new RenderTargetBitmap(new PixelSize(width, height), new Offset(96, 96));
+        var image = new RenderTargetBitmap(new PixelSize(width, height), new Offset(96, 96).ToAvaloniaVector());
         List<IDisposable> resources;
         using (Avalonia.Media.DrawingContext context = image.CreateDrawingContext())
         {
@@ -563,13 +563,13 @@ public sealed class SceneRasterizerTests
 
     private static RenderTargetBitmap SolidImage(uint argb)
     {
-        var image = new RenderTargetBitmap(new PixelSize(2, 2), new Offset(96, 96));
+        var image = new RenderTargetBitmap(new PixelSize(2, 2), new Offset(96, 96).ToAvaloniaVector());
         using (Avalonia.Media.DrawingContext context = image.CreateDrawingContext())
         {
             context.DrawRectangle(
                 new Avalonia.Media.SolidColorBrush(Avalonia.Media.Color.FromUInt32(argb)),
                 null,
-                DartGeometry.RectFromLTWH(0, 0, 2, 2));
+                DartGeometry.RectFromLTWH(0, 0, 2, 2).ToAvalonia());
         }
 
         return image;

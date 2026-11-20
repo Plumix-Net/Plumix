@@ -88,7 +88,7 @@ internal sealed class RasterizedShapeDraw
     private (WriteableBitmap? Bitmap, Rect Bounds) Rasterize(double scale)
     {
         Geometry geometry = _geometrySource();
-        Rect shapeBounds = _pen is null ? geometry.Bounds : geometry.GetRenderBounds(_pen);
+        Rect shapeBounds = (_pen is null ? geometry.Bounds : geometry.GetRenderBounds(_pen)).ToPlumix();
         double sigma = _maskFilter?.Sigma ?? 0.0;
         // Skia pads the mask by the blur's 3-sigma extent; one more pixel keeps the anti-aliased edge.
         double padding = PaintRasterizer.BlurExtent(sigma) + 1.0;
@@ -316,7 +316,7 @@ internal static class PaintRasterizer
     {
         var bitmap = new WriteableBitmap(
             new PixelSize(width, height),
-            Dpi,
+            Dpi.ToAvaloniaVector(),
             PixelFormats.Bgra8888,
             AlphaFormat.Premul);
         using ILockedFramebuffer framebuffer = bitmap.Lock();
@@ -336,7 +336,7 @@ internal static class PaintRasterizer
             BitmapBlendingMode = FilterLayerRasterizer.ToBitmapBlendingMode(blendMode),
             BitmapInterpolationMode = BitmapInterpolationMode.LowQuality,
         });
-        context.DrawImage(bitmap, DartGeometry.RectFromSize(bitmap.Size), bounds);
+        context.DrawImage(bitmap, DartGeometry.RectFromSize(bitmap.Size.ToPlumix()).ToAvalonia(), bounds.ToAvalonia());
     }
 
     private static byte[] Rasterize(
@@ -347,7 +347,7 @@ internal static class PaintRasterizer
         Action<DrawingContext> draw)
     {
         var pixelSize = new PixelSize(width, height);
-        using var target = new RenderTargetBitmap(pixelSize, Dpi);
+        using var target = new RenderTargetBitmap(pixelSize, Dpi.ToAvaloniaVector());
         using (DrawingContext drawingContext = target.CreateDrawingContext())
         using (drawingContext.PushTransform(
                    Matrix.CreateTranslation(-origin.Dx, -origin.Dy) * Matrix.CreateScale(scale, scale)))
@@ -355,7 +355,7 @@ internal static class PaintRasterizer
             draw(drawingContext);
         }
 
-        using var readable = new WriteableBitmap(pixelSize, Dpi, PixelFormats.Bgra8888, AlphaFormat.Premul);
+        using var readable = new WriteableBitmap(pixelSize, Dpi.ToAvaloniaVector(), PixelFormats.Bgra8888, AlphaFormat.Premul);
         using ILockedFramebuffer framebuffer = readable.Lock();
         target.CopyPixels(framebuffer);
         int rowBytes = checked(width * 4);

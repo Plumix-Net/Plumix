@@ -713,11 +713,11 @@ public sealed class ImageCacheDartParityTests : IDisposable
 
     private sealed class TestImage(Size size) : IImage, IDisposable
     {
-        public Size Size { get; } = size;
+        public global::Avalonia.Size Size { get; } = size.ToAvalonia();
 
         public int DisposeCount { get; private set; }
 
-        public void Draw(DrawingContext context, Rect sourceRect, Rect destRect)
+        public void Draw(DrawingContext context, global::Avalonia.Rect sourceRect, global::Avalonia.Rect destRect)
         {
         }
 

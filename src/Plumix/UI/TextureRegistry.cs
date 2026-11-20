@@ -71,7 +71,7 @@ public sealed class ImageTexture : EngineTexture
             return;
         }
 
-        Size size = image.Size;
+        Size size = image.Size.ToPlumix();
         using (context.PushRenderOptions(new RenderOptions
                {
                    BitmapInterpolationMode = filterQuality switch
@@ -83,7 +83,7 @@ public sealed class ImageTexture : EngineTexture
                    },
                }))
         {
-            context.DrawImage(image, DartGeometry.RectFromSize(size), bounds);
+            context.DrawImage(image, DartGeometry.RectFromSize(size).ToAvalonia(), bounds.ToAvalonia());
         }
     }
 

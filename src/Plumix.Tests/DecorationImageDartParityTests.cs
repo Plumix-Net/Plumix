@@ -889,7 +889,7 @@ public sealed class DecorationImageDartParityTests : IDisposable
 
     private static WriteableBitmap SolidBitmap(uint argb)
     {
-        var bitmap = new WriteableBitmap(new PixelSize(1, 1), new Offset(96, 96), PixelFormats.Bgra8888, AlphaFormat.Premul);
+        var bitmap = new WriteableBitmap(new PixelSize(1, 1), new Offset(96, 96).ToAvaloniaVector(), PixelFormats.Bgra8888, AlphaFormat.Premul);
         using ILockedFramebuffer framebuffer = bitmap.Lock();
         byte[] pixel = [(byte)argb, (byte)(argb >> 8), (byte)(argb >> 16), (byte)(argb >> 24)];
         Marshal.Copy(pixel, 0, framebuffer.Address, 4);
@@ -903,9 +903,9 @@ public sealed class DecorationImageDartParityTests : IDisposable
 
     private sealed class TestImage(int width, int height) : IImage
     {
-        public Size Size { get; } = new(width, height);
+        public global::Avalonia.Size Size { get; } = new(width, height);
 
-        public void Draw(DrawingContext context, Rect sourceRect, Rect destRect)
+        public void Draw(DrawingContext context, global::Avalonia.Rect sourceRect, global::Avalonia.Rect destRect)
         {
         }
     }

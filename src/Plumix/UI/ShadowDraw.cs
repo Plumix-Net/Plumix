@@ -37,9 +37,9 @@ internal sealed class ShadowDraw(Path path, Color color, double elevation, bool 
 
     private readonly Path _path = new(path);
 
-    public Rect Bounds { get; } = ComputeShadowBounds(path.GetBounds(), elevation, dpr);
+    public global::Avalonia.Rect Bounds { get; } = ComputeShadowBounds(path.GetBounds(), elevation, dpr).ToAvalonia();
 
-    public bool HitTest(Offset point) => false;
+    public bool HitTest(global::Avalonia.Point point) => false;
 
     public bool Equals(ICustomDrawOperation? other) => ReferenceEquals(this, other);
 

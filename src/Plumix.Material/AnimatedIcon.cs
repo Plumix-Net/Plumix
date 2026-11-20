@@ -198,14 +198,14 @@ internal sealed class PathFrames
                     {
                         path.EndFigure(isClosed: false);
                     }
-                    path.BeginFigure(moveTo.Interpolate(progress), isFilled: true);
+                    path.BeginFigure(moveTo.Interpolate(progress).ToAvalonia(), isFilled: true);
                     figureOpen = true;
                     break;
                 case PathCubicTo cubicTo:
                     path.CubicBezierTo(
-                        cubicTo.InterpolateControlPoint1(progress),
-                        cubicTo.InterpolateControlPoint2(progress),
-                        cubicTo.InterpolateTargetPoint(progress));
+                        cubicTo.InterpolateControlPoint1(progress).ToAvalonia(),
+                        cubicTo.InterpolateControlPoint2(progress).ToAvalonia(),
+                        cubicTo.InterpolateTargetPoint(progress).ToAvalonia());
                     break;
                 case PathClose:
                     if (figureOpen)

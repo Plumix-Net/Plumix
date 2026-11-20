@@ -1769,7 +1769,7 @@ internal sealed class RenderSlider : RenderBox
 
     private bool IsPointerOnOverlay(Offset globalPosition)
     {
-        return OverlayRect!.Value.ContainsHalfOpen(GlobalToLocal(globalPosition));
+        return OverlayRect!.Value.Contains(GlobalToLocal(globalPosition));
     }
 
     protected override bool HitTestSelf(Offset position) => true;
@@ -1791,7 +1791,7 @@ internal sealed class RenderSlider : RenderBox
 
         if (IsInteractive && OverlayRect != null)
         {
-            HoveringThumb = OverlayRect.Value.ContainsHalfOpen(@event.LocalPosition);
+            HoveringThumb = OverlayRect.Value.Contains(@event.LocalPosition);
         }
     }
 

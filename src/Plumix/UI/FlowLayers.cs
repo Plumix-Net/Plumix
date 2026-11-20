@@ -30,7 +30,7 @@ internal abstract class FlowLayer
             return null;
         }
 
-        return context.Canvas.PushOpacityMask(SaveLayerMask, bounds);
+        return context.Canvas.PushOpacityMask(SaveLayerMask, bounds.ToAvalonia());
     }
 
     /// <summary>Paints this layer: the engine's <c>Layer::Paint</c>.</summary>
@@ -220,7 +220,7 @@ internal sealed class ClipRectFlowLayer(Rect clipRect, Clip clipBehavior) : Cont
 
     public override void Paint(FlowPaintContext context)
     {
-        using (context.Canvas.PushClip(ClipRect))
+        using (context.Canvas.PushClip(ClipRect.ToAvalonia()))
         using (SaveLayerIfNeeded(context, ClipBehavior, ClipRect))
         {
             PaintChildren(context);
@@ -309,7 +309,7 @@ internal sealed class ClipGeometryFlowLayer(Geometry geometry, Offset geometryOf
     {
         using (context.Canvas.PushTransform(Matrix.CreateTranslation(GeometryOffset.Dx, GeometryOffset.Dy)))
         using (context.Canvas.PushGeometryClip(Geometry))
-        using (SaveLayerIfNeeded(context, ClipBehavior, Geometry.Bounds))
+        using (SaveLayerIfNeeded(context, ClipBehavior, Geometry.Bounds.ToPlumix()))
         using (context.Canvas.PushTransform(Matrix.CreateTranslation(-GeometryOffset.Dx, -GeometryOffset.Dy)))
         {
             PaintChildren(context);
@@ -491,7 +491,7 @@ internal sealed class MagnifierFlowLayer(
             return;
         }
 
-        Rect lensRect = LensRect.TransformToAABB(toTarget);
+        Rect lensRect = LensRect.ToAvalonia().TransformToAABB(toTarget).ToPlumix();
         if (lensRect.Width <= 0 || lensRect.Height <= 0)
         {
             return;
@@ -569,7 +569,7 @@ internal sealed class MagnifierFlowLayer(
             sourceSize.Height);
         if (scale > 0)
         {
-            context.DrawImage(backdrop.Image, sourceRect, lensRect);
+            context.DrawImage(backdrop.Image, sourceRect.ToAvalonia(), lensRect.ToAvalonia());
             return;
         }
 
@@ -578,7 +578,7 @@ internal sealed class MagnifierFlowLayer(
                    * Matrix.CreateScale(-1, -1)
                    * Matrix.CreateTranslation(-lensRect.Center.Dx, -lensRect.Center.Dy)))
         {
-            context.DrawImage(backdrop.Image, sourceRect, lensRect);
+            context.DrawImage(backdrop.Image, sourceRect.ToAvalonia(), lensRect.ToAvalonia());
         }
     }
 
@@ -778,7 +778,7 @@ internal sealed class PerformanceOverlayFlowLayer(int options, Rect bounds) : Fl
         }
 
         // The engine draws the text with its baseline at (x + labelX, y + height + labelY).
-        canvas.DrawText(text, new Offset(x + labelX, y + height + labelY - text.Baseline));
+        canvas.DrawText(text, new Offset(x + labelX, y + height + labelY - text.Baseline).ToAvalonia());
     }
 }
 
@@ -958,7 +958,7 @@ internal static class SceneRasterizer
     /// </summary>
     public static Bitmap RasterizeToImage(ContainerFlowLayer root, int width, int height)
     {
-        var image = new RenderTargetBitmap(new PixelSize(width, height), Dpi);
+        var image = new RenderTargetBitmap(new PixelSize(width, height), Dpi.ToAvaloniaVector());
         List<IDisposable> resources = [];
         try
         {
@@ -1028,7 +1028,7 @@ internal static class SceneRasterizer
         int width = Math.Max(1, (int)Math.Ceiling(state.TargetSize.Width));
         int height = Math.Max(1, (int)Math.Ceiling(state.TargetSize.Height));
         var bounds = DartGeometry.RectFromLTWH(0.0, 0.0, width, height);
-        var image = new RenderTargetBitmap(new PixelSize(width, height), Dpi);
+        var image = new RenderTargetBitmap(new PixelSize(width, height), Dpi.ToAvaloniaVector());
         t_captureDepth++;
         try
         {
@@ -1096,10 +1096,10 @@ internal static class SceneRasterizer
         {
             // Avalonia's recording context does not implement PushClip(RoundedRect) in every backend, but
             // its geometry-clip path records the equivalent rounded rectangle correctly.
-            return context.PushGeometryClip(new RectangleGeometry(rect, clampedRadius, clampedRadius));
+            return context.PushGeometryClip(new RectangleGeometry(rect.ToAvalonia(), clampedRadius, clampedRadius));
         }
 
-        return context.PushClip(new RoundedRect(rect, clampedRadius));
+        return context.PushClip(new RoundedRect(rect.ToAvalonia(), clampedRadius));
     }
 
     internal static DrawingContext.PushedState PushRoundedRectClip(
@@ -1128,15 +1128,15 @@ internal static class SceneRasterizer
             double fallbackY = Math.Max(
                 Math.Max(topLeft.Y, topRight.Y),
                 Math.Max(bottomRight.Y, bottomLeft.Y));
-            return context.PushGeometryClip(new RectangleGeometry(rect, fallbackX, fallbackY));
+            return context.PushGeometryClip(new RectangleGeometry(rect.ToAvalonia(), fallbackX, fallbackY));
         }
 
         return context.PushClip(new RoundedRect(
-            rect,
-            new Offset(topLeft.X, topLeft.Y),
-            new Offset(topRight.X, topRight.Y),
-            new Offset(bottomRight.X, bottomRight.Y),
-            new Offset(bottomLeft.X, bottomLeft.Y)));
+            rect.ToAvalonia(),
+            new Offset(topLeft.X, topLeft.Y).ToAvaloniaVector(),
+            new Offset(topRight.X, topRight.Y).ToAvaloniaVector(),
+            new Offset(bottomRight.X, bottomRight.Y).ToAvaloniaVector(),
+            new Offset(bottomLeft.X, bottomLeft.Y).ToAvaloniaVector()));
     }
 
     private static Radius ClipRadius(Radius radius) =>

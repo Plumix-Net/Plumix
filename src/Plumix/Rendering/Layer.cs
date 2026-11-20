@@ -2664,7 +2664,7 @@ public sealed class ClipGeometryLayer : ContainerLayer
         Offset localPosition,
         bool onlyFirst)
     {
-        return Geometry.FillContains(localPosition - GeometryOffset)
+        return Geometry.FillContains((localPosition - GeometryOffset).ToAvalonia())
             && base.FindAnnotations(result, localPosition, onlyFirst);
     }
 }

@@ -154,7 +154,7 @@ public sealed class LayerV2Tests
     [Fact]
     public void PushClipGeometry_CreatesGeometryLayer_WhenCompositingIsNeeded()
     {
-        var geometry = new RectangleGeometry(DartGeometry.RectFromLTWH(0, 0, 50, 30));
+        var geometry = new RectangleGeometry(DartGeometry.RectFromLTWH(0, 0, 50, 30).ToAvalonia());
 
         var rootLayer = new ContainerLayer();
         var context = new PaintingContext(rootLayer);

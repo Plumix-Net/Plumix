@@ -116,7 +116,7 @@ public sealed class UiGeometryDartParityTests
     {
         Offset offset = new(-5, 7);
         Assert.Equal(74, offset.DistanceSquared);
-        Assert.Equal(Math.Sqrt(74), offset.DartDistance);
+        Assert.Equal(Math.Sqrt(74), offset.Distance);
         Assert.Equal(new Offset(-10, 21), offset.Scale(2, 3));
         Assert.Equal(new Offset(-4, 9), offset.Translate(1, 2));
         Assert.Equal(DartGeometry.RectFromLTWH(-5, 7, 3, 4), offset.WithSize(new Size(3, 4)));
@@ -157,8 +157,8 @@ public sealed class UiGeometryDartParityTests
         Assert.Equal(DartGeometry.RectFromLTWH(-2, -2, 4, 4), DartGeometry.RectFromCircle(default, 2));
         Assert.Equal(DartGeometry.RectFromLTWH(5, 7, -4, -4), DartGeometry.RectFromLTRB(5, 7, 1, 3));
         Assert.True(DartGeometry.RectFromLTRB(5, 7, 1, 3).IsEmpty);
-        Assert.False(rect.ContainsHalfOpen(rect.BottomRight));
-        Assert.True(rect.ContainsHalfOpen(rect.TopLeft));
+        Assert.False(rect.Contains(rect.BottomRight));
+        Assert.True(rect.Contains(rect.TopLeft));
         Assert.Equal(2e9, DartGeometry.RectLargest.Width);
     }
 
@@ -167,14 +167,14 @@ public sealed class UiGeometryDartParityTests
     {
         Rect a = DartGeometry.RectFromLTRB(0, 0, 100, 100);
         Rect b = DartGeometry.RectFromLTRB(50, 50, 200, 200);
-        Assert.Equal(DartGeometry.RectFromLTWH(50, 50, 50, 50), a.IntersectUnclamped(b));
-        Assert.Equal(a.IntersectUnclamped(b), b.IntersectUnclamped(a));
+        Assert.Equal(DartGeometry.RectFromLTWH(50, 50, 50, 50), a.Intersect(b));
+        Assert.Equal(a.Intersect(b), b.Intersect(a));
         Assert.Equal(DartGeometry.RectFromLTWH(0, 0, 200, 200), a.ExpandToInclude(b));
         Assert.Equal(a.ExpandToInclude(b), b.ExpandToInclude(a));
         Rect vertical = DartGeometry.RectFromLTRB(50, 0, 50, 200);
         Rect horizontal = DartGeometry.RectFromLTRB(0, 50, 200, 50);
         Assert.Equal(DartGeometry.RectFromLTWH(0, 0, 200, 200), vertical.ExpandToInclude(horizontal));
-        Assert.Equal(DartGeometry.RectFromLTWH(5, 5, -3, -3), DartGeometry.RectFromLTWH(0, 0, 2, 2).IntersectUnclamped(DartGeometry.RectFromLTWH(5, 5, 2, 2)));
+        Assert.Equal(DartGeometry.RectFromLTWH(5, 5, -3, -3), DartGeometry.RectFromLTWH(0, 0, 2, 2).Intersect(DartGeometry.RectFromLTWH(5, 5, 2, 2)));
         Assert.False(a.Overlaps(DartGeometry.RectFromLTWH(100, 0, 10, 10)));
         Assert.True(a.Overlaps(b));
         Assert.Equal(DartGeometry.RectFromLTWH(60, 70, 150, 150), b.Shift(new Offset(10, 20)));

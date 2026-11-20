@@ -57,7 +57,7 @@ public sealed class ScrollBehaviorParityTests : IDisposable
         Assert.Equal(new Offset(19, 0), (horizontal + second).PixelsPerSecond);
         Assert.Equal(new Offset(5, 0), (second - horizontal).PixelsPerSecond);
         Assert.Equal(new Offset(-7, 0), (-horizontal).PixelsPerSecond);
-        Assert.Equal(5, horizontal.ClampMagnitude(0, 5).PixelsPerSecond.DartDistance, precision: 6);
+        Assert.Equal(5, horizontal.ClampMagnitude(0, 5).PixelsPerSecond.Distance, precision: 6);
     }
 
     [Fact]

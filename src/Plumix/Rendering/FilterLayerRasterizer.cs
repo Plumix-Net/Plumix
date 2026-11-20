@@ -179,7 +179,7 @@ internal static partial class FilterLayerRasterizer
         {
             RasterFrame frame = ApplyImageFilter(
                 Rasterize(
-                    drawingContext => drawingContext.DrawImage(backdrop, bounds, bounds),
+                    drawingContext => drawingContext.DrawImage(backdrop, bounds.ToAvalonia(), bounds.ToAvalonia()),
                     bounds),
                 imageFilter);
             return DrawFrame(context, frame, ToBitmapBlendingMode(blendMode));
@@ -209,7 +209,7 @@ internal static partial class FilterLayerRasterizer
         int width = Math.Max(1, (int)Math.Ceiling(bounds.Width));
         int height = Math.Max(1, (int)Math.Ceiling(bounds.Height));
         var pixelSize = new PixelSize(width, height);
-        using var target = new RenderTargetBitmap(pixelSize, Dpi);
+        using var target = new RenderTargetBitmap(pixelSize, Dpi.ToAvaloniaVector());
         using (DrawingContext drawingContext = target.CreateDrawingContext())
         using (drawingContext.PushTransform(Matrix.CreateTranslation(-bounds.Left, -bounds.Top)))
         {
@@ -218,7 +218,7 @@ internal static partial class FilterLayerRasterizer
 
         using var readable = new WriteableBitmap(
             pixelSize,
-            Dpi,
+            Dpi.ToAvaloniaVector(),
             PixelFormats.Bgra8888,
             AlphaFormat.Premul);
         using (ILockedFramebuffer framebuffer = readable.Lock())
@@ -253,7 +253,7 @@ internal static partial class FilterLayerRasterizer
 
         var bitmap = new WriteableBitmap(
             new PixelSize(frame.Width, frame.Height),
-            Dpi,
+            Dpi.ToAvaloniaVector(),
             PixelFormats.Bgra8888,
             AlphaFormat.Premul);
         using (ILockedFramebuffer framebuffer = bitmap.Lock())
@@ -272,8 +272,8 @@ internal static partial class FilterLayerRasterizer
         {
             context.DrawImage(
                 bitmap,
-                DartGeometry.RectFromLTWH(0.0, 0.0, frame.Width, frame.Height),
-                frame.Bounds);
+                DartGeometry.RectFromLTWH(0.0, 0.0, frame.Width, frame.Height).ToAvalonia(),
+                frame.Bounds.ToAvalonia());
         }
 
         return bitmap;

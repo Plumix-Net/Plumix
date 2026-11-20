@@ -285,7 +285,7 @@ public sealed class AvaloniaParagraphDartParityTests
 
         int OpaquePixels(RunGlyph[] glyphs)
         {
-            var run = new GlyphRun(typeface, 40, new string('H', glyphs.Length).AsMemory(), glyphs, new Offset(0, 40));
+            var run = new GlyphRun(typeface, 40, new string('H', glyphs.Length).AsMemory(), glyphs, new Offset(0, 40).ToAvalonia());
             var recorder = new PictureRecorder();
             new Canvas(recorder).DrawTextGeometry(
                 variable.Outline(run), new Paint { Color = new Plumix.UI.Color(0xFF000000) });

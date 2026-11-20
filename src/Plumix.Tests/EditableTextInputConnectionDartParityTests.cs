@@ -422,7 +422,7 @@ public sealed class EditableTextInputConnectionDartParityTests : IDisposable
 
             host.PumpFrameForTests(new Size(300, 200));
             SchedulerBinding.PumpFrameForTests();
-            Rect cursor = client.CursorRectangle;
+            Rect cursor = client.CursorRectangle.ToPlumix();
             Assert.True(cursor.Height > 0, cursor.ToString());
 
             // Without a focused field Avalonia gets no IME client, so focusing the host (any pointer

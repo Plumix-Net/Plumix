@@ -178,8 +178,8 @@ internal sealed class TextSelectionHandlePainter : CustomPainter
     internal static Geometry BuildPath(Size size)
     {
         double radius = size.Width / 2.0;
-        var circle = new EllipseGeometry(DartGeometry.RectFromLTWH(0.0, 0.0, radius * 2, radius * 2));
-        var point = new RectangleGeometry(DartGeometry.RectFromLTWH(0.0, 0.0, radius, radius));
+        var circle = new EllipseGeometry(DartGeometry.RectFromLTWH(0.0, 0.0, radius * 2, radius * 2).ToAvalonia());
+        var point = new RectangleGeometry(DartGeometry.RectFromLTWH(0.0, 0.0, radius, radius).ToAvalonia());
         return new CombinedGeometry(GeometryCombineMode.Union, circle, point);
     }
 

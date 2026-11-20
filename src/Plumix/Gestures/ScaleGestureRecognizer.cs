@@ -561,11 +561,11 @@ public class ScaleGestureRecognizer : OneSequenceGestureRecognizer
                 if (IsFlingGesture(velocity))
                 {
                     Offset pixelsPerSecond = velocity.PixelsPerSecond;
-                    if (pixelsPerSecond.DartDistanceSquared
+                    if (pixelsPerSecond.DistanceSquared
                         > GestureConstants.MaxFlingVelocity * GestureConstants.MaxFlingVelocity)
                     {
                         velocity = new Velocity(
-                            pixelsPerSecond / pixelsPerSecond.DartDistance * GestureConstants.MaxFlingVelocity);
+                            pixelsPerSecond / pixelsPerSecond.Distance * GestureConstants.MaxFlingVelocity);
                     }
 
                     Velocity endVelocity = velocity;
@@ -683,7 +683,7 @@ public class ScaleGestureRecognizer : OneSequenceGestureRecognizer
 
     private static bool IsFlingGesture(Velocity velocity)
     {
-        double speedSquared = velocity.PixelsPerSecond.DartDistanceSquared;
+        double speedSquared = velocity.PixelsPerSecond.DistanceSquared;
         return speedSquared > GestureConstants.MinFlingVelocity * GestureConstants.MinFlingVelocity;
     }
 

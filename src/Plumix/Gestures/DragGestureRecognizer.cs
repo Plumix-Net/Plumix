@@ -893,8 +893,8 @@ public class PanGestureRecognizer : DragGestureRecognizer
     {
         double minVelocity = EffectiveMinFlingVelocity;
         double minDistance = EffectiveMinFlingDistance(kind);
-        return estimate.PixelsPerSecond.DartDistanceSquared > minVelocity * minVelocity
-               && estimate.Offset.DartDistanceSquared > minDistance * minDistance;
+        return estimate.PixelsPerSecond.DistanceSquared > minVelocity * minVelocity
+               && estimate.Offset.DistanceSquared > minDistance * minDistance;
     }
 
     public override DragEndDetails? ConsiderFling(VelocityEstimate estimate, PointerDeviceKind kind)

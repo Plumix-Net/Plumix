@@ -65,9 +65,9 @@ internal sealed class FlutterTestGlyphDraw(IReadOnlyList<FlutterTestGlyphDraw.Op
 
     private static readonly Lazy<SKTypeface?> Typeface = new(LoadTypeface);
 
-    public Rect Bounds => bounds;
+    public global::Avalonia.Rect Bounds => bounds.ToAvalonia();
 
-    public bool HitTest(Offset point) => false;
+    public bool HitTest(global::Avalonia.Point point) => false;
 
     public bool Equals(ICustomDrawOperation? other) => ReferenceEquals(this, other);
 
@@ -115,7 +115,7 @@ internal sealed class FlutterTestGlyphDraw(IReadOnlyList<FlutterTestGlyphDraw.Op
             switch (operation)
             {
                 case BackgroundOperation background:
-                    context.FillRectangle(new ImmutableSolidColorBrush(background.Color), background.Rect);
+                    context.FillRectangle(new ImmutableSolidColorBrush(background.Color), background.Rect.ToAvalonia());
                     break;
                 case GlyphsOperation { Shadow: null } run:
                     foreach (Glyph glyph in run.Glyphs)
@@ -126,7 +126,7 @@ internal sealed class FlutterTestGlyphDraw(IReadOnlyList<FlutterTestGlyphDraw.Op
                                 glyph.X,
                                 glyph.Baseline - (glyph.FontSize * 0.75),
                                 glyph.FontSize,
-                                glyph.FontSize));
+                                glyph.FontSize).ToAvalonia());
                     }
 
                     break;

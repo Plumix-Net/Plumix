@@ -336,7 +336,7 @@ public sealed class PathDartParityTests
         // At x=106.25, the true curve is y=99.609375; old 16-segment flattening gave y=99.21875.
         Assert.True(path.Contains(new Offset(106.25, 99.5)));
         Assert.False(path.Contains(new Offset(106.25, 99.7)));
-        Assert.True(path.ToGeometry().FillContains(new Offset(106.25, 99.5)));
+        Assert.True(path.ToGeometry().FillContains(new Offset(106.25, 99.5).ToAvalonia()));
         var recorder = new PictureRecorder();
         var canvas = new Canvas(recorder);
         canvas.Scale(4, 4);
@@ -369,9 +369,9 @@ public sealed class PathDartParityTests
         Assert.True(path.Contains(new Offset(50, 50)));
         path.FillType = PathFillType.EvenOdd;
         Assert.False(path.Contains(new Offset(50, 50)));
-        Assert.False(path.ToGeometry().FillContains(new Offset(50, 50)));
+        Assert.False(path.ToGeometry().FillContains(new Offset(50, 50).ToAvalonia()));
         Assert.True(path.Contains(new Offset(10, 10)));
-        Assert.True(path.ToGeometry().FillContains(new Offset(10, 10)));
+        Assert.True(path.ToGeometry().FillContains(new Offset(10, 10).ToAvalonia()));
         path.Reset();
         path.AddRect(DartGeometry.RectFromLTWH(0, 0, 100, 100));
         path.AddPolygon([new Offset(20, 20), new Offset(20, 80), new Offset(80, 80), new Offset(80, 20)], true);

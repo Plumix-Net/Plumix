@@ -298,13 +298,13 @@ public class PaintingContext : ClipContext
             if (RenderingDebug.RepaintRainbowEnabled)
             {
                 var pen = new Pen(new SolidColorBrush(RenderingDebug.CurrentRepaintColor.ToColor()), 6.0);
-                Canvas.DrawGeometry(null, pen, new RectangleGeometry(DeflateRect(EstimatedBounds, 3.0)));
+                Canvas.DrawGeometry(null, pen, new RectangleGeometry(DeflateRect(EstimatedBounds, 3.0).ToAvalonia()));
             }
 
             if (RenderingDebug.PaintLayerBordersEnabled)
             {
                 var pen = new Pen(new SolidColorBrush(new Color(0xFFFF9800)), 1.0);
-                Canvas.DrawGeometry(null, pen, new RectangleGeometry(EstimatedBounds));
+                Canvas.DrawGeometry(null, pen, new RectangleGeometry(EstimatedBounds.ToAvalonia()));
             }
         }
 

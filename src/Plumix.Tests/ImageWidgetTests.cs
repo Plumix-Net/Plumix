@@ -497,12 +497,12 @@ public sealed class ImageWidgetTests : IDisposable
     {
         public FakeImage(Size size)
         {
-            Size = size;
+            Size = size.ToAvalonia();
         }
 
-        public Size Size { get; }
+        public global::Avalonia.Size Size { get; }
 
-        public void Draw(DrawingContext context, Rect sourceRect, Rect destRect)
+        public void Draw(DrawingContext context, global::Avalonia.Rect sourceRect, global::Avalonia.Rect destRect)
         {
         }
     }

@@ -96,7 +96,7 @@ internal sealed class VariableFont : IDisposable
                 (ushort)glyphs[index].Codepoint,
                 (int)glyphs[index].Cluster - start,
                 positions[index].XAdvance * _scale,
-                new Offset(positions[index].XOffset * _scale, -positions[index].YOffset * _scale));
+                new Offset(positions[index].XOffset * _scale, -positions[index].YOffset * _scale).ToAvaloniaVector());
         }
 
         return result;
@@ -121,7 +121,7 @@ internal sealed class VariableFont : IDisposable
             double x = 0.0;
             foreach (RunGlyph glyph in run.GlyphInfos)
             {
-                target.Origin = new Offset(x + glyph.GlyphOffset.X, glyph.GlyphOffset.Y + run.BaselineOrigin.Dy);
+                target.Origin = new Offset(x + glyph.GlyphOffset.X, glyph.GlyphOffset.Y + run.BaselineOrigin.Y);
                 DrawGlyph(_font.Handle, glyph.GlyphIndex, DrawFunctions.Value, GCHandle.ToIntPtr(handle));
                 target.Close();
                 x += glyph.GlyphAdvance;
@@ -160,15 +160,15 @@ internal sealed class VariableFont : IDisposable
         internal void Move(float x, float y)
         {
             Close();
-            context.BeginFigure(Point(x, y), true);
+            context.BeginFigure(Point(x, y).ToAvalonia(), true);
             _open = true;
         }
 
-        internal void Line(float x, float y) => context.LineTo(Point(x, y));
+        internal void Line(float x, float y) => context.LineTo(Point(x, y).ToAvalonia());
         internal void Quad(float x, float y, float endX, float endY) =>
-            context.QuadraticBezierTo(Point(x, y), Point(endX, endY));
+            context.QuadraticBezierTo(Point(x, y).ToAvalonia(), Point(endX, endY).ToAvalonia());
         internal void Cubic(float x, float y, float x2, float y2, float endX, float endY) =>
-            context.CubicBezierTo(Point(x, y), Point(x2, y2), Point(endX, endY));
+            context.CubicBezierTo(Point(x, y).ToAvalonia(), Point(x2, y2).ToAvalonia(), Point(endX, endY).ToAvalonia());
         internal void Close()
         {
             if (_open)

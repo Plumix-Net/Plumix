@@ -301,10 +301,10 @@ public sealed class ImageProviderDecorationTests : IDisposable
 
     private sealed class FakeImage : IImage, IDisposable
     {
-        public FakeImage(Size size) => Size = size;
-        public Size Size { get; }
+        public FakeImage(Size size) => Size = size.ToAvalonia();
+        public global::Avalonia.Size Size { get; }
         public int DisposeCount { get; private set; }
-        public void Draw(DrawingContext context, Rect sourceRect, Rect destRect) { }
+        public void Draw(DrawingContext context, global::Avalonia.Rect sourceRect, global::Avalonia.Rect destRect) { }
         public void Dispose() => DisposeCount++;
     }
 

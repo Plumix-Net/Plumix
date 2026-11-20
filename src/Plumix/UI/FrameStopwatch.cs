@@ -181,7 +181,7 @@ internal sealed class FrameStopwatch
 
     private static void FillRect(DrawingContext context, Rect rect, uint argb)
     {
-        context.DrawRectangle(new SolidColorBrush(Avalonia.Media.Color.FromUInt32(argb)), null, rect);
+        context.DrawRectangle(new SolidColorBrush(Avalonia.Media.Color.FromUInt32(argb)), null, rect.ToAvalonia());
     }
 }
 

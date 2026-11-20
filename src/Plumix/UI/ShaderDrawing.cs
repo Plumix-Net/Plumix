@@ -11,7 +11,7 @@ namespace Plumix.UI;
 internal static class ShaderDrawing
 {
     internal static void DrawRectangle(DrawingContext context, IBrush? brush, IPen? pen, Rect rect) =>
-        DrawRectangle(context, brush, pen, new RoundedRect(rect));
+        DrawRectangle(context, brush, pen, new RoundedRect(rect.ToAvalonia()));
 
     internal static void DrawRectangle(
         DrawingContext context, IBrush? brush, IPen? pen, RoundedRect rect, BoxShadows shadows = default)
@@ -28,7 +28,7 @@ internal static class ShaderDrawing
         }
 
         var path = new Path();
-        path.AddRRect(RRect.FromRectAndCorners(rect.Rect,
+        path.AddRRect(RRect.FromRectAndCorners(rect.Rect.ToPlumix(),
             new Rendering.Radius(rect.RadiiTopLeft.X, rect.RadiiTopLeft.Y),
             new Rendering.Radius(rect.RadiiTopRight.X, rect.RadiiTopRight.Y),
             new Rendering.Radius(rect.RadiiBottomRight.X, rect.RadiiBottomRight.Y),
@@ -47,7 +47,7 @@ internal static class ShaderDrawing
         if (brush is INativeShader shader)
         {
             using DrawingContext.PushedState clip = context.PushGeometryClip(geometry);
-            Fill(context, shader, geometry.Bounds);
+            Fill(context, shader, geometry.Bounds.ToPlumix());
         }
         else if (brush is not null)
         {
@@ -58,7 +58,7 @@ internal static class ShaderDrawing
         {
             Geometry outline = geometry.GetWidenedGeometry(pen);
             using DrawingContext.PushedState clip = context.PushGeometryClip(outline);
-            Fill(context, stroke, outline.Bounds);
+            Fill(context, stroke, outline.Bounds.ToPlumix());
         }
         else if (pen is not null)
         {
@@ -71,12 +71,12 @@ internal static class ShaderDrawing
     {
         if (brush is not INativeShader && pen?.Brush is not INativeShader)
         {
-            context.DrawEllipse(brush, pen, center, radiusX, radiusY);
+            context.DrawEllipse(brush, pen, center.ToAvalonia(), radiusX, radiusY);
             return;
         }
 
         DrawGeometry(context, brush, pen, new EllipseGeometry(DartGeometry.RectFromLTWH(
-            center.Dx - radiusX, center.Dy - radiusY, radiusX * 2.0, radiusY * 2.0)));
+            center.Dx - radiusX, center.Dy - radiusY, radiusX * 2.0, radiusY * 2.0).ToAvalonia()));
     }
 
     internal static void DrawLine(DrawingContext context, IPen pen, Offset start, Offset end)
@@ -102,7 +102,7 @@ internal static class ShaderDrawing
         }
         else
         {
-            context.DrawLine(pen, start, end);
+            context.DrawLine(pen, start.ToAvalonia(), end.ToAvalonia());
         }
     }
 
@@ -119,8 +119,8 @@ internal static class ShaderDrawing
         INativeShader shader, Rect bounds, Path? path = null, Paint? source = null, bool fillCanvas = false)
         : ICustomDrawOperation
     {
-        public Rect Bounds => bounds;
-        public bool HitTest(Offset point) => false;
+        public global::Avalonia.Rect Bounds => bounds.ToAvalonia();
+        public bool HitTest(global::Avalonia.Point point) => false;
         public bool Equals(ICustomDrawOperation? other) => ReferenceEquals(this, other);
         public void Dispose() { }
 

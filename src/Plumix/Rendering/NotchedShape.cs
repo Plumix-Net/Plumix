@@ -23,7 +23,7 @@ public sealed class CircularNotchedRectangle : NotchedShape
     {
         if (!guest.HasValue || !host.Overlaps(guest.Value))
         {
-            return new RectangleGeometry(host);
+            return new RectangleGeometry(host.ToAvalonia());
         }
 
         var guestRect = guest.Value;
@@ -38,7 +38,7 @@ public sealed class CircularNotchedRectangle : NotchedShape
         double denominator = a * a + b * b;
         if (denominator <= 0)
         {
-            return new RectangleGeometry(host);
+            return new RectangleGeometry(host.ToAvalonia());
         }
 
         double p2xA = ((a * radius * radius) - n2) / denominator;
@@ -62,36 +62,36 @@ public sealed class CircularNotchedRectangle : NotchedShape
 
         var geometry = new StreamGeometry();
         using var path = geometry.Open();
-        path.BeginFigure(host.TopLeft, isFilled: true);
+        path.BeginFigure(host.TopLeft.ToAvalonia(), isFilled: true);
         if (!Inverted)
         {
-            path.LineTo(points[0]);
-            path.QuadraticBezierTo(points[1], points[2]);
+            path.LineTo(points[0].ToAvalonia());
+            path.QuadraticBezierTo(points[1].ToAvalonia(), points[2].ToAvalonia());
             path.ArcTo(
-                points[3],
-                new Size(radius, radius),
+                points[3].ToAvalonia(),
+                new Size(radius, radius).ToAvalonia(),
                 rotationAngle: 0,
                 isLargeArc: false,
                 sweepDirection: SweepDirection.CounterClockwise);
-            path.QuadraticBezierTo(points[4], points[5]);
-            path.LineTo(host.TopRight);
-            path.LineTo(host.BottomRight);
-            path.LineTo(host.BottomLeft);
+            path.QuadraticBezierTo(points[4].ToAvalonia(), points[5].ToAvalonia());
+            path.LineTo(host.TopRight.ToAvalonia());
+            path.LineTo(host.BottomRight.ToAvalonia());
+            path.LineTo(host.BottomLeft.ToAvalonia());
         }
         else
         {
-            path.LineTo(host.TopRight);
-            path.LineTo(host.BottomRight);
-            path.LineTo(points[5]);
-            path.QuadraticBezierTo(points[4], points[3]);
+            path.LineTo(host.TopRight.ToAvalonia());
+            path.LineTo(host.BottomRight.ToAvalonia());
+            path.LineTo(points[5].ToAvalonia());
+            path.QuadraticBezierTo(points[4].ToAvalonia(), points[3].ToAvalonia());
             path.ArcTo(
-                points[2],
-                new Size(radius, radius),
+                points[2].ToAvalonia(),
+                new Size(radius, radius).ToAvalonia(),
                 rotationAngle: 0,
                 isLargeArc: false,
                 sweepDirection: SweepDirection.CounterClockwise);
-            path.QuadraticBezierTo(points[1], points[0]);
-            path.LineTo(host.BottomLeft);
+            path.QuadraticBezierTo(points[1].ToAvalonia(), points[0].ToAvalonia());
+            path.LineTo(host.BottomLeft.ToAvalonia());
         }
         path.EndFigure(isClosed: true);
         return geometry;

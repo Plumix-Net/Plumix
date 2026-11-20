@@ -193,7 +193,7 @@ public sealed class CanvasDrawShadowTests
     public void RectangleGeometry_DrawsTheSameShadowAsItsPath()
     {
         Bitmap fromGeometry = Render(canvas => canvas.DrawShadow(
-            new RectangleGeometry(Occluder, 4, 4), Colors.Black, 3, transparentOccluder: true));
+            new RectangleGeometry(Occluder.ToAvalonia(), 4, 4), Colors.Black, 3, transparentOccluder: true));
         Bitmap fromPath = Render(canvas =>
         {
             var path = new UI.Path();

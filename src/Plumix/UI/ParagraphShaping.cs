@@ -77,7 +77,7 @@ internal sealed class ParagraphShaping : ITextSource, IDisposable
                         glyph.GlyphIndex,
                         glyph.GlyphCluster,
                         glyph.GlyphAdvance + spacing,
-                        glyph.GlyphOffset + new Offset(style.LetterSpacing / 2.0, 0));
+                        glyph.GlyphOffset + new global::Avalonia.Vector(style.LetterSpacing / 2.0, 0));
                 }
 
                 _runs.Add(new PreparedRun(start, run.Length, glyphs, face, style.FontSize,

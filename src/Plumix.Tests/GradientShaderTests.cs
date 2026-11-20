@@ -197,7 +197,7 @@ public sealed class GradientShaderTests
         using var masked = new RenderTargetBitmap(new PixelSize(100, 60));
         using (DrawingContext context = masked.CreateDrawingContext())
         using (FilterLayerRasterizer.DrawShaderMasked(context,
-            target => target.DrawRectangle(Brushes.White, null, DartGeometry.RectFromLTWH(0, 0, 100, 60)),
+            target => target.DrawRectangle(Brushes.White, null, DartGeometry.RectFromLTWH(0, 0, 100, 60).ToAvalonia()),
             shader, BlendMode.SourceIn, DartGeometry.RectFromLTWH(0, 0, 100, 60)))
         {
         }

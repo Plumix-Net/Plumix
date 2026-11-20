@@ -408,7 +408,7 @@ internal sealed class AvaloniaParagraph : Paragraph
                     continue;
                 }
 
-                Rect rect = runBounds.Rectangle;
+                Rect rect = runBounds.Rectangle.ToPlumix();
                 var part = DartGeometry.RectFromLTWH(rect.Left, line.Baseline + delta - ascent, rect.Width, ascent + descent);
                 clusterBounds = clusterBounds is { } previous ? previous.ExpandToInclude(part) : part;
                 direction ??= bounds.FlowDirection == FlowDirection.RightToLeft ? TextDirection.Rtl : TextDirection.Ltr;
@@ -930,7 +930,7 @@ internal sealed class PlaceholderTextRun : DrawableTextRun
 
     public ParagraphPlaceholder Placeholder { get; }
 
-    public override Size Size => new(Placeholder.Width, Placeholder.Height);
+    public override global::Avalonia.Size Size => new(Placeholder.Width, Placeholder.Height);
 
     public override double Baseline => Placeholder.Alignment switch
     {
@@ -944,7 +944,7 @@ internal sealed class PlaceholderTextRun : DrawableTextRun
 
     public override TextRunProperties Properties { get; }
 
-    public override void Draw(DrawingContext drawingContext, Offset origin)
+    public override void Draw(DrawingContext drawingContext, global::Avalonia.Point origin)
     {
         // Intentionally empty: RenderParagraph paints the inline child itself.
     }

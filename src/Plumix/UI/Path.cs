@@ -245,12 +245,12 @@ public sealed class Path
     {
         if (_path.IsOval)
         {
-            return new EllipseGeometry(FromNative(_path.GetOvalBounds()));
+            return new EllipseGeometry(FromNative(_path.GetOvalBounds()).ToAvalonia());
         }
 
         if (_path.IsRect)
         {
-            return new RectangleGeometry(FromNative(_path.GetRect()));
+            return new RectangleGeometry(FromNative(_path.GetRect()).ToAvalonia());
         }
 
         if (_path.IsRoundRect)
@@ -259,7 +259,7 @@ public sealed class Path
             SKPoint[] radii = rounded.Radii;
             if (radii.All(radius => radius == radii[0]))
             {
-                return new RectangleGeometry(FromNative(rounded.Rect), radii[0].X, radii[0].Y);
+                return new RectangleGeometry(FromNative(rounded.Rect).ToAvalonia(), radii[0].X, radii[0].Y);
             }
         }
 
@@ -280,20 +280,20 @@ public sealed class Path
                         context.EndFigure(false);
                     }
 
-                    context.BeginFigure(FromNative(points[0]), true);
+                    context.BeginFigure(FromNative(points[0]).ToAvalonia(), true);
                     open = true;
                     break;
                 case SKPathVerb.Line:
-                    context.LineTo(FromNative(points[1]));
+                    context.LineTo(FromNative(points[1]).ToAvalonia());
                     break;
                 case SKPathVerb.Quad:
-                    context.QuadraticBezierTo(FromNative(points[1]), FromNative(points[2]));
+                    context.QuadraticBezierTo(FromNative(points[1]).ToAvalonia(), FromNative(points[2]).ToAvalonia());
                     break;
                 case SKPathVerb.Conic:
                     WriteConic(context, points, iterator.ConicWeight());
                     break;
                 case SKPathVerb.Cubic:
-                    context.CubicBezierTo(FromNative(points[1]), FromNative(points[2]), FromNative(points[3]));
+                    context.CubicBezierTo(FromNative(points[1]).ToAvalonia(), FromNative(points[2]).ToAvalonia(), FromNative(points[3]).ToAvalonia());
                     break;
                 case SKPathVerb.Close:
                     context.EndFigure(true);
@@ -336,7 +336,7 @@ public sealed class Path
         SKPoint[] quads = SKPath.ConvertConicToQuads(points[0], points[1], points[2], weight, subdivisions);
         for (int index = 1; index + 1 < quads.Length; index += 2)
         {
-            context.QuadraticBezierTo(FromNative(quads[index]), FromNative(quads[index + 1]));
+            context.QuadraticBezierTo(FromNative(quads[index]).ToAvalonia(), FromNative(quads[index + 1]).ToAvalonia());
         }
     }
 
@@ -378,8 +378,8 @@ public sealed class Path
         }
 
         context.ArcTo(
-            FromNative(points[2]),
-            size,
+            FromNative(points[2]).ToAvalonia(),
+            size.ToAvalonia(),
             0.0,
             false,
             cross > 0.0 ? SweepDirection.Clockwise : SweepDirection.CounterClockwise);

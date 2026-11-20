@@ -55,14 +55,13 @@ public sealed class PublicApiAvaloniaFreeTests
             ["IVisualBrushInitialize"] = 2,
             ["KeyEventArgs"] = 2,
             ["Matrix"] = 5,
-            ["Point"] = 665,
+            ["Point"] = 1,
             ["PointerCaptureLostEventArgs"] = 1,
             ["PointerEventArgs"] = 3,
             ["PointerPressedEventArgs"] = 1,
             ["PointerReleasedEventArgs"] = 1,
             ["PointerWheelEventArgs"] = 1,
-            ["Rect"] = 352,
-            ["Size"] = 229,
+            ["Size"] = 1,
             ["SolidColorBrush"] = 1,
             ["TextInputEventArgs"] = 1,
             ["Thickness"] = 3,
@@ -72,16 +71,8 @@ public sealed class PublicApiAvaloniaFreeTests
         ["Plumix.Material"] = new()
         {
             ["FontFamily"] = 2,
-            ["Point"] = 98,
-            ["Rect"] = 35,
-            ["Size"] = 83,
         },
-        ["Plumix.Cupertino"] = new()
-        {
-            ["Point"] = 19,
-            ["Rect"] = 4,
-            ["Size"] = 11,
-        },
+        ["Plumix.Cupertino"] = new(),
     };
 
     public static TheoryData<string> Packages => new() { "Plumix", "Plumix.Material", "Plumix.Cupertino" };

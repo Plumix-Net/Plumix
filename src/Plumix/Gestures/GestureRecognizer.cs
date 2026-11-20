@@ -675,7 +675,7 @@ public readonly record struct Velocity(Offset PixelsPerSecond)
             throw new ArgumentOutOfRangeException(nameof(maximumValue));
         }
 
-        double magnitude = PixelsPerSecond.DartDistance;
+        double magnitude = PixelsPerSecond.Distance;
         if (magnitude > maximumValue)
         {
             return new Velocity(PixelsPerSecond / magnitude * maximumValue);

@@ -25,7 +25,7 @@ public sealed class PaintRasterizerTests
         canvas.DrawLine(new Offset(4, 1), new Offset(4, 8), new Paint { Color = Colors.Red });
         Picture picture = recorder.EndRecording();
         using var bitmap = new Avalonia.Media.Imaging.RenderTargetBitmap(
-            new PixelSize(80, 120), new Offset(96.0 * dpiScale, 96.0 * dpiScale));
+            new PixelSize(80, 120), new Offset(96.0 * dpiScale, 96.0 * dpiScale).ToAvaloniaVector());
         using (DrawingContext context = bitmap.CreateDrawingContext())
         {
             picture.Playback(context, default);

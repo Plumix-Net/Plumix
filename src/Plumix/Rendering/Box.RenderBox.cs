@@ -1105,7 +1105,7 @@ public abstract class RenderBox : RenderObject
     {
         ArgumentNullException.ThrowIfNull(context);
         var pen = new Pen(new SolidColorBrush(new Color(0xFF00FFFF)), 1.0);
-        context.Canvas.DrawGeometry(null, pen, new RectangleGeometry(Deflate(DartGeometry.RectFromOffsetAndSize(offset, Size), 0.5)));
+        context.Canvas.DrawGeometry(null, pen, new RectangleGeometry(Deflate(DartGeometry.RectFromOffsetAndSize(offset, Size), 0.5).ToAvalonia()));
     }
 
     /// <summary>In debug mode, paints a line for each baseline.</summary>

@@ -287,7 +287,7 @@ public class RenderClipRect : RenderCustomClip<Rect>
         if (Clipper is not null)
         {
             UpdateClip();
-            if (!_clip.ContainsHalfOpen(position))
+            if (!_clip.Contains(position))
             {
                 return false;
             }
@@ -525,7 +525,7 @@ public class RenderClipRSuperellipse : RenderCustomClip<RSuperellipse>
         if (Clipper is not null)
         {
             UpdateClip();
-            if (!_clip.OuterRect.ContainsHalfOpen(position))
+            if (!_clip.OuterRect.Contains(position))
             {
                 return false;
             }

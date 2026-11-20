@@ -866,7 +866,7 @@ public sealed class InteractiveViewer : StatefulWidget
             {
                 case GestureType.Pan:
                 {
-                    if (details.Velocity.PixelsPerSecond.DartDistance < GestureConstants.MinFlingVelocity)
+                    if (details.Velocity.PixelsPerSecond.Distance < GestureConstants.MinFlingVelocity)
                     {
                         _currentAxis = null;
                         return;
@@ -883,7 +883,7 @@ public sealed class InteractiveViewer : StatefulWidget
                         translation.Dy,
                         details.Velocity.PixelsPerSecond.Dy);
                     double tFinal = GetFinalTime(
-                        details.Velocity.PixelsPerSecond.DartDistance,
+                        details.Velocity.PixelsPerSecond.Distance,
                         Widget.InteractionEndFrictionCoefficient);
                     _animation = new Tween<Offset>(
                             begin: translation,

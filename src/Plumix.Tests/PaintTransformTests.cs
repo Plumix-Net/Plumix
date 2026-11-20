@@ -155,7 +155,7 @@ public sealed class PaintTransformTests
         right.AddRect(DartGeometry.RectFromLTWH(20, 0, 40, 40));
 
         // Boolean results are concrete independent contours, shared by paint and containment.
-        Assert.False(Path.Combine(PathOperation.Difference, left, right).ToGeometry().FillContains(new Offset(30, 20)));
+        Assert.False(Path.Combine(PathOperation.Difference, left, right).ToGeometry().FillContains(new Offset(30, 20).ToAvalonia()));
 
         Assert.True(Path.Combine(PathOperation.Intersect, left, right).Contains(new Offset(30, 20)));
         Assert.False(Path.Combine(PathOperation.Intersect, left, right).Contains(new Offset(10, 20)));

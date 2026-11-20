@@ -1559,12 +1559,12 @@ internal sealed class RenderRangeSlider : RenderBox
         {
             if (OverlayStartRect != null)
             {
-                HoveringStartThumb = OverlayStartRect.Value.ContainsHalfOpen(@event.LocalPosition);
+                HoveringStartThumb = OverlayStartRect.Value.Contains(@event.LocalPosition);
             }
 
             if (OverlayEndRect != null)
             {
-                HoveringEndThumb = OverlayEndRect.Value.ContainsHalfOpen(@event.LocalPosition);
+                HoveringEndThumb = OverlayEndRect.Value.Contains(@event.LocalPosition);
             }
         }
     }

@@ -168,13 +168,13 @@ internal sealed class CupertinoTextSelectionHandlePainter : CustomPainter
     {
         const double halfStrokeWidth = 1.0;
         double radius = CupertinoTextSelectionControls.SelectionHandleRadius;
-        var circle = new EllipseGeometry(DartGeometry.RectFromLTWH(0.0, 0.0, radius * 2.0, radius * 2.0));
+        var circle = new EllipseGeometry(DartGeometry.RectFromLTWH(0.0, 0.0, radius * 2.0, radius * 2.0).ToAvalonia());
         var line = new RectangleGeometry(DartGeometry.RectFromLTWH(
             radius - halfStrokeWidth,
             radius * 2.0 - CupertinoTextSelectionControls.SelectionHandleOverlap,
             halfStrokeWidth * 2.0,
             Math.Max(0.0, size.Height - radius * 2.0
-                + CupertinoTextSelectionControls.SelectionHandleOverlap)));
+                + CupertinoTextSelectionControls.SelectionHandleOverlap)).ToAvalonia());
         return new CombinedGeometry(GeometryCombineMode.Union, circle, line);
     }
 

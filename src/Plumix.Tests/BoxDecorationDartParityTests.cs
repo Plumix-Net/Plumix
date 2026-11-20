@@ -443,9 +443,9 @@ public sealed class BoxDecorationDartParityTests
 
     private sealed class FakeImage(Size size) : IImage
     {
-        public Size Size { get; } = size;
+        public global::Avalonia.Size Size { get; } = size.ToAvalonia();
 
-        public void Draw(DrawingContext context, Rect sourceRect, Rect destRect)
+        public void Draw(DrawingContext context, global::Avalonia.Rect sourceRect, global::Avalonia.Rect destRect)
         {
         }
     }

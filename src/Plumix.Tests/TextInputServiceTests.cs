@@ -452,7 +452,7 @@ public sealed class TextInputServiceTests : IDisposable
 
         Assert.NotEqual(ltr, rtl);
         Assert.Equal(ltr.GetHashCode(), rtl.GetHashCode());
-        Assert.Equal("SelectionRect(1, 2, 3, 4, 5)", ltr.ToString());
+        Assert.Equal("SelectionRect(1, Rect.fromLTRB(2.0, 3.0, 6.0, 8.0))", ltr.ToString());
     }
 
     [Fact]

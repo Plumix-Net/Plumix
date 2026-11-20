@@ -299,7 +299,7 @@ public sealed class CanvasSaveLayerTests
     {
         var bitmap = new WriteableBitmap(
             new PixelSize(width, height),
-            new Offset(96, 96),
+            new Offset(96, 96).ToAvaloniaVector(),
             PixelFormats.Bgra8888,
             AlphaFormat.Premul);
         using ILockedFramebuffer framebuffer = bitmap.Lock();

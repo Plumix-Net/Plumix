@@ -53,7 +53,7 @@ internal static partial class FilterLayerRasterizer
 
         var pixelSize = new PixelSize(width, height);
         RasterFrame frame;
-        using (var target = new RenderTargetBitmap(pixelSize, Dpi))
+        using (var target = new RenderTargetBitmap(pixelSize, Dpi.ToAvaloniaVector()))
         {
             using (DrawingContext drawingContext = target.CreateDrawingContext())
             using (drawingContext.PushTransform(Matrix.CreateTranslation(-left, -top)))
@@ -62,7 +62,7 @@ internal static partial class FilterLayerRasterizer
                 drawChildren(drawingContext);
             }
 
-            using var readable = new WriteableBitmap(pixelSize, Dpi, PixelFormats.Bgra8888, AlphaFormat.Premul);
+            using var readable = new WriteableBitmap(pixelSize, Dpi.ToAvaloniaVector(), PixelFormats.Bgra8888, AlphaFormat.Premul);
             using (ILockedFramebuffer framebuffer = readable.Lock())
             {
                 target.CopyPixels(framebuffer);
@@ -118,13 +118,13 @@ internal static partial class FilterLayerRasterizer
     /// </summary>
     internal static WriteableBitmap? FilterImage(IImage image, ColorFilter? colorFilter, bool invertColors)
     {
-        var bounds = DartGeometry.RectFromSize(image.Size);
+        var bounds = DartGeometry.RectFromSize(image.Size.ToPlumix());
         if (!CanRasterize(bounds))
         {
             return null;
         }
 
-        RasterFrame frame = Rasterize(context => context.DrawImage(image, bounds, bounds), bounds);
+        RasterFrame frame = Rasterize(context => context.DrawImage(image, bounds.ToAvalonia(), bounds.ToAvalonia()), bounds);
         if (colorFilter is not null)
         {
             ApplyColorFilter(frame.Pixels, colorFilter);
@@ -147,7 +147,7 @@ internal static partial class FilterLayerRasterizer
                    BitmapInterpolationMode = BitmapInterpolationMode.LowQuality,
                }))
         {
-            context.DrawImage(image, DartGeometry.RectFromSize(image.Size), destination);
+            context.DrawImage(image, DartGeometry.RectFromSize(image.Size.ToPlumix()).ToAvalonia(), destination.ToAvalonia());
         }
     }
 
@@ -209,7 +209,7 @@ internal static partial class FilterLayerRasterizer
     {
         var bitmap = new WriteableBitmap(
             new PixelSize(frame.Width, frame.Height),
-            Dpi,
+            Dpi.ToAvaloniaVector(),
             PixelFormats.Bgra8888,
             AlphaFormat.Premul);
         using ILockedFramebuffer framebuffer = bitmap.Lock();

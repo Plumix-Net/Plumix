@@ -1498,7 +1498,7 @@ public sealed class ListWheelScrollViewTests
         const int moveCount = 50;
         int pointer = ++_pointer;
         DateTime now = DateTime.UtcNow;
-        double stepMilliseconds = 1000.0 * offset.DartDistance / (moveCount * speed);
+        double stepMilliseconds = 1000.0 * offset.Distance / (moveCount * speed);
         GestureBinding.Instance.HandlePointerEvent(harness.RenderView, new PointerDownEvent(
             pointer, PointerDeviceKind.Touch, start, PointerButtons.Primary, now));
         double lastPumpMilliseconds = 0.0;

@@ -32,7 +32,7 @@ public partial class Canvas
             {
                 EdgeMode = isAntiAlias ? EdgeMode.Antialias : EdgeMode.Aliased,
             });
-            ShaderDrawing.DrawRectangle(context, brush, pen, new RoundedRect(rect, radiusX, radiusY), boxShadows);
+            ShaderDrawing.DrawRectangle(context, brush, pen, new RoundedRect(rect.ToAvalonia(), radiusX, radiusY), boxShadows);
         });
     }
 
@@ -52,11 +52,11 @@ public partial class Canvas
         AddDrawCommand(context =>
         {
             var roundedRect = new RoundedRect(
-                rect,
-                new Offset(borderRadius.TopLeftRadius.X, borderRadius.TopLeftRadius.Y),
-                new Offset(borderRadius.TopRightRadius.X, borderRadius.TopRightRadius.Y),
-                new Offset(borderRadius.BottomRightRadius.X, borderRadius.BottomRightRadius.Y),
-                new Offset(borderRadius.BottomLeftRadius.X, borderRadius.BottomLeftRadius.Y));
+                rect.ToAvalonia(),
+                new Offset(borderRadius.TopLeftRadius.X, borderRadius.TopLeftRadius.Y).ToAvaloniaVector(),
+                new Offset(borderRadius.TopRightRadius.X, borderRadius.TopRightRadius.Y).ToAvaloniaVector(),
+                new Offset(borderRadius.BottomRightRadius.X, borderRadius.BottomRightRadius.Y).ToAvaloniaVector(),
+                new Offset(borderRadius.BottomLeftRadius.X, borderRadius.BottomLeftRadius.Y).ToAvaloniaVector());
             ShaderDrawing.DrawRectangle(context, brush, pen, roundedRect, boxShadows);
         });
     }
@@ -73,7 +73,7 @@ public partial class Canvas
             "drawRect",
             paint,
             call => call with { Rect = rect },
-            () => new RectangleGeometry(rect),
+            () => new RectangleGeometry(rect.ToAvalonia()),
             (context, fill, pen) => ShaderDrawing.DrawRectangle(context, fill, pen, rect),
             () => CreateRectPath(rect));
     }
@@ -183,7 +183,7 @@ public partial class Canvas
             "drawOval",
             paint,
             call => call with { Rect = oval },
-            () => new EllipseGeometry(oval),
+            () => new EllipseGeometry(oval.ToAvalonia()),
             (context, fill, pen) => ShaderDrawing.DrawEllipse(
                 context, fill, pen, oval.Center, oval.Width / 2.0, oval.Height / 2.0),
             () => CreateOvalPath(oval));
@@ -352,7 +352,7 @@ public partial class Canvas
         if (filter)
         {
             SaveLayer(geometry.GetRenderBounds(new Pen(Brushes.Black, paint.StrokeWidth)).Inflate(
-                PaintRasterizer.BlurExtent(paint.MaskFilter?.Sigma ?? 0.0) + 1.0), new Paint
+                PaintRasterizer.BlurExtent(paint.MaskFilter?.Sigma ?? 0.0) + 1.0).ToPlumix(), new Paint
             {
                 ColorFilter = paint.ColorFilter,
                 ImageFilter = paint.ImageFilter,
@@ -578,7 +578,7 @@ public partial class Canvas
                 center.Dx - clampedRadius,
                 center.Dy - clampedRadius,
                 clampedRadius * 2.0,
-                clampedRadius * 2.0)),
+                clampedRadius * 2.0).ToAvalonia()),
             (context, fill, pen) => ShaderDrawing.DrawEllipse(context, fill, pen, center, clampedRadius, clampedRadius),
             () => CreateOvalPath(DartGeometry.RectFromLTWH(center.Dx - clampedRadius, center.Dy - clampedRadius,
                 clampedRadius * 2.0, clampedRadius * 2.0)));
@@ -605,10 +605,10 @@ public partial class Canvas
             {
                 Offset startPoint = PointOnEllipse(rect, startAngleRadians);
                 Offset endPoint = PointOnEllipse(rect, startAngleRadians + sweepAngleRadians);
-                geometryContext.BeginFigure(startPoint, isFilled: false);
+                geometryContext.BeginFigure(startPoint.ToAvalonia(), isFilled: false);
                 geometryContext.ArcTo(
-                    point: endPoint,
-                    size: new Size(rect.Width / 2.0, rect.Height / 2.0),
+                    point: endPoint.ToAvalonia(),
+                    size: new Size(rect.Width / 2.0, rect.Height / 2.0).ToAvalonia(),
                     rotationAngle: 0.0,
                     isLargeArc: Math.Abs(sweepAngleRadians) > Math.PI,
                     sweepDirection: sweepAngleRadians >= 0
@@ -673,7 +673,7 @@ public partial class Canvas
             "drawLine",
             stroke,
             call => call with { Offset = startPoint, EndOffset = endPoint },
-            () => new LineGeometry(startPoint, endPoint),
+            () => new LineGeometry(startPoint.ToAvalonia(), endPoint.ToAvalonia()),
             (context, _, pen) => ShaderDrawing.DrawLine(context, pen!, startPoint, endPoint),
             () => CreateLinePath(startPoint, endPoint));
     }
@@ -692,10 +692,10 @@ public partial class Canvas
             var geometry = new StreamGeometry();
             using (var geometryContext = geometry.Open())
             {
-                geometryContext.BeginFigure(points[0], isFilled: true);
+                geometryContext.BeginFigure(points[0].ToAvalonia(), isFilled: true);
                 for (int index = 1; index < points.Count; index++)
                 {
-                    geometryContext.LineTo(points[index]);
+                    geometryContext.LineTo(points[index].ToAvalonia());
                 }
 
                 geometryContext.EndFigure(isClosed: true);
@@ -791,11 +791,11 @@ public partial class Canvas
                 var path = new Path();
                 if (rectangle.RadiusX > 0.0 && rectangle.RadiusY > 0.0)
                 {
-                    path.AddRRect(RRect.FromRectXY(rectangle.Rect, rectangle.RadiusX, rectangle.RadiusY));
+                    path.AddRRect(RRect.FromRectXY(rectangle.Rect.ToPlumix(), rectangle.RadiusX, rectangle.RadiusY));
                 }
                 else
                 {
-                    path.AddRect(rectangle.Rect);
+                    path.AddRect(rectangle.Rect.ToPlumix());
                 }
 
                 return path;
@@ -806,10 +806,10 @@ public partial class Canvas
                 var path = new Path();
                 // An unset Rect means the ellipse is given by its centre and radii (Avalonia's two modes).
                 path.AddOval(ellipse.Rect != default
-                    ? ellipse.Rect
+                    ? ellipse.Rect.ToPlumix()
                     : DartGeometry.RectFromLTWH(
-                        ellipse.Center.Dx - ellipse.RadiusX,
-                        ellipse.Center.Dy - ellipse.RadiusY,
+                        ellipse.Center.X - ellipse.RadiusX,
+                        ellipse.Center.Y - ellipse.RadiusY,
                         ellipse.RadiusX * 2.0,
                         ellipse.RadiusY * 2.0));
                 return path;
@@ -870,7 +870,7 @@ public partial class Canvas
             image,
             paint,
             destination,
-            (context, source) => context.DrawImage(source, DartGeometry.RectFromSize(source.Size), destination));
+            (context, source) => context.DrawImage(source, DartGeometry.RectFromSize(source.Size.ToPlumix()).ToAvalonia(), destination.ToAvalonia()));
     }
 
     /// <summary>
@@ -898,7 +898,7 @@ public partial class Canvas
                     return;
                 }
 
-                context.DrawImage(source, src, dst);
+                context.DrawImage(source, src.ToAvalonia(), dst.ToAvalonia());
             });
     }
 
@@ -926,7 +926,7 @@ public partial class Canvas
             {
                 foreach ((Rect patchSource, Rect patchDestination) in NinePatches(size, center, dst))
                 {
-                    context.DrawImage(source, patchSource, patchDestination);
+                    context.DrawImage(source, patchSource.ToAvalonia(), patchDestination.ToAvalonia());
                 }
             });
     }
@@ -969,7 +969,7 @@ public partial class Canvas
 
     // The image's size in dart:ui image pixels: the Avalonia image's own size (decoded bitmaps are 96 DPI,
     // one unit per pixel), as RenderImage and ImageInfo measure it.
-    internal static Size ImageSize(IImage image) => image.Size;
+    internal static Size ImageSize(IImage image) => image.Size.ToPlumix();
 
     // Records one image draw of a Paint-taking method. The paint is read now, as Dart's canvas does.
     private void RecordImageDraw(

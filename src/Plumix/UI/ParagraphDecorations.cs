@@ -31,7 +31,7 @@ internal static class ParagraphDecorations
         }
 
         Color color = style.DecorationColor ?? style.Color;
-        double baseline = run.GlyphRun.BaselineOrigin.Dy;
+        double baseline = run.GlyphRun.BaselineOrigin.Y;
         if (style.Decoration.HasFlag(TextDecoration.Underline))
         {
             Draw(baseline + (metrics.UnderlinePosition > 0 ? metrics.UnderlinePosition : thickness));

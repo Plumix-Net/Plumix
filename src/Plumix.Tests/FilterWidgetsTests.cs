@@ -706,7 +706,7 @@ public sealed class FilterWidgetsTests
         var drawing = new DrawingGroup();
         var image = new DrawingImage(drawing)
         {
-            Viewbox = DartGeometry.RectFromLTWH(0.0, 0.0, 40.0, 30.0),
+            Viewbox = DartGeometry.RectFromLTWH(0.0, 0.0, 40.0, 30.0).ToAvalonia(),
         };
         return new BackdropCapture(
             image,

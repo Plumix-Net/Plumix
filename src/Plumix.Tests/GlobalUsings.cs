@@ -10,7 +10,7 @@ global using Color = Plumix.UI.Color;
 global using Brightness = Plumix.UI.Brightness;
 global using Colors = Plumix.Tests.CssColors;
 global using MaterialColors = Plumix.Material.Colors;
-// Geometry: dart:ui's Offset/Size/Rect. During the migration Offset aliases Avalonia's Point.
-global using Offset = global::Avalonia.Point;
-global using Size = global::Avalonia.Size;
-global using Rect = global::Avalonia.Rect;
+// Geometry: dart:ui Offset/Size/Rect; the unqualified names never mean Avalonia's.
+global using Offset = global::Plumix.UI.Offset;
+global using Size = global::Plumix.UI.Size;
+global using Rect = global::Plumix.UI.Rect;

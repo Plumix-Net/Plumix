@@ -336,11 +336,11 @@ public sealed class UpstreamDelta347Tests : IDisposable
 
     private sealed class FakeImage : Avalonia.Media.IImage
     {
-        public FakeImage(Size size) => Size = size;
+        public FakeImage(Size size) => Size = size.ToAvalonia();
 
-        public Size Size { get; }
+        public global::Avalonia.Size Size { get; }
 
-        public void Draw(Avalonia.Media.DrawingContext context, Rect sourceRect, Rect destRect)
+        public void Draw(Avalonia.Media.DrawingContext context, global::Avalonia.Rect sourceRect, global::Avalonia.Rect destRect)
         {
         }
     }

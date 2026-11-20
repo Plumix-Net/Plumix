@@ -27,6 +27,9 @@ type TextOverflow = Plumix.UI.TextOverflow
 
 // Painting / geometry (the framework colour, insets and the Avalonia primitives used across the widget API)
 type Color = Plumix.UI.Color
+type Offset = Plumix.UI.Offset
+type Size = Plumix.UI.Size
+type Rect = Plumix.UI.Rect
 type Colors = Plumix.Material.Colors
 type FontWeight = Avalonia.Media.FontWeight
 type EdgeInsets = Plumix.Rendering.EdgeInsets

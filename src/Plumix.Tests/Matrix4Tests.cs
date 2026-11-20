@@ -118,7 +118,7 @@ public sealed class Matrix4Tests
 
         var probe = new Offset(37.0, -19.0);
         Offset expected = MatrixUtils.TransformPoint(perspective, probe);
-        Offset actual = hostMatrix.Transform(probe);
+        Offset actual = hostMatrix.Transform(probe.ToAvalonia()).ToPlumix();
         Assert.Equal(expected.Dx, actual.Dx, precision: 6);
         Assert.Equal(expected.Dy, actual.Dy, precision: 6);
     }
