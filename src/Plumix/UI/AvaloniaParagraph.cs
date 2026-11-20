@@ -58,6 +58,12 @@ internal static class ParagraphBackend
 /// A paragraph whose shaping/fallback comes from Avalonia and whose vertical layout belongs to Plumix.
 internal sealed class AvaloniaParagraph : Paragraph
 {
+    // SkParagraph's TextStyle font settings: grayscale anti-aliasing (SkFont::Edging::kAntiAlias), as
+    // FlutterTestGlyphDraw. Avalonia would otherwise draw LCD subpixel text on opaque RgbHorizontal surfaces
+    // (the GL window surface on Android and desktop, raster framebuffers), which Flutter never does; on Android
+    // that fills Skia's RGB565 LCD glyph atlas, which the emulator's software GLES path has been seen to corrupt.
+    private static readonly TextOptions GlyphTextOptions = new() { TextRenderingMode = TextRenderingMode.Antialias };
+
     private readonly ParagraphContent _content;
     private readonly ParagraphTextSource _source;
     private readonly List<(int Start, int End)> _clusters = [];
@@ -733,7 +739,11 @@ internal sealed class AvaloniaParagraph : Paragraph
                     var retained = new GlyphRun(glyphs.GlyphTypeface, glyphs.FontRenderingEmSize,
                         glyphs.Characters, glyphs.GlyphInfos.ToArray(), glyphs.BaselineOrigin, glyphs.BiDiLevel);
                     var brush = new SolidColorBrush(style.Color);
-                    canvas.AddDrawCommand(context => context.DrawGlyphRun(brush, retained));
+                    canvas.AddDrawCommand(context =>
+                    {
+                        using DrawingContext.PushedState edging = context.PushTextOptions(GlyphTextOptions);
+                        context.DrawGlyphRun(brush, retained);
+                    });
                 }
 
                 break;

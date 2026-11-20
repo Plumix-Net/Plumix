@@ -492,6 +492,52 @@ public sealed class AvaloniaParagraphDartParityTests
         Assert.Equal(0, paragraph.NumberOfLines);
     }
 
+    // SkParagraph paints glyphs with SkFont::Edging::kAntiAlias, never LCD subpixel coverage. Without an
+    // explicit mode Avalonia draws LCD text on opaque RgbHorizontal surfaces (its GL window surface on
+    // Android and desktop), and on Android those glyphs live in Skia's RGB565 LCD atlas. Pixels cannot show the
+    // difference on macOS (CoreText never makes LCD masks), so the replay goes into Avalonia's own recorder.
+    [Fact]
+    public void Paint_DrawsGlyphRunsWithGrayscaleAntialiasing()
+    {
+        using AvaloniaParagraph paragraph = Build("X");
+        paragraph.Layout(new ParagraphConstraints(100));
+        var recorder = new PictureRecorder();
+        new Canvas(recorder).DrawParagraph(paragraph, default);
+        Picture picture = recorder.EndRecording();
+        var group = new DrawingGroup();
+        using (DrawingContext context = group.Open())
+        {
+            picture.Playback(context, default);
+        }
+
+        Assert.Equal([TextRenderingMode.Antialias], GlyphRunTextRenderingModes(group, default));
+    }
+
+    // The effective mode of every recorded glyph run: DrawingGroup.TextOptions (internal) merged the way
+    // DrawingContext.PushTextOptions merges them, the outer group's specified values winning.
+    private static List<TextRenderingMode> GlyphRunTextRenderingModes(DrawingGroup group, TextOptions outer)
+    {
+        var options = (TextOptions?)typeof(DrawingGroup)
+            .GetProperty("TextOptions", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!
+            .GetValue(group);
+        TextOptions current = options is { } own ? outer.MergeWith(own) : outer;
+        var modes = new List<TextRenderingMode>();
+        foreach (Drawing child in group.Children)
+        {
+            switch (child)
+            {
+                case GlyphRunDrawing:
+                    modes.Add(current.TextRenderingMode);
+                    break;
+                case DrawingGroup nested:
+                    modes.AddRange(GlyphRunTextRenderingModes(nested, current));
+                    break;
+            }
+        }
+
+        return modes;
+    }
+
     private static Bitmap Render(Paragraph paragraph)
     {
         var recorder = new PictureRecorder();
