@@ -63,7 +63,7 @@ public sealed class CupertinoFormRowTests
             harness.FindWidgets<DefaultTextStyle>(),
             style => ReferenceEquals(style.Child, error));
         ColorMatchers.AssertSameColorAs(CupertinoColors.DestructiveRed.Color, errorStyle.Style.Color);
-        Assert.Equal(FontWeight.Medium, errorStyle.Style.FontWeight);
+        Assert.Equal(FontWeight.W500, errorStyle.Style.FontWeight);
 
         RenderParagraph helperParagraph = Assert.IsType<RenderParagraph>(FindParagraph(harness.RenderView, "Helper"));
         RenderParagraph errorParagraph = Assert.IsType<RenderParagraph>(FindParagraph(harness.RenderView, "Error"));

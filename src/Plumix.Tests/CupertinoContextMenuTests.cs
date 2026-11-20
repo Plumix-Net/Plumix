@@ -73,7 +73,7 @@ public sealed class CupertinoContextMenuTests : IDisposable
         Assert.Equal(EdgeInsets.FromLTRB(15.5, 8.0, 17.5, 8.0), padding.Insets);
         DefaultTextStyle textStyle = Assert.Single(light.FindWidgets<DefaultTextStyle>());
         Assert.Equal(16.0, textStyle.Style.FontSize);
-        Assert.Equal(FontWeight.SemiBold, textStyle.Style.FontWeight);
+        Assert.Equal(FontWeight.W600, textStyle.Style.FontWeight);
         ColorMatchers.AssertSameColorAs(CupertinoColors.Label.Color, textStyle.Style.Color);
         Icon icon = Assert.Single(light.FindWidgets<Icon>());
         Assert.Equal(21.0, icon.Size);

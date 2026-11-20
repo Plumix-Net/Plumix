@@ -1,9 +1,9 @@
 namespace Plumix.FSharp
 
-// Re-exports of the commonly used Plumix/Avalonia types so that application
+// Re-exports of the commonly used Plumix types so that application
 // code only needs `open Plumix.FSharp` (the underlying types are spread across
 // Plumix.Widgets / Plumix.Rendering / Plumix.UI / Plumix.Foundation /
-// Plumix.Material / Avalonia namespaces, which is invisible in C# but costs an
+// Plumix.Material namespaces, which is invisible in C# but costs an
 // `open` each in F#).
 
 // Framework primitives
@@ -25,13 +25,14 @@ type StackFit = Plumix.Rendering.StackFit
 type TextAlign = Plumix.UI.TextAlign
 type TextOverflow = Plumix.UI.TextOverflow
 
-// Painting / geometry (the framework colour, insets and the Avalonia primitives used across the widget API)
+// Painting / geometry / text (the framework value types used across the widget API)
 type Color = Plumix.UI.Color
 type Offset = Plumix.UI.Offset
 type Size = Plumix.UI.Size
 type Rect = Plumix.UI.Rect
 type Colors = Plumix.Material.Colors
-type FontWeight = Avalonia.Media.FontWeight
+type FontWeight = Plumix.UI.FontWeight
+type FontStyle = Plumix.UI.FontStyle
 type EdgeInsets = Plumix.Rendering.EdgeInsets
 type EdgeInsetsGeometry = Plumix.Rendering.EdgeInsetsGeometry
 

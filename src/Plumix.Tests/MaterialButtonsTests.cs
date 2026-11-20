@@ -2252,7 +2252,7 @@ public sealed class MaterialButtonsTests
         var paragraph = FindDescendant<RenderParagraph>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(paragraph);
         Assert.Equal(14, paragraph!.FontSize);
-        Assert.Equal(FontWeight.Medium, paragraph.FontWeight);
+        Assert.Equal(FontWeight.W500, paragraph.FontWeight);
         Assert.Equal(1.43, paragraph.Height);
         Assert.Equal(0.1, paragraph.LetterSpacing);
     }

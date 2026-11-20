@@ -121,7 +121,7 @@ public sealed class CupertinoMenuItem : StatelessWidget, CupertinoMenuEntry
     private const int KDefaultLargeTextModeMaxLines = 100;
 
     private static readonly TextStyle KLeadingDefaultTextStyle =
-        new(FontSize: 15.0, FontWeight: FontWeight.DemiBold);
+        new(FontSize: 15.0, FontWeight: FontWeight.W600);
 
     private static readonly IconThemeData KLeadingDefaultIconTheme =
         new(Size: 15.0, Weight: 600.0, ApplyTextScaling: true);

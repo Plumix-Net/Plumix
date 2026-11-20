@@ -25,9 +25,6 @@ public sealed class PublicApiAvaloniaFreeTests
             ["Control"] = 1,
             ["DrawingContext"] = 4,
             ["FocusChangedEventArgs"] = 2,
-            ["FontFamily"] = 18,
-            ["FontStyle"] = 17,
-            ["FontWeight"] = 22,
             ["Geometry"] = 9,
             ["IApplicationLifetime"] = 1,
             ["IAvaloniaListItemValidator`1"] = 2,
@@ -68,10 +65,7 @@ public sealed class PublicApiAvaloniaFreeTests
             ["Visual"] = 2,
             ["VisualTreeAttachmentEventArgs"] = 2,
         },
-        ["Plumix.Material"] = new()
-        {
-            ["FontFamily"] = 2,
-        },
+        ["Plumix.Material"] = new(),
         ["Plumix.Cupertino"] = new(),
     };
 

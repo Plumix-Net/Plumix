@@ -168,7 +168,7 @@ public sealed class CupertinoListTile : StatefulWidget
             TextStyle titleStyle = baseType || CurrentWidget.Subtitle is null
                 ? textStyle
                 : textStyle.CopyWith(
-                    fontWeight: FontWeight.DemiBold,
+                    fontWeight: FontWeight.W600,
                     fontSize: CurrentWidget.Leading is null ? NotchedTitleWithSubtitleFontSize : null);
             Widget title = new DefaultTextStyle(
                 style: titleStyle,

@@ -107,7 +107,7 @@ public sealed class CupertinoExpansionTile : StatefulWidget
                             CupertinoIcons.RightChevron,
                             color: CupertinoDynamicColor.Resolve(CupertinoColors.ActiveBlue, context),
                             size: 15.0,
-                            fontWeight: FontWeight.Black))));
+                            fontWeight: FontWeight.W900))));
         }
 
         private void HandleHeaderTap()

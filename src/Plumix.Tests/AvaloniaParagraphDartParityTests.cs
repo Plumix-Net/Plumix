@@ -16,8 +16,8 @@ namespace Plumix.Tests;
 // shaper, not the FlutterTest-metric engine selected by the rest of the test assembly.
 public sealed class AvaloniaParagraphDartParityTests
 {
-    private static readonly FontFamily Ahem = new("avares://Plumix.Tests/Fixtures/Fonts#Ahem");
-    private static readonly FontFamily Variable = new("avares://Plumix.Tests/Fixtures/Fonts#Roboto Slab");
+    private static readonly string Ahem = TestFonts.Ahem;
+    private static readonly string Variable = TestFonts.RobotoSlab;
 
     private static AvaloniaParagraph Build(
         string text, ParagraphStyle? paragraphStyle = null, ParagraphTextStyle? style = null,
@@ -33,7 +33,7 @@ public sealed class AvaloniaParagraphDartParityTests
     [Fact]
     public void NativeFont_IsTheBundledAhemFace()
     {
-        Assert.Equal("Ahem", new Typeface(Ahem).GlyphTypeface.FamilyName);
+        Assert.Equal("Ahem", new Typeface(AvaloniaFonts.Resolve(Ahem)).GlyphTypeface.FamilyName);
         using AvaloniaParagraph paragraph = Build("Test");
         paragraph.Layout(new ParagraphConstraints(400));
         Assert.Equal(80, paragraph.MaxIntrinsicWidth, 5);
@@ -245,9 +245,9 @@ public sealed class AvaloniaParagraphDartParityTests
     {
         // A face copies every table it reads; macOS's variable system font carries megabytes of them,
         // so a face per paragraph turned each laid-out paragraph into a multi-megabyte copy.
-        GlyphTypeface typeface = new Typeface(Variable).GlyphTypeface;
+        GlyphTypeface typeface = new Typeface(AvaloniaFonts.Resolve(Variable)).GlyphTypeface;
         ResolvedTextStyle style = ResolvedTextStyle.FromParagraphStyle(
-            new ParagraphStyle(FontFamily: Variable, FontSize: 40, FontWeight: (FontWeight)900));
+            new ParagraphStyle(FontFamily: Variable, FontSize: 40, FontWeight: new FontWeight(900)));
         Assert.True(VariableFont.IsVariable(typeface));
         var first = new VariableFont(typeface, style);
         using var second = new VariableFont(typeface, style);
@@ -272,7 +272,7 @@ public sealed class AvaloniaParagraphDartParityTests
         // glyph paths with the non-zero rule. Under the even-odd rule every overlap at a stroke joint
         // was punched out of the glyph. Two copies of a glyph at one origin overlap completely: the
         // non-zero rule paints them like one glyph, the even-odd rule cancels them out.
-        GlyphTypeface typeface = new Typeface(Variable).GlyphTypeface;
+        GlyphTypeface typeface = new Typeface(AvaloniaFonts.Resolve(Variable)).GlyphTypeface;
         ushort glyph = typeface.CharacterToGlyphMap['H'];
         using var variable = new VariableFont(typeface, ResolvedTextStyle.FromParagraphStyle(
             new ParagraphStyle(FontFamily: Variable, FontSize: 40, FontWeight: FontWeight.Normal)));
@@ -295,7 +295,7 @@ public sealed class AvaloniaParagraphDartParityTests
     }
 
     private static AvaloniaParagraph VariableParagraph(int weight, double? axis = null) =>
-        Build("Hello", new ParagraphStyle(FontFamily: Variable, FontSize: 40, FontWeight: (FontWeight)weight),
+        Build("Hello", new ParagraphStyle(FontFamily: Variable, FontSize: 40, FontWeight: new FontWeight(weight)),
             new ParagraphTextStyle(FontVariations: axis is double value ? [new FontVariation("wght", value)] : null));
 
     [Fact]

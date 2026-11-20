@@ -133,7 +133,7 @@ public sealed class EditableTextStylesDartParityTests : IDisposable
                 controller: _controller,
                 focusNode: _focusNode,
                 textDirection: TextDirection.Rtl,
-                style: new TextStyle(FontSize: 20.0, FontFamily: "Roboto", FontWeight: FontWeight.SemiBold),
+                style: new TextStyle(FontSize: 20.0, FontFamily: "Roboto", FontWeight: FontWeight.W600),
                 cursorColor: Colors.Blue,
                 backgroundCursorColor: Colors.Gray)));
         tester.ShowKeyboard(Find.ByType<EditableText>());

@@ -64,7 +64,7 @@ public class TextStyle : Diagnosticable, IEquatable<TextStyle>
         TextDecorationStyle? DecorationStyle = null,
         double? DecorationThickness = null,
         string? DebugLabel = null,
-        FontFamily? FontFamily = null,
+        string? FontFamily = null,
         IReadOnlyList<string>? FontFamilyFallback = null,
         string? Package = null,
         TextOverflow? Overflow = null)
@@ -104,7 +104,7 @@ public class TextStyle : Diagnosticable, IEquatable<TextStyle>
         // Dart interpolates a null family as the literal "null".
         this.FontFamily = Package is null
             ? FontFamily
-            : new FontFamily($"packages/{Package}/{FontFamily?.Name ?? "null"}");
+            : $"packages/{Package}/{FontFamily ?? "null"}";
         _fontFamilyFallback = FontFamilyFallback;
         _package = Package;
         this.Overflow = Overflow;
@@ -124,7 +124,7 @@ public class TextStyle : Diagnosticable, IEquatable<TextStyle>
 
     /// The name of the font to use when painting the text, already prefixed with
     /// `packages/&lt;package&gt;/` when a package was given.
-    public virtual FontFamily? FontFamily { get; }
+    public virtual string? FontFamily { get; }
 
     /// The ordered list of font families to fall back on when a glyph cannot be found in a higher
     /// priority family. Prefixed with `packages/&lt;package&gt;/` when a package was given.
@@ -199,7 +199,7 @@ public class TextStyle : Diagnosticable, IEquatable<TextStyle>
     public virtual TextOverflow? Overflow { get; }
 
     // Dart's `_fontFamily`: the family without the package prefix.
-    private FontFamily? UnprefixedFontFamily
+    private string? UnprefixedFontFamily
     {
         get
         {
@@ -207,12 +207,12 @@ public class TextStyle : Diagnosticable, IEquatable<TextStyle>
             {
                 string fontFamilyPrefix = $"packages/{_package}/";
                 if (Constants.KDebugMode && FontFamily is not null
-                    && !FontFamily.Name.StartsWith(fontFamilyPrefix, StringComparison.Ordinal))
+                    && !FontFamily.StartsWith(fontFamilyPrefix, StringComparison.Ordinal))
                 {
                     throw new AssertionError("fontFamily?.startsWith(fontFamilyPrefix) ?? true");
                 }
 
-                return FontFamily is null ? null : new FontFamily(FontFamily.Name[fontFamilyPrefix.Length..]);
+                return FontFamily?[fontFamilyPrefix.Length..];
             }
 
             return FontFamily;
@@ -247,7 +247,7 @@ public class TextStyle : Diagnosticable, IEquatable<TextStyle>
         TextDecorationStyle? decorationStyle = null,
         double? decorationThickness = null,
         string? debugLabel = null,
-        FontFamily? fontFamily = null,
+        string? fontFamily = null,
         IReadOnlyList<string>? fontFamilyFallback = null,
         string? package = null,
         TextOverflow? overflow = null)
@@ -318,7 +318,7 @@ public class TextStyle : Diagnosticable, IEquatable<TextStyle>
         TextDecorationStyle? decorationStyle = null,
         double decorationThicknessFactor = 1.0,
         double decorationThicknessDelta = 0.0,
-        FontFamily? fontFamily = null,
+        string? fontFamily = null,
         IReadOnlyList<string>? fontFamilyFallback = null,
         double fontSizeFactor = 1.0,
         double fontSizeDelta = 0.0,
@@ -740,7 +740,7 @@ public class TextStyle : Diagnosticable, IEquatable<TextStyle>
         int? maxLines = null,
         TextHeightBehavior? textHeightBehavior = null,
         string? locale = null,
-        FontFamily? fontFamily = null,
+        string? fontFamily = null,
         double? fontSize = null,
         FontWeight? fontWeight = null,
         FontStyle? fontStyle = null,
@@ -929,7 +929,7 @@ public class TextStyle : Diagnosticable, IEquatable<TextStyle>
         {
             new ColorProperty($"{prefix}color", Color, defaultValue: nullDefault),
             new ColorProperty($"{prefix}backgroundColor", BackgroundColor, defaultValue: nullDefault),
-            new StringProperty($"{prefix}family", FontFamily?.Name, defaultValue: nullDefault, quoted: false),
+            new StringProperty($"{prefix}family", FontFamily, defaultValue: nullDefault, quoted: false),
             new IterableProperty<string>($"{prefix}familyFallback", FontFamilyFallback, defaultValue: nullDefault),
             new DoubleProperty($"{prefix}size", FontSize, defaultValue: nullDefault),
         };
@@ -1107,10 +1107,10 @@ public class TextStyle : Diagnosticable, IEquatable<TextStyle>
     }
 
     // dart:ui's deprecated `FontWeight.index`: `(value ~/ 100 - 1).clamp(0, 8)`.
-    internal static int FontWeightIndex(FontWeight weight) => Math.Clamp(((int)weight / 100) - 1, 0, 8);
+    internal static int FontWeightIndex(FontWeight weight) => Math.Clamp((weight.Value / 100) - 1, 0, 8);
 
     // dart:ui `FontWeight.values[index]`.
-    private static FontWeight FontWeightFromIndex(int index) => (FontWeight)((index + 1) * 100);
+    private static FontWeight FontWeightFromIndex(int index) => new FontWeight(((index + 1) * 100));
 
     /// dart:ui `FontWeight.lerp`: rounds the interpolated value and clamps it to w100–w900, with a
     /// null side standing for w400. The result need not be a multiple of 100.
@@ -1121,11 +1121,11 @@ public class TextStyle : Diagnosticable, IEquatable<TextStyle>
             return null;
         }
 
-        int from = (int)(a ?? Avalonia.Media.FontWeight.Normal);
-        int to = (int)(b ?? Avalonia.Media.FontWeight.Normal);
+        int from = (a ?? Plumix.UI.FontWeight.Normal).Value;
+        int to = (b ?? Plumix.UI.FontWeight.Normal).Value;
         // dart:ui `_lerpInt`, then `round()` (half away from zero) and `clamp(100, 900)`.
         double value = from + ((to - from) * t);
-        return (FontWeight)Math.Clamp((int)Math.Round(value, MidpointRounding.AwayFromZero), 100, 900);
+        return new FontWeight(Math.Clamp((int)Math.Round(value, MidpointRounding.AwayFromZero), 100, 900));
     }
 
     // dart:ui `lerpDouble`.
@@ -1182,9 +1182,8 @@ public class TextStyle : Diagnosticable, IEquatable<TextStyle>
 
     /// The style every Plumix text path falls back to when no ancestor provides one.
     internal static TextStyle Fallback { get; } = new(
-        FontFamily: Avalonia.Media.FontFamily.Default,
         FontSize: 14,
         Color: new Color(0xFF000000),
-        FontWeight: Avalonia.Media.FontWeight.Normal,
-        FontStyle: Avalonia.Media.FontStyle.Normal);
+        FontWeight: Plumix.UI.FontWeight.Normal,
+        FontStyle: Plumix.UI.FontStyle.Normal);
 }

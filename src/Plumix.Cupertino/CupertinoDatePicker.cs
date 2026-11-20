@@ -1746,7 +1746,7 @@ internal sealed class CupertinoTimerPickerState : State<CupertinoTimerPicker>
         double labelWidth = CupertinoDatePicker.GetColumnWidth(
             AllLabels(localizations, kind),
             context,
-            new TextStyle(FontSize: TimerPickerLabelFontSize, FontWeight: FontWeight.SemiBold));
+            new TextStyle(FontSize: TimerPickerLabelFontSize, FontWeight: FontWeight.W600));
         double numberHeight;
         double numberBaseline;
         using (var painter = new TextPainter(textDirection: direction))
@@ -1817,7 +1817,7 @@ internal sealed class CupertinoTimerPickerState : State<CupertinoTimerPicker>
                                 label,
                                 style: new TextStyle(
                                     FontSize: TimerPickerLabelFontSize,
-                                    FontWeight: FontWeight.SemiBold)))))));
+                                    FontWeight: FontWeight.W600)))))));
         return new Stack(
             children:
             [

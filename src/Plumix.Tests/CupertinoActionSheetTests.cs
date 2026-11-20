@@ -84,7 +84,7 @@ public sealed class CupertinoActionSheetTests : IDisposable
 
         Assert.Equal(new Color(0xFF007AFF), ParagraphColor(Paragraph(light, "Plain")));
         Assert.Equal(FontWeight.Normal, Paragraph(light, "Plain").FontWeight);
-        Assert.Equal(FontWeight.SemiBold, Paragraph(light, "Default").FontWeight);
+        Assert.Equal(FontWeight.W600, Paragraph(light, "Default").FontWeight);
         Assert.Equal(new Color(0xFFFF3B30), ParagraphColor(Paragraph(light, "Destroy")));
 
         using var dark = new CupertinoThemeTestHarness(Wrap(
@@ -102,7 +102,7 @@ public sealed class CupertinoActionSheetTests : IDisposable
         using var both = new CupertinoThemeTestHarness(Wrap(
             Sheet(title: new Text("Title"), message: new Text("Message"), actions: [Action("One")])));
         both.Pump(PhoneSize);
-        Assert.Equal(FontWeight.SemiBold, Paragraph(both, "Title").FontWeight);
+        Assert.Equal(FontWeight.W600, Paragraph(both, "Title").FontWeight);
         Assert.Equal(FontWeight.Normal, Paragraph(both, "Message").FontWeight);
         Assert.Equal(13.0, Paragraph(both, "Title").FontSize);
         Assert.Equal(new Color(0x851D1D1D), ParagraphColor(Paragraph(both, "Message")));
@@ -115,7 +115,7 @@ public sealed class CupertinoActionSheetTests : IDisposable
         using var messageOnly = new CupertinoThemeTestHarness(Wrap(
             Sheet(message: new Text("Message"), actions: [Action("One")])));
         messageOnly.Pump(PhoneSize);
-        Assert.Equal(FontWeight.SemiBold, Paragraph(messageOnly, "Message").FontWeight);
+        Assert.Equal(FontWeight.W600, Paragraph(messageOnly, "Message").FontWeight);
 
         using var dark = new CupertinoThemeTestHarness(Wrap(
             Sheet(title: new Text("Title"), actions: [Action("One")]),

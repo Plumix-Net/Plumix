@@ -764,7 +764,8 @@ internal sealed class CupertinoSwitchPainter : ToggleablePainter
         Color iconColor = Color.Lerp(inactiveColor, activeColor, currentValue);
         double iconSize = icon.Size ?? DefaultIconSize;
         var style = new TextStyle(
-            FontFamily: Icon.ResolveFontFamily(icon.IconData!),
+            FontFamily: icon.IconData!.FontFamily,
+            Package: icon.IconData.FontPackage,
             FontSize: iconSize,
             Color: iconColor,
             FontWeight: icon.FontWeight,

@@ -103,7 +103,7 @@ public sealed class CupertinoSearchTextFieldTests : IDisposable
         using var focusNode = new FocusNode();
         int tapped = 0;
         int submitted = 0;
-        var style = new TextStyle(Color: new Color(0xFF123456), FontWeight: FontWeight.Light);
+        var style = new TextStyle(Color: new Color(0xFF123456), FontWeight: FontWeight.W300);
         var placeholderStyle = new TextStyle(
             Color: new Color(0xAA654321),
             FontWeight: FontWeight.Bold);

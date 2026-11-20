@@ -35,7 +35,7 @@ public sealed class CupertinoDialogTests : IDisposable
 
         RenderParagraph title = FindParagraph(harness.RenderView, "The Title")!;
         Assert.Equal(17.0, title.FontSize);
-        Assert.Equal(Avalonia.Media.FontWeight.SemiBold, title.FontWeight);
+        Assert.Equal(FontWeight.W600, title.FontWeight);
         RenderParagraph content = FindParagraph(harness.RenderView, "Content")!;
         Assert.Equal(13.0, content.FontSize);
         Assert.Equal(270.0, FindDescendants<RenderClipRSuperellipse>(harness.RenderView).First().Size.Width);
@@ -83,7 +83,7 @@ public sealed class CupertinoDialogTests : IDisposable
         RenderParagraph plain = FindParagraph(harness.RenderView, "Plain")!;
         Assert.Equal(16.8, plain.FontSize);
         Assert.Equal(CupertinoColors.SystemBlue.Color, ParagraphColor(plain));
-        Assert.Equal(Avalonia.Media.FontWeight.SemiBold, FindParagraph(harness.RenderView, "Bold")!.FontWeight);
+        Assert.Equal(FontWeight.W600, FindParagraph(harness.RenderView, "Bold")!.FontWeight);
         Assert.Equal(
             CupertinoColors.SystemRed.Color,
             ParagraphColor(FindParagraph(harness.RenderView, "Delete")!));

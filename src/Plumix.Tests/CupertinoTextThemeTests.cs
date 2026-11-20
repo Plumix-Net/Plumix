@@ -15,49 +15,49 @@ public sealed class CupertinoTextThemeTests
 
         // TextStyle 17 -0.41
         Assert.Equal(17.0, theme.TextStyle.FontSize);
-        Assert.Equal("CupertinoSystemText", theme.TextStyle.FontFamily!.Name);
+        Assert.Equal("CupertinoSystemText", theme.TextStyle.FontFamily!);
         Assert.Equal(-0.41, theme.TextStyle.LetterSpacing);
         Assert.Null(theme.TextStyle.FontWeight);
 
         // ActionTextStyle 17 -0.41
         Assert.Equal(17.0, theme.ActionTextStyle.FontSize);
-        Assert.Equal("CupertinoSystemText", theme.ActionTextStyle.FontFamily!.Name);
+        Assert.Equal("CupertinoSystemText", theme.ActionTextStyle.FontFamily!);
         Assert.Equal(-0.41, theme.ActionTextStyle.LetterSpacing);
         Assert.Null(theme.ActionTextStyle.FontWeight);
 
         // ActionSmallTextStyle 15 -0.23 (aka "Subheadline/Regular")
         Assert.Equal(15.0, theme.ActionSmallTextStyle.FontSize);
-        Assert.Equal("CupertinoSystemText", theme.ActionSmallTextStyle.FontFamily!.Name);
+        Assert.Equal("CupertinoSystemText", theme.ActionSmallTextStyle.FontFamily!);
         Assert.Equal(-0.23, theme.ActionSmallTextStyle.LetterSpacing);
         Assert.Null(theme.ActionSmallTextStyle.FontWeight);
 
         // TabLabel medium 10 -0.24
         Assert.Equal(10.0, theme.TabLabelTextStyle.FontSize);
-        Assert.Equal("CupertinoSystemText", theme.TabLabelTextStyle.FontFamily!.Name);
+        Assert.Equal("CupertinoSystemText", theme.TabLabelTextStyle.FontFamily!);
         Assert.Equal(-0.24, theme.TabLabelTextStyle.LetterSpacing);
-        Assert.Equal(FontWeight.Medium, theme.TabLabelTextStyle.FontWeight);
+        Assert.Equal(FontWeight.W500, theme.TabLabelTextStyle.FontWeight);
 
         // NavTitle SemiBold 17 -0.41
         Assert.Equal(17.0, theme.NavTitleTextStyle.FontSize);
-        Assert.Equal("CupertinoSystemText", theme.NavTitleTextStyle.FontFamily!.Name);
+        Assert.Equal("CupertinoSystemText", theme.NavTitleTextStyle.FontFamily!);
         Assert.Equal(-0.41, theme.NavTitleTextStyle.LetterSpacing);
-        Assert.Equal(FontWeight.SemiBold, theme.NavTitleTextStyle.FontWeight);
+        Assert.Equal(FontWeight.W600, theme.NavTitleTextStyle.FontWeight);
 
         // NavLargeTitle Bold 34 0.38
         Assert.Equal(34.0, theme.NavLargeTitleTextStyle.FontSize);
-        Assert.Equal("CupertinoSystemDisplay", theme.NavLargeTitleTextStyle.FontFamily!.Name);
+        Assert.Equal("CupertinoSystemDisplay", theme.NavLargeTitleTextStyle.FontFamily!);
         Assert.Equal(0.38, theme.NavLargeTitleTextStyle.LetterSpacing);
         Assert.Equal(FontWeight.Bold, theme.NavLargeTitleTextStyle.FontWeight);
 
         // Picker Regular 21 -0.6
         Assert.Equal(21.0, theme.PickerTextStyle.FontSize);
-        Assert.Equal("CupertinoSystemDisplay", theme.PickerTextStyle.FontFamily!.Name);
+        Assert.Equal("CupertinoSystemDisplay", theme.PickerTextStyle.FontFamily!);
         Assert.Equal(-0.6, theme.PickerTextStyle.LetterSpacing);
-        Assert.Equal(FontWeight.Regular, theme.PickerTextStyle.FontWeight);
+        Assert.Equal(FontWeight.Normal, theme.PickerTextStyle.FontWeight);
 
         // DateTimePicker Normal 21 0.4
         Assert.Equal(21.0, theme.DateTimePickerTextStyle.FontSize);
-        Assert.Equal("CupertinoSystemDisplay", theme.DateTimePickerTextStyle.FontFamily!.Name);
+        Assert.Equal("CupertinoSystemDisplay", theme.DateTimePickerTextStyle.FontFamily!);
         Assert.Equal(0.4, theme.DateTimePickerTextStyle.LetterSpacing);
         Assert.Equal(FontWeight.Normal, theme.DateTimePickerTextStyle.FontWeight);
     }

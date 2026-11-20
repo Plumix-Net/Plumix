@@ -391,9 +391,9 @@ internal static class TreeSliverFixtures
             new DefaultTextStyle(
                 new TextStyle(
                     Color: new Color(0xFF000000),
-                    FontFamily: new FontFamily("monospace"),
+                    FontFamily: "monospace",
                     FontSize: 48.0,
-                    FontWeight: FontWeight.Black,
+                    FontWeight: FontWeight.W900,
                     Decoration: Plumix.UI.TextDecoration.Underline,
                     DecorationColor: new Color(0xFFFFFF00),
                     DecorationStyle: TextDecorationStyle.Double,

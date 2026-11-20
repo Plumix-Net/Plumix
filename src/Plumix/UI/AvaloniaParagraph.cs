@@ -197,7 +197,7 @@ internal sealed class AvaloniaParagraph : Paragraph
         {
             var style = _content.DefaultStyle with
             {
-                FontFamily = strut.FontFamily ?? FontFamily.Default,
+                FontFamily = strut.FontFamily,
                 FontFamilyFallback = strut.FontFamilyFallback,
                 FontWeight = strut.FontWeight ?? FontWeight.Normal,
                 FontStyle = strut.FontStyle ?? FontStyle.Normal,
@@ -845,7 +845,7 @@ internal sealed class ParagraphTextSource : ITextSource
 
     internal static TextRunProperties CreateRunProperties(ResolvedTextStyle style)
     {
-        var typeface = new Typeface(ResolveFontFamily(style), style.FontStyle, style.FontWeight);
+        var typeface = new Typeface(ResolveFontFamily(style), style.FontStyle.ToAvalonia(), style.FontWeight.ToAvalonia());
         return new GenericTextRunProperties(
             typeface,
             style.FontSize,
@@ -857,18 +857,9 @@ internal sealed class ParagraphTextSource : ITextSource
     }
 
     // The engine tries `fontFamilyFallback` after the family; Avalonia reads the same order from a
-    // comma-separated family name.
-    private static FontFamily ResolveFontFamily(ResolvedTextStyle style)
-    {
-        if (style.FontFamilyFallback is not { Count: > 0 } fallback)
-        {
-            return style.FontFamily;
-        }
-
-        var familyNames = new List<string> { style.FontFamily.Name };
-        familyNames.AddRange(fallback);
-        return new FontFamily(string.Join(',', familyNames));
-    }
+    // comma-separated family name, and families loaded at run time live in Plumix's collection.
+    private static FontFamily ResolveFontFamily(ResolvedTextStyle style) =>
+        AvaloniaFonts.Resolve(style.FontFamily, style.FontFamilyFallback);
 
     // A `Paint` reaches Avalonia as its shader, or else as a solid brush of its color.
     private static IBrush PaintBrush(Paint paint) => paint.Shader ?? new SolidColorBrush(paint.Color);

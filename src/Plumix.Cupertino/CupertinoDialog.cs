@@ -15,16 +15,16 @@ namespace Plumix.Cupertino;
 internal static class CupertinoDialogConstants
 {
     public static readonly TextStyle TitleStyle = new(
-        FontFamily: new FontFamily("CupertinoSystemText"),
+        FontFamily: "CupertinoSystemText",
         Inherit: false,
         FontSize: 17.0,
-        FontWeight: FontWeight.SemiBold,
+        FontWeight: FontWeight.W600,
         Height: 1.3,
         LetterSpacing: -0.5,
         TextBaseline: TextBaseline.Alphabetic);
 
     public static readonly TextStyle ContentStyle = new(
-        FontFamily: new FontFamily("CupertinoSystemText"),
+        FontFamily: "CupertinoSystemText",
         Inherit: false,
         FontSize: 13.0,
         FontWeight: FontWeight.Normal,
@@ -33,7 +33,7 @@ internal static class CupertinoDialogConstants
         TextBaseline: TextBaseline.Alphabetic);
 
     public static readonly TextStyle ActionStyle = new(
-        FontFamily: new FontFamily("CupertinoSystemText"),
+        FontFamily: "CupertinoSystemText",
         Inherit: false,
         FontSize: 16.8,
         FontWeight: FontWeight.Normal,
@@ -41,7 +41,7 @@ internal static class CupertinoDialogConstants
 
     /// <summary>Dart's `_kActionSheetActionStyle`: the base style of an action sheet button label.</summary>
     public static readonly TextStyle ActionSheetActionStyle = new(
-        FontFamily: new FontFamily("CupertinoSystemDisplay"),
+        FontFamily: "CupertinoSystemDisplay",
         Inherit: false,
         FontSize: 17.0,
         FontWeight: FontWeight.Normal,
@@ -49,7 +49,7 @@ internal static class CupertinoDialogConstants
 
     /// <summary>Dart's `_kActionSheetContentStyle`: the base style of the title/message section.</summary>
     public static readonly TextStyle ActionSheetContentStyle = new(
-        FontFamily: new FontFamily("CupertinoSystemText"),
+        FontFamily: "CupertinoSystemText",
         Inherit: false,
         FontSize: 13.0,
         FontWeight: FontWeight.Normal,
@@ -390,7 +390,7 @@ internal sealed class CupertinoDialogActionState : State<CupertinoDialogAction>,
         style = style.Merge(Current.TextStyle);
         if (Current.IsDefaultAction)
         {
-            style = style.CopyWith(fontWeight: FontWeight.SemiBold);
+            style = style.CopyWith(fontWeight: FontWeight.W600);
         }
 
         if (!Current.Enabled)

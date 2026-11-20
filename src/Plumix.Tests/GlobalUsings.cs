@@ -14,3 +14,6 @@ global using MaterialColors = Plumix.Material.Colors;
 global using Offset = global::Plumix.UI.Offset;
 global using Size = global::Plumix.UI.Size;
 global using Rect = global::Plumix.UI.Rect;
+// Text: dart:ui FontWeight/FontStyle, never Avalonia.Media's.
+global using FontWeight = global::Plumix.UI.FontWeight;
+global using FontStyle = global::Plumix.UI.FontStyle;

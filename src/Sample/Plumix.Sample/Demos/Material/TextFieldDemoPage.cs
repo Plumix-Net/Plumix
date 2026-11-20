@@ -366,6 +366,6 @@ public sealed class TextFieldDemoPage : StatefulWidget
                 : states.Contains(WidgetState.Error) ? Colors.Crimson
                 : states.Contains(WidgetState.Focused) ? Colors.DodgerBlue : Colors.SlateGray,
             FontWeight: states.Contains(WidgetState.Focused)
-                ? Avalonia.Media.FontWeight.Bold : Avalonia.Media.FontWeight.Normal);
+                ? Plumix.UI.FontWeight.Bold : Plumix.UI.FontWeight.Normal);
     }
 }

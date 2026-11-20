@@ -608,8 +608,8 @@ public sealed class ImplicitAnimationsWidgetsDartParityTests
     {
         using var tester = new FrameworkDartTester();
         var textWidget = new Text("Hello", textDirection: TextDirection.Ltr);
-        var s1 = new TextStyle(FontSize: 10.0, FontWeight: (FontWeight)800, Height: 123.0);
-        var s2 = new TextStyle(FontSize: 20.0, FontWeight: (FontWeight)200, Height: 1.0);
+        var s1 = new TextStyle(FontSize: 10.0, FontWeight: new FontWeight(800), Height: 123.0);
+        var s2 = new TextStyle(FontSize: 20.0, FontWeight: new FontWeight(200), Height: 1.0);
         RichText FirstRichText() => (RichText)tester.ElementsOfType<RichText>().First().Widget;
 
         tester.PumpWidget(new AnimatedDefaultTextStyle(

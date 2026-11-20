@@ -206,7 +206,7 @@ public sealed class RenderEditableDartParityTests
             cursorColor: Color.FromARGB(0xFF, 0xFF, 0x00, 0x00),
             text: new TextSpan(
                 text: "中文测试文本是否正确",
-                style: new TextStyle(FontSize: 10.0, FontFamily: new FontFamily("FlutterTest"))),
+                style: new TextStyle(FontSize: 10.0, FontFamily: "FlutterTest")),
             selection: TextSelection.Collapsed(4, TextAffinity.Upstream));
         AssertCursorColorRadiusVisibility(editable, showCursor, BoxConstraints.Loose(new Size(100, 100)), true);
     }
@@ -585,7 +585,7 @@ public sealed class RenderEditableDartParityTests
             cursorColor: Color.FromARGB(0xFF, 0xFF, 0x00, 0x00),
             text: new TextSpan(
                 text: "撒地方加咖啡哈金凤凰卡号方式剪坏算法发挥福建垃\nasfjafjajfjaslfjaskjflasjfksajf撒分开建安路口附近拉设\n计费可使肌肤撒附近埃里克圾房卡设计费\"",
-                style: new TextStyle(Height: 1.0, FontSize: 10.0, FontFamily: new FontFamily("Roboto"))),
+                style: new TextStyle(Height: 1.0, FontSize: 10.0, FontFamily: "Roboto")),
             selection: TextSelection.Collapsed(4, TextAffinity.Upstream));
 
         editable.Layout(BoxConstraints.Loose(new Size(100.0, 1000.0)));

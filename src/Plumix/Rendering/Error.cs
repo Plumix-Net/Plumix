@@ -136,12 +136,12 @@ public class RenderErrorBox : RenderBox
         return Constants.KDebugMode
             ? new ParagraphTextStyle(
                 Color: new Color(0xFFFFFF66),
-                FontFamily: FontFamily.Parse("monospace"),
+                FontFamily: "monospace",
                 FontSize: 14.0,
                 FontWeight: FontWeight.Bold)
             : new ParagraphTextStyle(
                 Color: new Color(0xFF303030),
-                FontFamily: FontFamily.Parse("sans-serif"),
+                FontFamily: "sans-serif",
                 FontSize: 18.0);
     }
 }

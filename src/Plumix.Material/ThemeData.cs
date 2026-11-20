@@ -306,7 +306,7 @@ public sealed record ThemeData : IDiagnosticable
         Color? colorSchemeSeed = null,
         Typography? typography = null,
         TextTheme? textTheme = null,
-        FontFamily? fontFamily = null,
+        string? fontFamily = null,
         IReadOnlyList<string>? fontFamilyFallback = null,
         string? package = null,
         Color? scaffoldBackgroundColor = null,

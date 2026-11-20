@@ -21,7 +21,7 @@ internal static class RenderParagraphTestExtensions
         /// Dart's `TextPainter.plainText`: the span tree's text without semantics labels.
         public string PlainText => paragraph.Text.ToPlainText(includeSemanticsLabels: false);
 
-        public FontFamily FontFamily => paragraph.RootStyle.FontFamily ?? FontFamily.Default;
+        public string? FontFamily => paragraph.RootStyle.FontFamily;
 
         public FontStyle FontStyle => paragraph.RootStyle.FontStyle ?? FontStyle.Normal;
 

@@ -1860,7 +1860,8 @@ internal sealed class SwitchPainter : ToggleablePainter
         Color iconColor = Color.Lerp(_inactiveIconColor, _activeIconColor, colorValue);
         double iconSize = icon.Size ?? SwitchConfigM3.IconSize;
         var style = new TextStyle(
-            FontFamily: Icon.ResolveFontFamily(icon.IconData!),
+            FontFamily: icon.IconData!.FontFamily,
+            Package: icon.IconData.FontPackage,
             FontSize: iconSize,
             Color: iconColor,
             FontWeight: icon.FontWeight,

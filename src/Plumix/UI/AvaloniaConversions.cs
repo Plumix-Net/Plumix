@@ -1,10 +1,10 @@
 namespace Plumix;
 
 // C#-only infrastructure: no Dart parity source.
-// Conversions between the framework geometry and Avalonia's at the drawing/host boundary. Values
+// Conversions between framework value types and Avalonia's at the drawing/host boundary. Values
 // are copied; nothing allocates. Avalonia's Rect stores x/y/width/height, so an edge at infinity
 // can come back as NaN.
-internal static class AvaloniaGeometry
+internal static class AvaloniaConversions
 {
     extension(Offset offset)
     {
@@ -40,5 +40,27 @@ internal static class AvaloniaGeometry
     extension(global::Avalonia.Rect rect)
     {
         public Rect ToPlumix() => Rect.FromLTWH(rect.X, rect.Y, rect.Width, rect.Height);
+    }
+
+    extension(FontWeight weight)
+    {
+        public global::Avalonia.Media.FontWeight ToAvalonia() => (global::Avalonia.Media.FontWeight)weight.Value;
+    }
+
+    extension(global::Avalonia.Media.FontWeight weight)
+    {
+        public FontWeight ToPlumix() => new((int)weight);
+    }
+
+    extension(FontStyle style)
+    {
+        public global::Avalonia.Media.FontStyle ToAvalonia() => style == FontStyle.Italic
+            ? global::Avalonia.Media.FontStyle.Italic
+            : global::Avalonia.Media.FontStyle.Normal;
+    }
+
+    extension(global::Avalonia.Media.FontStyle style)
+    {
+        public FontStyle ToPlumix() => style == global::Avalonia.Media.FontStyle.Normal ? FontStyle.Normal : FontStyle.Italic;
     }
 }

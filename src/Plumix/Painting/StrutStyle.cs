@@ -26,7 +26,7 @@ public sealed class StrutStyle : Diagnosticable, IEquatable<StrutStyle>
     /// When `Package` is non-null the family name and every fallback name are prefixed with
     /// `packages/<package>/`, exactly as Dart does.
     public StrutStyle(
-        FontFamily? FontFamily = null,
+        string? FontFamily = null,
         IReadOnlyList<string>? FontFamilyFallback = null,
         double? FontSize = null,
         double? Height = null,
@@ -74,7 +74,7 @@ public sealed class StrutStyle : Diagnosticable, IEquatable<StrutStyle>
     /// `package` is applied to an explicit `fontFamily` here and again by the main constructor.
     public static StrutStyle FromTextStyle(
         TextStyle textStyle,
-        FontFamily? fontFamily = null,
+        string? fontFamily = null,
         IReadOnlyList<string>? fontFamilyFallback = null,
         double? fontSize = null,
         double? height = null,
@@ -107,7 +107,7 @@ public sealed class StrutStyle : Diagnosticable, IEquatable<StrutStyle>
     public static StrutStyle Disabled { get; } = new(Height: 0.0, Leading: 0.0);
 
     /// The name of the font to use when calculating the strut.
-    public FontFamily? FontFamily { get; }
+    public string? FontFamily { get; }
 
     /// The ordered list of font families to fall back on when a higher priority family cannot be
     /// found. Prefixed with `packages/<package>/` on every read when a package was given.
@@ -273,10 +273,10 @@ public sealed class StrutStyle : Diagnosticable, IEquatable<StrutStyle>
         }
 
         object nullDefault = DiagnosticsDefaults.NullValue;
-        string? weightDescription = FontWeight is null ? null : $"w{(int)FontWeight.Value}";
+        string? weightDescription = FontWeight is null ? null : $"w{FontWeight.Value.Value}";
         var styles = new List<DiagnosticsNode>
         {
-            new StringProperty($"{prefix}family", FontFamily?.Name, defaultValue: nullDefault, quoted: false),
+            new StringProperty($"{prefix}family", FontFamily, defaultValue: nullDefault, quoted: false),
             new IterableProperty<string>($"{prefix}familyFallback", FontFamilyFallback, defaultValue: nullDefault),
             new DoubleProperty($"{prefix}size", FontSize, defaultValue: nullDefault),
             new DiagnosticsProperty<FontWeight?>(
@@ -316,10 +316,10 @@ public sealed class StrutStyle : Diagnosticable, IEquatable<StrutStyle>
         }
     }
 
-    private static FontFamily? PrefixFamily(string package, FontFamily? family)
+    private static string? PrefixFamily(string package, string? family)
     {
         // Dart interpolates a null family as the literal "null".
-        return new FontFamily($"packages/{package}/{family?.Name ?? "null"}");
+        return $"packages/{package}/{family ?? "null"}";
     }
 
     private static bool ListEquals(IReadOnlyList<string>? a, IReadOnlyList<string>? b)

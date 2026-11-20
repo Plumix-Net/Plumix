@@ -580,7 +580,7 @@ public sealed class CupertinoMenuAnchorTests : IDisposable
         Assert.Equal(15.0, style.FontSize);
         Assert.Equal(lineHeight / subheadSize, style.Height!.Value, precision: 6);
         Assert.Equal(letterSpacing, style.LetterSpacing!.Value, precision: 6);
-        Assert.Equal(displayFont ? "CupertinoSystemDisplay" : "CupertinoSystemText", style.FontFamily!.Name);
+        Assert.Equal(displayFont ? "CupertinoSystemDisplay" : "CupertinoSystemText", style.FontFamily!);
         Assert.Equal(bodySize / 17.0, subtitle.TextScaler.Scale(17.0) / 17.0, precision: 6);
         Assert.Equal(bodySize >= 28.0 ? 100 : 2, subtitle.MaxLines);
         Assert.Equal(BlendMode.HardLight, Assert.IsType<Paint>(style.Foreground).BlendMode);
@@ -614,7 +614,7 @@ public sealed class CupertinoMenuAnchorTests : IDisposable
         TextStyle style = FindParagraph(harness.RenderView, "A").Text.Style!;
         var paragraphStyle = new ParagraphStyle(
             FontSize: 15.0,
-            FontFamily: new FontFamily("avares://Plumix.Tests/Fixtures/Fonts#Ahem"));
+            FontFamily: TestFonts.Ahem);
         ResolvedTextStyle defaults = ResolvedTextStyle.FromParagraphStyle(paragraphStyle);
         ResolvedTextStyle run = defaults.Merge(style.GetTextStyle() with { FontFamily = paragraphStyle.FontFamily });
         using var paragraph = new AvaloniaParagraph(new ParagraphContent(

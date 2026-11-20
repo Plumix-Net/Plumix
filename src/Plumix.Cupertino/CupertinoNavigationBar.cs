@@ -775,7 +775,8 @@ internal sealed class BackChevron : StatelessWidget
                         Inherit: false,
                         Color: textStyle.Color,
                         FontSize: 30.0,
-                        FontFamily: IconFontRegistry.Resolve(backChevron)))));
+                        FontFamily: backChevron.FontFamily,
+                        Package: backChevron.FontPackage))));
         if (textDirection == TextDirection.Rtl)
         {
             iconWidget = new Plumix.Widgets.Transform(

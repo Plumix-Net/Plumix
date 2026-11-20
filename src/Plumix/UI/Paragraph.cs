@@ -51,7 +51,7 @@ public sealed record ParagraphTextStyle(
     FontWeight? FontWeight = null,
     FontStyle? FontStyle = null,
     TextBaseline? TextBaseline = null,
-    FontFamily? FontFamily = null,
+    string? FontFamily = null,
     IReadOnlyList<string>? FontFamilyFallback = null,
     double? FontSize = null,
     double? LetterSpacing = null,
@@ -127,7 +127,7 @@ public sealed record ParagraphTextStyle(
         string heightText = Height is { } height
             ? (height == TextDefaults.TextHeightNone ? "kTextHeightNone" : $"{Number(height)}x")
             : unspecified;
-        string fontFamilyText = FontFamily is { } family && family.Name.Length > 0 ? family.Name : unspecified;
+        string fontFamilyText = FontFamily is { } family && family.Length > 0 ? family : unspecified;
         string fallbackText = FontFamilyFallback is { Count: > 0 } fallback ? DartList(fallback) : unspecified;
         string decorationColorText = DecorationColor is { } decorationColor
             ? decorationColor.ToString()
@@ -160,7 +160,7 @@ public sealed record ParagraphTextStyle(
     /// dart:ui `FontWeight.toString`.
     internal static string DescribeFontWeight(FontWeight weight)
     {
-        int value = (int)weight;
+        int value = weight.Value;
         return value % 100 != 0
             ? $"FontWeight({value.ToString(CultureInfo.InvariantCulture)})"
             : $"FontWeight.w{value.ToString(CultureInfo.InvariantCulture)}";
@@ -215,7 +215,7 @@ public sealed record ParagraphTextStyle(
 
 /// Dart's `ui.StrutStyle`: the minimum line height a paragraph applies to every line.
 public sealed record ParagraphStrutStyle(
-    FontFamily? FontFamily = null,
+    string? FontFamily = null,
     IReadOnlyList<string>? FontFamilyFallback = null,
     double? FontSize = null,
     double? Height = null,
@@ -247,7 +247,7 @@ public sealed record ParagraphStyle(
     TextAlign? TextAlign = null,
     TextDirection? TextDirection = null,
     int? MaxLines = null,
-    FontFamily? FontFamily = null,
+    string? FontFamily = null,
     double? FontSize = null,
     double? Height = null,
     TextHeightBehavior? TextHeightBehavior = null,
@@ -266,11 +266,11 @@ public sealed record ParagraphStyle(
         return "ParagraphStyle("
                + $"textAlign: {Enum(TextAlign, "TextAlign")}, "
                + $"textDirection: {Enum(TextDirection, "TextDirection")}, "
-               + $"fontWeight: {(FontWeight is { } weight ? $"FontWeight.w{(int)weight}" : "unspecified")}, "
+               + $"fontWeight: {(FontWeight is { } weight ? $"FontWeight.w{weight.Value}" : "unspecified")}, "
                + $"fontStyle: {Enum(FontStyle, "FontStyle")}, "
                + $"maxLines: {maxLinesText}, "
                + $"textHeightBehavior: {(TextHeightBehavior?.ToString() ?? "unspecified")}, "
-               + $"fontFamily: {(FontFamily?.Name ?? "unspecified")}, "
+               + $"fontFamily: {(FontFamily ?? "unspecified")}, "
                + $"fontSize: {(FontSize is { } size ? FormatDouble(size) : "unspecified")}, "
                + $"height: {heightText}, "
                + $"strutStyle: {(StrutStyle?.ToString() ?? "unspecified")}, "

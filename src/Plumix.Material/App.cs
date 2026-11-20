@@ -23,10 +23,10 @@ public sealed class MaterialApp : StatefulWidget
         [new Locale("en", "US")];
 
     private static TextStyle ErrorTextStyle { get; } = new(
-        FontFamily: new FontFamily("monospace"),
+        FontFamily: "monospace",
         FontSize: 48.0,
         Color: Color.FromARGB(0xD0, 0xFF, 0x00, 0x00),
-        FontWeight: FontWeight.Black);
+        FontWeight: FontWeight.W900);
 
     public MaterialApp(
         GlobalKey<NavigatorState>? navigatorKey = null,

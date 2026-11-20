@@ -430,7 +430,7 @@ public sealed class TextSpacingOverridesDartParityTests
             child: new Center(child: new Text(
                 "Hello",
                 textDirection: TextDirection.Ltr,
-                style: new TextStyle(Inherit: false, FontSize: 12.0, FontWeight: FontWeight.Light)))));
+                style: new TextStyle(Inherit: false, FontSize: 12.0, FontWeight: FontWeight.W300)))));
 
         RichText text = tester.FirstWidget<RichText>(Find.ByType<RichText>());
         Assert.Equal(FontWeight.Bold, text.Text.Style?.FontWeight);
@@ -440,10 +440,10 @@ public sealed class TextSpacingOverridesDartParityTests
         tester.PumpWidget(new MediaQuery(
             data: new MediaQueryData(BoldText: true),
             child: new Center(child: new RichText(
-                text: new TextSpan(text: "Hello", style: new TextStyle(FontWeight: FontWeight.Light)),
+                text: new TextSpan(text: "Hello", style: new TextStyle(FontWeight: FontWeight.W300)),
                 textDirection: TextDirection.Ltr))));
         text = tester.FirstWidget<RichText>(Find.ByType<RichText>());
-        Assert.Equal(FontWeight.Light, text.Text.Style?.FontWeight);
+        Assert.Equal(FontWeight.W300, text.Text.Style?.FontWeight);
     }
 
     private sealed class SubclassSpan(string text) : TextSpan(text: text);

@@ -171,7 +171,7 @@ public sealed class AccessibilityEvaluationsDartParityTests : IDisposable
             "test",
             style: new TextStyle(Color: new Color(0xFF767676),
                 FontSize: 14,
-                FontWeight: Avalonia.Media.FontWeight.Bold)))));
+                FontWeight: FontWeight.Bold)))));
 
         EvaluationResult result = await Evaluate(new MinimumTextContrastEvaluation(
             minNormalTextContrastRatio: 10.0,

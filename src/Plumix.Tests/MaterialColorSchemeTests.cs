@@ -222,7 +222,7 @@ public sealed class MaterialColorSchemeTests
 
         Assert.Equal(scheme.Surface, typography.Black.BodyMedium.Color);
         Assert.Equal(scheme.OnSurface, typography.White.BodyMedium.Color);
-        Assert.Equal(new FontFamily("Segoe UI"), typography.Black.BodyMedium.FontFamily);
+        Assert.Equal("Segoe UI", typography.Black.BodyMedium.FontFamily);
         Assert.Null(typography.EnglishLike.BodyMedium.FontFamily);
         Assert.Equal(TextLeadingDistribution.Even, typography.EnglishLike.BodyMedium.LeadingDistribution);
         Assert.Same(
@@ -291,14 +291,14 @@ public sealed class MaterialColorSchemeTests
     {
         Assert.All(Styles(Typography.BlackRedmond), style =>
         {
-            Assert.Equal(new FontFamily("Segoe UI"), style.FontFamily);
+            Assert.Equal("Segoe UI", style.FontFamily);
             Assert.Equal(Plumix.UI.TextDecoration.None, style.Decoration);
         });
         Assert.All(Styles(Typography.BlackRedwoodCity), style =>
-            Assert.Equal(new FontFamily(".AppleSystemUIFont"), style.FontFamily));
+            Assert.Equal(".AppleSystemUIFont", style.FontFamily));
         Assert.All(Styles(Typography.BlackHelsinki), style =>
         {
-            Assert.Equal(new FontFamily("Roboto"), style.FontFamily);
+            Assert.Equal("Roboto", style.FontFamily);
             Assert.Equal(
                 ["Ubuntu", "Adwaita Sans", "Cantarell", "DejaVu Sans", "Liberation Sans", "Arial"],
                 style.FontFamilyFallback);
@@ -306,9 +306,9 @@ public sealed class MaterialColorSchemeTests
 
         TextStyle[] cupertino = Styles(Typography.BlackCupertino);
         Assert.All(cupertino[..7], style =>
-            Assert.Equal(new FontFamily("CupertinoSystemDisplay"), style.FontFamily));
+            Assert.Equal("CupertinoSystemDisplay", style.FontFamily));
         Assert.All(cupertino[7..], style =>
-            Assert.Equal(new FontFamily("CupertinoSystemText"), style.FontFamily));
+            Assert.Equal("CupertinoSystemText", style.FontFamily));
         Assert.Equal(Color.FromARGB(0x8A, 0, 0, 0), Typography.BlackMountainView.DisplayLarge.Color);
         Assert.Equal(Color.FromARGB(0xDD, 0, 0, 0), Typography.BlackMountainView.BodyMedium.Color);
         Assert.Equal(Colors.Black, Typography.BlackMountainView.LabelSmall.Color);
@@ -343,7 +343,7 @@ public sealed class MaterialColorSchemeTests
         Assert.NotNull(localized);
         Assert.Equal(15, localized.TextTheme.BodyMedium.FontSize);
         Assert.Equal(TextBaseline.Ideographic, localized.TextTheme.BodyMedium.TextBaseline);
-        Assert.Equal(new FontFamily("Roboto"), localized.TextTheme.BodyMedium.FontFamily);
+        Assert.Equal("Roboto", localized.TextTheme.BodyMedium.FontFamily);
         Assert.Equal(Color.FromARGB(0xDD, 0, 0, 0), localized.TextTheme.BodyMedium.Color);
 
         root.UnmountRoot();
@@ -354,24 +354,24 @@ public sealed class MaterialColorSchemeTests
     {
         string[] fallback = ["Fallback One", "Fallback Two"];
         var theme = new ThemeData(
-            fontFamily: new FontFamily("App Font"),
+            fontFamily: "App Font",
             fontFamilyFallback: fallback,
             package: "fonts.package",
             textTheme: new TextTheme(
-                bodyMedium: new TextStyle(FontFamily: new FontFamily("Body Override"))));
+                bodyMedium: new TextStyle(FontFamily: "Body Override")));
 
         // Dart's `TextStyle` prefixes the family and every fallback with `packages/<package>/`.
-        Assert.Equal(new FontFamily("packages/fonts.package/App Font"), theme.TextTheme.TitleLarge.FontFamily);
+        Assert.Equal("packages/fonts.package/App Font", theme.TextTheme.TitleLarge.FontFamily);
         Assert.Equal(
             ["packages/fonts.package/Fallback One", "packages/fonts.package/Fallback Two"],
             theme.TextTheme.TitleLarge.FontFamilyFallback);
         Assert.Equal("fonts.package", theme.TextTheme.TitleLarge.Package);
         // `merge` takes the override's family but keeps the applied package (`other._package ?? _package`).
         Assert.Equal(
-            new FontFamily("packages/fonts.package/Body Override"),
+            "packages/fonts.package/Body Override",
             theme.TextTheme.BodyMedium.FontFamily);
         Assert.Equal(
-            new FontFamily("packages/fonts.package/App Font"),
+            "packages/fonts.package/App Font",
             theme.PrimaryTextTheme.BodyMedium.FontFamily);
     }
 
@@ -469,9 +469,9 @@ public sealed class MaterialColorSchemeTests
 
     private static int WeightValue(FontWeight? weight)
     {
-        if (weight == FontWeight.Thin) return 100;
-        if (weight == FontWeight.Light) return 300;
-        if (weight == FontWeight.Medium) return 500;
+        if (weight == FontWeight.W100) return 100;
+        if (weight == FontWeight.W300) return 300;
+        if (weight == FontWeight.W500) return 500;
         if (weight == FontWeight.Bold) return 700;
         return 400;
     }

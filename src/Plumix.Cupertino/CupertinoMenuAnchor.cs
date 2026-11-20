@@ -220,9 +220,9 @@ internal sealed class CupertinoDynamicTypeStyle
         (units - minimum) / (maximum - minimum);
 
     private static TextStyle Style(double size, double height, double spacing, bool display) => new(
-        FontFamily: new FontFamily(display
+        FontFamily: display
             ? CupertinoMenuMetrics.KDisplayFont
-            : CupertinoMenuMetrics.KBodyFont),
+            : CupertinoMenuMetrics.KBodyFont,
         FontSize: size,
         Height: height,
         LetterSpacing: spacing);

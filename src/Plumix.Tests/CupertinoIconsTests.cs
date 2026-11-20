@@ -21,8 +21,7 @@ public sealed class CupertinoIconsTests
         "bee931644c76c0d920e9a560269bfc2324a934f6e2d9db704657722cac2c0df5";
     private const string ExpectedFontHash =
         "67c44fe9183b002e79dde7f6977e2988661c9a3e4a3c5fce968787efdbed823c";
-    private const string ExpectedFontFamily =
-        "avares://Plumix.Cupertino/Assets/Fonts/CupertinoIcons.ttf#CupertinoIcons";
+    private const string ExpectedFontFamily = "packages/cupertino_icons/CupertinoIcons";
 
     [Fact]
     public void GeneratedCatalog_MatchesPinnedDartManifest()
@@ -113,7 +112,11 @@ public sealed class CupertinoIconsTests
             var paragraph = FindDescendant<RenderParagraph>(root.ChildElement!.RenderObject);
             Assert.NotNull(paragraph);
             Assert.Equal(char.ConvertFromUtf32(icon.CodePoint), paragraph!.PlainText);
-            Assert.Equal(new FontFamily(ExpectedFontFamily), paragraph.FontFamily);
+            Assert.Equal(ExpectedFontFamily, paragraph.FontFamily);
+            Assert.True(AvaloniaFonts.IsRegistered(ExpectedFontFamily));
+            Assert.True(FontManager.Current.TryGetGlyphTypeface(
+                new Typeface(AvaloniaFonts.Resolve(ExpectedFontFamily)), out GlyphTypeface? glyphs));
+            Assert.NotEqual(0, glyphs.CharacterToGlyphMap[icon.CodePoint]);
         }
     }
 

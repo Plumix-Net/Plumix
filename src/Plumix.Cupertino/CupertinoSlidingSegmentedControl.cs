@@ -614,7 +614,7 @@ internal sealed class SlidingSegmentState<T> : State<SlidingSegment<T>> where T 
         bool shouldHighlight = Current.Highlighted && !Current.IsMomentary;
         TextStyle style = DefaultTextStyle.Of(context).Style.Merge(new TextStyle(
             FontSize: 13.0,
-            FontWeight: shouldHighlight ? FontWeight.DemiBold : FontWeight.Medium,
+            FontWeight: shouldHighlight ? FontWeight.W600 : FontWeight.W500,
             Color: Current.Enabled ? null : DisabledContentColor));
         Alignment alignment = Current.Location switch
         {
@@ -640,7 +640,7 @@ internal sealed class SlidingSegmentState<T> : State<SlidingSegment<T>> where T 
             child: Current.Child,
             style: new TextStyle(
                 FontSize: 13.0,
-                FontWeight: FontWeight.DemiBold));
+                FontWeight: FontWeight.W600));
         return new MetaData(
             behavior: HitTestBehavior.Opaque,
             child: new IndexedStack(

@@ -17,7 +17,7 @@ namespace Plumix.Tests;
 
 public sealed class TextStyleTests
 {
-    private static FontWeight W(int value) => (FontWeight)value;
+    private static FontWeight W(int value) => new FontWeight(value);
 
     // -- TextStyle control test ----------------------------------------------------------------
 
@@ -210,12 +210,12 @@ public sealed class TextStyleTests
     [Fact]
     public void TextStyleUsingPackageFont()
     {
-        var s6 = new TextStyle(FontFamily: new FontFamily("test"));
-        Assert.Equal("test", s6.FontFamily!.Name);
+        var s6 = new TextStyle(FontFamily: "test");
+        Assert.Equal("test", s6.FontFamily!);
         Assert.Equal(UiTextStyleString(fontFamily: "test"), s6.GetTextStyle().ToString());
 
-        var s7 = new TextStyle(FontFamily: new FontFamily("test"), Package: "p");
-        Assert.Equal("packages/p/test", s7.FontFamily!.Name);
+        var s7 = new TextStyle(FontFamily: "test", Package: "p");
+        Assert.Equal("packages/p/test", s7.FontFamily!);
         Assert.Equal(UiTextStyleString(fontFamily: "packages/p/test"), s7.GetTextStyle().ToString());
 
         var s8 = new TextStyle(FontFamilyFallback: ["test", "test2"], Package: "p");
@@ -247,19 +247,19 @@ public sealed class TextStyleTests
     [Fact]
     public void TextStylePackageFontMerge()
     {
-        var s1 = new TextStyle(Package: "p", FontFamily: new FontFamily("font1"), FontFamilyFallback: ["fallback1"]);
-        var s2 = new TextStyle(Package: "p", FontFamily: new FontFamily("font2"), FontFamilyFallback: ["fallback2"]);
+        var s1 = new TextStyle(Package: "p", FontFamily: "font1", FontFamilyFallback: ["fallback1"]);
+        var s2 = new TextStyle(Package: "p", FontFamily: "font2", FontFamilyFallback: ["fallback2"]);
 
         TextStyle emptyMerge = new TextStyle().Merge(s1);
-        Assert.Equal("packages/p/font1", emptyMerge.FontFamily!.Name);
+        Assert.Equal("packages/p/font1", emptyMerge.FontFamily!);
         Assert.Equal(["packages/p/fallback1"], emptyMerge.FontFamilyFallback!);
 
         TextStyle lerp1 = TextStyle.Lerp(s1, s2, 0)!;
-        Assert.Equal("packages/p/font1", lerp1.FontFamily!.Name);
+        Assert.Equal("packages/p/font1", lerp1.FontFamily!);
         Assert.Equal(["packages/p/fallback1"], lerp1.FontFamilyFallback!);
 
         TextStyle lerp2 = TextStyle.Lerp(s1, s2, 1.0)!;
-        Assert.Equal("packages/p/font2", lerp2.FontFamily!.Name);
+        Assert.Equal("packages/p/font2", lerp2.FontFamily!);
         Assert.Equal(["packages/p/fallback2"], lerp2.FontFamilyFallback!);
     }
 
@@ -271,18 +271,18 @@ public sealed class TextStyleTests
         Assert.Equal("test", s1.FontFamilyFallback[1]);
         Assert.Equal(2, s1.FontFamilyFallback.Count);
 
-        var s2 = new TextStyle(FontFamily: new FontFamily("foo"), FontFamilyFallback: ["Roboto", "test"]);
+        var s2 = new TextStyle(FontFamily: "foo", FontFamilyFallback: ["Roboto", "test"]);
         Assert.Equal("Roboto", s2.FontFamilyFallback![0]);
         Assert.Equal("test", s2.FontFamilyFallback[1]);
-        Assert.Equal("foo", s2.FontFamily!.Name);
+        Assert.Equal("foo", s2.FontFamily!);
         Assert.Equal(2, s2.FontFamilyFallback.Count);
 
-        var s3 = new TextStyle(FontFamily: new FontFamily("foo"));
-        Assert.Equal("foo", s3.FontFamily!.Name);
+        var s3 = new TextStyle(FontFamily: "foo");
+        Assert.Equal("foo", s3.FontFamily!);
         Assert.Null(s3.FontFamilyFallback);
 
-        var s4 = new TextStyle(FontFamily: new FontFamily("foo"), FontFamilyFallback: []);
-        Assert.Equal("foo", s4.FontFamily!.Name);
+        var s4 = new TextStyle(FontFamily: "foo", FontFamilyFallback: []);
+        Assert.Equal("foo", s4.FontFamily!);
         Assert.Equal([], s4.FontFamilyFallback!);
         Assert.Empty(s4.FontFamilyFallback!);
 
@@ -290,9 +290,9 @@ public sealed class TextStyleTests
             UiTextStyleString(fontFamily: "foo", fontFamilyFallback: "[Roboto, test]"),
             s2.GetTextStyle().ToString());
 
-        Assert.Equal("foo", s2.Apply().FontFamily!.Name);
+        Assert.Equal("foo", s2.Apply().FontFamily!);
         Assert.Equal(["Roboto", "test"], s2.Apply().FontFamilyFallback!);
-        Assert.Equal("bar", s2.Apply(fontFamily: new FontFamily("bar")).FontFamily!.Name);
+        Assert.Equal("bar", s2.Apply(fontFamily: "bar").FontFamily!);
         Assert.Equal(["Banana"], s2.Apply(fontFamilyFallback: ["Banana"]).FontFamilyFallback!);
     }
 
@@ -530,24 +530,24 @@ public sealed class TextStyleTests
     [Fact]
     public void TextStyleFontFamilyAndPackage()
     {
-        var p = new TextStyle(FontFamily: new FontFamily("fontFamily"), Package: "foo");
-        var q = new TextStyle(FontFamily: new FontFamily("fontFamily"), Package: "bar");
+        var p = new TextStyle(FontFamily: "fontFamily", Package: "foo");
+        var q = new TextStyle(FontFamily: "fontFamily", Package: "bar");
         Assert.NotEqual(p, q);
         Assert.NotEqual(p.GetHashCode(), q.GetHashCode());
 
-        Assert.Equal("fontFamily", new TextStyle(FontFamily: new FontFamily("fontFamily")).FontFamily!.Name);
+        Assert.Equal("fontFamily", new TextStyle(FontFamily: "fontFamily").FontFamily!);
         Assert.Equal(
             "packages/bar/fontFamily",
-            new TextStyle(FontFamily: new FontFamily("fontFamily")).CopyWith(package: "bar").FontFamily!.Name);
-        Assert.Equal("packages/foo/fontFamily", p.FontFamily!.Name);
-        Assert.Equal("packages/bar/fontFamily", p.CopyWith(package: "bar").FontFamily!.Name);
-        Assert.Equal("packages/bar/fontFamily", new TextStyle().Merge(q).FontFamily!.Name);
+            new TextStyle(FontFamily: "fontFamily").CopyWith(package: "bar").FontFamily!);
+        Assert.Equal("packages/foo/fontFamily", p.FontFamily!);
+        Assert.Equal("packages/bar/fontFamily", p.CopyWith(package: "bar").FontFamily!);
+        Assert.Equal("packages/bar/fontFamily", new TextStyle().Merge(q).FontFamily!);
         Assert.Equal(
             "packages/foo/fontFamily",
-            new TextStyle().Apply(fontFamily: new FontFamily("fontFamily"), package: "foo").FontFamily!.Name);
+            new TextStyle().Apply(fontFamily: "fontFamily", package: "foo").FontFamily!);
         Assert.Equal(
             "packages/bar/fontFamily",
-            p.Apply(fontFamily: new FontFamily("fontFamily"), package: "bar").FontFamily!.Name);
+            p.Apply(fontFamily: "fontFamily", package: "bar").FontFamily!);
     }
 
     [Fact]
@@ -689,10 +689,10 @@ public sealed class TextStyleTests
                 Height: 100.0).ToString());
         Assert.Equal(
             UiTextStyleString(fontFamily: "test"),
-            new ParagraphTextStyle(FontFamily: new FontFamily("test")).ToString());
+            new ParagraphTextStyle(FontFamily: "test").ToString());
         Assert.Equal(
             UiTextStyleString(fontFamily: "foo", fontFamilyFallback: "[Roboto, test]"),
-            new ParagraphTextStyle(FontFamily: new FontFamily("foo"), FontFamilyFallback: ["Roboto", "test"])
+            new ParagraphTextStyle(FontFamily: "foo", FontFamilyFallback: ["Roboto", "test"])
                 .ToString());
         Assert.Equal(
             UiTextStyleString(leadingDistribution: "TextLeadingDistribution.even"),

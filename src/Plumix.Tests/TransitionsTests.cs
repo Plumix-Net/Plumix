@@ -619,7 +619,7 @@ public sealed class TransitionsTests : IDisposable
         var firstStyle = new TextStyle(
             FontSize: 14,
             Color: Colors.DarkBlue,
-            FontWeight: FontWeight.SemiBold,
+            FontWeight: FontWeight.W600,
             LetterSpacing: 0.5);
         var secondStyle = new TextStyle(
             FontSize: 22,
@@ -653,7 +653,7 @@ public sealed class TransitionsTests : IDisposable
 
         var paragraph = Assert.IsType<RenderParagraph>(root.ChildElement!.RenderObject);
         Assert.Equal(14, paragraph.FontSize);
-        Assert.Equal(FontWeight.SemiBold, paragraph.FontWeight);
+        Assert.Equal(FontWeight.W600, paragraph.FontWeight);
         Assert.Equal(0.5, paragraph.LetterSpacing);
         Assert.Equal(Colors.DarkBlue, Assert.IsType<SolidColorBrush>(paragraph.Foreground).Color);
         Assert.Equal(TextAlign.Center, paragraph.TextAlign);

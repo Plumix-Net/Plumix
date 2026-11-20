@@ -264,10 +264,10 @@ public sealed class TextWidgetTests
     {
         var owner = TestBuildOwner.Create();
         var style1 = new TextStyle(
-            FontFamily: new FontFamily("Arial"),
+            FontFamily: "Arial",
             FontSize: 15,
             Color: Colors.DarkSlateBlue,
-            FontWeight: FontWeight.SemiBold,
+            FontWeight: FontWeight.W600,
             FontStyle: FontStyle.Normal,
             Height: 1.4,
             LetterSpacing: 0.4);
@@ -290,7 +290,7 @@ public sealed class TextWidgetTests
         var paragraph = RequireRenderObject<RenderParagraph>(root.ChildElement);
         Assert.Equal(style1.FontFamily, paragraph.FontFamily);
         Assert.Equal(15, paragraph.FontSize);
-        Assert.Equal(FontWeight.SemiBold, paragraph.FontWeight);
+        Assert.Equal(FontWeight.W600, paragraph.FontWeight);
         Assert.Equal(FontStyle.Normal, paragraph.FontStyle);
         Assert.Equal(1.4, paragraph.Height);
         Assert.Equal(0.4, paragraph.LetterSpacing);
@@ -303,7 +303,7 @@ public sealed class TextWidgetTests
         Assert.Equal(new TextHeightBehavior(false, false), paragraph.TextHeightBehavior);
 
         var style2 = new TextStyle(
-            FontFamily: new FontFamily("Times New Roman"),
+            FontFamily: "Times New Roman",
             FontSize: 18,
             Color: Colors.DarkGreen,
             FontWeight: FontWeight.Bold,
@@ -350,10 +350,10 @@ public sealed class TextWidgetTests
         // `Theme` therefore keeps `DefaultTextStyle.fallback`, not `textTheme.bodyMedium`.
         var owner = TestBuildOwner.Create();
         var themedStyle = new TextStyle(
-            FontFamily: new FontFamily("Arial"),
+            FontFamily: "Arial",
             FontSize: 17,
             Color: Colors.OrangeRed,
-            FontWeight: FontWeight.SemiBold,
+            FontWeight: FontWeight.W600,
             FontStyle: FontStyle.Italic,
             Height: 1.5,
             LetterSpacing: 0.6);
@@ -393,7 +393,7 @@ public sealed class TextWidgetTests
         var materialParagraph = FindDescendant<RenderParagraph>(materialRoot.ChildElement!.RenderObject);
         Assert.NotNull(materialParagraph);
         Assert.Equal(17, materialParagraph!.FontSize);
-        Assert.Equal(FontWeight.SemiBold, materialParagraph.FontWeight);
+        Assert.Equal(FontWeight.W600, materialParagraph.FontWeight);
         Assert.Equal(themedStyle.Color, (Color)Assert.IsType<SolidColorBrush>(materialParagraph.Foreground).Color);
     }
 
@@ -461,9 +461,7 @@ public sealed class TextWidgetTests
         Assert.Equal(char.ConvertFromUtf32(0xe047), paragraph!.PlainText);
         Assert.Equal(28, paragraph.FontSize);
         Assert.Equal(Colors.DarkOrange, (Color)Assert.IsType<SolidColorBrush>(paragraph.Foreground).Color);
-        Assert.Equal(
-            new FontFamily("avares://Plumix.Material/Assets/Fonts/MaterialIcons-Regular.otf#Material Icons"),
-            paragraph.FontFamily);
+        Assert.Equal("MaterialIcons", paragraph.FontFamily);
     }
 
     [Fact]

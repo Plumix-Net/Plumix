@@ -21,8 +21,7 @@ public sealed class MaterialIconsTests
         "7b2d0c21162ddae0942442151d579839cd8cacbd1725aa3e2f6391a4c211d852";
     private const string ExpectedFontHash =
         "d9865b671a09d683d13a863089d8825e0f61a37696ce5d7d448bc8023aa62453";
-    private const string ExpectedFontFamily =
-        "avares://Plumix.Material/Assets/Fonts/MaterialIcons-Regular.otf#Material Icons";
+    private const string ExpectedFontFamily = "MaterialIcons";
 
     [Fact]
     public void GeneratedCatalog_MatchesPinnedDartManifest()
@@ -208,7 +207,11 @@ public sealed class MaterialIconsTests
             var paragraph = FindDescendant<RenderParagraph>(root.ChildElement!.RenderObject);
             Assert.NotNull(paragraph);
             Assert.Equal(char.ConvertFromUtf32(icon.CodePoint), paragraph!.PlainText);
-            Assert.Equal(new FontFamily(ExpectedFontFamily), paragraph.FontFamily);
+            Assert.Equal(ExpectedFontFamily, paragraph.FontFamily);
+            Assert.True(AvaloniaFonts.IsRegistered(ExpectedFontFamily));
+            Assert.True(FontManager.Current.TryGetGlyphTypeface(
+                new Typeface(AvaloniaFonts.Resolve(ExpectedFontFamily)), out GlyphTypeface? glyphs));
+            Assert.NotEqual(0, glyphs.CharacterToGlyphMap[icon.CodePoint]);
         }
     }
 

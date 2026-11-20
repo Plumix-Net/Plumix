@@ -1619,7 +1619,7 @@ internal sealed class HeadlessParagraph : Paragraph
         var glyphs = new List<FlutterTestGlyphDraw.Glyph>();
         ResolvedTextStyle style = run.Style;
         // OneLineShaper::shape fakes the weight and slant the regular, upright FlutterTest lacks.
-        int weight = (int)style.FontWeight;
+        int weight = style.FontWeight.Value;
         bool fakeBold = weight >= 600 && weight - FlutterTestFontWeight >= 200;
         bool fakeItalic = style.FontStyle != FontStyle.Normal;
         Color color = style.Foreground?.Color ?? style.Color;

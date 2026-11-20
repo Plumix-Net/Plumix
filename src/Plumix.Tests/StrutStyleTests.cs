@@ -15,15 +15,15 @@ public sealed class StrutStyleTests
     {
         Assert.Equal(
             "StrutStyle(family: Serif, size: 14.0)",
-            new StrutStyle(FontFamily: new FontFamily("Serif"), FontSize: 14).ToString());
+            new StrutStyle(FontFamily: "Serif", FontSize: 14).ToString());
 
-        var s1 = new StrutStyle(FontFamily: new FontFamily("Serif"), FontSize: 14, ForceStrutHeight: true);
-        Assert.Equal("Serif", s1.FontFamily!.Name);
+        var s1 = new StrutStyle(FontFamily: "Serif", FontSize: 14, ForceStrutHeight: true);
+        Assert.Equal("Serif", s1.FontFamily!);
         Assert.Equal(14.0, s1.FontSize);
         Assert.Equal(s1, s1);
         Assert.Equal("StrutStyle(family: Serif, size: 14.0, <strut height forced>)", s1.ToString());
 
-        var s2 = new StrutStyle(FontFamily: new FontFamily("Serif"), FontSize: 14, ForceStrutHeight: false);
+        var s2 = new StrutStyle(FontFamily: "Serif", FontSize: 14, ForceStrutHeight: false);
         Assert.Equal("StrutStyle(family: Serif, size: 14.0, <strut height normal>)", s2.ToString());
 
         Assert.Equal("StrutStyle", new StrutStyle().ToString());
@@ -81,19 +81,19 @@ public sealed class StrutStyleTests
         Assert.Throws<ArgumentOutOfRangeException>(() => new StrutStyle(Leading: -1));
         Assert.Throws<ArgumentException>(() => new StrutStyle(Package: "p"));
 
-        var style = new StrutStyle(FontFamily: new FontFamily("F"), FontFamilyFallback: ["G"], Package: "p");
-        Assert.Equal("packages/p/F", style.FontFamily!.Name);
+        var style = new StrutStyle(FontFamily: "F", FontFamilyFallback: ["G"], Package: "p");
+        Assert.Equal("packages/p/F", style.FontFamily!);
         Assert.Equal(["packages/p/G"], style.FontFamilyFallback!);
 
         var fallbackOnly = new StrutStyle(FontFamilyFallback: ["G"], Package: "p");
-        Assert.Equal("packages/p/null", fallbackOnly.FontFamily!.Name);
+        Assert.Equal("packages/p/null", fallbackOnly.FontFamily!);
     }
 
     [Fact]
     public void FromTextStyle_TakesTextStyleValuesButNotLeadingOrForce()
     {
         var textStyle = new TextStyle(
-            FontFamily: new FontFamily("Serif"),
+            FontFamily: "Serif",
             FontSize: 12,
             FontWeight: FontWeight.Bold,
             FontStyle: FontStyle.Italic,
@@ -101,7 +101,7 @@ public sealed class StrutStyleTests
             LeadingDistribution: TextLeadingDistribution.Even,
             FontFamilyFallback: ["Fallback"]);
         StrutStyle strut = StrutStyle.FromTextStyle(textStyle);
-        Assert.Equal("Serif", strut.FontFamily!.Name);
+        Assert.Equal("Serif", strut.FontFamily!);
         Assert.Equal(12, strut.FontSize);
         Assert.Equal(FontWeight.Bold, strut.FontWeight);
         Assert.Equal(FontStyle.Italic, strut.FontStyle);
@@ -116,8 +116,8 @@ public sealed class StrutStyleTests
         Assert.Equal(0.5, overridden.Leading);
         Assert.True(overridden.ForceStrutHeight);
 
-        StrutStyle packaged = StrutStyle.FromTextStyle(textStyle, fontFamily: new FontFamily("F"), package: "p");
-        Assert.Equal("packages/p/packages/p/F", packaged.FontFamily!.Name);
+        StrutStyle packaged = StrutStyle.FromTextStyle(textStyle, fontFamily: "F", package: "p");
+        Assert.Equal("packages/p/packages/p/F", packaged.FontFamily!);
     }
 
     [Fact]

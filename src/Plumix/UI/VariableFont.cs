@@ -31,7 +31,7 @@ internal sealed class VariableFont : IDisposable
         _font.SetFunctionsOpenType();
         _font.SetScale((int)_face.UnitsPerEm, (int)_face.UnitsPerEm);
         _scale = style.FontSize / _face.UnitsPerEm;
-        var axes = new Dictionary<string, float> { ["wght"] = (int)style.FontWeight };
+        var axes = new Dictionary<string, float> { ["wght"] = style.FontWeight.Value };
         if (style.FontVariations is { } variations)
         {
             foreach (FontVariation variation in variations)

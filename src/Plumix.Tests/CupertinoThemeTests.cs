@@ -70,11 +70,11 @@ public sealed class CupertinoThemeTests
             new CupertinoThemeData(
                 barBackgroundColor: barBackground,
                 textTheme: new CupertinoTextThemeData(
-                    textStyle: new TextStyle(FontFamily: new FontFamily("Skeuomorphic")))),
+                    textStyle: new TextStyle(FontFamily: "Skeuomorphic"))),
             _singletonThemeSubtree));
 
         Assert.Equal(1, _buildCount);
-        Assert.Equal("Skeuomorphic", _actualTheme!.TextTheme.TextStyle.FontFamily!.Name);
+        Assert.Equal("Skeuomorphic", _actualTheme!.TextTheme.TextStyle.FontFamily!);
 
         // Changing another property also triggers a rebuild.
         harness.PumpWidget(new CupertinoTheme(
@@ -82,22 +82,22 @@ public sealed class CupertinoThemeTests
                 brightness: Brightness.Light,
                 barBackgroundColor: barBackground,
                 textTheme: new CupertinoTextThemeData(
-                    textStyle: new TextStyle(FontFamily: new FontFamily("Skeuomorphic")))),
+                    textStyle: new TextStyle(FontFamily: "Skeuomorphic"))),
             _singletonThemeSubtree));
 
         Assert.Equal(2, _buildCount);
-        Assert.Equal("Skeuomorphic", _actualTheme!.TextTheme.TextStyle.FontFamily!.Name);
+        Assert.Equal("Skeuomorphic", _actualTheme!.TextTheme.TextStyle.FontFamily!);
 
         harness.PumpWidget(new CupertinoTheme(
             new CupertinoThemeData(
                 brightness: Brightness.Light,
                 barBackgroundColor: barBackground,
                 textTheme: new CupertinoTextThemeData(
-                    textStyle: new TextStyle(FontFamily: new FontFamily("Flat")))),
+                    textStyle: new TextStyle(FontFamily: "Flat"))),
             _singletonThemeSubtree));
 
         Assert.Equal(3, _buildCount);
-        Assert.Equal("Flat", _actualTheme!.TextTheme.TextStyle.FontFamily!.Name);
+        Assert.Equal("Flat", _actualTheme!.TextTheme.TextStyle.FontFamily!);
     }
 
     [Fact]

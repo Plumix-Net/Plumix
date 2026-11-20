@@ -130,7 +130,7 @@ public sealed class EditableTextInputConnectionDartParityTests : IDisposable
     [Fact]
     public void TextStylingInfoIsSentOnStyleUpdate()
     {
-        var textStyle1 = new TextStyle(FontSize: 20.0, FontFamily: "RobotoMono", FontWeight: FontWeight.SemiBold);
+        var textStyle1 = new TextStyle(FontSize: 20.0, FontFamily: "RobotoMono", FontWeight: FontWeight.W600);
         var textStyle2 = new TextStyle(
             FontSize: 20.0,
             FontFamily: "Raleway",

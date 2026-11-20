@@ -191,9 +191,9 @@ internal sealed class CupertinoActionSheetState : State<CupertinoActionSheet>
                     CupertinoDialogConstants.ActionSheetContentVerticalPadding),
                 titleTextStyle: Current.Message is null
                     ? textStyle
-                    : textStyle.CopyWith(fontWeight: FontWeight.SemiBold),
+                    : textStyle.CopyWith(fontWeight: FontWeight.W600),
                 messageTextStyle: Current.Title is null
-                    ? textStyle.CopyWith(fontWeight: FontWeight.SemiBold)
+                    ? textStyle.CopyWith(fontWeight: FontWeight.W600)
                     : textStyle,
                 additionalPaddingBetweenTitleAndMessage: EdgeInsets.FromLTRB(0, 4.0, 0, 0)));
     }
@@ -456,7 +456,7 @@ internal sealed class ActionSheetActionContent : StatelessWidget
                 : CupertinoTheme.Of(context).PrimaryColor);
         if (IsDefaultAction)
         {
-            style = style.CopyWith(fontWeight: FontWeight.SemiBold);
+            style = style.CopyWith(fontWeight: FontWeight.W600);
         }
 
         double verticalPadding = CupertinoDialogConstants.ActionSheetButtonVerticalPaddingBase

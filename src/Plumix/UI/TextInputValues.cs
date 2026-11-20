@@ -175,7 +175,7 @@ public sealed class TextInputStyle : Diagnosticable, IEquatable<TextInputStyle>
     /// weight (<c>Normal == 400</c>), so the index is <c>weight / 100 - 1</c>, clamped to Dart's
     /// <c>w100</c>-<c>w900</c> range.</remarks>
     public static int FontWeightIndex(FontWeight weight) =>
-        Math.Clamp((int)weight / 100 - 1, 0, 8);
+        Math.Clamp(weight.Value / 100 - 1, 0, 8);
 
     /// <inheritdoc/>
     public bool Equals(TextInputStyle? other) =>

@@ -99,6 +99,17 @@ public abstract class AssetBundle
 {
     public abstract Task<Stream> LoadAsync(string key, CancellationToken cancellationToken = default);
 
+    /// <summary>Retrieves the bytes of the asset at <paramref name="key"/> (Dart's <c>load</c>).</summary>
+    public virtual async Task<ReadOnlyMemory<byte>> LoadBytesAsync(
+        string key,
+        CancellationToken cancellationToken = default)
+    {
+        await using Stream stream = await LoadAsync(key, cancellationToken).ConfigureAwait(false);
+        using var buffer = new MemoryStream();
+        await stream.CopyToAsync(buffer, cancellationToken).ConfigureAwait(false);
+        return buffer.ToArray();
+    }
+
     // Dart's base AssetBundle has no cache; caching bundles override these hooks.
     public virtual void Evict(string key) { }
 
@@ -129,6 +140,19 @@ public sealed class PlatformAssetBundle : AssetBundle
         return Task.FromResult(AssetLoader.Open(uri, BaseUri));
     }
 
+    // Embedded resources are already in memory: hand the bytes over without a continuation, so a
+    // font loaded from the bundle is registered before `FontLoader.Load` returns.
+    public override Task<ReadOnlyMemory<byte>> LoadBytesAsync(
+        string key,
+        CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        using Stream stream = AssetLoader.Open(ResolveUri(key), BaseUri);
+        using var buffer = new MemoryStream();
+        stream.CopyTo(buffer);
+        return Task.FromResult<ReadOnlyMemory<byte>>(buffer.ToArray());
+    }
+
     public override Task<IReadOnlyList<string>> ListAssetsAsync(
         string key,
         CancellationToken cancellationToken = default)
@@ -149,6 +173,13 @@ public sealed class PlatformAssetBundle : AssetBundle
         if (uri.IsAbsoluteUri || BaseUri is not null)
         {
             return uri;
+        }
+
+        // Dart's `packages/<package>/<path>` keys name an asset of another package (assembly).
+        const string packagesPrefix = "packages/";
+        if (key.StartsWith(packagesPrefix, StringComparison.Ordinal) && key.IndexOf('/', packagesPrefix.Length) is > 0 and int end)
+        {
+            return new Uri($"avares://{key[packagesPrefix.Length..end]}/{key[(end + 1)..]}");
         }
 
         string assemblyName = System.Reflection.Assembly.GetEntryAssembly()?.GetName().Name

@@ -367,14 +367,14 @@ public sealed class ParagraphEngineTests
 
         var s2 = new TextStyle(
             Color: new Color(0xFF00FF00),
-            FontWeight: FontWeight.ExtraBold,
+            FontWeight: FontWeight.W800,
             FontSize: 10.0,
             Height: 100.0,
             LeadingDistribution: TextLeadingDistribution.Even);
         Assert.Equal(
             new ParagraphTextStyle(
                 Color: new Color(0xFF00FF00),
-                FontWeight: FontWeight.ExtraBold,
+                FontWeight: FontWeight.W800,
                 FontSize: 10.0,
                 Height: 100.0,
                 LeadingDistribution: TextLeadingDistribution.Even),
@@ -382,7 +382,7 @@ public sealed class ParagraphEngineTests
         Assert.Equal(
             new ParagraphStyle(
                 TextAlign: TextAlign.Center,
-                FontWeight: FontWeight.ExtraBold,
+                FontWeight: FontWeight.W800,
                 FontSize: 10.0,
                 Height: 100.0,
                 TextHeightBehavior: new TextHeightBehavior(LeadingDistribution: TextLeadingDistribution.Even)),
@@ -452,7 +452,7 @@ public sealed class ParagraphEngineTests
         Assert.Equal(255, PaintedPixel("X", new ParagraphTextStyle(FontSize: 40), new Offset(10.3, 0.3), 9, 20).R);
         Assert.InRange(PaintedPixel(
             "X",
-            new ParagraphTextStyle(FontSize: 40, FontWeight: FontWeight.SemiBold),
+            new ParagraphTextStyle(FontSize: 40, FontWeight: FontWeight.W600),
             new Offset(10.3, 0.3),
             9,
             20).R, (byte)160, (byte)230);

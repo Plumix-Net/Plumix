@@ -80,7 +80,7 @@ public sealed class CupertinoFormRow : StatelessWidget
                 child: new DefaultTextStyle(
                     style: new TextStyle(
                         Color: CupertinoColors.DestructiveRed,
-                        FontWeight: FontWeight.Medium),
+                        FontWeight: FontWeight.W500),
                     child: Error)));
         }
 

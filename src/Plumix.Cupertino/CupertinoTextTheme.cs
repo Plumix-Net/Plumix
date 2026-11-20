@@ -12,7 +12,7 @@ public class CupertinoTextThemeData
 {
     internal static readonly TextStyle DefaultTextStyle = new(
         Inherit: false,
-        FontFamily: new FontFamily("CupertinoSystemText"),
+        FontFamily: "CupertinoSystemText",
         FontSize: 17.0,
         LetterSpacing: -0.41,
         Color: CupertinoColors.Label,
@@ -20,7 +20,7 @@ public class CupertinoTextThemeData
 
     internal static readonly TextStyle DefaultActionTextStyle = new(
         Inherit: false,
-        FontFamily: new FontFamily("CupertinoSystemText"),
+        FontFamily: "CupertinoSystemText",
         FontSize: 17.0,
         LetterSpacing: -0.41,
         Color: CupertinoColors.ActiveBlue,
@@ -28,7 +28,7 @@ public class CupertinoTextThemeData
 
     internal static readonly TextStyle DefaultActionSmallTextStyle = new(
         Inherit: false,
-        FontFamily: new FontFamily("CupertinoSystemText"),
+        FontFamily: "CupertinoSystemText",
         FontSize: 15.0,
         LetterSpacing: -0.23,
         Color: CupertinoColors.ActiveBlue,
@@ -36,23 +36,23 @@ public class CupertinoTextThemeData
 
     internal static readonly TextStyle DefaultTabLabelTextStyle = new(
         Inherit: false,
-        FontFamily: new FontFamily("CupertinoSystemText"),
+        FontFamily: "CupertinoSystemText",
         FontSize: 10.0,
-        FontWeight: FontWeight.Medium,
+        FontWeight: FontWeight.W500,
         LetterSpacing: -0.24,
         Color: CupertinoColors.InactiveGray);
 
     internal static readonly TextStyle DefaultMiddleTitleTextStyle = new(
         Inherit: false,
-        FontFamily: new FontFamily("CupertinoSystemText"),
+        FontFamily: "CupertinoSystemText",
         FontSize: 17.0,
-        FontWeight: FontWeight.SemiBold,
+        FontWeight: FontWeight.W600,
         LetterSpacing: -0.41,
         Color: CupertinoColors.Label);
 
     internal static readonly TextStyle DefaultLargeTitleTextStyle = new(
         Inherit: false,
-        FontFamily: new FontFamily("CupertinoSystemDisplay"),
+        FontFamily: "CupertinoSystemDisplay",
         FontSize: 34.0,
         FontWeight: FontWeight.Bold,
         LetterSpacing: 0.38,
@@ -60,15 +60,15 @@ public class CupertinoTextThemeData
 
     internal static readonly TextStyle DefaultPickerTextStyle = new(
         Inherit: false,
-        FontFamily: new FontFamily("CupertinoSystemDisplay"),
+        FontFamily: "CupertinoSystemDisplay",
         FontSize: 21.0,
-        FontWeight: FontWeight.Regular,
+        FontWeight: FontWeight.Normal,
         LetterSpacing: -0.6,
         Color: CupertinoColors.Label);
 
     internal static readonly TextStyle DefaultDateTimePickerTextStyle = new(
         Inherit: false,
-        FontFamily: new FontFamily("CupertinoSystemDisplay"),
+        FontFamily: "CupertinoSystemDisplay",
         FontSize: 21.0,
         FontWeight: FontWeight.Normal,
         LetterSpacing: 0.4,

@@ -229,7 +229,7 @@ public sealed class TextPainterTests
     [Fact]
     public void Caret_LtrLettersNextToEmojiAsSeparateTextBoxes()
     {
-        var bold = new TextStyle(FontWeight: Avalonia.Media.FontWeight.Bold);
+        var bold = new TextStyle(FontWeight: FontWeight.Bold);
         Assert.Equal(
             [0, 28, 28, 28, 28, 28, 42, 56, 70, 84, 98, 112],
             CaretOffsetsForTextSpan(
@@ -253,7 +253,7 @@ public sealed class TextPainterTests
     [Fact]
     public void Caret_RtlLettersNextToEmojiAsSeparateTextBoxes()
     {
-        var bold = new TextStyle(FontWeight: Avalonia.Media.FontWeight.Bold);
+        var bold = new TextStyle(FontWeight: FontWeight.Bold);
         Assert.Equal(
             [112, 84, 84, 84, 84, 84, 70, 56, 42, 28, 14, 0],
             CaretOffsetsForTextSpan(

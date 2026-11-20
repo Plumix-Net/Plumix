@@ -10,7 +10,6 @@ using Plumix.UI;
 using Plumix.Widgets;
 using Xunit;
 using Xunit.Sdk;
-using FontWeight = Avalonia.Media.FontWeight;
 using MaterialWidget = Plumix.Material.Material;
 using TextDirection = Plumix.UI.TextDirection;
 
@@ -703,7 +702,7 @@ public sealed class SliderDartParityTestsA : IDisposable
         tester.PumpAndSettle();
 
         Assert.Equal("50", log[^1].ToPlainText());
-        Assert.Equal(FontWeight.Medium, log[^1].Style!.FontWeight);
+        Assert.Equal(FontWeight.W500, log[^1].Style!.FontWeight);
 
         gesture.Up();
         tester.PumpAndSettle();

@@ -267,7 +267,7 @@ public sealed class CupertinoSlidingSegmentedControlTests : IDisposable
         harness.Pump(ViewSize);
         Assert.Contains(
             harness.FindWidgets<AnimatedDefaultTextStyle>(),
-            style => style.Style.FontWeight == FontWeight.DemiBold);
+            style => style.Style.FontWeight == FontWeight.W600);
 
         PointerDown(harness.RenderView, new Offset(110.0, 14.0), pointer: 30);
         harness.Pump(ViewSize);

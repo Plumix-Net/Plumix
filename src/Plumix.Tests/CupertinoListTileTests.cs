@@ -90,7 +90,7 @@ public sealed class CupertinoListTileTests : IDisposable
         RenderParagraph notchedSubtitle = Assert.IsType<RenderParagraph>(
             FindParagraph(notchedHarness.RenderView, "Notched subtitle"));
         Assert.Equal(16.0, notchedTitle.FontSize);
-        Assert.Equal(FontWeight.DemiBold, notchedTitle.FontWeight);
+        Assert.Equal(FontWeight.W600, notchedTitle.FontWeight);
         Assert.Equal(14.0, notchedSubtitle.FontSize);
         Assert.Contains(
             FindAll<RenderConstrainedBox>(notchedHarness.RenderView),

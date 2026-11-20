@@ -137,7 +137,7 @@ public record TextTheme
     }
 
     public TextTheme Apply(
-        FontFamily? fontFamily = null,
+        string? fontFamily = null,
         IReadOnlyList<string>? fontFamilyFallback = null,
         string? package = null,
         double fontSizeFactor = 1.0,
@@ -246,7 +246,7 @@ public record TextTheme
 
 public sealed record MaterialTextTheme : TextTheme
 {
-    private static readonly FontFamily DefaultBodyFontFamily = ResolveDefaultBodyFontFamily();
+    private static readonly string? DefaultBodyFontFamily = ResolveDefaultBodyFontFamily();
     private static readonly Color DefaultForeground = new Color(0xFF1D1B20);
 
     public MaterialTextTheme(
@@ -297,9 +297,9 @@ public sealed record MaterialTextTheme : TextTheme
 
     public static TextStyle DefaultTitleLarge { get; } = Style(22, 1.27, 0.0);
 
-    public static TextStyle DefaultTitleMedium { get; } = Style(16, 1.5, 0.15, FontWeight.Medium);
+    public static TextStyle DefaultTitleMedium { get; } = Style(16, 1.5, 0.15, FontWeight.W500);
 
-    public static TextStyle DefaultTitleSmall { get; } = Style(14, 1.43, 0.1, FontWeight.Medium);
+    public static TextStyle DefaultTitleSmall { get; } = Style(14, 1.43, 0.1, FontWeight.W500);
 
     public static TextStyle DefaultBodyLarge { get; } = Style(16, 1.5, 0.5);
 
@@ -311,11 +311,11 @@ public sealed record MaterialTextTheme : TextTheme
         0.4,
         color: new Color(0xFF49454F));
 
-    public static TextStyle DefaultLabelLarge { get; } = Style(14, 1.43, 0.1, FontWeight.Medium);
+    public static TextStyle DefaultLabelLarge { get; } = Style(14, 1.43, 0.1, FontWeight.W500);
 
-    public static TextStyle DefaultLabelMedium { get; } = Style(12, 1.33, 0.5, FontWeight.Medium);
+    public static TextStyle DefaultLabelMedium { get; } = Style(12, 1.33, 0.5, FontWeight.W500);
 
-    public static TextStyle DefaultLabelSmall { get; } = Style(11, 1.45, 0.5, FontWeight.Medium);
+    public static TextStyle DefaultLabelSmall { get; } = Style(11, 1.45, 0.5, FontWeight.W500);
 
     public static MaterialTextTheme Fallback { get; } = new();
 
@@ -357,29 +357,30 @@ public sealed record MaterialTextTheme : TextTheme
             LetterSpacing: letterSpacing);
     }
 
-    internal static FontFamily ResolveDefaultBodyFontFamily()
+    internal static string? ResolveDefaultBodyFontFamily()
     {
         if (OperatingSystem.IsIOS() || OperatingSystem.IsMacOS())
         {
-            return new FontFamily(".AppleSystemUIFont");
+            return ".AppleSystemUIFont";
         }
 
         if (OperatingSystem.IsAndroid())
         {
-            return new FontFamily("Roboto");
+            return "Roboto";
         }
 
         if (OperatingSystem.IsWindows())
         {
-            return new FontFamily("Segoe UI");
+            return "Segoe UI";
         }
 
         if (OperatingSystem.IsLinux())
         {
-            return new FontFamily("Noto Sans");
+            return "Noto Sans";
         }
 
-        return FontFamily.Default;
+        // Elsewhere the engine's default family.
+        return null;
     }
 }
 
@@ -640,13 +641,12 @@ public sealed record Typography
         Color color,
         bool display)
     {
-        FontFamily family = typeface switch
+        string family = typeface switch
         {
-            PlatformTypeface.MountainView or PlatformTypeface.Helsinki => new FontFamily("Roboto"),
-            PlatformTypeface.Redmond => new FontFamily("Segoe UI"),
-            PlatformTypeface.RedwoodCity => new FontFamily(".AppleSystemUIFont"),
-            PlatformTypeface.Cupertino => new FontFamily(
-                display ? "CupertinoSystemDisplay" : "CupertinoSystemText"),
+            PlatformTypeface.MountainView or PlatformTypeface.Helsinki => "Roboto",
+            PlatformTypeface.Redmond => "Segoe UI",
+            PlatformTypeface.RedwoodCity => ".AppleSystemUIFont",
+            PlatformTypeface.Cupertino => display ? "CupertinoSystemDisplay" : "CupertinoSystemText",
             _ => throw new ArgumentOutOfRangeException(nameof(typeface)),
         };
         return new TextStyle(
@@ -657,51 +657,51 @@ public sealed record Typography
     }
 
     private static TextTheme CreateEnglishLike2014() => new(
-        displayLarge: GeometryStyle(112, FontWeight.Thin),
+        displayLarge: GeometryStyle(112, FontWeight.W100),
         displayMedium: GeometryStyle(56, FontWeight.Normal),
         displaySmall: GeometryStyle(45, FontWeight.Normal),
         headlineLarge: GeometryStyle(40, FontWeight.Normal),
         headlineMedium: GeometryStyle(34, FontWeight.Normal),
         headlineSmall: GeometryStyle(24, FontWeight.Normal),
-        titleLarge: GeometryStyle(20, FontWeight.Medium),
+        titleLarge: GeometryStyle(20, FontWeight.W500),
         titleMedium: GeometryStyle(16, FontWeight.Normal),
-        titleSmall: GeometryStyle(14, FontWeight.Medium, 0.1),
-        bodyLarge: GeometryStyle(14, FontWeight.Medium),
+        titleSmall: GeometryStyle(14, FontWeight.W500, 0.1),
+        bodyLarge: GeometryStyle(14, FontWeight.W500),
         bodyMedium: GeometryStyle(14, FontWeight.Normal),
         bodySmall: GeometryStyle(12, FontWeight.Normal),
-        labelLarge: GeometryStyle(14, FontWeight.Medium),
+        labelLarge: GeometryStyle(14, FontWeight.W500),
         labelMedium: GeometryStyle(12, FontWeight.Normal),
         labelSmall: GeometryStyle(10, FontWeight.Normal, 1.5));
 
     private static TextTheme CreateDense2014() => CreateLegacyDense(
-        displayLargeWeight: FontWeight.Thin,
+        displayLargeWeight: FontWeight.W100,
         displayMediumWeight: FontWeight.Normal,
-        bodyLargeWeight: FontWeight.Medium,
+        bodyLargeWeight: FontWeight.W500,
         sizes: [112, 56, 45, 40, 34, 24, 21, 17, 15, 15, 15, 13, 15, 12, 11]);
 
     private static TextTheme CreateTall2014() => CreateLegacyTall(
         sizes: [112, 56, 45, 40, 34, 24, 21, 17, 15, 15, 15, 13, 15, 12, 11]);
 
     private static TextTheme CreateEnglishLike2018() => new(
-        displayLarge: GeometryStyle(96, FontWeight.Light, -1.5),
-        displayMedium: GeometryStyle(60, FontWeight.Light, -0.5),
+        displayLarge: GeometryStyle(96, FontWeight.W300, -1.5),
+        displayMedium: GeometryStyle(60, FontWeight.W300, -0.5),
         displaySmall: GeometryStyle(48, FontWeight.Normal, 0.0),
         headlineLarge: GeometryStyle(40, FontWeight.Normal, 0.25),
         headlineMedium: GeometryStyle(34, FontWeight.Normal, 0.25),
         headlineSmall: GeometryStyle(24, FontWeight.Normal, 0.0),
-        titleLarge: GeometryStyle(20, FontWeight.Medium, 0.15),
+        titleLarge: GeometryStyle(20, FontWeight.W500, 0.15),
         titleMedium: GeometryStyle(16, FontWeight.Normal, 0.15),
-        titleSmall: GeometryStyle(14, FontWeight.Medium, 0.1),
+        titleSmall: GeometryStyle(14, FontWeight.W500, 0.1),
         bodyLarge: GeometryStyle(16, FontWeight.Normal, 0.5),
         bodyMedium: GeometryStyle(14, FontWeight.Normal, 0.25),
         bodySmall: GeometryStyle(12, FontWeight.Normal, 0.4),
-        labelLarge: GeometryStyle(14, FontWeight.Medium, 1.25),
+        labelLarge: GeometryStyle(14, FontWeight.W500, 1.25),
         labelMedium: GeometryStyle(11, FontWeight.Normal, 1.5),
         labelSmall: GeometryStyle(10, FontWeight.Normal, 1.5));
 
     private static TextTheme CreateDense2018() => CreateLegacyDense(
-        displayLargeWeight: FontWeight.Thin,
-        displayMediumWeight: FontWeight.Thin,
+        displayLargeWeight: FontWeight.W100,
+        displayMediumWeight: FontWeight.W100,
         bodyLargeWeight: FontWeight.Normal,
         sizes: [96, 60, 48, 40, 34, 24, 21, 17, 15, 17, 15, 13, 15, 12, 11]);
 
@@ -719,13 +719,13 @@ public sealed record Typography
         headlineLarge: GeometryStyle(sizes[3], FontWeight.Normal, baseline: TextBaseline.Ideographic),
         headlineMedium: GeometryStyle(sizes[4], FontWeight.Normal, baseline: TextBaseline.Ideographic),
         headlineSmall: GeometryStyle(sizes[5], FontWeight.Normal, baseline: TextBaseline.Ideographic),
-        titleLarge: GeometryStyle(sizes[6], FontWeight.Medium, baseline: TextBaseline.Ideographic),
+        titleLarge: GeometryStyle(sizes[6], FontWeight.W500, baseline: TextBaseline.Ideographic),
         titleMedium: GeometryStyle(sizes[7], FontWeight.Normal, baseline: TextBaseline.Ideographic),
-        titleSmall: GeometryStyle(sizes[8], FontWeight.Medium, baseline: TextBaseline.Ideographic),
+        titleSmall: GeometryStyle(sizes[8], FontWeight.W500, baseline: TextBaseline.Ideographic),
         bodyLarge: GeometryStyle(sizes[9], bodyLargeWeight, baseline: TextBaseline.Ideographic),
         bodyMedium: GeometryStyle(sizes[10], FontWeight.Normal, baseline: TextBaseline.Ideographic),
         bodySmall: GeometryStyle(sizes[11], FontWeight.Normal, baseline: TextBaseline.Ideographic),
-        labelLarge: GeometryStyle(sizes[12], FontWeight.Medium, baseline: TextBaseline.Ideographic),
+        labelLarge: GeometryStyle(sizes[12], FontWeight.W500, baseline: TextBaseline.Ideographic),
         labelMedium: GeometryStyle(sizes[13], FontWeight.Normal, baseline: TextBaseline.Ideographic),
         labelSmall: GeometryStyle(sizes[14], FontWeight.Normal, baseline: TextBaseline.Ideographic));
 
@@ -738,7 +738,7 @@ public sealed record Typography
         headlineSmall: GeometryStyle(sizes[5], FontWeight.Normal),
         titleLarge: GeometryStyle(sizes[6], FontWeight.Bold),
         titleMedium: GeometryStyle(sizes[7], FontWeight.Normal),
-        titleSmall: GeometryStyle(sizes[8], FontWeight.Medium),
+        titleSmall: GeometryStyle(sizes[8], FontWeight.W500),
         bodyLarge: GeometryStyle(sizes[9], FontWeight.Bold),
         bodyMedium: GeometryStyle(sizes[10], FontWeight.Normal),
         bodySmall: GeometryStyle(sizes[11], FontWeight.Normal),
@@ -754,14 +754,14 @@ public sealed record Typography
         headlineMedium: GeometryStyle(28, FontWeight.Normal, 0.0, 1.29, baseline, true),
         headlineSmall: GeometryStyle(24, FontWeight.Normal, 0.0, 1.33, baseline, true),
         titleLarge: GeometryStyle(22, FontWeight.Normal, 0.0, 1.27, baseline, true),
-        titleMedium: GeometryStyle(16, FontWeight.Medium, 0.15, 1.5, baseline, true),
-        titleSmall: GeometryStyle(14, FontWeight.Medium, 0.1, 1.43, baseline, true),
+        titleMedium: GeometryStyle(16, FontWeight.W500, 0.15, 1.5, baseline, true),
+        titleSmall: GeometryStyle(14, FontWeight.W500, 0.1, 1.43, baseline, true),
         bodyLarge: GeometryStyle(16, FontWeight.Normal, 0.5, 1.5, baseline, true),
         bodyMedium: GeometryStyle(14, FontWeight.Normal, 0.25, 1.43, baseline, true),
         bodySmall: GeometryStyle(12, FontWeight.Normal, 0.4, 1.33, baseline, true),
-        labelLarge: GeometryStyle(14, FontWeight.Medium, 0.1, 1.43, baseline, true),
-        labelMedium: GeometryStyle(12, FontWeight.Medium, 0.5, 1.33, baseline, true),
-        labelSmall: GeometryStyle(11, FontWeight.Medium, 0.5, 1.45, baseline, true));
+        labelLarge: GeometryStyle(14, FontWeight.W500, 0.1, 1.43, baseline, true),
+        labelMedium: GeometryStyle(12, FontWeight.W500, 0.5, 1.33, baseline, true),
+        labelSmall: GeometryStyle(11, FontWeight.W500, 0.5, 1.45, baseline, true));
 
     private static TextStyle GeometryStyle(
         double fontSize,

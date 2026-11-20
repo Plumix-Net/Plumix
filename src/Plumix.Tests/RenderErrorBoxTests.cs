@@ -21,7 +21,7 @@ public sealed class RenderErrorBoxTests
             RenderErrorBox.BackgroundColor);
         Assert.Equal(new Color(Constants.KDebugMode ? 0xFFFFFF66 : 0xFF303030),
             RenderErrorBox.TextStyle.Color);
-        Assert.Equal(Constants.KDebugMode ? "monospace" : "sans-serif", RenderErrorBox.TextStyle.FontFamily!.Name);
+        Assert.Equal(Constants.KDebugMode ? "monospace" : "sans-serif", RenderErrorBox.TextStyle.FontFamily!);
         Assert.Equal(Constants.KDebugMode ? 14 : 18, RenderErrorBox.TextStyle.FontSize);
         Assert.Equal(Constants.KDebugMode ? (FontWeight?)FontWeight.Bold : null, RenderErrorBox.TextStyle.FontWeight);
         Assert.Equal(TextDirection.Ltr, RenderErrorBox.ParagraphStyle.TextDirection);

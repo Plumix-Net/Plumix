@@ -30,7 +30,7 @@ internal sealed class AppBarTextStylesDemoPageState : State
     private static readonly TextStyle ThemeToolbarStyle = new(
         FontSize: 14,
         Color: new Color(0xFFF4A261),
-        FontWeight: FontWeight.SemiBold);
+        FontWeight: FontWeight.W600);
     private static readonly TextStyle WidgetTitleStyle = new(
         FontSize: 19,
         Color: new Color(0xFF8E44AD),

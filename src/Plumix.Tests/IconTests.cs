@@ -61,12 +61,12 @@ public sealed class IconTests
     {
         using var tester = new FrameworkDartTester();
         tester.PumpWidget(Wrap(new DefaultTextStyle(
-            style: new TextStyle(FontSize: 80.0, LetterSpacing: 9.0, FontWeight: FontWeight.Black),
+            style: new TextStyle(FontSize: 80.0, LetterSpacing: 9.0, FontWeight: FontWeight.W900),
             child: new Icon(new IconData(0xf04b6, FontFamily: "Roboto", FontFamilyFallback: ["FallbackFont"]),
                 fontWeight: FontWeight.Bold))));
         TextStyle style = Style(tester);
         Assert.False(style.Inherit);
-        Assert.Equal(new FontFamily("Roboto"), style.FontFamily);
+        Assert.Equal("Roboto", style.FontFamily);
         Assert.Equal(new[] { "FallbackFont" }, style.FontFamilyFallback);
         Assert.Equal(FontWeight.Bold, style.FontWeight);
         Assert.Equal(24.0, style.FontSize);

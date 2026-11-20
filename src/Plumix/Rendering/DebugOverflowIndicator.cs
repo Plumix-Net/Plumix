@@ -29,7 +29,7 @@ internal sealed class DebugOverflowIndicator : IDisposable
     private static readonly TextStyle IndicatorTextStyle = new(
         Color: new Color(0xFF900000),
         FontSize: IndicatorFontSizePixels,
-        FontWeight: FontWeight.ExtraBold);
+        FontWeight: FontWeight.W800);
 
     private static readonly IBrush IndicatorPaint = new LinearGradientBrush
     {

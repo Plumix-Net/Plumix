@@ -1,4 +1,3 @@
-using System.Collections.Concurrent;
 using Avalonia.Media;
 using Plumix.Foundation;
 using Plumix.Painting;
@@ -8,40 +7,6 @@ using Plumix.UI;
 namespace Plumix.Widgets;
 
 // Dart parity source: flutter/packages/flutter/lib/src/widgets/icon.dart
-
-internal static class IconFontRegistry
-{
-    private static readonly ConcurrentDictionary<(string Package, string Family), FontFamily> RegisteredFonts =
-        new();
-
-    /// <summary>
-    /// Maps an icon font to the resource that carries its glyphs. Dart resolves `fontPackage: null`
-    /// against the application's own asset bundle (Material's own icons); a null package here means
-    /// the same unqualified registration.
-    /// </summary>
-    public static void Register(string? package, string family, string resourceUri)
-    {
-        RegisteredFonts[(package ?? string.Empty, family)] = new FontFamily(resourceUri);
-    }
-
-    public static FontFamily Resolve(IconData iconData)
-    {
-        if (string.IsNullOrWhiteSpace(iconData.FontFamily))
-        {
-            return FontFamily.Default;
-        }
-
-        (string Package, string Family) key = (iconData.FontPackage ?? string.Empty, iconData.FontFamily);
-        if (RegisteredFonts.TryGetValue(key, out FontFamily? fontFamily))
-        {
-            return fontFamily;
-        }
-
-        return new FontFamily(iconData.FontPackage is null
-            ? iconData.FontFamily
-            : $"packages/{iconData.FontPackage}/{iconData.FontFamily}");
-    }
-}
 
 public sealed class Icon : StatelessWidget
 {
@@ -163,17 +128,15 @@ public sealed class Icon : StatelessWidget
             fontVariations.Add(new FontVariation("opsz", opticalSize));
         }
 
-        // The registry resolves Dart asset families to Avalonia resource URIs before shaping.
         var fontStyle = new TextStyle(
             FontVariations: fontVariations,
             Inherit: false,
             Color: iconColor,
             FontSize: iconSize,
-            FontFamily: IconData.FontFamily is null ? null : ResolveFontFamily(IconData),
+            FontFamily: IconData.FontFamily,
+            Package: IconData.FontPackage,
             FontWeight: FontWeight,
-            FontFamilyFallback: IconData.FontPackage is null
-                ? IconData.FontFamilyFallback
-                : IconData.FontFamilyFallback?.Select(family => $"packages/{IconData.FontPackage}/{family}").ToList(),
+            FontFamilyFallback: IconData.FontFamilyFallback,
             Shadows: iconShadows,
             Height: 1.0,
             LeadingDistribution: TextLeadingDistribution.Even,
@@ -219,11 +182,6 @@ public sealed class Icon : StatelessWidget
         properties.Add(new StringProperty("semanticLabel", SemanticLabel, defaultValue: nullDefault));
         properties.Add(new EnumProperty<TextDirection>("textDirection", TextDirection, defaultValue: nullDefault));
         properties.Add(new DiagnosticsProperty<bool?>("applyTextScaling", ApplyTextScaling, defaultValue: nullDefault));
-    }
-
-    public static FontFamily ResolveFontFamily(IconData iconData)
-    {
-        return IconFontRegistry.Resolve(iconData);
     }
 
 }

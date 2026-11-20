@@ -28,7 +28,7 @@ public sealed class BannerPainter : CustomPainter
     public static TextStyle DefaultTextStyle { get; } = new(
         FontSize: Height * 0.85,
         Color: new Color(0xFFFFFFFF),
-        FontWeight: FontWeight.Black,
+        FontWeight: FontWeight.W900,
         Height: 1.0);
     public static BoxShadow DefaultShadow { get; } = new(
         color: Color.FromARGB(0x7F, 0, 0, 0),

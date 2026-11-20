@@ -752,7 +752,7 @@ internal sealed partial class SliderState : State<Slider>
         if (MediaQuery.BoldTextOf(context))
         {
             valueIndicatorTextStyle = valueIndicatorTextStyle.Merge(
-                new TextStyle(FontWeight: Avalonia.Media.FontWeight.Bold));
+                new TextStyle(FontWeight: FontWeight.Bold));
         }
 
         sliderTheme = sliderTheme.CopyWith(

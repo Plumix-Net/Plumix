@@ -47,7 +47,7 @@ public sealed class CupertinoContextMenuAction : StatefulWidget
                 new Color(0xFF3F3F40));
 
         private static readonly TextStyle ActionSheetActionStyle = new(
-            FontFamily: new FontFamily("CupertinoSystemText"),
+            FontFamily: "CupertinoSystemText",
             FontSize: 16.0,
             FontWeight: FontWeight.Normal,
             Color: CupertinoColors.Black,
@@ -110,7 +110,7 @@ public sealed class CupertinoContextMenuAction : StatefulWidget
             {
                 return ActionSheetActionStyle.CopyWith(
                     color: CupertinoDynamicColor.Resolve(CupertinoColors.Label, context),
-                    fontWeight: FontWeight.SemiBold);
+                    fontWeight: FontWeight.W600);
             }
 
             if (Current.IsDestructiveAction)

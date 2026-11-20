@@ -68,7 +68,7 @@ internal sealed class WidgetTextStyleMapper : WidgetStateTextStyle, IWidgetState
 
     public override Color? BackgroundColor => throw NoSuchMember(nameof(BackgroundColor));
 
-    public override FontFamily? FontFamily => throw NoSuchMember(nameof(FontFamily));
+    public override string? FontFamily => throw NoSuchMember(nameof(FontFamily));
 
     public override double? FontSize => throw NoSuchMember(nameof(FontSize));
 
@@ -135,7 +135,7 @@ internal sealed class WidgetTextStyleMapper : WidgetStateTextStyle, IWidgetState
         TextDecorationStyle? decorationStyle = null,
         double? decorationThickness = null,
         string? debugLabel = null,
-        FontFamily? fontFamily = null,
+        string? fontFamily = null,
         IReadOnlyList<string>? fontFamilyFallback = null,
         string? package = null,
         TextOverflow? overflow = null) => throw NoSuchMember(nameof(CopyWith));
@@ -148,7 +148,7 @@ internal sealed class WidgetTextStyleMapper : WidgetStateTextStyle, IWidgetState
         TextDecorationStyle? decorationStyle = null,
         double decorationThicknessFactor = 1.0,
         double decorationThicknessDelta = 0.0,
-        FontFamily? fontFamily = null,
+        string? fontFamily = null,
         IReadOnlyList<string>? fontFamilyFallback = null,
         double fontSizeFactor = 1.0,
         double fontSizeDelta = 0.0,
@@ -182,7 +182,7 @@ internal sealed class WidgetTextStyleMapper : WidgetStateTextStyle, IWidgetState
         int? maxLines = null,
         TextHeightBehavior? textHeightBehavior = null,
         string? locale = null,
-        FontFamily? fontFamily = null,
+        string? fontFamily = null,
         double? fontSize = null,
         FontWeight? fontWeight = null,
         FontStyle? fontStyle = null,

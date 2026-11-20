@@ -1930,7 +1930,7 @@ public sealed partial class EditableText : StatefulWidget
             double? wordSpacingOverride = MediaQuery.MaybeWordSpacingOverrideOf(Context);
 
             return new TextInputStyle(
-                fontFamily: _style.FontFamily?.Name,
+                fontFamily: _style.FontFamily,
                 fontSize: _style.FontSize,
                 fontWeight: _style.FontWeight,
                 textDirection: Widget.TextDirection ?? Directionality.Of(Context),

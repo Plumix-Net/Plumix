@@ -2,8 +2,6 @@ namespace Plumix.FSharp
 
 open System
 open System.Collections.Generic
-open Avalonia
-open Avalonia.Media
 open Plumix.Foundation
 open Plumix.Material
 open Plumix.Painting
