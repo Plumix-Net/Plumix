@@ -472,7 +472,7 @@ public abstract class RenderBox : RenderObject
     public Size DebugAdoptSize(Size value) => value;
 
     /// <inheritdoc />
-    protected override Rect SemanticBounds => DartGeometry.RectFromOffsetAndSize(default, Size);
+    protected override Rect SemanticBounds => Offset.Zero & Size;
 
     /// <inheritdoc />
     /// <remarks>Flutter's <c>RenderBox.debugResetSize</c>: re-adopts the current size.</remarks>
@@ -1030,7 +1030,7 @@ public abstract class RenderBox : RenderObject
     }
 
     /// <summary>A rectangle that contains all the pixels painted by this box.</summary>
-    public override Rect PaintBounds => DartGeometry.RectFromOffsetAndSize(default, Size);
+    public override Rect PaintBounds => Offset.Zero & Size;
 
     /// <summary>Implements the <see cref="RenderingDebug.PaintPointersEnabled"/> debugging feature.</summary>
     /// <remarks>
@@ -1105,7 +1105,7 @@ public abstract class RenderBox : RenderObject
     {
         ArgumentNullException.ThrowIfNull(context);
         var pen = new Pen(new SolidColorBrush(new Color(0xFF00FFFF)), 1.0);
-        context.Canvas.DrawGeometry(null, pen, new RectangleGeometry(Deflate(DartGeometry.RectFromOffsetAndSize(offset, Size), 0.5).ToAvalonia()));
+        context.Canvas.DrawGeometry(null, pen, new RectangleGeometry(Deflate((offset & Size), 0.5).ToAvalonia()));
     }
 
     /// <summary>In debug mode, paints a line for each baseline.</summary>
@@ -1158,7 +1158,7 @@ public abstract class RenderBox : RenderObject
         }
 
         var color = new Color(0x00BBBBu | (uint)(0x04000000 * Depth & 0xFF000000));
-        context.Canvas.DrawRectangle(new SolidColorBrush(color), null, DartGeometry.RectFromOffsetAndSize(offset, Size));
+        context.Canvas.DrawRectangle(new SolidColorBrush(color), null, (offset & Size));
     }
 
     /// <inheritdoc />
@@ -1195,7 +1195,7 @@ public abstract class RenderBox : RenderObject
     /// <remarks>Dart's <c>Rect.deflate</c>.</remarks>
     private static Rect Deflate(Rect rect, double delta)
     {
-        return DartGeometry.RectFromLTWH(
+        return Rect.FromLTWH(
             rect.Left + delta,
             rect.Top + delta,
             Math.Max(0.0, rect.Width - (delta * 2.0)),

@@ -106,7 +106,7 @@ public readonly record struct Alignment(double X, double Y)
     {
         double halfWidthDelta = (rect.Width - size.Width) / 2.0;
         double halfHeightDelta = (rect.Height - size.Height) / 2.0;
-        return DartGeometry.RectFromLTWH(
+        return Rect.FromLTWH(
             rect.Left + halfWidthDelta + (X * halfWidthDelta),
             rect.Top + halfHeightDelta + (Y * halfHeightDelta),
             size.Width,

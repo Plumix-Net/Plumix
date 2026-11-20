@@ -848,8 +848,8 @@ public sealed class MaterialInputDecoratorTests
         Assert.True(border.IsOutline);
         Assert.Equal(EdgeInsets.All(2.0), border.Dimensions);
         Assert.Equal(shape.PreferPaintInterior, border.PreferPaintInterior);
-        Assert.Equal(shape.GetOuterPath(DartGeometry.RectFromLTWH(0, 0, 40, 20)).GetBounds(),
-            border.GetOuterPath(DartGeometry.RectFromLTWH(0, 0, 40, 20)).GetBounds());
+        Assert.Equal(shape.GetOuterPath(Rect.FromLTWH(0, 0, 40, 20)).GetBounds(),
+            border.GetOuterPath(Rect.FromLTWH(0, 0, 40, 20)).GetBounds());
 
         var scaled = (ShapedInputBorder)border.Scale(0.5);
         Assert.Equal(1.0, scaled.BorderSide.Width, precision: 6);
@@ -867,9 +867,9 @@ public sealed class MaterialInputDecoratorTests
 
         // The gap cuts the top edge of the outline out of the painted path.
         var probe = new PaintingContext(new OffsetLayer());
-        border.Paint(probe, DartGeometry.RectFromLTWH(0, 0, 200, 56), gapStart: 40.0, gapExtent: 30.0, gapPercentage: 1.0,
+        border.Paint(probe, Rect.FromLTWH(0, 0, 200, 56), gapStart: 40.0, gapExtent: 30.0, gapPercentage: 1.0,
             textDirection: TextDirection.Ltr);
-        border.Paint(probe, DartGeometry.RectFromLTWH(0, 0, 200, 56), gapStart: null, textDirection: TextDirection.Ltr);
+        border.Paint(probe, Rect.FromLTWH(0, 0, 200, 56), gapStart: null, textDirection: TextDirection.Ltr);
         Assert.Throws<ArgumentOutOfRangeException>(() => new ShapedInputBorder(shape, gapPadding: -1.0));
     }
 
@@ -882,19 +882,19 @@ public sealed class MaterialInputDecoratorTests
 
         // The inner edge is the rect deflated by the bottom side, which is what the ring is filled
         // between; Flutter asserts the same outer/inner pair through paintNonUniformBorder.
-        Plumix.UI.Path inner = border.GetInnerPath(DartGeometry.RectFromLTWH(0, 0, 100, 100));
-        Assert.Equal(DartGeometry.RectFromLTWH(0, 0, 100, 99), inner.GetBounds());
-        Assert.Equal(DartGeometry.RectFromLTWH(0, 0, 100, 100), border.GetOuterPath(DartGeometry.RectFromLTWH(0, 0, 100, 100)).GetBounds());
+        Plumix.UI.Path inner = border.GetInnerPath(Rect.FromLTWH(0, 0, 100, 100));
+        Assert.Equal(Rect.FromLTWH(0, 0, 100, 99), inner.GetBounds());
+        Assert.Equal(Rect.FromLTWH(0, 0, 100, 100), border.GetOuterPath(Rect.FromLTWH(0, 0, 100, 100)).GetBounds());
 
         var probe = new PaintingContext(new OffsetLayer());
         var squared = new UnderlineInputBorder(new BorderSide(Colors.Black, 2.0), BorderRadius.Zero);
-        squared.Paint(probe, DartGeometry.RectFromLTWH(0, 0, 100, 100), gapStart: null);
+        squared.Paint(probe, Rect.FromLTWH(0, 0, 100, 100), gapStart: null);
         Assert.Equal(EdgeInsets.FromLTRB(0, 0, 0, 2.0), squared.Dimensions);
 
         // A border with no style paints nothing at all.
         var invisible = new UnderlineInputBorder(BorderSide.None);
         var emptyProbe = new PaintingContext(new OffsetLayer());
-        invisible.Paint(emptyProbe, DartGeometry.RectFromLTWH(0, 0, 100, 100), gapStart: null);
+        invisible.Paint(emptyProbe, Rect.FromLTWH(0, 0, 100, 100), gapStart: null);
         Assert.Equal(EdgeInsetsGeometry.Zero, invisible.Dimensions);
     }
 

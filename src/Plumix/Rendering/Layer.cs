@@ -1563,7 +1563,7 @@ public sealed class AnnotatedRegionLayer<T> : ContainerLayer where T : notnull
             return isAbsorbed;
         }
 
-        if (Size.HasValue && !ContainsRect(DartGeometry.RectFromOffsetAndSize(Offset, Size.Value), localPosition))
+        if (Size.HasValue && !ContainsRect((Offset & Size.Value), localPosition))
         {
             return isAbsorbed;
         }

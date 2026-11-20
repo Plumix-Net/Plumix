@@ -35,7 +35,7 @@ public sealed class ScrollableSelectionDartParityTests : IDisposable
     // Dart's top-level `textOffsetToPosition`.
     private static Offset TextOffsetToPosition(RenderParagraph paragraph, int offset)
     {
-        var caret = DartGeometry.RectFromLTWH(0.0, 0.0, 2.0, 20.0);
+        var caret = Rect.FromLTWH(0.0, 0.0, 2.0, 20.0);
         Offset localOffset = paragraph.GetOffsetForCaret(new TextPosition(offset), caret);
         return paragraph.LocalToGlobal(localOffset);
     }

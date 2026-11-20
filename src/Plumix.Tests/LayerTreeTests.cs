@@ -307,7 +307,7 @@ public sealed class LayerTreeTests
     public void PictureLayer_PrintsPictureAndRasterCacheHintsInDebugInfo()
     {
         Picture picture = new PictureRecorder().EndRecording();
-        var layer = new PictureLayer(DartGeometry.RectFromLTWH(0, 0, 100, 100))
+        var layer = new PictureLayer(Rect.FromLTWH(0, 0, 100, 100))
         {
             Picture = picture,
             IsComplexHint = true,
@@ -332,7 +332,7 @@ public sealed class LayerTreeTests
     [DebugOnlyFact]
     public void MutatingPictureLayerFields_TriggersNeedsAddToScene()
     {
-        var pictureLayer = new PictureLayer(DartGeometry.RectFromLTWH(0, 0, 10, 10));
+        var pictureLayer = new PictureLayer(Rect.FromLTWH(0, 0, 10, 10));
         CheckNeedsAddToScene(pictureLayer, () => pictureLayer.Picture = new PictureRecorder().EndRecording());
 
         pictureLayer.IsComplexHint = false;
@@ -356,34 +356,34 @@ public sealed class LayerTreeTests
     [DebugOnlyFact]
     public void MutatingClipLayerFields_TriggersNeedsAddToScene()
     {
-        var clipRectLayer = new ClipRectLayer { ClipRect = DartGeometry.RectFromLTWH(0, 0, 10, 10) };
-        CheckNeedsAddToScene(clipRectLayer, () => clipRectLayer.ClipRect = DartGeometry.RectFromLTWH(1, 1, 10, 10));
+        var clipRectLayer = new ClipRectLayer { ClipRect = Rect.FromLTWH(0, 0, 10, 10) };
+        CheckNeedsAddToScene(clipRectLayer, () => clipRectLayer.ClipRect = Rect.FromLTWH(1, 1, 10, 10));
         CheckNeedsAddToScene(clipRectLayer, () => clipRectLayer.ClipBehavior = Clip.AntiAlias);
 
         var clipRRectLayer = new ClipRRectLayer
         {
-            ClipRRect = RRect.FromRectAndRadius(DartGeometry.RectFromLTWH(0, 0, 10, 10), Radius.Zero),
+            ClipRRect = RRect.FromRectAndRadius(Rect.FromLTWH(0, 0, 10, 10), Radius.Zero),
         };
         CheckNeedsAddToScene(
             clipRRectLayer,
-            () => clipRRectLayer.ClipRRect = RRect.FromRectAndRadius(DartGeometry.RectFromLTWH(1, 1, 10, 10), Radius.Zero));
+            () => clipRRectLayer.ClipRRect = RRect.FromRectAndRadius(Rect.FromLTWH(1, 1, 10, 10), Radius.Zero));
         CheckNeedsAddToScene(clipRRectLayer, () => clipRRectLayer.ClipBehavior = Clip.HardEdge);
 
         var clipRSuperellipseLayer = new ClipRSuperellipseLayer
         {
-            ClipRSuperellipse = RSuperellipse.FromRectAndRadius(DartGeometry.RectFromLTWH(0, 0, 10, 10), Radius.Zero),
+            ClipRSuperellipse = RSuperellipse.FromRectAndRadius(Rect.FromLTWH(0, 0, 10, 10), Radius.Zero),
         };
         CheckNeedsAddToScene(
             clipRSuperellipseLayer,
             () => clipRSuperellipseLayer.ClipRSuperellipse =
-                RSuperellipse.FromRectAndRadius(DartGeometry.RectFromLTWH(1, 1, 10, 10), Radius.Zero));
+                RSuperellipse.FromRectAndRadius(Rect.FromLTWH(1, 1, 10, 10), Radius.Zero));
         CheckNeedsAddToScene(clipRSuperellipseLayer, () => clipRSuperellipseLayer.ClipBehavior = Clip.HardEdge);
 
         var clipPathLayer = new ClipPathLayer { ClipPath = new Plumix.UI.Path() };
         CheckNeedsAddToScene(clipPathLayer, () =>
         {
             var newPath = new Plumix.UI.Path();
-            newPath.AddRect(DartGeometry.RectFromLTWH(0, 0, 10, 10));
+            newPath.AddRect(Rect.FromLTWH(0, 0, 10, 10));
             clipPathLayer.ClipPath = newPath;
         });
         CheckNeedsAddToScene(clipPathLayer, () => clipPathLayer.ClipBehavior = Clip.AntiAliasWithSaveLayer);
@@ -400,8 +400,8 @@ public sealed class LayerTreeTests
             colorFilterLayer,
             () => colorFilterLayer.ColorFilter = new ColorFilter.Mode(Colors.Blue, BlendMode.Color));
 
-        var shaderMaskLayer = new ShaderMaskLayer { MaskRect = DartGeometry.RectFromLTWH(0, 0, 10, 10) };
-        CheckNeedsAddToScene(shaderMaskLayer, () => shaderMaskLayer.MaskRect = DartGeometry.RectFromLTWH(1, 1, 10, 10));
+        var shaderMaskLayer = new ShaderMaskLayer { MaskRect = Rect.FromLTWH(0, 0, 10, 10) };
+        CheckNeedsAddToScene(shaderMaskLayer, () => shaderMaskLayer.MaskRect = Rect.FromLTWH(1, 1, 10, 10));
         CheckNeedsAddToScene(shaderMaskLayer, () => shaderMaskLayer.BlendMode = BlendMode.Source);
         CheckNeedsAddToScene(
             shaderMaskLayer,
@@ -445,7 +445,7 @@ public sealed class LayerTreeTests
     [Fact]
     public void Layers_DescribeClipBounds()
     {
-        var bounds = DartGeometry.RectFromLTWH(10, 10, 20, 20);
+        var bounds = Rect.FromLTWH(10, 10, 20, 20);
         RRect rrBounds = RRect.FromRectAndRadius(bounds, new Radius(2, 2));
         RSuperellipse rseBounds = RSuperellipse.FromRectAndRadius(bounds, new Radius(2, 2));
         var path = new Plumix.UI.Path();
@@ -657,7 +657,7 @@ public sealed class LayerTreeTests
     public void PaintingContext_AddCompositionCallback_ObservesItsContainerLayer()
     {
         var root = new OffsetLayer();
-        var context = new PaintingContext(root, DartGeometry.RectFromLTWH(0, 0, 10, 10));
+        var context = new PaintingContext(root, Rect.FromLTWH(0, 0, 10, 10));
         Layer? observed = null;
         context.AddCompositionCallback(layer => observed = layer);
         root.BuildScene(new SceneBuilder()).Dispose();
@@ -695,7 +695,7 @@ public sealed class LayerTreeTests
         Assert.Equal(Matrix4.TranslationValues(3, 4, 0), offsetTransform);
 
         Matrix4 clipTransform = Matrix4.Identity();
-        new ClipRectLayer { ClipRect = DartGeometry.RectFromLTWH(0, 0, 1, 1) }.ApplyTransform(child, clipTransform);
+        new ClipRectLayer { ClipRect = Rect.FromLTWH(0, 0, 1, 1) }.ApplyTransform(child, clipTransform);
         Assert.Equal(Matrix4.Identity(), clipTransform);
 
         // Before the first composite a TransformLayer applies its transform without its offset; after it,

@@ -336,9 +336,7 @@ internal sealed partial class SelectableFragment : ChangeNotifier, ISelectable, 
     private Rect EmptyRangeRect()
     {
         Offset offset = _paragraph.GetPositionOffset(new TextPosition(_range.Start));
-        return DartGeometry.RectFromCorners(
-            new Offset(offset.Dx, offset.Dy - _paragraph.PreferredLineHeight),
-            offset);
+        return Rect.FromLTRB(offset.Dx, offset.Dy - _paragraph.PreferredLineHeight, offset.Dx, offset.Dy);
     }
 
     private bool BoundingBoxesContains(Offset position)
@@ -1597,7 +1595,7 @@ internal sealed partial class SelectableFragment : ChangeNotifier, ISelectable, 
         foreach (TextBox box in _paragraph.GetBoxesForSelection(selection))
         {
             Rect rect = box.ToRect();
-            context.Canvas.DrawRectangle(brush, null, DartGeometry.RectFromOffsetAndSize(rect.TopLeft + offset, rect.Size));
+            context.Canvas.DrawRectangle(brush, null, (rect.TopLeft + offset & rect.Size));
         }
     }
 

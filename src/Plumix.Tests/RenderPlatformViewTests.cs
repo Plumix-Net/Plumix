@@ -155,7 +155,7 @@ public sealed class RenderPlatformViewTests : IDisposable
         Assert.True(box.ValidForMouseTracker);
         var layer = Assert.IsType<PlatformViewLayer>(((ContainerLayer)box.DebugLayer!).FirstChild);
         Assert.Equal(7, layer.ViewId);
-        Assert.Equal(DartGeometry.RectFromLTWH(0, 0, 800, 600), layer.Rect);
+        Assert.Equal(Rect.FromLTWH(0, 0, 800, 600), layer.Rect);
     }
 
     [Fact]

@@ -111,11 +111,11 @@ public sealed class CanvasDartParityTests
     public void ClipRect_AffectsGetClipBounds(bool doAntiAlias)
     {
         // The LR/TB-swapped variants of the Dart test cannot be expressed: an Avalonia Rect is always sorted.
-        var clipRect = DartGeometry.RectFromCorners(new Offset(10.2, 11.3), new Offset(20.4, 25.7));
+        var clipRect = Rect.FromLTRB(10.2, 11.3, 20.4, 25.7);
         Canvas canvas = NewCanvas();
         canvas.ClipRect(clipRect, doAntiAlias: doAntiAlias);
         Rect clipExpandedBounds = doAntiAlias
-            ? DartGeometry.RectFromCorners(new Offset(10, 11), new Offset(21, 26))
+            ? Rect.FromLTRB(10, 11, 21, 26)
             : clipRect;
 
         AssertClipBoundsLifecycle(canvas, clipExpandedBounds);
@@ -125,8 +125,8 @@ public sealed class CanvasDartParityTests
     public void ClipRect_WithMatrix_AffectsGetClipBounds()
     {
         Canvas canvas = NewCanvas();
-        var clipBounds1 = DartGeometry.RectFromLTWH(0, 0, 10, 10);
-        var clipBounds2 = DartGeometry.RectFromLTWH(10, 10, 10, 10);
+        var clipBounds1 = Rect.FromLTWH(0, 0, 10, 10);
+        var clipBounds2 = Rect.FromLTWH(10, 10, 10, 10);
 
         canvas.Save();
         canvas.ClipRect(clipBounds1, doAntiAlias: false);
@@ -147,17 +147,17 @@ public sealed class CanvasDartParityTests
     public void ClipRRect_AntiAliased_AffectsGetClipBounds()
     {
         Canvas canvas = NewCanvas();
-        var clipBounds = DartGeometry.RectFromCorners(new Offset(10.2, 11.3), new Offset(20.4, 25.7));
+        var clipBounds = Rect.FromLTRB(10.2, 11.3, 20.4, 25.7);
         canvas.ClipRRect(RRect.FromRectAndRadius(clipBounds, Radius.Circular(3)));
 
-        AssertClipBoundsLifecycle(canvas, DartGeometry.RectFromCorners(new Offset(10, 11), new Offset(21, 26)));
+        AssertClipBoundsLifecycle(canvas, Rect.FromLTRB(10, 11, 21, 26));
     }
 
     [Fact]
     public void ClipRRect_Aliased_AffectsGetClipBounds()
     {
         Canvas canvas = NewCanvas();
-        var clipBounds = DartGeometry.RectFromCorners(new Offset(10.2, 11.3), new Offset(20.4, 25.7));
+        var clipBounds = Rect.FromLTRB(10.2, 11.3, 20.4, 25.7);
         canvas.ClipRRect(RRect.FromRectAndRadius(clipBounds, Radius.Circular(3)), doAntiAlias: false);
 
         AssertClipBoundsLifecycle(canvas, clipBounds, doAntiAliasInnerClip: false);
@@ -167,8 +167,8 @@ public sealed class CanvasDartParityTests
     public void ClipRRect_WithMatrix_AffectsGetClipBounds()
     {
         Canvas canvas = NewCanvas();
-        var clipBounds1 = DartGeometry.RectFromLTWH(0, 0, 10, 10);
-        var clipBounds2 = DartGeometry.RectFromLTWH(10, 10, 10, 10);
+        var clipBounds1 = Rect.FromLTWH(0, 0, 10, 10);
+        var clipBounds2 = Rect.FromLTWH(10, 10, 10, 10);
         RRect clip1 = RRect.FromRectAndRadius(clipBounds1, Radius.Circular(3));
         RRect clip2 = RRect.FromRectAndRadius(clipBounds2, Radius.Circular(3));
 
@@ -193,7 +193,7 @@ public sealed class CanvasDartParityTests
     public void ClipPath_AffectsGetClipBounds(bool doAntiAlias)
     {
         Canvas canvas = NewCanvas();
-        var clipBounds = DartGeometry.RectFromCorners(new Offset(10.2, 11.3), new Offset(20.4, 25.7));
+        var clipBounds = Rect.FromLTRB(10.2, 11.3, 20.4, 25.7);
         var clip = new Path();
         clip.AddRect(clipBounds);
         clip.AddOval(clipBounds);
@@ -201,7 +201,7 @@ public sealed class CanvasDartParityTests
 
         AssertClipBoundsLifecycle(
             canvas,
-            doAntiAlias ? DartGeometry.RectFromCorners(new Offset(10, 11), new Offset(21, 26)) : clipBounds,
+            doAntiAlias ? Rect.FromLTRB(10, 11, 21, 26) : clipBounds,
             doAntiAliasInnerClip: doAntiAlias);
     }
 
@@ -209,8 +209,8 @@ public sealed class CanvasDartParityTests
     public void ClipPath_WithMatrix_AffectsGetClipBounds()
     {
         Canvas canvas = NewCanvas();
-        var clipBounds1 = DartGeometry.RectFromLTWH(0, 0, 10, 10);
-        var clipBounds2 = DartGeometry.RectFromLTWH(10, 10, 10, 10);
+        var clipBounds1 = Rect.FromLTWH(0, 0, 10, 10);
+        var clipBounds2 = Rect.FromLTWH(10, 10, 10, 10);
         var clip1 = new Path();
         clip1.AddRect(clipBounds1);
         clip1.AddOval(clipBounds1);
@@ -237,7 +237,7 @@ public sealed class CanvasDartParityTests
     public void ClipRectDifference_DoesNotAffectGetClipBounds()
     {
         Canvas canvas = NewCanvas();
-        var clipBounds = DartGeometry.RectFromCorners(new Offset(10.2, 11.3), new Offset(20.4, 25.7));
+        var clipBounds = Rect.FromLTRB(10.2, 11.3, 20.4, 25.7);
         canvas.ClipRect(clipBounds, doAntiAlias: false);
 
         Rect initialLocalBounds = canvas.GetLocalClipBounds();
@@ -245,7 +245,7 @@ public sealed class CanvasDartParityTests
         AssertCloseToRect(clipBounds, initialLocalBounds);
         AssertCloseToRect(clipBounds, initialDestinationBounds);
 
-        canvas.ClipRect(DartGeometry.RectFromLTWH(0, 0, 15, 15), doAntiAlias: false, clipOp: ClipOp.Difference);
+        canvas.ClipRect(Rect.FromLTWH(0, 0, 15, 15), doAntiAlias: false, clipOp: ClipOp.Difference);
         Assert.Equal(initialLocalBounds, canvas.GetLocalClipBounds());
         Assert.Equal(initialDestinationBounds, canvas.GetDestinationClipBounds());
     }
@@ -298,24 +298,24 @@ public sealed class CanvasDartParityTests
     public void SaveLayer_RestoresTheTransformAndClip()
     {
         Canvas canvas = NewCanvas();
-        canvas.ClipRect(DartGeometry.RectFromLTWH(0, 0, 50, 50), doAntiAlias: false);
+        canvas.ClipRect(Rect.FromLTWH(0, 0, 50, 50), doAntiAlias: false);
         canvas.SaveLayer(null, new Paint());
         canvas.Translate(5, 5);
-        canvas.ClipRect(DartGeometry.RectFromLTWH(0, 0, 10, 10), doAntiAlias: false);
-        Assert.Equal(DartGeometry.RectFromLTWH(5, 5, 10, 10), canvas.GetDestinationClipBounds());
+        canvas.ClipRect(Rect.FromLTWH(0, 0, 10, 10), doAntiAlias: false);
+        Assert.Equal(Rect.FromLTWH(5, 5, 10, 10), canvas.GetDestinationClipBounds());
         Assert.Equal(2, canvas.GetSaveCount());
 
         canvas.Restore();
 
-        Assert.Equal(DartGeometry.RectFromLTWH(0, 0, 50, 50), canvas.GetDestinationClipBounds());
+        Assert.Equal(Rect.FromLTWH(0, 0, 50, 50), canvas.GetDestinationClipBounds());
         AssertCloseToTransform(Matrix4.Identity().Storage, canvas.GetTransform());
     }
 
     [Fact]
     public void CullRect_IsTheInitialClip()
     {
-        var canvas = new Canvas(new PictureRecorder(), DartGeometry.RectFromLTWH(0, 0, 100, 50));
-        Assert.Equal(DartGeometry.RectFromLTWH(0, 0, 100, 50), canvas.GetDestinationClipBounds());
+        var canvas = new Canvas(new PictureRecorder(), Rect.FromLTWH(0, 0, 100, 50));
+        Assert.Equal(Rect.FromLTWH(0, 0, 100, 50), canvas.GetDestinationClipBounds());
 
         Canvas unbounded = NewCanvas();
         Assert.Equal(Canvas.LargestRect, unbounded.GetDestinationClipBounds());
@@ -335,7 +335,7 @@ public sealed class CanvasDartParityTests
         AssertCloseToRect(clipExpandedBounds, initialDestinationBounds);
 
         canvas.Save();
-        canvas.ClipRect(DartGeometry.RectFromLTWH(0, 0, 15, 15), doAntiAlias: doAntiAliasInnerClip);
+        canvas.ClipRect(Rect.FromLTWH(0, 0, 15, 15), doAntiAlias: doAntiAliasInnerClip);
         Assert.False(IsCloseToRect(clipExpandedBounds, canvas.GetLocalClipBounds()));
         Assert.False(IsCloseToRect(clipExpandedBounds, canvas.GetDestinationClipBounds()));
         AssertCloseToRect(clipExpandedBounds, initialLocalBounds);
@@ -347,9 +347,7 @@ public sealed class CanvasDartParityTests
 
         canvas.Save();
         canvas.Scale(2, 2);
-        var scaledExpandedBounds = DartGeometry.RectFromCorners(
-            new Offset(clipExpandedBounds.Left / 2.0, clipExpandedBounds.Top / 2.0),
-            new Offset(clipExpandedBounds.Right / 2.0, clipExpandedBounds.Bottom / 2.0));
+        var scaledExpandedBounds = Rect.FromLTRB(clipExpandedBounds.Left / 2.0, clipExpandedBounds.Top / 2.0, clipExpandedBounds.Right / 2.0, clipExpandedBounds.Bottom / 2.0);
         AssertCloseToRect(scaledExpandedBounds, canvas.GetLocalClipBounds());
         AssertCloseToRect(clipExpandedBounds, canvas.GetDestinationClipBounds());
         canvas.Restore();

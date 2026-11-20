@@ -296,7 +296,7 @@ internal sealed class RenderCupertinoMenuSwipeSurface : RenderProxyBoxWithHitTes
 
     /// <summary>Dart parity source: <c>_RenderSwipeSurface.computeRect</c>.</summary>
     public Rect ComputeRect() => HasSize
-        ? DartGeometry.RectFromOffsetAndSize(LocalToGlobal(default), Size)
+        ? (LocalToGlobal(default) & Size)
         : default;
 
     protected override void OnDetach()

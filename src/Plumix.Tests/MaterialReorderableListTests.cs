@@ -56,7 +56,7 @@ public sealed class MaterialReorderableListTests
         IndexedWidgetBuilder builder = (_, index) => new SizedBox(key: new ValueKey<int>(index));
         ReorderCallback callback = (_, _) => { };
         ReorderDragBoundaryProvider boundaryProvider = _ =>
-            new FixedRectDragBoundaryDelegate(DartGeometry.RectFromLTWH(0, 0, 100, 100));
+            new FixedRectDragBoundaryDelegate(Rect.FromLTWH(0, 0, 100, 100));
         ChildIndexGetter childIndexGetter = _ => 0;
 
         ReorderableListView list = ReorderableListView.Builder(
@@ -221,22 +221,22 @@ public sealed class MaterialReorderableListTests
 
         BuildContext context = key.CurrentContext!;
         DragBoundaryDelegate<Rect> global = DragBoundary.ForRectOf(context);
-        Assert.False(global.IsWithinBoundary(DartGeometry.RectFromLTWH(10, 10, 20, 20)));
-        Assert.True(global.IsWithinBoundary(DartGeometry.RectFromLTWH(40, 30, 20, 20)));
+        Assert.False(global.IsWithinBoundary(Rect.FromLTWH(10, 10, 20, 20)));
+        Assert.True(global.IsWithinBoundary(Rect.FromLTWH(40, 30, 20, 20)));
         Assert.Equal(
-            DartGeometry.RectFromLTWH(40, 30, 20, 20),
-            global.NearestPositionWithinBoundary(DartGeometry.RectFromLTWH(10, 10, 20, 20)));
+            Rect.FromLTWH(40, 30, 20, 20),
+            global.NearestPositionWithinBoundary(Rect.FromLTWH(10, 10, 20, 20)));
 
         DragBoundaryDelegate<Rect> local = DragBoundary.ForRectOf(
             context,
             useGlobalPosition: false);
-        Assert.True(local.IsWithinBoundary(DartGeometry.RectFromLTWH(50, 50, 20, 20)));
-        Assert.False(local.IsWithinBoundary(DartGeometry.RectFromLTWH(90, 90, 20, 20)));
+        Assert.True(local.IsWithinBoundary(Rect.FromLTWH(50, 50, 20, 20)));
+        Assert.False(local.IsWithinBoundary(Rect.FromLTWH(90, 90, 20, 20)));
         Assert.Equal(
-            DartGeometry.RectFromLTWH(80, 80, 20, 20),
-            local.NearestPositionWithinBoundary(DartGeometry.RectFromLTWH(90, 90, 20, 20)));
+            Rect.FromLTWH(80, 80, 20, 20),
+            local.NearestPositionWithinBoundary(Rect.FromLTWH(90, 90, 20, 20)));
         Assert.Throws<InvalidOperationException>(() =>
-            local.NearestPositionWithinBoundary(DartGeometry.RectFromLTWH(0, 0, 101, 20)));
+            local.NearestPositionWithinBoundary(Rect.FromLTWH(0, 0, 101, 20)));
 
         var freeKey = new LabeledGlobalKey<State>("free-drag-boundary-child");
         using WidgetRenderHarness freeHarness = new(Wrap(new SizedBox(
@@ -248,7 +248,7 @@ public sealed class MaterialReorderableListTests
         BuildContext freeContext = freeKey.CurrentContext!;
         Assert.Null(DragBoundary.ForRectMaybeOf(freeContext));
         DragBoundaryDelegate<Rect> free = DragBoundary.ForRectOf(freeContext);
-        var unrestricted = DartGeometry.RectFromLTWH(300, 300, 300, 300);
+        var unrestricted = Rect.FromLTWH(300, 300, 300, 300);
         Assert.True(free.IsWithinBoundary(unrestricted));
         Assert.Equal(unrestricted, free.NearestPositionWithinBoundary(unrestricted));
     }
@@ -934,7 +934,7 @@ public sealed class MaterialReorderableListTests
 
         public override Rect NearestPositionWithinBoundary(Rect draggedObject)
         {
-            return DartGeometry.RectFromLTWH(
+            return Rect.FromLTWH(
                 Math.Clamp(draggedObject.Left, _boundary.Left, _boundary.Right - draggedObject.Width),
                 Math.Clamp(draggedObject.Top, _boundary.Top, _boundary.Bottom - draggedObject.Height),
                 draggedObject.Width,

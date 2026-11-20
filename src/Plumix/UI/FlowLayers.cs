@@ -562,7 +562,7 @@ internal sealed class MagnifierFlowLayer(
 
         Offset focalPoint = lensRect.Center + focalPointOffset;
         var sourceSize = new Size(lensRect.Width / absoluteScale, lensRect.Height / absoluteScale);
-        var sourceRect = DartGeometry.RectFromLTWH(
+        var sourceRect = Rect.FromLTWH(
             focalPoint.Dx - (sourceSize.Width / 2.0),
             focalPoint.Dy - (sourceSize.Height / 2.0),
             sourceSize.Width,
@@ -660,7 +660,7 @@ internal sealed class TextureFlowLayer(Offset offset, Size size, int textureId, 
             return;
         }
 
-        texture.Paint(context.Canvas, DartGeometry.RectFromOffsetAndSize(Offset, Size), Freeze, FilterQuality);
+        texture.Paint(context.Canvas, (Offset & Size), Freeze, FilterQuality);
     }
 }
 
@@ -763,7 +763,7 @@ internal sealed class PerformanceOverlayFlowLayer(int options, Rect bounds) : Fl
         const int labelY = -10; // distance from y+height
         if (showGraph && width > 0 && height > 0)
         {
-            stopwatch.Visualize(canvas, DartGeometry.RectFromLTWH(x, y, width, height));
+            stopwatch.Visualize(canvas, Rect.FromLTWH(x, y, width, height));
         }
 
         if (!showLabels)
@@ -1027,7 +1027,7 @@ internal static class SceneRasterizer
     {
         int width = Math.Max(1, (int)Math.Ceiling(state.TargetSize.Width));
         int height = Math.Max(1, (int)Math.Ceiling(state.TargetSize.Height));
-        var bounds = DartGeometry.RectFromLTWH(0.0, 0.0, width, height);
+        var bounds = Rect.FromLTWH(0.0, 0.0, width, height);
         var image = new RenderTargetBitmap(new PixelSize(width, height), Dpi.ToAvaloniaVector());
         t_captureDepth++;
         try

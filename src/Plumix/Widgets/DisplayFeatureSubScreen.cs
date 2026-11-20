@@ -30,7 +30,7 @@ public sealed class DisplayFeatureSubScreen : StatelessWidget
     {
         var mediaQuery = MediaQuery.Of(context);
         Size parentSize = mediaQuery.Size;
-        var wantedBounds = DartGeometry.RectFromOffsetAndSize(default, parentSize);
+        var wantedBounds = Offset.Zero & parentSize;
         Offset resolvedAnchorPoint = CapOffset(AnchorPoint ?? FallbackAnchorPoint(context), parentSize);
         List<Rect> subScreens = SubScreensInBounds(wantedBounds, AvoidBounds(mediaQuery));
         Rect closestSubScreen = ClosestToAnchorPoint(subScreens, resolvedAnchorPoint);
@@ -87,13 +87,13 @@ public sealed class DisplayFeatureSubScreen : StatelessWidget
                     // The display feature splits this sub-screen vertically.
                     if (screen.Left < bounds.Left)
                     {
-                        newSubScreens.Add(DartGeometry.RectFromLTWH(screen.Left, screen.Top, bounds.Left - screen.Left, screen.Height));
+                        newSubScreens.Add(Rect.FromLTWH(screen.Left, screen.Top, bounds.Left - screen.Left, screen.Height));
                     }
 
                     if (screen.Right > bounds.Right)
                     {
                         newSubScreens.Add(
-                            DartGeometry.RectFromLTWH(bounds.Right, screen.Top, screen.Right - bounds.Right, screen.Height));
+                            Rect.FromLTWH(bounds.Right, screen.Top, screen.Right - bounds.Right, screen.Height));
                     }
                 }
                 else if (screen.Left >= bounds.Left && screen.Right <= bounds.Right)
@@ -101,13 +101,13 @@ public sealed class DisplayFeatureSubScreen : StatelessWidget
                     // The display feature splits this sub-screen horizontally.
                     if (screen.Top < bounds.Top)
                     {
-                        newSubScreens.Add(DartGeometry.RectFromLTWH(screen.Left, screen.Top, screen.Width, bounds.Top - screen.Top));
+                        newSubScreens.Add(Rect.FromLTWH(screen.Left, screen.Top, screen.Width, bounds.Top - screen.Top));
                     }
 
                     if (screen.Bottom > bounds.Bottom)
                     {
                         newSubScreens.Add(
-                            DartGeometry.RectFromLTWH(screen.Left, bounds.Bottom, screen.Width, screen.Bottom - bounds.Bottom));
+                            Rect.FromLTWH(screen.Left, bounds.Bottom, screen.Width, screen.Bottom - bounds.Bottom));
                     }
                 }
                 else

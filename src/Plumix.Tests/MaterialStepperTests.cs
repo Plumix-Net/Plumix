@@ -415,8 +415,8 @@ public sealed class MaterialStepperTests : IDisposable
     {
         using var tester = new FrameworkDartTester();
         var buttonShape = new RoundedRectangleBorder(borderRadius: BorderRadius.All(Radius.Circular(2)));
-        var continueButtonRect = DartGeometry.RectFromCorners(new Offset(24.0, 212.0), new Offset(168.0, 260.0));
-        var cancelButtonRect = DartGeometry.RectFromCorners(new Offset(176.0, 212.0), new Offset(292.0, 260.0));
+        var continueButtonRect = Rect.FromLTRB(24.0, 212.0, 168.0, 260.0);
+        var cancelButtonRect = Rect.FromLTRB(176.0, 212.0, 292.0, 260.0);
 
         tester.PumpWidget(BuildButtonFrame(new ThemeData(useMaterial3: false)));
         MaterialWidget continueMaterial = ButtonMaterial(tester, "CONTINUE");
@@ -448,8 +448,8 @@ public sealed class MaterialStepperTests : IDisposable
     {
         using var tester = new FrameworkDartTester();
         var buttonShape = new RoundedRectangleBorder(borderRadius: BorderRadius.All(Radius.Circular(2)));
-        var continueButtonRect = DartGeometry.RectFromCorners(new Offset(24.0, 212.0), new Offset(168.8, 260.0));
-        var cancelButtonRect = DartGeometry.RectFromCorners(new Offset(176.8, 212.0), new Offset(293.4, 260.0));
+        var continueButtonRect = Rect.FromLTRB(24.0, 212.0, 168.8, 260.0);
+        var cancelButtonRect = Rect.FromLTRB(176.8, 212.0, 293.4, 260.0);
 
         var themeLight = new ThemeData();
         tester.PumpWidget(BuildButtonFrame(themeLight));

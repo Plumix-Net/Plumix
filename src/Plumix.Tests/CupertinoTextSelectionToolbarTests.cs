@@ -306,7 +306,7 @@ public sealed class CupertinoTextSelectionToolbarTests : IDisposable
         var context = new PaintingContext(layer);
         items.Paint(context, default);
         context.DebugStopRecordingIfNeeded();
-        using var image = layer.ToImageSync(DartGeometry.RectFromSize(items.Size), pixelRatio);
+        using var image = layer.ToImageSync(Plumix.UI.Offset.Zero & items.Size, pixelRatio);
         int y = (int)(ChildHeight * pixelRatio / 2.0);
         double coverage = 0.0;
         for (int x = (int)(ChildWidth * pixelRatio) - 2; x <= (ChildWidth * pixelRatio) + 2; x++)
@@ -457,7 +457,7 @@ public sealed class CupertinoTextSelectionToolbarTests : IDisposable
         RenderCupertinoTextSelectionToolbarShape shape = Shape(harness);
         RenderBox child = shape.Child!;
         Assert.Equal(default, ((BoxParentData)child.parentData!).offset);
-        Assert.Equal(DartGeometry.RectFromLTWH(0.0, 7.0, 100.0, 36.0), shape.ShapeRRect(child).Rect);
+        Assert.Equal(Rect.FromLTWH(0.0, 7.0, 100.0, 36.0), shape.ShapeRRect(child).Rect);
 
         Plumix.UI.Path path = shape.ClipPath(child, shape.ShapeRRect(child));
         double arrowTipX = shape.GlobalToLocal(new Offset(400.0, 0.0)).Dx;

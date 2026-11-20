@@ -541,7 +541,7 @@ public sealed class RawMenuAnchorState : RawMenuAnchorBaseState<RawMenuAnchor>
     {
         Rect anchorRect = RenderObject.TransformRect(
             layoutInfo.ChildPaintTransform,
-            DartGeometry.RectFromOffsetAndSize(default, layoutInfo.ChildSize));
+            (Offset.Zero & layoutInfo.ChildSize));
         return Current.OverlayBuilder(
             context,
             new RawMenuOverlayInfo(

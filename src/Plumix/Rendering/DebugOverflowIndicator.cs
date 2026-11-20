@@ -95,7 +95,7 @@ internal sealed class DebugOverflowIndicator : IDisposable
         var regions = new List<OverflowRegionData>();
         if (overflow.Left > 0.0)
         {
-            var markerRect = DartGeometry.RectFromLTWH(0.0, 0.0, containerRect.Width * IndicatorFraction, containerRect.Height);
+            var markerRect = Rect.FromLTWH(0.0, 0.0, containerRect.Width * IndicatorFraction, containerRect.Height);
             regions.Add(new OverflowRegionData(
                 Rect: markerRect,
                 Label: $"LEFT OVERFLOWED BY {FormatPixels(overflow.Left)} PIXELS",
@@ -107,7 +107,7 @@ internal sealed class DebugOverflowIndicator : IDisposable
 
         if (overflow.Right > 0.0)
         {
-            var markerRect = DartGeometry.RectFromLTWH(
+            var markerRect = Rect.FromLTWH(
                 containerRect.Width * (1.0 - IndicatorFraction),
                 0.0,
                 containerRect.Width * IndicatorFraction,
@@ -123,7 +123,7 @@ internal sealed class DebugOverflowIndicator : IDisposable
 
         if (overflow.Top > 0.0)
         {
-            var markerRect = DartGeometry.RectFromLTWH(0.0, 0.0, containerRect.Width, containerRect.Height * IndicatorFraction);
+            var markerRect = Rect.FromLTWH(0.0, 0.0, containerRect.Width, containerRect.Height * IndicatorFraction);
             regions.Add(new OverflowRegionData(
                 Rect: markerRect,
                 Label: $"TOP OVERFLOWED BY {FormatPixels(overflow.Top)} PIXELS",
@@ -135,7 +135,7 @@ internal sealed class DebugOverflowIndicator : IDisposable
 
         if (overflow.Bottom > 0.0)
         {
-            var markerRect = DartGeometry.RectFromLTWH(
+            var markerRect = Rect.FromLTWH(
                 0.0,
                 containerRect.Height * (1.0 - IndicatorFraction),
                 containerRect.Width,
@@ -248,7 +248,7 @@ internal sealed class DebugOverflowIndicator : IDisposable
 
             Offset labelOffset = region.LabelOffset + offset;
             var centerOffset = new Offset(-label.Width / 2.0, 0.0);
-            var textBackgroundRect = DartGeometry.RectFromOffsetAndSize(centerOffset, label.Size);
+            var textBackgroundRect = centerOffset & label.Size;
             context.Canvas.Save();
             context.Canvas.Translate(labelOffset.Dx, labelOffset.Dy);
             context.Canvas.Rotate(region.Rotation);

@@ -34,7 +34,7 @@ public sealed class PlumixHostInputTests : IDisposable
         // so wheel and press events over them fell through to the controls behind the host.
         var host = new PlumixHost();
         host.Measure(new Size(100, 50).ToAvalonia());
-        host.Arrange(DartGeometry.RectFromLTWH(0, 0, 100, 50).ToAvalonia());
+        host.Arrange(Rect.FromLTWH(0, 0, 100, 50).ToAvalonia());
         ICustomHitTest hitTest = Assert.IsAssignableFrom<ICustomHitTest>(host);
         Assert.True(hitTest.HitTest(new Offset(0, 0).ToAvalonia()));
         Assert.True(hitTest.HitTest(new Offset(50, 25).ToAvalonia()));

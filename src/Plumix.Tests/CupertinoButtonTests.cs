@@ -248,7 +248,7 @@ public sealed class CupertinoButtonTests : IDisposable
             harness.Pump(ViewSize);
 
             RenderBox box = ButtonBox(harness);
-            Rect bounds = DartGeometry.RectFromOffsetAndSize(box.LocalToGlobal(default), box.Size);
+            Rect bounds = box.LocalToGlobal(default) & box.Size;
             TapGestureRecognizer recognizer = Recognizer<TapGestureRecognizer>(harness);
 
             recognizer.OnTapDown!(Down(bounds.Center));
@@ -314,7 +314,7 @@ public sealed class CupertinoButtonTests : IDisposable
             harness.Pump(ViewSize);
 
             RenderBox box = ButtonBox(harness);
-            Rect bounds = DartGeometry.RectFromOffsetAndSize(box.LocalToGlobal(default), box.Size);
+            Rect bounds = box.LocalToGlobal(default) & box.Size;
             double slop = CupertinoButton.TapMoveSlop();
             TapGestureRecognizer recognizer = Recognizer<TapGestureRecognizer>(harness);
             FadeTransition transition = Assert.Single(harness.FindWidgets<FadeTransition>());

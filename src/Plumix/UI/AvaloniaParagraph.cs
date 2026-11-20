@@ -409,7 +409,7 @@ internal sealed class AvaloniaParagraph : Paragraph
                 }
 
                 Rect rect = runBounds.Rectangle.ToPlumix();
-                var part = DartGeometry.RectFromLTWH(rect.Left, line.Baseline + delta - ascent, rect.Width, ascent + descent);
+                var part = Rect.FromLTWH(rect.Left, line.Baseline + delta - ascent, rect.Width, ascent + descent);
                 clusterBounds = clusterBounds is { } previous ? previous.ExpandToInclude(part) : part;
                 direction ??= bounds.FlowDirection == FlowDirection.RightToLeft ? TextDirection.Rtl : TextDirection.Ltr;
             }

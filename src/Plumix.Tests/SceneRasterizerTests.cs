@@ -21,7 +21,7 @@ public sealed class SceneRasterizerTests
         var offset = new OffsetLayer(new Offset(10, 10));
         offset.Append(new PictureLayer(default)
         {
-            Picture = SceneBuilderTests.DrawRectPicture(DartGeometry.RectFromLTWH(0, 0, 5, 5), Red),
+            Picture = SceneBuilderTests.DrawRectPicture(Rect.FromLTWH(0, 0, 5, 5), Red),
         });
         root.Append(offset);
 
@@ -38,7 +38,7 @@ public sealed class SceneRasterizerTests
     public void ClipRectLayer_ClipsItsChildren()
     {
         var root = new OffsetLayer();
-        var clip = new ClipRectLayer { ClipRect = DartGeometry.RectFromLTWH(0, 0, 4, 4) };
+        var clip = new ClipRectLayer { ClipRect = Rect.FromLTWH(0, 0, 4, 4) };
         clip.Append(new PictureLayer(default) { Picture = SceneBuilderTests.DrawPaintPicture(Red) });
         root.Append(clip);
 
@@ -56,7 +56,7 @@ public sealed class SceneRasterizerTests
         var root = new OffsetLayer();
         var clip = new ClipRRectLayer
         {
-            ClipRRect = RRect.FromRectAndRadius(DartGeometry.RectFromLTWH(0, 0, 40, 8), Radius.Circular(100)),
+            ClipRRect = RRect.FromRectAndRadius(Rect.FromLTWH(0, 0, 40, 8), Radius.Circular(100)),
         };
         clip.Append(new PictureLayer(default) { Picture = SceneBuilderTests.DrawPaintPicture(Red) });
         root.Append(clip);
@@ -78,11 +78,11 @@ public sealed class SceneRasterizerTests
         var filter = new ImageFilterLayer(
             new ImageFilter.Matrix(Matrix4.Diagonal3Values(2.0, 1.0, 1.0).Storage, FilterQuality.Medium))
         {
-            FilterBounds = DartGeometry.RectFromLTWH(0, 0, 10, 2),
+            FilterBounds = Rect.FromLTWH(0, 0, 10, 2),
         };
         filter.Append(new PictureLayer(default)
         {
-            Picture = SceneBuilderTests.DrawRectPicture(DartGeometry.RectFromLTWH(0, 0, 1.5, 2), Red),
+            Picture = SceneBuilderTests.DrawRectPicture(Rect.FromLTWH(0, 0, 1.5, 2), Red),
         });
         root.Append(filter);
 
@@ -132,10 +132,10 @@ public sealed class SceneRasterizerTests
         var root = new OffsetLayer();
         root.Append(new PictureLayer(default)
         {
-            Picture = SceneBuilderTests.DrawRectPicture(DartGeometry.RectFromLTWH(0, 0, 10, 10), Red),
+            Picture = SceneBuilderTests.DrawRectPicture(Rect.FromLTWH(0, 0, 10, 10), Red),
         });
         var offset = new OffsetLayer(new Offset(10, 0));
-        var clip = new ClipRectLayer { ClipRect = DartGeometry.RectFromLTWH(0, 0, 10, 10) };
+        var clip = new ClipRectLayer { ClipRect = Rect.FromLTWH(0, 0, 10, 10) };
         Matrix4 shift = Matrix4.TranslationValues(10, 0, 0);
         clip.Append(new BackdropFilterLayer(new ImageFilter.Matrix(shift.Storage)));
         offset.Append(clip);
@@ -153,13 +153,13 @@ public sealed class SceneRasterizerTests
         var root = new OffsetLayer();
         root.Append(new PictureLayer(default)
         {
-            Picture = SceneBuilderTests.DrawRectPicture(DartGeometry.RectFromLTWH(0, 0, 20, 20), Red),
+            Picture = SceneBuilderTests.DrawRectPicture(Rect.FromLTWH(0, 0, 20, 20), Red),
         });
         var offset = new OffsetLayer(new Offset(30, 0));
         // The lens is centred on (35, 5) in the target; its focal point (10, 10) lies in the red square.
         offset.Append(new MagnifierLayer
         {
-            LensRect = DartGeometry.RectFromLTWH(0, 0, 10, 10),
+            LensRect = Rect.FromLTWH(0, 0, 10, 10),
             FocalPointOffset = new Offset(-25, 5),
             MagnificationScale = 1.0,
             Decoration = new MagnifierDecoration(opacity: 1.0),
@@ -182,12 +182,12 @@ public sealed class SceneRasterizerTests
         var root = new OffsetLayer();
         root.Append(new PictureLayer(default)
         {
-            Picture = SceneBuilderTests.DrawRectPicture(DartGeometry.RectFromLTWH(0, 0, 20, 20), Red),
+            Picture = SceneBuilderTests.DrawRectPicture(Rect.FromLTWH(0, 0, 20, 20), Red),
         });
         var offset = new OffsetLayer(new Offset(30, 0));
         offset.Append(new MagnifierLayer
         {
-            LensRect = DartGeometry.RectFromLTWH(0, 0, 10, 10),
+            LensRect = Rect.FromLTWH(0, 0, 10, 10),
             FocalPointOffset = new Offset(-25, 5),
             MagnificationScale = 1.0,
             Decoration = new MagnifierDecoration(
@@ -216,7 +216,7 @@ public sealed class SceneRasterizerTests
         var retained = new OffsetLayer(new Offset(2, 2));
         retained.Append(new PictureLayer(default)
         {
-            Picture = SceneBuilderTests.DrawRectPicture(DartGeometry.RectFromLTWH(0, 0, 2, 2), Red),
+            Picture = SceneBuilderTests.DrawRectPicture(Rect.FromLTWH(0, 0, 2, 2), Red),
         });
         root.Append(retained);
         root.BuildScene(new SceneBuilder()).Dispose();
@@ -328,14 +328,14 @@ public sealed class SceneRasterizerTests
     public void PerformanceOverlay_DrawsTheStatisticsGraphsOnlyWhenEnabled()
     {
         var builder = new SceneBuilder();
-        builder.AddPerformanceOverlay(0x0F, DartGeometry.RectFromLTWH(0, 0, 200, 160));
+        builder.AddPerformanceOverlay(0x0F, Rect.FromLTWH(0, 0, 200, 160));
         using Scene enabled = builder.Build();
         Bitmap image = enabled.ToImageSync(200, 160);
         // The graph background is the engine's semi-transparent white.
         Assert.InRange(RasterBackend.PixelAt(image, 10, 10).A, 0x90, 0xA0);
 
         var emptyBuilder = new SceneBuilder();
-        emptyBuilder.AddPerformanceOverlay(0, DartGeometry.RectFromLTWH(0, 0, 200, 160));
+        emptyBuilder.AddPerformanceOverlay(0, Rect.FromLTWH(0, 0, 200, 160));
         using Scene disabled = emptyBuilder.Build();
         Assert.Equal(0, RasterBackend.PixelAt(disabled.ToImageSync(200, 160), 10, 10).A);
     }
@@ -569,7 +569,7 @@ public sealed class SceneRasterizerTests
             context.DrawRectangle(
                 new Avalonia.Media.SolidColorBrush(Avalonia.Media.Color.FromUInt32(argb)),
                 null,
-                DartGeometry.RectFromLTWH(0, 0, 2, 2).ToAvalonia());
+                Rect.FromLTWH(0, 0, 2, 2).ToAvalonia());
         }
 
         return image;

@@ -86,7 +86,7 @@ public sealed class TweenDartParityTests : IDisposable
     [DebugOnlyFact]
     public void ThrowsFlutterErrorWhenTweeningTypesThatDoNotSatisfyTweenRequirements_Rect()
     {
-        var rectTween = new Tween<Rect>(DartGeometry.RectFromLTWH(0, 0, 10, 10), DartGeometry.RectFromLTWH(2, 2, 2, 2));
+        var rectTween = new Tween<Rect>(Rect.FromLTWH(0, 0, 10, 10), Rect.FromLTWH(2, 2, 2, 2));
 
         FlutterError error = Assert.Throws<FlutterError>(() => rectTween.Transform(0.1));
         Assert.Equal(
@@ -168,10 +168,10 @@ public sealed class TweenDartParityTests : IDisposable
     [Fact]
     public void RectTween()
     {
-        var a = DartGeometry.RectFromLTWH(5.0, 3.0, 7.0, 11.0);
-        var b = DartGeometry.RectFromLTWH(8.0, 12.0, 14.0, 18.0);
+        var a = Rect.FromLTWH(5.0, 3.0, 7.0, 11.0);
+        var b = Rect.FromLTWH(8.0, 12.0, 14.0, 18.0);
         var tween = new RectTween(begin: a, end: b);
-        Assert.Equal(DartGeometry.RectFromLTWH(6.5, 7.5, 10.5, 14.5), tween.Lerp(0.5));
+        Assert.Equal(Rect.FromLTWH(6.5, 7.5, 10.5, 14.5), tween.Lerp(0.5));
         AssertOneLineDescription(tween);
     }
 
@@ -316,7 +316,7 @@ public sealed class TweenDartParityTests : IDisposable
         Assert.Equal(new Size(5, 10), new SizeTween(end: new Size(10, 20)).Lerp(0.5));
         Assert.Equal(new Size(5, 10), new SizeTween(begin: new Size(10, 20)).Lerp(0.5));
         Assert.Null(new SizeTween().Lerp(0.5));
-        Assert.Equal(DartGeometry.RectFromLTWH(1, 2, 3, 4), new RectTween(end: DartGeometry.RectFromLTWH(2, 4, 6, 8)).Lerp(0.5));
+        Assert.Equal(Rect.FromLTWH(1, 2, 3, 4), new RectTween(end: Rect.FromLTWH(2, 4, 6, 8)).Lerp(0.5));
         Assert.Null(new RectTween().Transform(0.0));
     }
 

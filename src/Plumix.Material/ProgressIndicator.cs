@@ -739,7 +739,7 @@ internal sealed class RenderLinearProgressIndicator : RenderBox
             ? offset.Dx + (Size.Width - width - (Size.Width * startFraction))
             : offset.Dx + (Size.Width * startFraction);
 
-        var barRect = DartGeometry.RectFromLTWH(left, offset.Dy, width, Size.Height);
+        var barRect = Rect.FromLTWH(left, offset.Dy, width, Size.Height);
         double barRadius = ResolveRadius(barRect.Width, barRect.Height, radius);
         ctx.Canvas.DrawRectangle(
             brush,
@@ -1732,7 +1732,7 @@ internal sealed class RenderCircularProgressIndicator : RenderBox
 
         double left = offset.Dx + ((Size.Width - diameter) / 2.0) + strokeOffset;
         double top = offset.Dy + ((Size.Height - diameter) / 2.0) + strokeOffset;
-        var arcRect = DartGeometry.RectFromLTWH(left, top, arcDiameter, arcDiameter);
+        var arcRect = Rect.FromLTWH(left, top, arcDiameter, arcDiameter);
         double? resolvedValue = Value.HasValue
             ? CircularProgressIndicator.ClampValue(Value.Value)
             : (double?)null;

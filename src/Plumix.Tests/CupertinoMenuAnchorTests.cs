@@ -622,7 +622,7 @@ public sealed class CupertinoMenuAnchorTests : IDisposable
         paragraph.Layout(new ParagraphConstraints(100.0));
         var recorder = new PictureRecorder();
         var canvas = new Canvas(recorder);
-        canvas.DrawRect(DartGeometry.RectFromLTWH(0.0, 0.0, 100.0, 100.0), new Paint { Color = new Color(0xFF204060) });
+        canvas.DrawRect(Rect.FromLTWH(0.0, 0.0, 100.0, 100.0), new Paint { Color = new Color(0xFF204060) });
         canvas.DrawParagraph(paragraph, default);
         using Bitmap image = recorder.EndRecording().ToImageSync(100, 100);
 

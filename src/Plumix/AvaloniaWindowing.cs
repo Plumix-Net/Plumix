@@ -767,20 +767,20 @@ internal sealed class AvaloniaAnchoredWindow
         double ratio = _parentWindow.RenderScaling;
         PixelPoint parentOrigin = _parentWindow.PointToScreen(new Offset(0, 0).ToAvalonia());
         Size parentClient = _parentWindow.ClientSize.ToPlumix();
-        var parentRect = DartGeometry.RectFromLTWH(
+        var parentRect = Rect.FromLTWH(
             parentOrigin.X,
             parentOrigin.Y,
             parentClient.Width * ratio,
             parentClient.Height * ratio);
         Screen? screen = _parentWindow.Screens.ScreenFromWindow(_parentWindow);
         Rect displayRect = screen is null
-            ? DartGeometry.RectFromLTWH(-1e9, -1e9, 2e9, 2e9)
-            : DartGeometry.RectFromLTWH(
+            ? Rect.FromLTWH(-1e9, -1e9, 2e9, 2e9)
+            : Rect.FromLTWH(
                 screen.WorkingArea.X,
                 screen.WorkingArea.Y,
                 screen.WorkingArea.Width,
                 screen.WorkingArea.Height);
-        var anchorRect = DartGeometry.RectFromLTWH(
+        var anchorRect = Rect.FromLTWH(
             parentRect.Left + _anchorRect.Left * ratio,
             parentRect.Top + _anchorRect.Top * ratio,
             _anchorRect.Width * ratio,

@@ -1480,7 +1480,7 @@ internal sealed class TimeDialPainter : CustomPainter
             canvas.DrawCircle(new SolidColorBrush(DotColor), null, focusedPoint, 2);
         }
 
-        Rect focusedRect = DartGeometry.RectFromLTWH(
+        Rect focusedRect = Rect.FromLTWH(
             focusedPoint.Dx - DotRadius,
             focusedPoint.Dy - DotRadius,
             DotRadius * 2,

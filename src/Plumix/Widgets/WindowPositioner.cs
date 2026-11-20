@@ -396,7 +396,7 @@ public sealed class WindowPositioner
 
     /// <summary>Dart's <c>Offset &amp; Size</c>.</summary>
     private static Rect RectFrom(Offset offset, Size size) =>
-        DartGeometry.RectFromLTWH(offset.Dx, offset.Dy, size.Width, size.Height);
+        Rect.FromLTWH(offset.Dx, offset.Dy, size.Width, size.Height);
 
     private static bool RectContains(Rect r1, Rect r2)
     {

@@ -71,7 +71,7 @@ public sealed class RenderAnimatedBox : RenderBox, IDisposable
 
     public override void Paint(PaintingContext ctx, Offset offset)
     {
-        var rect = DartGeometry.RectFromOffsetAndSize(offset, Size);
+        var rect = offset & Size;
         ctx.Canvas.DrawRectangle(Brush, null, rect, 16, 16);
     }
 

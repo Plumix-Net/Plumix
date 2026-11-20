@@ -90,8 +90,8 @@ public sealed class CupertinoTextSelectionControlsTests : IDisposable
             CupertinoTextSelectionHandlePainter.BuildPath(new Size(12.0, 20.5)));
 
         Assert.Equal(GeometryCombineMode.Union, geometry.GeometryCombineMode);
-        Assert.Equal(DartGeometry.RectFromLTWH(0.0, 0.0, 12.0, 12.0), Assert.IsType<EllipseGeometry>(geometry.Geometry1).Rect.ToPlumix());
-        Assert.Equal(DartGeometry.RectFromLTWH(5.0, 10.5, 2.0, 10.0), Assert.IsType<RectangleGeometry>(geometry.Geometry2).Rect.ToPlumix());
+        Assert.Equal(Rect.FromLTWH(0.0, 0.0, 12.0, 12.0), Assert.IsType<EllipseGeometry>(geometry.Geometry1).Rect.ToPlumix());
+        Assert.Equal(Rect.FromLTWH(5.0, 10.5, 2.0, 10.0), Assert.IsType<RectangleGeometry>(geometry.Geometry2).Rect.ToPlumix());
 
         var root = new ContainerLayer();
         var context = new PaintingContext(root);
@@ -309,7 +309,7 @@ public sealed class CupertinoTextSelectionControlsTests : IDisposable
         return new WidgetRenderHarness(Wrap(new Builder(context =>
             CupertinoTextSelectionControls.Instance.BuildToolbar(
                 context,
-                globalEditableRegion: DartGeometry.RectFromLTWH(10.0, 40.0, 200.0, 60.0),
+                globalEditableRegion: Rect.FromLTWH(10.0, 40.0, 200.0, 60.0),
                 textLineHeight: 14.0,
                 selectionMidpoint: new Offset(400.0, 0.0),
                 endpoints:
@@ -336,7 +336,7 @@ public sealed class CupertinoTextSelectionControlsTests : IDisposable
         return new WidgetRenderHarness(Wrap(new Builder(context =>
             CupertinoDesktopTextSelectionControls.Instance.BuildToolbar(
                 context,
-                globalEditableRegion: DartGeometry.RectFromLTWH(10.0, 40.0, 200.0, 60.0),
+                globalEditableRegion: Rect.FromLTWH(10.0, 40.0, 200.0, 60.0),
                 textLineHeight: 14.0,
                 selectionMidpoint: new Offset(400.0, 80.0),
                 endpoints:

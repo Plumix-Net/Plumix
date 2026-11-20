@@ -675,7 +675,7 @@ public sealed class RenderTable : RenderBox
     public Rect GetRowBox(int row)
     {
         if (row < 0 || row >= _rows) throw new ArgumentOutOfRangeException(nameof(row));
-        return DartGeometry.RectFromLTWH(0.0, _rowTops[row], Size.Width, _rowTops[row + 1] - _rowTops[row]);
+        return Rect.FromLTWH(0.0, _rowTops[row], Size.Width, _rowTops[row + 1] - _rowTops[row]);
     }
 
     protected override void OnDetach()
@@ -743,7 +743,7 @@ public sealed class RenderTable : RenderBox
         static Rect RectWithOffset(SemanticsNode child)
         {
             Offset translation = GetAsTranslation(child.Transform);
-            return DartGeometry.RectFromLTWH(
+            return Rect.FromLTWH(
                 child.Rect.Left + translation.Dx,
                 child.Rect.Top + translation.Dy,
                 child.Rect.Width,
@@ -862,7 +862,7 @@ public sealed class RenderTable : RenderBox
                 if (addCellWrapper)
                 {
                     cell.Transform = Matrix4.TranslationValues(_columnLefts[x], 0.0, 0.0);
-                    cell.Rect = DartGeometry.RectFromLTWH(0, 0, cellWidth, rowBox.Height);
+                    cell.Rect = Rect.FromLTWH(0, 0, cellWidth, rowBox.Height);
                 }
 
                 foreach (SemanticsNode child in rawChildren)
@@ -887,7 +887,7 @@ public sealed class RenderTable : RenderBox
                 new SemanticsConfiguration { IndexInParent = y, Role = SemanticsRole.Row },
                 cells);
             newRow.Transform = Matrix4.TranslationValues(rowBox.Left, rowBox.Top, 0.0);
-            newRow.Rect = DartGeometry.RectFromLTWH(0, 0, rowBox.Width, rowBox.Height);
+            newRow.Rect = Rect.FromLTWH(0, 0, rowBox.Width, rowBox.Height);
 
             rows.Add(newRow);
         }
@@ -1213,7 +1213,7 @@ public sealed class RenderTable : RenderBox
         {
             if (_border is not null)
             {
-                var emptyRect = DartGeometry.RectFromLTWH(offset.Dx, offset.Dy, _tableWidth, 0.0);
+                var emptyRect = Rect.FromLTWH(offset.Dx, offset.Dy, _tableWidth, 0.0);
                 _border.Paint(context, emptyRect, rows: [], columns: []);
             }
 
@@ -1245,7 +1245,7 @@ public sealed class RenderTable : RenderBox
 
         if (_border is not null)
         {
-            var borderRect = DartGeometry.RectFromLTWH(offset.Dx, offset.Dy, _tableWidth, _rowTops[^1]);
+            var borderRect = Rect.FromLTWH(offset.Dx, offset.Dy, _tableWidth, _rowTops[^1]);
             IReadOnlyList<double> rows = [.. _rowTops.GetRange(1, _rowTops.Count - 2)];
             IReadOnlyList<double> columns = [.. _columnLefts!.Skip(1)];
             _border.Paint(context, borderRect, rows: rows, columns: columns);

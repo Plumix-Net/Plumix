@@ -547,7 +547,7 @@ public class RenderView : RenderObject, IRenderObjectSingleChildContainer
         get
         {
             double devicePixelRatio = Configuration.DevicePixelRatio;
-            return DartGeometry.RectFromLTWH(0.0, 0.0, _size.Width * devicePixelRatio, _size.Height * devicePixelRatio);
+            return Rect.FromLTWH(0.0, 0.0, _size.Width * devicePixelRatio, _size.Height * devicePixelRatio);
         }
     }
 
@@ -558,7 +558,7 @@ public class RenderView : RenderObject, IRenderObjectSingleChildContainer
         get
         {
             Debug.Assert(_rootTransform is not null);
-            return MatrixUtils.TransformRect(_rootTransform!, DartGeometry.RectFromSize(_size));
+            return MatrixUtils.TransformRect(_rootTransform!, (Offset.Zero & _size));
         }
     }
 

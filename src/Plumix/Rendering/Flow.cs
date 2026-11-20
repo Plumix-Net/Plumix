@@ -296,7 +296,7 @@ public sealed class RenderFlow : RenderBox,
         _clipRectLayer.Layer = context.PushClipRect(
             NeedsCompositing,
             offset,
-            DartGeometry.RectFromOffsetAndSize(new Offset(0, 0), Size),
+            (new Offset(0, 0) & Size),
             PaintWithDelegate,
             ClipBehavior,
             _clipRectLayer.Layer);
@@ -339,7 +339,7 @@ public sealed class RenderFlow : RenderBox,
 
     protected override Rect? DescribeApproximatePaintClip(RenderObject? child)
     {
-        return ClipBehavior == Clip.None ? null : DartGeometry.RectFromOffsetAndSize(default, Size);
+        return ClipBehavior == Clip.None ? null : (Offset.Zero & Size);
     }
 
     protected override bool HitTestChildren(BoxHitTestResult result, Offset position)

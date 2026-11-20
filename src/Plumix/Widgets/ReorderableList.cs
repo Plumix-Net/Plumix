@@ -370,7 +370,7 @@ public sealed class SliverReorderableListState : State<SliverReorderableList>
     private ScrollableState _scrollable = null!;
 
     internal SliverReorderableList CurrentWidget => Widget;
-    internal Rect DragOriginBounds => _dragInfo is null ? default : DartGeometry.RectFromOffsetAndSize(_dragInfo.Origin, _dragInfo.ItemSize);
+    internal Rect DragOriginBounds => _dragInfo is null ? default : (_dragInfo.Origin & _dragInfo.ItemSize);
     internal bool IsDragging => _dragInfo is not null;
     internal int? DragIndex => _dragIndex;
     internal Offset DragTranslation => _dragInfo is null
@@ -783,7 +783,7 @@ public sealed class SliverReorderableListState : State<SliverReorderableList>
     private double MainAxisExtent(Size size) => ScrollAxis == Axis.Vertical ? size.Height : size.Width;
     private Offset ExtentOffset(double extent) =>
         ScrollAxis == Axis.Vertical ? new Offset(0, extent) : new Offset(extent, 0);
-    private Rect DragTargetRect() => DartGeometry.RectFromOffsetAndSize(_dragInfo!.DragPosition - _dragInfo.DragOffset, _dragInfo.ItemSize);
+    private Rect DragTargetRect() => _dragInfo!.DragPosition - _dragInfo.DragOffset & _dragInfo.ItemSize;
     private Offset ItemOffsetAt(int index) => _items[index].TargetGeometry().TopLeft;
     private double ItemExtentAt(int index) => MainAxisExtent(_items[index].TargetGeometry().Size);
 
@@ -980,7 +980,7 @@ internal sealed class ReorderableItemState : State<ReorderableItem>
     internal Rect TargetGeometry()
     {
         var box = (RenderBox)Context.FindRenderObject()!;
-        return DartGeometry.RectFromOffsetAndSize(box.LocalToGlobal(default) + _targetOffset, box.Size);
+        return box.LocalToGlobal(default) + _targetOffset & box.Size;
     }
 
     internal bool TryGetTargetGeometry(out Rect geometry)

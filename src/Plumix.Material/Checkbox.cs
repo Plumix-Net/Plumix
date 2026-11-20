@@ -868,7 +868,7 @@ internal sealed class CheckboxPainter : ToggleablePainter
     {
         double inset = 1.0 - (Math.Abs(t - 0.5) * 2.0);
         double size = EdgeSize - (inset * 2.0);
-        return DartGeometry.RectFromLTWH(
+        return Rect.FromLTWH(
             origin.Dx + inset,
             origin.Dy + inset,
             size,

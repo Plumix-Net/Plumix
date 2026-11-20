@@ -144,7 +144,7 @@ public sealed class MagnifierController
             : rect.Bottom > bounds.Bottom
                 ? bounds.Bottom - rect.Bottom
                 : 0;
-        return DartGeometry.RectFromOffsetAndSize(rect.TopLeft + new Offset(dx, dy), rect.Size);
+        return rect.TopLeft + new Offset(dx, dy) & rect.Size;
     }
 
     private static Task WaitForStatus(AnimationController controller, AnimationStatus target)

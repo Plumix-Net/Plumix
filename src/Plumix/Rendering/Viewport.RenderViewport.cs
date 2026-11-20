@@ -525,7 +525,7 @@ public abstract class RenderViewportBase<TParentData> : RenderBox,
             _clipRectLayer.Layer = context.PushClipRect(
                 NeedsCompositing,
                 offset,
-                DartGeometry.RectFromOffsetAndSize(new Offset(0, 0), Size),
+                (new Offset(0, 0) & Size),
                 PaintContents,
                 ClipBehavior,
                 _clipRectLayer.Layer);
@@ -558,7 +558,7 @@ public abstract class RenderViewportBase<TParentData> : RenderBox,
             Size size = Axis == Axis.Vertical
                 ? new Size(child.Constraints.CrossAxisExtent, child.Geometry!.LayoutExtent)
                 : new Size(child.Geometry!.LayoutExtent, child.Constraints.CrossAxisExtent);
-            var rect = DartGeometry.RectFromOffsetAndSize(offset + PaintOffsetOf(child), size);
+            var rect = offset + PaintOffsetOf(child) & size;
             context.Canvas.DrawGeometry(null, pen, new RectangleGeometry(rect.Deflate(0.5).ToAvalonia()));
         }
     }
@@ -676,8 +676,8 @@ public abstract class RenderViewportBase<TParentData> : RenderBox,
             pivotExtent = targetSliver.Geometry!.ScrollExtent;
             double crossAxisExtent = targetSliver.Constraints.CrossAxisExtent;
             rect ??= effectiveAxis == Axis.Horizontal
-                ? DartGeometry.RectFromLTWH(0.0, 0.0, targetSliver.Geometry!.ScrollExtent, crossAxisExtent)
-                : DartGeometry.RectFromLTWH(0.0, 0.0, crossAxisExtent, targetSliver.Geometry!.ScrollExtent);
+                ? Rect.FromLTWH(0.0, 0.0, targetSliver.Geometry!.ScrollExtent, crossAxisExtent)
+                : Rect.FromLTWH(0.0, 0.0, crossAxisExtent, targetSliver.Geometry!.ScrollExtent);
             rectLocal = rect.Value;
         }
         else
@@ -747,7 +747,7 @@ public abstract class RenderViewportBase<TParentData> : RenderBox,
 
     private static Rect TranslateRect(Rect rect, double dx, double dy)
     {
-        return DartGeometry.RectFromLTWH(rect.Left + dx, rect.Top + dy, rect.Width, rect.Height);
+        return Rect.FromLTWH(rect.Left + dx, rect.Top + dy, rect.Width, rect.Height);
     }
 
     public override void ShowOnScreen(
@@ -812,7 +812,7 @@ public abstract class RenderViewportBase<TParentData> : RenderBox,
             return null;
         }
 
-        var viewportClip = DartGeometry.RectFromOffsetAndSize(new Offset(0, 0), Size);
+        var viewportClip = new Offset(0, 0) & Size;
         if (child is not RenderSliver clippedSliver)
         {
             return viewportClip;
@@ -850,7 +850,7 @@ public abstract class RenderViewportBase<TParentData> : RenderBox,
                 break;
         }
 
-        return DartGeometry.RectFromCorners(new Offset(left, top), new Offset(right, bottom));
+        return Rect.FromLTRB(left, top, right, bottom);
     }
 
     /// <summary>
@@ -865,19 +865,15 @@ public abstract class RenderViewportBase<TParentData> : RenderBox,
             return null;
         }
 
-        var semanticBounds = DartGeometry.RectFromOffsetAndSize(new Offset(0, 0), Size);
+        var semanticBounds = new Offset(0, 0) & Size;
         if (CalculatedCacheExtent is not { } cacheExtent)
         {
             return semanticBounds;
         }
 
         return Axis == Axis.Vertical
-            ? DartGeometry.RectFromCorners(
-                new Offset(semanticBounds.Left, semanticBounds.Top - cacheExtent),
-                new Offset(semanticBounds.Right, semanticBounds.Bottom + cacheExtent))
-            : DartGeometry.RectFromCorners(
-                new Offset(semanticBounds.Left - cacheExtent, semanticBounds.Top),
-                new Offset(semanticBounds.Right + cacheExtent, semanticBounds.Bottom));
+            ? Rect.FromLTRB(semanticBounds.Left, semanticBounds.Top - cacheExtent, semanticBounds.Right, semanticBounds.Bottom + cacheExtent)
+            : Rect.FromLTRB(semanticBounds.Left - cacheExtent, semanticBounds.Top, semanticBounds.Right + cacheExtent, semanticBounds.Bottom);
     }
 
     public override void VisitChildrenForSemantics(Action<RenderObject> visitor)

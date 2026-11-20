@@ -784,7 +784,7 @@ internal sealed class GlowController : ChangeNotifier
         double radius = size.Width * 1.5;
         double height = Math.Min(size.Height, size.Width * WidthToHeightFactor);
         double scaleY = GlowSize * baseGlowScale;
-        var clipRect = DartGeometry.RectFromLTWH(0.0, 0.0, size.Width, height);
+        var clipRect = Rect.FromLTWH(0.0, 0.0, size.Width, height);
         var center = new Offset(size.Width / 2.0 * (0.5 + _displacement), height - radius);
         var paint = new Paint { Color = Color.WithOpacity(GlowOpacity) };
         context.Canvas.Save();

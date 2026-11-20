@@ -255,7 +255,7 @@ internal sealed class RenderAnimatedSize : RenderAligningShiftedBox
             _clipRectLayer.Layer = context.PushClipRect(
                 NeedsCompositing,
                 offset,
-                DartGeometry.RectFromOffsetAndSize(new Offset(0, 0), Size),
+                (new Offset(0, 0) & Size),
                 base.Paint,
                 ClipBehavior,
                 _clipRectLayer.Layer);

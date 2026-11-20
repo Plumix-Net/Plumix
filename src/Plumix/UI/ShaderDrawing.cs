@@ -75,7 +75,7 @@ internal static class ShaderDrawing
             return;
         }
 
-        DrawGeometry(context, brush, pen, new EllipseGeometry(DartGeometry.RectFromLTWH(
+        DrawGeometry(context, brush, pen, new EllipseGeometry(Rect.FromLTWH(
             center.Dx - radiusX, center.Dy - radiusY, radiusX * 2.0, radiusY * 2.0).ToAvalonia()));
     }
 

@@ -553,7 +553,7 @@ public class FocusNode : ChangeNotifier, IDiagnosticableTree
             return null;
         }
 
-        var localRect = DartGeometry.RectFromOffsetAndSize(new Offset(0, 0), renderBox.Size);
+        var localRect = new Offset(0, 0) & renderBox.Size;
         Matrix4 transformToRoot = renderBox.ComputePaintTransformToRoot();
         return RenderObject.TransformRect(transformToRoot, localRect);
     }

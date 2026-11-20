@@ -818,7 +818,7 @@ public sealed class TextSelectionOverlay : IDisposable
 
     private static Rect RectFromPoints(Offset a, Offset b)
     {
-        return DartGeometry.RectFromLTWH(
+        return Rect.FromLTWH(
             Math.Min(a.Dx, b.Dx),
             Math.Min(a.Dy, b.Dy),
             Math.Abs(a.Dx - b.Dx),
@@ -1948,7 +1948,7 @@ public sealed class SelectionOverlay : IDisposable
 
     private static Rect RectFromPoints(Offset a, Offset b)
     {
-        return DartGeometry.RectFromLTWH(
+        return Rect.FromLTWH(
             Math.Min(a.Dx, b.Dx),
             Math.Min(a.Dy, b.Dy),
             Math.Abs(a.Dx - b.Dx),
@@ -2137,7 +2137,7 @@ internal sealed class SelectionHandleOverlay : StatefulWidget
                 widget.PreferredLineHeight);
             Size handleSize = widget.SelectionControls.GetHandleSize(widget.PreferredLineHeight);
 
-            Rect handleRect = DartGeometry.RectFromLTWH(0.0, 0.0, handleSize.Width, handleSize.Height);
+            Rect handleRect = Rect.FromLTWH(0.0, 0.0, handleSize.Width, handleSize.Height);
             Rect interactiveRect = IsEmptyRect(handleRect)
                 ? handleRect
                 : handleRect.ExpandToInclude(RectFromCircle(
@@ -2207,7 +2207,7 @@ internal sealed class SelectionHandleOverlay : StatefulWidget
 
         private static Rect RectFromCircle(Offset center, double radius)
         {
-            return DartGeometry.RectFromLTWH(center.Dx - radius, center.Dy - radius, radius * 2, radius * 2);
+            return Rect.FromLTWH(center.Dx - radius, center.Dy - radius, radius * 2, radius * 2);
         }
 
         private void HandleVisibilityChanged()

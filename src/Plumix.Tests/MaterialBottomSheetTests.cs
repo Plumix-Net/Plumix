@@ -713,7 +713,7 @@ public sealed class MaterialBottomSheetTests : IDisposable
     {
         var media = new MediaQueryData(
             Size: new Size(800, 600),
-            DisplayFeatures: [new DisplayFeature(DartGeometry.RectFromLTWH(390, 0, 20, 600), DisplayFeatureType.Hinge)]);
+            DisplayFeatures: [new DisplayFeature(Rect.FromLTWH(390, 0, 20, 600), DisplayFeatureType.Hinge)]);
 
         Rect trailing = ShowModalAndMeasureSheet(media, new Offset(1000, 0));
         Assert.Equal(410, trailing.Left, precision: 3);
@@ -1223,7 +1223,7 @@ public sealed class MaterialBottomSheetTests : IDisposable
 
         var layout = Assert.Single(FindDescendants<RenderBottomSheetLayoutWithSizeListener>(harness.RenderView));
         Offset origin = layout.LocalToGlobal(default);
-        return DartGeometry.RectFromOffsetAndSize(origin, layout.Size);
+        return origin & layout.Size;
     }
 
     private static MediaQueryData ShowModalAndCaptureMediaQuery(bool useSafeArea)

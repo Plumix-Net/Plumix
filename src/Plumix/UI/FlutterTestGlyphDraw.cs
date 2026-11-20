@@ -122,7 +122,7 @@ internal sealed class FlutterTestGlyphDraw(IReadOnlyList<FlutterTestGlyphDraw.Op
                     {
                         context.FillRectangle(
                             new ImmutableSolidColorBrush(glyph.Color),
-                            DartGeometry.RectFromLTWH(
+                            Rect.FromLTWH(
                                 glyph.X,
                                 glyph.Baseline - (glyph.FontSize * 0.75),
                                 glyph.FontSize,

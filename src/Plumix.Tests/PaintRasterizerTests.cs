@@ -50,7 +50,7 @@ public sealed class PaintRasterizerTests
     {
         var recorder = new PictureRecorder();
         var canvas = new Canvas(recorder);
-        canvas.ClipRect(DartGeometry.RectFromLTWH(0, 0, 10, 6));
+        canvas.ClipRect(Rect.FromLTWH(0, 0, 10, 6));
         var paint = new Paint { Color = Colors.Red };
         canvas.DrawLine(new Offset(4, 1), new Offset(4, 10), paint);
         paint.Color = Colors.Blue;
@@ -173,18 +173,18 @@ public sealed class PaintRasterizerTests
         var recorder = new PictureRecorder();
         var canvas = new Canvas(recorder);
         var blur = MaskFilter.Blur(BlurStyle.Outer, 3.0);
-        canvas.DrawRect(DartGeometry.RectFromLTWH(0, 0, 10, 10), new Paint { Color = new Color(0xFF112233), MaskFilter = blur });
-        canvas.DrawOval(DartGeometry.RectFromLTWH(0, 0, 10, 20), new Paint { BlendMode = BlendMode.Multiply });
+        canvas.DrawRect(Rect.FromLTWH(0, 0, 10, 10), new Paint { Color = new Color(0xFF112233), MaskFilter = blur });
+        canvas.DrawOval(Rect.FromLTWH(0, 0, 10, 20), new Paint { BlendMode = BlendMode.Multiply });
         var path = new Path();
-        path.AddRect(DartGeometry.RectFromLTWH(0, 0, 5, 5));
+        path.AddRect(Rect.FromLTWH(0, 0, 5, 5));
         canvas.DrawPath(path, new Paint { Style = PaintingStyle.Stroke, StrokeWidth = 2.0 });
         canvas.DrawLine(new Offset(0, 0), new Offset(5, 5), new Paint { StrokeWidth = 3.0 });
         canvas.DrawDRRect(
-            RRect.FromRectAndRadius(DartGeometry.RectFromLTWH(0, 0, 20, 20), 4.0),
-            RRect.FromRectAndRadius(DartGeometry.RectFromLTWH(5, 5, 10, 10), 2.0),
+            RRect.FromRectAndRadius(Rect.FromLTWH(0, 0, 20, 20), 4.0),
+            RRect.FromRectAndRadius(Rect.FromLTWH(5, 5, 10, 10), 2.0),
             new Paint());
         canvas.DrawRSuperellipseBlur(
-            RSuperellipse.FromRectAndRadius(DartGeometry.RectFromLTWH(0, 0, 20, 20), Radius.Circular(5.0)),
+            RSuperellipse.FromRectAndRadius(Rect.FromLTWH(0, 0, 20, 20), Radius.Circular(5.0)),
             new Color(0x40000000),
             2.0);
 

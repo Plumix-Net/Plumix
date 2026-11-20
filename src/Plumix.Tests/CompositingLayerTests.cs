@@ -402,7 +402,7 @@ public sealed class CompositingLayerTests
     public void RenderClipRect_ReusesItsClipLayer_AcrossPaints()
     {
         var leaf = new CompositingLeafRenderBox();
-        var clipper = new FixedRectClipper(DartGeometry.RectFromLTWH(0, 0, 32, 32));
+        var clipper = new FixedRectClipper(Rect.FromLTWH(0, 0, 32, 32));
         var clipRect = new RenderClipRect(leaf, clipper: clipper);
         var root = new RenderView(new FlutterView(new Size(800, 600)))
         {
@@ -419,9 +419,9 @@ public sealed class CompositingLayerTests
 
         Assert.Equal(1, leaf.PaintCount);
         var clipLayer = Assert.IsType<ClipRectLayer>(Assert.Single(pipeline.RootLayer.Children));
-        Assert.Equal(DartGeometry.RectFromLTWH(0, 0, 32, 32), clipLayer.ClipRect);
+        Assert.Equal(Rect.FromLTWH(0, 0, 32, 32), clipLayer.ClipRect);
 
-        clipper.Rect = DartGeometry.RectFromLTWH(3, 5, 20, 12);
+        clipper.Rect = Rect.FromLTWH(3, 5, 20, 12);
         pipeline.FlushCompositingBits();
         pipeline.FlushPaint();
         pipeline.CompositeFrame();
@@ -429,7 +429,7 @@ public sealed class CompositingLayerTests
         var updatedLayer = Assert.IsType<ClipRectLayer>(Assert.Single(pipeline.RootLayer.Children));
         Assert.Same(clipLayer, updatedLayer);
         Assert.Equal(2, leaf.PaintCount);
-        Assert.Equal(DartGeometry.RectFromLTWH(3, 5, 20, 12), clipLayer.ClipRect);
+        Assert.Equal(Rect.FromLTWH(3, 5, 20, 12), clipLayer.ClipRect);
     }
 
     [Fact]
@@ -581,7 +581,7 @@ public sealed class CompositingLayerTests
         public override void Paint(PaintingContext ctx, Offset offset)
         {
             PaintCount += 1;
-            ctx.Canvas.DrawRectangle(Brushes.CadetBlue, null, DartGeometry.RectFromOffsetAndSize(offset, Size));
+            ctx.Canvas.DrawRectangle(Brushes.CadetBlue, null, (offset & Size));
         }
     }
 
@@ -600,7 +600,7 @@ public sealed class CompositingLayerTests
         public override void Paint(PaintingContext ctx, Offset offset)
         {
             PaintCount += 1;
-            ctx.Canvas.DrawRectangle(Brushes.CadetBlue, null, DartGeometry.RectFromOffsetAndSize(offset, Size));
+            ctx.Canvas.DrawRectangle(Brushes.CadetBlue, null, (offset & Size));
         }
     }
 
@@ -658,7 +658,7 @@ public sealed class CompositingLayerTests
         public override void Paint(PaintingContext ctx, Offset offset)
         {
             PaintCount += 1;
-            ctx.Canvas.DrawRectangle(Brushes.Transparent, null, DartGeometry.RectFromOffsetAndSize(offset, Size));
+            ctx.Canvas.DrawRectangle(Brushes.Transparent, null, (offset & Size));
             base.Paint(ctx, offset);
         }
     }

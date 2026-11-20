@@ -427,7 +427,7 @@ public sealed class RenderingParityTests
             ctx.Canvas.DrawRectangle(
                 new SolidColorBrush(new Color(0xFFC8E6C9)),
                 null,
-                DartGeometry.RectFromOffsetAndSize(offset, Size));
+                (offset & Size));
         }
     }
 

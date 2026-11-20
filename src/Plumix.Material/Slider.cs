@@ -1846,7 +1846,7 @@ internal sealed class RenderSlider : RenderBox
             Size overlaySize = SliderTheme.OverlayShape!.GetPreferredSize(IsInteractive, false);
             double radius = overlaySize.Width / 2.0;
             // Dart's `Rect.fromCircle(center: thumbCenter, radius: radius)`.
-            OverlayRect = DartGeometry.RectFromLTWH(thumbCenter.Dx - radius, thumbCenter.Dy - radius, radius * 2.0, radius * 2.0);
+            OverlayRect = Rect.FromLTWH(thumbCenter.Dx - radius, thumbCenter.Dy - radius, radius * 2.0, radius * 2.0);
         }
 
         Offset? secondaryOffset = secondaryVisualPosition != null
@@ -2032,7 +2032,7 @@ internal sealed class RenderSlider : RenderBox
         Offset center = SemanticThumbCenter;
         const double extent = WidgetConstants.MinInteractiveDimension;
         // Dart's `Rect.fromCenter(center: ..., width: kMinInteractiveDimension, height: ...)`.
-        node.Rect = DartGeometry.RectFromLTWH(center.Dx - extent / 2.0, center.Dy - extent / 2.0, extent, extent);
+        node.Rect = Rect.FromLTWH(center.Dx - extent / 2.0, center.Dy - extent / 2.0, extent, extent);
 
         node.UpdateWith(config: config);
     }

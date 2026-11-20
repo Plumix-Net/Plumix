@@ -24,7 +24,7 @@ public sealed class RenderParagraphTests
         var paragraph = new RenderParagraph(new TextSpan(KText));
         LayOut(paragraph);
 
-        var caret = DartGeometry.RectFromLTWH(0.0, 0.0, 2.0, 20.0);
+        var caret = Rect.FromLTWH(0.0, 0.0, 2.0, 20.0);
         Offset offset5 = paragraph.GetOffsetForCaret(new TextPosition(5), caret);
         Assert.True(offset5.Dx > 0.0);
 
@@ -238,7 +238,7 @@ public sealed class RenderParagraphTests
         Rect RectForA() => paragraph.GetBoxesForSelection(new TextSelection(0, 1)).Single().ToRect();
 
         LayOut(paragraph, new BoxConstraints(MinWidth: 100.0, MaxWidth: 100.0));
-        Assert.Equal(DartGeometry.RectFromLTWH(0, 0, 10, 10), RectForA());
+        Assert.Equal(Rect.FromLTWH(0, 0, 10, 10), RectForA());
 
         paragraph.TextAlign = TextAlign.Right;
         if (Plumix.Foundation.Constants.KDebugMode)
@@ -249,7 +249,7 @@ public sealed class RenderParagraphTests
         }
 
         paragraph.Paint(new PaintingContext(new ContainerLayer()), default);
-        Assert.Equal(DartGeometry.RectFromLTWH(90, 0, 10, 10), RectForA());
+        Assert.Equal(Rect.FromLTWH(90, 0, 10, 10), RectForA());
     }
 
     [Fact]
@@ -506,10 +506,10 @@ public sealed class RenderParagraphTests
 
         Assert.Equal(new TextPosition(3), paragraph.GetPositionForOffset(new Offset(42.0, 14.0)));
         Assert.Equal(
-            DartGeometry.RectFromLTWH(14, 0, 56, 14),
+            Rect.FromLTWH(14, 0, 56, 14),
             paragraph.GetBoxesForSelection(new TextSelection(1, 5)).Single().ToRect());
         Assert.Equal(
-            DartGeometry.RectFromLTWH(28, 0, 28, 14),
+            Rect.FromLTWH(28, 0, 28, 14),
             paragraph.GetBoxesForSelection(new TextSelection(2, 4)).Single().ToRect());
     }
 

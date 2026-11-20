@@ -386,9 +386,7 @@ public class RenderTreeSliver : RenderSliverVariedExtentList
                 + (parentIndex == 0 ? 0.0 : ItemExtentBuilder!(parentIndex, LayoutDimensions)!.Value);
             double trailingOffset = IndexToLayoutOffset(0.0, segment.TrailingIndex)
                 + ItemExtentBuilder!(segment.TrailingIndex, LayoutDimensions)!.Value;
-            var rect = DartGeometry.RectFromCorners(
-                new Offset(0.0, leadingOffset),
-                new Offset(Constraints.CrossAxisExtent, trailingOffset));
+            var rect = Rect.FromLTRB(0.0, leadingOffset, Constraints.CrossAxisExtent, trailingOffset);
             // We use the same animation key to keep track of the clip layer, unless this is the odd
             // man out segment.
             UniqueKey key = _animationLeadingIndices[parentIndex];

@@ -37,11 +37,11 @@ public sealed class EditableTextScribbleDartParityTests : IDisposable
 
     private static readonly SelectionRect[] ExpectedRects =
     [
-        new(position: 0, bounds: DartGeometry.RectFromLTWH(0.0, 0.0, 14.0, 14.0)),
-        new(position: 1, bounds: DartGeometry.RectFromLTWH(14.0, 0.0, 14.0, 14.0)),
-        new(position: 2, bounds: DartGeometry.RectFromLTWH(28.0, 0.0, 14.0, 14.0)),
-        new(position: 3, bounds: DartGeometry.RectFromLTWH(42.0, 0.0, 14.0, 14.0)),
-        new(position: 4, bounds: DartGeometry.RectFromLTWH(56.0, 0.0, 14.0, 14.0)),
+        new(position: 0, bounds: Rect.FromLTWH(0.0, 0.0, 14.0, 14.0)),
+        new(position: 1, bounds: Rect.FromLTWH(14.0, 0.0, 14.0, 14.0)),
+        new(position: 2, bounds: Rect.FromLTWH(28.0, 0.0, 14.0, 14.0)),
+        new(position: 3, bounds: Rect.FromLTWH(42.0, 0.0, 14.0, 14.0)),
+        new(position: 4, bounds: Rect.FromLTWH(56.0, 0.0, 14.0, 14.0)),
     ];
 
     private Widget Field(
@@ -159,7 +159,7 @@ public sealed class EditableTextScribbleDartParityTests : IDisposable
         Assert.Equal(5, narrow.Count);
         for (int i = 0; i < 5; i++)
         {
-            Assert.Equal(new SelectionRect(position: i, bounds: DartGeometry.RectFromLTWH(0, 14.0 * i, 14.0, 14.0)), narrow[i]);
+            Assert.Equal(new SelectionRect(position: i, bounds: Rect.FromLTWH(0, 14.0 * i, 14.0, 14.0)), narrow[i]);
         }
     }
 
@@ -210,12 +210,12 @@ public sealed class EditableTextScribbleDartParityTests : IDisposable
         tester.PumpWidget(Field(width: 800, height: 600));
         IScribbleClient client = UI.TextInput.ScribbleClients.Values.Single();
 
-        Assert.True(client.IsInScribbleRect(DartGeometry.RectFromLTWH(0, 0, 1, 1)));
-        Assert.Equal(DartGeometry.RectFromLTWH(0, 0, 800, 600), client.Bounds);
-        Assert.False(client.IsInScribbleRect(DartGeometry.RectFromLTWH(-1, -1, 1, 1)));
+        Assert.True(client.IsInScribbleRect(Rect.FromLTWH(0, 0, 1, 1)));
+        Assert.Equal(Rect.FromLTWH(0, 0, 800, 600), client.Bounds);
+        Assert.False(client.IsInScribbleRect(Rect.FromLTWH(-1, -1, 1, 1)));
 
         tester.PumpWidget(Field(width: 800, height: 600, readOnly: true));
-        Assert.False(UI.TextInput.ScribbleClients.Values.Single().IsInScribbleRect(DartGeometry.RectFromLTWH(0, 0, 1, 1)));
+        Assert.False(UI.TextInput.ScribbleClients.Values.Single().IsInScribbleRect(Rect.FromLTWH(0, 0, 1, 1)));
 
         // Covered by another widget: the hit test does not reach the editable.
         tester.PumpWidget(new Directionality(TextDirection.Ltr, new Stack(children:
@@ -223,7 +223,7 @@ public sealed class EditableTextScribbleDartParityTests : IDisposable
             Field(width: 800, height: 600),
             Positioned.Fill(child: new Container(color: new Color(0xFF000000))),
         ])));
-        Assert.False(UI.TextInput.ScribbleClients.Values.Single().IsInScribbleRect(DartGeometry.RectFromLTWH(0, 0, 1, 1)));
+        Assert.False(UI.TextInput.ScribbleClients.Values.Single().IsInScribbleRect(Rect.FromLTWH(0, 0, 1, 1)));
 
         tester.PumpWidget(Field(width: 800, height: 600, stylusHandwritingEnabled: false));
         Assert.Empty(UI.TextInput.ScribbleClients);

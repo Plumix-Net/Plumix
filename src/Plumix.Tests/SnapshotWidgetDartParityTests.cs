@@ -391,7 +391,7 @@ public sealed class SnapshotWidgetDartParityTests
     {
         public override void Paint(PaintingContext context, Offset offset)
         {
-            context.AddLayer(new PlatformViewLayer(DartGeometry.RectFromOffsetAndSize(offset, Size), viewId: 1));
+            context.AddLayer(new PlatformViewLayer((offset & Size), viewId: 1));
         }
     }
 

@@ -36,7 +36,7 @@ public sealed class TextSelectionToolbarAnchorsTests
             new(new Offset(80, 14), TextDirection.Ltr),
         ];
 
-        Assert.Equal(DartGeometry.RectFromLTWH(120, 50, 60, 14), TextSelectionToolbarAnchors.GetSelectionRect(box, 14, 14, points));
+        Assert.Equal(Rect.FromLTWH(120, 50, 60, 14), TextSelectionToolbarAnchors.GetSelectionRect(box, 14, 14, points));
         TextSelectionToolbarAnchors anchors = TextSelectionToolbarAnchors.FromSelection(box, 14, 14, points);
         Assert.Equal(new Offset(150, 50), anchors.PrimaryAnchor);
         Assert.Equal(new Offset(150, 64), anchors.SecondaryAnchor);
@@ -62,7 +62,7 @@ public sealed class TextSelectionToolbarAnchorsTests
             new(new Offset(10, 42), TextDirection.Ltr),
         ];
 
-        Assert.Equal(DartGeometry.RectFromLTWH(100, 50, 200, 42), TextSelectionToolbarAnchors.GetSelectionRect(box, 14, 14, points));
+        Assert.Equal(Rect.FromLTWH(100, 50, 200, 42), TextSelectionToolbarAnchors.GetSelectionRect(box, 14, 14, points));
         TextSelectionToolbarAnchors anchors = TextSelectionToolbarAnchors.FromSelection(box, 14, 14, points);
         Assert.Equal(new Offset(200, 50), anchors.PrimaryAnchor);
         Assert.Equal(new Offset(200, 92), anchors.SecondaryAnchor);
@@ -70,7 +70,7 @@ public sealed class TextSelectionToolbarAnchorsTests
         // Endpoints less than half an end glyph apart are one line: the rect runs from the first
         // endpoint, and Avalonia's Rect clamps Dart's negative width to zero.
         points[1] = new TextSelectionPoint(new Offset(10, 20), TextDirection.Ltr);
-        Assert.Equal(DartGeometry.RectFromLTWH(250, 50, 0, 20), TextSelectionToolbarAnchors.GetSelectionRect(box, 14, 14, points));
+        Assert.Equal(Rect.FromLTWH(250, 50, 0, 20), TextSelectionToolbarAnchors.GetSelectionRect(box, 14, 14, points));
         Assert.Equal(180, TextSelectionToolbarAnchors.FromSelection(box, 14, 14, points).PrimaryAnchor.Dx);
     }
 }

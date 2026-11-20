@@ -63,7 +63,7 @@ public sealed class CupertinoSheetTransition : StatefulWidget
             Navigator.Of(context).UserGestureInProgress ? Curves.Linear : Curves.LinearToEaseOut,
             Navigator.Of(context).UserGestureInProgress ? Curves.Linear : Curves.EaseInToLinear);
         Animation<Offset> position = curved.Drive(new VectorTween(
-            begin: DartGeometry.OffsetZero,
+            begin: Offset.Zero,
             end: CupertinoSheetRoute<dynamic>.HasParentSheet(context)
                 ? new Offset(0.0, -0.005)
                 : new Offset(0.0, 0.07)));
@@ -181,7 +181,7 @@ internal sealed class CupertinoSheetTransitionState : State<CupertinoSheetTransi
     public override Widget Build(BuildContext context)
     {
         Animation<Offset> secondaryPosition = _secondaryCurve.Drive(new VectorTween(
-            begin: DartGeometry.OffsetZero,
+            begin: Offset.Zero,
             end: new Offset(0.0, -0.005)));
         Animation<double> secondaryScale = _secondaryCurve.Drive(new DoubleTween(
             begin: 1.0,
@@ -190,7 +190,7 @@ internal sealed class CupertinoSheetTransitionState : State<CupertinoSheetTransi
             begin: new Offset(0.0, 1.0),
             end: CupertinoSheetRoute<dynamic>.HasParentSheet(context)
                 ? new Offset(0.0, -0.02)
-                : DartGeometry.OffsetZero));
+                : Offset.Zero));
 
         return new CupertinoSheetStretchControllerProvider(
             controller: _stretchDragController,

@@ -216,7 +216,7 @@ public sealed class CupertinoTextSelectionToolbarButton : StatefulWidget
             path.MoveTo(origin.Dx, origin.Dy + 3.5);
             path.LineTo(origin.Dx, origin.Dy + 1.0);
             path.ArcTo(
-                DartGeometry.RectFromLTWH(origin.Dx, origin.Dy, 2.0, 2.0),
+                Rect.FromLTWH(origin.Dx, origin.Dy, 2.0, 2.0),
                 Math.PI,
                 Math.PI / 2.0,
                 forceMoveTo: false);

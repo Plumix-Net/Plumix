@@ -41,7 +41,7 @@ public sealed class TextDartParityTests : IDisposable
     // selectable_region_test.dart's top-level `textOffsetToPosition`.
     private static Offset TextOffsetToPosition(RenderParagraph paragraph, int offset)
     {
-        var caret = DartGeometry.RectFromLTWH(0.0, 0.0, 2.0, 20.0);
+        var caret = Rect.FromLTWH(0.0, 0.0, 2.0, 20.0);
         Offset localOffset = paragraph.GetOffsetForCaret(new TextPosition(offset), caret)
                             + new Offset(0.0, paragraph.PreferredLineHeight);
         return paragraph.LocalToGlobal(localOffset) + new Offset(0.0, -2.0);

@@ -252,7 +252,7 @@ public sealed class SemanticsCustomActionTests
 
         Rect? rect = pipeline.SemanticsOwner!.GetRectOfSemanticsNode(secondNode.Id);
         Assert.NotNull(rect);
-        Assert.Equal(DartGeometry.RectFromLTWH(20, 0, 30, 10), rect!.Value);
+        Assert.Equal(Rect.FromLTWH(20, 0, 30, 10), rect!.Value);
         Assert.Null(pipeline.SemanticsOwner!.GetRectOfSemanticsNode(-1));
     }
 

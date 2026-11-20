@@ -135,7 +135,7 @@ public record UnderlineInputBorder : InputBorder
     public override Path GetInnerPath(Rect rect, TextDirection? textDirection = null)
     {
         var path = new Path();
-        path.AddRect(DartGeometry.RectFromLTWH(rect.Left, rect.Top, rect.Width, Math.Max(0.0, rect.Height - BorderSide.Width)));
+        path.AddRect(Rect.FromLTWH(rect.Left, rect.Top, rect.Width, Math.Max(0.0, rect.Height - BorderSide.Width)));
         return path;
     }
 
@@ -512,9 +512,7 @@ public record ShapedInputBorder : InputBorder
         var gapRect = new Path();
         // The band extends slightly beyond the top edge to ensure a clean cut, and is kept short so
         // that only the top edge is affected.
-        gapRect.AddRect(DartGeometry.RectFromCorners(
-            new Offset(Math.Clamp(start, rect.Left, rect.Right), rect.Top - 1.0),
-            new Offset(Math.Clamp(gapRight, rect.Left, rect.Right), rect.Top + 1.0)));
+        gapRect.AddRect(Rect.FromLTRB(Math.Clamp(start, rect.Left, rect.Right), rect.Top - 1.0, Math.Clamp(gapRight, rect.Left, rect.Right), rect.Top + 1.0));
         return Path.Combine(PathOperation.Difference, outerPath, gapRect);
     }
 }

@@ -790,7 +790,7 @@ public sealed class ScrollableEnsureVisibleDartParityTests
     }
 
     private static Rect Ltrb(double left, double top, double right, double bottom) =>
-        DartGeometry.RectFromCorners(new Offset(left, top), new Offset(right, bottom));
+        Rect.FromLTRB(left, top, right, bottom);
 
     // Flutter: 'TwoDimensionalViewport ensureVisible Axis.vertical'
     [Fact]

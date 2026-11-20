@@ -37,7 +37,7 @@ public abstract class CustomClipper<T> : IListenable
     /// <summary>
     /// Returns an approximation of the clip returned by <see cref="GetClip"/>, as an axis-aligned Rect.
     /// </summary>
-    public virtual Rect GetApproximateClipRect(Size size) => DartGeometry.RectFromOffsetAndSize(new Offset(0, 0), size);
+    public virtual Rect GetApproximateClipRect(Size size) => new Offset(0, 0) & size;
 
     /// <summary>Whether a new instance of the clipper represents different information than the old one.</summary>
     public abstract bool ShouldReclip(CustomClipper<T> oldClipper);
@@ -65,7 +65,7 @@ public class ShapeBorderClipper : CustomClipper<Path>
     /// <summary>Returns the outer path of <see cref="Shape"/> as the clip.</summary>
     public override Path GetClip(Size size)
     {
-        return Shape.GetOuterPath(DartGeometry.RectFromOffsetAndSize(new Offset(0, 0), size), TextDirection);
+        return Shape.GetOuterPath((new Offset(0, 0) & size), TextDirection);
     }
 
     /// <inheritdoc />
@@ -214,7 +214,7 @@ public abstract class RenderCustomClip<T> : RenderProxyBox
             case Clip.AntiAlias:
             case Clip.AntiAliasWithSaveLayer:
             default:
-                return _clipper?.GetApproximateClipRect(Size) ?? DartGeometry.RectFromOffsetAndSize(new Offset(0, 0), Size);
+                return _clipper?.GetApproximateClipRect(Size) ?? (new Offset(0, 0) & Size);
         }
     }
 
@@ -279,7 +279,7 @@ public class RenderClipRect : RenderCustomClip<Rect>
     {
     }
 
-    private protected override Rect DefaultClip => DartGeometry.RectFromOffsetAndSize(new Offset(0, 0), Size);
+    private protected override Rect DefaultClip => new Offset(0, 0) & Size;
 
     /// <inheritdoc />
     public override bool HitTest(BoxHitTestResult result, Offset position)
@@ -334,7 +334,7 @@ public class RenderClipRect : RenderCustomClip<Rect>
                 base.DebugPaintSize(context, offset);
                 if (ClipBehavior != Clip.None)
                 {
-                    context.Canvas.DrawRectangle(null, _debugPaint, DartGeometry.RectFromOffsetAndSize(_clip.TopLeft + offset, _clip.Size));
+                    context.Canvas.DrawRectangle(null, _debugPaint, (_clip.TopLeft + offset & _clip.Size));
                     _debugText!.Paint(
                         context.Canvas,
                         offset + new Offset(_clip.Width / 8.0, -DebugTextFontSize * 1.1));
@@ -399,7 +399,7 @@ public class RenderClipRRect : RenderCustomClip<RRect>
     }
 
     private protected override RRect DefaultClip =>
-        _borderRadius.Resolve(TextDirection).ToRRect(DartGeometry.RectFromOffsetAndSize(new Offset(0, 0), Size));
+        _borderRadius.Resolve(TextDirection).ToRRect(new Offset(0, 0) & Size);
 
     /// <inheritdoc />
     public override bool HitTest(BoxHitTestResult result, Offset position)
@@ -517,7 +517,7 @@ public class RenderClipRSuperellipse : RenderCustomClip<RSuperellipse>
     }
 
     private protected override RSuperellipse DefaultClip =>
-        _borderRadius.Resolve(TextDirection).ToRSuperellipse(DartGeometry.RectFromOffsetAndSize(new Offset(0, 0), Size));
+        _borderRadius.Resolve(TextDirection).ToRSuperellipse(new Offset(0, 0) & Size);
 
     /// <inheritdoc />
     public override bool HitTest(BoxHitTestResult result, Offset position)
@@ -609,7 +609,7 @@ public class RenderClipOval : RenderCustomClip<Rect>
         return _cachedPath;
     }
 
-    private protected override Rect DefaultClip => DartGeometry.RectFromOffsetAndSize(new Offset(0, 0), Size);
+    private protected override Rect DefaultClip => new Offset(0, 0) & Size;
 
     /// <inheritdoc />
     public override bool HitTest(BoxHitTestResult result, Offset position)
@@ -695,7 +695,7 @@ public class RenderClipPath : RenderCustomClip<Path>
         get
         {
             var path = new Path();
-            path.AddRect(DartGeometry.RectFromOffsetAndSize(new Offset(0, 0), Size));
+            path.AddRect(new Offset(0, 0) & Size);
             return path;
         }
     }
@@ -726,7 +726,7 @@ public class RenderClipPath : RenderCustomClip<Path>
                 Layer = context.PushClipPath(
                     NeedsCompositing,
                     offset,
-                    DartGeometry.RectFromOffsetAndSize(new Offset(0, 0), Size),
+                    (new Offset(0, 0) & Size),
                     _clip,
                     base.Paint,
                     clipBehavior: ClipBehavior,
@@ -778,7 +778,7 @@ internal sealed class DecorationClipper : CustomClipper<Path>
     public override Path GetClip(Size size)
     {
         return Decoration.GetClipPath(
-            DartGeometry.RectFromOffsetAndSize(new Offset(0, 0), size),
+            (new Offset(0, 0) & size),
             TextDirection ?? Plumix.UI.TextDirection.Ltr);
     }
 

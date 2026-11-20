@@ -169,10 +169,10 @@ internal sealed class CupertinoMagnifierDemoPageState : State
         Rect? panel = PanelBounds();
         if (panel is not { } bounds)
         {
-            return DartGeometry.RectFromLTWH(globalPosition.Dx, globalPosition.Dy, 1.0, 1.0);
+            return Rect.FromLTWH(globalPosition.Dx, globalPosition.Dy, 1.0, 1.0);
         }
 
-        return DartGeometry.RectFromLTWH(bounds.Left + 16.0, bounds.Top + 24.0, Math.Max(0.0, bounds.Width - 32.0), 44.0);
+        return Rect.FromLTWH(bounds.Left + 16.0, bounds.Top + 24.0, Math.Max(0.0, bounds.Width - 32.0), 44.0);
     }
 
     private Rect? PanelBounds()
@@ -182,6 +182,6 @@ internal sealed class CupertinoMagnifierDemoPageState : State
             return null;
         }
 
-        return DartGeometry.RectFromOffsetAndSize(box.LocalToGlobal(default), box.Size);
+        return box.LocalToGlobal(default) & box.Size;
     }
 }

@@ -121,7 +121,7 @@ public class RenderPerformanceOverlay : RenderBox
     {
         System.Diagnostics.Debug.Assert(NeedsCompositing);
         context.AddLayer(new PerformanceOverlayLayer(
-            overlayRect: DartGeometry.RectFromLTWH(offset.Dx, offset.Dy, Size.Width, Size.Height),
+            overlayRect: Rect.FromLTWH(offset.Dx, offset.Dy, Size.Width, Size.Height),
             optionsMask: OptionsMask));
     }
 }

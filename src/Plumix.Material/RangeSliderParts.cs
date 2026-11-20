@@ -293,7 +293,7 @@ public abstract class BaseRangeSliderTrackShape : RangeSliderTrackShape
             - (sliderTheme.Padding == null ? Math.Max(thumbSize.Width, overlayWidth) : thumbSize.Width);
         double trackBottom = trackTop + trackHeight;
         // If the parentBox's size less than slider's size the trackRight will be less than trackLeft, so switch them.
-        return DartGeometry.RectFromLTRB(
+        return Rect.FromLTRB(
             Math.Min(trackLeft, trackRight),
             trackTop,
             Math.Max(trackLeft, trackRight),
@@ -365,32 +365,32 @@ public class RectangularRangeSliderTrackShape : BaseRangeSliderTrackShape
             sliderTheme: sliderTheme,
             isEnabled: isEnabled,
             isDiscrete: isDiscrete);
-        Rect leftTrackSegment = DartGeometry.RectFromLTRB(
+        Rect leftTrackSegment = Rect.FromLTRB(
             trackRect.Left,
             trackRect.Top,
             leftThumbOffset.Dx,
             trackRect.Bottom);
-        if (!DartGeometry.RectIsEmpty(leftTrackSegment))
+        if (!leftTrackSegment.IsEmpty)
         {
             context.Canvas.DrawRectangle(inactivePaint, null, leftTrackSegment);
         }
 
-        Rect middleTrackSegment = DartGeometry.RectFromLTRB(
+        Rect middleTrackSegment = Rect.FromLTRB(
             leftThumbOffset.Dx,
             trackRect.Top,
             rightThumbOffset.Dx,
             trackRect.Bottom);
-        if (!DartGeometry.RectIsEmpty(middleTrackSegment))
+        if (!middleTrackSegment.IsEmpty)
         {
             context.Canvas.DrawRectangle(activePaint, null, middleTrackSegment);
         }
 
-        Rect rightTrackSegment = DartGeometry.RectFromLTRB(
+        Rect rightTrackSegment = Rect.FromLTRB(
             rightThumbOffset.Dx,
             trackRect.Top,
             trackRect.Right,
             trackRect.Bottom);
-        if (!DartGeometry.RectIsEmpty(rightTrackSegment))
+        if (!rightTrackSegment.IsEmpty)
         {
             context.Canvas.DrawRectangle(inactivePaint, null, rightTrackSegment);
         }
@@ -570,7 +570,7 @@ public class RoundRangeSliderTickMarkShape : RangeSliderTickMarkShape
     public override Size GetPreferredSize(SliderThemeData sliderTheme, bool isEnabled = false)
     {
         DebugAssertions.Assert(sliderTheme.TrackHeight != null);
-        return DartGeometry.SizeFromRadius(TickMarkRadius ?? sliderTheme.TrackHeight!.Value / 4);
+        return Size.FromRadius(TickMarkRadius ?? sliderTheme.TrackHeight!.Value / 4);
     }
 
     public override void Paint(
@@ -668,7 +668,7 @@ public class RoundRangeSliderThumbShape : RangeSliderThumbShape
 
     public override Size GetPreferredSize(bool isEnabled, bool isDiscrete)
     {
-        return DartGeometry.SizeFromRadius(isEnabled ? EnabledThumbRadius : _disabledThumbRadius);
+        return Size.FromRadius(isEnabled ? EnabledThumbRadius : _disabledThumbRadius);
     }
 
     public override void Paint(
@@ -709,7 +709,7 @@ public class RoundRangeSliderThumbShape : RangeSliderThumbShape
             : Elevation;
         var shadowPath = new Path();
         shadowPath.AddArc(
-            DartGeometry.RectFromCenter(center: center, width: 2 * radius, height: 2 * radius),
+            Rect.FromCenter(center: center, width: 2 * radius, height: 2 * radius),
             0,
             Math.PI * 2);
 
@@ -974,7 +974,7 @@ public class GappedRangeSliderTrackShape : BaseRangeSliderTrackShape
             isEnabled: isEnabled,
             isDiscrete: isDiscrete);
 
-        Radius trackCornerRadius = Radius.Circular(DartGeometry.ShortestSide(trackRect.Size) / 2);
+        Radius trackCornerRadius = Radius.Circular(trackRect.Size.ShortestSide / 2);
         Radius trackInsideCornerRadius = Radius.Circular(2.0);
 
         (Offset leftThumbOffset, Offset rightThumbOffset) = textDirection switch
@@ -1060,7 +1060,7 @@ public class GappedRangeSliderTrackShape : BaseRangeSliderTrackShape
         bool showStartStopIndicator = startThumbCenter.Dx > startStopIndicatorOffset.Dx;
         if (showStartStopIndicator && !isDiscrete)
         {
-            Rect stopIndicatorRect = DartGeometry.RectFromCircle(
+            Rect stopIndicatorRect = Rect.FromCircle(
                 center: startStopIndicatorOffset,
                 radius: stopIndicatorRadius);
             context.Canvas.DrawCircle(activePaint, null, stopIndicatorRect.Center, stopIndicatorRadius);
@@ -1069,7 +1069,7 @@ public class GappedRangeSliderTrackShape : BaseRangeSliderTrackShape
         bool showEndStopIndicator = endThumbCenter.Dx < endStopIndicatorOffset.Dx;
         if (showEndStopIndicator && !isDiscrete)
         {
-            Rect stopIndicatorRect = DartGeometry.RectFromCircle(
+            Rect stopIndicatorRect = Rect.FromCircle(
                 center: endStopIndicatorOffset,
                 radius: stopIndicatorRadius);
             context.Canvas.DrawCircle(activePaint, null, stopIndicatorRect.Center, stopIndicatorRadius);
@@ -1129,8 +1129,8 @@ public class HandleRangeSliderThumbShape : RangeSliderThumbShape
         Size thumbSize = sliderTheme.ThumbSize!.Resolve(
             new HashSet<WidgetState>())!.Value; // This is resolved in the paint method.
         RRect rrect = RRect.FromRectAndRadius(
-            DartGeometry.RectFromCenter(center: center, width: thumbSize.Width, height: thumbSize.Height),
-            Radius.Circular(DartGeometry.ShortestSide(thumbSize) / 2));
+            Rect.FromCenter(center: center, width: thumbSize.Width, height: thumbSize.Height),
+            Radius.Circular(thumbSize.ShortestSide / 2));
 
         canvas.DrawRRect(rrect, new SolidColorBrush(color), null);
     }

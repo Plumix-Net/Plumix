@@ -630,7 +630,7 @@ public sealed class MaterialPopupMenuTests : IDisposable
             Size: new Size(800, 600),
             DisplayFeatures:
             [
-                new DisplayFeature(DartGeometry.RectFromLTWH(390, 0, 20, 600), DisplayFeatureType.Hinge),
+                new DisplayFeature(Rect.FromLTWH(390, 0, 20, 600), DisplayFeatureType.Hinge),
             ]);
         using var harness = new WidgetRenderHarness(new Directionality(
             TextDirection.Rtl,

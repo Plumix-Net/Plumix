@@ -84,12 +84,12 @@ public sealed class MatrixUtilsTests
     [Fact]
     public void TransformRect_HandlesIdentityScaleAndRotation()
     {
-        var rect = DartGeometry.RectFromLTWH(10.0, 20.0, 20.0, 20.0);
+        var rect = Rect.FromLTWH(10.0, 20.0, 20.0, 20.0);
 
         Assert.Equal(rect, MatrixUtils.TransformRect(Matrix4.Identity(), rect));
 
         Rect scaled = MatrixUtils.TransformRect(Matrix4.Diagonal3Values(2.0, 2.0, 2.0), rect);
-        Assert.Equal(DartGeometry.RectFromLTWH(20.0, 40.0, 40.0, 40.0), scaled);
+        Assert.Equal(Rect.FromLTWH(20.0, 40.0, 40.0, 40.0), scaled);
 
         Rect rotated = MatrixUtils.TransformRect(Matrix4.RotationZ(Math.PI / 2.0), rect);
         Assert.Equal(-40.0, rotated.Left, precision: 5);
@@ -101,9 +101,7 @@ public sealed class MatrixUtilsTests
     [Fact]
     public void TransformRect_KeepsVeryLargeFiniteRectsFinite()
     {
-        var rect = DartGeometry.RectFromCorners(
-            new Offset(0.0, -1.7976931348623157e+308),
-            new Offset(800.0, 1.7976931348623157e+308));
+        var rect = Rect.FromLTRB(0.0, -1.7976931348623157e+308, 800.0, 1.7976931348623157e+308);
         Matrix4 transform = Matrix4.Identity();
         transform.TranslateByDouble(10.0, 0.0, 0.0, 1);
 
@@ -127,7 +125,7 @@ public sealed class MatrixUtilsTests
 
         for (int i = 1; i < 500; i++)
         {
-            var rect = DartGeometry.RectFromLTWH(11.0 * i, 12.0 * i, (15.0 - 11.0) * i, (18.0 - 12.0) * i);
+            var rect = Rect.FromLTWH(11.0 * i, 12.0 * i, (15.0 - 11.0) * i, (18.0 - 12.0) * i);
             Rect actual = MatrixUtils.TransformRect(transform, rect);
 
             double minX = double.PositiveInfinity;
@@ -153,11 +151,11 @@ public sealed class MatrixUtilsTests
     [Fact]
     public void InverseTransformRect_ShortCircuitsOnTheIdentity()
     {
-        var rect = DartGeometry.RectFromLTWH(10.0, 20.0, 20.0, 20.0);
+        var rect = Rect.FromLTWH(10.0, 20.0, 20.0, 20.0);
 
         Assert.Equal(rect, MatrixUtils.InverseTransformRect(Matrix4.Identity(), rect));
         Assert.Equal(
-            DartGeometry.RectFromLTWH(5.0, 10.0, 10.0, 10.0),
+            Rect.FromLTWH(5.0, 10.0, 10.0, 10.0),
             MatrixUtils.InverseTransformRect(Matrix4.Diagonal3Values(2.0, 2.0, 2.0), rect));
     }
 

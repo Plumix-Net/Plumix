@@ -84,7 +84,7 @@ public class TextureBox : RenderBox
     public override void Paint(PaintingContext context, Offset offset)
     {
         context.AddLayer(new TextureLayer(
-            rect: DartGeometry.RectFromLTWH(offset.Dx, offset.Dy, Size.Width, Size.Height),
+            rect: Rect.FromLTWH(offset.Dx, offset.Dy, Size.Width, Size.Height),
             textureId: _textureId,
             freeze: Freeze,
             filterQuality: _filterQuality));

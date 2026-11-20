@@ -316,8 +316,8 @@ public sealed class AccessibilityBridgeTests : IDisposable
                 child: new Semantics(container: true, label: "box", child: new SizedBox(width: 50, height: 40)))));
 
         AccessibilityNode box = Find("box");
-        Assert.Equal(DartGeometry.RectFromLTWH(20, 60, 100, 80), box.GetGlobalRect());
-        Assert.Equal(DartGeometry.RectFromLTWH(10, 30, 50, 40), box.GetBoundsInView());
+        Assert.Equal(Rect.FromLTWH(20, 60, 100, 80), box.GetGlobalRect());
+        Assert.Equal(Rect.FromLTWH(10, 30, 50, 40), box.GetBoundsInView());
         Assert.Equal(
             RendererBinding.Instance.GetRectOfSemanticsNodeInViewCoordinates(_bridge.ViewId, box.Id),
             box.GetBoundsInView());

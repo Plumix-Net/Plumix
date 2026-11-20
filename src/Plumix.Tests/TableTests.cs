@@ -608,7 +608,7 @@ public sealed class TableTests
             {
                 Assert.Equal(SemanticsRole.Row, row.Role);
                 Assert.Equal(0, row.IndexInParent);
-                Assert.Equal(DartGeometry.RectFromLTWH(0, 0, 100, 10), row.GlobalRect);
+                Assert.Equal(Rect.FromLTWH(0, 0, 100, 10), row.GlobalRect);
                 Assert.Collection(
                     row.Children,
                     cell =>
@@ -628,7 +628,7 @@ public sealed class TableTests
             {
                 Assert.Equal(SemanticsRole.Row, row.Role);
                 Assert.Equal(1, row.IndexInParent);
-                Assert.Equal(DartGeometry.RectFromLTWH(0, 10, 100, 10), row.GlobalRect);
+                Assert.Equal(Rect.FromLTWH(0, 10, 100, 10), row.GlobalRect);
                 Assert.Collection(
                     row.Children,
                     cell =>
@@ -661,7 +661,7 @@ public sealed class TableTests
         Assert.Empty(wrapper.Label);
         Assert.Equal(0, wrapper.IndexInParent);
         // The wrapper is clipped to its column, not to the whole row.
-        Assert.Equal(DartGeometry.RectFromLTWH(0, 0, 50, 10), wrapper.GlobalRect);
+        Assert.Equal(Rect.FromLTWH(0, 0, 50, 10), wrapper.GlobalRect);
         Assert.Equal("Plain", Assert.Single(wrapper.Children).Label);
         Assert.Same(FindNodeWithLabel(tableNode, "Celled"), row.Children[1]);
     }

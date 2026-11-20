@@ -24,9 +24,9 @@ public sealed class GradientShaderTests
     public void Linear_TilesOutsideTheShaderRectangleInAbsoluteCoordinates(TileMode mode)
     {
         var gradient = new LinearGradient(colors: [Colors.Red, Colors.Blue], tileMode: mode);
-        IBrush shader = gradient.CreateShader(DartGeometry.RectFromLTWH(20, 10, 40, 40));
+        IBrush shader = gradient.CreateShader(Rect.FromLTWH(20, 10, 40, 40));
         using RenderTargetBitmap image = Render(canvas => canvas.DrawRect(
-            DartGeometry.RectFromLTWH(0, 0, 100, 60), new Paint { Shader = shader }));
+            Rect.FromLTWH(0, 0, 100, 60), new Paint { Shader = shader }));
 
         AssertPixel(image, 40, 30, 124, 0, 131, 255);
         switch (mode)
@@ -59,8 +59,8 @@ public sealed class GradientShaderTests
     {
         var gradient = new SweepGradient(colors: [Colors.Red, Colors.Blue],
             startAngle: Math.PI / 2, endAngle: Math.PI, tileMode: mode);
-        using RenderTargetBitmap image = Render(canvas => canvas.DrawRect(DartGeometry.RectFromLTWH(0, 0, 100, 100),
-            new Paint { Shader = gradient.CreateShader(DartGeometry.RectFromLTWH(0, 0, 100, 100)) }), 100, 100);
+        using RenderTargetBitmap image = Render(canvas => canvas.DrawRect(Rect.FromLTWH(0, 0, 100, 100),
+            new Paint { Shader = gradient.CreateShader(Rect.FromLTWH(0, 0, 100, 100)) }), 100, 100);
 
         AssertPixel(image, 25, 75, 131, 0, 124, 255);
         // Upper-left lies after the sector, lower-right before it: neither is the seam.
@@ -91,8 +91,8 @@ public sealed class GradientShaderTests
         var gradient = new RadialGradient(colors: [Colors.Red, Colors.Blue],
             center: Alignment.Center, radius: 0.5, focal: Alignment.Center, focalRadius: 0.125, tileMode: mode);
         // Non-square bounds: center=(60,40), radii=40 and 10.
-        using RenderTargetBitmap image = Render(canvas => canvas.DrawRect(DartGeometry.RectFromLTWH(0, 0, 120, 80),
-            new Paint { Shader = gradient.CreateShader(DartGeometry.RectFromLTWH(0, 0, 120, 80)) }), 120, 80);
+        using RenderTargetBitmap image = Render(canvas => canvas.DrawRect(Rect.FromLTWH(0, 0, 120, 80),
+            new Paint { Shader = gradient.CreateShader(Rect.FromLTWH(0, 0, 120, 80)) }), 120, 80);
 
         AssertPixel(image, 85, 40, 123, 0, 132, 255);
         if (mode == TileMode.Clamp)
@@ -143,7 +143,7 @@ public sealed class GradientShaderTests
     [InlineData(Math.PI / 2)]
     public void Rotation_UsesAbsoluteBoundsForEveryGradientKind(double angle)
     {
-        var bounds = DartGeometry.RectFromLTWH(10, 20, 60, 40);
+        var bounds = Rect.FromLTWH(10, 20, 60, 40);
         var rotation = new GradientRotation(angle);
         SKMatrix matrix = SKMatrix.CreateRotation((float)angle, 40, 40);
         foreach (Gradient gradient in new Gradient[]
@@ -155,7 +155,7 @@ public sealed class GradientShaderTests
                 tileMode: TileMode.Mirror, transform: rotation),
         })
         {
-            using RenderTargetBitmap actual = Render(canvas => canvas.DrawRect(DartGeometry.RectFromLTWH(0, 0, 100, 100),
+            using RenderTargetBitmap actual = Render(canvas => canvas.DrawRect(Rect.FromLTWH(0, 0, 100, 100),
                 new Paint { Shader = gradient.CreateShader(bounds) }), 100, 100);
             using SKShader expected = gradient switch
             {
@@ -179,9 +179,9 @@ public sealed class GradientShaderTests
         matrix.Storage[3] = 0.01;
         var gradient = new LinearGradient(colors: [Colors.Red, Colors.Blue],
             transform: new PerspectiveTransform(matrix));
-        IBrush shader = gradient.CreateShader(DartGeometry.RectFromLTWH(0, 0, 100, 100));
+        IBrush shader = gradient.CreateShader(Rect.FromLTWH(0, 0, 100, 100));
         matrix.Storage[3] = 0.5;
-        using RenderTargetBitmap actual = Render(canvas => canvas.DrawRect(DartGeometry.RectFromLTWH(0, 0, 100, 100),
+        using RenderTargetBitmap actual = Render(canvas => canvas.DrawRect(Rect.FromLTWH(0, 0, 100, 100),
             new Paint { Shader = shader }), 100, 100);
         using SKShader expected = SKShader.CreateLinearGradient(new SKPoint(0, 50), new SKPoint(100, 50),
             [SKColors.Red, SKColors.Blue], [0.0f, 1.0f], SKShaderTileMode.Clamp,
@@ -193,18 +193,18 @@ public sealed class GradientShaderTests
     public void ShaderMask_AndBlurredPaintUseTheSameDecalShader()
     {
         IBrush shader = new LinearGradient(colors: [Colors.Red, Colors.Blue], tileMode: TileMode.Decal)
-            .CreateShader(DartGeometry.RectFromLTWH(20, 0, 40, 60));
+            .CreateShader(Rect.FromLTWH(20, 0, 40, 60));
         using var masked = new RenderTargetBitmap(new PixelSize(100, 60));
         using (DrawingContext context = masked.CreateDrawingContext())
         using (FilterLayerRasterizer.DrawShaderMasked(context,
-            target => target.DrawRectangle(Brushes.White, null, DartGeometry.RectFromLTWH(0, 0, 100, 60).ToAvalonia()),
-            shader, BlendMode.SourceIn, DartGeometry.RectFromLTWH(0, 0, 100, 60)))
+            target => target.DrawRectangle(Brushes.White, null, Rect.FromLTWH(0, 0, 100, 60).ToAvalonia()),
+            shader, BlendMode.SourceIn, Rect.FromLTWH(0, 0, 100, 60)))
         {
         }
 
         AssertPixel(masked, 40, 30, 124, 0, 131, 255);
         Assert.Equal(0, RasterBackend.PixelAt(masked, 10, 30).A);
-        using RenderTargetBitmap blurred = Render(canvas => canvas.DrawRect(DartGeometry.RectFromLTWH(0, 0, 100, 60), new Paint
+        using RenderTargetBitmap blurred = Render(canvas => canvas.DrawRect(Rect.FromLTWH(0, 0, 100, 60), new Paint
         {
             Shader = shader,
             MaskFilter = MaskFilter.Blur(BlurStyle.Normal, 2.0),
@@ -217,11 +217,11 @@ public sealed class GradientShaderTests
     public void PathStroke_PreservesRecordingClipOpacityAndDevicePixelHairlines()
     {
         IBrush shader = new LinearGradient(colors: [Colors.Red, Colors.Blue])
-            .CreateShader(DartGeometry.RectFromLTWH(0, 0, 100, 60));
+            .CreateShader(Rect.FromLTWH(0, 0, 100, 60));
         var paint = new Paint { Shader = shader };
         var recorder = new PictureRecorder();
         var canvas = new Canvas(recorder);
-        canvas.ClipRect(DartGeometry.RectFromLTWH(0, 0, 100, 40));
+        canvas.ClipRect(Rect.FromLTWH(0, 0, 100, 40));
         canvas.Scale(2, 2);
         canvas.DrawLine(new Offset(20, 5), new Offset(20, 30), paint);
         paint.Shader = null;
@@ -253,7 +253,7 @@ public sealed class GradientShaderTests
                 colors: [Colors.Red, Colors.Blue], radius: 0.4,
                 focal: Alignment.Center, focalRadius: 0.1, tileMode: TileMode.Decal)))));
         using Bitmap image = Assert.IsAssignableFrom<OffsetLayer>(tester.RenderView.Layer)
-            .ToImageSync(DartGeometry.RectFromLTWH(0, 0, 100, 100));
+            .ToImageSync(Rect.FromLTWH(0, 0, 100, 100));
         AssertPixel(image, 75, 50, 123, 0, 132, 255);
         Assert.Equal(0, RasterBackend.PixelAt(image, 51, 51).A);
         Assert.Equal(0, RasterBackend.PixelAt(image, 99, 99).A);
@@ -302,10 +302,10 @@ public sealed class GradientShaderTests
     [InlineData(true)]
     public void PaintAlpha_ModulatesTheShaderWithAndWithoutRasterEffects(bool blur)
     {
-        using RenderTargetBitmap image = Render(canvas => canvas.DrawRect(DartGeometry.RectFromLTWH(0, 0, 100, 60), new Paint
+        using RenderTargetBitmap image = Render(canvas => canvas.DrawRect(Rect.FromLTWH(0, 0, 100, 60), new Paint
         {
             Shader = new LinearGradient(colors: [Colors.Red, Colors.Blue])
-                .CreateShader(DartGeometry.RectFromLTWH(0, 0, 100, 60)),
+                .CreateShader(Rect.FromLTWH(0, 0, 100, 60)),
             Color = Color.From(alpha: 0.5, red: 0.0, green: 0.0, blue: 0.0),
             MaskFilter = blur ? MaskFilter.Blur(BlurStyle.Normal, 1.0) : null,
         }));
@@ -338,11 +338,11 @@ public sealed class GradientShaderTests
     {
         using RenderTargetBitmap image = Render(canvas =>
         {
-            canvas.ClipRect(DartGeometry.RectFromLTWH(10, 10, 60, 40));
+            canvas.ClipRect(Rect.FromLTWH(10, 10, 60, 40));
             canvas.DrawPaint(new Paint
             {
                 Shader = new LinearGradient(colors: [Colors.Red, Colors.Blue], tileMode: TileMode.Decal)
-                    .CreateShader(DartGeometry.RectFromLTWH(20, 0, 40, 60)),
+                    .CreateShader(Rect.FromLTWH(20, 0, 40, 60)),
                 Color = Color.From(alpha: 0.5, red: 0.0, green: 0.0, blue: 0.0),
             });
         });
@@ -379,7 +379,7 @@ public sealed class GradientShaderTests
         Assert.Equal(Math.PI, sweep.EndAngle);
         Assert.Equal(TileMode.Decal, sweep.TileMode);
         using Bitmap image = Assert.IsAssignableFrom<OffsetLayer>(tester.RenderView.Layer)
-            .ToImageSync(DartGeometry.RectFromLTWH(0, 0, 800, 600));
+            .ToImageSync(Rect.FromLTWH(0, 0, 800, 600));
         Assert.Contains(RasterBackend.ReadPixels(image), value => value != 0);
         Assert.Null(tester.TakeException());
     }
@@ -388,7 +388,7 @@ public sealed class GradientShaderTests
     public void ShaderCreation_RejectsInvalidSweepNaNCoordinatesAndNonfiniteMatrices()
     {
         Assert.Throws<AssertionError>(() => new SweepGradient(colors: [Colors.Red, Colors.Blue],
-            startAngle: 1, endAngle: 1).CreateShader(DartGeometry.RectFromLTWH(0, 0, 100, 100)));
+            startAngle: 1, endAngle: 1).CreateShader(Rect.FromLTWH(0, 0, 100, 100)));
         Assert.Throws<AssertionError>(() => GradientShader.Linear(new Offset(double.NaN, 0), default,
             [Colors.Red, Colors.Blue], [0.0, 1.0], TileMode.Clamp, null));
         Assert.Throws<AssertionError>(() => GradientShader.Radial(default, 10,
@@ -396,11 +396,11 @@ public sealed class GradientShaderTests
         Matrix4 matrix = Matrix4.Identity();
         matrix.Storage[10] = double.PositiveInfinity;
         Assert.Throws<AssertionError>(() => new LinearGradient(colors: [Colors.Red, Colors.Blue],
-            transform: new PerspectiveTransform(matrix)).CreateShader(DartGeometry.RectFromLTWH(0, 0, 100, 100)));
+            transform: new PerspectiveTransform(matrix)).CreateShader(Rect.FromLTWH(0, 0, 100, 100)));
     }
 
     private static RenderTargetBitmap RenderGradient(Gradient gradient) => Render(canvas => canvas.DrawRect(
-        DartGeometry.RectFromLTWH(0, 0, 100, 100), new Paint { Shader = gradient.CreateShader(DartGeometry.RectFromLTWH(0, 0, 100, 100)) }),
+        Rect.FromLTWH(0, 0, 100, 100), new Paint { Shader = gradient.CreateShader(Rect.FromLTWH(0, 0, 100, 100)) }),
         100, 100);
 
     private static RenderTargetBitmap Render(Action<Canvas> draw, int width = 100, int height = 60)

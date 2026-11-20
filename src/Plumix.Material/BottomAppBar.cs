@@ -345,7 +345,7 @@ internal sealed class RenderBottomAppBarSurface : RenderProxyBox
 
     public override bool HitTest(BoxHitTestResult result, Offset position)
     {
-        var host = DartGeometry.RectFromSize(Size);
+        var host = Offset.Zero & Size;
         if (!ShapeContains(host, ResolveGuestRect(), position))
         {
             return false;
@@ -405,7 +405,7 @@ internal sealed class RenderBottomAppBarSurface : RenderProxyBox
     public override void Paint(PaintingContext context, Offset offset)
     {
         if (Size.Width <= 0 || Size.Height <= 0) return;
-        var host = DartGeometry.RectFromSize(Size);
+        var host = Offset.Zero & Size;
         var geometry = Shape?.GetOuterPath(host, ResolveGuestRect()) ?? new RectangleGeometry(host.ToAvalonia());
         if (Elevation > 0.0 && ShadowColor.Alpha > 0)
         {
@@ -448,7 +448,7 @@ internal sealed class RenderBottomAppBarSurface : RenderProxyBox
             return null;
         }
 
-        var localArea = DartGeometry.RectFromLTWH(area.Left, area.Top - top, area.Width, area.Height);
+        var localArea = Rect.FromLTWH(area.Left, area.Top - top, area.Width, area.Height);
         return localArea.Inflate(NotchMargin);
     }
 }

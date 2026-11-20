@@ -40,7 +40,7 @@ public sealed class DecorationImageDartParityTests : IDisposable
     }
 
     private static Rect LTRB(double left, double top, double right, double bottom) =>
-        DartGeometry.RectFromCorners(new Offset(left, top), new Offset(right, bottom));
+        Rect.FromLTRB(left, top, right, bottom);
 
     private static List<CanvasCall> Record(Action<Canvas> paint)
     {
@@ -68,15 +68,15 @@ public sealed class DecorationImageDartParityTests : IDisposable
         var image = new TestImage(300, 300);
         List<CanvasCall> calls = Record(canvas => ImagePainting.PaintImage(
             canvas: canvas,
-            rect: DartGeometry.RectFromLTWH(50.0, 75.0, 200.0, 100.0),
+            rect: Rect.FromLTWH(50.0, 75.0, 200.0, 100.0),
             image: image,
             fit: BoxFit.Cover,
             alignment: Alignment.CenterLeft));
 
         CanvasCall command = calls.First(call => call.Method == "drawImageRect");
         Assert.Same(image, command.Image);
-        Assert.Equal(DartGeometry.RectFromLTWH(0.0, 75.0, 300.0, 150.0), command.SourceRect);
-        Assert.Equal(DartGeometry.RectFromLTWH(50.0, 75.0, 200.0, 100.0), command.Rect);
+        Assert.Equal(Rect.FromLTWH(0.0, 75.0, 300.0, 150.0), command.SourceRect);
+        Assert.Equal(Rect.FromLTWH(50.0, 75.0, 200.0, 100.0), command.Rect);
     }
 
     [DebugOnlyFact]
@@ -91,7 +91,7 @@ public sealed class DecorationImageDartParityTests : IDisposable
         List<CanvasCall> calls;
         try
         {
-            var rect = DartGeometry.RectFromLTWH(50.0, 50.0, 100.0, 50.0);
+            var rect = Rect.FromLTWH(50.0, 50.0, 100.0, 50.0);
             calls = Record(canvas => ImagePainting.PaintImage(
                 canvas: canvas,
                 rect: rect,
@@ -107,7 +107,7 @@ public sealed class DecorationImageDartParityTests : IDisposable
         int saveLayer = calls.FindIndex(call => call.Method == "saveLayer");
         Assert.True(saveLayer >= 0);
         CanvasCall layer = calls[saveLayer];
-        Assert.Equal(DartGeometry.RectFromLTWH(50.0, 50.0, 100.0, 50.0), layer.Rect);
+        Assert.Equal(Rect.FromLTWH(50.0, 50.0, 100.0, 50.0), layer.Rect);
         Assert.Equal(
             new ColorFilter.Matrix(-1, 0, 0, 0, 255, 0, -1, 0, 0, 255, 0, 0, -1, 0, 255, 0, 0, 0, 1, 0),
             layer.Paint!.ColorFilter);
@@ -136,7 +136,7 @@ public sealed class DecorationImageDartParityTests : IDisposable
         {
             Record(canvas => ImagePainting.PaintImage(
                 canvas: canvas,
-                rect: DartGeometry.RectFromLTWH(50.0, 50.0, 290.0, 290.0),
+                rect: Rect.FromLTWH(50.0, 50.0, 290.0, 290.0),
                 image: new TestImage(300, 300),
                 debugImageLabel: "TestImage",
                 fit: BoxFit.Fill));
@@ -173,7 +173,7 @@ public sealed class DecorationImageDartParityTests : IDisposable
         var imageSizeInfos = new List<ImageSizeInfo>();
         PaintingDebug.DebugOnPaintImage = imageSizeInfos.Add;
         var image = new TestImage(300, 300);
-        var rect = DartGeometry.RectFromLTWH(50.0, 75.0, 200.0, 100.0);
+        var rect = Rect.FromLTWH(50.0, 75.0, 200.0, 100.0);
 
         Record(canvas => ImagePainting.PaintImage(canvas: canvas, rect: rect, image: image, debugImageLabel: "test.png"));
 
@@ -202,7 +202,7 @@ public sealed class DecorationImageDartParityTests : IDisposable
 
         Record(canvas => ImagePainting.PaintImage(
             canvas: canvas,
-            rect: DartGeometry.RectFromLTWH(50.0, 75.0, 200.0, 100.0),
+            rect: Rect.FromLTWH(50.0, 75.0, 200.0, 100.0),
             image: image,
             debugImageLabel: "test.png"));
         Assert.Single(imageSizeInfos);
@@ -213,7 +213,7 @@ public sealed class DecorationImageDartParityTests : IDisposable
 
         Record(canvas => ImagePainting.PaintImage(
             canvas: canvas,
-            rect: DartGeometry.RectFromLTWH(50.0, 75.0, 200.0, 150.0),
+            rect: Rect.FromLTWH(50.0, 75.0, 200.0, 150.0),
             image: image,
             debugImageLabel: "test.png"));
 
@@ -234,7 +234,7 @@ public sealed class DecorationImageDartParityTests : IDisposable
 
         Record(canvas => ImagePainting.PaintImage(
             canvas: canvas,
-            rect: DartGeometry.RectFromLTWH(50.0, 75.0, 200.0, 100.0),
+            rect: Rect.FromLTWH(50.0, 75.0, 200.0, 100.0),
             image: new TestImage(300, 200)));
 
         ImageSizeInfo info = Assert.Single(imageSizeInfos);
@@ -320,7 +320,7 @@ public sealed class DecorationImageDartParityTests : IDisposable
             colorFilter: colorFilter,
             fit: BoxFit.Contain,
             alignment: Alignment.BottomLeft,
-            centerSlice: DartGeometry.RectFromLTWH(10.0, 20.0, 30.0, 40.0),
+            centerSlice: Rect.FromLTWH(10.0, 20.0, 30.0, 40.0),
             repeat: ImageRepeat.RepeatY,
             opacity: 0.5,
             filterQuality: FilterQuality.High,
@@ -363,7 +363,7 @@ public sealed class DecorationImageDartParityTests : IDisposable
             new SynchronousTestImageProvider(),
             colorFilter: new ColorFilter.Mode(new Color(0xFF00FF00), BlendMode.Source),
             fit: BoxFit.Contain,
-            centerSlice: DartGeometry.RectFromLTWH(10.0, 20.0, 30.0, 40.0),
+            centerSlice: Rect.FromLTWH(10.0, 20.0, 30.0, 40.0),
             repeat: ImageRepeat.RepeatY,
             matchTextDirection: true,
             scale: 0.5,
@@ -422,7 +422,7 @@ public sealed class DecorationImageDartParityTests : IDisposable
             for (double scale = 1.0; scale <= 4.0; scale += 1.0)
             {
                 var image = new TestImage(100, 100);
-                var outputRect = DartGeometry.RectFromLTWH(30.0, 30.0, 250.0, 250.0);
+                var outputRect = Rect.FromLTWH(30.0, 30.0, 250.0, 250.0);
                 List<CanvasCall> calls = Record(canvas => ImagePainting.PaintImage(
                     canvas: canvas,
                     rect: outputRect,
@@ -432,10 +432,10 @@ public sealed class DecorationImageDartParityTests : IDisposable
                     fit: fit));
 
                 CanvasCall call = Assert.Single(calls, call => call.Method == "drawImageRect");
-                Assert.Equal(DartGeometry.RectFromLTWH(0, 0, 100, 100), call.SourceRect);
+                Assert.Equal(Rect.FromLTWH(0, 0, 100, 100), call.SourceRect);
                 double side = 100 / scale;
                 AssertCloseToRect(
-                    DartGeometry.RectFromCorners(new Offset(outputRect.Right - side, outputRect.Bottom - side), outputRect.BottomRight),
+                    Rect.FromLTRB(outputRect.Right - side, outputRect.Bottom - side, outputRect.BottomRight.Dx, outputRect.BottomRight.Dy),
                     call.Rect!.Value);
             }
         }
@@ -444,7 +444,7 @@ public sealed class DecorationImageDartParityTests : IDisposable
     [Fact]
     public void PaintImage_BoxFitScaleDownTest()
     {
-        var outputRect = DartGeometry.RectFromLTWH(30.0, 30.0, 250.0, 20.0);
+        var outputRect = Rect.FromLTWH(30.0, 30.0, 250.0, 20.0);
         List<CanvasCall> calls = Record(canvas => ImagePainting.PaintImage(
             canvas: canvas,
             rect: outputRect,
@@ -454,7 +454,7 @@ public sealed class DecorationImageDartParityTests : IDisposable
             fit: BoxFit.ScaleDown));
 
         CanvasCall call = Assert.Single(calls, call => call.Method == "drawImageRect");
-        Assert.Equal(DartGeometry.RectFromLTWH(0, 0, 100, 100), call.SourceRect);
+        Assert.Equal(Rect.FromLTWH(0, 0, 100, 100), call.SourceRect);
         Assert.Equal(LTRB(260.0, 30.0, 280.0, 50.0), call.Rect);
     }
 
@@ -468,7 +468,7 @@ public sealed class DecorationImageDartParityTests : IDisposable
         ];
         foreach (BoxFit boxFit in boxFits)
         {
-            var outputRect = DartGeometry.RectFromLTWH(30.0, 30.0, 250.0, 250.0);
+            var outputRect = Rect.FromLTWH(30.0, 30.0, 250.0, 250.0);
             List<CanvasCall> calls = Record(canvas => ImagePainting.PaintImage(
                 canvas: canvas,
                 rect: outputRect,
@@ -489,7 +489,7 @@ public sealed class DecorationImageDartParityTests : IDisposable
     {
         List<CanvasCall> calls = Record(canvas => ImagePainting.PaintImage(
             canvas: canvas,
-            rect: DartGeometry.RectFromLTWH(30.0, 30.0, 400.0, 200.0),
+            rect: Rect.FromLTWH(30.0, 30.0, 400.0, 200.0),
             image: new TestImage(100, 100),
             alignment: Alignment.TopLeft,
             repeat: ImageRepeat.RepeatX,
@@ -497,9 +497,9 @@ public sealed class DecorationImageDartParityTests : IDisposable
 
         CanvasCall[] draws = calls.Where(call => call.Method == "drawImageRect").ToArray();
         Assert.Equal(2, draws.Length);
-        Assert.All(draws, call => Assert.Equal(DartGeometry.RectFromLTWH(0, 0, 100, 100), call.SourceRect));
+        Assert.All(draws, call => Assert.Equal(Rect.FromLTWH(0, 0, 100, 100), call.SourceRect));
         Assert.Equal(
-            new HashSet<Rect> { DartGeometry.RectFromLTWH(30.0, 30.0, 200.0, 200.0), DartGeometry.RectFromLTWH(230.0, 30.0, 200.0, 200.0) },
+            new HashSet<Rect> { Rect.FromLTWH(30.0, 30.0, 200.0, 200.0), Rect.FromLTWH(230.0, 30.0, 200.0, 200.0) },
             draws.Select(call => call.Rect!.Value).ToHashSet());
     }
 
@@ -508,7 +508,7 @@ public sealed class DecorationImageDartParityTests : IDisposable
     {
         List<CanvasCall> calls = Record(canvas => ImagePainting.PaintImage(
             canvas: canvas,
-            rect: DartGeometry.RectFromLTWH(30.0, 30.0, 200.0, 400.0),
+            rect: Rect.FromLTWH(30.0, 30.0, 200.0, 400.0),
             image: new TestImage(100, 100),
             alignment: Alignment.TopLeft,
             repeat: ImageRepeat.RepeatY,
@@ -517,7 +517,7 @@ public sealed class DecorationImageDartParityTests : IDisposable
         CanvasCall[] draws = calls.Where(call => call.Method == "drawImageRect").ToArray();
         Assert.Equal(2, draws.Length);
         Assert.Equal(
-            new HashSet<Rect> { DartGeometry.RectFromLTWH(30.0, 30.0, 200.0, 200.0), DartGeometry.RectFromLTWH(30.0, 230.0, 200.0, 200.0) },
+            new HashSet<Rect> { Rect.FromLTWH(30.0, 30.0, 200.0, 200.0), Rect.FromLTWH(30.0, 230.0, 200.0, 200.0) },
             draws.Select(call => call.Rect!.Value).ToHashSet());
     }
 
@@ -613,7 +613,7 @@ public sealed class DecorationImageDartParityTests : IDisposable
 
         List<CanvasCall> calls = Record(canvas => painter.Paint(
             canvas,
-            DartGeometry.RectFromLTWH(0, 0, 20, 20),
+            Rect.FromLTWH(0, 0, 20, 20),
             null,
             ImageConfiguration.Empty));
 
@@ -632,11 +632,11 @@ public sealed class DecorationImageDartParityTests : IDisposable
         var a = new DecorationImage(new SynchronousTestImageProvider());
         DecorationImagePainter painter = DecorationImage.Lerp(a, null, 0.5)!.CreatePainter(() => { });
         var clip = new Path();
-        clip.AddOval(DartGeometry.RectFromLTWH(0, 0, 20, 20));
+        clip.AddOval(Rect.FromLTWH(0, 0, 20, 20));
 
         List<CanvasCall> calls = Record(canvas => painter.Paint(
             canvas,
-            DartGeometry.RectFromLTWH(0, 0, 20, 20),
+            Rect.FromLTWH(0, 0, 20, 20),
             clip,
             ImageConfiguration.Empty,
             blendMode: BlendMode.Multiply));
@@ -870,7 +870,7 @@ public sealed class DecorationImageDartParityTests : IDisposable
         DecorationImagePainter painter = image.CreatePainter(() => { });
         var recorder = new PictureRecorder();
         var canvas = new Canvas(recorder);
-        painter.Paint(canvas, DartGeometry.RectFromLTWH(0, 0, 20, 20), null, new ImageConfiguration(TextDirection: TextDirection.Ltr));
+        painter.Paint(canvas, Rect.FromLTWH(0, 0, 20, 20), null, new ImageConfiguration(TextDirection: TextDirection.Ltr));
         Bitmap bitmap = recorder.EndRecording().ToImageSync(20, 20);
         painter.Dispose();
         return RasterBackend.PixelAt(bitmap, 10, 10);

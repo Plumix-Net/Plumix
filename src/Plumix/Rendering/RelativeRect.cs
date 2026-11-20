@@ -15,9 +15,9 @@ public readonly record struct RelativeRect(double Left, double Top, double Right
         container.Bottom - rect.Bottom);
 
     public static RelativeRect FromSize(Rect rect, Size containerSize) =>
-        FromRect(rect, DartGeometry.RectFromSize(containerSize));
+        FromRect(rect, (Offset.Zero & containerSize));
 
-    public Rect ToRect(Rect container) => DartGeometry.RectFromLTWH(
+    public Rect ToRect(Rect container) => Rect.FromLTWH(
         container.Left + Left,
         container.Top + Top,
         Math.Max(0, container.Width - Left - Right),

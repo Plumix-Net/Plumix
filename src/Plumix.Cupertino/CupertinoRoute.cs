@@ -822,7 +822,7 @@ internal sealed record CupertinoEdgeShadowDecoration : Decoration
                 context.Canvas.DrawRectangle(
                     new SolidColorBrush(color),
                     null,
-                    DartGeometry.RectFromLTWH(x - 1.0, offset.Dy, 1.0, shadowHeight));
+                    Rect.FromLTWH(x - 1.0, offset.Dy, 1.0, shadowHeight));
             }
         }
     }

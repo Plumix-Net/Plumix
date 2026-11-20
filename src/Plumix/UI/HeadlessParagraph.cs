@@ -1336,13 +1336,11 @@ internal sealed class HeadlessParagraph : Paragraph
             TextRange range = placeholder.Width == 0.0 && placeholder.Height == 0.0
                 ? new TextRange(0, 0)
                 : new TextRange(cluster.Start, cluster.End);
-            return new GlyphInfo(DartGeometry.RectFromLTWH(item.X, top, item.Width, placeholder.Height), range, direction);
+            return new GlyphInfo(Rect.FromLTWH(item.X, top, item.Width, placeholder.Height), range, direction);
         }
 
         double fontSize = item.Style.FontSize;
-        var bounds = DartGeometry.RectFromCorners(
-            new Offset(item.X, line.Baseline - (fontSize * AscentRatio)),
-            new Offset(item.X + item.Width, line.Baseline + (fontSize * DescentRatio)));
+        var bounds = Rect.FromLTRB(item.X, line.Baseline - (fontSize * AscentRatio), item.X + item.Width, line.Baseline + (fontSize * DescentRatio));
         return new GlyphInfo(bounds, new TextRange(cluster.Start, cluster.End), direction);
     }
 
@@ -1499,7 +1497,7 @@ internal sealed class HeadlessParagraph : Paragraph
                     AddOperation(new FlutterTestGlyphDraw.GlyphsOperation(GlyphsOf(run, offset.Dx, baseline)));
                 }
 
-                Include(run.Clip.ExpandToInclude(DartGeometry.RectFromLTWH(
+                Include(run.Clip.ExpandToInclude(Rect.FromLTWH(
                     run.Left,
                     baseline - (run.Style.FontSize * AscentRatio),
                     run.Right - run.Left + run.Style.FontSize,
@@ -1607,7 +1605,7 @@ internal sealed class HeadlessParagraph : Paragraph
             {
                 Left = left,
                 Right = left + item.Width,
-                Clip = DartGeometry.RectFromLTWH(left, top, item.Width, ascent + descent),
+                Clip = Rect.FromLTWH(left, top, item.Width, ascent + descent),
             };
             current.Items.Add(item);
             runs.Add(current);
@@ -1753,17 +1751,17 @@ internal sealed class HeadlessParagraph : Paragraph
         switch (shape)
         {
             case GlyphShape.DescentOnly:
-                return new RectangleGeometry(DartGeometry.RectFromLTWH(x, baseline, Math.Max(width, 0.0), descent).ToAvalonia());
+                return new RectangleGeometry(Rect.FromLTWH(x, baseline, Math.Max(width, 0.0), descent).ToAvalonia());
             case GlyphShape.AscentOnly:
-                return new RectangleGeometry(DartGeometry.RectFromLTWH(x, baseline - ascent, Math.Max(width, 0.0), ascent).ToAvalonia());
+                return new RectangleGeometry(Rect.FromLTWH(x, baseline - ascent, Math.Max(width, 0.0), ascent).ToAvalonia());
             case GlyphShape.NotDef:
                 double unit = fontSize / 1024.0;
-                var outer = DartGeometry.RectFromLTWH(x + (128 * unit), baseline - (768 * unit), 768 * unit, 768 * unit);
-                var inner = DartGeometry.RectFromLTWH(x + (256 * unit), baseline - (640 * unit), 512 * unit, 512 * unit);
+                var outer = Rect.FromLTWH(x + (128 * unit), baseline - (768 * unit), 768 * unit, 768 * unit);
+                var inner = Rect.FromLTWH(x + (256 * unit), baseline - (640 * unit), 512 * unit, 512 * unit);
                 return new CombinedGeometry(GeometryCombineMode.Exclude,
                     new RectangleGeometry(outer.ToAvalonia()), new RectangleGeometry(inner.ToAvalonia()));
             default:
-                return new RectangleGeometry(DartGeometry.RectFromLTWH(x, baseline - ascent, Math.Max(width, 0.0), ascent + descent).ToAvalonia());
+                return new RectangleGeometry(Rect.FromLTWH(x, baseline - ascent, Math.Max(width, 0.0), ascent + descent).ToAvalonia());
         }
     }
 

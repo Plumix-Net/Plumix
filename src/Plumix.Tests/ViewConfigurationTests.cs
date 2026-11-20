@@ -240,7 +240,7 @@ public sealed class ViewConfigurationTests
         Size logicalSize = view.Size;
         double devicePixelRatio = view.Configuration.DevicePixelRatio;
         Assert.Equal(
-            DartGeometry.RectFromLTWH(0, 0, logicalSize.Width * devicePixelRatio, logicalSize.Height * devicePixelRatio),
+            Rect.FromLTWH(0, 0, logicalSize.Width * devicePixelRatio, logicalSize.Height * devicePixelRatio),
             view.PaintBounds);
     }
 
@@ -300,7 +300,7 @@ public sealed class ViewConfigurationTests
         // The view gives its child plain parent data: it is a bare RenderObject, not a RenderBox.
         Assert.IsNotType<BoxParentData>(center.parentData);
         // Dart's `semanticBounds`: the logical box under the root transform.
-        Assert.Equal(DartGeometry.RectFromLTWH(0, 0, 200, 100), view.SemanticBoundsForSemantics);
+        Assert.Equal(Rect.FromLTWH(0, 0, 200, 100), view.SemanticBoundsForSemantics);
 
         Matrix4 toView = child.GetTransformTo(view);
         Assert.Equal(new Offset(70, 30), MatrixUtils.TransformPoint(toView, new Offset(0, 0)));

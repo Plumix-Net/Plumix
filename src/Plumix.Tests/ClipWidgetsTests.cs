@@ -14,7 +14,7 @@ public sealed class ClipWidgetsTests
     [Fact]
     public void ClipOvalAndClipPath_ExposeFlutterDefaultsAndUpdateRenderObjects()
     {
-        var ovalClipper = new FixedOvalClipper(DartGeometry.RectFromLTWH(2, 4, 24, 16));
+        var ovalClipper = new FixedOvalClipper(Rect.FromLTWH(2, 4, 24, 16));
         var pathClipper = new TriangleClipper();
         var oval = new ClipOval(child: new SizedBox(width: 40, height: 30));
         var path = new ClipPath(child: new SizedBox(width: 40, height: 30));
@@ -106,7 +106,7 @@ public sealed class ClipWidgetsTests
         Assert.Null(oval.InvokeDescribeApproximatePaintClip(child));
 
         oval.ClipBehavior = Clip.AntiAlias;
-        Assert.Equal(DartGeometry.RectFromLTWH(0, 0, 100, 60), oval.InvokeDescribeApproximatePaintClip(child));
+        Assert.Equal(Rect.FromLTWH(0, 0, 100, 60), oval.InvokeDescribeApproximatePaintClip(child));
         pipeline.FlushCompositingBits();
         pipeline.FlushPaint();
         pipeline.CompositeFrame();
@@ -115,7 +115,7 @@ public sealed class ClipWidgetsTests
     [Fact]
     public void RenderClipPath_CustomGeometryDrivesHitTestingAndApproximateSemanticsClip()
     {
-        var clipper = new TriangleClipper(DartGeometry.RectFromLTWH(0, 0, 70, 50));
+        var clipper = new TriangleClipper(Rect.FromLTWH(0, 0, 70, 50));
         var child = new HitTestBox(new Size(100, 60));
         var path = new RenderClipPath(
             child: child,
@@ -124,15 +124,15 @@ public sealed class ClipWidgetsTests
 
         Assert.True(path.HitTest(new BoxHitTestResult(), new Offset(50, 20)));
         Assert.False(path.HitTest(new BoxHitTestResult(), new Offset(5, 50)));
-        Assert.Equal(DartGeometry.RectFromLTWH(0, 0, 70, 50), path.InvokeDescribeApproximatePaintClip(child));
+        Assert.Equal(Rect.FromLTWH(0, 0, 70, 50), path.InvokeDescribeApproximatePaintClip(child));
     }
 
     [Fact]
     public void Path_ContainsShapesAndHonorsNonZeroAndEvenOddFillRules()
     {
         var path = new Path();
-        path.AddRect(DartGeometry.RectFromLTWH(0, 0, 80, 60));
-        path.AddRect(DartGeometry.RectFromLTWH(20, 15, 40, 30));
+        path.AddRect(Rect.FromLTWH(0, 0, 80, 60));
+        path.AddRect(Rect.FromLTWH(20, 15, 40, 30));
 
         Assert.True(path.Contains(new Offset(40, 30)));
 
@@ -141,7 +141,7 @@ public sealed class ClipWidgetsTests
         Assert.True(path.Contains(new Offset(10, 10)));
 
         var oval = new Path();
-        oval.AddOval(DartGeometry.RectFromLTWH(0, 0, 80, 40));
+        oval.AddOval(Rect.FromLTWH(0, 0, 80, 40));
         Assert.True(oval.Contains(new Offset(40, 20)));
         Assert.False(oval.Contains(new Offset(2, 2)));
 
@@ -307,7 +307,7 @@ public sealed class ClipWidgetsTests
     [Fact]
     public void RenderPhysicalShape_UsesPathForHitTestingSurfaceShadowAndClip()
     {
-        var clipRect = DartGeometry.RectFromLTWH(10.0, 5.0, 80.0, 50.0);
+        var clipRect = Rect.FromLTWH(10.0, 5.0, 80.0, 50.0);
         var physicalShape = new RenderPhysicalShape(
             clipper: new FixedRectPathClipper(clipRect),
             color: Colors.Orange,
@@ -358,11 +358,11 @@ public sealed class ClipWidgetsTests
         // With no clipper the effective clip is the layout rect. Dart's clip render objects are not
         // repaint boundaries: they clip through `pushClipRect`, on the canvas or in a layer.
         Assert.False(render.IsRepaintBoundary);
-        Assert.Equal(DartGeometry.RectFromLTWH(0, 0, 60, 40), render.InvokeDescribeApproximatePaintClip(null));
+        Assert.Equal(Rect.FromLTWH(0, 0, 60, 40), render.InvokeDescribeApproximatePaintClip(null));
 
-        var clipper = new FixedRectClipper(DartGeometry.RectFromLTWH(0, 0, 20, 20));
+        var clipper = new FixedRectClipper(Rect.FromLTWH(0, 0, 20, 20));
         render.Clipper = clipper;
-        Assert.Equal(DartGeometry.RectFromLTWH(0, 0, 20, 20), render.InvokeDescribeApproximatePaintClip(null));
+        Assert.Equal(Rect.FromLTWH(0, 0, 20, 20), render.InvokeDescribeApproximatePaintClip(null));
 
         render.ClipBehavior = Clip.None;
         Assert.False(render.IsRepaintBoundary);
@@ -412,7 +412,7 @@ public sealed class ClipWidgetsTests
         Assert.True(render.HitTest(new BoxHitTestResult(), new Offset(0.5, 0.5)));
 
         render.Clipper = new FixedRoundedRectClipper(
-            RRect.FromRectAndRadius(DartGeometry.RectFromLTWH(0, 0, 40, 40), new Radius(12.0, 12.0)));
+            RRect.FromRectAndRadius(Rect.FromLTWH(0, 0, 40, 40), new Radius(12.0, 12.0)));
 
         Assert.True(render.HitTest(new BoxHitTestResult(), new Offset(20, 20)));
         Assert.False(render.HitTest(new BoxHitTestResult(), new Offset(0.5, 0.5)));
@@ -547,7 +547,7 @@ public sealed class ClipWidgetsTests
 
         public TriangleClipper(Rect? approximateClip = null)
         {
-            _approximateClip = approximateClip ?? DartGeometry.RectFromLTWH(0, 0, 100, 60);
+            _approximateClip = approximateClip ?? Rect.FromLTWH(0, 0, 100, 60);
         }
 
         public override Path GetClip(Size size)
@@ -573,7 +573,7 @@ public sealed class ClipWidgetsTests
         public override Path GetClip(Size size)
         {
             var path = new Path();
-            path.AddRect(DartGeometry.RectFromOffsetAndSize(new Offset(0, 0), size));
+            path.AddRect(new Offset(0, 0) & size);
             return path;
         }
 
@@ -615,7 +615,7 @@ public sealed class ClipWidgetsTests
         public override Rect GetClip(Size size)
         {
             GetClipCalls += 1;
-            return DartGeometry.RectFromOffsetAndSize(new Offset(0, 0), size);
+            return new Offset(0, 0) & size;
         }
 
         public override bool ShouldReclip(CustomClipper<Rect> oldClipper) => false;
@@ -675,7 +675,7 @@ public sealed class ClipWidgetsTests
 
         public override void Paint(PaintingContext ctx, Offset offset)
         {
-            ctx.Canvas.DrawRectangle(Brushes.Red, null, DartGeometry.RectFromOffsetAndSize(offset, Size));
+            ctx.Canvas.DrawRectangle(Brushes.Red, null, (offset & Size));
         }
     }
 
@@ -690,7 +690,7 @@ public sealed class ClipWidgetsTests
 
         public override void Paint(PaintingContext ctx, Offset offset)
         {
-            ctx.Canvas.DrawRectangle(Brushes.Red, null, DartGeometry.RectFromOffsetAndSize(offset, Size));
+            ctx.Canvas.DrawRectangle(Brushes.Red, null, (offset & Size));
         }
     }
 

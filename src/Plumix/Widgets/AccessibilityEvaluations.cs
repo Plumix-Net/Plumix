@@ -106,11 +106,11 @@ public abstract class AccessibilityEvaluation
 
     /// <remarks>Dart's <c>Rect.inflate</c>.</remarks>
     private protected static Rect Inflate(Rect rect, double delta) =>
-        DartGeometry.RectFromLTRB(rect.Left - delta, rect.Top - delta, rect.Right + delta, rect.Bottom + delta);
+        Rect.FromLTRB(rect.Left - delta, rect.Top - delta, rect.Right + delta, rect.Bottom + delta);
 
     /// <remarks>Dart's <c>Rect.intersect</c>, which keeps a negative size when the rects do not overlap.</remarks>
     private protected static Rect Intersect(Rect rect, Rect other) =>
-        DartGeometry.RectFromLTRB(
+        Rect.FromLTRB(
             Math.Max(rect.Left, other.Left),
             Math.Max(rect.Top, other.Top),
             Math.Min(rect.Right, other.Right),
@@ -186,7 +186,7 @@ public class MinimumTapTargetEvaluation : AccessibilityEvaluation
             current = current.Parent;
         }
 
-        var viewRect = DartGeometry.RectFromOffsetAndSize(default, view.PhysicalSize);
+        var viewRect = Offset.Zero & view.PhysicalSize;
         if (IsAtBoundary(paintBounds, viewRect))
         {
             return violations;
@@ -403,7 +403,7 @@ public abstract class ContrastEvaluation : AccessibilityEvaluation
         int width,
         int height)
     {
-        Rect truePaintBounds = Intersect(paintBounds, DartGeometry.RectFromLTWH(0, 0, width, height));
+        Rect truePaintBounds = Intersect(paintBounds, Rect.FromLTWH(0, 0, width, height));
 
         int leftX = (int)Math.Floor(truePaintBounds.Left);
         int rightX = (int)Math.Ceiling(truePaintBounds.Right);
@@ -691,7 +691,7 @@ public class MinimumNonTextContrastEvaluation : ContrastEvaluation
         }
 
         double devicePixelRatio = renderView.FlutterView.DevicePixelRatio;
-        Rect logicalBounds = DartGeometry.RectFromLTRB(
+        Rect logicalBounds = Rect.FromLTRB(
             nodeBounds.Left / devicePixelRatio,
             nodeBounds.Top / devicePixelRatio,
             nodeBounds.Right / devicePixelRatio,

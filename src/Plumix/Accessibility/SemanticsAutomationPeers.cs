@@ -549,7 +549,7 @@ internal abstract class SemanticsNodeAutomationPeer : AutomationPeer
         Rect bounds = Node.GetBoundsInView();
         return bounds.Width <= 0
                || bounds.Height <= 0
-               || !DartGeometry.RectFromSize(Host.ViewSize).Overlaps(bounds);
+               || !(Offset.Zero & Host.ViewSize).Overlaps(bounds);
     }
 
     // The engine's `kFocus`: accessibility focus moves to this node.

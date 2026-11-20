@@ -123,7 +123,7 @@ public class InkHighlight : InteractiveInkFeature
     {
         var paint = new Paint { Color = Color.WithAlpha(_alpha.Value) };
         Offset? originOffset = MatrixUtils.GetAsTranslation(transform);
-        Rect rect = _rectCallback is not null ? _rectCallback() : DartGeometry.RectFromSize(ReferenceBox.Size);
+        Rect rect = _rectCallback is not null ? _rectCallback() : (Offset.Zero & ReferenceBox.Size);
         if (originOffset is null)
         {
             canvas.Save();

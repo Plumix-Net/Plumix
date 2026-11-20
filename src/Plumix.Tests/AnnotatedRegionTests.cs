@@ -145,7 +145,7 @@ public sealed class AnnotatedRegionTests
         };
         var clip = new ClipRectLayer
         {
-            ClipRect = DartGeometry.RectFromLTWH(0, 0, 20, 20),
+            ClipRect = Rect.FromLTWH(0, 0, 20, 20),
         };
         var annotation = new AnnotatedRegionLayer<string>(
             value: "transformed",
@@ -221,7 +221,7 @@ public sealed class AnnotatedRegionTests
             ctx.Canvas.DrawRectangle(
                 Avalonia.Media.Brushes.CadetBlue,
                 pen: null,
-                rect: DartGeometry.RectFromOffsetAndSize(offset, Size));
+                rect: (offset & Size));
         }
     }
 

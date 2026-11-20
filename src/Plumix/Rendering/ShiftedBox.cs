@@ -305,7 +305,7 @@ public sealed class RenderPadding : RenderShiftedBox
     {
         ArgumentNullException.ThrowIfNull(context);
         base.DebugPaintSize(context, offset);
-        var outerRect = DartGeometry.RectFromOffsetAndSize(offset, Size);
+        var outerRect = offset & Size;
         RenderingDebug.PaintPadding(
             context,
             outerRect,
@@ -587,7 +587,7 @@ public class RenderPositionedBox : RenderAligningShiftedBox
             context.Canvas.DrawRectangle(
                 new SolidColorBrush(new Color(0x90909090)),
                 null,
-                DartGeometry.RectFromOffsetAndSize(offset, Size));
+                (offset & Size));
         }
     }
 
@@ -1189,8 +1189,8 @@ public sealed class RenderConstraintsTransformBox : RenderAligningShiftedBox
             Size = constraints.Constrain(child.Size);
             AlignChild();
             var childParentData = (BoxParentData)child.parentData!;
-            _overflowContainerRect = DartGeometry.RectFromOffsetAndSize(default, Size);
-            _overflowChildRect = DartGeometry.RectFromOffsetAndSize(childParentData.offset, child.Size);
+            _overflowContainerRect = Offset.Zero & Size;
+            _overflowChildRect = childParentData.offset & child.Size;
         }
         else
         {
@@ -1221,7 +1221,7 @@ public sealed class RenderConstraintsTransformBox : RenderAligningShiftedBox
         _clipRectLayer.Layer = context.PushClipRect(
             NeedsCompositing,
             offset,
-            DartGeometry.RectFromOffsetAndSize(default, Size),
+            (Offset.Zero & Size),
             base.Paint,
             _clipBehavior,
             _clipRectLayer.Layer);
@@ -1252,7 +1252,7 @@ public sealed class RenderConstraintsTransformBox : RenderAligningShiftedBox
     {
         return _clipBehavior == Clip.None || !_isOverflowing
             ? null
-            : DartGeometry.RectFromOffsetAndSize(default, Size);
+            : (Offset.Zero & Size);
     }
 
     private BoxConstraints TransformConstraints(BoxConstraints constraints)

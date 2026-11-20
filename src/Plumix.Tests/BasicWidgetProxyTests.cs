@@ -127,7 +127,7 @@ public sealed class BasicWidgetProxyTests
     [Fact]
     public void RenderFractionalTranslation_HitTestingAndSemanticsFollowPaintOffset()
     {
-        var child = new RegionHitTestRenderBox(new Size(20, 10), DartGeometry.RectFromLTWH(0, 0, 20, 10));
+        var child = new RegionHitTestRenderBox(new Size(20, 10), Rect.FromLTWH(0, 0, 20, 10));
         var translation = new RenderFractionalTranslation(
             translation: new Offset(1, 0),
             transformHitTests: true,
@@ -179,7 +179,7 @@ public sealed class BasicWidgetProxyTests
     {
         var child = new RegionHitTestRenderBox(
             new Size(80, 30),
-            DartGeometry.RectFromLTWH(0, 0, 20, 10),
+            Rect.FromLTWH(0, 0, 20, 10),
             baseline: 8);
         var rotated = new RenderRotatedBox(quarterTurns: 1, child: child);
 
@@ -219,7 +219,7 @@ public sealed class BasicWidgetProxyTests
     public void ClipRectWidget_CreatesRenderClipRect_AndUpdatesClip()
     {
         var owner = TestBuildOwner.Create();
-        var initialClipper = new FixedRectClipper(DartGeometry.RectFromLTWH(1, 2, 30, 40));
+        var initialClipper = new FixedRectClipper(Rect.FromLTWH(1, 2, 30, 40));
         var root = new TestRootElement(
             new ClipRect(
                 clipper: initialClipper,
@@ -233,7 +233,7 @@ public sealed class BasicWidgetProxyTests
         Assert.Same(initialClipper, renderClipRect.Clipper);
         Assert.Equal(Plumix.UI.Clip.HardEdge, renderClipRect.ClipBehavior);
 
-        var updatedClipper = new FixedRectClipper(DartGeometry.RectFromLTWH(4, 6, 12, 14));
+        var updatedClipper = new FixedRectClipper(Rect.FromLTWH(4, 6, 12, 14));
         root.Update(new ClipRect(
             clipper: updatedClipper,
             child: new SizedBox(width: 40, height: 50)));

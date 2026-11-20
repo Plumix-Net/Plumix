@@ -657,7 +657,7 @@ public sealed class SemanticsTreeTests
         var root = pipeline.SemanticsOwner!.RootNode;
         Assert.NotNull(root);
         var moved = Assert.Single(root.Children);
-        Assert.Equal(DartGeometry.RectFromLTWH(30, 12, 12, 8), moved.GlobalRect);
+        Assert.Equal(Rect.FromLTWH(30, 12, 12, 8), moved.GlobalRect);
     }
 
     [Fact]
@@ -680,7 +680,7 @@ public sealed class SemanticsTreeTests
         Assert.NotNull(firstRoot);
         var firstNode = Assert.Single(firstRoot.Children);
         int firstId = firstNode.Id;
-        Assert.Equal(DartGeometry.RectFromLTWH(10, 6, 12, 8), firstNode.GlobalRect);
+        Assert.Equal(Rect.FromLTWH(10, 6, 12, 8), firstNode.GlobalRect);
 
         transform.Transform = Matrix4.TranslationValues(44, 18, 0.0);
         pipeline.FlushSemantics();
@@ -689,7 +689,7 @@ public sealed class SemanticsTreeTests
         Assert.NotNull(updatedRoot);
         var updatedNode = Assert.Single(updatedRoot.Children);
         Assert.Equal(firstId, updatedNode.Id);
-        Assert.Equal(DartGeometry.RectFromLTWH(44, 18, 12, 8), updatedNode.GlobalRect);
+        Assert.Equal(Rect.FromLTWH(44, 18, 12, 8), updatedNode.GlobalRect);
     }
 
     [Fact]
@@ -697,7 +697,7 @@ public sealed class SemanticsTreeTests
     {
         var leaf = new FixedSemanticBox("Hidden", new Size(12, 8));
         var transform = new RenderTransform(Matrix4.TranslationValues(40, 0, 0.0), child: leaf);
-        var clip = new RenderClipRect(transform, clipper: new FixedRectClipper(DartGeometry.RectFromLTWH(0, 0, 20, 20)));
+        var clip = new RenderClipRect(transform, clipper: new FixedRectClipper(Rect.FromLTWH(0, 0, 20, 20)));
 
         var renderView = new RenderView(new FlutterView(new Size(800, 600)))
         {
@@ -720,7 +720,7 @@ public sealed class SemanticsTreeTests
     {
         var leaf = new FixedSemanticBox("Clipped", new Size(12, 8));
         var transform = new RenderTransform(Matrix4.TranslationValues(20, 0, 0.0), child: leaf);
-        var clipper = new FixedRectClipper(DartGeometry.RectFromLTWH(0, 0, 64, 32));
+        var clipper = new FixedRectClipper(Rect.FromLTWH(0, 0, 64, 32));
         var clip = new RenderClipRect(transform, clipper: clipper);
 
         var renderView = new RenderView(new FlutterView(new Size(800, 600)))
@@ -738,7 +738,7 @@ public sealed class SemanticsTreeTests
         Assert.NotNull(firstRoot);
         Assert.Single(firstRoot.Children);
 
-        clipper.Rect = DartGeometry.RectFromLTWH(0, 0, 8, 8);
+        clipper.Rect = Rect.FromLTWH(0, 0, 8, 8);
         pipeline.FlushSemantics();
 
         var updatedRoot = pipeline.SemanticsOwner!.RootNode;
@@ -753,8 +753,8 @@ public sealed class SemanticsTreeTests
         var transform = new RenderTransform(Matrix4.TranslationValues(30, 0, 0.0), child: leaf);
         var clip = new DistinctSemanticsClipRenderBox(transform)
         {
-            PaintClipRect = DartGeometry.RectFromLTWH(0, 0, 20, 20),
-            SemanticsClipRect = DartGeometry.RectFromLTWH(0, 0, 64, 20)
+            PaintClipRect = Rect.FromLTWH(0, 0, 20, 20),
+            SemanticsClipRect = Rect.FromLTWH(0, 0, 64, 20)
         };
 
         var renderView = new RenderView(new FlutterView(new Size(800, 600)))
@@ -782,8 +782,8 @@ public sealed class SemanticsTreeTests
         var transform = new RenderTransform(Matrix4.TranslationValues(80, 0, 0.0), child: leaf);
         var clip = new DistinctSemanticsClipRenderBox(transform)
         {
-            PaintClipRect = DartGeometry.RectFromLTWH(0, 0, 20, 20),
-            SemanticsClipRect = DartGeometry.RectFromLTWH(0, 0, 64, 20)
+            PaintClipRect = Rect.FromLTWH(0, 0, 20, 20),
+            SemanticsClipRect = Rect.FromLTWH(0, 0, 64, 20)
         };
 
         var renderView = new RenderView(new FlutterView(new Size(800, 600)))
@@ -1267,7 +1267,7 @@ public sealed class SemanticsTreeTests
         Assert.NotNull(firstRoot);
         var firstNode = FindNodeByLabel(firstRoot, "Synthetic Geo");
         Assert.NotNull(firstNode);
-        Assert.Equal(DartGeometry.RectFromLTWH(10, 6, 10, 8), firstNode.GlobalRect);
+        Assert.Equal(Rect.FromLTWH(10, 6, 10, 8), firstNode.GlobalRect);
         int firstId = firstNode.Id;
 
         transform.Transform = Matrix4.TranslationValues(25, 3, 0.0);
@@ -1278,7 +1278,7 @@ public sealed class SemanticsTreeTests
         var updatedNode = FindNodeByLabel(updatedRoot, "Synthetic Geo");
         Assert.NotNull(updatedNode);
         Assert.Equal(firstId, updatedNode.Id);
-        Assert.Equal(DartGeometry.RectFromLTWH(25, 3, 10, 8), updatedNode.GlobalRect);
+        Assert.Equal(Rect.FromLTWH(25, 3, 10, 8), updatedNode.GlobalRect);
     }
 
     [Fact]
@@ -1289,8 +1289,8 @@ public sealed class SemanticsTreeTests
         var transform = new RenderTransform(Matrix4.TranslationValues(30, 0, 0.0), child: delegated);
         var clip = new DistinctSemanticsClipRenderBox(transform)
         {
-            PaintClipRect = DartGeometry.RectFromLTWH(0, 0, 120, 40),
-            SemanticsClipRect = DartGeometry.RectFromLTWH(0, 0, 120, 40)
+            PaintClipRect = Rect.FromLTWH(0, 0, 120, 40),
+            SemanticsClipRect = Rect.FromLTWH(0, 0, 120, 40)
         };
 
         var renderView = new RenderView(new FlutterView(new Size(800, 600)))
@@ -1310,7 +1310,7 @@ public sealed class SemanticsTreeTests
         Assert.False(initialNode.IsHidden);
         int initialId = initialNode.Id;
 
-        clip.PaintClipRect = DartGeometry.RectFromLTWH(0, 0, 10, 10);
+        clip.PaintClipRect = Rect.FromLTWH(0, 0, 10, 10);
         pipeline.FlushSemantics();
 
         var hiddenRoot = pipeline.SemanticsOwner!.RootNode;
@@ -1321,17 +1321,17 @@ public sealed class SemanticsTreeTests
         // A sibling node folds its transform into its rect and carries the ancestor clips, but has no
         // hidden state of its own: Flutter's `_updateSiblingNodesGeometries` only writes the four
         // geometry fields.
-        Assert.Equal(DartGeometry.RectFromLTWH(0, 0, 10, 10), hiddenNode.ParentPaintClipRect);
+        Assert.Equal(Rect.FromLTWH(0, 0, 10, 10), hiddenNode.ParentPaintClipRect);
 
-        clip.SemanticsClipRect = DartGeometry.RectFromLTWH(0, 0, 10, 10);
+        clip.SemanticsClipRect = Rect.FromLTWH(0, 0, 10, 10);
         pipeline.FlushSemantics();
 
         var clippedOutRoot = pipeline.SemanticsOwner!.RootNode;
         Assert.NotNull(clippedOutRoot);
         Assert.Null(FindNodeByLabel(clippedOutRoot, "Synthetic Clip"));
 
-        clip.PaintClipRect = DartGeometry.RectFromLTWH(0, 0, 120, 40);
-        clip.SemanticsClipRect = DartGeometry.RectFromLTWH(0, 0, 120, 40);
+        clip.PaintClipRect = Rect.FromLTWH(0, 0, 120, 40);
+        clip.SemanticsClipRect = Rect.FromLTWH(0, 0, 120, 40);
         pipeline.FlushSemantics();
 
         var restoredRoot = pipeline.SemanticsOwner!.RootNode;

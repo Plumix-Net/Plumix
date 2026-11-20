@@ -863,12 +863,12 @@ public sealed class SelectableRegionState
         Matrix4 transform = _selectable!.GetTransformTo(null);
         var globalTransformAsOffset = new Offset(transform[12], transform[13]);
         Offset position = selectionPoint.LocalPosition + globalTransformAsOffset;
-        var caretRect = DartGeometry.RectFromLTWH(
+        var caretRect = Rect.FromLTWH(
             position.Dx,
             position.Dy - selectionPoint.LineHeight,
             0.0,
             selectionPoint.LineHeight);
-        var fieldBounds = DartGeometry.RectFromOffsetAndSize(globalTransformAsOffset, _selectable.Size);
+        var fieldBounds = globalTransformAsOffset & _selectable.Size;
         return new MagnifierInfo(
             GlobalGesturePosition: globalGesturePosition,
             CaretRect: caretRect,

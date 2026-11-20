@@ -40,7 +40,7 @@ internal sealed partial class FrameworkDartTester
     }
 
     /// <summary>Dart's <c>tester.getRect</c>.</summary>
-    public Rect GetRect(Element element) => DartGeometry.RectFromCorners(GetTopLeft(element), GetBottomRight(element));
+    public Rect GetRect(Element element) => Rect.FromPoints(GetTopLeft(element), GetBottomRight(element));
 
     /// <summary>Dart's <c>tester.getSize</c>.</summary>
     public Size GetSize(Element element) => ((RenderBox)element.FindRenderObject()!).Size;

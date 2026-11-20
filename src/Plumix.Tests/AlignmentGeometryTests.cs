@@ -20,7 +20,7 @@ public sealed class AlignmentGeometryTests
         Assert.Equal(new Offset(75.0, 62.5), value.AlongOffset(new Offset(100.0, 100.0)));
         Assert.Equal(new Offset(75.0, 62.5), value.AlongOffset(new Offset(100.0, 100.0)));
         Assert.Equal(new Offset(75.0, 62.5), value.AlongSize(new Size(100.0, 100.0)));
-        Assert.Equal(new Offset(85.0, 82.5), value.WithinRect(DartGeometry.RectFromLTWH(10.0, 20.0, 100.0, 100.0)));
+        Assert.Equal(new Offset(85.0, 82.5), value.WithinRect(Rect.FromLTWH(10.0, 20.0, 100.0, 100.0)));
     }
 
     [Fact]

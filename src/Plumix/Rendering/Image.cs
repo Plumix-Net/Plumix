@@ -388,7 +388,7 @@ public sealed class RenderImage : RenderBox
             : null;
         ImagePainting.PaintImage(
             canvas: context.Canvas,
-            rect: DartGeometry.RectFromOffsetAndSize(offset, Size),
+            rect: (offset & Size),
             image: _image,
             debugImageLabel: DebugImageLabel,
             scale: _scale,

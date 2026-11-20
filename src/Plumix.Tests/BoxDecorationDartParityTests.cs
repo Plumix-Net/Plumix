@@ -40,7 +40,7 @@ public sealed class BoxDecorationDartParityTests
             BorderRadius: BorderRadiusDirectional.Only(topStart: 100.0));
         BoxPainter painter = decoration.CreateBoxPainter();
         var size = new Size(1000.0, 1000.0);
-        var rect = DartGeometry.RectFromSize(size);
+        var rect = Offset.Zero & size;
 
         PaintAssert.Paints(
             PaintDecoration(painter, default, new ImageConfiguration(Size: size, TextDirection: TextDirection.Rtl)),
@@ -69,14 +69,14 @@ public sealed class BoxDecorationDartParityTests
 
         PaintAssert.Paints(
             PaintDecoration(painter, default, new ImageConfiguration(Size: size, TextDirection: TextDirection.Rtl)),
-            PaintPattern.Paints.Rect(rect: DartGeometry.RectFromSize(size)));
+            PaintPattern.Paints.Rect(rect: Offset.Zero & size));
     }
 
     [Fact]
     public void GetClipPath_WithBorderRadius()
     {
         var decoration = new BoxDecoration(BorderRadius: BorderRadius.All(Radius.Circular(10)));
-        var rect = DartGeometry.RectFromLTWH(0.0, 0.0, 100.0, 20.0);
+        var rect = Rect.FromLTWH(0.0, 0.0, 100.0, 20.0);
         Path clipPath = decoration.GetClipPath(rect, TextDirection.Ltr);
 
         Assert.True(clipPath.Contains(new Offset(30.0, 10.0)));
@@ -89,7 +89,7 @@ public sealed class BoxDecorationDartParityTests
     public void GetClipPath_WithShapeCircle()
     {
         var decoration = new BoxDecoration(Shape: BoxShape.Circle);
-        var rect = DartGeometry.RectFromLTWH(0.0, 0.0, 100.0, 20.0);
+        var rect = Rect.FromLTWH(0.0, 0.0, 100.0, 20.0);
         Path clipPath = decoration.GetClipPath(rect, TextDirection.Ltr);
 
         Assert.True(clipPath.Contains(new Offset(50.0, 0.0)));
@@ -205,17 +205,17 @@ public sealed class BoxDecorationDartParityTests
             new Offset(10.0, 20.0),
             new ImageConfiguration(Size: new Size(100.0, 50.0)));
 
-        var rect = DartGeometry.RectFromLTWH(10.0, 20.0, 100.0, 50.0);
+        var rect = Rect.FromLTWH(10.0, 20.0, 100.0, 50.0);
         // _paintShadows: the rect shifted by the offset and inflated by the spread, with the shadow's paint.
         CanvasCall shadowCall = calls[0];
         Assert.Equal("drawRRect", shadowCall.Method);
-        Assert.Equal(BorderRadius.Circular(8.0).ToRRect(DartGeometry.RectFromLTWH(11.0, 23.0, 102.0, 52.0)), shadowCall.RRect);
+        Assert.Equal(BorderRadius.Circular(8.0).ToRRect(Rect.FromLTWH(11.0, 23.0, 102.0, 52.0)), shadowCall.RRect);
         Assert.Equal(MaskFilter.Blur(BlurStyle.Solid, shadow.BlurSigma), shadowCall.MaskFilter);
         Assert.Equal(new Color(0x80000000), shadowCall.Color);
         // _paintBackgroundColor: an opaque solid Border reduces the rect by half its stroke inset.
         CanvasCall background = calls[1];
         Assert.Equal("drawRRect", background.Method);
-        Assert.Equal(BorderRadius.Circular(8.0).ToRRect(DartGeometry.RectFromLTWH(11.0, 21.0, 98.0, 48.0)), background.RRect);
+        Assert.Equal(BorderRadius.Circular(8.0).ToRRect(Rect.FromLTWH(11.0, 21.0, 98.0, 48.0)), background.RRect);
         Assert.Null(background.MaskFilter);
         Assert.Equal(new Color(0xFF00FF00), background.Color);
     }
@@ -231,7 +231,7 @@ public sealed class BoxDecorationDartParityTests
             default,
             new ImageConfiguration(Size: new Size(100.0, 50.0)));
 
-        PaintAssert.Paints(calls, PaintPattern.Paints.Rect(rect: DartGeometry.RectFromLTWH(0.0, 0.0, 100.0, 50.0)));
+        PaintAssert.Paints(calls, PaintPattern.Paints.Rect(rect: Rect.FromLTWH(0.0, 0.0, 100.0, 50.0)));
     }
 
     [Fact]
@@ -242,13 +242,13 @@ public sealed class BoxDecorationDartParityTests
             Border: new BorderDirectional(start: new BorderSide(new Color(0xFF000000), 4.0)));
         var configuration = new ImageConfiguration(Size: new Size(100.0, 50.0), TextDirection: TextDirection.Rtl);
         IReadOnlyList<CanvasCall> rtl = PaintDecoration(decoration.CreateBoxPainter(), default, configuration);
-        PaintAssert.Paints(rtl, PaintPattern.Paints.Rect(rect: DartGeometry.RectFromLTWH(0.0, 0.0, 98.0, 50.0)));
+        PaintAssert.Paints(rtl, PaintPattern.Paints.Rect(rect: Rect.FromLTWH(0.0, 0.0, 98.0, 50.0)));
 
         IReadOnlyList<CanvasCall> ltr = PaintDecoration(
             decoration.CreateBoxPainter(),
             default,
             configuration with { TextDirection = TextDirection.Ltr });
-        PaintAssert.Paints(ltr, PaintPattern.Paints.Rect(rect: DartGeometry.RectFromLTWH(2.0, 0.0, 98.0, 50.0)));
+        PaintAssert.Paints(ltr, PaintPattern.Paints.Rect(rect: Rect.FromLTWH(2.0, 0.0, 98.0, 50.0)));
     }
 
     [Fact]
@@ -281,7 +281,7 @@ public sealed class BoxDecorationDartParityTests
             decoration.CreateBoxPainter(),
             default,
             new ImageConfiguration(Size: new Size(10.0, 10.0)));
-        PaintAssert.Paints(calls, PaintPattern.Paints.Rect(rect: DartGeometry.RectFromLTWH(0.0, 0.0, 10.0, 10.0)));
+        PaintAssert.Paints(calls, PaintPattern.Paints.Rect(rect: Rect.FromLTWH(0.0, 0.0, 10.0, 10.0)));
     }
 
     [Fact]
@@ -346,8 +346,8 @@ public sealed class BoxDecorationDartParityTests
                 calls,
                 PaintPattern.Paints
                     .Save()
-                    .ClipRect(rect: DartGeometry.RectFromLTWH(1.0, 1.0, 10.0, 10.0))
-                    .Rect(rect: DartGeometry.RectFromLTWH(1.0, 1.0, 10.0, 10.0), hasMaskFilter: false)
+                    .ClipRect(rect: Rect.FromLTWH(1.0, 1.0, 10.0, 10.0))
+                    .Rect(rect: Rect.FromLTWH(1.0, 1.0, 10.0, 10.0), hasMaskFilter: false)
                     .Restore());
         }
         finally

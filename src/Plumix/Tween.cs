@@ -452,7 +452,7 @@ public class RectTween : Tween<Rect?>
 
     private static Rect FromLTRB(double left, double top, double right, double bottom)
     {
-        return DartGeometry.RectFromLTWH(left, top, Math.Max(0.0, right - left), Math.Max(0.0, bottom - top));
+        return Rect.FromLTWH(left, top, Math.Max(0.0, right - left), Math.Max(0.0, bottom - top));
     }
 }
 

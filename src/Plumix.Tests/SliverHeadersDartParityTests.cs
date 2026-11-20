@@ -616,7 +616,7 @@ public sealed class SliverHeadersDartParityTests
         Assert.False(semantics.IncludesNodeWithTags(
             RenderViewport.ExcludeFromScrolling,
             RenderViewport.UseTwoPaneSemantics));
-        Assert.Equal(DartGeometry.RectFromLTWH(0, 100, 800, 300), tester.GetRect(Text(tester, "header")));
+        Assert.Equal(Rect.FromLTWH(0, 100, 800, 300), tester.GetRect(Text(tester, "header")));
 
         tester.Drag(tester.ElementOfType<CustomScrollView>(), new Offset(0, -100));
         tester.PumpAndSettle();
@@ -624,7 +624,7 @@ public sealed class SliverHeadersDartParityTests
 
         Assert.True(semantics.IncludesNodeWithTags(RenderViewport.UseTwoPaneSemantics));
         Assert.False(semantics.IncludesNodeWithTags(RenderViewport.ExcludeFromScrolling));
-        Assert.Equal(DartGeometry.RectFromLTWH(0, 0, 800, 300), tester.GetRect(Text(tester, "header")));
+        Assert.Equal(Rect.FromLTWH(0, 0, 800, 300), tester.GetRect(Text(tester, "header")));
 
         tester.Drag(tester.ElementOfType<CustomScrollView>(), new Offset(0, -300));
         tester.PumpAndSettle();
@@ -634,7 +634,7 @@ public sealed class SliverHeadersDartParityTests
         Assert.Equal(
             new HashSet<SemanticsTag> { RenderViewport.ExcludeFromScrolling, RenderViewport.UseTwoPaneSemantics },
             semanticNode?.Parent?.Tags?.ToHashSet());
-        Assert.Equal(DartGeometry.RectFromLTWH(0, 0, 800, 300), tester.GetRect(Text(tester, "header")));
+        Assert.Equal(Rect.FromLTWH(0, 0, 800, 300), tester.GetRect(Text(tester, "header")));
     }
 
     // ------------------------------------------------------------ sliver_floating_header_test.dart
@@ -692,10 +692,10 @@ public sealed class SliverHeadersDartParityTests
             Assert.Empty(tester.OnstageElementsWithText("header"));
 
             Scroll(new Offset(0, 25));
-            Assert.Equal(DartGeometry.RectFromLTWH(0, 0, 800, 200), GetHeaderRect());
+            Assert.Equal(Rect.FromLTWH(0, 0, 800, 200), GetHeaderRect());
 
             Scroll(new Offset(0, 25));
-            Assert.Equal(DartGeometry.RectFromLTWH(0, 0, 800, 200), GetHeaderRect());
+            Assert.Equal(Rect.FromLTWH(0, 0, 800, 200), GetHeaderRect());
 
             Scroll(new Offset(0, -25));
             Assert.Empty(tester.OnstageElementsWithText("header"));
@@ -717,10 +717,10 @@ public sealed class SliverHeadersDartParityTests
             Assert.Empty(tester.OnstageElementsWithText("header"));
 
             Scroll(new Offset(25, 0));
-            Assert.Equal(DartGeometry.RectFromLTWH(0, 0, 200, 600), GetHeaderRect());
+            Assert.Equal(Rect.FromLTWH(0, 0, 200, 600), GetHeaderRect());
 
             Scroll(new Offset(25, 0));
-            Assert.Equal(DartGeometry.RectFromLTWH(0, 0, 200, 600), GetHeaderRect());
+            Assert.Equal(Rect.FromLTWH(0, 0, 200, 600), GetHeaderRect());
 
             Scroll(new Offset(-25, 0));
             Assert.Empty(tester.OnstageElementsWithText("header"));
@@ -742,10 +742,10 @@ public sealed class SliverHeadersDartParityTests
             Assert.Empty(tester.OnstageElementsWithText("header"));
 
             Scroll(new Offset(0, -25));
-            Assert.Equal(DartGeometry.RectFromLTWH(0, 400, 800, 200), GetHeaderRect());
+            Assert.Equal(Rect.FromLTWH(0, 400, 800, 200), GetHeaderRect());
 
             Scroll(new Offset(0, -25));
-            Assert.Equal(DartGeometry.RectFromLTWH(0, 400, 800, 200), GetHeaderRect());
+            Assert.Equal(Rect.FromLTWH(0, 400, 800, 200), GetHeaderRect());
 
             Scroll(new Offset(0, 25));
             Assert.Empty(tester.OnstageElementsWithText("header"));
@@ -767,10 +767,10 @@ public sealed class SliverHeadersDartParityTests
             Assert.Empty(tester.OnstageElementsWithText("header"));
 
             Scroll(new Offset(-25, 0));
-            Assert.Equal(DartGeometry.RectFromLTWH(600, 0, 200, 600), GetHeaderRect());
+            Assert.Equal(Rect.FromLTWH(600, 0, 200, 600), GetHeaderRect());
 
             Scroll(new Offset(-25, 0));
-            Assert.Equal(DartGeometry.RectFromLTWH(600, 0, 200, 600), GetHeaderRect());
+            Assert.Equal(Rect.FromLTWH(600, 0, 200, 600), GetHeaderRect());
 
             Scroll(new Offset(25, 0));
             Assert.Empty(tester.OnstageElementsWithText("header"));
@@ -813,13 +813,13 @@ public sealed class SliverHeadersDartParityTests
 
         Scroll(new Offset(0, 25));
 
-        Assert.Equal(DartGeometry.RectFromLTWH(0, -175, 800, 200), GetHeaderRect());
+        Assert.Equal(Rect.FromLTWH(0, -175, 800, 200), GetHeaderRect());
 
         tester.Pump(TimeSpan.FromMilliseconds(500));
-        Assert.Equal(DartGeometry.RectFromLTWH(0, -175 / 2.0, 800, 200), GetHeaderRect());
+        Assert.Equal(Rect.FromLTWH(0, -175 / 2.0, 800, 200), GetHeaderRect());
 
         tester.Pump(TimeSpan.FromMilliseconds(500));
-        Assert.Equal(DartGeometry.RectFromLTWH(0, 0, 800, 200), GetHeaderRect());
+        Assert.Equal(Rect.FromLTWH(0, 0, 800, 200), GetHeaderRect());
     }
 
     // Flutter: 'SliverFloatingHeader snapMode parameter'
@@ -851,7 +851,7 @@ public sealed class SliverHeadersDartParityTests
         {
             tester.PumpWidget(BuildFrame(FloatingHeaderSnapMode.Overlay));
             tester.PumpAndSettle();
-            Assert.Equal(DartGeometry.RectFromLTWH(0, 0, 800, 200), GetHeaderRect());
+            Assert.Equal(Rect.FromLTWH(0, 0, 800, 200), GetHeaderRect());
             Assert.Equal(200, GetItem0Y());
 
             Scroll(new Offset(0, -200));
@@ -868,14 +868,14 @@ public sealed class SliverHeadersDartParityTests
 
             Scroll(new Offset(0, 200));
             tester.PumpAndSettle();
-            Assert.Equal(DartGeometry.RectFromLTWH(0, 0, 800, 200), GetHeaderRect());
+            Assert.Equal(Rect.FromLTWH(0, 0, 800, 200), GetHeaderRect());
             Assert.Equal(200, GetItem0Y());
         }
 
         {
             tester.PumpWidget(BuildFrame(FloatingHeaderSnapMode.Scroll));
             tester.PumpAndSettle();
-            Assert.Equal(DartGeometry.RectFromLTWH(0, 0, 800, 200), GetHeaderRect());
+            Assert.Equal(Rect.FromLTWH(0, 0, 800, 200), GetHeaderRect());
             Assert.Equal(200, GetItem0Y());
 
             Scroll(new Offset(0, -200));

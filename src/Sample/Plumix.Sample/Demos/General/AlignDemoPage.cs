@@ -69,8 +69,8 @@ internal sealed class AlignDemoPageState : State
             _explicitTransitionsController,
             positionTween.Transform);
         var rectTween = new RectTween(
-            begin: DartGeometry.RectFromLTWH(12, 74, 70, 40),
-            end: DartGeometry.RectFromLTWH(158, 14, 70, 40));
+            begin: Rect.FromLTWH(12, 74, 70, 40),
+            end: Rect.FromLTWH(158, 14, 70, 40));
         _explicitRelativePositionAnimation = new DerivedAnimation<Rect?>(
             _explicitTransitionsController,
             rectTween.Transform);

@@ -858,7 +858,7 @@ public class RenderListWheelViewport : RenderBox, IContainerRenderObjectMixin<Re
                 _clipRectLayer.Layer = context.PushClipRect(
                     NeedsCompositing,
                     offset,
-                    DartGeometry.RectFromOffsetAndSize(new Offset(0, 0), Size),
+                    (new Offset(0, 0) & Size),
                     PaintVisibleChildren,
                     ClipBehavior,
                     _clipRectLayer.Layer);
@@ -990,9 +990,9 @@ public class RenderListWheelViewport : RenderBox, IContainerRenderObjectMixin<Re
                                        >= magnifierTopLinePosition - (_itemExtent * _magnification);
         bool isBeforeMagnifierBottomLine = untransformedPaintingCoordinates.Dy <= magnifierBottomLinePosition;
 
-        var centerRect = DartGeometry.RectFromLTWH(0.0, magnifierTopLinePosition, Size.Width, _itemExtent * _magnification);
-        var topHalfRect = DartGeometry.RectFromLTWH(0.0, 0.0, Size.Width, magnifierTopLinePosition);
-        var bottomHalfRect = DartGeometry.RectFromLTWH(0.0, magnifierBottomLinePosition, Size.Width, magnifierTopLinePosition);
+        var centerRect = Rect.FromLTWH(0.0, magnifierTopLinePosition, Size.Width, _itemExtent * _magnification);
+        var topHalfRect = Rect.FromLTWH(0.0, 0.0, Size.Width, magnifierTopLinePosition);
+        var bottomHalfRect = Rect.FromLTWH(0.0, magnifierBottomLinePosition, Size.Width, magnifierTopLinePosition);
         // Some part of the child is in the center magnifier.
         bool inCenter = isAfterMagnifierTopLine && isBeforeMagnifierBottomLine;
 
@@ -1120,7 +1120,7 @@ public class RenderListWheelViewport : RenderBox, IContainerRenderObjectMixin<Re
 
     protected override Rect? DescribeApproximatePaintClip(RenderObject? child)
     {
-        return ShouldClipAtCurrentOffset() ? DartGeometry.RectFromOffsetAndSize(default(Offset), Size) : null;
+        return ShouldClipAtCurrentOffset() ? ((default(Offset)) & Size) : null;
     }
 
     protected override bool HitTestChildren(BoxHitTestResult result, Offset position)

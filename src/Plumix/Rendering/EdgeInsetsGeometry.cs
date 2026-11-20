@@ -340,7 +340,7 @@ public readonly record struct EdgeInsets(double Left, double Top, double Right, 
     /// </summary>
     public Rect InflateRect(Rect rect)
     {
-        return DartGeometry.RectFromLTRB(
+        return Rect.FromLTRB(
             rect.Left - Left,
             rect.Top - Top,
             rect.Right + Right,
@@ -353,7 +353,7 @@ public readonly record struct EdgeInsets(double Left, double Top, double Right, 
     /// </summary>
     public Rect DeflateRect(Rect rect)
     {
-        return DartGeometry.RectFromLTRB(
+        return Rect.FromLTRB(
             rect.Left + Left,
             rect.Top + Top,
             rect.Right - Right,
@@ -482,10 +482,10 @@ public readonly record struct EdgeInsets(double Left, double Top, double Right, 
     public static EdgeInsets operator %(EdgeInsets value, double divisor)
     {
         return new EdgeInsets(
-            DartGeometry.Modulo(value.Left, divisor),
-            DartGeometry.Modulo(value.Top, divisor),
-            DartGeometry.Modulo(value.Right, divisor),
-            DartGeometry.Modulo(value.Bottom, divisor));
+            GeometryMath.Modulo(value.Left, divisor),
+            GeometryMath.Modulo(value.Top, divisor),
+            GeometryMath.Modulo(value.Right, divisor),
+            GeometryMath.Modulo(value.Bottom, divisor));
     }
 
     /// <summary>
@@ -495,10 +495,10 @@ public readonly record struct EdgeInsets(double Left, double Top, double Right, 
     public EdgeInsets TruncatingDivide(double factor)
     {
         return new EdgeInsets(
-            DartGeometry.TruncateQuotient(Left, factor),
-            DartGeometry.TruncateQuotient(Top, factor),
-            DartGeometry.TruncateQuotient(Right, factor),
-            DartGeometry.TruncateQuotient(Bottom, factor));
+            GeometryMath.TruncateQuotient(Left, factor),
+            GeometryMath.TruncateQuotient(Top, factor),
+            GeometryMath.TruncateQuotient(Right, factor),
+            GeometryMath.TruncateQuotient(Bottom, factor));
     }
 
     /// <summary>Linearly interpolate between two <see cref="EdgeInsets"/>. Dart's <c>EdgeInsets.lerp</c>.</summary>

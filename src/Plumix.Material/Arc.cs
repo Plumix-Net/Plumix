@@ -535,7 +535,7 @@ public class MaterialRectCenterArcTween : RectTween
         Offset center = _centerArc.Lerp(t);
         double width = (begin.Width * (1.0 - t)) + (end.Width * t);
         double height = (begin.Height * (1.0 - t)) + (end.Height * t);
-        return DartGeometry.RectFromLTWH(center.Dx - (width / 2.0), center.Dy - (height / 2.0), width, height);
+        return Rect.FromLTWH(center.Dx - (width / 2.0), center.Dy - (height / 2.0), width, height);
     }
 
     public override string ToString()
@@ -557,7 +557,7 @@ internal static class ArcGeometry
 
     public static Rect RectFromPoints(Offset a, Offset b)
     {
-        return DartGeometry.RectFromLTWH(
+        return Rect.FromLTWH(
             Math.Min(a.Dx, b.Dx),
             Math.Min(a.Dy, b.Dy),
             Math.Abs(a.Dx - b.Dx),

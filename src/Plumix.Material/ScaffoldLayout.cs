@@ -304,7 +304,7 @@ internal sealed class ScaffoldLayout : MultiChildLayoutDelegate
                 end: currentFabOffset,
                 progress: FloatingActionButtonMoveAnimation.Value);
             PositionChild(ScaffoldSlot.FloatingActionButton, fabOffset);
-            floatingActionButtonRect = DartGeometry.RectFromOffsetAndSize(fabOffset, fabSize);
+            floatingActionButtonRect = fabOffset & fabSize;
         }
         else
         {

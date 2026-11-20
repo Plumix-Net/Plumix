@@ -605,7 +605,7 @@ public sealed partial class RenderParagraph : RenderBox,
             context.Canvas.DrawRectangle(
                 new SolidColorBrush(RenderingDebug.CurrentRepaintColor.ToColor()),
                 null,
-                DartGeometry.RectFromOffsetAndSize(offset, Size));
+                (offset & Size));
         }
 
         if (_lastSelectableFragments is not null)
@@ -613,7 +613,7 @@ public sealed partial class RenderParagraph : RenderBox,
             if (_needsClipping)
             {
                 context.Canvas.Save();
-                context.Canvas.ClipRect(DartGeometry.RectFromOffsetAndSize(offset, Size));
+                context.Canvas.ClipRect(offset & Size);
             }
 
             PaintSelectionHighlights(context, offset);
@@ -625,7 +625,7 @@ public sealed partial class RenderParagraph : RenderBox,
 
         if (_needsClipping)
         {
-            var bounds = DartGeometry.RectFromOffsetAndSize(offset, Size);
+            var bounds = offset & Size;
             context.Canvas.Save();
             if (_overflowShader is { } shader)
             {
@@ -891,7 +891,7 @@ public sealed partial class RenderParagraph : RenderBox,
             }
 
             // Infinite text boxes must not reach platform accessibility bridges.
-            rect = DartGeometry.RectFromLTWH(
+            rect = Rect.FromLTWH(
                 Math.Max(0.0, rect.Left),
                 Math.Max(0.0, rect.Top),
                 Math.Min(rect.Width, Constraints.MaxWidth),
@@ -900,7 +900,7 @@ public sealed partial class RenderParagraph : RenderBox,
             double top = Math.Floor(rect.Top) - 4.0;
             double right = Math.Ceiling(rect.Right) + 4.0;
             double bottom = Math.Ceiling(rect.Bottom) + 4.0;
-            var currentRect = DartGeometry.RectFromLTWH(left, top, right - left, bottom - top);
+            var currentRect = Rect.FromLTWH(left, top, right - left, bottom - top);
             var configuration = new SemanticsConfiguration
             {
                 SortKey = new OrdinalSortKey(ordinal++),

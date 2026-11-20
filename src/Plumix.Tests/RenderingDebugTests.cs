@@ -174,7 +174,7 @@ public sealed class RenderingDebugTests : IDisposable
     {
         var probe = new PaintCallbackRenderBox(
             new Size(60.0, 40.0),
-            (context, offset) => RenderingDebug.PaintPadding(context, DartGeometry.RectFromOffsetAndSize(offset, new Size(60.0, 40.0)), null));
+            (context, offset) => RenderingDebug.PaintPadding(context, (offset & new Size(60.0, 40.0)), null));
 
         OffsetLayer layer = Paint(probe, new Size(60.0, 40.0));
 
@@ -185,8 +185,8 @@ public sealed class RenderingDebugTests : IDisposable
     [Fact]
     public void PaintPadding_WithInnerRect_BuildsAnEvenOddRingOverTheOuterRect()
     {
-        var outer = DartGeometry.RectFromLTWH(0.0, 0.0, 60.0, 40.0);
-        var inner = DartGeometry.RectFromLTWH(10.0, 10.0, 40.0, 20.0);
+        var outer = Rect.FromLTWH(0.0, 0.0, 60.0, 40.0);
+        var inner = Rect.FromLTWH(10.0, 10.0, 40.0, 20.0);
 
         Plumix.UI.Path ring = RenderingDebug.BuildDoubleRectPath(outer, inner);
 
@@ -201,7 +201,7 @@ public sealed class RenderingDebugTests : IDisposable
             new Size(60.0, 40.0),
             (context, offset) => RenderingDebug.PaintPadding(
                 context,
-                DartGeometry.RectFromOffsetAndSize(offset, new Size(60.0, 40.0)),
+                (offset & new Size(60.0, 40.0)),
                 default(Rect)));
 
         OffsetLayer layer = Paint(probe, new Size(60.0, 40.0));
@@ -598,7 +598,7 @@ public sealed class RenderingDebugTests : IDisposable
         RenderingDebug.PaintLayerBordersEnabled = true;
         var probe = new PaintCallbackRenderBox(
             new Size(40.0, 40.0),
-            (context, offset) => context.Canvas.DrawRectangle(Brushes.Red, null, DartGeometry.RectFromOffsetAndSize(offset, new Size(4.0, 4.0))));
+            (context, offset) => context.Canvas.DrawRectangle(Brushes.Red, null, (offset & new Size(4.0, 4.0))));
 
         OffsetLayer layer = Paint(probe, new Size(40.0, 40.0));
 

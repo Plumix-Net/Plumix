@@ -160,7 +160,7 @@ public sealed partial class EditableText
             else
             {
                 double expandedHeight = Math.Max(rect.Height, renderEditable.PreferredLineHeight);
-                Rect expandedRect = DartGeometry.RectFromLTWH(
+                Rect expandedRect = Rect.FromLTWH(
                     rect.Center.Dx - rect.Width / 2,
                     rect.Center.Dy - expandedHeight / 2,
                     rect.Width,
@@ -772,7 +772,7 @@ public sealed partial class EditableText
             double obscuredVertical =
                 (view.Padding.Top + view.Padding.Bottom + view.ViewInsets.Bottom) / devicePixelRatio;
             double obscuredHorizontal = (view.Padding.Left + view.Padding.Right) / devicePixelRatio;
-            return DartGeometry.RectFromLTWH(
+            return Rect.FromLTWH(
                 view.Padding.Left / devicePixelRatio,
                 view.Padding.Top / devicePixelRatio,
                 screenSize.Width - obscuredHorizontal,
@@ -812,7 +812,7 @@ public sealed partial class EditableText
         {
             double left = Math.Min(a.Left, b.Left);
             double top = Math.Min(a.Top, b.Top);
-            return DartGeometry.RectFromLTWH(left, top, Math.Max(a.Right, b.Right) - left, Math.Max(a.Bottom, b.Bottom) - top);
+            return Rect.FromLTWH(left, top, Math.Max(a.Right, b.Right) - left, Math.Max(a.Bottom, b.Bottom) - top);
         }
     }
 }

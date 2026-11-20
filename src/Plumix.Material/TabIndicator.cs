@@ -83,12 +83,12 @@ public sealed record UnderlineTabIndicator : Decoration
     internal Rect IndicatorRectFor(Rect rect, TextDirection textDirection)
     {
         EdgeInsets resolved = Insets.Resolve(textDirection);
-        var indicator = DartGeometry.RectFromLTWH(
+        var indicator = Rect.FromLTWH(
             rect.Left + resolved.Left,
             rect.Top + resolved.Top,
             Math.Max(0.0, rect.Width - resolved.Left - resolved.Right),
             Math.Max(0.0, rect.Height - resolved.Top - resolved.Bottom));
-        return DartGeometry.RectFromLTWH(
+        return Rect.FromLTWH(
             indicator.Left,
             indicator.Bottom - BorderSide.Width,
             indicator.Width,
@@ -117,7 +117,7 @@ internal sealed class UnderlinePainter : BoxPainter
             ?? throw new InvalidOperationException("UnderlineTabIndicator requires a configured size.");
         TextDirection textDirection = configuration.TextDirection
             ?? throw new InvalidOperationException("UnderlineTabIndicator requires a text direction.");
-        var rect = DartGeometry.RectFromOffsetAndSize(offset, size);
+        var rect = offset & size;
         if (_borderRadius is { } borderRadius)
         {
             Rect rounded = _decoration.IndicatorRectFor(rect, textDirection);

@@ -548,7 +548,7 @@ public sealed class InteractiveViewer : StatefulWidget
             {
                 DebugAssertions.Assert(_parentKey.CurrentContext is not null);
                 var parentRenderBox = (RenderBox)_parentKey.CurrentContext!.FindRenderObject()!;
-                return DartGeometry.RectFromSize(parentRenderBox.Size);
+                return Offset.Zero & parentRenderBox.Size;
             }
         }
 
@@ -1138,7 +1138,7 @@ public sealed class InteractiveViewer : StatefulWidget
                             matrix: matrix,
                             child: Widget.Builder_!(
                                 builderContext,
-                                TransformViewport(matrix, DartGeometry.RectFromSize(constraints.Biggest))));
+                                TransformViewport(matrix, (Offset.Zero & constraints.Biggest))));
                     });
             }
 

@@ -1450,7 +1450,7 @@ public sealed class InteractiveViewerDartParityTests
             }
         }
 
-        return DartGeometry.RectFromCorners(new Offset(xMin!.Value, yMin!.Value), new Offset(xMax!.Value, yMax!.Value));
+        return Rect.FromLTRB(xMin!.Value, yMin!.Value, xMax!.Value, yMax!.Value);
     }
 
     private static void AssertMoreOrLessEquals(double expected, double actual, double epsilon = Eps)

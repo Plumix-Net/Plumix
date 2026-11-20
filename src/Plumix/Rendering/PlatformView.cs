@@ -275,7 +275,7 @@ public class RenderAndroidView : PlatformViewRenderBox
             _clipRectLayer.Layer = context.PushClipRect(
                 true,
                 offset,
-                DartGeometry.RectFromOffsetAndSize(offset, Size),
+                (offset & Size),
                 PaintTexture,
                 clipBehavior: ClipBehavior,
                 oldLayer: _clipRectLayer.Layer);
@@ -304,13 +304,13 @@ public class RenderAndroidView : PlatformViewRenderBox
         if (_viewController.RequiresViewComposition)
         {
             context.AddLayer(new PlatformViewLayer(
-                rect: DartGeometry.RectFromOffsetAndSize(offset, textureSize),
+                rect: (offset & textureSize),
                 viewId: _viewController.ViewId));
         }
         else
         {
             context.AddLayer(new TextureLayer(
-                rect: DartGeometry.RectFromOffsetAndSize(offset, textureSize),
+                rect: (offset & textureSize),
                 textureId: _viewController.TextureId!.Value));
         }
     }
@@ -396,7 +396,7 @@ public abstract class RenderDarwinPlatformView<T> : RenderBox
 
     public override void Paint(PaintingContext context, Offset offset)
     {
-        context.AddLayer(new PlatformViewLayer(rect: DartGeometry.RectFromOffsetAndSize(offset, Size), viewId: _viewController.Id));
+        context.AddLayer(new PlatformViewLayer(rect: (offset & Size), viewId: _viewController.Id));
     }
 
     public override bool HitTest(BoxHitTestResult result, Offset position)
@@ -817,7 +817,7 @@ public class PlatformViewRenderBox : RenderBox, IMouseTrackerAnnotation
 
     public override void Paint(PaintingContext context, Offset offset)
     {
-        context.AddLayer(new PlatformViewLayer(rect: DartGeometry.RectFromOffsetAndSize(offset, Size), viewId: _controller.ViewId));
+        context.AddLayer(new PlatformViewLayer(rect: (offset & Size), viewId: _controller.ViewId));
     }
 
     protected override void DescribeSemanticsConfiguration(SemanticsConfiguration configuration)

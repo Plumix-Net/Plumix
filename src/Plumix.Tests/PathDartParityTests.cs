@@ -19,19 +19,19 @@ public sealed class PathDartParityTests
         var path = new Path { FillType = PathFillType.EvenOdd };
         Assert.Equal("Path", path.ToString());
         Assert.Equal(default, path.GetBounds());
-        path.AddRect(DartGeometry.RectFromLTWH(1, 3, 4, 4));
-        Assert.Equal(DartGeometry.RectFromLTWH(1, 3, 4, 4), path.GetBounds());
+        path.AddRect(Rect.FromLTWH(1, 3, 4, 4));
+        Assert.Equal(Rect.FromLTWH(1, 3, 4, 4), path.GetBounds());
         var copy = new Path(path);
         path.LineTo(20, 15);
-        Assert.Equal(DartGeometry.RectFromLTWH(1, 3, 19, 12), path.GetBounds());
-        Assert.Equal(DartGeometry.RectFromLTWH(1, 3, 4, 4), copy.GetBounds());
+        Assert.Equal(Rect.FromLTWH(1, 3, 19, 12), path.GetBounds());
+        Assert.Equal(Rect.FromLTWH(1, 3, 4, 4), copy.GetBounds());
         Path shifted = copy.Shift(new Offset(10, 10));
-        Assert.Equal(DartGeometry.RectFromLTWH(11, 13, 4, 4), shifted.GetBounds());
+        Assert.Equal(Rect.FromLTWH(11, 13, 4, 4), shifted.GetBounds());
         Path zeroShifted = copy.Shift(default);
         Assert.NotSame(copy, zeroShifted);
         zeroShifted.Reset();
         Assert.Equal(PathFillType.NonZero, zeroShifted.FillType);
-        Assert.Equal(DartGeometry.RectFromLTWH(1, 3, 4, 4), copy.GetBounds());
+        Assert.Equal(Rect.FromLTWH(1, 3, 4, 4), copy.GetBounds());
     }
 
     [Fact]
@@ -40,16 +40,16 @@ public sealed class PathDartParityTests
         var path = new Path();
         path.MoveTo(0, 0);
         path.QuadraticBezierTo(100, 200, 200, 0);
-        Assert.Equal(DartGeometry.RectFromLTWH(0, 0, 200, 200), path.GetBounds());
+        Assert.Equal(Rect.FromLTWH(0, 0, 200, 200), path.GetBounds());
         path.MoveTo(1000, 1000);
-        Assert.Equal(DartGeometry.RectFromLTWH(0, 0, 200, 200), path.GetBounds());
+        Assert.Equal(Rect.FromLTWH(0, 0, 200, 200), path.GetBounds());
         path.LineTo(1001, 1001);
-        Assert.Equal(DartGeometry.RectFromLTWH(0, 0, 1001, 1001), path.GetBounds());
+        Assert.Equal(Rect.FromLTWH(0, 0, 1001, 1001), path.GetBounds());
         path.MoveTo(double.PositiveInfinity, 0);
         Assert.Equal(default, path.GetBounds());
         path.Reset();
         path.MoveTo(7, 9);
-        Assert.Equal(DartGeometry.RectFromLTWH(7, 9, 0, 0), path.GetBounds());
+        Assert.Equal(Rect.FromLTWH(7, 9, 0, 0), path.GetBounds());
         path.Reset();
         path.MoveTo(double.MaxValue, 0);
         Assert.Equal((double)float.MaxValue, path.GetBounds().Left);
@@ -65,16 +65,16 @@ public sealed class PathDartParityTests
         PathOperation operation, bool overlap, bool leftOnly, bool rightOnly)
     {
         var left = new Path();
-        left.AddRect(DartGeometry.RectFromLTWH(0, 0, 40, 40));
+        left.AddRect(Rect.FromLTWH(0, 0, 40, 40));
         var right = new Path();
-        right.AddRect(DartGeometry.RectFromLTWH(20, 0, 40, 40));
+        right.AddRect(Rect.FromLTWH(20, 0, 40, 40));
         Path result = Path.Combine(operation, left, right);
         left.Reset();
         right.Reset();
         Assert.Equal(overlap, result.Contains(new Offset(30, 20)));
         Assert.Equal(leftOnly, result.Contains(new Offset(10, 20)));
         Assert.Equal(rightOnly, result.Contains(new Offset(50, 20)));
-        result.AddOval(DartGeometry.RectFromLTWH(80, 0, 20, 20));
+        result.AddOval(Rect.FromLTWH(80, 0, 20, 20));
         Assert.True(result.Contains(new Offset(90, 10)));
         var appended = new Path();
         appended.AddPath(result, new Offset(0, 50));
@@ -86,15 +86,15 @@ public sealed class PathDartParityTests
     public void BooleanBoundsAreTheSolvedGeometryRatherThanOperandBounds()
     {
         var first = new Path();
-        first.AddOval(DartGeometry.RectFromLTWH(0, 0, 20, 20));
+        first.AddOval(Rect.FromLTWH(0, 0, 20, 20));
         var second = new Path();
-        second.AddOval(DartGeometry.RectFromLTWH(-5, -5, 20, 20));
+        second.AddOval(Rect.FromLTWH(-5, -5, 20, 20));
         Assert.InRange(Path.Combine(PathOperation.Difference, first, second).GetBounds().Top, 0.87, 0.89);
         Assert.InRange(Path.Combine(PathOperation.ReverseDifference, first, second).GetBounds().Right, 14.10, 14.12);
-        Assert.Equal(DartGeometry.RectFromLTWH(-5, -5, 25, 25), Path.Combine(PathOperation.Union, first, second).GetBounds());
-        Assert.Equal(DartGeometry.RectFromLTWH(0, 0, 15, 15), Path.Combine(PathOperation.Intersect, first, second).GetBounds());
+        Assert.Equal(Rect.FromLTWH(-5, -5, 25, 25), Path.Combine(PathOperation.Union, first, second).GetBounds());
+        Assert.Equal(Rect.FromLTWH(0, 0, 15, 15), Path.Combine(PathOperation.Intersect, first, second).GetBounds());
         var rect = new Path();
-        rect.AddRect(DartGeometry.RectFromLTWH(0, 0, 20, 20));
+        rect.AddRect(Rect.FromLTWH(0, 0, 20, 20));
         Assert.Equal(default, Path.Combine(PathOperation.Difference, rect, rect).GetBounds());
         Assert.Empty(Path.Combine(PathOperation.Xor, rect, rect).ComputeMetrics());
     }
@@ -106,7 +106,7 @@ public sealed class PathDartParityTests
         invalid.MoveTo(double.NaN, 0);
         invalid.LineTo(10, 10);
         var other = new Path();
-        other.AddRect(DartGeometry.RectFromLTWH(0, 0, 10, 10));
+        other.AddRect(Rect.FromLTWH(0, 0, 10, 10));
         Assert.Equal(
             "Path.combine() failed.  This may be due an invalid path; in particular, check for NaN values.",
             Assert.Throws<InvalidOperationException>(() => Path.Combine(PathOperation.Union, invalid, other)).Message);
@@ -116,20 +116,20 @@ public sealed class PathDartParityTests
     public void TransformAppendAndExtendMatchEngineTests()
     {
         var path = new Path();
-        path.AddRect(DartGeometry.RectFromLTWH(0, 0, 10, 10));
+        path.AddRect(Rect.FromLTWH(0, 0, 10, 10));
         Matrix4 matrix = Matrix4.Diagonal3Values(2.5, 0.5, 1);
-        Assert.Equal(DartGeometry.RectFromLTWH(0, 0, 25, 5), path.Transform(matrix.Storage).GetBounds());
-        Assert.Equal(DartGeometry.RectFromLTWH(0, 0, 10, 10), path.GetBounds());
+        Assert.Equal(Rect.FromLTWH(0, 0, 25, 5), path.Transform(matrix.Storage).GetBounds());
+        Assert.Equal(Rect.FromLTWH(0, 0, 10, 10), path.GetBounds());
         var line = new Path();
         line.MoveTo(0, 0);
         line.LineTo(10, 10);
         path.AddPath(line, new Offset(10, 10));
-        Assert.Equal(DartGeometry.RectFromLTWH(0, 0, 20, 20), path.GetBounds());
+        Assert.Equal(Rect.FromLTWH(0, 0, 20, 20), path.GetBounds());
         path.AddPath(line, new Offset(20, 20), matrix.Storage);
-        Assert.Equal(DartGeometry.RectFromLTWH(0, 0, 45, 25), path.GetBounds());
+        Assert.Equal(Rect.FromLTWH(0, 0, 45, 25), path.GetBounds());
         path.ExtendWithPath(line, default);
         path.ExtendWithPath(line, new Offset(45, 25), matrix.Storage);
-        Assert.Equal(DartGeometry.RectFromLTWH(0, 0, 70, 30), path.GetBounds());
+        Assert.Equal(Rect.FromLTWH(0, 0, 70, 30), path.GetBounds());
 
         var extended = new Path();
         extended.MoveTo(0, 0);
@@ -145,18 +145,18 @@ public sealed class PathDartParityTests
     public void PerspectiveUsesTheFullMatrixAndPreservesCurves()
     {
         var path = new Path();
-        path.AddRect(DartGeometry.RectFromLTWH(0, 0, 10, 10));
+        path.AddRect(Rect.FromLTWH(0, 0, 10, 10));
         Matrix4 matrix = Matrix4.Identity();
         matrix.Storage[3] = 0.1;
         Path transformed = path.Transform(matrix.Storage);
-        Assert.Equal(DartGeometry.RectFromLTWH(0, 0, 5, 10), transformed.GetBounds());
+        Assert.Equal(Rect.FromLTWH(0, 0, 5, 10), transformed.GetBounds());
         Assert.True(transformed.Contains(new Offset(2, 2)));
         Assert.False(transformed.Contains(new Offset(8, 2)));
         path.Reset();
         path.MoveTo(0, 0);
         path.QuadraticBezierTo(10, 20, 20, 0);
         Path scaled = path.Transform(Matrix.CreateScale(2, 3));
-        Assert.Equal(DartGeometry.RectFromLTWH(0, 0, 40, 60), scaled.GetBounds());
+        Assert.Equal(Rect.FromLTWH(0, 0, 40, 60), scaled.GetBounds());
         Assert.True(scaled.Contains(new Offset(20, 29.99)));
         Assert.False(scaled.Contains(new Offset(20, 30.01)));
     }
@@ -193,14 +193,14 @@ public sealed class PathDartParityTests
         path.RelativeLineTo(-50, -50);
         path.RelativeLineTo(100, 0);
         path.RelativeLineTo(-50, 50);
-        Assert.Equal(DartGeometry.RectFromLTWH(50, 50, 100, 50), path.GetBounds());
+        Assert.Equal(Rect.FromLTWH(50, 50, 100, 50), path.GetBounds());
         path.Close();
         path.RelativeMoveTo(5, 5);
         path.RelativeLineTo(1, 1);
         Assert.Equal(new Offset(106, 106), path.ComputeMetrics().Last().GetTangentForOffset(100)!.Position);
         path.Reset();
         path.AddPolygon(Enumerable.Range(0, 10001).Select(index => new Offset(index, index)).ToArray(), false);
-        Assert.Equal(DartGeometry.RectFromLTWH(0, 0, 10000, 10000), path.GetBounds());
+        Assert.Equal(Rect.FromLTWH(0, 0, 10000, 10000), path.GetBounds());
     }
 
     [Fact]
@@ -216,15 +216,15 @@ public sealed class PathDartParityTests
         Assert.Equal(10, metric.Length);
         Assert.False(metric.IsClosed);
         Assert.Equal(0, metric.ContourIndex);
-        Assert.Equal(DartGeometry.RectFromLTWH(1, 0, 8, 0), metric.ExtractPath(1, 9).GetBounds());
+        Assert.Equal(Rect.FromLTWH(1, 0, 8, 0), metric.ExtractPath(1, 9).GetBounds());
         Assert.Equal(new Offset(1, 0), metric.GetTangentForOffset(1)!.Position);
         Assert.Equal(0, metric.GetTangentForOffset(1)!.Angle);
         Assert.Equal(new Offset(0, 0), metric.GetTangentForOffset(-100)!.Position);
         Assert.Equal(new Offset(10, 0), metric.GetTangentForOffset(100)!.Position);
         Assert.Null(metric.GetTangentForOffset(double.NaN));
         Assert.Equal(default, metric.ExtractPath(9, 1).GetBounds());
-        Assert.Equal(DartGeometry.RectFromLTWH(5, 0, 0, 0), metric.ExtractPath(5, 5).GetBounds());
-        Assert.Equal(DartGeometry.RectFromLTWH(0, 0, 10, 0), metric.ExtractPath(-100, 100).GetBounds());
+        Assert.Equal(Rect.FromLTWH(5, 0, 0, 0), metric.ExtractPath(5, 5).GetBounds());
+        Assert.Equal(Rect.FromLTWH(0, 0, 10, 0), metric.ExtractPath(-100, 100).GetBounds());
         Assert.False(iterator.MoveNext());
         Assert.Throws<InvalidOperationException>(() => iterator.Current);
         Assert.Empty(metrics);
@@ -239,7 +239,7 @@ public sealed class PathDartParityTests
         PathMetric closed = Assert.Single(line.ComputeMetrics(forceClosed: true));
         Assert.Equal(20, closed.Length);
         Assert.True(closed.IsClosed);
-        Assert.Equal(DartGeometry.RectFromLTWH(1, 0, 8, 0), closed.ExtractPath(1, 9).GetBounds());
+        Assert.Equal(Rect.FromLTWH(1, 0, 8, 0), closed.ExtractPath(1, 9).GetBounds());
     }
 
     [Fact]
@@ -298,8 +298,8 @@ public sealed class PathDartParityTests
                 path.MoveTo(20, 100);
                 path.CubicTo(80, 10, 120, 90, 140, 40);
                 break;
-            case 2: path.AddRRect(RRect.FromRectXY(DartGeometry.RectFromLTWH(20, 30, 200, 100), 0, 0)); break;
-            case 3: path.AddRRect(RRect.FromRectXY(DartGeometry.RectFromLTWH(20, 30, 200, 100), 8, 4)); break;
+            case 2: path.AddRRect(RRect.FromRectXY(Rect.FromLTWH(20, 30, 200, 100), 0, 0)); break;
+            case 3: path.AddRRect(RRect.FromRectXY(Rect.FromLTWH(20, 30, 200, 100), 8, 4)); break;
         }
 
         Assert.InRange(Assert.Single(path.ComputeMetrics()).Length, length - 0.1, length + 0.1);
@@ -364,8 +364,8 @@ public sealed class PathDartParityTests
     public void FillRulesAndContourOrientationAreSharedByPaintAndContains()
     {
         var path = new Path();
-        path.AddRect(DartGeometry.RectFromLTWH(0, 0, 100, 100));
-        path.AddRect(DartGeometry.RectFromLTWH(20, 20, 60, 60));
+        path.AddRect(Rect.FromLTWH(0, 0, 100, 100));
+        path.AddRect(Rect.FromLTWH(20, 20, 60, 60));
         Assert.True(path.Contains(new Offset(50, 50)));
         path.FillType = PathFillType.EvenOdd;
         Assert.False(path.Contains(new Offset(50, 50)));
@@ -373,7 +373,7 @@ public sealed class PathDartParityTests
         Assert.True(path.Contains(new Offset(10, 10)));
         Assert.True(path.ToGeometry().FillContains(new Offset(10, 10).ToAvalonia()));
         path.Reset();
-        path.AddRect(DartGeometry.RectFromLTWH(0, 0, 100, 100));
+        path.AddRect(Rect.FromLTWH(0, 0, 100, 100));
         path.AddPolygon([new Offset(20, 20), new Offset(20, 80), new Offset(80, 80), new Offset(80, 20)], true);
         Assert.False(path.Contains(new Offset(50, 50)));
     }
@@ -383,15 +383,15 @@ public sealed class PathDartParityTests
     {
         var arc = new Path();
         arc.MoveTo(-10, 0);
-        arc.ArcTo(DartGeometry.RectFromLTWH(0, 0, 20, 20), 0, Math.PI / 2, forceMoveTo: false);
+        arc.ArcTo(Rect.FromLTWH(0, 0, 20, 20), 0, Math.PI / 2, forceMoveTo: false);
         Assert.Single(arc.ComputeMetrics());
         var forced = new Path();
         forced.MoveTo(-20, 0);
         forced.LineTo(-10, 0);
-        forced.ArcTo(DartGeometry.RectFromLTWH(0, 0, 20, 20), 0, Math.PI / 2, forceMoveTo: true);
+        forced.ArcTo(Rect.FromLTWH(0, 0, 20, 20), 0, Math.PI / 2, forceMoveTo: true);
         Assert.Equal(2, forced.ComputeMetrics().Count());
         var added = new Path();
-        added.AddArc(DartGeometry.RectFromLTWH(0, 0, 20, 20), 0, Math.PI * 2);
+        added.AddArc(Rect.FromLTWH(0, 0, 20, 20), 0, Math.PI * 2);
         Assert.InRange(Assert.Single(added.ComputeMetrics()).Length, 62, 63);
         var line = new Path();
         line.LineTo(10, 0);
@@ -438,7 +438,7 @@ public sealed class PathDartParityTests
         path.LineTo(70, 0);
         path.MoveTo(3, 4);
         path.LineTo(3, 4);
-        path.AddRect(DartGeometry.RectFromLTWH(0, 0, 40, 20));
+        path.AddRect(Rect.FromLTWH(0, 0, 40, 20));
         PathMetric[] metrics = path.ComputeMetrics().ToArray();
         Assert.Equal(2, metrics.Length);
         Assert.Equal("PathMetric(length: 70.0, isClosed: false, contourIndex: 0)", metrics[0].ToString());

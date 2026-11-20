@@ -2121,9 +2121,7 @@ internal sealed class RenderRangeSlider : RenderBox
 
     /// <summary>Dart's <c>Rect.fromCenter</c>, built from its left/top/right/bottom edges.</summary>
     private static Rect RectFromCenter(Offset center, double width, double height) =>
-        DartGeometry.RectFromCorners(
-            new Offset(center.Dx - (width / 2), center.Dy - (height / 2)),
-            new Offset(center.Dx + (width / 2), center.Dy + (height / 2)));
+        Rect.FromLTRB(center.Dx - (width / 2), center.Dy - (height / 2), center.Dx + (width / 2), center.Dy + (height / 2));
 }
 
 /// <summary>Flutter's private <c>_RangeSliderDefaultsM2</c>.</summary>

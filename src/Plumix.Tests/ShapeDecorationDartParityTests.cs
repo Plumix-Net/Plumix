@@ -142,7 +142,7 @@ public sealed class ShapeDecorationDartParityTests
     public void GetClipPath()
     {
         var decoration = new ShapeDecoration(new CircleBorder());
-        Path clipPath = decoration.GetClipPath(DartGeometry.RectFromLTWH(0.0, 0.0, 100.0, 20.0), TextDirection.Ltr);
+        Path clipPath = decoration.GetClipPath(Rect.FromLTWH(0.0, 0.0, 100.0, 20.0), TextDirection.Ltr);
         Assert.True(clipPath.Contains(new Offset(50.0, 10.0)));
         Assert.False(clipPath.Contains(new Offset(1.0, 1.0)));
         Assert.False(clipPath.Contains(new Offset(30.0, 10.0)));
@@ -153,7 +153,7 @@ public sealed class ShapeDecorationDartParityTests
     public void GetClipPath_ForOval()
     {
         var decoration = new ShapeDecoration(new OvalBorder());
-        Path clipPath = decoration.GetClipPath(DartGeometry.RectFromLTWH(0.0, 0.0, 100.0, 50.0), TextDirection.Ltr);
+        Path clipPath = decoration.GetClipPath(Rect.FromLTWH(0.0, 0.0, 100.0, 50.0), TextDirection.Ltr);
         Assert.True(clipPath.Contains(new Offset(50.0, 10.0)));
         Assert.False(clipPath.Contains(new Offset(1.0, 1.0)));
         Assert.False(clipPath.Contains(new Offset(15.0, 1.0)));
@@ -179,10 +179,10 @@ public sealed class ShapeDecorationDartParityTests
             new ImageConfiguration(Size: new Size(40.0, 20.0)));
 
         Assert.Equal("drawRRect", calls[0].Method);
-        Assert.Equal(BorderRadius.Circular(6.0).ToRRect(DartGeometry.RectFromLTWH(-1.0, 1.0, 42.0, 22.0)), calls[0].RRect);
+        Assert.Equal(BorderRadius.Circular(6.0).ToRRect(Rect.FromLTWH(-1.0, 1.0, 42.0, 22.0)), calls[0].RRect);
         Assert.Equal(MaskFilter.Blur(BlurStyle.Inner, shadow.BlurSigma), calls[0].MaskFilter);
         Assert.Equal("drawRRect", calls[1].Method);
-        Assert.Equal(BorderRadius.Circular(6.0).ToRRect(DartGeometry.RectFromLTWH(0.0, 0.0, 40.0, 20.0)), calls[1].RRect);
+        Assert.Equal(BorderRadius.Circular(6.0).ToRRect(Rect.FromLTWH(0.0, 0.0, 40.0, 20.0)), calls[1].RRect);
         Assert.Null(calls[1].MaskFilter);
     }
 
@@ -222,7 +222,7 @@ public sealed class ShapeDecorationDartParityTests
             decoration.CreateBoxPainter(),
             default,
             new ImageConfiguration(Size: new Size(40.0, 20.0)));
-        PaintAssert.Paints(calls, PaintPattern.Paints.Rect(rect: DartGeometry.RectFromLTWH(2.0, 2.0, 36.0, 16.0)));
+        PaintAssert.Paints(calls, PaintPattern.Paints.Rect(rect: Rect.FromLTWH(2.0, 2.0, 36.0, 16.0)));
 
         var gradientDecoration = new ShapeDecoration(
             new RoundedRectangleBorder(new BorderSide(new Color(0xFF000000), 4.0)),
@@ -231,7 +231,7 @@ public sealed class ShapeDecorationDartParityTests
             gradientDecoration.CreateBoxPainter(),
             default,
             new ImageConfiguration(Size: new Size(40.0, 20.0)));
-        PaintAssert.Paints(gradientCalls, PaintPattern.Paints.Rect(rect: DartGeometry.RectFromLTWH(0.0, 0.0, 40.0, 20.0)));
+        PaintAssert.Paints(gradientCalls, PaintPattern.Paints.Rect(rect: Rect.FromLTWH(0.0, 0.0, 40.0, 20.0)));
     }
 
     [Fact]

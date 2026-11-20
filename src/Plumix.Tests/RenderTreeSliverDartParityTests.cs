@@ -429,6 +429,6 @@ internal static class TreeSliverFixtures
         double right,
         double bottom)
     {
-        Assert.Equal(DartGeometry.RectFromLTWH(left, top, right - left, bottom - top), tester.GetRect(Find.Text(text)));
+        Assert.Equal(Rect.FromLTWH(left, top, right - left, bottom - top), tester.GetRect(Find.Text(text)));
     }
 }

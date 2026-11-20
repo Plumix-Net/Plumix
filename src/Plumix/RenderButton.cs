@@ -137,7 +137,7 @@ public sealed class RenderButton : RenderBox
             ? new SolidColorBrush(Background, 0.45)
             : new SolidColorBrush(Background);
 
-        var rect = DartGeometry.RectFromOffsetAndSize(offset, Size);
+        var rect = offset & Size;
         ctx.Canvas.DrawRectangle(background, null, rect, 10, 10);
 
         double textX = offset.Dx + (Size.Width - _textPainter.Width) / 2;

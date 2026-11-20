@@ -705,7 +705,7 @@ public class SearchAnchor : StatefulWidget
             var searchBarBox = (RenderBox)context.FindRenderObject()!;
             RenderObject? navigatorBox = Navigator!.Context.FindRenderObject();
             Offset boxLocation = searchBarBox.LocalToGlobal(default, ancestor: navigatorBox);
-            return DartGeometry.RectFromOffsetAndSize(boxLocation, searchBarBox.Size);
+            return boxLocation & searchBarBox.Size;
         }
 
         private void UpdateViewConfig(BuildContext context)
@@ -756,8 +756,8 @@ public class SearchAnchor : StatefulWidget
             }
 
             _rectTween.End = _showFullScreenView
-                ? DartGeometry.RectFromOffsetAndSize(default(Offset), screenSize)
-                : DartGeometry.RectFromOffsetAndSize(new Offset(dx, dy), new Size(viewWidth, viewHeight));
+                ? ((default(Offset)) & screenSize)
+                : (new Offset(dx, dy) & new Size(viewWidth, viewHeight));
         }
 
         private static double LerpDouble(double a, double b, double t)
@@ -927,7 +927,7 @@ internal sealed class SearchViewContent : StatefulWidget
                 _screenSize = updatedScreenSize;
                 if (Current.ShowFullScreenView)
                 {
-                    _viewRect = DartGeometry.RectFromOffsetAndSize(default(Offset), updatedScreenSize);
+                    _viewRect = (default(Offset)) & updatedScreenSize;
                 }
             }
 

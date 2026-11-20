@@ -97,7 +97,7 @@ public class RenderErrorBox : RenderBox
             ctx.Canvas.DrawRectangle(
                 new SolidColorBrush(BackgroundColor),
                 null,
-                DartGeometry.RectFromOffsetAndSize(offset, Size));
+                (offset & Size));
             if (_paragraph is not null)
             {
                 EdgeInsets padding = Padding;

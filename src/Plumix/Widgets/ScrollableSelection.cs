@@ -376,7 +376,7 @@ internal sealed class ScrollableSelectionContainerDelegate : MultiSelectableSele
         var scrollableBox = (RenderBox)State.Context.FindRenderObject()!;
         Matrix4 transform = selectable.GetTransformTo(scrollableBox);
         Offset edgeOffsetInScrollableCoordinates = MatrixUtils.TransformPoint(transform, edge.LocalPosition);
-        var scrollableRect = DartGeometry.RectFromLTWH(
+        var scrollableRect = Rect.FromLTWH(
             0,
             0,
             scrollableBox.Size.Width,
@@ -479,7 +479,7 @@ internal sealed class ScrollableSelectionContainerDelegate : MultiSelectableSele
     {
         var box = (RenderBox)State.Context.FindRenderObject()!;
         Offset localPosition = box.GlobalToLocal(globalPosition);
-        var rect = DartGeometry.RectFromLTWH(0, 0, box.Size.Width, box.Size.Height);
+        var rect = Rect.FromLTWH(0, 0, box.Size.Width, box.Size.Height);
         return SelectionUtils.RectContains(rect, localPosition);
     }
 
@@ -572,7 +572,7 @@ internal sealed class ScrollableSelectionContainerDelegate : MultiSelectableSele
     private static Offset Translate(Offset point, double dx, double dy) => new(point.Dx + dx, point.Dy + dy);
 
     private static Rect RectFromCenter(Offset center, double width, double height) =>
-        DartGeometry.RectFromLTWH(center.Dx - (width / 2), center.Dy - (height / 2), width, height);
+        Rect.FromLTWH(center.Dx - (width / 2), center.Dy - (height / 2), width, height);
 
     /// Dart's free function `_getDeltaToScrollOrigin`, which the delegate uses in place of the
     /// identical <see cref="ScrollableState.DeltaToScrollOrigin"/> getter.

@@ -120,7 +120,7 @@ public partial class Canvas
         AddDrawCommand(context => ShaderDrawing.DrawRectangle(context, brush, null, DrawPaintBounds));
     }
 
-    private static readonly Rect DrawPaintBounds = DartGeometry.RectFromLTWH(-1.0e9, -1.0e9, 2.0e9, 2.0e9);
+    private static readonly Rect DrawPaintBounds = Rect.FromLTWH(-1.0e9, -1.0e9, 2.0e9, 2.0e9);
 
     // Dart parity source: dart:ui Canvas.drawRRect.
     public virtual void DrawRRect(RRect rrect, IBrush? brush, IPen? pen)
@@ -574,13 +574,13 @@ public partial class Canvas
             "drawCircle",
             paint,
             call => call with { Center = center, Radius = radius },
-            () => new EllipseGeometry(DartGeometry.RectFromLTWH(
+            () => new EllipseGeometry(Rect.FromLTWH(
                 center.Dx - clampedRadius,
                 center.Dy - clampedRadius,
                 clampedRadius * 2.0,
                 clampedRadius * 2.0).ToAvalonia()),
             (context, fill, pen) => ShaderDrawing.DrawEllipse(context, fill, pen, center, clampedRadius, clampedRadius),
-            () => CreateOvalPath(DartGeometry.RectFromLTWH(center.Dx - clampedRadius, center.Dy - clampedRadius,
+            () => CreateOvalPath(Rect.FromLTWH(center.Dx - clampedRadius, center.Dy - clampedRadius,
                 clampedRadius * 2.0, clampedRadius * 2.0)));
     }
 
@@ -807,7 +807,7 @@ public partial class Canvas
                 // An unset Rect means the ellipse is given by its centre and radii (Avalonia's two modes).
                 path.AddOval(ellipse.Rect != default
                     ? ellipse.Rect.ToPlumix()
-                    : DartGeometry.RectFromLTWH(
+                    : Rect.FromLTWH(
                         ellipse.Center.X - ellipse.RadiusX,
                         ellipse.Center.Y - ellipse.RadiusY,
                         ellipse.RadiusX * 2.0,
@@ -864,13 +864,13 @@ public partial class Canvas
         ArgumentNullException.ThrowIfNull(image);
         ArgumentNullException.ThrowIfNull(paint);
         Size size = ImageSize(image);
-        var destination = DartGeometry.RectFromOffsetAndSize(offset, size);
+        var destination = offset & size;
         RecordImageDraw(
             new CanvasCall("drawImage", Offset: offset, Image: image),
             image,
             paint,
             destination,
-            (context, source) => context.DrawImage(source, DartGeometry.RectFromSize(source.Size.ToPlumix()).ToAvalonia(), destination.ToAvalonia()));
+            (context, source) => context.DrawImage(source, (Offset.Zero & source.Size.ToPlumix()).ToAvalonia(), destination.ToAvalonia()));
     }
 
     /// <summary>
@@ -942,12 +942,8 @@ public partial class Canvas
         {
             for (int column = 0; column < 3; column++)
             {
-                Rect source = DartGeometry.RectFromCorners(
-                    new Offset(sourceX[column], sourceY[row]),
-                    new Offset(sourceX[column + 1], sourceY[row + 1]));
-                Rect destination = DartGeometry.RectFromCorners(
-                    new Offset(destinationX[column], destinationY[row]),
-                    new Offset(destinationX[column + 1], destinationY[row + 1]));
+                Rect source = Rect.FromLTRB(sourceX[column], sourceY[row], sourceX[column + 1], sourceY[row + 1]);
+                Rect destination = Rect.FromLTRB(destinationX[column], destinationY[row], destinationX[column + 1], destinationY[row + 1]);
                 if (source.Width > 0.0 && source.Height > 0.0 && destination.Width > 0.0 && destination.Height > 0.0)
                 {
                     yield return (source, destination);

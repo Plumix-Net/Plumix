@@ -325,7 +325,7 @@ internal sealed class NavigationBarComponentsTransition
         double top = Math.Min(a.Top, b.Top);
         double right = Math.Max(a.Right, b.Right);
         double bottom = Math.Max(a.Bottom, b.Bottom);
-        return DartGeometry.RectFromLTWH(left, top, right - left, bottom - top);
+        return Rect.FromLTWH(left, top, right - left, bottom - top);
     }
 
     private static RelativeRect Shift(RelativeRect rect, Offset offset)
@@ -345,7 +345,7 @@ internal sealed class NavigationBarComponentsTransition
     {
         var componentBox = (RenderBox)key.CurrentContext!.FindRenderObject()!;
         return RelativeRect.FromRect(
-            DartGeometry.RectFromOffsetAndSize(componentBox.LocalToGlobal(new Offset(0.0, 0.0), ancestor: from), componentBox.Size),
+            (componentBox.LocalToGlobal(new Offset(0.0, 0.0), ancestor: from) & componentBox.Size),
             TransitionBox);
     }
 
@@ -1005,8 +1005,8 @@ internal static class NavBarTransitions
             Math.Max(begin!.Value.Size.Width, end!.Value.Size.Width),
             Math.Max(begin.Value.Size.Height, end.Value.Size.Height));
         return new Plumix.RectTween(
-            begin: DartGeometry.RectFromOffsetAndSize(begin.Value.TopLeft, largestSize),
-            end: DartGeometry.RectFromOffsetAndSize(end.Value.TopLeft, largestSize));
+            begin: (begin.Value.TopLeft & largestSize),
+            end: (end.Value.TopLeft & largestSize));
     }
 
     /// <summary>Dart's `_navBarHeroLaunchPadBuilder`.</summary>

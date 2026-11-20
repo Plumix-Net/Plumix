@@ -23,11 +23,11 @@ public sealed class MaterialArcTests
     public void MaterialRectArcTween_ControlTest()
     {
         var a = new MaterialRectArcTween(
-            begin: DartGeometry.RectFromLTWH(0.0, 0.0, 10.0, 10.0),
-            end: DartGeometry.RectFromLTWH(0.0, 10.0, 10.0, 10.0));
+            begin: Rect.FromLTWH(0.0, 0.0, 10.0, 10.0),
+            end: Rect.FromLTWH(0.0, 10.0, 10.0, 10.0));
         var b = new MaterialRectArcTween(
-            begin: DartGeometry.RectFromLTWH(0.0, 0.0, 10.0, 10.0),
-            end: DartGeometry.RectFromLTWH(0.0, 10.0, 10.0, 10.0));
+            begin: Rect.FromLTWH(0.0, 0.0, 10.0, 10.0),
+            end: Rect.FromLTWH(0.0, 10.0, 10.0, 10.0));
         Assert.Equal(a.ToString(), b.ToString());
         Assert.Contains("MaterialRectArcTween(", a.ToString(), StringComparison.Ordinal);
         Assert.DoesNotContain("\n", a.ToString(), StringComparison.Ordinal);
@@ -50,14 +50,14 @@ public sealed class MaterialArcTests
     public void OnAxis_MaterialRectArcTween_LerpsLinearly()
     {
         var tween = new MaterialRectArcTween(
-            begin: DartGeometry.RectFromLTWH(0.0, 0.0, 10.0, 10.0),
-            end: DartGeometry.RectFromLTWH(0.0, 10.0, 10.0, 10.0));
-        Assert.Equal(DartGeometry.RectFromLTWH(0.0, 5.0, 10.0, 10.0), tween.Transform(0.5));
+            begin: Rect.FromLTWH(0.0, 0.0, 10.0, 10.0),
+            end: Rect.FromLTWH(0.0, 10.0, 10.0, 10.0));
+        Assert.Equal(Rect.FromLTWH(0.0, 5.0, 10.0, 10.0), tween.Transform(0.5));
 
         tween = new MaterialRectArcTween(
-            begin: DartGeometry.RectFromLTWH(0.0, 0.0, 10.0, 10.0),
-            end: DartGeometry.RectFromLTWH(10.0, 0.0, 10.0, 10.0));
-        Assert.Equal(DartGeometry.RectFromLTWH(5.0, 0.0, 10.0, 10.0), tween.Transform(0.5));
+            begin: Rect.FromLTWH(0.0, 0.0, 10.0, 10.0),
+            end: Rect.FromLTWH(10.0, 0.0, 10.0, 10.0));
+        Assert.Equal(Rect.FromLTWH(5.0, 0.0, 10.0, 10.0), tween.Transform(0.5));
     }
 
     [Fact]
@@ -82,19 +82,19 @@ public sealed class MaterialArcTests
     [Fact]
     public void MaterialRectArcTween_MovesCornersAlongArcs()
     {
-        var begin = DartGeometry.RectFromCorners(new Offset(180.0, 100.0), new Offset(330.0, 200.0));
-        var end = DartGeometry.RectFromCorners(new Offset(32.0, 275.0), new Offset(132.0, 425.0));
+        var begin = Rect.FromLTRB(180.0, 100.0, 330.0, 200.0);
+        var end = Rect.FromLTRB(32.0, 275.0, 132.0, 425.0);
 
         var tween = new MaterialRectArcTween(begin: begin, end: end);
         Assert.Equal(begin, tween.Transform(0.0));
-        AssertSameRect(DartGeometry.RectFromCorners(new Offset(120.0, 113.0), new Offset(259.0, 237.0)), tween.Transform(0.25)!.Value);
-        AssertSameRect(DartGeometry.RectFromCorners(new Offset(42.3, 206.5), new Offset(153.5, 354.7)), tween.Transform(0.75)!.Value);
+        AssertSameRect(Rect.FromLTRB(120.0, 113.0, 259.0, 237.0), tween.Transform(0.25)!.Value);
+        AssertSameRect(Rect.FromLTRB(42.3, 206.5, 153.5, 354.7), tween.Transform(0.75)!.Value);
         Assert.Equal(end, tween.Transform(1.0));
 
         tween = new MaterialRectArcTween(begin: end, end: begin);
         Assert.Equal(end, tween.Transform(0.0));
-        AssertSameRect(DartGeometry.RectFromCorners(new Offset(92.0, 262.0), new Offset(203.0, 388.0)), tween.Transform(0.25)!.Value);
-        AssertSameRect(DartGeometry.RectFromCorners(new Offset(169.7, 168.5), new Offset(308.5, 270.3)), tween.Transform(0.75)!.Value);
+        AssertSameRect(Rect.FromLTRB(92.0, 262.0, 203.0, 388.0), tween.Transform(0.25)!.Value);
+        AssertSameRect(Rect.FromLTRB(169.7, 168.5, 308.5, 270.3), tween.Transform(0.75)!.Value);
         Assert.Equal(begin, tween.Transform(1.0));
     }
 
@@ -102,19 +102,19 @@ public sealed class MaterialArcTests
     public void MaterialRectArcTween_RecomputesArcsWhenEndpointsChange()
     {
         var tween = new MaterialRectArcTween(
-            begin: DartGeometry.RectFromLTWH(0.0, 0.0, 10.0, 10.0),
-            end: DartGeometry.RectFromLTWH(0.0, 10.0, 10.0, 10.0));
-        Assert.Equal(DartGeometry.RectFromLTWH(0.0, 5.0, 10.0, 10.0), tween.Transform(0.5));
+            begin: Rect.FromLTWH(0.0, 0.0, 10.0, 10.0),
+            end: Rect.FromLTWH(0.0, 10.0, 10.0, 10.0));
+        Assert.Equal(Rect.FromLTWH(0.0, 5.0, 10.0, 10.0), tween.Transform(0.5));
 
-        tween.End = DartGeometry.RectFromLTWH(0.0, 20.0, 10.0, 10.0);
-        Assert.Equal(DartGeometry.RectFromLTWH(0.0, 10.0, 10.0, 10.0), tween.Transform(0.5));
+        tween.End = Rect.FromLTWH(0.0, 20.0, 10.0, 10.0);
+        Assert.Equal(Rect.FromLTWH(0.0, 10.0, 10.0, 10.0), tween.Transform(0.5));
     }
 
     [Fact]
     public void MaterialRectCenterArcTween_MovesCenterAlongArcAndLerpsSize()
     {
-        var begin = DartGeometry.RectFromLTWH(0.0, 0.0, 10.0, 10.0);
-        var end = DartGeometry.RectFromLTWH(0.0, 100.0, 20.0, 20.0);
+        var begin = Rect.FromLTWH(0.0, 0.0, 10.0, 10.0);
+        var end = Rect.FromLTWH(0.0, 100.0, 20.0, 20.0);
         var tween = new MaterialRectCenterArcTween(begin: begin, end: end);
 
         Assert.Equal(begin, tween.Transform(0.0));
@@ -148,12 +148,12 @@ public sealed class MaterialArcTests
 
         Assert.NotNull(controller.CreateRectTween);
         Tween<Rect?> tween = controller.CreateRectTween!(
-            DartGeometry.RectFromLTWH(0.0, 0.0, 10.0, 10.0),
-            DartGeometry.RectFromLTWH(100.0, 200.0, 20.0, 20.0));
+            Rect.FromLTWH(0.0, 0.0, 10.0, 10.0),
+            Rect.FromLTWH(100.0, 200.0, 20.0, 20.0));
 
         var arcTween = Assert.IsType<MaterialRectArcTween>(tween);
-        Assert.Equal(DartGeometry.RectFromLTWH(0.0, 0.0, 10.0, 10.0), arcTween.Transform(0.0));
-        Assert.Equal(DartGeometry.RectFromLTWH(100.0, 200.0, 20.0, 20.0), arcTween.Transform(1.0));
+        Assert.Equal(Rect.FromLTWH(0.0, 0.0, 10.0, 10.0), arcTween.Transform(0.0));
+        Assert.Equal(Rect.FromLTWH(100.0, 200.0, 20.0, 20.0), arcTween.Transform(1.0));
         Assert.NotNull(arcTween.BeginArc);
         Assert.NotNull(arcTween.EndArc);
     }

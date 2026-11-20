@@ -1881,14 +1881,14 @@ internal sealed class HighlightPainter : CustomPainter
         {
             case HighlightPainterStyle.HighlightLeading when rtl:
             case HighlightPainterStyle.HighlightTrailing when !rtl:
-                context.Canvas.DrawRect(DartGeometry.RectFromLTWH(size.Width / 2, 0, size.Width / 2, size.Height), paint);
+                context.Canvas.DrawRect(Rect.FromLTWH(size.Width / 2, 0, size.Width / 2, size.Height), paint);
                 break;
             case HighlightPainterStyle.HighlightLeading:
             case HighlightPainterStyle.HighlightTrailing:
-                context.Canvas.DrawRect(DartGeometry.RectFromLTWH(0, 0, size.Width / 2, size.Height), paint);
+                context.Canvas.DrawRect(Rect.FromLTWH(0, 0, size.Width / 2, size.Height), paint);
                 break;
             case HighlightPainterStyle.HighlightAll:
-                context.Canvas.DrawRect(DartGeometry.RectFromLTWH(0, 0, size.Width, size.Height), paint);
+                context.Canvas.DrawRect(Rect.FromLTWH(0, 0, size.Width, size.Height), paint);
                 break;
             case HighlightPainterStyle.None:
                 break;

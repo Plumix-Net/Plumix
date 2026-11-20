@@ -614,15 +614,15 @@ public sealed class TwoDimensionalViewportTests
 
         var harness = new TwoDimensionalRenderHarness(BuildFirst());
         harness.Pump(Surface);
-        Assert.Equal(DartGeometry.RectFromLTWH(200, 200, 200, 200), CellRect(harness, new ChildVicinity(1, 1)));
+        Assert.Equal(Rect.FromLTWH(200, 200, 200, 200), CellRect(harness, new ChildVicinity(1, 1)));
 
         harness.Replace(BuildSecond());
         harness.Pump(Surface);
-        Assert.Equal(DartGeometry.RectFromLTWH(0, 0, 200, 200), CellRect(harness, new ChildVicinity(0, 0)));
+        Assert.Equal(Rect.FromLTWH(0, 0, 200, 200), CellRect(harness, new ChildVicinity(0, 0)));
 
         harness.Replace(BuildFirst());
         harness.Pump(Surface);
-        Assert.Equal(DartGeometry.RectFromLTWH(200, 200, 200, 200), CellRect(harness, new ChildVicinity(1, 1)));
+        Assert.Equal(Rect.FromLTWH(200, 200, 200, 200), CellRect(harness, new ChildVicinity(1, 1)));
     }
 
     // Reveal -----------------------------------------------------------------------------------
@@ -639,11 +639,11 @@ public sealed class TwoDimensionalViewportTests
 
         RevealedOffset vertical = viewport.GetOffsetToReveal(target, 1.0, axis: Axis.Vertical);
         Assert.Equal(600.0, vertical.Offset);
-        Assert.Equal(DartGeometry.RectFromLTWH(1000.0, 400.0, 200.0, 200.0), vertical.Rect);
+        Assert.Equal(Rect.FromLTWH(1000.0, 400.0, 200.0, 200.0), vertical.Rect);
 
         RevealedOffset horizontal = viewport.GetOffsetToReveal(target, 1.0, axis: Axis.Horizontal);
         Assert.Equal(400.0, horizontal.Offset);
-        Assert.Equal(DartGeometry.RectFromLTWH(600.0, 1000.0, 200.0, 200.0), horizontal.Rect);
+        Assert.Equal(Rect.FromLTWH(600.0, 1000.0, 200.0, 200.0), horizontal.Rect);
 
         // Omitting the axis falls back to MainAxis, which defaults to vertical.
         RevealedOffset implied = viewport.GetOffsetToReveal(target, 1.0);
@@ -664,7 +664,7 @@ public sealed class TwoDimensionalViewportTests
 
         RevealedOffset implied = viewport.GetOffsetToReveal(target, 1.0);
         Assert.Equal(400.0, implied.Offset);
-        Assert.Equal(DartGeometry.RectFromLTWH(600.0, 1000.0, 200.0, 200.0), implied.Rect);
+        Assert.Equal(Rect.FromLTWH(600.0, 1000.0, 200.0, 200.0), implied.Rect);
     }
 
     [Fact]
@@ -675,16 +675,16 @@ public sealed class TwoDimensionalViewportTests
             useCacheExtent: true));
         harness.Pump(Surface);
 
-        Assert.Equal(DartGeometry.RectFromLTWH(200.0, 200.0, 200.0, 200.0), CellRect(harness, new ChildVicinity(1, 1)));
-        Assert.Equal(DartGeometry.RectFromLTWH(1000.0, 800.0, 200.0, 200.0), CellRect(harness, new ChildVicinity(5, 4)));
+        Assert.Equal(Rect.FromLTWH(200.0, 200.0, 200.0, 200.0), CellRect(harness, new ChildVicinity(1, 1)));
+        Assert.Equal(Rect.FromLTWH(1000.0, 800.0, 200.0, 200.0), CellRect(harness, new ChildVicinity(5, 4)));
 
         Viewport(harness).TestGetChildFor(new ChildVicinity(5, 4))!.ShowOnScreen();
         harness.Pump(Surface);
-        Assert.Equal(DartGeometry.RectFromLTWH(600.0, 200.0, 200.0, 200.0), CellRect(harness, new ChildVicinity(5, 4)));
+        Assert.Equal(Rect.FromLTWH(600.0, 200.0, 200.0, 200.0), CellRect(harness, new ChildVicinity(5, 4)));
 
         Viewport(harness).TestGetChildFor(new ChildVicinity(5, 4))!.ShowOnScreen();
         harness.Pump(Surface);
-        Assert.Equal(DartGeometry.RectFromLTWH(600.0, 200.0, 200.0, 200.0), CellRect(harness, new ChildVicinity(5, 4)));
+        Assert.Equal(Rect.FromLTWH(600.0, 200.0, 200.0, 200.0), CellRect(harness, new ChildVicinity(5, 4)));
     }
 
     [Fact]
@@ -697,12 +697,12 @@ public sealed class TwoDimensionalViewportTests
             useCacheExtent: true));
         harness.Pump(Surface);
 
-        Assert.Equal(DartGeometry.RectFromLTWH(400.0, 200.0, 200.0, 200.0), CellRect(harness, new ChildVicinity(1, 1)));
-        Assert.Equal(DartGeometry.RectFromLTWH(-400.0, -400.0, 200.0, 200.0), CellRect(harness, new ChildVicinity(5, 4)));
+        Assert.Equal(Rect.FromLTWH(400.0, 200.0, 200.0, 200.0), CellRect(harness, new ChildVicinity(1, 1)));
+        Assert.Equal(Rect.FromLTWH(-400.0, -400.0, 200.0, 200.0), CellRect(harness, new ChildVicinity(5, 4)));
 
         Viewport(harness).TestGetChildFor(new ChildVicinity(5, 4))!.ShowOnScreen();
         harness.Pump(Surface);
-        Assert.Equal(DartGeometry.RectFromLTWH(0.0, 200.0, 200.0, 200.0), CellRect(harness, new ChildVicinity(5, 4)));
+        Assert.Equal(Rect.FromLTWH(0.0, 200.0, 200.0, 200.0), CellRect(harness, new ChildVicinity(5, 4)));
     }
 
     // Hit testing ------------------------------------------------------------------------------
@@ -851,7 +851,7 @@ public sealed class TwoDimensionalViewportTests
         RenderSimpleBuilderTableViewport viewport = Viewport(harness);
         RenderBox child = viewport.TestGetChildFor(vicinity)!;
         Offset offset = viewport.ParentDataOf(child).PaintOffset!.Value;
-        return DartGeometry.RectFromLTWH(offset.Dx, offset.Dy, child.Size.Width, child.Size.Height);
+        return Rect.FromLTWH(offset.Dx, offset.Dy, child.Size.Width, child.Size.Height);
     }
 
     private static RenderBox? HitCell(RenderSimpleBuilderTableViewport viewport, Offset position)

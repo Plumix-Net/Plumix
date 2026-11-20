@@ -583,7 +583,7 @@ internal sealed class CupertinoRadioPainter : ToggleablePainter
 
     private static Rect RectFromCircle(Offset center, double radius)
     {
-        return DartGeometry.RectFromLTWH(center.Dx - radius, center.Dy - radius, radius * 2.0, radius * 2.0);
+        return Rect.FromLTWH(center.Dx - radius, center.Dy - radius, radius * 2.0, radius * 2.0);
     }
 
     // Dart's `Color.withOpacity`: replaces the alpha channel outright.

@@ -171,7 +171,7 @@ public sealed class ParagraphEngineTests
         Assert.Equal(last, bottomRight);
         Assert.NotEqual(paragraph.GetGlyphInfoAt(0), bottomRight);
 
-        Assert.Equal(DartGeometry.RectFromLTWH(30, 10, 10, 10), last.GraphemeClusterLayoutBounds);
+        Assert.Equal(Rect.FromLTWH(30, 10, 10, 10), last.GraphemeClusterLayoutBounds);
         Assert.Equal(new TextRange(8, 9), last.GraphemeClusterCodeUnitRange);
         Assert.Equal(TextDirection.Ltr, last.WritingDirection);
     }
@@ -341,8 +341,8 @@ public sealed class ParagraphEngineTests
     [Fact]
     public void GlyphInfo_AndTextBox_StoreTheirFields()
     {
-        var info = new GlyphInfo(DartGeometry.RectFromLTWH(1, 2, 3, 4), new TextRange(5, 6), TextDirection.Rtl);
-        Assert.Equal(DartGeometry.RectFromLTWH(1, 2, 3, 4), info.GraphemeClusterLayoutBounds);
+        var info = new GlyphInfo(Rect.FromLTWH(1, 2, 3, 4), new TextRange(5, 6), TextDirection.Rtl);
+        Assert.Equal(Rect.FromLTWH(1, 2, 3, 4), info.GraphemeClusterLayoutBounds);
         Assert.Equal(new TextRange(5, 6), info.GraphemeClusterCodeUnitRange);
         Assert.Equal(TextDirection.Rtl, info.WritingDirection);
 
@@ -521,7 +521,7 @@ public sealed class ParagraphEngineTests
         paragraph.Layout(new ParagraphConstraints(400));
         var recorder = new PictureRecorder();
         var canvas = new Canvas(recorder);
-        canvas.DrawRect(DartGeometry.RectFromLTWH(0, 0, 80, 60), new Paint { Color = new Color(0xFFFFFFFF) });
+        canvas.DrawRect(Rect.FromLTWH(0, 0, 80, 60), new Paint { Color = new Color(0xFFFFFFFF) });
         canvas.DrawParagraph(paragraph, offset);
         using Avalonia.Media.Imaging.Bitmap image = recorder.EndRecording().ToImageSync(80, 60);
         return RasterBackend.PixelAt(image, x, y);

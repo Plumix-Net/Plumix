@@ -15,7 +15,7 @@ namespace Plumix.Tests;
 [Collection(SchedulerTestCollection.Name)]
 public sealed class CanvasDrawShadowTests
 {
-    private static readonly Rect Occluder = DartGeometry.RectFromLTWH(20, 20, 60, 60);
+    private static readonly Rect Occluder = Rect.FromLTWH(20, 20, 60, 60);
 
     private static Bitmap Render(Action<Canvas> paint, double engineDevicePixelRatio = 1.0)
     {

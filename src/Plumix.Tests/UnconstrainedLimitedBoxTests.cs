@@ -215,7 +215,7 @@ public sealed class UnconstrainedLimitedBoxTests
         Assert.Empty(FindLayers<ClipRectLayer>(pipeline.RootLayer));
         Assert.NotEmpty(FindLayers<PictureLayer>(pipeline.RootLayer));
         Assert.Equal(
-            DartGeometry.RectFromLTWH(0, 0, 80, 40),
+            Rect.FromLTWH(0, 0, 80, 40),
             transform.InvokeDescribeApproximatePaintClip(child));
 
         transform.ClipBehavior = Clip.None;
@@ -415,7 +415,7 @@ public sealed class UnconstrainedLimitedBoxTests
         {
             if (_paints)
             {
-                ctx.Canvas.DrawRectangle(Brushes.Red, pen: null, DartGeometry.RectFromOffsetAndSize(offset, Size));
+                ctx.Canvas.DrawRectangle(Brushes.Red, pen: null, (offset & Size));
             }
         }
     }

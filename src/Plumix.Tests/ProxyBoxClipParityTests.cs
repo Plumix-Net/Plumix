@@ -149,7 +149,7 @@ public sealed class ProxyBoxClipParityTests
         var child = new RenderConstrainedBox(BoxConstraints.TightFor(width: 200, height: 200));
         var renderClipRect = new RenderClipRect(clipBehavior: Clip.None, child: child);
         LayoutRoot(renderClipRect, new Size(800, 600));
-        var bounds = DartGeometry.RectFromOffsetAndSize(new Offset(0, 0), renderClipRect.Size);
+        var bounds = new Offset(0, 0) & renderClipRect.Size;
 
         Assert.Null(renderClipRect.InvokeDescribeApproximatePaintClip(child));
         renderClipRect.ClipBehavior = Clip.HardEdge;
@@ -320,7 +320,7 @@ public sealed class ProxyBoxClipParityTests
     public void RenderClipRect_HitTestUsesDartsHalfOpenRectContains()
     {
         var child = new SizedRenderBox(new Size(80, 80), hitSelf: true);
-        var clip = new RenderClipRect(child: child, clipper: new ValueClipper<Rect>("a", DartGeometry.RectFromLTWH(0, 0, 20, 20)));
+        var clip = new RenderClipRect(child: child, clipper: new ValueClipper<Rect>("a", Rect.FromLTWH(0, 0, 20, 20)));
         LayoutRoot(clip, new Size(80, 80));
 
         Assert.True(clip.HitTest(new BoxHitTestResult(), new Offset(0, 0)));
@@ -335,7 +335,7 @@ public sealed class ProxyBoxClipParityTests
         var child = new SizedRenderBox(new Size(80, 80), hitSelf: true);
         var clip = new RenderClipRRect(
             child: child,
-            clipper: new ValueClipper<RRect>("r", RRect.FromRectAndRadius(DartGeometry.RectFromLTWH(0, 0, 40, 40), 10.0)));
+            clipper: new ValueClipper<RRect>("r", RRect.FromRectAndRadius(Rect.FromLTWH(0, 0, 40, 40), 10.0)));
         LayoutRoot(clip, new Size(80, 80));
 
         Assert.True(clip.HitTest(new BoxHitTestResult(), new Offset(20, 20)));
@@ -346,7 +346,7 @@ public sealed class ProxyBoxClipParityTests
     [Fact]
     public void RRect_Contains_MatchesDartUi()
     {
-        RRect rrect = RRect.FromRectAndRadius(DartGeometry.RectFromLTWH(10, 10, 100, 50), 20.0);
+        RRect rrect = RRect.FromRectAndRadius(Rect.FromLTWH(10, 10, 100, 50), 20.0);
 
         Assert.True(rrect.Contains(new Offset(10, 35)));
         Assert.True(rrect.Contains(new Offset(60, 10)));
@@ -356,7 +356,7 @@ public sealed class ProxyBoxClipParityTests
         Assert.True(rrect.Contains(new Offset(30, 30)));
 
         // Radii that overflow the rect are scaled down first.
-        RRect overflowing = RRect.FromRectAndRadius(DartGeometry.RectFromLTWH(0, 0, 10, 10), 100.0);
+        RRect overflowing = RRect.FromRectAndRadius(Rect.FromLTWH(0, 0, 10, 10), 100.0);
         Assert.True(overflowing.Contains(new Offset(5, 5)));
         Assert.False(overflowing.Contains(new Offset(0.5, 0.5)));
     }
@@ -522,7 +522,7 @@ public sealed class ProxyBoxClipParityTests
                     clipper: new ValueClipper<Rect>(message, rect, log),
                     child: new GestureDetector(behavior: HitTestBehavior.Opaque, onTap: () => log.Add("tap")))));
 
-        tester.PumpWidget(Build(100.0, "a", DartGeometry.RectFromLTWH(5.0, 5.0, 10.0, 10.0)));
+        tester.PumpWidget(Build(100.0, "a", Rect.FromLTWH(5.0, 5.0, 10.0, 10.0)));
         Assert.Equal(["a"], log);
 
         TapAt(tester, new Offset(10.0, 10.0));
@@ -531,19 +531,19 @@ public sealed class ProxyBoxClipParityTests
         TapAt(tester, new Offset(100.0, 100.0));
         Assert.Equal(["a", "tap"], log);
 
-        tester.PumpWidget(Build(100.0, "a", DartGeometry.RectFromLTWH(5.0, 5.0, 10.0, 10.0)));
+        tester.PumpWidget(Build(100.0, "a", Rect.FromLTWH(5.0, 5.0, 10.0, 10.0)));
         Assert.Equal(["a", "tap"], log);
 
-        tester.PumpWidget(Build(200.0, "a", DartGeometry.RectFromLTWH(5.0, 5.0, 10.0, 10.0)));
+        tester.PumpWidget(Build(200.0, "a", Rect.FromLTWH(5.0, 5.0, 10.0, 10.0)));
         Assert.Equal(["a", "tap", "a"], log);
 
-        tester.PumpWidget(Build(200.0, "a", DartGeometry.RectFromLTWH(5.0, 5.0, 10.0, 10.0)));
+        tester.PumpWidget(Build(200.0, "a", Rect.FromLTWH(5.0, 5.0, 10.0, 10.0)));
         Assert.Equal(["a", "tap", "a"], log);
 
-        tester.PumpWidget(Build(200.0, "b", DartGeometry.RectFromLTWH(5.0, 5.0, 10.0, 10.0)));
+        tester.PumpWidget(Build(200.0, "b", Rect.FromLTWH(5.0, 5.0, 10.0, 10.0)));
         Assert.Equal(["a", "tap", "a", "b"], log);
 
-        tester.PumpWidget(Build(200.0, "c", DartGeometry.RectFromLTWH(25.0, 25.0, 10.0, 10.0)));
+        tester.PumpWidget(Build(200.0, "c", Rect.FromLTWH(25.0, 25.0, 10.0, 10.0)));
         Assert.Equal(["a", "tap", "a", "b", "c"], log);
 
         TapAt(tester, new Offset(30.0, 30.0));
@@ -571,7 +571,7 @@ public sealed class ProxyBoxClipParityTests
     [Fact]
     public void ClipRect_DoesNotCrashAtZeroArea()
     {
-        using var clip = new ValueNotifier<Rect>(DartGeometry.RectFromLTWH(50.0, 50.0, 100.0, 100.0));
+        using var clip = new ValueNotifier<Rect>(Rect.FromLTWH(50.0, 50.0, 100.0, 100.0));
         Assert.Equal(
             new Size(0, 0),
             ZeroAreaSize<ClipRect>(new ClipRect(clipper: new NotifyClipper<Rect>(clip))));
@@ -894,7 +894,7 @@ public sealed class ProxyBoxClipParityTests
         public override Path GetClip(Size size)
         {
             var path = new Path();
-            path.AddRect(DartGeometry.RectFromLTWH(50.0, 50.0, 100.0, 100.0));
+            path.AddRect(Rect.FromLTWH(50.0, 50.0, 100.0, 100.0));
             return path;
         }
 
@@ -908,7 +908,7 @@ public sealed class ProxyBoxClipParityTests
         {
             log.Add("getClip");
             var path = new Path();
-            path.AddRect(DartGeometry.RectFromLTWH(50.0, 50.0, 100.0, 100.0));
+            path.AddRect(Rect.FromLTWH(50.0, 50.0, 100.0, 100.0));
             return path;
         }
 
@@ -950,7 +950,7 @@ public sealed class ProxyBoxClipParityTests
     {
         public int Id { get; } = id;
 
-        public override Rect GetClip(Size size) => DartGeometry.RectFromLTWH(0, 0, size.Width, size.Height);
+        public override Rect GetClip(Size size) => Rect.FromLTWH(0, 0, size.Width, size.Height);
 
         public override bool ShouldReclip(CustomClipper<Rect> oldClipper) => true;
 

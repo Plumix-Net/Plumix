@@ -10,7 +10,7 @@ namespace Plumix.UI;
 internal sealed class HairlineDraw(Offset start, Offset end, Color color, bool isAntiAlias, StrokeCap cap)
     : ICustomDrawOperation
 {
-    public global::Avalonia.Rect Bounds => DartGeometry.RectFromCorners(start, end).Inflate(1.0).ToAvalonia();
+    public global::Avalonia.Rect Bounds => Rect.FromLTRB(start.Dx, start.Dy, end.Dx, end.Dy).Inflate(1.0).ToAvalonia();
 
     public bool HitTest(global::Avalonia.Point point) => false;
 

@@ -62,8 +62,8 @@ public sealed class SystemContextMenuControllerDartParityTests : IDisposable
         _connection = UI.TextInput.Attach(client, new TextInputConfiguration());
     }
 
-    private static readonly Rect Rect1 = DartGeometry.RectFromLTWH(0, 0, 100, 100);
-    private static readonly Rect Rect2 = DartGeometry.RectFromLTWH(1, 1, 200, 200);
+    private static readonly Rect Rect1 = Rect.FromLTWH(0, 0, 100, 100);
+    private static readonly Rect Rect2 = Rect.FromLTWH(1, 1, 200, 200);
     private static readonly IReadOnlyList<IOSSystemContextMenuItemData> CopyItems =
         [new IOSSystemContextMenuItemDataCopy()];
 
@@ -350,7 +350,7 @@ public sealed class SystemContextMenuControllerDartParityTests : IDisposable
         _ = controller1.Hide();
         Assert.False(controller1.IsVisible);
 
-        _ = controller2.ShowWithItems(DartGeometry.RectFromLTWH(100, 100, 100, 100), [item2]);
+        _ = controller2.ShowWithItems(Rect.FromLTWH(100, 100, 100, 100), [item2]);
         Assert.True(controller2.IsVisible);
 
         controller2.HandleCustomContextMenuAction(item2.CallbackId);
@@ -438,7 +438,7 @@ public sealed class SystemContextMenuControllerDartParityTests : IDisposable
 
         _ = controller.ShowWithItems(Rect1, [oldItem]);
         Assert.True(controller.IsVisible);
-        _ = controller.ShowWithItems(DartGeometry.RectFromLTWH(100, 100, 100, 100), [newItem]);
+        _ = controller.ShowWithItems(Rect.FromLTWH(100, 100, 100, 100), [newItem]);
         Assert.True(controller.IsVisible);
 
         Assert.Throws<AssertionError>(() => controller.HandleCustomContextMenuAction(oldItem.CallbackId));

@@ -359,7 +359,7 @@ public sealed class SceneBuilderTests
         Assert.False(builder.AddedPicture);
         Assert.Null(layer.EngineLayer);
 
-        layer.Append(new PictureLayer(DartGeometry.RectFromLTWH(-1e9, -1e9, 2e9, 2e9))
+        layer.Append(new PictureLayer(Rect.FromLTWH(-1e9, -1e9, 2e9, 2e9))
         {
             Picture = new PictureRecorder().EndRecording(),
         });
@@ -404,7 +404,7 @@ public sealed class SceneBuilderTests
         layer.AddToScene(builder);
         Assert.Null(layer.EngineLayer);
 
-        layer.Append(new PictureLayer(DartGeometry.RectFromLTWH(-1e9, -1e9, 2e9, 2e9))
+        layer.Append(new PictureLayer(Rect.FromLTWH(-1e9, -1e9, 2e9, 2e9))
         {
             Picture = new PictureRecorder().EndRecording(),
         });
@@ -448,7 +448,7 @@ public sealed class SceneBuilderTests
         layer.DebugMarkClean();
         layer.UpdateSubtreeNeedsAddToScene();
         Assert.False(layer.DebugSubtreeNeedsAddToScene);
-        layer.OverlayRect = DartGeometry.RectFromLTWH(0, 0, 1, 1);
+        layer.OverlayRect = Rect.FromLTWH(0, 0, 1, 1);
         layer.UpdateSubtreeNeedsAddToScene();
         Assert.True(layer.DebugSubtreeNeedsAddToScene);
     }
@@ -467,7 +467,7 @@ public sealed class SceneBuilderTests
         parent.BuildScene(new SceneBuilder()).Dispose();
 
         // Causes grandChild to pass its engine layer as `oldLayer`.
-        Bitmap image = await grandChild.ToImage(DartGeometry.RectFromLTWH(0, 0, 10, 10));
+        Bitmap image = await grandChild.ToImage(Rect.FromLTWH(0, 0, 10, 10));
         Assert.Equal(new PixelSize(10, 10), image.PixelSize);
 
         // Ensure we can render the same scene again after rendering an interior layer.
@@ -485,7 +485,7 @@ public sealed class SceneBuilderTests
         parent.Append(child);
 
         parent.BuildScene(new SceneBuilder()).Dispose();
-        Bitmap image = grandChild.ToImageSync(DartGeometry.RectFromLTWH(0, 0, 10, 10));
+        Bitmap image = grandChild.ToImageSync(Rect.FromLTWH(0, 0, 10, 10));
         Assert.Equal(new PixelSize(10, 10), image.PixelSize);
         parent.BuildScene(new SceneBuilder()).Dispose();
     }
@@ -494,10 +494,10 @@ public sealed class SceneBuilderTests
     public void OffsetLayerToImageSync_CropsToTheBoundsAtThePixelRatio()
     {
         var layer = new OffsetLayer(new Offset(100, 100));
-        var picture = new PictureLayer(DartGeometry.RectFromLTWH(0, 0, 20, 20)) { Picture = DrawRectPicture(DartGeometry.RectFromLTWH(5, 5, 5, 5)) };
+        var picture = new PictureLayer(Rect.FromLTWH(0, 0, 20, 20)) { Picture = DrawRectPicture(Rect.FromLTWH(5, 5, 5, 5)) };
         layer.Append(picture);
 
-        Bitmap image = layer.ToImageSync(DartGeometry.RectFromLTWH(5, 5, 10, 10), pixelRatio: 2.0);
+        Bitmap image = layer.ToImageSync(Rect.FromLTWH(5, 5, 10, 10), pixelRatio: 2.0);
 
         Assert.Equal(new PixelSize(20, 20), image.PixelSize);
         // The rect starts at the bounds' origin: the top-left image pixels are covered...
@@ -569,14 +569,14 @@ public sealed class SceneBuilderTests
     public void ASceneThatOnlyReAddsRetainedLayersPaintsTheSameAsThePreviousOne()
     {
         var root = new TransformLayer(Matrix4.Diagonal3Values(3.0, 3.0, 1.0));
-        var looseLayer = new PictureLayer(DartGeometry.RectFromLTWH(0, 0, 20, 20))
+        var looseLayer = new PictureLayer(Rect.FromLTWH(0, 0, 20, 20))
         {
-            Picture = DrawRectPicture(DartGeometry.RectFromLTWH(0, 0, 20, 20)),
+            Picture = DrawRectPicture(Rect.FromLTWH(0, 0, 20, 20)),
         };
         var boundary = new OffsetLayer(new Offset(0, 20));
-        var nestedLayer = new PictureLayer(DartGeometry.RectFromLTWH(0, 0, 10, 10))
+        var nestedLayer = new PictureLayer(Rect.FromLTWH(0, 0, 10, 10))
         {
-            Picture = DrawRectPicture(DartGeometry.RectFromLTWH(0, 0, 10, 10)),
+            Picture = DrawRectPicture(Rect.FromLTWH(0, 0, 10, 10)),
         };
         boundary.Append(nestedLayer);
         root.Append(looseLayer);
@@ -593,7 +593,7 @@ public sealed class SceneBuilderTests
         Assert.NotSame(first, unchanged);
         Assert.True(ContainerFlowLayer.PaintsSameAs(unchanged, first));
 
-        nestedLayer.Picture = DrawRectPicture(DartGeometry.RectFromLTWH(0, 0, 10, 10), 0xFFFF0000);
+        nestedLayer.Picture = DrawRectPicture(Rect.FromLTWH(0, 0, 10, 10), 0xFFFF0000);
         ContainerFlowLayer repainted = Build();
         Assert.False(ContainerFlowLayer.PaintsSameAs(repainted, unchanged));
 

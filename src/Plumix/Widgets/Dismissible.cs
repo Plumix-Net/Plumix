@@ -668,14 +668,14 @@ public sealed class Dismissible : StatefulWidget
             {
                 double offset = MoveAnimation.Value.Dx * size.Width;
                 return offset < 0.0
-                    ? DartGeometry.RectFromLTWH(size.Width + offset, 0.0, -offset, size.Height)
-                    : DartGeometry.RectFromLTWH(0.0, 0.0, offset, size.Height);
+                    ? Rect.FromLTWH(size.Width + offset, 0.0, -offset, size.Height)
+                    : Rect.FromLTWH(0.0, 0.0, offset, size.Height);
             }
 
             double verticalOffset = MoveAnimation.Value.Dy * size.Height;
             return verticalOffset < 0.0
-                ? DartGeometry.RectFromLTWH(0.0, size.Height + verticalOffset, size.Width, -verticalOffset)
-                : DartGeometry.RectFromLTWH(0.0, 0.0, size.Width, verticalOffset);
+                ? Rect.FromLTWH(0.0, size.Height + verticalOffset, size.Width, -verticalOffset)
+                : Rect.FromLTWH(0.0, 0.0, size.Width, verticalOffset);
         }
 
         public override Rect GetApproximateClipRect(Size size) => GetClip(size);

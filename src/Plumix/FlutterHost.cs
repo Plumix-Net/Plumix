@@ -990,7 +990,7 @@ public partial class PlumixHost : Control, ICustomHitTest
         var size = _lastArrangedSize;
         Offset origin = (_attachedTopLevel is null ? default : this.TranslatePoint(default, _attachedTopLevel) ?? default).ToPlumix();
         EdgeInsets viewInsets = ResolveViewInsets(
-            _inputPane?.State ?? InputPaneState.Closed, (_inputPane?.OccludedRect ?? default).ToPlumix(), DartGeometry.RectFromOffsetAndSize(origin, size));
+            _inputPane?.State ?? InputPaneState.Closed, (_inputPane?.OccludedRect ?? default).ToPlumix(), (origin & size));
         double scale = _attachedTopLevel?.RenderScaling ?? 1.0;
         if (!double.IsFinite(scale) || scale <= 0)
         {

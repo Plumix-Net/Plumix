@@ -12,7 +12,7 @@ namespace Plumix.Tests;
 /// and the `_SelectableFragment` half of `rendering/paragraph.dart`.
 public sealed class SelectionSubsystemTests
 {
-    private static readonly Rect TargetRect = DartGeometry.RectFromLTWH(100, 100, 200, 500);
+    private static readonly Rect TargetRect = Rect.FromLTWH(100, 100, 200, 500);
 
     [Theory]
     // The exact table from Flutter's `selection_test.dart` > `selectionBasedOnRect works`.
@@ -81,12 +81,12 @@ public sealed class SelectionSubsystemTests
             SelectionStatus.Uncollapsed,
             hasContent: true,
             startSelectionPoint: start,
-            selectionRects: [DartGeometry.RectFromLTWH(0, 0, 4, 4)]);
+            selectionRects: [Rect.FromLTWH(0, 0, 4, 4)]);
         var second = new SelectionGeometry(
             SelectionStatus.Uncollapsed,
             hasContent: true,
             startSelectionPoint: new SelectionPoint(new Offset(1, 2), 12, TextSelectionHandleType.Left),
-            selectionRects: [DartGeometry.RectFromLTWH(0, 0, 4, 4)]);
+            selectionRects: [Rect.FromLTWH(0, 0, 4, 4)]);
 
         Assert.Equal(first, second);
         Assert.NotEqual(first, first.CopyWith(status: SelectionStatus.Collapsed));

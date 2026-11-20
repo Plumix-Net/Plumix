@@ -198,7 +198,7 @@ public sealed class RenderWrap : RenderBox,
             _clipRectLayer.Layer = context.PushClipRect(
                 NeedsCompositing,
                 offset,
-                DartGeometry.RectFromOffsetAndSize(new Offset(0, 0), Size),
+                (new Offset(0, 0) & Size),
                 DefaultPaint,
                 ClipBehavior,
                 _clipRectLayer.Layer);

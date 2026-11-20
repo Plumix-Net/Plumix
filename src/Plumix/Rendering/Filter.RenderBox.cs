@@ -57,7 +57,7 @@ public sealed class RenderColorFilter : RenderProxyBox
             ColorFilter,
             base.Paint,
             _layer as ColorFilterLayer);
-        layer.FilterBounds = DartGeometry.RectFromOffsetAndSize(offset, Size);
+        layer.FilterBounds = offset & Size;
         _layer = layer;
     }
 }
@@ -127,7 +127,7 @@ public sealed class RenderImageFilter : RenderProxyBox
     {
         var imageFilterLayer = (ImageFilterLayer)layer;
         imageFilterLayer.ImageFilter = ImageFilter;
-        imageFilterLayer.FilterBounds = DartGeometry.RectFromOffsetAndSize(default, Size);
+        imageFilterLayer.FilterBounds = Offset.Zero & Size;
     }
 }
 
@@ -194,8 +194,8 @@ public class RenderShaderMask : RenderProxyBox
             Debug.Assert(NeedsCompositing);
             var layer = Layer as ShaderMaskLayer ?? new ShaderMaskLayer();
             Layer = layer;
-            layer.Shader = _shaderCallback(DartGeometry.RectFromOffsetAndSize(new Offset(0, 0), Size));
-            layer.MaskRect = DartGeometry.RectFromOffsetAndSize(offset, Size);
+            layer.Shader = _shaderCallback(new Offset(0, 0) & Size);
+            layer.MaskRect = offset & Size;
             layer.BlendMode = _blendMode;
             context.PushLayer(layer, base.Paint, offset);
             if (Constants.KDebugMode)
@@ -345,7 +345,7 @@ public class RenderBackdropFilter : RenderProxyBox
             return;
         }
 
-        ImageFilter effectiveFilter = _filterConfig.Resolve(new ImageFilterContext(DartGeometry.RectFromOffsetAndSize(offset, Size)));
+        ImageFilter effectiveFilter = _filterConfig.Resolve(new ImageFilterContext(offset & Size));
 
         if (Child is not null)
         {

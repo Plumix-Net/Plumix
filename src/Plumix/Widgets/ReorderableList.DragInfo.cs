@@ -116,7 +116,7 @@ internal sealed class ReorderDragInfo : Drag, IDisposable
 
     private Offset AdjustedDragOffset(Offset position) => _boundary is null
         ? position
-        : _boundary.NearestPositionWithinBoundary(DartGeometry.RectFromOffsetAndSize(position - DragOffset, ItemSize)).TopLeft + DragOffset;
+        : _boundary.NearestPositionWithinBoundary(position - DragOffset & ItemSize).TopLeft + DragOffset;
 
     private void HandleStatus(AnimationStatus status)
     {

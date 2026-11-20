@@ -238,7 +238,7 @@ public sealed class RenderEditableDartParityTests
 
         Assert.True(Paints(
             PaintEditable(editable),
-            RectStep(Color.FromARGB(0xFF, 0xFF, 0x00, 0x00), DartGeometry.RectFromLTWH(40, 0, 1, 10))));
+            RectStep(Color.FromARGB(0xFF, 0xFF, 0x00, 0x00), Rect.FromLTWH(40, 0, 1, 10))));
 
         // Now change to a rounded caret.
         editable.CursorColor = Color.FromARGB(0xFF, 0x00, 0x00, 0xFF);
@@ -250,7 +250,7 @@ public sealed class RenderEditableDartParityTests
             PaintEditable(editable),
             RRectStep(
                 Color.FromARGB(0xFF, 0x00, 0x00, 0xFF),
-                RRect.FromRectAndRadius(DartGeometry.RectFromLTWH(40, 0, 4, 10), Radius.Circular(3)))));
+                RRect.FromRectAndRadius(Rect.FromLTWH(40, 0, 4, 10), Radius.Circular(3)))));
 
         editable.TextScaler = TextScaler.Linear(2.0);
         tester.PumpFrame(EnginePhase.CompositingBits);
@@ -260,7 +260,7 @@ public sealed class RenderEditableDartParityTests
             PaintEditable(editable),
             RRectStep(
                 Color.FromARGB(0xFF, 0x00, 0x00, 0xFF),
-                RRect.FromRectAndRadius(DartGeometry.RectFromLTWH(80, 0, 4, 20), Radius.Circular(3)))));
+                RRect.FromRectAndRadius(Rect.FromLTWH(80, 0, 4, 20), Radius.Circular(3)))));
 
         // Can turn off caret.
         showCursor.Value = false;
@@ -1365,7 +1365,7 @@ public sealed class RenderEditableDartParityTests
             new TextPosition(4, TextAffinity.Upstream));
         tester.PumpFrame(EnginePhase.CompositingBits);
 
-        RRect expectedRRect = RRect.FromRectAndRadius(DartGeometry.RectFromLTWH(49.5, 51, 2, 8), Radius.Circular(1));
+        RRect expectedRRect = RRect.FromRectAndRadius(Rect.FromLTWH(49.5, 51, 2, 8), Radius.Circular(1));
 
         Assert.True(Paints(PaintEditable(editable), RRectStep(cursorColor.WithOpacity(0.75), expectedRRect)));
 
@@ -1777,7 +1777,7 @@ public sealed class RenderEditableDartParityTests
     }
 
     private static Rect FromLTRB(double left, double top, double right, double bottom) =>
-        DartGeometry.RectFromLTWH(left, top, right - left, bottom - top);
+        Rect.FromLTWH(left, top, right - left, bottom - top);
 
     private static IReadOnlyList<CanvasCall> PaintEditable(RenderEditable editable)
     {
@@ -2084,7 +2084,7 @@ public sealed class RenderEditableDartParityTests
         public override void Paint(Canvas canvas, Size size, RenderEditable renderEditable)
         {
             PaintCount += 1;
-            canvas.DrawRectangle(new SolidColorBrush(Color), null, DartGeometry.RectFromLTWH(1, 1, 0, 0));
+            canvas.DrawRectangle(new SolidColorBrush(Color), null, Rect.FromLTWH(1, 1, 0, 0));
         }
 
         public override bool ShouldRepaint(RenderEditablePainter? oldDelegate) => Repaint;

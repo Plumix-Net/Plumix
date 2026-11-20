@@ -31,7 +31,7 @@ public sealed partial class HeroNavigatorTests
             using var manifest = GeometryManifest(harness, route, route, hero, hero);
 
             Assert.True(manifest.IsValid);
-            Assert.Equal(DartGeometry.RectFromLTWH(20, 60, width, height), manifest.ToHeroLocation);
+            Assert.Equal(Rect.FromLTWH(20, 60, width, height), manifest.ToHeroLocation);
             Assert.Equal(manifest.ToHeroLocation, manifest.FromHeroLocation);
         }
         finally
@@ -87,7 +87,7 @@ public sealed partial class HeroNavigatorTests
             }
             else
             {
-                Assert.Equal(DartGeometry.RectFromLTWH(60, 90, 44, 44), manifest.ToHeroLocation);
+                Assert.Equal(Rect.FromLTWH(60, 90, 44, 44), manifest.ToHeroLocation);
             }
         }
         finally
@@ -124,7 +124,7 @@ public sealed partial class HeroNavigatorTests
             Assert.Equal(valid, manifest.IsValid);
             if (!unpaintableDestination)
             {
-                Assert.Equal(DartGeometry.RectFromLTWH(100, 60, 44, 44), manifest.ToHeroLocation);
+                Assert.Equal(Rect.FromLTWH(100, 60, 44, 44), manifest.ToHeroLocation);
             }
         }
         finally

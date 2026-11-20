@@ -840,7 +840,7 @@ public sealed class MaterialAutocompleteTests : IDisposable
     private static Rect GlobalRect(RenderBox renderBox)
     {
         Assert.True(renderBox.TryGetTransformFromRoot(out Matrix4 transform));
-        return RenderObject.TransformRect(transform, DartGeometry.RectFromSize(renderBox.Size));
+        return RenderObject.TransformRect(transform, (Offset.Zero & renderBox.Size));
     }
 
     private static async Task PumpUntilAsync(

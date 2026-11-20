@@ -63,7 +63,7 @@ public readonly record struct TextBox(double Left, double Top, double Right, dou
     /// The right edge of the box for left-to-right text, the left edge for right-to-left text.
     public double End => Direction == TextDirection.Ltr ? Right : Left;
 
-    public Rect ToRect() => DartGeometry.RectFromCorners(new Offset(Left, Top), new Offset(Right, Bottom));
+    public Rect ToRect() => Rect.FromLTRB(Left, Top, Right, Bottom);
 
     public override string ToString()
     {

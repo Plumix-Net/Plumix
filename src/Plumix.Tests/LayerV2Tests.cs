@@ -29,7 +29,7 @@ public sealed class LayerV2Tests
         pipeline.CompositeFrame();
 
         var clipLayer = Assert.IsType<ClipRectLayer>(Assert.Single(pipeline.RootLayer.Children));
-        Assert.Equal(DartGeometry.RectFromLTWH(4, 6, 40, 24), clipLayer.ClipRect);
+        Assert.Equal(Rect.FromLTWH(4, 6, 40, 24), clipLayer.ClipRect);
         Assert.IsType<PictureLayer>(Assert.Single(clipLayer.Children));
     }
 
@@ -65,8 +65,8 @@ public sealed class LayerV2Tests
         ClipRectLayer? layer = context.PushClipRect(
             needsCompositing: true,
             new Offset(3, 5),
-            DartGeometry.RectFromLTWH(0, 0, 10, 10),
-            (clipped, offset) => clipped.Canvas.DrawRectangle(Brushes.Gold, null, DartGeometry.RectFromOffsetAndSize(offset, new Size(4, 4))),
+            Rect.FromLTWH(0, 0, 10, 10),
+            (clipped, offset) => clipped.Canvas.DrawRectangle(Brushes.Gold, null, (offset & new Size(4, 4))),
             Clip.None);
 
         Assert.Null(layer);
@@ -82,11 +82,11 @@ public sealed class LayerV2Tests
         ClipRectLayer? layer = context.PushClipRect(
             needsCompositing: true,
             new Offset(3, 5),
-            DartGeometry.RectFromLTWH(0, 0, 10, 10),
+            Rect.FromLTWH(0, 0, 10, 10),
             (_, _) => { });
 
         Assert.NotNull(layer);
-        Assert.Equal(DartGeometry.RectFromLTWH(3, 5, 10, 10), layer!.ClipRect);
+        Assert.Equal(Rect.FromLTWH(3, 5, 10, 10), layer!.ClipRect);
         Assert.Equal(Clip.HardEdge, layer.ClipBehavior);
     }
 
@@ -100,7 +100,7 @@ public sealed class LayerV2Tests
         ClipRectLayer? layer = context.PushClipRect(
             needsCompositing: true,
             new Offset(0, 0),
-            DartGeometry.RectFromLTWH(0, 0, 10, 10),
+            Rect.FromLTWH(0, 0, 10, 10),
             (_, _) => { },
             oldLayer: oldLayer);
 
@@ -125,7 +125,7 @@ public sealed class LayerV2Tests
         pipeline.CompositeFrame();
 
         var clipLayer = Assert.IsType<ClipRRectLayer>(Assert.Single(pipeline.RootLayer.Children));
-        Assert.Equal(DartGeometry.RectFromLTWH(5, 7, 44, 26), clipLayer.ClipRRect.Rect);
+        Assert.Equal(Rect.FromLTWH(5, 7, 44, 26), clipLayer.ClipRRect.Rect);
         Assert.Equal(BorderRadius.Circular(8), clipLayer.ClipRRect.Radii);
         Assert.IsType<PictureLayer>(Assert.Single(clipLayer.Children));
     }
@@ -134,36 +134,36 @@ public sealed class LayerV2Tests
     public void PushClipPath_CreatesClipPathLayer_WhenCompositingIsNeeded()
     {
         var path = new Plumix.UI.Path();
-        path.AddOval(DartGeometry.RectFromLTWH(0, 0, 50, 30));
+        path.AddOval(Rect.FromLTWH(0, 0, 50, 30));
 
         var rootLayer = new ContainerLayer();
         var context = new PaintingContext(rootLayer);
         ClipPathLayer? layer = context.PushClipPath(
             needsCompositing: true,
             new Offset(2, 4),
-            DartGeometry.RectFromLTWH(0, 0, 50, 30),
+            Rect.FromLTWH(0, 0, 50, 30),
             path,
-            (clipped, _) => clipped.Canvas.DrawRectangle(Brushes.Gold, null, DartGeometry.RectFromLTWH(0, 0, 80, 40)));
+            (clipped, _) => clipped.Canvas.DrawRectangle(Brushes.Gold, null, Rect.FromLTWH(0, 0, 80, 40)));
 
         Assert.NotNull(layer);
         Assert.Same(layer, Assert.Single(rootLayer.Children));
-        Assert.Equal(DartGeometry.RectFromLTWH(2, 4, 50, 30), layer!.ClipPath.GetBounds());
+        Assert.Equal(Rect.FromLTWH(2, 4, 50, 30), layer!.ClipPath.GetBounds());
         Assert.IsType<PictureLayer>(Assert.Single(layer.Children));
     }
 
     [Fact]
     public void PushClipGeometry_CreatesGeometryLayer_WhenCompositingIsNeeded()
     {
-        var geometry = new RectangleGeometry(DartGeometry.RectFromLTWH(0, 0, 50, 30).ToAvalonia());
+        var geometry = new RectangleGeometry(Rect.FromLTWH(0, 0, 50, 30).ToAvalonia());
 
         var rootLayer = new ContainerLayer();
         var context = new PaintingContext(rootLayer);
         context.PushClipGeometry(
             needsCompositing: true,
             new Offset(0, 0),
-            DartGeometry.RectFromLTWH(0, 0, 50, 30),
+            Rect.FromLTWH(0, 0, 50, 30),
             geometry,
-            (clipped, _) => clipped.Canvas.DrawRectangle(Brushes.Gold, null, DartGeometry.RectFromLTWH(0, 0, 80, 40)));
+            (clipped, _) => clipped.Canvas.DrawRectangle(Brushes.Gold, null, Rect.FromLTWH(0, 0, 80, 40)));
 
         var clipLayer = Assert.IsType<ClipGeometryLayer>(Assert.Single(rootLayer.Children));
         Assert.Same(geometry, clipLayer.Geometry);
@@ -189,7 +189,7 @@ public sealed class LayerV2Tests
         pipeline.CompositeFrame();
 
         var firstLayer = Assert.IsType<ClipRRectLayer>(Assert.Single(pipeline.RootLayer.Children));
-        Assert.Equal(DartGeometry.RectFromLTWH(0, 0, 80, 40), firstLayer.ClipRRect.Rect);
+        Assert.Equal(Rect.FromLTWH(0, 0, 80, 40), firstLayer.ClipRRect.Rect);
 
         pipeline.RequestLayout();
         pipeline.FlushLayout(new Size(200, 40));
@@ -198,7 +198,7 @@ public sealed class LayerV2Tests
         pipeline.CompositeFrame();
 
         var secondLayer = Assert.IsType<ClipRRectLayer>(Assert.Single(pipeline.RootLayer.Children));
-        Assert.Equal(DartGeometry.RectFromLTWH(0, 0, 200, 40), secondLayer.ClipRRect.Rect);
+        Assert.Equal(Rect.FromLTWH(0, 0, 200, 40), secondLayer.ClipRRect.Rect);
         Assert.Same(firstLayer, secondLayer);
     }
 
@@ -281,11 +281,11 @@ public sealed class LayerV2Tests
             ctx.PushClipRect(
                 _needsCompositing,
                 offset,
-                DartGeometry.RectFromOffsetAndSize(new Offset(4, 6), new Size(40, 24)),
+                (new Offset(4, 6) & new Size(40, 24)),
                 (clipContext, clipOffset) => clipContext.Canvas.DrawRectangle(
                     Brushes.Crimson,
                     null,
-                    DartGeometry.RectFromOffsetAndSize(clipOffset, Size)));
+                    (clipOffset & Size)));
         }
     }
 
@@ -308,7 +308,7 @@ public sealed class LayerV2Tests
                     (transformContext, transformOffset) => transformContext.Canvas.DrawRectangle(
                         Brushes.MediumSeaGreen,
                         null,
-                        DartGeometry.RectFromOffsetAndSize(transformOffset, new Size(20, 10)))));
+                        (transformOffset & new Size(20, 10)))));
         }
     }
 
@@ -324,14 +324,14 @@ public sealed class LayerV2Tests
             ctx.PushClipRRect(
                 true,
                 offset,
-                DartGeometry.RectFromOffsetAndSize(new Offset(5, 7), new Size(44, 26)),
+                (new Offset(5, 7) & new Size(44, 26)),
                 RRect.FromRectAndCorners(
-                    DartGeometry.RectFromOffsetAndSize(new Offset(5, 7), new Size(44, 26)),
+                    (new Offset(5, 7) & new Size(44, 26)),
                     BorderRadius.Circular(8)),
                 (clipContext, clipOffset) => clipContext.Canvas.DrawRectangle(
                     Brushes.CornflowerBlue,
                     null,
-                    DartGeometry.RectFromOffsetAndSize(clipOffset, Size)));
+                    (clipOffset & Size)));
         }
     }
 
@@ -347,7 +347,7 @@ public sealed class LayerV2Tests
 
         public override void Paint(PaintingContext ctx, Offset offset)
         {
-            ctx.Canvas.DrawRectangle(Brushes.Transparent, null, DartGeometry.RectFromOffsetAndSize(offset, Size));
+            ctx.Canvas.DrawRectangle(Brushes.Transparent, null, (offset & Size));
         }
     }
 }

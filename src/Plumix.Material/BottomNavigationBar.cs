@@ -1108,7 +1108,7 @@ internal sealed class BottomNavigationBarRadialPainter : CustomPainter
         foreach (BottomNavigationBarCircle circle in Circles)
         {
             var brush = new SolidColorBrush(circle.Color);
-            var rect = DartGeometry.RectFromLTWH(0.0, 0.0, size.Width, size.Height);
+            var rect = Rect.FromLTWH(0.0, 0.0, size.Width, size.Height);
             double leftFraction = TextDirection switch
             {
                 TextDirection.Rtl => 1.0 - circle.HorizontalLeadingOffset,

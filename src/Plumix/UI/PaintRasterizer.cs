@@ -132,7 +132,7 @@ internal sealed class RasterizedShapeDraw
             : PaintRasterizer.ShadeMask(
                 mask,
                 PaintRasterizer.RasterizeBrush(width, height, bounds, scale, _brush, _color.A));
-        return (PaintRasterizer.CreateBitmap(pixels, width, height), DartGeometry.RectFromOffsetAndSize(bounds.TopLeft, new Size(
+        return (PaintRasterizer.CreateBitmap(pixels, width, height), (bounds.TopLeft & new Size(
             width / scale,
             height / scale)));
     }
@@ -336,7 +336,7 @@ internal static class PaintRasterizer
             BitmapBlendingMode = FilterLayerRasterizer.ToBitmapBlendingMode(blendMode),
             BitmapInterpolationMode = BitmapInterpolationMode.LowQuality,
         });
-        context.DrawImage(bitmap, DartGeometry.RectFromSize(bitmap.Size.ToPlumix()).ToAvalonia(), bounds.ToAvalonia());
+        context.DrawImage(bitmap, (Offset.Zero & bitmap.Size.ToPlumix()).ToAvalonia(), bounds.ToAvalonia());
     }
 
     private static byte[] Rasterize(

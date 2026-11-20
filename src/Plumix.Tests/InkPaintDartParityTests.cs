@@ -697,7 +697,7 @@ public sealed class InkPaintDartParityTests : IDisposable
     private static FrameworkDartTester CreateTester() => new(fakeGestureTimers: true);
 
     private static Rect Ltrb(double left, double top, double right, double bottom) =>
-        DartGeometry.RectFromCorners(new Offset(left, top), new Offset(right, bottom));
+        Rect.FromLTRB(left, top, right, bottom);
 
     private static Element InkWellOf(FrameworkDartTester tester) => tester.ElementOfType<InkWell>();
 
@@ -733,7 +733,7 @@ public sealed class InkPaintDartParityTests : IDisposable
                 position: position,
                 color: color,
                 containedInkWell: containedInkWell,
-                rectCallback: () => DartGeometry.RectFromLTWH(0, 0, 100, 100),
+                rectCallback: () => Rect.FromLTWH(0, 0, 100, 100),
                 borderRadius: borderRadius,
                 customBorder: customBorder,
                 radius: radius,

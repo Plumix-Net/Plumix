@@ -198,8 +198,8 @@ internal sealed class DefaultSnapshotPainter : SnapshotPainter
         Size sourceSize,
         double pixelRatio)
     {
-        var src = DartGeometry.RectFromLTWH(0, 0, sourceSize.Width, sourceSize.Height);
-        var dst = DartGeometry.RectFromLTWH(offset.Dx, offset.Dy, size.Width, size.Height);
+        var src = Rect.FromLTWH(0, 0, sourceSize.Width, sourceSize.Height);
+        var dst = Rect.FromLTWH(offset.Dx, offset.Dy, size.Width, size.Height);
         var paint = new Paint { FilterQuality = FilterQuality.Medium };
         context.Canvas.DrawImageRect(image, src, dst, paint);
     }

@@ -224,7 +224,7 @@ public abstract record BoxBorder : ShapeBorder
 
                 double circleRadius = ShortestSide(rect) / 2.0;
                 borderRect = RRect.FromRectAndRadius(
-                    DartGeometry.RectFromLTWH(
+                    Rect.FromLTWH(
                         rect.Center.Dx - circleRadius,
                         rect.Center.Dy - circleRadius,
                         circleRadius * 2.0,

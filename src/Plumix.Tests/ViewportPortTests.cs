@@ -238,7 +238,7 @@ public class ViewportPortTests
         RenderViewport viewport = BuildViewport(offset, [sliver]);
         Layout(viewport, new Size(100, 200));
 
-        Assert.Equal(DartGeometry.RectFromLTWH(0, 0, 100, 200), viewport.InvokeDescribeApproximatePaintClip(sliver));
+        Assert.Equal(Rect.FromLTWH(0, 0, 100, 200), viewport.InvokeDescribeApproximatePaintClip(sliver));
 
         viewport.ClipBehavior = Clip.None;
         Assert.Null(viewport.InvokeDescribeApproximatePaintClip(sliver));
@@ -315,15 +315,15 @@ public class ViewportPortTests
 
         RevealedOffset leading = viewport.GetOffsetToReveal(boxes[5], 0.0);
         Assert.Equal(500.0, leading.Offset);
-        Assert.Equal(DartGeometry.RectFromLTWH(0, 0, 300, 100), leading.Rect);
+        Assert.Equal(Rect.FromLTWH(0, 0, 300, 100), leading.Rect);
 
         RevealedOffset trailing = viewport.GetOffsetToReveal(boxes[5], 1.0);
         Assert.Equal(400.0, trailing.Offset);
-        Assert.Equal(DartGeometry.RectFromLTWH(0, 100, 300, 100), trailing.Rect);
+        Assert.Equal(Rect.FromLTWH(0, 100, 300, 100), trailing.Rect);
 
-        RevealedOffset partial = viewport.GetOffsetToReveal(boxes[5], 0.0, DartGeometry.RectFromLTWH(40, 40, 10, 10));
+        RevealedOffset partial = viewport.GetOffsetToReveal(boxes[5], 0.0, Rect.FromLTWH(40, 40, 10, 10));
         Assert.Equal(540.0, partial.Offset);
-        Assert.Equal(DartGeometry.RectFromLTWH(40, 0, 10, 10), partial.Rect);
+        Assert.Equal(Rect.FromLTWH(40, 0, 10, 10), partial.Rect);
     }
 
     [Fact]

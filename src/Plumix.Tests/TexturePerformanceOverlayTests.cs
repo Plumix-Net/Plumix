@@ -101,7 +101,7 @@ public sealed class TexturePerformanceOverlayTests
         Assert.True(overlay.NeedsCompositing);
 
         var layer = Assert.IsType<PerformanceOverlayLayer>(PaintIntoContainer(overlay).LastChild);
-        Assert.Equal(DartGeometry.RectFromLTWH(0, 0, 400, 160), layer.OverlayRect);
+        Assert.Equal(Rect.FromLTWH(0, 0, 400, 160), layer.OverlayRect);
         Assert.Equal(0b1111, layer.OptionsMask);
     }
 
@@ -126,7 +126,7 @@ public sealed class TexturePerformanceOverlayTests
 
         Element overlayElement = tester.ElementOfType<PerformanceOverlay>();
         Assert.Equal(0b1111, ((PerformanceOverlay)overlayElement.Widget).OptionsMask);
-        Assert.Equal(DartGeometry.RectFromLTWH(0, 0, 400, 160), tester.GetRect(overlayElement));
+        Assert.Equal(Rect.FromLTWH(0, 0, 400, 160), tester.GetRect(overlayElement));
 
         tester.PumpWidget(new WidgetsApp(
             color: new Plumix.UI.Color(0xFF2196F3),

@@ -318,7 +318,7 @@ public sealed class HostTextInputPlugin
         CaretRectChanged?.Invoke();
     }
 
-    private static Rect RectFromJson(IDictionary rect) => DartGeometry.RectFromLTWH(
+    private static Rect RectFromJson(IDictionary rect) => Rect.FromLTWH(
         Convert.ToDouble(rect["x"]),
         Convert.ToDouble(rect["y"]),
         Convert.ToDouble(rect["width"]),
@@ -374,7 +374,7 @@ public sealed class HostTextInputPlugin
             maxY = Math.Max(maxY, y);
         }
 
-        return DartGeometry.RectFromLTWH(minX, minY, maxX - minX, maxY - minY);
+        return Rect.FromLTWH(minX, minY, maxX - minX, maxY - minY);
     }
 
     /// <summary>

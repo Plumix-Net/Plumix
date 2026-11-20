@@ -236,7 +236,7 @@ public sealed class RendererBindingDartParityTests : IDisposable
         int node = FindNode(owner, "rect");
 
         Assert.Equal(
-            DartGeometry.RectFromLTWH(0, 0, 100, 100),
+            Rect.FromLTWH(0, 0, 100, 100),
             SemanticsBinding.Instance.GetRectOfSemanticsNodeInViewCoordinates(8114, node));
     }
 
@@ -267,10 +267,10 @@ public sealed class RendererBindingDartParityTests : IDisposable
         PumpFrame();
         int node = FindNode(owner, "scaled");
 
-        Assert.Equal(DartGeometry.RectFromLTWH(0, 0, 200, 200), owner.SemanticsOwner!.GetSemanticsNode(node)!.GlobalRect);
-        Assert.Equal(DartGeometry.RectFromLTWH(0, 0, 200, 200), owner.SemanticsOwner!.RootNode!.Rect);
+        Assert.Equal(Rect.FromLTWH(0, 0, 200, 200), owner.SemanticsOwner!.GetSemanticsNode(node)!.GlobalRect);
+        Assert.Equal(Rect.FromLTWH(0, 0, 200, 200), owner.SemanticsOwner!.RootNode!.Rect);
         Assert.Equal(
-            DartGeometry.RectFromLTWH(0, 0, 100, 100),
+            Rect.FromLTWH(0, 0, 100, 100),
             SemanticsBinding.Instance.GetRectOfSemanticsNodeInViewCoordinates(8115, node));
         Assert.Equal(new Size(100, 100), view.Size);
     }

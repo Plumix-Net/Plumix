@@ -36,7 +36,7 @@ internal readonly record struct RoundRectGeometry
     public Radius BottomLeft { get; }
     public double Width => Right - Left;
     public double Height => Bottom - Top;
-    public Rect OuterRect => DartGeometry.RectFromLTRB(Left, Top, Right, Bottom);
+    public Rect OuterRect => Rect.FromLTRB(Left, Top, Right, Bottom);
     public Offset Center => new(Left + Width / 2.0, Top + Height / 2.0);
     public double ShortestSide => Math.Min(Math.Abs(Width), Math.Abs(Height));
     public double LongestSide => Math.Max(Math.Abs(Width), Math.Abs(Height));
@@ -55,12 +55,12 @@ internal readonly record struct RoundRectGeometry
 
     public Rect SafeInnerRect => InnerRect(0.29289321881);
     public Rect MiddleRect => InnerRect(1.0);
-    public Rect WideMiddleRect => DartGeometry.RectFromLTRB(
+    public Rect WideMiddleRect => Rect.FromLTRB(
         Left, Top + Math.Max(TopLeft.Y, TopRight.Y), Right, Bottom - Math.Max(BottomRight.Y, BottomLeft.Y));
-    public Rect TallMiddleRect => DartGeometry.RectFromLTRB(
+    public Rect TallMiddleRect => Rect.FromLTRB(
         Left + Math.Max(BottomLeft.X, TopLeft.X), Top, Right - Math.Max(TopRight.X, BottomRight.X), Bottom);
 
-    private Rect InnerRect(double factor) => DartGeometry.RectFromLTRB(
+    private Rect InnerRect(double factor) => Rect.FromLTRB(
         Left + Math.Max(BottomLeft.X, TopLeft.X) * factor,
         Top + Math.Max(TopLeft.Y, TopRight.Y) * factor,
         Right - Math.Max(TopRight.X, BottomRight.X) * factor,
@@ -117,8 +117,8 @@ internal readonly record struct RoundRectGeometry
         }
 
         return new(
-            DartGeometry.LerpDouble(Left, end.Left, t), DartGeometry.LerpDouble(Top, end.Top, t),
-            DartGeometry.LerpDouble(Right, end.Right, t), DartGeometry.LerpDouble(Bottom, end.Bottom, t),
+            GeometryMath.LerpDouble(Left, end.Left, t), GeometryMath.LerpDouble(Top, end.Top, t),
+            GeometryMath.LerpDouble(Right, end.Right, t), GeometryMath.LerpDouble(Bottom, end.Bottom, t),
             ClampRadius(Radius.Lerp(TopLeft, end.TopLeft, t)), ClampRadius(Radius.Lerp(TopRight, end.TopRight, t)),
             ClampRadius(Radius.Lerp(BottomRight, end.BottomRight, t)),
             ClampRadius(Radius.Lerp(BottomLeft, end.BottomLeft, t)));
@@ -132,13 +132,13 @@ internal readonly record struct RoundRectGeometry
 
     public string Format(string className)
     {
-        string rect = $"{DartGeometry.Fixed(Left)}, {DartGeometry.Fixed(Top)}, "
-                      + $"{DartGeometry.Fixed(Right)}, {DartGeometry.Fixed(Bottom)}";
+        string rect = $"{GeometryMath.Fixed(Left)}, {GeometryMath.Fixed(Top)}, "
+                      + $"{GeometryMath.Fixed(Right)}, {GeometryMath.Fixed(Bottom)}";
         if (Uniform)
         {
             return TopLeft.X == TopLeft.Y
-                ? $"{className}.fromLTRBR({rect}, {DartGeometry.Fixed(TopLeft.X)})"
-                : $"{className}.fromLTRBXY({rect}, {DartGeometry.Fixed(TopLeft.X)}, {DartGeometry.Fixed(TopLeft.Y)})";
+                ? $"{className}.fromLTRBR({rect}, {GeometryMath.Fixed(TopLeft.X)})"
+                : $"{className}.fromLTRBXY({rect}, {GeometryMath.Fixed(TopLeft.X)}, {GeometryMath.Fixed(TopLeft.Y)})";
         }
 
         return $"{className}.fromLTRBAndCorners({rect}, topLeft: {TopLeft}, topRight: {TopRight}, "

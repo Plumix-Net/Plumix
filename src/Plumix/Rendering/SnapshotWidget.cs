@@ -192,7 +192,7 @@ public sealed class RenderSnapshotWidget : RenderProxyBox
     private IImage? PaintAndDetachToImage()
     {
         var offsetLayer = new OffsetLayer();
-        var context = new PaintingContext(offsetLayer, DartGeometry.RectFromSize(Size));
+        var context = new PaintingContext(offsetLayer, (Offset.Zero & Size));
         base.Paint(context, default);
         // Dart calls the protected `stopRecordingIfNeeded` here (with an ignore comment).
         context.DebugStopRecordingIfNeeded();
@@ -208,7 +208,7 @@ public sealed class RenderSnapshotWidget : RenderProxyBox
             return null;
         }
 
-        IImage image = offsetLayer.ToImageSync(DartGeometry.RectFromSize(Size), pixelRatio: DevicePixelRatio);
+        IImage image = offsetLayer.ToImageSync((Offset.Zero & Size), pixelRatio: DevicePixelRatio);
         offsetLayer.Dispose();
         _lastCachedSize = Size;
         return image;

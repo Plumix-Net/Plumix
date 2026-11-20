@@ -337,7 +337,7 @@ internal sealed class ScribbleFocusableState : State<ScribbleFocusable>, IScribb
             }
 
             Matrix4 transform = box.GetTransformTo(null);
-            return MatrixUtils.TransformRect(transform, DartGeometry.RectFromLTWH(0, 0, box.Size.Width, box.Size.Height));
+            return MatrixUtils.TransformRect(transform, Rect.FromLTWH(0, 0, box.Size.Width, box.Size.Height));
         }
     }
 

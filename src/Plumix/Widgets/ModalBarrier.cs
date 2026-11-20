@@ -54,7 +54,7 @@ internal sealed class RenderSemanticsClipper : RenderProxyBox
             Rect originalRect = base.SemanticBounds;
             double width = Math.Max(0, originalRect.Width - clipDetails.Left - clipDetails.Right);
             double height = Math.Max(0, originalRect.Height - clipDetails.Top - clipDetails.Bottom);
-            return DartGeometry.RectFromLTWH(
+            return Rect.FromLTWH(
                 originalRect.Left + clipDetails.Left,
                 originalRect.Top + clipDetails.Top,
                 width,

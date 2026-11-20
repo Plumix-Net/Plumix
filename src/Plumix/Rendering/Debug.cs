@@ -374,7 +374,7 @@ public static partial class RenderingDebug
     /// <remarks>Dart's <c>Rect.inflate</c>.</remarks>
     private static Rect Inflate(Rect rect, double delta)
     {
-        return DartGeometry.RectFromLTWH(
+        return Rect.FromLTWH(
             rect.Left - delta,
             rect.Top - delta,
             rect.Width + (delta * 2.0),
@@ -388,6 +388,6 @@ public static partial class RenderingDebug
         double top = Math.Max(a.Top, b.Top);
         double right = Math.Min(a.Left + a.Width, b.Left + b.Width);
         double bottom = Math.Min(a.Top + a.Height, b.Top + b.Height);
-        return DartGeometry.RectFromLTWH(left, top, Math.Max(0.0, right - left), Math.Max(0.0, bottom - top));
+        return Rect.FromLTWH(left, top, Math.Max(0.0, right - left), Math.Max(0.0, bottom - top));
     }
 }

@@ -158,7 +158,7 @@ public sealed class RenderMagnifier : RenderProxyBox
     public override void Paint(PaintingContext context, Offset offset)
     {
         context.PushMagnifier(
-            lensRect: DartGeometry.RectFromOffsetAndSize(offset, Size),
+            lensRect: (offset & Size),
             focalPointOffset: _focalPointOffset,
             magnificationScale: _magnificationScale,
             decoration: _decoration,

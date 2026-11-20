@@ -417,7 +417,7 @@ internal sealed class RenderInkFeatures : RenderProxyBox, MaterialInkController
             Canvas canvas = context.Canvas;
             canvas.Save();
             canvas.Translate(offset.Dx, offset.Dy);
-            canvas.ClipRect(DartGeometry.RectFromOffsetAndSize(new Offset(0, 0), Size));
+            canvas.ClipRect(new Offset(0, 0) & Size);
             foreach (InkFeature inkFeature in inkFeatures)
             {
                 inkFeature.PaintInternal(canvas);
@@ -794,7 +794,7 @@ internal sealed class ShapeBorderPainter(ShapeBorder border, TextDirection? text
 
     public override void Paint(PaintingContext context, Size size)
     {
-        Border.Paint(context, DartGeometry.RectFromOffsetAndSize(new Offset(0, 0), size), textDirection: TextDirection);
+        Border.Paint(context, (new Offset(0, 0) & size), textDirection: TextDirection);
     }
 
     public override bool ShouldRepaint(CustomPainter oldDelegate)

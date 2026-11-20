@@ -114,7 +114,7 @@ public sealed class FrameworkDartTesterHarnessTests : IDisposable
         Assert.Equal(new Offset(10, 70), tester.GetBottomLeft(box));
         Assert.Equal(new Offset(110, 70), tester.GetBottomRight(box));
         Assert.Equal(new Offset(60, 45), tester.GetCenter(box));
-        Assert.Equal(DartGeometry.RectFromLTWH(10, 20, 100, 50), tester.GetRect(box));
+        Assert.Equal(Rect.FromLTWH(10, 20, 100, 50), tester.GetRect(box));
         Assert.Equal(new Size(100, 50), tester.GetSize(box));
 
         tester.Tap(box);

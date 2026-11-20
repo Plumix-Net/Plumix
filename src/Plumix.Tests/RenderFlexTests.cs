@@ -466,7 +466,7 @@ public sealed class RenderFlexTests
         Layout(flex, BoxConstraints.Loose(new Size(100, 100)));
 
         Assert.True(flex._hasOverflow);
-        Assert.Equal(DartGeometry.RectFromOffsetAndSize(new Offset(), flex.Size), flex.InvokeDescribeApproximatePaintClip(fixedChild));
+        Assert.Equal((new Offset() & flex.Size), flex.InvokeDescribeApproximatePaintClip(fixedChild));
 
         flex.ClipBehavior = Clip.None;
         Assert.Null(flex.InvokeDescribeApproximatePaintClip(fixedChild));

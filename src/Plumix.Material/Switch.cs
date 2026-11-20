@@ -1659,7 +1659,7 @@ internal sealed class SwitchPainter : ToggleablePainter
             thumbPaintOffset.Dx + (thumbSize.Height / 2.0),
             size.Height / 2.0);
 
-        var trackRect = DartGeometry.RectFromLTWH(
+        var trackRect = Rect.FromLTWH(
             trackPaintOffset.Dx,
             trackPaintOffset.Dy,
             _trackWidth,
@@ -1670,7 +1670,7 @@ internal sealed class SwitchPainter : ToggleablePainter
             null);
         if (trackOutlineColor != null)
         {
-            var outlineRect = DartGeometry.RectFromLTWH(
+            var outlineRect = Rect.FromLTWH(
                 trackPaintOffset.Dx + 1.0,
                 trackPaintOffset.Dy + 1.0,
                 _trackWidth - 2.0,
@@ -1810,7 +1810,7 @@ internal sealed class SwitchPainter : ToggleablePainter
 
             if (icon?.IconData is not null)
             {
-                var thumbBounds = DartGeometry.RectFromLTWH(offset.Dx, offset.Dy, thumbSize.Width, thumbSize.Height);
+                var thumbBounds = Rect.FromLTWH(offset.Dx, offset.Dy, thumbSize.Width, thumbSize.Height);
                 PaintIcon(context, thumbBounds, icon, colorValue);
             }
         }

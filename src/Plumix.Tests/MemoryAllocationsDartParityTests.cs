@@ -732,7 +732,7 @@ public sealed class MemoryAllocationsDartParityTests
     {
         var recorder = new PictureRecorder();
         var canvas = new Canvas(recorder);
-        var rect = DartGeometry.RectFromLTWH(0.0, 0.0, 100.0, 100.0);
+        var rect = Rect.FromLTWH(0.0, 0.0, 100.0, 100.0);
         canvas.ClipRect(rect);
         return recorder.EndRecording();
     }

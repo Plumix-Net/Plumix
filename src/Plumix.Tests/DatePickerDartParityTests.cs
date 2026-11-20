@@ -2309,7 +2309,7 @@ public sealed class DatePickerDartParityTests : IDisposable
                 DisplayFeatures:
                 [
                     new DisplayFeature(
-                        Bounds: DartGeometry.RectFromCorners(new Offset(390, 0), new Offset(410, 600)),
+                        Bounds: Rect.FromLTRB(390, 0, 410, 600),
                         Type: DisplayFeatureType.Hinge,
                         State: DisplayFeatureState.Unknown),
                 ]),

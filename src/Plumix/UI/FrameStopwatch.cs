@@ -139,7 +139,7 @@ internal sealed class FrameStopwatch
             double sampleUnitHeight = height * UnitHeight(timeMilliseconds, maxUnitInterval);
             double barTop = bottom - sampleUnitHeight;
             double barRight = x + ((i + 1) * sampleUnitWidth);
-            FillRect(context, DartGeometry.RectFromCorners(new Offset(barLeft, barTop), new Offset(barRight, bottom)), 0xAA0000FF);
+            FillRect(context, Rect.FromLTRB(barLeft, barTop, barRight, bottom), 0xAA0000FF);
             barLeft = barRight;
         }
 
@@ -161,7 +161,7 @@ internal sealed class FrameStopwatch
                 // Draw a skinny rectangle (i.e. a line).
                 FillRect(
                     context,
-                    DartGeometry.RectFromCorners(new Offset(x, y + frameHeight), new Offset(x + width, y + frameHeight + 1)),
+                    Rect.FromLTRB(x, y + frameHeight, x + width, y + frameHeight + 1),
                     0xCC000000);
             }
         }
@@ -176,7 +176,7 @@ internal sealed class FrameStopwatch
 
         int sample = (CurrentSample + 1) % LapsCount;
         double left = x + (sample * sampleUnitWidth);
-        FillRect(context, DartGeometry.RectFromCorners(new Offset(left, y), new Offset(left + sampleUnitWidth, rect.Bottom)), color);
+        FillRect(context, Rect.FromLTRB(left, y, left + sampleUnitWidth, rect.Bottom), color);
     }
 
     private static void FillRect(DrawingContext context, Rect rect, uint argb)

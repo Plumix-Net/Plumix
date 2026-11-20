@@ -327,7 +327,7 @@ public sealed class AvaloniaParagraphDartParityTests
         erase.Layout(new ParagraphConstraints(100));
         var recorder = new PictureRecorder();
         var canvas = new Canvas(recorder);
-        canvas.DrawRect(DartGeometry.RectFromLTWH(0, 0, 100, 100), new Paint { Color = new Color(0xFFFF0000) });
+        canvas.DrawRect(Rect.FromLTWH(0, 0, 100, 100), new Paint { Color = new Color(0xFFFF0000) });
         canvas.DrawParagraph(erase, default);
         using Bitmap erased = recorder.EndRecording().ToImageSync(100, 100);
         Assert.Equal(0, RasterBackend.PixelAt(erased, 10, 10).A);

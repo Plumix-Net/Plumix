@@ -197,7 +197,7 @@ public sealed record LinearBorder : OutlinedBorder
 
         if (Start is { } startEdge && startEdge.Size != 0.0 && Side.Style != BorderStyle.None)
         {
-            var insetRect = DartGeometry.RectFromLTWH(
+            var insetRect = Rect.FromLTWH(
                 rect.Left,
                 rect.Top + insets.Top,
                 rect.Width,
@@ -206,12 +206,12 @@ public sealed record LinearBorder : OutlinedBorder
             double width = rtl ? insets.Right : insets.Left;
             double height = insetRect.Height * startEdge.Size;
             double y = (insetRect.Height - height) * ((startEdge.Alignment + 1.0) / 2.0);
-            DrawEdge(context, DartGeometry.RectFromLTWH(x, y, width, height), Side.Color);
+            DrawEdge(context, Rect.FromLTWH(x, y, width, height), Side.Color);
         }
 
         if (End is { } endEdge && endEdge.Size != 0.0 && Side.Style != BorderStyle.None)
         {
-            var insetRect = DartGeometry.RectFromLTWH(
+            var insetRect = Rect.FromLTWH(
                 rect.Left,
                 rect.Top + insets.Top,
                 rect.Width,
@@ -220,7 +220,7 @@ public sealed record LinearBorder : OutlinedBorder
             double width = rtl ? insets.Left : insets.Right;
             double height = insetRect.Height * endEdge.Size;
             double y = (insetRect.Height - height) * ((endEdge.Alignment + 1.0) / 2.0);
-            DrawEdge(context, DartGeometry.RectFromLTWH(x, y, width, height), Side.Color);
+            DrawEdge(context, Rect.FromLTWH(x, y, width, height), Side.Color);
         }
 
         if (Top is { } topEdge && topEdge.Size != 0.0 && Side.Style != BorderStyle.None)
@@ -228,7 +228,7 @@ public sealed record LinearBorder : OutlinedBorder
             double width = rect.Width * topEdge.Size;
             double startX = (rect.Width - width) * ((topEdge.Alignment + 1.0) / 2.0);
             double x = rtl ? rect.Width - startX - width : startX;
-            DrawEdge(context, DartGeometry.RectFromLTWH(x, rect.Top, width, insets.Top), Side.Color);
+            DrawEdge(context, Rect.FromLTWH(x, rect.Top, width, insets.Top), Side.Color);
         }
 
         if (Bottom is { } bottomEdge && bottomEdge.Size != 0.0 && Side.Style != BorderStyle.None)
@@ -236,7 +236,7 @@ public sealed record LinearBorder : OutlinedBorder
             double width = rect.Width * bottomEdge.Size;
             double startX = (rect.Width - width) * ((bottomEdge.Alignment + 1.0) / 2.0);
             double x = rtl ? rect.Width - startX - width : startX;
-            DrawEdge(context, DartGeometry.RectFromLTWH(x, rect.Bottom - insets.Bottom, width, Side.Width), Side.Color);
+            DrawEdge(context, Rect.FromLTWH(x, rect.Bottom - insets.Bottom, width, Side.Width), Side.Color);
         }
     }
 

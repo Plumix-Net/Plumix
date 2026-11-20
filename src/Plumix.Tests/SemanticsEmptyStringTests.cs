@@ -169,7 +169,7 @@ public sealed class SemanticsEmptyStringTests
     [Fact]
     public void NodeUpdateResetsPreviousTextToNonNullEmptyStrings()
     {
-        var node = new SemanticsNode { Rect = DartGeometry.RectFromLTWH(0, 0, 10, 10) };
+        var node = new SemanticsNode { Rect = Rect.FromLTWH(0, 0, 10, 10) };
         node.UpdateWith(new SemanticsConfiguration
         {
             Label = "label",

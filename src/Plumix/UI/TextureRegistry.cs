@@ -83,7 +83,7 @@ public sealed class ImageTexture : EngineTexture
                    },
                }))
         {
-            context.DrawImage(image, DartGeometry.RectFromSize(size).ToAvalonia(), bounds.ToAvalonia());
+            context.DrawImage(image, (Offset.Zero & size).ToAvalonia(), bounds.ToAvalonia());
         }
     }
 

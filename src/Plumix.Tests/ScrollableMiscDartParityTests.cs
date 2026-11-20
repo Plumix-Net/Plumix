@@ -1065,7 +1065,7 @@ public sealed class ScrollableMiscDartParityTests
         tester.GetRect(tester.ElementsWithKey(new ValueKey<string>(key)).Single());
 
     private static Rect Ltrb(double left, double top, double right, double bottom) =>
-        DartGeometry.RectFromCorners(new Offset(left, top), new Offset(right, bottom));
+        Rect.FromLTRB(left, top, right, bottom);
 
     // Flutter: "scrollable_helpers_test.dart: Keyboard scrolling doesn't happen if scroll physics are set to
     // NeverScrollableScrollPhysics"
@@ -1463,7 +1463,7 @@ public sealed class ScrollableMiscDartParityTests
         ScrollableState scrollableState = tester.State<ScrollableState>();
         var scroller = new EdgeDraggingAutoScroller(scrollableState, velocityScalar: 1.0);
         var scrollRenderBox = (RenderBox)scrollableState.Context.FindRenderObject()!;
-        var dragTarget = DartGeometry.RectFromLTWH(0, 0, scrollRenderBox.Size.Width, scrollRenderBox.Size.Height);
+        var dragTarget = Rect.FromLTWH(0, 0, scrollRenderBox.Size.Width, scrollRenderBox.Size.Height);
 
         scroller.StartAutoScrollIfNecessary(dragTarget);
         tester.Pump();

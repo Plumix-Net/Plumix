@@ -501,15 +501,15 @@ public sealed class RadioGroupRawRadioTests : IDisposable
         {
             if (CurrentWidget.GeometryOrder)
             {
-                FirstFocus.TraversalRect = DartGeometry.RectFromLTWH(0, 80, 20, 20);
-                SecondFocus.TraversalRect = DartGeometry.RectFromLTWH(0, 40, 20, 20);
-                ThirdFocus.TraversalRect = DartGeometry.RectFromLTWH(0, 0, 20, 20);
+                FirstFocus.TraversalRect = Rect.FromLTWH(0, 80, 20, 20);
+                SecondFocus.TraversalRect = Rect.FromLTWH(0, 40, 20, 20);
+                ThirdFocus.TraversalRect = Rect.FromLTWH(0, 0, 20, 20);
             }
             else if (CurrentWidget.RtlOrder)
             {
-                FirstFocus.TraversalRect = DartGeometry.RectFromLTWH(0, 0, 20, 20);
-                SecondFocus.TraversalRect = DartGeometry.RectFromLTWH(40, 0, 20, 20);
-                ThirdFocus.TraversalRect = DartGeometry.RectFromLTWH(80, 0, 20, 20);
+                FirstFocus.TraversalRect = Rect.FromLTWH(0, 0, 20, 20);
+                SecondFocus.TraversalRect = Rect.FromLTWH(40, 0, 20, 20);
+                ThirdFocus.TraversalRect = Rect.FromLTWH(80, 0, 20, 20);
             }
 
             return new RadioGroup<string>(

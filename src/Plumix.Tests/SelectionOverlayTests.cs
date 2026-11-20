@@ -301,9 +301,9 @@ public sealed class SelectionOverlayTests : IDisposable
 
         var initial = new MagnifierInfo(
             GlobalGesturePosition: new Offset(4, 5),
-            CaretRect: DartGeometry.RectFromLTWH(0, 0, 2, 12),
-            FieldBounds: DartGeometry.RectFromLTWH(0, 0, 100, 20),
-            CurrentLineBoundaries: DartGeometry.RectFromLTWH(0, 0, 100, 12));
+            CaretRect: Rect.FromLTWH(0, 0, 2, 12),
+            FieldBounds: Rect.FromLTWH(0, 0, 100, 20),
+            CurrentLineBoundaries: Rect.FromLTWH(0, 0, 100, 12));
         overlay.ShowMagnifier(initial);
         fixture.Pump();
 

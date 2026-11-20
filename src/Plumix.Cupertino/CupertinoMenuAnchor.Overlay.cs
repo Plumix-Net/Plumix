@@ -239,7 +239,7 @@ internal sealed class CupertinoMenuOverlayState : State<CupertinoMenuOverlay>, W
             builder: (_, value, child) => new CustomSingleChildLayout(
                 layoutDelegate: new CupertinoMenuLayoutDelegate(
                     anchorRect: Current.AnchorPosition.HasValue
-                        ? DartGeometry.RectFromOffsetAndSize(_attachmentPoint, new Size())
+                        ? (_attachmentPoint & new Size())
                         : Current.AnchorRect,
                     attachmentPoint: _attachmentPoint,
                     avoidBounds: avoidBounds,
@@ -464,7 +464,7 @@ internal sealed class CupertinoMenuShadowPainter : CustomPainter
     public override void Paint(PaintingContext context, Size size)
     {
         double shadowAnimation = ShadowAnimation;
-        var rect = DartGeometry.RectFromOffsetAndSize(default, size);
+        var rect = Offset.Zero & size;
         RSuperellipse roundedRect = RSuperellipse.FromRectAndRadius(rect, KRadius);
         double blurSigma = shadowAnimation * 50.0;
         Color shadowColor = Plumix.UI.Color.FromRGBO(0, 0, 10, shadowAnimation * shadowAnimation * KShadowOpacity);
@@ -557,9 +557,9 @@ internal sealed class CupertinoMenuLayoutDelegate : SingleChildLayoutDelegate
 
     private Rect ClosestScreen(Size size)
     {
-        List<Rect> screens = DisplayFeatureSubScreen.SubScreensInBounds(DartGeometry.RectFromOffsetAndSize(default, size), AvoidBounds);
+        List<Rect> screens = DisplayFeatureSubScreen.SubScreensInBounds((Offset.Zero & size), AvoidBounds);
         Offset anchor = AnchorRect.Center;
-        Rect closest = screens.Count == 0 ? DartGeometry.RectFromOffsetAndSize(default, size) : screens[0];
+        Rect closest = screens.Count == 0 ? (Offset.Zero & size) : screens[0];
         double closestDistance = CupertinoMenuMetrics.ComputeSquaredDistanceToRect(anchor, closest);
         foreach (Rect screen in screens.Skip(1))
         {

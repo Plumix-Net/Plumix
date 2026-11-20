@@ -9,18 +9,18 @@ namespace Plumix.Tests;
 // the view the keyboard frame covers, measured from the view's bottom.
 public sealed class PlumixHostViewInsetsTests
 {
-    private static readonly Rect Screen = DartGeometry.RectFromLTWH(0, 0, 402, 874);
+    private static readonly Rect Screen = Rect.FromLTWH(0, 0, 402, 874);
 
     [Fact]
     public void OpenKeyboard_InsetsTheCoveredBottom()
     {
         // iOS: the frame includes the home-indicator strip, so the inset is the whole frame.
         Assert.Equal(EdgeInsets.FromLTRB(0, 0, 0, 336),
-            PlumixHost.ResolveViewInsets(InputPaneState.Open, DartGeometry.RectFromLTWH(0, 538, 402, 336), Screen));
+            PlumixHost.ResolveViewInsets(InputPaneState.Open, Rect.FromLTWH(0, 538, 402, 336), Screen));
         // Android: Avalonia reports the pane above the 24 dp navigation bar; the inset reaches the bottom,
         // so the content no longer slides under the keyboard by the bar's height.
         Assert.Equal(EdgeInsets.FromLTRB(0, 0, 0, 300),
-            PlumixHost.ResolveViewInsets(InputPaneState.Open, DartGeometry.RectFromLTWH(0, 574, 402, 276), Screen));
+            PlumixHost.ResolveViewInsets(InputPaneState.Open, Rect.FromLTWH(0, 574, 402, 276), Screen));
     }
 
     [Fact]
@@ -28,11 +28,11 @@ public sealed class PlumixHostViewInsetsTests
     {
         // UIKit's will-hide notification leaves the full-height end frame off screen; the inset used
         // to stay at its height after a route with a text field was popped.
-        var below = DartGeometry.RectFromLTWH(0, 874, 402, 336);
+        var below = Rect.FromLTWH(0, 874, 402, 336);
 
         Assert.Equal(default, PlumixHost.ResolveViewInsets(InputPaneState.Closed, below, Screen));
         Assert.Equal(default, PlumixHost.ResolveViewInsets(InputPaneState.Open, below, Screen));
-        Assert.Equal(default, PlumixHost.ResolveViewInsets(InputPaneState.Closed, DartGeometry.RectFromLTWH(0, 538, 402, 336), Screen));
+        Assert.Equal(default, PlumixHost.ResolveViewInsets(InputPaneState.Closed, Rect.FromLTWH(0, 538, 402, 336), Screen));
     }
 
     [Fact]
@@ -40,16 +40,16 @@ public sealed class PlumixHostViewInsetsTests
     {
         // With a hardware keyboard iOS "opens" a full-height frame of which only the bar is on screen.
         Assert.Equal(EdgeInsets.FromLTRB(0, 0, 0, 55),
-            PlumixHost.ResolveViewInsets(InputPaneState.Open, DartGeometry.RectFromLTWH(0, 819, 402, 336), Screen));
+            PlumixHost.ResolveViewInsets(InputPaneState.Open, Rect.FromLTWH(0, 819, 402, 336), Screen));
     }
 
     [Fact]
     public void ViewOffsetInTheTopLevel_MeasuresFromItsOwnBottom()
     {
-        var view = DartGeometry.RectFromLTWH(0, 100, 402, 500);
+        var view = Rect.FromLTWH(0, 100, 402, 500);
 
         Assert.Equal(EdgeInsets.FromLTRB(0, 0, 0, 62),
-            PlumixHost.ResolveViewInsets(InputPaneState.Open, DartGeometry.RectFromLTWH(0, 538, 402, 336), view));
-        Assert.Equal(default, PlumixHost.ResolveViewInsets(InputPaneState.Open, DartGeometry.RectFromLTWH(0, 700, 402, 174), view));
+            PlumixHost.ResolveViewInsets(InputPaneState.Open, Rect.FromLTWH(0, 538, 402, 336), view));
+        Assert.Equal(default, PlumixHost.ResolveViewInsets(InputPaneState.Open, Rect.FromLTWH(0, 700, 402, 174), view));
     }
 }

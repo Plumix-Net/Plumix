@@ -165,18 +165,18 @@ public readonly record struct RRect
         return path;
     }
 
-    internal Rect TopLeftCorner() => DartGeometry.RectFromLTWH(Left, Top, TopLeft.X * 2.0, TopLeft.Y * 2.0);
+    internal Rect TopLeftCorner() => Rect.FromLTWH(Left, Top, TopLeft.X * 2.0, TopLeft.Y * 2.0);
 
     internal Rect TopRightCorner() =>
-        DartGeometry.RectFromLTWH(Right - (TopRight.X * 2.0), Top, TopRight.X * 2.0, TopRight.Y * 2.0);
+        Rect.FromLTWH(Right - (TopRight.X * 2.0), Top, TopRight.X * 2.0, TopRight.Y * 2.0);
 
-    internal Rect BottomRightCorner() => DartGeometry.RectFromLTWH(
+    internal Rect BottomRightCorner() => Rect.FromLTWH(
         Right - (BottomRight.X * 2.0),
         Bottom - (BottomRight.Y * 2.0),
         BottomRight.X * 2.0,
         BottomRight.Y * 2.0);
 
     internal Rect BottomLeftCorner() =>
-        DartGeometry.RectFromLTWH(Left, Bottom - (BottomLeft.Y * 2.0), BottomLeft.X * 2.0, BottomLeft.Y * 2.0);
+        Rect.FromLTWH(Left, Bottom - (BottomLeft.Y * 2.0), BottomLeft.X * 2.0, BottomLeft.Y * 2.0);
 
 }

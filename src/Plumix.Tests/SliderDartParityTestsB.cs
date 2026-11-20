@@ -903,8 +903,8 @@ public sealed class SliderDartParityTestsB : IDisposable
         PaintAssert.Paints(
             renderObject,
             PaintPattern.Paints
-                .Rect(rect: DartGeometry.RectFromCorners(new Offset(24.0, 298.0), new Offset(400.0, 302.0))) // active track Rect.
-                .Rect(rect: DartGeometry.RectFromCorners(new Offset(400.0, 298.0), new Offset(776.0, 302.0)))); // inactive track Rect.
+                .Rect(rect: Rect.FromLTRB(24.0, 298.0, 400.0, 302.0)) // active track Rect.
+                .Rect(rect: Rect.FromLTRB(400.0, 298.0, 776.0, 302.0))); // inactive track Rect.
     }
 
     // Flutter: "SliderTheme change should trigger re-layout"
@@ -1253,7 +1253,7 @@ public sealed class SliderDartParityTestsB : IDisposable
             TextDirection textDirection)
         {
             var paint = new Paint { Color = MaterialColors.Red };
-            context.Canvas.DrawRect(DartGeometry.RectFromLTWH(center.Dx, center.Dy, 10.0, 20.0), paint);
+            context.Canvas.DrawRect(Rect.FromLTWH(center.Dx, center.Dy, 10.0, 20.0), paint);
         }
     }
 

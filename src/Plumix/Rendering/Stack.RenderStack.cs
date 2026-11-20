@@ -415,7 +415,7 @@ public class RenderStack : RenderBox,
             _clipRectLayer.Layer = context.PushClipRect(
                 NeedsCompositing,
                 offset,
-                DartGeometry.RectFromOffsetAndSize(new Offset(), Size),
+                (new Offset() & Size),
                 PaintStack,
                 ClipBehavior,
                 _clipRectLayer.Layer);
@@ -432,7 +432,7 @@ public class RenderStack : RenderBox,
         DefaultHitTestChildren(result, position);
 
     protected override Rect? DescribeApproximatePaintClip(RenderObject? child) =>
-        _hasVisualOverflow && ClipBehavior != Clip.None ? DartGeometry.RectFromOffsetAndSize(new Offset(), Size) : null;
+        _hasVisualOverflow && ClipBehavior != Clip.None ? (new Offset() & Size) : null;
 
     protected override Rect? DescribeSemanticsClip(RenderObject? child) => DescribeApproximatePaintClip(child);
 

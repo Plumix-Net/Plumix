@@ -196,7 +196,7 @@ public class InkRipple : InteractiveInkFeature
 
         if (containedInkWell)
         {
-            return () => DartGeometry.RectFromSize(referenceBox.Size);
+            return () => (Offset.Zero & referenceBox.Size);
         }
 
         return null;

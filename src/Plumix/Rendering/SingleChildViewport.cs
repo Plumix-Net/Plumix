@@ -102,22 +102,14 @@ public sealed class RenderSingleChildViewport : RenderProxyBox, IRenderAbstractV
     /// </summary>
     protected override Rect? DescribeSemanticsClip(RenderObject? child)
     {
-        var semanticBounds = DartGeometry.RectFromOffsetAndSize(new Offset(0, 0), Size);
+        var semanticBounds = new Offset(0, 0) & Size;
         double remainingOffset = MaxScrollExtent - OffsetPixels;
         return AxisDirection switch
         {
-            AxisDirection.Up => DartGeometry.RectFromCorners(
-                new Offset(semanticBounds.Left, semanticBounds.Top - remainingOffset),
-                new Offset(semanticBounds.Right, semanticBounds.Bottom + OffsetPixels)),
-            AxisDirection.Right => DartGeometry.RectFromCorners(
-                new Offset(semanticBounds.Left - OffsetPixels, semanticBounds.Top),
-                new Offset(semanticBounds.Right + remainingOffset, semanticBounds.Bottom)),
-            AxisDirection.Down => DartGeometry.RectFromCorners(
-                new Offset(semanticBounds.Left, semanticBounds.Top - OffsetPixels),
-                new Offset(semanticBounds.Right, semanticBounds.Bottom + remainingOffset)),
-            _ => DartGeometry.RectFromCorners(
-                new Offset(semanticBounds.Left - remainingOffset, semanticBounds.Top),
-                new Offset(semanticBounds.Right + OffsetPixels, semanticBounds.Bottom))
+            AxisDirection.Up => Rect.FromLTRB(semanticBounds.Left, semanticBounds.Top - remainingOffset, semanticBounds.Right, semanticBounds.Bottom + OffsetPixels),
+            AxisDirection.Right => Rect.FromLTRB(semanticBounds.Left - OffsetPixels, semanticBounds.Top, semanticBounds.Right + remainingOffset, semanticBounds.Bottom),
+            AxisDirection.Down => Rect.FromLTRB(semanticBounds.Left, semanticBounds.Top - OffsetPixels, semanticBounds.Right, semanticBounds.Bottom + remainingOffset),
+            _ => Rect.FromLTRB(semanticBounds.Left - remainingOffset, semanticBounds.Top, semanticBounds.Right + OffsetPixels, semanticBounds.Bottom)
         };
     }
 
@@ -168,7 +160,7 @@ public sealed class RenderSingleChildViewport : RenderProxyBox, IRenderAbstractV
 
         double targetOffset = leadingScrollOffset - (mainAxisExtent - targetMainAxisExtent) * alignment;
         Offset shift = ResolvePaintOffset(targetOffset);
-        var targetRect = DartGeometry.RectFromLTWH(bounds.Left + shift.Dx, bounds.Top + shift.Dy, bounds.Width, bounds.Height);
+        var targetRect = Rect.FromLTWH(bounds.Left + shift.Dx, bounds.Top + shift.Dy, bounds.Width, bounds.Height);
         return new RevealedOffset(targetOffset, targetRect);
     }
 
@@ -250,7 +242,7 @@ public sealed class RenderSingleChildViewport : RenderProxyBox, IRenderAbstractV
             || paintOffset.Dy + child.Size.Height > Size.Height);
 
     protected override Rect? DescribeApproximatePaintClip(RenderObject? child) =>
-        child != null && ShouldClipAtPaintOffset(PaintOffset) ? DartGeometry.RectFromSize(Size) : null;
+        child != null && ShouldClipAtPaintOffset(PaintOffset) ? (Plumix.UI.Offset.Zero & Size) : null;
 
     public override void Paint(PaintingContext context, Offset offset)
     {
@@ -262,7 +254,7 @@ public sealed class RenderSingleChildViewport : RenderProxyBox, IRenderAbstractV
             _clipRectLayer.Layer = context.PushClipRect(
                 NeedsCompositing,
                 offset,
-                DartGeometry.RectFromSize(Size),
+                (Plumix.UI.Offset.Zero & Size),
                 PaintContents,
                 clipBehavior: ClipBehavior,
                 oldLayer: _clipRectLayer.Layer);

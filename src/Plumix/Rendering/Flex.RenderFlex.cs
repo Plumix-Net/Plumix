@@ -1035,15 +1035,15 @@ public class RenderFlex : RenderBox, IRenderBoxContainerDefaultsMixin<RenderBox,
         _clipRectLayer.Layer = ctx.PushClipRect(
             NeedsCompositing,
             offset,
-            DartGeometry.RectFromOffsetAndSize(new Offset(0, 0), Size),
+            (new Offset(0, 0) & Size),
             DefaultPaint,
             ClipBehavior,
             _clipRectLayer.Layer);
 
         Rect overflowChildRect = Direction switch
         {
-            Axis.Horizontal => DartGeometry.RectFromLTWH(0.0, 0.0, Size.Width + _overflow, 0.0),
-            Axis.Vertical => DartGeometry.RectFromLTWH(0.0, 0.0, 0.0, Size.Height + _overflow),
+            Axis.Horizontal => Rect.FromLTWH(0.0, 0.0, Size.Width + _overflow, 0.0),
+            Axis.Vertical => Rect.FromLTWH(0.0, 0.0, 0.0, Size.Height + _overflow),
 
             _ => throw new ArgumentOutOfRangeException()
         };
@@ -1074,7 +1074,7 @@ public class RenderFlex : RenderBox, IRenderBoxContainerDefaultsMixin<RenderBox,
                 this,
                 ctx,
                 offset,
-                DartGeometry.RectFromOffsetAndSize(new Offset(), Size),
+                (new Offset() & Size),
                 overflowChildRect,
                 overflowHints: debugOverflowHints);
         }
@@ -1084,7 +1084,7 @@ public class RenderFlex : RenderBox, IRenderBoxContainerDefaultsMixin<RenderBox,
     {
         Clip.None => null,
         Clip.HardEdge or Clip.AntiAlias or Clip.AntiAliasWithSaveLayer =>
-            _hasOverflow ? DartGeometry.RectFromOffsetAndSize(new Offset(), Size) : null,
+            _hasOverflow ? (new Offset() & Size) : null,
 
         _ => throw new ArgumentOutOfRangeException()
     };

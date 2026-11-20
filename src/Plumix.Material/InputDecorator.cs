@@ -1524,7 +1524,7 @@ internal sealed class InputBorderPainter : CustomPainter
 
     public override void Paint(PaintingContext context, Size size)
     {
-        var canvasRect = DartGeometry.RectFromSize(size);
+        var canvasRect = Offset.Zero & size;
         Color blended = BlendedColor;
         if (blended.Alpha > 0)
         {

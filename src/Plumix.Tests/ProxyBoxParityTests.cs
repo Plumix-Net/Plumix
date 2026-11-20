@@ -368,7 +368,7 @@ public sealed class ProxyBoxParityTests
         // Dart's `_defaultClip` builds `RRect.fromRectXY(rect, width / 2, height / 2)` for a circle,
         // so a non-square box clips to an ellipse rather than a stadium.
         Rect? approximateClip = physical.InvokeDescribeApproximatePaintClip(null);
-        Assert.Equal(DartGeometry.RectFromLTWH(0, 0, 40, 24), approximateClip);
+        Assert.Equal(Rect.FromLTWH(0, 0, 40, 24), approximateClip);
 
         physical.Shape = BoxShape.Rectangle;
         Assert.True(physical.DebugNeedsPaint);

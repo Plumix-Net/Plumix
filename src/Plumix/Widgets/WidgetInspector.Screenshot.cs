@@ -740,12 +740,10 @@ public abstract partial class WidgetInspectorService
         double top = Math.Max(a.Top, b.Top);
         double right = Math.Min(a.Right, b.Right);
         double bottom = Math.Min(a.Bottom, b.Bottom);
-        return right <= left || bottom <= top ? default : DartGeometry.RectFromLTWH(left, top, right - left, bottom - top);
+        return right <= left || bottom <= top ? default : Rect.FromLTWH(left, top, right - left, bottom - top);
     }
 
-    private static Rect ExpandToInclude(Rect a, Rect b) => DartGeometry.RectFromCorners(
-        new Offset(Math.Min(a.Left, b.Left), Math.Min(a.Top, b.Top)),
-        new Offset(Math.Max(a.Right, b.Right), Math.Max(a.Bottom, b.Bottom)));
+    private static Rect ExpandToInclude(Rect a, Rect b) => Rect.FromLTRB(Math.Min(a.Left, b.Left), Math.Min(a.Top, b.Top), Math.Max(a.Right, b.Right), Math.Max(a.Bottom, b.Bottom));
 
     private static bool IsEmpty(Rect rect) => rect.Width <= 0 || rect.Height <= 0;
 

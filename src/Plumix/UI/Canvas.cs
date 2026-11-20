@@ -488,7 +488,7 @@ public sealed class PictureRecorder
 public partial class Canvas
 {
     // Dart's Rect.largest: the default cull rect of a recording canvas.
-    internal static readonly Rect LargestRect = DartGeometry.RectFromLTWH(-1.0e9, -1.0e9, 2.0e9, 2.0e9);
+    internal static readonly Rect LargestRect = Rect.FromLTWH(-1.0e9, -1.0e9, 2.0e9, 2.0e9);
 
     private readonly List<CanvasCommand> _commands;
     private readonly List<CanvasCall> _debugCalls;
@@ -769,7 +769,7 @@ public partial class Canvas
         ArgumentNullException.ThrowIfNull(geometry);
         Rect geometryBounds = geometry.Bounds.ToPlumix();
         IntersectClipBounds(
-            DartGeometry.RectFromOffsetAndSize(geometryBounds.TopLeft + geometryOffset, geometryBounds.Size),
+            (geometryBounds.TopLeft + geometryOffset & geometryBounds.Size),
             doAntiAlias);
         if (geometryOffset.Dx != 0.0 || geometryOffset.Dy != 0.0)
         {
@@ -793,7 +793,7 @@ public partial class Canvas
         {
             double left = Math.Floor(bounds.Left);
             double top = Math.Floor(bounds.Top);
-            bounds = DartGeometry.RectFromLTWH(left, top, Math.Ceiling(bounds.Right) - left, Math.Ceiling(bounds.Bottom) - top);
+            bounds = Rect.FromLTWH(left, top, Math.Ceiling(bounds.Right) - left, Math.Ceiling(bounds.Bottom) - top);
         }
 
         Rect intersection = _destinationClipBounds.Intersect(bounds);

@@ -305,7 +305,7 @@ internal sealed class DemoSliderThumbShape : SliderComponentShape
         context.Canvas.DrawRectangle(
             brush: new SolidColorBrush(color),
             pen: null,
-            rect: DartGeometry.RectFromLTWH(center.Dx - 10.0, center.Dy - 10.0, 20.0, 20.0),
+            rect: Rect.FromLTWH(center.Dx - 10.0, center.Dy - 10.0, 20.0, 20.0),
             radiusX: 5.0,
             radiusY: 5.0);
     }

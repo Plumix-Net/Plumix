@@ -1083,7 +1083,7 @@ public abstract partial class RenderObject : DiagnosticableTree, IRenderObject, 
 
     public virtual bool AlwaysNeedsCompositing => false;
 
-    protected virtual Rect SemanticBounds => DartGeometry.RectZero;
+    protected virtual Rect SemanticBounds => Rect.Zero;
 
     internal Rect SemanticBoundsForSemantics => SemanticBounds;
 

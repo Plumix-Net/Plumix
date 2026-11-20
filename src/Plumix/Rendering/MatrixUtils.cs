@@ -312,7 +312,7 @@ public static class MatrixUtils
     }
 
     private static Rect FromLtrb(double left, double top, double right, double bottom) =>
-        DartGeometry.RectFromCorners(new Offset(left, top), new Offset(right, bottom));
+        Rect.FromLTRB(left, top, right, bottom);
 }
 
 /// <summary>

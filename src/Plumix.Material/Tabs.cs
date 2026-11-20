@@ -780,7 +780,7 @@ internal sealed class IndicatorPainter : CustomPainter
 
         EdgeInsets indicatorInsets = IndicatorPadding
             .Resolve(_currentTextDirection ?? Plumix.UI.TextDirection.Ltr);
-        var rect = DartGeometry.RectFromLTWH(tabLeft, 0.0, tabRight - tabLeft, tabBarSize.Height);
+        var rect = Rect.FromLTWH(tabLeft, 0.0, tabRight - tabLeft, tabBarSize.Height);
         if (rect.Width < indicatorInsets.Left + indicatorInsets.Right
             || rect.Height < indicatorInsets.Top + indicatorInsets.Bottom)
         {
@@ -789,7 +789,7 @@ internal sealed class IndicatorPainter : CustomPainter
                 + $"Insets: {indicatorInsets}");
         }
 
-        return DartGeometry.RectFromLTWH(
+        return Rect.FromLTWH(
             rect.Left + indicatorInsets.Left,
             rect.Top + indicatorInsets.Top,
             rect.Width - indicatorInsets.Left - indicatorInsets.Right,
@@ -941,7 +941,7 @@ internal sealed class IndicatorPainter : CustomPainter
                 : Lerp(toRect.Right, fromRect.Right, rightFraction);
         }
 
-        return DartGeometry.RectFromLTWH(
+        return Rect.FromLTWH(
             lerpRectLeft,
             rect.Top,
             Math.Max(0.0, lerpRectRight - lerpRectLeft),
@@ -973,7 +973,7 @@ internal sealed class IndicatorPainter : CustomPainter
 
     private static double Lerp(double a, double b, double t) => a + ((b - a) * t);
 
-    private static Rect LerpRect(Rect a, Rect b, double t) => DartGeometry.RectFromLTWH(
+    private static Rect LerpRect(Rect a, Rect b, double t) => Rect.FromLTWH(
         Lerp(a.Left, b.Left, t),
         Lerp(a.Top, b.Top, t),
         Math.Max(0.0, Lerp(a.Right, b.Right, t) - Lerp(a.Left, b.Left, t)),

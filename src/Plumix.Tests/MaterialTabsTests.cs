@@ -361,15 +361,15 @@ public sealed class MaterialTabsTests
         var inset = new UnderlineTabIndicator(
             borderSide: new BorderSide(Colors.Red, 8),
             insets: EdgeInsetsGeometry.Only(left: 8, right: 4));
-        Rect rect = inset.IndicatorRectFor(DartGeometry.RectFromLTWH(0, 0, 200, 54), TextDirection.Ltr);
-        Assert.Equal(DartGeometry.RectFromLTWH(8, 46, 188, 8), rect);
+        Rect rect = inset.IndicatorRectFor(Rect.FromLTWH(0, 0, 200, 54), TextDirection.Ltr);
+        Assert.Equal(Rect.FromLTWH(8, 46, 188, 8), rect);
 
         // Directional insets mirror with the text direction.
         var directional = new UnderlineTabIndicator(
             borderSide: new BorderSide(Colors.Red, 2),
             insets: EdgeInsetsGeometry.DirectionalOnly(start: 100));
-        Assert.Equal(100, directional.IndicatorRectFor(DartGeometry.RectFromLTWH(0, 0, 200, 50), TextDirection.Ltr).Left);
-        Assert.Equal(0, directional.IndicatorRectFor(DartGeometry.RectFromLTWH(0, 0, 200, 50), TextDirection.Rtl).Left);
+        Assert.Equal(100, directional.IndicatorRectFor(Rect.FromLTWH(0, 0, 200, 50), TextDirection.Ltr).Left);
+        Assert.Equal(0, directional.IndicatorRectFor(Rect.FromLTWH(0, 0, 200, 50), TextDirection.Rtl).Left);
 
         // lerp interpolates the side and insets and drops the border radius, as Dart does.
         var from = new UnderlineTabIndicator(
@@ -691,21 +691,21 @@ public sealed class MaterialTabsTests
         ltr.Pump(new Size(800, 200));
         // 46 (tab height) + 8 (indicator weight)
         Assert.Equal(54, FindDescendant<RenderCustomPaint>(ltr.RenderView)!.Size.Height, precision: 3);
-        Assert.Equal(DartGeometry.RectFromLTWH(8, 0, 188, 54), RequireIndicatorPainter(ltr.RenderView).CurrentRect);
+        Assert.Equal(Rect.FromLTWH(8, 0, 188, 54), RequireIndicatorPainter(ltr.RenderView).CurrentRect);
 
         ltrController.Index = 3;
         ltr.Pump(new Size(800, 200));
-        Assert.Equal(DartGeometry.RectFromLTWH(608, 0, 188, 54), RequireIndicatorPainter(ltr.RenderView).CurrentRect);
+        Assert.Equal(Rect.FromLTWH(608, 0, 188, 54), RequireIndicatorPainter(ltr.RenderView).CurrentRect);
 
         using var rtlController = new TabController(4);
         using var rtl = new WidgetRenderHarness(Build(TextDirection.Rtl, rtlController));
         rtl.Pump(new Size(800, 200));
         // The insets are non-directional, so only the tab rect mirrors.
-        Assert.Equal(DartGeometry.RectFromLTWH(608, 0, 188, 54), RequireIndicatorPainter(rtl.RenderView).CurrentRect);
+        Assert.Equal(Rect.FromLTWH(608, 0, 188, 54), RequireIndicatorPainter(rtl.RenderView).CurrentRect);
 
         rtlController.Index = 3;
         rtl.Pump(new Size(800, 200));
-        Assert.Equal(DartGeometry.RectFromLTWH(8, 0, 188, 54), RequireIndicatorPainter(rtl.RenderView).CurrentRect);
+        Assert.Equal(Rect.FromLTWH(8, 0, 188, 54), RequireIndicatorPainter(rtl.RenderView).CurrentRect);
     }
 
     [Fact]
@@ -734,7 +734,7 @@ public sealed class MaterialTabsTests
             return RequireIndicatorPainter(harness.RenderView).CurrentRect!.Value;
         }
 
-        Assert.Equal(DartGeometry.RectFromLTWH(0, 0, 200, 48), RectFor(TabIndicatorAnimation.Linear, 0));
+        Assert.Equal(Rect.FromLTWH(0, 0, 200, 48), RectFor(TabIndicatorAnimation.Linear, 0));
         // Linear moves both edges by the same fraction: 0.2 * 200 = 40.
         Rect linear = RectFor(TabIndicatorAnimation.Linear, 0.2);
         Assert.Equal(40, linear.Left, precision: 3);
@@ -1391,7 +1391,7 @@ public sealed class MaterialTabsTests
         for (RenderBox? child = flex.FirstChild; child is not null; child = flex.ChildAfter(child))
         {
             Offset offset = ((FlexParentData)child.parentData!).offset;
-            rects.Add(DartGeometry.RectFromOffsetAndSize(offset, child.Size));
+            rects.Add(offset & child.Size);
         }
 
         return rects;

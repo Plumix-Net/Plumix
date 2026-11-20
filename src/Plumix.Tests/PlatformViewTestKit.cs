@@ -150,7 +150,7 @@ internal static class PlatformViewTestKit
     {
         SemanticsNode node = renderObject.DebugSemantics!;
         Assert.Equal(platformViewId, node.PlatformViewId);
-        Assert.Equal(DartGeometry.RectFromLTWH(0, 0, 200, 100), node.Rect);
+        Assert.Equal(Rect.FromLTWH(0, 0, 200, 100), node.Rect);
         Assert.Equal(Matrix4.TranslationValues(600, 500, 0), node.Transform);
         Assert.Empty(node.Children);
     }

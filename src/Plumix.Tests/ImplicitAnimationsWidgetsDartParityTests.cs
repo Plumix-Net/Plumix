@@ -423,7 +423,7 @@ public sealed class ImplicitAnimationsWidgetsDartParityTests
     public void AnimatedPositionedFromRectControlTest()
     {
         var positioned = AnimatedPositioned.FromRect(
-            rect: DartGeometry.RectFromLTWH(7.0, 5.0, 12.0, 16.0),
+            rect: Rect.FromLTWH(7.0, 5.0, 12.0, 16.0),
             duration: Ms200,
             child: new Container());
         Assert.Equal(7.0, positioned.Left);

@@ -576,7 +576,7 @@ internal sealed class RenderCupertinoSlider : RenderBox, IMouseTrackerAnnotation
         var thumbCenter = new Offset(trackActive, trackCenter);
         new CupertinoThumbPainter(color: ThumbColor).Paint(
             context,
-            DartGeometry.RectFromLTWH(
+            Rect.FromLTWH(
                 thumbCenter.Dx - CupertinoThumbPainter.Radius,
                 thumbCenter.Dy - CupertinoThumbPainter.Radius,
                 2.0 * CupertinoThumbPainter.Radius,

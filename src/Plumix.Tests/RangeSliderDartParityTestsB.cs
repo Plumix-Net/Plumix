@@ -1653,7 +1653,7 @@ public sealed class RangeSliderDartParityTestsB : IDisposable
         (a > b - epsilon && a < b + epsilon) || a == b;
 
     private static Rect Ltrb(double left, double top, double right, double bottom) =>
-        DartGeometry.RectFromCorners(new Offset(left, top), new Offset(right, bottom));
+        Rect.FromLTRB(left, top, right, bottom);
 
     private static Element SliderElement(FrameworkDartTester tester) => tester.ElementOfType<RangeSlider>();
 

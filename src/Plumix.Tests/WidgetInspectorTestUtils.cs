@@ -291,7 +291,7 @@ internal sealed class RenderRepaintBoundaryWithDebugPaint : RenderRepaintBoundar
         var recorder = new PictureRecorder();
         var canvas = new Plumix.UI.Canvas(recorder);
         canvas.DrawCircle(center, 20.0, paint);
-        return new PictureLayer(DartGeometry.RectFromSize(Size)) { Picture = recorder.EndRecording() };
+        return new PictureLayer(Offset.Zero & Size) { Picture = recorder.EndRecording() };
     }
 }
 

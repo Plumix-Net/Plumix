@@ -1194,37 +1194,37 @@ public sealed class ListWheelScrollViewTests
         RenderObject target = OuterChild(harness, 5);
         RevealedOffset revealed = viewport.GetOffsetToReveal(target, 0.0);
         Assert.Equal(500.0, revealed.Offset);
-        Assert.Equal(DartGeometry.RectFromLTWH(0.0, 200.0, 300.0, 100.0), revealed.Rect);
+        Assert.Equal(Rect.FromLTWH(0.0, 200.0, 300.0, 100.0), revealed.Rect);
 
         revealed = viewport.GetOffsetToReveal(target, 1.0);
         Assert.Equal(500.0, revealed.Offset);
-        Assert.Equal(DartGeometry.RectFromLTWH(0.0, 200.0, 300.0, 100.0), revealed.Rect);
+        Assert.Equal(Rect.FromLTWH(0.0, 200.0, 300.0, 100.0), revealed.Rect);
 
-        revealed = viewport.GetOffsetToReveal(target, 0.0, rect: DartGeometry.RectFromLTWH(40.0, 40.0, 10.0, 10.0));
+        revealed = viewport.GetOffsetToReveal(target, 0.0, rect: Rect.FromLTWH(40.0, 40.0, 10.0, 10.0));
         Assert.Equal(500.0, revealed.Offset);
-        Assert.Equal(DartGeometry.RectFromLTWH(40.0, 240.0, 10.0, 10.0), revealed.Rect);
+        Assert.Equal(Rect.FromLTWH(40.0, 240.0, 10.0, 10.0), revealed.Rect);
 
-        revealed = viewport.GetOffsetToReveal(target, 1.0, rect: DartGeometry.RectFromLTWH(40.0, 40.0, 10.0, 10.0));
+        revealed = viewport.GetOffsetToReveal(target, 1.0, rect: Rect.FromLTWH(40.0, 40.0, 10.0, 10.0));
         Assert.Equal(500.0, revealed.Offset);
-        Assert.Equal(DartGeometry.RectFromLTWH(40.0, 240.0, 10.0, 10.0), revealed.Rect);
+        Assert.Equal(Rect.FromLTWH(40.0, 240.0, 10.0, 10.0), revealed.Rect);
 
         // Descendant of the viewport, not a direct child.
         target = InnerChild(harness, 5);
         revealed = viewport.GetOffsetToReveal(target, 0.0);
         Assert.Equal(500.0, revealed.Offset);
-        Assert.Equal(DartGeometry.RectFromLTWH(125.0, 225.0, 50.0, 50.0), revealed.Rect);
+        Assert.Equal(Rect.FromLTWH(125.0, 225.0, 50.0, 50.0), revealed.Rect);
 
         revealed = viewport.GetOffsetToReveal(target, 1.0);
         Assert.Equal(500.0, revealed.Offset);
-        Assert.Equal(DartGeometry.RectFromLTWH(125.0, 225.0, 50.0, 50.0), revealed.Rect);
+        Assert.Equal(Rect.FromLTWH(125.0, 225.0, 50.0, 50.0), revealed.Rect);
 
-        revealed = viewport.GetOffsetToReveal(target, 0.0, rect: DartGeometry.RectFromLTWH(40.0, 40.0, 10.0, 10.0));
+        revealed = viewport.GetOffsetToReveal(target, 0.0, rect: Rect.FromLTWH(40.0, 40.0, 10.0, 10.0));
         Assert.Equal(500.0, revealed.Offset);
-        Assert.Equal(DartGeometry.RectFromLTWH(165.0, 265.0, 10.0, 10.0), revealed.Rect);
+        Assert.Equal(Rect.FromLTWH(165.0, 265.0, 10.0, 10.0), revealed.Rect);
 
-        revealed = viewport.GetOffsetToReveal(target, 1.0, rect: DartGeometry.RectFromLTWH(40.0, 40.0, 10.0, 10.0));
+        revealed = viewport.GetOffsetToReveal(target, 1.0, rect: Rect.FromLTWH(40.0, 40.0, 10.0, 10.0));
         Assert.Equal(500.0, revealed.Offset);
-        Assert.Equal(DartGeometry.RectFromLTWH(165.0, 265.0, 10.0, 10.0), revealed.Rect);
+        Assert.Equal(Rect.FromLTWH(165.0, 265.0, 10.0, 10.0), revealed.Rect);
 
         // A horizontal axis request is not an error for a vertical wheel.
         revealed = viewport.GetOffsetToReveal(target, 0.0, axis: Axis.Horizontal);

@@ -388,7 +388,7 @@ internal sealed class HeroFlightManifest : IDisposable
 
         return MatrixUtils.TransformRect(
             box.GetTransformTo(ancestorContext?.FindRenderObject()),
-            DartGeometry.RectFromOffsetAndSize(new Offset(0, 0), box.Size));
+            (new Offset(0, 0) & box.Size));
     }
 }
 
@@ -682,7 +682,7 @@ internal sealed class HeroFlight : IDisposable
             Rect end = HeroRectTween.End!.Value;
             if (origin != end.TopLeft)
             {
-                var heroRectEnd = DartGeometry.RectFromOffsetAndSize(origin, end.Size);
+                var heroRectEnd = origin & end.Size;
                 HeroRectTween = Manifest.CreateHeroRectTween(HeroRectTween.Begin, heroRectEnd);
             }
         }

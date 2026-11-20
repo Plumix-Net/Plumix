@@ -31,7 +31,7 @@ internal static partial class FilterLayerRasterizer
         }
 
         RasterFrame output = ApplyImageFilter(
-            new RasterFrame(pixels.ToArray(), width, height, DartGeometry.RectFromLTWH(0.0, 0.0, width, height)),
+            new RasterFrame(pixels.ToArray(), width, height, Rect.FromLTWH(0.0, 0.0, width, height)),
             imageFilter);
         return new FilterRasterResult(
             output.Pixels,
@@ -107,7 +107,7 @@ internal static partial class FilterLayerRasterizer
             RasterFrame frame = ApplyImageFilter(Rasterize(drawChildren, bounds), imageFilter);
             return DrawFrame(
                 context,
-                frame with { Bounds = DartGeometry.RectFromOffsetAndSize(frame.Bounds.TopLeft + offset, frame.Bounds.Size) });
+                frame with { Bounds = frame.Bounds.TopLeft + offset & frame.Bounds.Size });
         }
         catch (InvalidOperationException)
         {
@@ -225,7 +225,7 @@ internal static partial class FilterLayerRasterizer
         {
             target.CopyPixels(framebuffer);
             byte[] pixels = CopyFromFramebuffer(framebuffer, width, height);
-            return new RasterFrame(pixels, width, height, DartGeometry.RectFromOffsetAndSize(bounds.TopLeft, new Size(width, height)));
+            return new RasterFrame(pixels, width, height, (bounds.TopLeft & new Size(width, height)));
         }
     }
 
@@ -272,7 +272,7 @@ internal static partial class FilterLayerRasterizer
         {
             context.DrawImage(
                 bitmap,
-                DartGeometry.RectFromLTWH(0.0, 0.0, frame.Width, frame.Height).ToAvalonia(),
+                Rect.FromLTWH(0.0, 0.0, frame.Width, frame.Height).ToAvalonia(),
                 frame.Bounds.ToAvalonia());
         }
 
@@ -713,7 +713,7 @@ internal static partial class FilterLayerRasterizer
             output,
             width,
             height,
-            DartGeometry.RectFromLTWH(
+            Rect.FromLTWH(
                 sourceFrame.Bounds.Left - radiusX,
                 sourceFrame.Bounds.Top - radiusY,
                 width,
@@ -764,7 +764,7 @@ internal static partial class FilterLayerRasterizer
             pixels,
             width,
             height,
-            DartGeometry.RectFromLTWH(
+            Rect.FromLTWH(
                 frame.Bounds.Left + sourceLeft,
                 frame.Bounds.Top + sourceTop,
                 width,
@@ -921,7 +921,7 @@ internal static partial class FilterLayerRasterizer
             output,
             width,
             height,
-            DartGeometry.RectFromLTWH(
+            Rect.FromLTWH(
                 frame.Bounds.Left - horizontalOffset,
                 frame.Bounds.Top - verticalOffset,
                 width,
@@ -988,7 +988,7 @@ internal static partial class FilterLayerRasterizer
             output,
             width,
             height,
-            DartGeometry.RectFromLTWH(minimumX, minimumY, width, height));
+            Rect.FromLTWH(minimumX, minimumY, width, height));
     }
 
     private static void SampleNearest(

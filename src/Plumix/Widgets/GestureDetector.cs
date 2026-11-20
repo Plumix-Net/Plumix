@@ -945,7 +945,7 @@ internal sealed class DefaultSemanticsGestureDelegate : SemanticsGestureDelegate
     private static Rect GetLocalRectFromRenderObject(RenderObject renderObject)
     {
         return renderObject is RenderBox box
-            ? DartGeometry.RectFromLTWH(0.0, 0.0, box.Size.Width, box.Size.Height)
+            ? Rect.FromLTWH(0.0, 0.0, box.Size.Width, box.Size.Height)
             : default;
     }
 

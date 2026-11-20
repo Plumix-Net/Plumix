@@ -72,7 +72,7 @@ public sealed class FlowRepaintBoundaryTests
 
         var flowLayer = Assert.IsType<OffsetLayer>(Assert.Single(pipeline.RootLayer.Children));
         var clipLayer = Assert.IsType<ClipRectLayer>(Assert.Single(flowLayer.Children));
-        Assert.Equal(DartGeometry.RectFromLTWH(0, 0, 80, 60), clipLayer.ClipRect);
+        Assert.Equal(Rect.FromLTWH(0, 0, 80, 60), clipLayer.ClipRect);
     }
 
     [Fact]

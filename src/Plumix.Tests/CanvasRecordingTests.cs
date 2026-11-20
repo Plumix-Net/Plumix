@@ -16,18 +16,18 @@ public sealed class CanvasRecordingTests
     public void PathCopy_PreservesOpenContoursAndFillTypeAfterSourceMutation()
     {
         var source = new Path { FillType = PathFillType.EvenOdd };
-        source.AddOval(DartGeometry.RectFromLTWH(0, 0, 20, 20));
+        source.AddOval(Rect.FromLTWH(0, 0, 20, 20));
         source.MoveTo(30, 0);
         source.LineTo(30, 20);
         var copy = new Path(source);
         source.LineTo(50, 20);
         source.Reset();
         Assert.Equal(PathFillType.EvenOdd, copy.FillType);
-        Assert.Equal(DartGeometry.RectFromLTWH(0, 0, 30, 20), copy.GetBounds());
+        Assert.Equal(Rect.FromLTWH(0, 0, 30, 20), copy.GetBounds());
         Assert.True(copy.Contains(new Offset(10, 10)));
         Assert.False(copy.Contains(new Offset(1, 1)));
         copy.LineTo(40, 20);
-        Assert.Equal(DartGeometry.RectFromLTWH(0, 0, 40, 20), copy.GetBounds());
+        Assert.Equal(Rect.FromLTWH(0, 0, 40, 20), copy.GetBounds());
         Assert.Equal(default, source.GetBounds());
     }
 
@@ -35,9 +35,9 @@ public sealed class CanvasRecordingTests
     public void PathCopy_PreservesCombinedGeometryAfterOperandsAreReset()
     {
         var outer = new Path();
-        outer.AddRect(DartGeometry.RectFromLTWH(0, 0, 20, 20));
+        outer.AddRect(Rect.FromLTWH(0, 0, 20, 20));
         var inner = new Path();
-        inner.AddRect(DartGeometry.RectFromLTWH(5, 5, 10, 10));
+        inner.AddRect(Rect.FromLTWH(5, 5, 10, 10));
         var source = Path.Combine(PathOperation.Difference, outer, inner);
         var copy = new Path(source);
         outer.Reset();
@@ -45,7 +45,7 @@ public sealed class CanvasRecordingTests
         source.Reset();
         Assert.True(copy.Contains(new Offset(2, 2)));
         Assert.False(copy.Contains(new Offset(10, 10)));
-        Assert.Equal(DartGeometry.RectFromLTWH(0, 0, 20, 20), copy.GetBounds());
+        Assert.Equal(Rect.FromLTWH(0, 0, 20, 20), copy.GetBounds());
     }
 
     [Fact]
@@ -99,7 +99,7 @@ public sealed class CanvasRecordingTests
     {
         var canvas = new Canvas(new PictureRecorder());
 
-        canvas.SaveLayer(DartGeometry.RectFromLTWH(0, 0, 10, 10), new Paint());
+        canvas.SaveLayer(Rect.FromLTWH(0, 0, 10, 10), new Paint());
 
         Assert.Equal(2, canvas.GetSaveCount());
     }
@@ -138,8 +138,8 @@ public sealed class CanvasRecordingTests
         var canvas = new Canvas(recorder);
 
         canvas.Save();
-        canvas.ClipRect(DartGeometry.RectFromLTWH(0, 0, 5, 5));
-        canvas.DrawRectangle(Brushes.Red, null, DartGeometry.RectFromLTWH(0, 0, 4, 4));
+        canvas.ClipRect(Rect.FromLTWH(0, 0, 5, 5));
+        canvas.DrawRectangle(Brushes.Red, null, Rect.FromLTWH(0, 0, 4, 4));
         canvas.Restore();
 
         Picture picture = recorder.EndRecording();
@@ -163,9 +163,9 @@ public sealed class CanvasRecordingTests
         int inside = 0;
 
         context.ClipRectAndPaint(
-            DartGeometry.RectFromLTWH(0, 0, 10, 10),
+            Rect.FromLTWH(0, 0, 10, 10),
             Clip.None,
-            DartGeometry.RectFromLTWH(0, 0, 10, 10),
+            Rect.FromLTWH(0, 0, 10, 10),
             () => inside = context.Canvas.GetSaveCount());
 
         // Dart still brackets the painter with save/restore, it just skips the clip call.
@@ -180,9 +180,9 @@ public sealed class CanvasRecordingTests
         int inside = 0;
 
         context.ClipRectAndPaint(
-            DartGeometry.RectFromLTWH(0, 0, 10, 10),
+            Rect.FromLTWH(0, 0, 10, 10),
             Clip.AntiAliasWithSaveLayer,
-            DartGeometry.RectFromLTWH(0, 0, 10, 10),
+            Rect.FromLTWH(0, 0, 10, 10),
             () => inside = context.Canvas.GetSaveCount());
 
         Assert.Equal(3, inside);
@@ -195,7 +195,7 @@ public sealed class CanvasRecordingTests
     public void ClipContext_RestoresTheCanvasAfterEveryClipShape(Clip clipBehavior)
     {
         var context = new PaintingContext(new ContainerLayer());
-        var bounds = DartGeometry.RectFromLTWH(0, 0, 10, 10);
+        var bounds = Rect.FromLTWH(0, 0, 10, 10);
         var path = new Path();
         path.AddOval(bounds);
 
@@ -263,7 +263,7 @@ public sealed class CanvasRecordingTests
     public void PaintingContext_PictureLayer_CarriesTheEstimatedBoundsAsItsCanvasBounds()
     {
         var root = new ContainerLayer();
-        var bounds = DartGeometry.RectFromLTWH(0, 0, 40, 20);
+        var bounds = Rect.FromLTWH(0, 0, 40, 20);
         var context = new PaintingContext(root, bounds);
 
         context.Canvas.DrawLine(new Pen(Brushes.Red), new Offset(0, 0), new Offset(1, 1));
@@ -319,7 +319,7 @@ public sealed class CanvasRecordingTests
         context.PushClipRect(
             needsCompositing: false,
             new Offset(6, 7),
-            DartGeometry.RectFromLTWH(0, 0, 10, 10),
+            Rect.FromLTWH(0, 0, 10, 10),
             (_, offset) => seen = offset);
 
         Assert.Equal(new Offset(6, 7), seen);
@@ -330,20 +330,20 @@ public sealed class CanvasRecordingTests
     {
         var context = new PaintingContext(new ContainerLayer());
         var path = new Path();
-        path.AddRect(DartGeometry.RectFromLTWH(0, 0, 10, 10));
+        path.AddRect(Rect.FromLTWH(0, 0, 10, 10));
 
         ClipPathLayer? layer = context.PushClipPath(
             needsCompositing: true,
             new Offset(4, 5),
-            DartGeometry.RectFromLTWH(0, 0, 10, 10),
+            Rect.FromLTWH(0, 0, 10, 10),
             path,
             (_, _) => { });
 
         Assert.NotNull(layer);
-        Assert.Equal(DartGeometry.RectFromLTWH(4, 5, 10, 10), layer!.ClipPath.GetBounds());
+        Assert.Equal(Rect.FromLTWH(4, 5, 10, 10), layer!.ClipPath.GetBounds());
 
         // The caller's path is not mutated.
-        Assert.Equal(DartGeometry.RectFromLTWH(0, 0, 10, 10), path.GetBounds());
+        Assert.Equal(Rect.FromLTWH(0, 0, 10, 10), path.GetBounds());
     }
 
     [Fact]
@@ -354,12 +354,12 @@ public sealed class CanvasRecordingTests
         ClipRSuperellipseLayer? layer = context.PushClipRSuperellipse(
             needsCompositing: true,
             new Offset(2, 3),
-            DartGeometry.RectFromLTWH(0, 0, 10, 10),
-            RSuperellipse.FromRectAndRadius(DartGeometry.RectFromLTWH(0, 0, 10, 10), new Radius(4.0, 4.0)),
+            Rect.FromLTWH(0, 0, 10, 10),
+            RSuperellipse.FromRectAndRadius(Rect.FromLTWH(0, 0, 10, 10), new Radius(4.0, 4.0)),
             (_, _) => { });
 
         Assert.NotNull(layer);
-        Assert.Equal(DartGeometry.RectFromLTWH(2, 3, 10, 10), layer!.ClipRSuperellipse.Rect);
+        Assert.Equal(Rect.FromLTWH(2, 3, 10, 10), layer!.ClipRSuperellipse.Rect);
     }
 
     [Theory]
@@ -367,7 +367,7 @@ public sealed class CanvasRecordingTests
     public void EveryClipPush_WithClipNone_ReturnsNullAndPaintsDirectly(Clip clipBehavior)
     {
         var context = new PaintingContext(new ContainerLayer());
-        var bounds = DartGeometry.RectFromLTWH(0, 0, 10, 10);
+        var bounds = Rect.FromLTWH(0, 0, 10, 10);
         var path = new Path();
         path.AddRect(bounds);
         int painted = 0;

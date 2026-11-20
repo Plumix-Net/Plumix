@@ -1135,7 +1135,7 @@ internal sealed class RenderCupertinoSlidingSegmentedControl<T> : RenderBox,
         for (RenderBox? child = LastChild; child is not null; child = ChildBefore(child))
         {
             var data = (CupertinoSlidingSegmentedControlParentData)child.parentData!;
-            Rect childRect = DartGeometry.RectFromOffsetAndSize(data.offset, child.Size);
+            Rect childRect = data.offset & child.Size;
             if (!childRect.Contains(position))
             {
                 continue;
@@ -1352,7 +1352,7 @@ internal sealed class RenderCupertinoSlidingSegmentedControl<T> : RenderBox,
         CurrentThumbRect = unscaled;
         Rect thumbRect = ScaleThumbRect(unscaled, HighlightedIndex.Value, ThumbScale);
         RSuperellipse shape = RSuperellipse.FromRectAndRadius(
-            DartGeometry.RectFromOffsetAndSize(thumbRect.TopLeft + (Offset)offset, thumbRect.Size),
+            (thumbRect.TopLeft + (Offset)offset & thumbRect.Size),
             Radius.Circular(7.0));
         foreach (BoxShadow shadow in ThumbShadows)
         {
@@ -1417,7 +1417,7 @@ internal sealed class RenderCupertinoSlidingSegmentedControl<T> : RenderBox,
             }
 
             var data = (CupertinoSlidingSegmentedControlParentData)child.parentData!;
-            return DartGeometry.RectFromOffsetAndSize(data.offset, child.Size);
+            return data.offset & child.Size;
         }
 
         return null;
@@ -1436,7 +1436,7 @@ internal sealed class RenderCupertinoSlidingSegmentedControl<T> : RenderBox,
         double maximumRight = last.Value.Right + 1.0;
         double left = Math.Clamp(rect.Left, minimumLeft, maximumRight);
         double right = Math.Clamp(rect.Right, minimumLeft, maximumRight);
-        return DartGeometry.RectFromLTWH(
+        return Rect.FromLTWH(
             left,
             first.Value.Top,
             Math.Max(0.0, right - left),
@@ -1453,14 +1453,14 @@ internal sealed class RenderCupertinoSlidingSegmentedControl<T> : RenderBox,
             _ when highlightedIndex == SegmentCount - 1 => rect.Right - width,
             _ => rect.Center.Dx - (width / 2.0),
         };
-        return DartGeometry.RectFromLTWH(
+        return Rect.FromLTWH(
             left,
             rect.Center.Dy - (height / 2.0),
             width,
             height);
     }
 
-    private static Rect InflateHorizontally(Rect rect, double amount) => DartGeometry.RectFromLTWH(
+    private static Rect InflateHorizontally(Rect rect, double amount) => Rect.FromLTWH(
         rect.Left - amount,
         rect.Top,
         rect.Width + (amount * 2.0),

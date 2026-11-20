@@ -266,7 +266,7 @@ internal sealed class WidgetInspectorState : State<WidgetInspector>
         // of the display we do not want to select anything. A user can still select
         // a widget that is only at the exact screen margin by tapping.
         FlutterView view = View.Of(Context);
-        var bounds = DartGeometry.RectFromLTWH(
+        var bounds = Rect.FromLTWH(
             0,
             0,
             view.PhysicalSize.Width / view.DevicePixelRatio,
@@ -287,7 +287,7 @@ internal sealed class WidgetInspectorState : State<WidgetInspector>
     {
         double width = Math.Max(0.0, rect.Width - 2 * delta);
         double height = Math.Max(0.0, rect.Height - 2 * delta);
-        return DartGeometry.RectFromLTWH(rect.Left + delta, rect.Top + delta, width, height);
+        return Rect.FromLTWH(rect.Left + delta, rect.Top + delta, width, height);
     }
 
     private void HandleTap()
@@ -655,7 +655,7 @@ internal sealed class RenderInspectorOverlay : RenderBox
     {
         Debug.Assert(NeedsCompositing);
         context.AddLayer(new InspectorOverlayLayer(
-            overlayRect: DartGeometry.RectFromLTWH(offset.Dx, offset.Dy, Size.Width, Size.Height),
+            overlayRect: Rect.FromLTWH(offset.Dx, offset.Dy, Size.Width, Size.Height),
             selection: Selection,
             rootRenderObject: Parent));
     }
@@ -1069,7 +1069,7 @@ internal sealed class InspectorOverlayLayer : Layer
             Color = WidgetInspectorOverlay.TooltipBackgroundColor,
         };
         canvas.DrawRect(
-            DartGeometry.RectFromCorners(tipOffset, new Offset(tipOffset.Dx + tooltipSize.Width, tipOffset.Dy + tooltipSize.Height)),
+            Rect.FromLTRB(tipOffset.Dx, tipOffset.Dy, tipOffset.Dx + tooltipSize.Width, tipOffset.Dy + tooltipSize.Height),
             tooltipBackground);
 
         double wedgeY = tipOffset.Dy;
@@ -1493,7 +1493,7 @@ internal sealed class ExitWidgetSelectionTooltipPainter : CustomPainter
         double tooltipYOffset = 0 - tooltipHeight - tooltipSpacing;
 
         // Draw tooltip background.
-        canvas.DrawRect(DartGeometry.RectFromLTWH(tooltipXOffset, tooltipYOffset, tooltipWidth, tooltipHeight), tooltipPaint);
+        canvas.DrawRect(Rect.FromLTWH(tooltipXOffset, tooltipYOffset, tooltipWidth, tooltipHeight), tooltipPaint);
 
         // Draw tooltip text.
         tooltipTextPainter.Paint(

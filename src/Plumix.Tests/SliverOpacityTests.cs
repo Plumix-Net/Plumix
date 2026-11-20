@@ -287,7 +287,7 @@ public sealed class SliverOpacityTests : IDisposable
         public override void Paint(PaintingContext ctx, Offset offset)
         {
             PaintCount += 1;
-            ctx.Canvas.DrawRectangle(Brushes.Blue, null, DartGeometry.RectFromOffsetAndSize(offset, Size));
+            ctx.Canvas.DrawRectangle(Brushes.Blue, null, (offset & Size));
         }
     }
 

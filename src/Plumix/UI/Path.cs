@@ -218,7 +218,7 @@ public sealed class Path
             bottom = Math.Max(bottom, points[index].Y);
         }
 
-        return DartGeometry.RectFromLTWH(left, top, right - left, bottom - top);
+        return Rect.FromLTWH(left, top, right - left, bottom - top);
     }
 
     public static Path Combine(PathOperation operation, Path path1, Path path2)
@@ -393,7 +393,7 @@ public sealed class Path
     private static Offset FromNative(SKPoint point) => new(point.X, point.Y);
     private static SKRect ToNative(Rect rect) =>
         new(Narrow(rect.Left), Narrow(rect.Top), Narrow(rect.Right), Narrow(rect.Bottom));
-    private static Rect FromNative(SKRect rect) => DartGeometry.RectFromLTWH(rect.Left, rect.Top, rect.Width, rect.Height);
+    private static Rect FromNative(SKRect rect) => Rect.FromLTWH(rect.Left, rect.Top, rect.Width, rect.Height);
 
     private static SKPoint ToNativeRadius(Radius radius)
     {

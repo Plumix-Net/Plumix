@@ -345,7 +345,7 @@ public class RenderConstrainedBox : RenderProxyBox
                 context.Canvas.DrawRectangle(
                     new SolidColorBrush(new Color(0x90909090)),
                     null,
-                    DartGeometry.RectFromOffsetAndSize(offset, Size));
+                    (offset & Size));
             }
         }
     }

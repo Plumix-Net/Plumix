@@ -910,8 +910,8 @@ public abstract class RenderSliver : RenderObject
     /// </remarks>
     public override Rect PaintBounds => Constraints.Axis switch
     {
-        Axis.Horizontal => DartGeometry.RectFromLTWH(0.0, 0.0, Geometry!.PaintExtent, Constraints.CrossAxisExtent),
-        _ => DartGeometry.RectFromLTWH(0.0, 0.0, Constraints.CrossAxisExtent, Geometry!.PaintExtent),
+        Axis.Horizontal => Rect.FromLTWH(0.0, 0.0, Geometry!.PaintExtent, Constraints.CrossAxisExtent),
+        _ => Rect.FromLTWH(0.0, 0.0, Constraints.CrossAxisExtent, Geometry!.PaintExtent),
     };
 
     /// <inheritdoc />
@@ -1177,20 +1177,16 @@ public abstract class RenderSliver : RenderObject
         double crossAxisExtent = sliverGeometry.CrossAxisExtent ?? constraints.CrossAxisExtent;
         Rect rect = constraints.Axis switch
         {
-            Axis.Horizontal => DartGeometry.RectFromLTWH(-leadingOffset, 0.0, maxPaintExtent, crossAxisExtent),
-            _ => DartGeometry.RectFromLTWH(0.0, -leadingOffset, crossAxisExtent, maxPaintExtent),
+            Axis.Horizontal => Rect.FromLTWH(-leadingOffset, 0.0, maxPaintExtent, crossAxisExtent),
+            _ => Rect.FromLTWH(0.0, -leadingOffset, crossAxisExtent, maxPaintExtent),
         };
 
         return ScrollDirectionUtils.ApplyGrowthDirectionToAxisDirection(
             constraints.AxisDirection,
             constraints.GrowthDirection) switch
         {
-            AxisDirection.Left => DartGeometry.RectFromCorners(
-                new Offset(paintExtent - rect.Right, rect.Top),
-                new Offset(paintExtent - rect.Left, rect.Bottom)),
-            AxisDirection.Up => DartGeometry.RectFromCorners(
-                new Offset(rect.Left, paintExtent - rect.Bottom),
-                new Offset(rect.Right, paintExtent - rect.Top)),
+            AxisDirection.Left => Rect.FromLTRB(paintExtent - rect.Right, rect.Top, paintExtent - rect.Left, rect.Bottom),
+            AxisDirection.Up => Rect.FromLTRB(rect.Left, paintExtent - rect.Bottom, rect.Right, paintExtent - rect.Top),
             _ => rect,
         };
     }
@@ -2535,13 +2531,13 @@ public abstract class RenderSliverEdgeInsetsPadding : RenderSliver, IRenderObjec
             return;
         }
 
-        var outerRect = DartGeometry.RectFromOffsetAndSize(offset, GetAbsoluteSize());
+        var outerRect = offset & GetAbsoluteSize();
         Rect? innerRect = null;
         if (_child is not null)
         {
             Size childSize = _child.GetAbsoluteSize();
             var childParentData = (SliverPhysicalParentData)_child.parentData!;
-            Rect inner = DartGeometry.RectFromOffsetAndSize(offset + childParentData.PaintOffset, childSize);
+            Rect inner = offset + childParentData.PaintOffset & childSize;
             Debug.Assert(inner.Top >= outerRect.Top);
             Debug.Assert(inner.Left >= outerRect.Left);
             Debug.Assert(inner.Right <= outerRect.Right);

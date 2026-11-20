@@ -375,7 +375,7 @@ internal sealed class RectangularSliderValueIndicatorPathPainter
             scale: scale);
 
         double rectHeight = labelPainter.Height + _labelPadding;
-        var upperRect = DartGeometry.RectFromLTWH(
+        var upperRect = Rect.FromLTWH(
             (-rectangleWidth / 2) + horizontalShift,
             -_triangleHeight - rectHeight,
             rectangleWidth,
@@ -635,7 +635,7 @@ internal sealed class PaddleSliderValueIndicatorPathPainter
             throw new AssertionError("center.isFinite");
         }
 
-        var arcRect = DartGeometry.RectFromLTWH(center.Dx - radius, center.Dy - radius, radius * 2.0, radius * 2.0);
+        var arcRect = Rect.FromLTWH(center.Dx - radius, center.Dy - radius, radius * 2.0, radius * 2.0);
         path.ArcTo(arcRect, startAngle, endAngle - startAngle, false);
     }
 
@@ -673,7 +673,7 @@ internal sealed class PaddleSliderValueIndicatorPathPainter
         double widthWithOverflow)
     {
         const double edgeMargin = 8.0;
-        var topLobeRect = DartGeometry.RectFromLTWH(
+        var topLobeRect = Rect.FromLTWH(
             -_topLobeRadius - halfWidthNeeded,
             -_topLobeRadius - _distanceBetweenTopBottomCenters,
             2.0 * (_topLobeRadius + halfWidthNeeded),
@@ -815,9 +815,7 @@ internal sealed class PaddleSliderValueIndicatorPathPainter
         {
             Offset leftCenter = _topLobeCenter - new Offset(leftWidthNeeded, 0.0) + neckStretch;
             Offset rightCenter = _topLobeCenter + new Offset(rightWidthNeeded, 0.0) + neckStretch;
-            var valueRect = DartGeometry.RectFromCorners(
-                new Offset(leftCenter.Dx - _topLobeRadius, leftCenter.Dy - _topLobeRadius),
-                new Offset(rightCenter.Dx + _topLobeRadius, rightCenter.Dy + _topLobeRadius));
+            var valueRect = Rect.FromLTRB(leftCenter.Dx - _topLobeRadius, leftCenter.Dy - _topLobeRadius, rightCenter.Dx + _topLobeRadius, rightCenter.Dy + _topLobeRadius);
             var outlinePaint = new Pen(new SolidColorBrush(new Color(0xffff0000)), 1.0);
             canvas.DrawRectangle(null, outlinePaint, valueRect);
         }

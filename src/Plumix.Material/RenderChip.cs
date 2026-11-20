@@ -114,7 +114,7 @@ internal sealed class RenderEnsureMinSemanticsSize : RenderProxyBox
         {
             double width = Math.Max(Size.Width, _minSemanticSize.Width);
             double height = Math.Max(Size.Height, _minSemanticSize.Height);
-            return DartGeometry.RectFromLTWH(
+            return Rect.FromLTWH(
                 (Size.Width - width) / 2.0,
                 (Size.Height - height) / 2.0,
                 width,
@@ -664,7 +664,7 @@ internal sealed class RenderChip : RenderBox, ISlottedRenderObjectContainer
         if (ltr)
         {
             _pressRect = _canTap
-                ? DartGeometry.RectFromLTWH(
+                ? Rect.FromLTWH(
                     0.0,
                     0.0,
                     sizes.LogicalDeleteSize.Width > 0.0
@@ -676,7 +676,7 @@ internal sealed class RenderChip : RenderBox, ISlottedRenderObjectContainer
             if (sizes.LogicalDeleteSize.Width > 0.0)
             {
                 deleteOffset = CenterLayout(sizes.LogicalDeleteSize, start, sizes, ltr: true);
-                _deleteButtonRect = DartGeometry.RectFromLTWH(
+                _deleteButtonRect = Rect.FromLTWH(
                     start + _padding.Left,
                     0.0,
                     sizes.LogicalDeleteSize.Width + _padding.Right,
@@ -691,7 +691,7 @@ internal sealed class RenderChip : RenderBox, ISlottedRenderObjectContainer
         {
             if (sizes.LogicalDeleteSize.Width > 0.0)
             {
-                _deleteButtonRect = DartGeometry.RectFromLTWH(
+                _deleteButtonRect = Rect.FromLTWH(
                     0.0,
                     0.0,
                     sizes.LogicalDeleteSize.Width + _padding.Right,
@@ -705,7 +705,7 @@ internal sealed class RenderChip : RenderBox, ISlottedRenderObjectContainer
 
             start -= sizes.LogicalDeleteSize.Width;
             _pressRect = _canTap
-                ? DartGeometry.RectFromLTWH(
+                ? Rect.FromLTWH(
                     _deleteButtonRect.Width,
                     0.0,
                     sizes.OverallWidth - _deleteButtonRect.Width + Horizontal(_padding),
@@ -765,7 +765,7 @@ internal sealed class RenderChip : RenderBox, ISlottedRenderObjectContainer
         Rect avatarRect;
         if (_avatar is not null)
         {
-            avatarRect = DartGeometry.RectFromOffsetAndSize(ParentDataOf(_avatar).offset + offset, _avatar.Size);
+            avatarRect = ParentDataOf(_avatar).offset + offset & _avatar.Size;
             var scrim = new SolidColorBrush(Color.FromARGB(0x60, 0x19, 0x19, 0x19));
             if (_avatarBorder is CircleBorder)
             {
@@ -790,7 +790,7 @@ internal sealed class RenderChip : RenderBox, ISlottedRenderObjectContainer
             double x = _textDirection == TextDirection.Ltr
                 ? offset.Dx + _padding.Left
                 : offset.Dx + Size.Width - _padding.Right - contentHeight;
-            avatarRect = DartGeometry.RectFromLTWH(x, offset.Dy + _padding.Top, contentHeight, contentHeight);
+            avatarRect = Rect.FromLTWH(x, offset.Dy + _padding.Top, contentHeight, contentHeight);
         }
 
         PaintCheckmark(context, avatarRect, _checkmarkProgress);

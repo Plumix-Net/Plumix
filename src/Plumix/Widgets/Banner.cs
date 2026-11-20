@@ -23,7 +23,7 @@ public sealed class BannerPainter : CustomPainter
     public const double Offset = 40.0;
     public const double Height = 12.0;
     public static double BottomOffset => Offset + (Math.Sqrt(0.5) * Height);
-    public static Rect BannerRect { get; } = DartGeometry.RectFromLTWH(-Offset, Offset - Height, Offset * 2.0, Height);
+    public static Rect BannerRect { get; } = Rect.FromLTWH(-Offset, Offset - Height, Offset * 2.0, Height);
     public static Color DefaultColor { get; } = Color.FromARGB(0xA0, 0xB7, 0x1C, 0x1C);
     public static TextStyle DefaultTextStyle { get; } = new(
         FontSize: Height * 0.85,

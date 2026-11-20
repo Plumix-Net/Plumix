@@ -245,7 +245,7 @@ public sealed class MaterialMenuAnchorTests
     {
         // Flutter's "vertically constrained menus are positioned above the anchor by default" and
         // "…with the provided offset": a 122 x 64 menu under a bottom-aligned 552..600 anchor.
-        var anchorRect = DartGeometry.RectFromLTWH(0.0, 552.0, 116.0, 48.0);
+        var anchorRect = Rect.FromLTWH(0.0, 552.0, 116.0, 48.0);
         var childSize = new Size(122.0, 64.0);
 
         Offset noOffset = Layout(anchorRect: anchorRect)
@@ -275,11 +275,11 @@ public sealed class MaterialMenuAnchorTests
             avoidBounds: null,
             heightFactor: 1.0);
 
-        Offset fits = Cascading(DartGeometry.RectFromLTWH(120.0, 40.0, 80.0, 40.0))
+        Offset fits = Cascading(Rect.FromLTWH(120.0, 40.0, 80.0, 40.0))
             .GetPositionForChild(new Size(500.0, 360.0), new Size(100.0, 120.0));
-        Offset flipped = Cascading(DartGeometry.RectFromLTWH(120.0, 40.0, 80.0, 40.0))
+        Offset flipped = Cascading(Rect.FromLTWH(120.0, 40.0, 80.0, 40.0))
             .GetPositionForChild(new Size(260.0, 360.0), new Size(100.0, 120.0));
-        Offset clamped = Cascading(DartGeometry.RectFromLTWH(20.0, 40.0, 80.0, 40.0))
+        Offset clamped = Cascading(Rect.FromLTWH(20.0, 40.0, 80.0, 40.0))
             .GetPositionForChild(new Size(150.0, 360.0), new Size(100.0, 120.0));
 
         Assert.Equal(new Offset(200.0, 32.0), fits);
@@ -291,7 +291,7 @@ public sealed class MaterialMenuAnchorTests
     public void MenuLayout_ClampsToTheScreenEdgeWhenTheParentOrientationDiffers()
     {
         // A menu bar's submenu (parent horizontal, menu vertical) is clamped, never flipped.
-        Offset position = Layout(anchorRect: DartGeometry.RectFromLTWH(700.0, 0.0, 80.0, 48.0))
+        Offset position = Layout(anchorRect: Rect.FromLTWH(700.0, 0.0, 80.0, 48.0))
             .GetPositionForChild(OverlaySize, MenuSize);
 
         Assert.Equal(new Offset(800.0 - 274.0, 48.0), position);
@@ -303,7 +303,7 @@ public sealed class MaterialMenuAnchorTests
         // Flutter's "menu is positioned to avoid the software keyboard" (flutter/flutter#142921).
         var overlaySize = new Size(600.0, 800.0);
         MenuLayout layout = Layout(
-            anchorRect: DartGeometry.RectFromLTWH(0.0, 500.0, 100.0, 60.0),
+            anchorRect: Rect.FromLTWH(0.0, 500.0, 100.0, 60.0),
             viewInsets: EdgeInsets.FromLTRB(0.0, 0.0, 0.0, 200.0));
 
         Offset position = layout.GetPositionForChild(overlaySize, new Size(200.0, 100.0));
@@ -318,8 +318,8 @@ public sealed class MaterialMenuAnchorTests
         // A vertical hinge splits the 500-wide overlay into 0..246 and 254..500; the anchor sits in
         // the right sub-screen, and a menu wider than it is pinned to that sub-screen's left edge.
         MenuLayout layout = Layout(
-            anchorRect: DartGeometry.RectFromLTWH(360.0, 40.0, 80.0, 40.0),
-            avoidBounds: [DartGeometry.RectFromLTWH(246.0, 0.0, 8.0, 360.0)]);
+            anchorRect: Rect.FromLTWH(360.0, 40.0, 80.0, 40.0),
+            avoidBounds: [Rect.FromLTWH(246.0, 0.0, 8.0, 360.0)]);
 
         Offset wide = layout.GetPositionForChild(new Size(500.0, 360.0), new Size(300.0, 100.0));
         Offset narrow = layout.GetPositionForChild(new Size(500.0, 360.0), new Size(120.0, 100.0));
@@ -440,7 +440,7 @@ public sealed class MaterialMenuAnchorTests
     public void MenuLayout_KeepsAnUpwardGrowingPanelPinnedToItsBottomEdge()
     {
         MenuLayout Growing(double heightFactor) => Layout(
-            anchorRect: DartGeometry.RectFromLTWH(0.0, 552.0, 116.0, 48.0),
+            anchorRect: Rect.FromLTWH(0.0, 552.0, 116.0, 48.0),
             heightFactor: heightFactor);
 
         Offset settled = Growing(1.0).GetPositionForChild(OverlaySize, new Size(122.0, 64.0));
@@ -473,7 +473,7 @@ public sealed class MaterialMenuAnchorTests
         MenuLayout baseline = Layout(anchorRect: AnchorRect);
 
         Assert.False(baseline.ShouldRelayout(Layout(anchorRect: AnchorRect)));
-        Assert.True(baseline.ShouldRelayout(Layout(anchorRect: DartGeometry.RectFromLTWH(0.0, 0.0, 10.0, 10.0))));
+        Assert.True(baseline.ShouldRelayout(Layout(anchorRect: Rect.FromLTWH(0.0, 0.0, 10.0, 10.0))));
         Assert.True(baseline.ShouldRelayout(
             Layout(anchorRect: AnchorRect, textDirection: TextDirection.Rtl)));
         Assert.True(baseline.ShouldRelayout(
@@ -490,7 +490,7 @@ public sealed class MaterialMenuAnchorTests
             Layout(anchorRect: AnchorRect, reservedPadding: EdgeInsetsGeometry.All(4.0))));
         Assert.True(baseline.ShouldRelayout(Layout(anchorRect: AnchorRect, heightFactor: 0.5)));
         Assert.True(baseline.ShouldRelayout(
-            Layout(anchorRect: AnchorRect, avoidBounds: [DartGeometry.RectFromLTWH(0.0, 0.0, 1.0, 1.0)])));
+            Layout(anchorRect: AnchorRect, avoidBounds: [Rect.FromLTWH(0.0, 0.0, 1.0, 1.0)])));
     }
 
     // ---- MenuStyle and the menu theme datas ----
@@ -598,7 +598,7 @@ public sealed class MaterialMenuAnchorTests
         Assert.Equal(bar, new MenuBarThemeData(style));
     }
 
-    private static readonly Rect AnchorRect = DartGeometry.RectFromLTWH(328.0, 14.0, 144.0, 48.0);
+    private static readonly Rect AnchorRect = Rect.FromLTWH(328.0, 14.0, 144.0, 48.0);
 
     private static readonly Size OverlaySize = new(800.0, 600.0);
 

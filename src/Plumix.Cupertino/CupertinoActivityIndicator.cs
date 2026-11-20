@@ -319,7 +319,7 @@ internal sealed class CupertinoLinearActivityIndicatorPainter : CustomPainter
     {
         // Draw the background of the progress bar.
         context.Canvas.DrawRRect(
-            RRect.FromRectAndRadius(DartGeometry.RectFromSize(size), Radius.Circular(size.Height / 2)),
+            RRect.FromRectAndRadius((Offset.Zero & size), Radius.Circular(size.Height / 2)),
             BackgroundPaint,
             pen: null);
 
@@ -328,7 +328,7 @@ internal sealed class CupertinoLinearActivityIndicatorPainter : CustomPainter
         {
             context.Canvas.DrawRRect(
                 RRect.FromRectAndRadius(
-                    DartGeometry.RectFromSize(new Size(Math.Clamp(Progress, 0.0, 1.0) * size.Width, size.Height)),
+                    (Offset.Zero & new Size(Math.Clamp(Progress, 0.0, 1.0) * size.Width, size.Height)),
                     Radius.Circular(size.Height / 2)),
                 ProgressPaint,
                 pen: null);

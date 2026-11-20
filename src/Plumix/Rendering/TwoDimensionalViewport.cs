@@ -722,7 +722,7 @@ public abstract class RenderTwoDimensionalViewport : RenderBox, IRenderAbstractV
     }
 
     private static Rect Translate(Rect rect, double dx, double dy) =>
-        DartGeometry.RectFromLTWH(rect.Left + dx, rect.Top + dy, rect.Width, rect.Height);
+        Rect.FromLTWH(rect.Left + dx, rect.Top + dy, rect.Width, rect.Height);
 
     /// <inheritdoc />
     public override void ShowOnScreen(
@@ -1173,7 +1173,7 @@ public abstract class RenderTwoDimensionalViewport : RenderBox, IRenderAbstractV
             _clipRectLayer.Layer = context.PushClipRect(
                 NeedsCompositing,
                 offset,
-                DartGeometry.RectFromLTWH(0, 0, ViewportDimension.Width, ViewportDimension.Height),
+                Rect.FromLTWH(0, 0, ViewportDimension.Width, ViewportDimension.Height),
                 PaintChildren,
                 ClipBehavior,
                 _clipRectLayer.Layer);

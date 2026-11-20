@@ -692,7 +692,7 @@ internal sealed class RenderMergeableMaterialListBody : RenderListBody
         while (child is not null)
         {
             var parentData = (ListBodyParentData)child.parentData!;
-            var rect = DartGeometry.RectFromOffsetAndSize(parentData.offset + offset, child.Size);
+            var rect = parentData.offset + offset & child.Size;
             if (index % 2 == 0 && Elevation != 0.0)
             {
                 var shadowPath = new Plumix.UI.Path();

@@ -486,7 +486,7 @@ public sealed class WidgetInspectorDartParityTests : IDisposable
             .FirstElement(Find.ByType(typeof(InspectorOverlay)))
             .FindRenderObject()!;
         var layer = new InspectorOverlayLayer(
-            DartGeometry.RectFromSize(overlay.Size),
+            (Offset.Zero & overlay.Size),
             WidgetInspectorService.Instance.Selection,
             overlay.Parent);
         layer.AddToScene(new SceneBuilder());
@@ -497,7 +497,7 @@ public sealed class WidgetInspectorDartParityTests : IDisposable
         Assert.Equal(new Color(0x80404080), rects[1].Color);
         Assert.All(rects[2..^1], rect => Assert.Equal(new Color(0x80404080), rect.Color));
         Assert.Equal(new Color(0xE63C3C3C), rects[^1].Color);
-        Assert.Equal(DartGeometry.RectFromLTWH(0.5, 0.5, 49.0, 99.0), rects[0].Rect);
+        Assert.Equal(Rect.FromLTWH(0.5, 0.5, 49.0, 99.0), rects[0].Rect);
         layer.Dispose();
     }
 

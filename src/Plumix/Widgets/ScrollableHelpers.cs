@@ -247,7 +247,7 @@ public sealed class EdgeDraggingAutoScroller
         Matrix4 transform = scrollRenderBox.GetTransformTo(null);
         Rect globalRect = MatrixUtils.TransformRect(
             transform,
-            DartGeometry.RectFromLTWH(0, 0, scrollRenderBox.Size.Width, scrollRenderBox.Size.Height));
+            Rect.FromLTWH(0, 0, scrollRenderBox.Size.Width, scrollRenderBox.Size.Height));
         Rect transformedDragTarget = MatrixUtils.TransformRect(transform, _dragTargetRelatedToScrollOrigin);
         Debug.Assert(
             globalRect.Size.Width + Constants.PrecisionErrorTolerance >= transformedDragTarget.Width

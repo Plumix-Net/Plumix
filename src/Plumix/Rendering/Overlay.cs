@@ -276,7 +276,7 @@ internal sealed class RenderOverlayTheater : RenderBox,
         _clipRectLayer.Layer = context.PushClipRect(
             NeedsCompositing,
             offset,
-            DartGeometry.RectFromOffsetAndSize(new Offset(0, 0), Size),
+            (new Offset(0, 0) & Size),
             PaintOnstageChildren,
             _clipBehavior,
             _clipRectLayer.Layer);
@@ -305,7 +305,7 @@ internal sealed class RenderOverlayTheater : RenderBox,
     {
         return _clipBehavior == Clip.None
             ? null
-            : DartGeometry.RectFromOffsetAndSize(new Offset(), Size);
+            : (new Offset() & Size);
     }
 
     protected override Rect? DescribeSemanticsClip(RenderObject? child)

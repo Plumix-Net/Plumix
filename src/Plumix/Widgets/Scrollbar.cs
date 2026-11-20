@@ -612,8 +612,8 @@ public sealed class ScrollbarPainter : CustomPainter, IListenable
             double trackX = orientation == global::Plumix.Widgets.ScrollbarOrientation.Left
                 ? _resolvedPadding.Left
                 : thumbX - CrossAxisMargin;
-            trackRect = DartGeometry.RectFromLTWH(trackX, trackRectStart, Thickness + (2 * CrossAxisMargin), trackRectExtent);
-            thumbRect = DartGeometry.RectFromLTWH(thumbX, trackStart + thumbOffset, Thickness, thumbExtent);
+            trackRect = Rect.FromLTWH(trackX, trackRectStart, Thickness + (2 * CrossAxisMargin), trackRectExtent);
+            thumbRect = Rect.FromLTWH(thumbX, trackStart + thumbOffset, Thickness, thumbExtent);
         }
         else
         {
@@ -623,8 +623,8 @@ public sealed class ScrollbarPainter : CustomPainter, IListenable
             double trackY = orientation == global::Plumix.Widgets.ScrollbarOrientation.Top
                 ? _resolvedPadding.Top
                 : thumbY - CrossAxisMargin;
-            trackRect = DartGeometry.RectFromLTWH(trackRectStart, trackY, trackRectExtent, Thickness + (2 * CrossAxisMargin));
-            thumbRect = DartGeometry.RectFromLTWH(trackStart + thumbOffset, thumbY, thumbExtent, Thickness);
+            trackRect = Rect.FromLTWH(trackRectStart, trackY, trackRectExtent, Thickness + (2 * CrossAxisMargin));
+            thumbRect = Rect.FromLTWH(trackStart + thumbOffset, thumbY, thumbExtent, Thickness);
         }
 
         return new ScrollbarGeometry(
@@ -658,7 +658,7 @@ public sealed class ScrollbarPainter : CustomPainter, IListenable
     }
 
     /// <summary>`Rect.fromCircle(center: center, radius: radius)`.</summary>
-    private static Rect FromCircle(Offset center, double radius) => DartGeometry.RectFromLTWH(
+    private static Rect FromCircle(Offset center, double radius) => Rect.FromLTWH(
         center.Dx - radius,
         center.Dy - radius,
         radius * 2,
@@ -669,7 +669,7 @@ public sealed class ScrollbarPainter : CustomPainter, IListenable
     {
         double left = Math.Min(rect.Left, other.Left);
         double top = Math.Min(rect.Top, other.Top);
-        return DartGeometry.RectFromLTWH(
+        return Rect.FromLTWH(
             left,
             top,
             Math.Max(rect.Right, other.Right) - left,

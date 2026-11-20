@@ -82,7 +82,7 @@ internal sealed class DropdownMenuPainter : CustomPainter
         double clamped = Math.Clamp(resize, 0.0, 1.0);
         double topValue = top.Transform(clamped);
         double bottomValue = bottom.Transform(clamped);
-        return DartGeometry.RectFromLTWH(0.0, topValue, size.Width, Math.Max(0.0, bottomValue - topValue));
+        return Rect.FromLTWH(0.0, topValue, size.Width, Math.Max(0.0, bottomValue - topValue));
     }
 
     public override bool ShouldRepaint(CustomPainter oldDelegate)
@@ -1459,7 +1459,7 @@ internal sealed class DropdownButtonState<T> : State<DropdownButton<T>>
         }
 
         Offset itemOrigin = itemBox.LocalToGlobal(default, navigator.Context.FindRenderObject());
-        var itemRect = DartGeometry.RectFromOffsetAndSize(itemOrigin, itemBox.Size);
+        var itemRect = itemOrigin & itemBox.Size;
         var route = new DropdownRoute<T>(
             items: menuItems,
             buttonRect: menuMargin.Resolve(textDirection ?? TextDirection.Ltr).InflateRect(itemRect),

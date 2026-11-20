@@ -23,7 +23,7 @@ internal sealed class PlaceholderPainter : CustomPainter
     public override void Paint(PaintingContext context, Size size)
     {
         var pen = new Pen(new SolidColorBrush(Color), StrokeWidth);
-        var rect = DartGeometry.RectFromSize(size);
+        var rect = Offset.Zero & size;
         context.Canvas.DrawRectangle(Brushes.Transparent, pen, rect);
         context.Canvas.DrawLine(pen, rect.TopRight, rect.BottomLeft);
         context.Canvas.DrawLine(pen, rect.TopLeft, rect.BottomRight);

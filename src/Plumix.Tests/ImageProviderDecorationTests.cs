@@ -266,12 +266,12 @@ public sealed class ImageProviderDecorationTests : IDisposable
             matchTextDirection: true).CreatePainter(() => repaint.TrySetResult(true));
         var canvas = new Canvas(new PictureRecorder());
 
-        painter.Paint(canvas, DartGeometry.RectFromLTWH(0, 0, 40, 20), null, new ImageConfiguration(TextDirection: TextDirection.Rtl));
+        painter.Paint(canvas, Rect.FromLTWH(0, 0, 40, 20), null, new ImageConfiguration(TextDirection: TextDirection.Rtl));
         Assert.Empty(canvas.DebugCalls);
 
         completion.SetResult(new ImageInfo(image));
         await EventLoopPump.WaitFor(repaint.Task);
-        painter.Paint(canvas, DartGeometry.RectFromLTWH(0, 0, 40, 20), null, new ImageConfiguration(TextDirection: TextDirection.Rtl));
+        painter.Paint(canvas, Rect.FromLTWH(0, 0, 40, 20), null, new ImageConfiguration(TextDirection: TextDirection.Rtl));
 
         Assert.Contains(canvas.DebugCalls, call => call.Method == "drawImageRect");
         Assert.Contains(canvas.DebugCalls, call => call.Method == "scale" && call.Dx == -1.0);

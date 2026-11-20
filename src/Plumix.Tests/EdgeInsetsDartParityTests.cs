@@ -57,11 +57,11 @@ public sealed class EdgeInsetsDartParityTests
         Assert.Equal(20.0, insets.Along(Axis.Vertical));
 
         Assert.Equal(
-            DartGeometry.RectFromLTRB(18.0, 25.0, 135.0, 156.0),
-            insets.InflateRect(DartGeometry.RectFromLTRB(23.0, 32.0, 124.0, 143.0)));
+            Rect.FromLTRB(18.0, 25.0, 135.0, 156.0),
+            insets.InflateRect(Rect.FromLTRB(23.0, 32.0, 124.0, 143.0)));
         Assert.Equal(
-            DartGeometry.RectFromLTRB(28.0, 39.0, 113.0, 130.0),
-            insets.DeflateRect(DartGeometry.RectFromLTRB(23.0, 32.0, 124.0, 143.0)));
+            Rect.FromLTRB(28.0, 39.0, 113.0, 130.0),
+            insets.DeflateRect(Rect.FromLTRB(23.0, 32.0, 124.0, 143.0)));
 
         Assert.Equal(new Size(116.0, 145.0), insets.InflateSize(new Size(100.0, 125.0)));
         Assert.Equal(new Size(84.0, 105.0), insets.DeflateSize(new Size(100.0, 125.0)));
@@ -75,9 +75,9 @@ public sealed class EdgeInsetsDartParityTests
     public void DeflateRect_DoesNotClampANegativeResult()
     {
         // Dart's `Rect.fromLTRB` keeps an inverted rect; Avalonia's `Rect.Deflate` would clamp it to zero.
-        Rect deflated = EdgeInsets.All(10).DeflateRect(DartGeometry.RectFromLTRB(0, 0, 4, 4));
+        Rect deflated = EdgeInsets.All(10).DeflateRect(Rect.FromLTRB(0, 0, 4, 4));
 
-        Assert.Equal(DartGeometry.RectFromLTRB(10, 10, -6, -6), deflated);
+        Assert.Equal(Rect.FromLTRB(10, 10, -6, -6), deflated);
         Assert.Equal(new Size(-16, -16), EdgeInsets.All(10).DeflateSize(new Size(4, 4)));
     }
 

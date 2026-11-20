@@ -195,7 +195,7 @@ public sealed class SliverPersistentHeaderDartParityTests
         VerifyActualBoxPosition(
             tester,
             0,
-            DartGeometry.RectFromLTWH(0.0, 600.0 - @delegate.MaxExtent, 800.0, @delegate.MaxExtent));
+            Rect.FromLTWH(0.0, 600.0 - @delegate.MaxExtent, 800.0, @delegate.MaxExtent));
         VerifyPaintPosition(key3, new Offset(0.0, 600.0), false);
 
         Assert.True(@delegate.MaxExtent * 2.0 < 600.0); // make sure this fits on the test screen...
@@ -209,28 +209,28 @@ public sealed class SliverPersistentHeaderDartParityTests
         VerifyActualBoxPosition(
             tester,
             0,
-            DartGeometry.RectFromLTWH(0.0, 600.0 - @delegate.MaxExtent * 2.0, 800.0, @delegate.MaxExtent));
+            Rect.FromLTWH(0.0, 600.0 - @delegate.MaxExtent * 2.0, 800.0, @delegate.MaxExtent));
         VerifyPaintPosition(key3, new Offset(0.0, 600.0 - @delegate.MaxExtent), true);
 
         _ = position.AnimateTo(bigHeight, curve: Curves.Linear, duration: OneMinute);
         tester.PumpAndSettle(TimeSpan.FromMilliseconds(1000));
         VerifyPaintPosition(key1, default, false);
         VerifyPaintPosition(key2, default, true);
-        VerifyActualBoxPosition(tester, 0, DartGeometry.RectFromLTWH(0.0, 0.0, 800.0, @delegate.MaxExtent));
+        VerifyActualBoxPosition(tester, 0, Rect.FromLTWH(0.0, 0.0, 800.0, @delegate.MaxExtent));
         VerifyPaintPosition(key3, new Offset(0.0, @delegate.MaxExtent), true);
 
         _ = position.AnimateTo(bigHeight + @delegate.MaxExtent * 0.1, curve: Curves.Linear, duration: OneMinute);
         tester.PumpAndSettle(TimeSpan.FromMilliseconds(1000));
         VerifyPaintPosition(key1, default, false);
         VerifyPaintPosition(key2, default, true);
-        VerifyActualBoxPosition(tester, 0, DartGeometry.RectFromLTWH(0.0, 0.0, 800.0, @delegate.MaxExtent * 0.9));
+        VerifyActualBoxPosition(tester, 0, Rect.FromLTWH(0.0, 0.0, 800.0, @delegate.MaxExtent * 0.9));
         VerifyPaintPosition(key3, new Offset(0.0, @delegate.MaxExtent * 0.9), true);
 
         _ = position.AnimateTo(bigHeight + @delegate.MaxExtent * 0.5, curve: Curves.Linear, duration: OneMinute);
         tester.PumpAndSettle(TimeSpan.FromMilliseconds(1000));
         VerifyPaintPosition(key1, default, false);
         VerifyPaintPosition(key2, default, true);
-        VerifyActualBoxPosition(tester, 0, DartGeometry.RectFromLTWH(0.0, 0.0, 800.0, @delegate.MaxExtent * 0.5));
+        VerifyActualBoxPosition(tester, 0, Rect.FromLTWH(0.0, 0.0, 800.0, @delegate.MaxExtent * 0.5));
         VerifyPaintPosition(key3, new Offset(0.0, @delegate.MaxExtent * 0.5), true);
 
         _ = position.AnimateTo(bigHeight + @delegate.MaxExtent * 0.9, curve: Curves.Linear, duration: OneMinute);
@@ -240,7 +240,7 @@ public sealed class SliverPersistentHeaderDartParityTests
         VerifyActualBoxPosition(
             tester,
             0,
-            DartGeometry.RectFromLTWH(0.0, -@delegate.MaxExtent * 0.4, 800.0, @delegate.MaxExtent * 0.5));
+            Rect.FromLTWH(0.0, -@delegate.MaxExtent * 0.4, 800.0, @delegate.MaxExtent * 0.5));
         VerifyPaintPosition(key3, new Offset(0.0, @delegate.MaxExtent * 0.1), true);
 
         _ = position.AnimateTo(bigHeight + @delegate.MaxExtent * 2.0, curve: Curves.Linear, duration: OneMinute);
@@ -319,7 +319,7 @@ public sealed class SliverPersistentHeaderDartParityTests
         VerifyActualBoxPosition(
             tester,
             0,
-            DartGeometry.RectFromLTWH(0.0, -@delegate.MaxExtent * 0.4, 800.0, @delegate.MaxExtent * 0.5));
+            Rect.FromLTWH(0.0, -@delegate.MaxExtent * 0.4, 800.0, @delegate.MaxExtent * 0.5));
         VerifyPaintPosition(key3, default, true);
     }
 
@@ -480,7 +480,7 @@ public sealed class SliverPersistentHeaderDartParityTests
         VerifyPaintPosition(key1, default, false);
         VerifyPaintPosition(key2, default, true);
         VerifyPaintPosition(key3, new Offset(0.0, 100.0), true);
-        VerifyActualBoxPosition(tester, 1, DartGeometry.RectFromLTWH(0.0, 100.0, 800.0, 200.0));
+        VerifyActualBoxPosition(tester, 1, Rect.FromLTWH(0.0, 100.0, 800.0, 200.0));
         VerifyPaintPosition(key4, new Offset(0.0, 300.0), true);
         VerifyPaintPosition(key5, new Offset(0.0, 850.0), false);
         _ = position.AnimateTo(700.0, curve: Curves.Linear, duration: OneMinute);
@@ -488,7 +488,7 @@ public sealed class SliverPersistentHeaderDartParityTests
         VerifyPaintPosition(key1, default, false);
         VerifyPaintPosition(key2, default, true);
         VerifyPaintPosition(key3, new Offset(0.0, 100.0), true);
-        VerifyActualBoxPosition(tester, 1, DartGeometry.RectFromLTWH(0.0, 100.0, 800.0, 200.0));
+        VerifyActualBoxPosition(tester, 1, Rect.FromLTWH(0.0, 100.0, 800.0, 200.0));
         VerifyPaintPosition(key4, new Offset(0.0, 250.0), true);
         VerifyPaintPosition(key5, new Offset(0.0, 800.0), false);
         _ = position.AnimateTo(750.0, curve: Curves.Linear, duration: OneMinute);
@@ -496,7 +496,7 @@ public sealed class SliverPersistentHeaderDartParityTests
         VerifyPaintPosition(key1, default, false);
         VerifyPaintPosition(key2, default, true);
         VerifyPaintPosition(key3, new Offset(0.0, 100.0), true);
-        VerifyActualBoxPosition(tester, 1, DartGeometry.RectFromLTWH(0.0, 100.0, 800.0, 200.0));
+        VerifyActualBoxPosition(tester, 1, Rect.FromLTWH(0.0, 100.0, 800.0, 200.0));
         VerifyPaintPosition(key4, new Offset(0.0, 200.0), true);
         VerifyPaintPosition(key5, new Offset(0.0, 750.0), false);
         _ = position.AnimateTo(800.0, curve: Curves.Linear, duration: OneMinute);
@@ -525,7 +525,7 @@ public sealed class SliverPersistentHeaderDartParityTests
         VerifyPaintPosition(key1, default, false);
         VerifyPaintPosition(key2, default, true);
         VerifyPaintPosition(key3, new Offset(0.0, 100.0), true);
-        VerifyActualBoxPosition(tester, 1, DartGeometry.RectFromLTWH(0.0, 100.0, 800.0, 100.0));
+        VerifyActualBoxPosition(tester, 1, Rect.FromLTWH(0.0, 100.0, 800.0, 100.0));
         VerifyPaintPosition(key4, default, true);
         VerifyPaintPosition(key5, new Offset(0.0, 550.0), true);
     }
@@ -707,7 +707,7 @@ public sealed class SliverPersistentHeaderDartParityTests
         ScrollPosition position = Position(tester);
         _ = position.AnimateTo(bigHeight + @delegate.MaxExtent - 5.0, curve: Curves.Linear, duration: OneMinute);
         tester.PumpAndSettle(TimeSpan.FromMilliseconds(1000));
-        Assert.Equal(DartGeometry.RectFromLTWH(0.0, -195.0, 800.0, 200.0), tester.GetRect(Text(tester, "Sliver Persistent Header")));
+        Assert.Equal(Rect.FromLTWH(0.0, -195.0, 800.0, 200.0), tester.GetRect(Text(tester, "Sliver Persistent Header")));
     }
 
     // Flutter: 'SliverPersistentHeader - scrolling - overscroll gap is below header'
@@ -804,7 +804,7 @@ public sealed class SliverPersistentHeaderDartParityTests
         _ = position.AnimateTo(@delegate.MaxExtent - 20.0, curve: Curves.Linear, duration: OneMinute);
         tester.PumpAndSettle(TimeSpan.FromMilliseconds(1000));
         FlushSemantics(tester);
-        Assert.Equal(DartGeometry.RectFromLTWH(0.0, -180.0, 800.0, 200.0), tester.GetRect(Text(tester, "Sliver Persistent Header")));
+        Assert.Equal(Rect.FromLTWH(0.0, -180.0, 800.0, 200.0), tester.GetRect(Text(tester, "Sliver Persistent Header")));
 
         SemanticsNode sliver = Assert.Single(SemanticsNodesWithLabel(tester, "Sliver Persistent Header"));
         Assert.False(sliver.GetSemanticsData().HasFlag(SemanticsFlags.IsHidden));
@@ -1033,7 +1033,7 @@ public sealed class SliverPersistentHeaderDartParityTests
         // The persistent header is pinned to the leading edge thus still visible, the viewport
         // should not scroll.
         RenderObject content = PinnedHeaderContent().RenderObject!;
-        content.ShowOnScreen(descendant: content, rect: DartGeometry.RectFromLTWH(0, 0, 300, 300));
+        content.ShowOnScreen(descendant: content, rect: Rect.FromLTWH(0, 0, 300, 300));
         tester.PumpAndSettle();
         // The header expands but doesn't move.
         Assert.Equal(300.0 * 15, fixture.Controller.Offset);
@@ -1044,7 +1044,7 @@ public sealed class SliverPersistentHeaderDartParityTests
         //
         // See: https://github.com/flutter/flutter/issues/25507.
         content = PinnedHeaderContent().RenderObject!;
-        content.ShowOnScreen(descendant: content, rect: DartGeometry.RectFromLTWH(-1, -1, 300, 300));
+        content.ShowOnScreen(descendant: content, rect: Rect.FromLTWH(-1, -1, 300, 300));
         tester.PumpAndSettle();
         Assert.Equal(300.0 * 15, fixture.Controller.Offset);
         Assert.Equal(300, fixture.MainAxisExtent(PinnedHeaderContent()));
@@ -1075,12 +1075,12 @@ public sealed class SliverPersistentHeaderDartParityTests
             // Adding different rect to check if the second showOnScreen call leads to a different
             // result. When the animation has forward status and the second showOnScreen is called,
             // the new animation won't start.
-            rect: DartGeometry.RectFromLTWH(0, 0, 150, 150),
+            rect: Rect.FromLTWH(0, 0, 150, 150),
             duration: TimeSpan.FromSeconds(3));
         tester.Pump(TimeSpan.FromSeconds(1));
 
         content = PinnedHeaderContent().RenderObject!;
-        content.ShowOnScreen(descendant: content, rect: DartGeometry.RectFromLTWH(0, 0, 300, 300));
+        content.ShowOnScreen(descendant: content, rect: Rect.FromLTWH(0, 0, 300, 300));
 
         tester.PumpAndSettle();
         Assert.Equal(300.0 * 15, fixture.Controller.Offset);
@@ -1106,7 +1106,7 @@ public sealed class SliverPersistentHeaderDartParityTests
 
         // The persistent header is pinned to the leading edge thus still visible, the viewport
         // should not scroll.
-        PinnedHeaderContent().FindRenderObject()!.ShowOnScreen(rect: DartGeometry.RectFromLTWH(0, 0, 300, 300));
+        PinnedHeaderContent().FindRenderObject()!.ShowOnScreen(rect: Rect.FromLTWH(0, 0, 300, 300));
         tester.PumpAndSettle();
         // The header expands but doesn't move.
         Assert.Equal(300.0 * 15, fixture.Controller.Offset);
@@ -1116,7 +1116,7 @@ public sealed class SliverPersistentHeaderDartParityTests
         // edge of the viewport. Ignore the 1 pixel, the viewport should not scroll.
         //
         // See: https://github.com/flutter/flutter/issues/25507.
-        PinnedHeaderContent().FindRenderObject()!.ShowOnScreen(rect: DartGeometry.RectFromLTWH(-1, -1, 300, 300));
+        PinnedHeaderContent().FindRenderObject()!.ShowOnScreen(rect: Rect.FromLTWH(-1, -1, 300, 300));
         tester.PumpAndSettle();
         Assert.Equal(300.0 * 15, fixture.Controller.Offset);
         Assert.Equal(300, fixture.MainAxisExtent(PinnedHeaderContent()));
@@ -1145,7 +1145,7 @@ public sealed class SliverPersistentHeaderDartParityTests
         Assert.Equal(100, fixture.MainAxisExtent(PinnedHeaderContent()));
 
         RenderObject content = PinnedHeaderContent().RenderObject!;
-        content.ShowOnScreen(descendant: content, rect: DartGeometry.RectFromLTWH(0, 0, 300, 300));
+        content.ShowOnScreen(descendant: content, rect: Rect.FromLTWH(0, 0, 300, 300));
         tester.PumpAndSettle();
         // The header doesn't move. It would have expanded to 300 but maxShowOnScreenExtent is 200,
         // preventing it from doing so.
@@ -1154,7 +1154,7 @@ public sealed class SliverPersistentHeaderDartParityTests
 
         // ignoreLeading still works.
         content = PinnedHeaderContent().RenderObject!;
-        content.ShowOnScreen(descendant: content, rect: DartGeometry.RectFromLTWH(-1, -1, 300, 300));
+        content.ShowOnScreen(descendant: content, rect: Rect.FromLTWH(-1, -1, 300, 300));
         tester.PumpAndSettle();
         Assert.Equal(300.0 * 15, fixture.Controller.Offset);
         Assert.Equal(200, fixture.MainAxisExtent(PinnedHeaderContent()));
@@ -1166,7 +1166,7 @@ public sealed class SliverPersistentHeaderDartParityTests
 
         // Doesn't move, doesn't expand or shrink, leading still ignored.
         content = PinnedHeaderContent().RenderObject!;
-        content.ShowOnScreen(descendant: content, rect: DartGeometry.RectFromLTWH(-1, -1, 300, 300));
+        content.ShowOnScreen(descendant: content, rect: Rect.FromLTWH(-1, -1, 300, 300));
         tester.PumpAndSettle();
         Assert.Equal(300.0 * 10 + 50.0, fixture.Controller.Offset);
         Assert.Equal(250, fixture.MainAxisExtent(PinnedHeaderContent()));
@@ -1195,7 +1195,7 @@ public sealed class SliverPersistentHeaderDartParityTests
         Assert.Equal(100, fixture.MainAxisExtent(PinnedHeaderContent()));
 
         RenderObject content = PinnedHeaderContent().RenderObject!;
-        content.ShowOnScreen(descendant: content, rect: DartGeometry.RectFromLTWH(0, 0, 110, 110));
+        content.ShowOnScreen(descendant: content, rect: Rect.FromLTWH(0, 0, 110, 110));
         tester.PumpAndSettle();
         // The header doesn't move. It would have expanded to 110 but minShowOnScreenExtent is 200,
         // preventing it from doing so.
@@ -1204,7 +1204,7 @@ public sealed class SliverPersistentHeaderDartParityTests
 
         // ignoreLeading still works.
         content = PinnedHeaderContent().RenderObject!;
-        content.ShowOnScreen(descendant: content, rect: DartGeometry.RectFromLTWH(-1, -1, 110, 110));
+        content.ShowOnScreen(descendant: content, rect: Rect.FromLTWH(-1, -1, 110, 110));
         tester.PumpAndSettle();
         Assert.Equal(300.0 * 15, fixture.Controller.Offset);
         Assert.Equal(200, fixture.MainAxisExtent(PinnedHeaderContent()));
@@ -1216,7 +1216,7 @@ public sealed class SliverPersistentHeaderDartParityTests
 
         // Doesn't move, doesn't expand or shrink, leading still ignored.
         content = PinnedHeaderContent().RenderObject!;
-        content.ShowOnScreen(descendant: content, rect: DartGeometry.RectFromLTWH(-1, -1, 110, 110));
+        content.ShowOnScreen(descendant: content, rect: Rect.FromLTWH(-1, -1, 110, 110));
         tester.PumpAndSettle();
         Assert.Equal(300.0 * 10 + 50.0, fixture.Controller.Offset);
         Assert.Equal(250, fixture.MainAxisExtent(PinnedHeaderContent()));

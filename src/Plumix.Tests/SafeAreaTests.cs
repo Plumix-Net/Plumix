@@ -400,7 +400,7 @@ public sealed class SafeAreaTests
         };
 
         Assert.True(controller.IsShowing);
-        host.Arrange(DartGeometry.RectFromLTWH(0, 0, 320, 180).ToAvalonia());
+        host.Arrange(Rect.FromLTWH(0, 0, 320, 180).ToAvalonia());
         Assert.True(controller.IsShowing);
         _ = host;
     }

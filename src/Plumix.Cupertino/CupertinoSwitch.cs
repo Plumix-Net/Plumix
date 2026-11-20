@@ -584,13 +584,13 @@ internal sealed class CupertinoSwitchPainter : ToggleablePainter
 
         double trackX = (size.Width - TrackWidth) / 2.0;
         double trackY = (size.Height - TrackHeight) / 2.0;
-        var trackRect = DartGeometry.RectFromLTWH(trackX, trackY, TrackWidth, TrackHeight);
+        var trackRect = Rect.FromLTWH(trackX, trackY, TrackWidth, TrackHeight);
         var trackRRect = RRect.FromRectAndRadius(trackRect, TrackRadius);
         double horizontalProgress = visualPosition * (20.0 - pressedExtension);
         double thumbX = trackX + TrackRadius + (pressedExtension / 2.0)
                         - (thumbSize.Width / 2.0) + horizontalProgress;
         double thumbY = trackY - ((thumbSize.Height / 2.0) - TrackRadius);
-        var thumbBounds = DartGeometry.RectFromLTWH(thumbX, thumbY, thumbSize.Width, thumbSize.Height);
+        var thumbBounds = Rect.FromLTWH(thumbX, thumbY, thumbSize.Width, thumbSize.Height);
 
         context.Canvas.DrawRRect(trackRRect, new SolidColorBrush(trackColor), null);
         if (outlineColor != null)
@@ -694,7 +694,7 @@ internal sealed class CupertinoSwitchPainter : ToggleablePainter
         context.Canvas.DrawRectangle(
             new SolidColorBrush(onColor),
             null,
-            DartGeometry.RectFromLTWH(onCenter.Dx - 0.5, onCenter.Dy - 5.0, 1.0, 10.0));
+            Rect.FromLTWH(onCenter.Dx - 0.5, onCenter.Dy - 5.0, 1.0, 10.0));
         context.Canvas.DrawCircle(
             Brushes.Transparent,
             new Pen(new SolidColorBrush(offColor), 1.0),

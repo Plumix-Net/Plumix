@@ -193,7 +193,7 @@ public sealed class ShapeBorderTests
             left: new BorderSide(Green, 2.0));
         Assert.Throws<InvalidOperationException>(() => mixedAlign.Paint(
             harness.Context,
-            DartGeometry.RectFromLTWH(0, 0, 40, 40),
+            Rect.FromLTWH(0, 0, 40, 40),
             TextDirection.Ltr,
             BoxShape.Rectangle,
             null));
@@ -201,7 +201,7 @@ public sealed class ShapeBorderTests
         var mixedColors = new Border(top: new BorderSide(Green, 2.0), bottom: new BorderSide(Blue, 2.0));
         Assert.Throws<InvalidOperationException>(() => mixedColors.Paint(
             harness.Context,
-            DartGeometry.RectFromLTWH(0, 0, 40, 40),
+            Rect.FromLTWH(0, 0, 40, 40),
             TextDirection.Ltr,
             BoxShape.Rectangle,
             BorderRadius.Circular(20)));
@@ -217,13 +217,13 @@ public sealed class ShapeBorderTests
             bottom: new BorderSide(Green, 5.0));
         Assert.Equal(EdgeInsetsGeometry.DirectionalOnly(2, 3, 7, 5), directional.Dimensions);
 
-        var rect = DartGeometry.RectFromLTWH(50, 60, 60, 130);
+        var rect = Rect.FromLTWH(50, 60, 60, 130);
         Assert.Equal(rect, directional.GetOuterPath(rect, TextDirection.Rtl).GetBounds());
         Assert.Equal(
-            DartGeometry.RectFromLTWH(52, 63, 51, 122),
+            Rect.FromLTWH(52, 63, 51, 122),
             directional.GetInnerPath(rect, TextDirection.Ltr).GetBounds());
         Assert.Equal(
-            DartGeometry.RectFromLTWH(57, 63, 51, 122),
+            Rect.FromLTWH(57, 63, 51, 122),
             directional.GetInnerPath(rect, TextDirection.Rtl).GetBounds());
 
         // A visual border with no lateral sides merges into a directional one.
@@ -272,15 +272,15 @@ public sealed class ShapeBorderTests
             new RoundedRectangleBorder(new BorderSide(Green, 15.0), BorderRadius.Circular(150)),
             ShapeBorder.Lerp(c10, c20, 0.5));
 
-        var rect = DartGeometry.RectFromLTWH(10, 20, 70, 170);
+        var rect = Rect.FromLTWH(10, 20, 70, 170);
         Assert.Equal(rect, c10.GetOuterPath(rect).GetBounds());
-        Assert.Equal(DartGeometry.RectFromLTWH(20, 30, 50, 150), c10.GetInnerPath(rect).GetBounds());
+        Assert.Equal(Rect.FromLTWH(20, 30, 50, 150), c10.GetInnerPath(rect).GetBounds());
 
         // A directional radius resolves per text direction.
         var directional = new RoundedRectangleBorder(
             borderRadius: BorderRadiusDirectional.Only(topStart: 20.0));
-        Assert.True(directional.GetOuterPath(DartGeometry.RectFromLTWH(0, 0, 100, 100), TextDirection.Ltr).Contains(new Offset(99, 1)));
-        Assert.False(directional.GetOuterPath(DartGeometry.RectFromLTWH(0, 0, 100, 100), TextDirection.Ltr).Contains(new Offset(1, 1)));
+        Assert.True(directional.GetOuterPath(Rect.FromLTWH(0, 0, 100, 100), TextDirection.Ltr).Contains(new Offset(99, 1)));
+        Assert.False(directional.GetOuterPath(Rect.FromLTWH(0, 0, 100, 100), TextDirection.Ltr).Contains(new Offset(1, 1)));
     }
 
     [Fact]
@@ -288,7 +288,7 @@ public sealed class ShapeBorderTests
     {
         var rounded = new RoundedRectangleBorder(borderRadius: BorderRadius.Circular(10));
         var circle = new CircleBorder();
-        var rect = DartGeometry.RectFromLTWH(0, 0, 100, 20);
+        var rect = Rect.FromLTWH(0, 0, 100, 20);
 
         ShapeBorder tenth = ShapeBorder.Lerp(rounded, circle, 0.1)!;
         ShapeBorder ninth = ShapeBorder.Lerp(rounded, circle, 0.9)!;
@@ -317,7 +317,7 @@ public sealed class ShapeBorderTests
         Assert.Equal(EdgeInsets.All(10.0), c10.Dimensions);
         Assert.Equal(new StadiumBorder(new BorderSide(Green, 20.0)), c10.Scale(2.0));
 
-        var rect = DartGeometry.RectFromLTWH(0, 0, 100, 20);
+        var rect = Rect.FromLTWH(0, 0, 100, 20);
         Assert.True(stadium.GetOuterPath(rect).Contains(new Offset(50, 10)));
         Assert.False(stadium.GetOuterPath(rect).Contains(new Offset(1, 1)));
 
@@ -330,13 +330,13 @@ public sealed class ShapeBorderTests
     [Fact]
     public void CircleAndOvalBorder_AdjustRectByEccentricity()
     {
-        var rect = DartGeometry.RectFromLTWH(0, 0, 200, 100);
-        Assert.Equal(DartGeometry.RectFromLTWH(50, 0, 100, 100), new CircleBorder().GetOuterPath(rect).GetBounds());
+        var rect = Rect.FromLTWH(0, 0, 200, 100);
+        Assert.Equal(Rect.FromLTWH(50, 0, 100, 100), new CircleBorder().GetOuterPath(rect).GetBounds());
         Assert.Equal(rect, new CircleBorder(eccentricity: 1.0).GetOuterPath(rect).GetBounds());
         Assert.Equal(rect, new OvalBorder().GetOuterPath(rect).GetBounds());
 
         var thick = new CircleBorder(new BorderSide(Green, 10.0), eccentricity: 1.0);
-        Assert.Equal(DartGeometry.RectFromLTWH(10, 10, 180, 80), thick.GetInnerPath(rect).GetBounds());
+        Assert.Equal(Rect.FromLTWH(10, 10, 180, 80), thick.GetInnerPath(rect).GetBounds());
         Assert.Equal(EdgeInsets.All(10.0), thick.Dimensions);
 
         Assert.Throws<ArgumentOutOfRangeException>(() => new CircleBorder(eccentricity: -0.1));
@@ -360,7 +360,7 @@ public sealed class ShapeBorderTests
             new BeveledRectangleBorder(new BorderSide(Green, 20.0), BorderRadius.Circular(200)),
             c10.Scale(2.0));
 
-        var rect = DartGeometry.RectFromLTWH(10, 20, 20, 20);
+        var rect = Rect.FromLTWH(10, 20, 20, 20);
         var bevel = new BeveledRectangleBorder(borderRadius: BorderRadius.Circular(5.0));
         Assert.True(bevel.GetOuterPath(rect).Contains(new Offset(15, 25)));
         Assert.False(bevel.GetOuterPath(rect).Contains(new Offset(10, 20)));
@@ -399,10 +399,10 @@ public sealed class ShapeBorderTests
         Assert.Throws<ArgumentOutOfRangeException>(() => new StarBorder(points: 1));
 
         // A degenerate rect must not produce an infinite scale matrix.
-        Path degenerate = star.GetOuterPath(DartGeometry.RectFromLTWH(100, 100, 0, 0));
+        Path degenerate = star.GetOuterPath(Rect.FromLTWH(100, 100, 0, 0));
         Assert.NotNull(degenerate);
 
-        Assert.True(star.GetOuterPath(DartGeometry.RectFromLTWH(0, 0, 100, 100)).Contains(new Offset(50, 50)));
+        Assert.True(star.GetOuterPath(Rect.FromLTWH(0, 0, 100, 100)).Contains(new Offset(50, 50)));
     }
 
     [Fact]
@@ -468,7 +468,7 @@ public sealed class ShapeBorderTests
         Assert.False(circleDecoration.HitTest(new Size(100, 20), new Offset(1, 1)));
         Assert.False(circleDecoration.HitTest(new Size(100, 20), new Offset(30, 10)));
 
-        Path clip = circleDecoration.GetClipPath(DartGeometry.RectFromLTWH(0, 0, 100, 20), TextDirection.Ltr);
+        Path clip = circleDecoration.GetClipPath(Rect.FromLTWH(0, 0, 100, 20), TextDirection.Ltr);
         Assert.True(clip.Contains(new Offset(50, 10)));
         Assert.False(clip.Contains(new Offset(99, 19)));
 

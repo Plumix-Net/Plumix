@@ -828,7 +828,7 @@ public abstract class MultiSelectableSelectionContainerDelegate : SelectionConta
         }
 
         var selectionRects = new List<Rect>();
-        Rect? drawableArea = HasSize ? DartGeometry.RectFromOffsetAndSize(default, ContainerSize) : null;
+        Rect? drawableArea = HasSize ? (Offset.Zero & ContainerSize) : null;
         for (int index = CurrentSelectionStartIndex; index <= CurrentSelectionEndIndex; index += 1)
         {
             Matrix4 transform = GetTransformFrom(Selectables[index]);
@@ -891,7 +891,7 @@ public abstract class MultiSelectableSelectionContainerDelegate : SelectionConta
         if (effectiveStartHandle is not null || effectiveEndHandle is not null)
         {
             Rect? drawableArea = HasSize
-                ? DartGeometry.RectFromOffsetAndSize(default, ContainerSize).Inflate(SelectionHandleDrawableAreaPadding)
+                ? (Offset.Zero & ContainerSize).Inflate(SelectionHandleDrawableAreaPadding)
                 : null;
             bool hideStartHandle = Value.StartSelectionPoint is not { } start
                                    || drawableArea is not { } startArea

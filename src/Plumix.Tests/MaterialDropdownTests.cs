@@ -423,7 +423,7 @@ public sealed class MaterialDropdownTests : IDisposable
         double expectedScrollOffset)
     {
         DropdownRoute<string> route = BuildRoute(100, selectedIndex);
-        var buttonRect = DartGeometry.RectFromLTWH(0.0, buttonTop, 100.0, 48.0);
+        var buttonRect = Rect.FromLTWH(0.0, buttonTop, 100.0, 48.0);
         DropdownMenuLimits limits = route.GetMenuLimits(buttonRect, 600.0, selectedIndex);
         Assert.Equal(expectedScrollOffset, limits.ScrollOffset, precision: 3);
         // The menu is one interactive row shy of the view on both edges.
@@ -436,7 +436,7 @@ public sealed class MaterialDropdownTests : IDisposable
     {
         // Three rows fit, so the menu is placed so that the selected row covers the button.
         DropdownRoute<string> route = BuildRoute(3, 1);
-        var buttonRect = DartGeometry.RectFromLTWH(0.0, 276.0, 100.0, 48.0);
+        var buttonRect = Rect.FromLTWH(0.0, 276.0, 100.0, 48.0);
         DropdownMenuLimits limits = route.GetMenuLimits(buttonRect, 600.0, 1);
         Assert.Equal(8.0 + (3 * 48.0) + 8.0, limits.Height, precision: 3);
         Assert.Equal(276.0 - 8.0 - 48.0, limits.Top, precision: 3);
@@ -461,7 +461,7 @@ public sealed class MaterialDropdownTests : IDisposable
         double expectedLeft)
     {
         DropdownRoute<string> route = BuildRoute(3, 0);
-        var buttonRect = DartGeometry.RectFromLTWH(120.0, 100.0, 80.0, 48.0);
+        var buttonRect = Rect.FromLTWH(120.0, 100.0, 80.0, 48.0);
         var layout = new DropdownMenuRouteLayout<string>(buttonRect, route, direction, menuWidth: null);
         BoxConstraints constraints = layout.GetConstraintsForChild(BoxConstraints.Tight(new Size(400.0, 600.0)));
         Assert.Equal(80.0, constraints.MinWidth, precision: 3);
@@ -481,7 +481,7 @@ public sealed class MaterialDropdownTests : IDisposable
         // Dart relayouts only when the button rect or the text direction changed.
         var same = new DropdownMenuRouteLayout<string>(buttonRect, route, direction, menuWidth: null);
         var moved = new DropdownMenuRouteLayout<string>(
-            DartGeometry.RectFromLTWH(0.0, 0.0, 10.0, 10.0),
+            Rect.FromLTWH(0.0, 0.0, 10.0, 10.0),
             route,
             direction,
             menuWidth: null);
@@ -494,14 +494,14 @@ public sealed class MaterialDropdownTests : IDisposable
     {
         var size = new Size(120.0, 208.0);
         Rect start = DropdownMenuPainter.ResolveRect(56.0, size, 0.0);
-        Assert.Equal(DartGeometry.RectFromLTWH(0.0, 56.0, 120.0, 48.0), start);
+        Assert.Equal(Rect.FromLTWH(0.0, 56.0, 120.0, 48.0), start);
 
         Rect middle = DropdownMenuPainter.ResolveRect(56.0, size, 0.5);
         Assert.Equal(28.0, middle.Top, precision: 3);
         Assert.Equal(156.0, middle.Bottom, precision: 3);
 
         Rect end = DropdownMenuPainter.ResolveRect(56.0, size, 1.0);
-        Assert.Equal(DartGeometry.RectFromLTWH(0.0, 0.0, 120.0, 208.0), end);
+        Assert.Equal(Rect.FromLTWH(0.0, 0.0, 120.0, 208.0), end);
 
         // A menu shorter than one row still produces a normalized rect.
         var shortSize = new Size(112.0, 47.0);
@@ -787,7 +787,7 @@ public sealed class MaterialDropdownTests : IDisposable
         return new DropdownRoute<string>(
             items: items,
             padding: EdgeInsetsGeometry.Symmetric(horizontal: 16.0),
-            buttonRect: DartGeometry.RectFromLTWH(0.0, 0.0, 100.0, 48.0),
+            buttonRect: Rect.FromLTWH(0.0, 0.0, 100.0, 48.0),
             selectedIndex: selectedIndex,
             capturedThemes: new CapturedThemes([]),
             style: ThemeData.Light.TextTheme.TitleMedium,

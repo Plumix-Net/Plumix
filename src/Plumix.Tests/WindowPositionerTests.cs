@@ -9,19 +9,19 @@ namespace Plumix.Tests;
 
 public sealed class WindowPositionerTests
 {
-    private static readonly Rect ClientDisplayArea = DartGeometry.RectFromLTWH(0, 0, 800, 600);
-    private static readonly Rect ClientParentRect = DartGeometry.RectFromLTWH(200, 150, 400, 300);
+    private static readonly Rect ClientDisplayArea = Rect.FromLTWH(0, 0, 800, 600);
+    private static readonly Rect ClientParentRect = Rect.FromLTWH(200, 150, 400, 300);
     private static readonly Size ClientChildSize = new(100, 50);
 
-    private static readonly Rect DisplayArea = DartGeometry.RectFromLTWH(0, 0, 640, 480);
-    private static readonly Rect ParentRect = DartGeometry.RectFromLTWH(20, 40, 600, 400);
+    private static readonly Rect DisplayArea = Rect.FromLTWH(0, 0, 640, 480);
+    private static readonly Rect ParentRect = Rect.FromLTWH(20, 40, 600, 400);
     private static readonly Size ChildSize = new(300, 300);
 
-    private static readonly Rect RectNearRhs = AnchorRectFor(DartGeometry.RectFromLTWH(590, 20, 10, 20));
-    private static readonly Rect RectNearLeft = AnchorRectFor(DartGeometry.RectFromLTWH(0, 20, 20, 20));
-    private static readonly Rect RectNearAll = AnchorRectFor(DartGeometry.RectFromLTWH(0, 20, 600, 380));
-    private static readonly Rect RectNearBottom = AnchorRectFor(DartGeometry.RectFromLTWH(20, 380, 20, 20));
-    private static readonly Rect RectNearBottomRight = AnchorRectFor(DartGeometry.RectFromLTWH(400, 380, 200, 20));
+    private static readonly Rect RectNearRhs = AnchorRectFor(Rect.FromLTWH(590, 20, 10, 20));
+    private static readonly Rect RectNearLeft = AnchorRectFor(Rect.FromLTWH(0, 20, 20, 20));
+    private static readonly Rect RectNearAll = AnchorRectFor(Rect.FromLTWH(0, 20, 600, 380));
+    private static readonly Rect RectNearBottom = AnchorRectFor(Rect.FromLTWH(20, 380, 20, 20));
+    private static readonly Rect RectNearBottomRight = AnchorRectFor(Rect.FromLTWH(400, 380, 200, 20));
 
     public static TheoryData<WindowPositionerAnchor, WindowPositionerAnchor> AnchorPairs()
     {
@@ -109,7 +109,7 @@ public sealed class WindowPositionerTests
     [Fact]
     public void Client_AnchorsToParentGivenOffsetRightOfParent()
     {
-        var anchorRect = DartGeometry.RectFromLTWH(590, 300, 10, 10);
+        var anchorRect = Rect.FromLTWH(590, 300, 10, 10);
         var positioner = new WindowPositioner(
             parentAnchor: WindowPositionerAnchor.TopRight,
             childAnchor: WindowPositionerAnchor.TopLeft,
@@ -125,7 +125,7 @@ public sealed class WindowPositionerTests
     [Fact]
     public void Client_AnchorsToParentGivenOffsetAboveParent()
     {
-        var anchorRect = DartGeometry.RectFromLTWH(400, 150, 10, 10);
+        var anchorRect = Rect.FromLTWH(400, 150, 10, 10);
         var positioner = new WindowPositioner(
             parentAnchor: WindowPositionerAnchor.TopRight,
             childAnchor: WindowPositionerAnchor.BottomRight,
@@ -141,7 +141,7 @@ public sealed class WindowPositionerTests
     [Fact]
     public void Client_AnchorsToParentGivenAnchorRectangleAndOffsetBelowLeftParent()
     {
-        var anchorRect = DartGeometry.RectFromLTWH(190, 450, 10, 10);
+        var anchorRect = Rect.FromLTWH(190, 450, 10, 10);
         var positioner = new WindowPositioner(
             parentAnchor: WindowPositionerAnchor.BottomLeft,
             childAnchor: WindowPositionerAnchor.TopRight,
@@ -160,7 +160,7 @@ public sealed class WindowPositionerTests
         WindowPositionerAnchor parentAnchor,
         WindowPositionerAnchor childAnchor)
     {
-        Rect anchorRect = AnchorRectFor(DartGeometry.RectFromLTWH(100, 50, 20, 20));
+        Rect anchorRect = AnchorRectFor(Rect.FromLTWH(100, 50, 20, 20));
         var positioner = new WindowPositioner(parentAnchor: parentAnchor, childAnchor: childAnchor);
 
         Rect placed = positioner.PlaceWindow(ChildSize, anchorRect, ParentRect, DisplayArea);
@@ -222,7 +222,7 @@ public sealed class WindowPositionerTests
         Rect placed = positioner.PlaceWindow(ChildSize, RectNearRhs, ParentRect, DisplayArea);
 
         Assert.Equal(DisplayArea.Right - ChildSize.Width, placed.Left);
-        Assert.Equal(DartGeometry.RectFromLTWH(340, 60, 300, 300), placed);
+        Assert.Equal(Rect.FromLTWH(340, 60, 300, 300), placed);
     }
 
     [Fact]
@@ -236,7 +236,7 @@ public sealed class WindowPositionerTests
         Rect placed = positioner.PlaceWindow(ChildSize, RectNearLeft, ParentRect, DisplayArea);
 
         Assert.Equal(DisplayArea.Left, placed.Left);
-        Assert.Equal(DartGeometry.RectFromLTWH(0, 60, 300, 300), placed);
+        Assert.Equal(Rect.FromLTWH(0, 60, 300, 300), placed);
     }
 
     [Fact]
@@ -250,7 +250,7 @@ public sealed class WindowPositionerTests
         Rect placed = positioner.PlaceWindow(ChildSize, RectNearBottom, ParentRect, DisplayArea);
 
         Assert.Equal(DisplayArea.Bottom - ChildSize.Height, placed.Top);
-        Assert.Equal(DartGeometry.RectFromLTWH(40, 180, 300, 300), placed);
+        Assert.Equal(Rect.FromLTWH(40, 180, 300, 300), placed);
     }
 
     [Fact]
@@ -264,7 +264,7 @@ public sealed class WindowPositionerTests
         Rect placed = positioner.PlaceWindow(ChildSize, RectNearAll, ParentRect, DisplayArea);
 
         Assert.Equal(DisplayArea.Top, placed.Top);
-        Assert.Equal(DartGeometry.RectFromLTWH(20, 0, 300, 300), placed);
+        Assert.Equal(Rect.FromLTWH(20, 0, 300, 300), placed);
     }
 
     [Fact]
@@ -293,7 +293,7 @@ public sealed class WindowPositionerTests
         Rect placed = positioner.PlaceWindow(ChildSize, RectNearRhs, ParentRect, DisplayArea);
 
         Assert.Equal(DisplayArea.Right - RectNearRhs.Right, placed.Width);
-        Assert.Equal(DartGeometry.RectFromLTWH(620, 60, 20, 300), placed);
+        Assert.Equal(Rect.FromLTWH(620, 60, 20, 300), placed);
     }
 
     [Fact]
@@ -307,7 +307,7 @@ public sealed class WindowPositionerTests
         Rect placed = positioner.PlaceWindow(ChildSize, RectNearLeft, ParentRect, DisplayArea);
 
         Assert.Equal(RectNearLeft.Left - DisplayArea.Left, placed.Width);
-        Assert.Equal(DartGeometry.RectFromLTWH(0, 60, 20, 300), placed);
+        Assert.Equal(Rect.FromLTWH(0, 60, 20, 300), placed);
     }
 
     [Fact]
@@ -321,7 +321,7 @@ public sealed class WindowPositionerTests
         Rect placed = positioner.PlaceWindow(ChildSize, RectNearAll, ParentRect, DisplayArea);
 
         Assert.Equal(DisplayArea.Bottom - RectNearAll.Bottom, placed.Height);
-        Assert.Equal(DartGeometry.RectFromLTWH(20, 440, 300, 40), placed);
+        Assert.Equal(Rect.FromLTWH(20, 440, 300, 40), placed);
     }
 
     [Fact]
@@ -335,7 +335,7 @@ public sealed class WindowPositionerTests
         Rect placed = positioner.PlaceWindow(ChildSize, RectNearAll, ParentRect, DisplayArea);
 
         Assert.Equal(RectNearAll.Top - DisplayArea.Top, placed.Height);
-        Assert.Equal(DartGeometry.RectFromLTWH(20, 0, 300, 60), placed);
+        Assert.Equal(Rect.FromLTWH(20, 0, 300, 60), placed);
     }
 
     [Fact]
@@ -351,13 +351,13 @@ public sealed class WindowPositionerTests
         Assert.Equal(
             new Size(DisplayArea.Right - RectNearBottomRight.Right, DisplayArea.Bottom - RectNearBottomRight.Bottom),
             placed.Size);
-        Assert.Equal(DartGeometry.RectFromLTWH(620, 440, 20, 40), placed);
+        Assert.Equal(Rect.FromLTWH(620, 440, 20, 40), placed);
     }
 
     private static Rect AnchorRectFor(Rect rect) => rect.Shift(new Offset(20, 40));
 
     private static Rect RectFromCenter(Offset center, double width, double height) =>
-        DartGeometry.RectFromLTWH(center.Dx - width / 2, center.Dy - height / 2, width, height);
+        Rect.FromLTWH(center.Dx - width / 2, center.Dy - height / 2, width, height);
 
     private static Offset AnchorPositionFor(WindowPositionerAnchor anchor, Rect rect)
     {

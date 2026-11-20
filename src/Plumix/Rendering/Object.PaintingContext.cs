@@ -611,12 +611,12 @@ public class PaintingContext : ClipContext
         $"PaintingContext#{GetHashCode()}(layer: {_containerLayer}, canvas bounds: {EstimatedBounds})";
 
     /// <remarks>Dart's <c>Rect.shift</c>.</remarks>
-    private static Rect ShiftRect(Rect rect, Offset offset) => DartGeometry.RectFromOffsetAndSize(rect.TopLeft + offset, rect.Size);
+    private static Rect ShiftRect(Rect rect, Offset offset) => rect.TopLeft + offset & rect.Size;
 
     /// <remarks>Dart's <c>Rect.deflate</c>.</remarks>
     private static Rect DeflateRect(Rect rect, double delta)
     {
-        return DartGeometry.RectFromLTWH(
+        return Rect.FromLTWH(
             rect.Left + delta,
             rect.Top + delta,
             Math.Max(0.0, rect.Width - (delta * 2.0)),

@@ -130,7 +130,7 @@ public sealed class CupertinoScrollbarTests
         Settle(harness);
 
         ScrollbarGeometry geometry = RequirePainter(harness).Geometry!.Value;
-        Assert.Equal(DartGeometry.RectFromLTWH(0, 0, 9, 600), geometry.TrackRect);
+        Assert.Equal(Rect.FromLTWH(0, 0, 9, 600), geometry.TrackRect);
         Assert.Equal(3, geometry.ThumbRect.Left, precision: 3);
         Assert.Equal(3, geometry.ThumbRect.Top, precision: 3);
         Assert.Equal(3, geometry.ThumbRect.Width, precision: 3);

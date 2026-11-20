@@ -181,7 +181,7 @@ public sealed class ParagraphSelectionDartParityTests
 
     private static Offset TextOffsetToPosition(RenderParagraph paragraph, int offset)
     {
-        Offset caret = paragraph.GetOffsetForCaret(new TextPosition(offset), DartGeometry.RectFromLTWH(0, 0, 2, 20));
+        Offset caret = paragraph.GetOffsetForCaret(new TextPosition(offset), Rect.FromLTWH(0, 0, 2, 20));
         return paragraph.LocalToGlobal(caret + new Offset(0, paragraph.PreferredLineHeight - 2));
     }
 

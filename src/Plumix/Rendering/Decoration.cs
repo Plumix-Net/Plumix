@@ -138,7 +138,9 @@ public abstract class BoxPainter : IDisposable
 }
 
 // Dart parity source: flutter/engine/src/flutter/lib/ui/geometry.dart (Radius)
-public readonly record struct Radius
+// `==` follows Dart (a NaN radius is unequal to itself); Equals/GetHashCode are reflexive, like
+// double's, so Radius works as a dictionary key.
+public readonly struct Radius : IEquatable<Radius>
 {
     public Radius(double x, double y) { X = x; Y = y; }
 
@@ -165,8 +167,11 @@ public readonly record struct Radius
             CurveFormat.ClampDouble(X, minimumX ?? double.NegativeInfinity, maximumX ?? double.PositiveInfinity),
             CurveFormat.ClampDouble(Y, minimumY ?? double.NegativeInfinity, maximumY ?? double.PositiveInfinity));
 
-    public bool Equals(Radius other) => X == other.X && Y == other.Y;
+    public bool Equals(Radius other) => X.Equals(other.X) && Y.Equals(other.Y);
+    public override bool Equals(object? obj) => obj is Radius other && Equals(other);
     public override int GetHashCode() => HashCode.Combine(X, Y);
+    public static bool operator ==(Radius a, Radius b) => a.X == b.X && a.Y == b.Y;
+    public static bool operator !=(Radius a, Radius b) => !(a == b);
 
     public static Radius operator -(Radius value) => new(-value.X, -value.Y);
     public static Radius operator -(Radius a, Radius b) => new(a.X - b.X, a.Y - b.Y);
@@ -174,20 +179,20 @@ public readonly record struct Radius
     public static Radius operator *(Radius radius, double factor) => new(radius.X * factor, radius.Y * factor);
     public static Radius operator /(Radius radius, double divisor) => new(radius.X / divisor, radius.Y / divisor);
     public static Radius operator %(Radius radius, double divisor) => new(
-        DartGeometry.Modulo(radius.X, divisor), DartGeometry.Modulo(radius.Y, divisor));
+        GeometryMath.Modulo(radius.X, divisor), GeometryMath.Modulo(radius.Y, divisor));
 
     public Radius TruncateDivide(double divisor) => new(
-        DartGeometry.TruncateQuotient(X, divisor), DartGeometry.TruncateQuotient(Y, divisor));
+        GeometryMath.TruncateQuotient(X, divisor), GeometryMath.TruncateQuotient(Y, divisor));
 
     public static Radius Lerp(Radius a, Radius b, double t) => new(
-        DartGeometry.LerpDouble(a.X, b.X, t), DartGeometry.LerpDouble(a.Y, b.Y, t));
+        GeometryMath.LerpDouble(a.X, b.X, t), GeometryMath.LerpDouble(a.Y, b.Y, t));
 
     public static Radius? Lerp(Radius? a, Radius? b, double t) =>
         b is null ? a * (1.0 - t) : a is null ? b * t : Lerp(a.Value, b.Value, t);
 
     public override string ToString() => X == Y
-        ? $"Radius.circular({DartGeometry.Fixed(X)})"
-        : $"Radius.elliptical({DartGeometry.Fixed(X)}, {DartGeometry.Fixed(Y)})";
+        ? $"Radius.circular({GeometryMath.Fixed(X)})"
+        : $"Radius.elliptical({GeometryMath.Fixed(X)}, {GeometryMath.Fixed(Y)})";
 }
 
 public readonly record struct BorderRadius
@@ -845,7 +850,7 @@ public sealed record ShapeDecoration : Decoration
 
     public override bool HitTest(Size size, Offset position, TextDirection? textDirection = null)
     {
-        return Shape.GetOuterPath(DartGeometry.RectFromOffsetAndSize(new Offset(0, 0), size), textDirection).Contains(position);
+        return Shape.GetOuterPath((new Offset(0, 0) & size), textDirection).Contains(position);
     }
 
     public override BoxPainter CreateBoxPainter(Action? onChanged = null)
@@ -1034,7 +1039,7 @@ internal sealed class ShapeDecorationPainter : BoxPainter
     }
 
     // Dart's `rect.shift(shadow.offset).inflate(shadow.spreadRadius)`.
-    internal static Rect ShiftInflate(Rect rect, BoxShadow shadow) => DartGeometry.RectFromLTRB(
+    internal static Rect ShiftInflate(Rect rect, BoxShadow shadow) => Rect.FromLTRB(
         rect.Left + shadow.Offset.Dx - shadow.SpreadRadius,
         rect.Top + shadow.Offset.Dy - shadow.SpreadRadius,
         rect.Right + shadow.Offset.Dx + shadow.SpreadRadius,
@@ -1123,7 +1128,7 @@ internal sealed class ShapeDecorationPainter : BoxPainter
             if (side.Color.Alpha == 255 && side.Style == BorderStyle.Solid)
             {
                 double inset = side.StrokeInset / 2.0;
-                return DartGeometry.RectFromLTRB(
+                return Rect.FromLTRB(
                     rect.Left + inset,
                     rect.Top + inset,
                     rect.Right - inset,
@@ -1158,7 +1163,7 @@ internal sealed class ShapeDecorationPainter : BoxPainter
             throw new AssertionError("A ShapeDecoration painter needs an ImageConfiguration with a size.");
         }
 
-        var rect = DartGeometry.RectFromOffsetAndSize(offset, configuration.Size ?? default);
+        var rect = offset & (configuration.Size ?? default);
         TextDirection? textDirection = configuration.TextDirection;
         Canvas canvas = context.Canvas;
         Precache(rect, textDirection);
@@ -1169,7 +1174,7 @@ internal sealed class ShapeDecorationPainter : BoxPainter
     }
 
     // Dart's `Rect.largest`.
-    internal static readonly Rect LargestRect = DartGeometry.RectFromLTRB(-1.0e9, -1.0e9, 1.0e9, 1.0e9);
+    internal static readonly Rect LargestRect = Rect.FromLTRB(-1.0e9, -1.0e9, 1.0e9, 1.0e9);
 
     private void HandleImageChanged()
     {
@@ -1289,8 +1294,8 @@ public sealed record BoxDecoration : Decoration
         {
             case BoxShape.Circle:
                 Offset center = rect.Center;
-                double radius = DartGeometry.ShortestSide(rect) / 2.0;
-                path.AddOval(DartGeometry.RectFromCircle(center, radius));
+                double radius = rect.ShortestSide / 2.0;
+                path.AddOval(Rect.FromCircle(center, radius));
                 return path;
             default:
                 if (BorderRadius is { } borderRadius)
@@ -1442,7 +1447,7 @@ public sealed record BoxDecoration : Decoration
 
     public override bool HitTest(Size size, Offset position, TextDirection? textDirection = null)
     {
-        var bounds = DartGeometry.RectFromSize(size);
+        var bounds = Offset.Zero & size;
         if (Constants.KDebugMode && !bounds.Contains(position))
         {
             throw new AssertionError($"The hit-test position {position} is outside the box {size}.");
@@ -1538,7 +1543,7 @@ internal sealed class BoxDecorationPainter : BoxPainter
                 }
 
                 Offset center = rect.Center;
-                double radius = DartGeometry.ShortestSide(rect) / 2.0;
+                double radius = rect.ShortestSide / 2.0;
                 canvas.DrawCircle(center, radius, paint);
                 break;
             case BoxShape.Rectangle:
@@ -1632,7 +1637,7 @@ internal sealed class BoxDecorationPainter : BoxPainter
     }
 
     private static Rect Deflate(Rect rect, double left, double top, double right, double bottom) =>
-        DartGeometry.RectFromLTRB(rect.Left + left, rect.Top + top, rect.Right - right, rect.Bottom - bottom);
+        Rect.FromLTRB(rect.Left + left, rect.Top + top, rect.Right - right, rect.Bottom - bottom);
 
     private void PaintBackgroundImage(PaintingContext context, Rect rect, ImageConfiguration configuration)
     {
@@ -1652,8 +1657,8 @@ internal sealed class BoxDecorationPainter : BoxPainter
                 }
 
                 Offset center = rect.Center;
-                double radius = DartGeometry.ShortestSide(rect) / 2.0;
-                Rect square = DartGeometry.RectFromCircle(center, radius);
+                double radius = rect.ShortestSide / 2.0;
+                Rect square = Rect.FromCircle(center, radius);
                 clipPath = new Plumix.UI.Path();
                 clipPath.AddOval(square);
                 break;
@@ -1687,7 +1692,7 @@ internal sealed class BoxDecorationPainter : BoxPainter
             throw new AssertionError("A BoxDecoration painter needs an ImageConfiguration with a size.");
         }
 
-        var rect = DartGeometry.RectFromOffsetAndSize(offset, configuration.Size ?? default);
+        var rect = offset & (configuration.Size ?? default);
         TextDirection? textDirection = configuration.TextDirection;
         Canvas canvas = context.Canvas;
         PaintShadows(canvas, rect, textDirection);

@@ -597,7 +597,7 @@ internal sealed class NavigationBarIndicatorInkWell : InkResponse
                                     "The navigation destination icon must be laid out before resolving its ink rect.");
             Offset iconTopLeft = iconBox.LocalToGlobal(default);
             Offset localTopLeft = referenceBox.GlobalToLocal(iconTopLeft);
-            return DartGeometry.RectFromOffsetAndSize(localTopLeft, iconBox.Size);
+            return localTopLeft & iconBox.Size;
         };
     }
 }

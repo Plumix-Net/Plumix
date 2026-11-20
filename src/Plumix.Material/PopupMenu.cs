@@ -566,7 +566,7 @@ public sealed class PopupMenuButtonState<T> : State<PopupMenuButton<T>>
     {
         if (!Mounted || Context.FindRenderObject() is not RenderBox button || !button.HasSize)
         {
-            return _lastPosition ?? RelativeRect.FromSize(DartGeometry.RectZero, constraints.Biggest);
+            return _lastPosition ?? RelativeRect.FromSize(Rect.Zero, constraints.Biggest);
         }
 
         Rect bounds;
@@ -576,7 +576,7 @@ public sealed class PopupMenuButtonState<T> : State<PopupMenuButton<T>>
         }
         catch (InvalidOperationException)
         {
-            return _lastPosition ?? RelativeRect.FromSize(DartGeometry.RectZero, constraints.Biggest);
+            return _lastPosition ?? RelativeRect.FromSize(Rect.Zero, constraints.Biggest);
         }
 
         PopupMenuPosition position = CurrentWidget.Position
@@ -609,7 +609,7 @@ public sealed class PopupMenuButtonState<T> : State<PopupMenuButton<T>>
         double top = points.Min(p => p.Dy);
         double right = points.Max(p => p.Dx);
         double bottom = points.Max(p => p.Dy);
-        return DartGeometry.RectFromLTWH(left, top, right - left, bottom - top);
+        return Rect.FromLTWH(left, top, right - left, bottom - top);
     }
 }
 
@@ -793,7 +793,7 @@ internal sealed class PopupMenuRoute<T> : PageRoute
         BoxConstraints constraints = BoxConstraints.Tight(mediaQuery.Size);
         RelativeRect position = _positionBuilder?.Invoke(context, constraints)
                                 ?? _position
-                                ?? RelativeRect.FromSize(DartGeometry.RectZero, mediaQuery.Size);
+                                ?? RelativeRect.FromSize(Rect.Zero, mediaQuery.Size);
         Widget menu = new PopupMenuPanel<T>(this, _items, _initialValue);
         menu = _capturedThemes.Wrap(menu);
         menu = new PopupMenuPositionLayout(
@@ -1150,7 +1150,7 @@ internal sealed class RenderPopupMenuPositionLayout : RenderShiftedBox
 
     private Rect ResolveAvailableRegion()
     {
-        var regions = new List<Rect> { DartGeometry.RectFromSize(Size) };
+        var regions = new List<Rect> { (Offset.Zero & Size) };
         foreach (DisplayFeature feature in DisplayFeatures)
         {
             var next = new List<Rect>();
@@ -1163,13 +1163,13 @@ internal sealed class RenderPopupMenuPositionLayout : RenderShiftedBox
                 }
                 else if (bounds.Height >= region.Height && bounds.Width < region.Width)
                 {
-                    next.Add(DartGeometry.RectFromLTWH(region.Left, region.Top, bounds.Left - region.Left, region.Height));
-                    next.Add(DartGeometry.RectFromLTWH(bounds.Right, region.Top, region.Right - bounds.Right, region.Height));
+                    next.Add(Rect.FromLTWH(region.Left, region.Top, bounds.Left - region.Left, region.Height));
+                    next.Add(Rect.FromLTWH(bounds.Right, region.Top, region.Right - bounds.Right, region.Height));
                 }
                 else if (bounds.Width >= region.Width && bounds.Height < region.Height)
                 {
-                    next.Add(DartGeometry.RectFromLTWH(region.Left, region.Top, region.Width, bounds.Top - region.Top));
-                    next.Add(DartGeometry.RectFromLTWH(region.Left, bounds.Bottom, region.Width, region.Bottom - bounds.Bottom));
+                    next.Add(Rect.FromLTWH(region.Left, region.Top, region.Width, bounds.Top - region.Top));
+                    next.Add(Rect.FromLTWH(region.Left, bounds.Bottom, region.Width, region.Bottom - bounds.Bottom));
                 }
                 else
                 {
@@ -1179,7 +1179,7 @@ internal sealed class RenderPopupMenuPositionLayout : RenderShiftedBox
             regions = next.Where(region => region.Width > 0 && region.Height > 0).ToList();
         }
 
-        Rect anchor = Position.ToRect(DartGeometry.RectFromSize(Size));
+        Rect anchor = Position.ToRect(Offset.Zero & Size);
         return regions.MinBy(region =>
         {
             double dx = region.Center.Dx - anchor.Center.Dx;

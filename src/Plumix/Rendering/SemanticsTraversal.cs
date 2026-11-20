@@ -275,7 +275,7 @@ internal static class SemanticsTraversal
 
     private static Rect Deflate(Rect rect, double delta)
     {
-        return DartGeometry.RectFromLTWH(
+        return Rect.FromLTWH(
             rect.Left + delta,
             rect.Top + delta,
             Math.Max(0.0, rect.Width - 2 * delta),

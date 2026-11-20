@@ -296,7 +296,7 @@ public class RenderTransform : RenderProxyBox
 
                 var imageFilterLayer = (ImageFilterLayer)Layer;
                 // Plumix-only: the CPU rasterizer needs the region the child paints into.
-                imageFilterLayer.FilterBounds = DartGeometry.RectFromOffsetAndSize(offset, Size);
+                imageFilterLayer.FilterBounds = offset & Size;
                 context.PushLayer(imageFilterLayer, base.Paint, offset);
                 if (Constants.KDebugMode)
                 {
@@ -530,8 +530,8 @@ public class RenderFittedBox : RenderProxyBox
             FittedSizes sizes = BoxFitUtils.ApplyBoxFit(_fit, childSize, Size);
             double scaleX = sizes.Destination.Width / sizes.Source.Width;
             double scaleY = sizes.Destination.Height / sizes.Source.Height;
-            Rect sourceRect = resolvedAlignment.Inscribe(sizes.Source, DartGeometry.RectFromOffsetAndSize(new Offset(0, 0), childSize));
-            Rect destinationRect = resolvedAlignment.Inscribe(sizes.Destination, DartGeometry.RectFromOffsetAndSize(new Offset(0, 0), Size));
+            Rect sourceRect = resolvedAlignment.Inscribe(sizes.Source, (new Offset(0, 0) & childSize));
+            Rect destinationRect = resolvedAlignment.Inscribe(sizes.Destination, (new Offset(0, 0) & Size));
             _hasVisualOverflow = sourceRect.Width < childSize.Width || sourceRect.Height < childSize.Height;
             Debug.Assert(double.IsFinite(scaleX) && double.IsFinite(scaleY));
             _transform = Matrix4.TranslationValues(destinationRect.Left, destinationRect.Top, 0.0);
@@ -573,7 +573,7 @@ public class RenderFittedBox : RenderProxyBox
             Layer = context.PushClipRect(
                 NeedsCompositing,
                 offset,
-                DartGeometry.RectFromOffsetAndSize(new Offset(0, 0), Size),
+                (new Offset(0, 0) & Size),
                 (clipContext, clipOffset) => PaintChildWithTransform(clipContext, clipOffset),
                 clipBehavior: ClipBehavior,
                 oldLayer: Layer as ClipRectLayer);

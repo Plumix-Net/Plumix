@@ -279,10 +279,7 @@ public class RenderFollowerLayer : RenderProxyBox
             layer,
             base.Paint,
             default,
-            childPaintBounds: DartGeometry.RectFromCorners(
-                // We don't know where we'll end up, so we have no idea what our cull rect should be.
-                new Offset(double.NegativeInfinity, double.NegativeInfinity),
-                new Offset(double.PositiveInfinity, double.PositiveInfinity)));
+            childPaintBounds: Rect.FromLTRB(double.NegativeInfinity, double.NegativeInfinity, double.PositiveInfinity, double.PositiveInfinity));
         if (Constants.KDebugMode)
         {
             layer.DebugCreator = DebugCreator;

@@ -56,7 +56,7 @@ public sealed class RenderColoredBox : RenderProxyBoxWithHitTestBehavior
             context.Canvas.DrawRectangle(
                 new SolidColorBrush(Color),
                 null,
-                DartGeometry.RectFromOffsetAndSize(offset, Size),
+                (offset & Size),
                 isAntiAlias: IsAntiAlias);
         }
 

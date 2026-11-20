@@ -29,19 +29,19 @@ public sealed class FocusTraversalTests : IDisposable
     {
         var bottom = new FocusNode
         {
-            TraversalRect = DartGeometry.RectFromLTWH(0, 80, 20, 20),
+            TraversalRect = Rect.FromLTWH(0, 80, 20, 20),
         };
         var middleRight = new FocusNode
         {
-            TraversalRect = DartGeometry.RectFromLTWH(40, 40, 20, 20),
+            TraversalRect = Rect.FromLTWH(40, 40, 20, 20),
         };
         var middleLeft = new FocusNode
         {
-            TraversalRect = DartGeometry.RectFromLTWH(0, 40, 20, 20),
+            TraversalRect = Rect.FromLTWH(0, 40, 20, 20),
         };
         var top = new FocusNode
         {
-            TraversalRect = DartGeometry.RectFromLTWH(0, 0, 20, 20),
+            TraversalRect = Rect.FromLTWH(0, 0, 20, 20),
         };
 
         IReadOnlyList<FocusNode> sorted = ReadingOrderTraversalPolicy.Sort(

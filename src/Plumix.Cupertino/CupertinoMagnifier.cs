@@ -195,13 +195,13 @@ public sealed class CupertinoTextMagnifier : StatefulWidget
             // the whole magnifier out of bounds if need be.
             double verticalSlack =
                 CupertinoMagnifier.DefaultSize.Height + CupertinoMagnifier.MagnifierAboveFocalPoint;
-            var paddedBounds = DartGeometry.RectFromLTWH(
+            var paddedBounds = Rect.FromLTWH(
                 CurrentWidget.HorizontalScreenEdgePadding,
                 -verticalSlack,
                 Math.Max(0, screenSize.Width - (CurrentWidget.HorizontalScreenEdgePadding * 2.0)),
                 screenSize.Height + (verticalSlack * 2.0));
             Offset adjustedMagnifierPosition = MagnifierController.ShiftWithinBounds(
-                DartGeometry.RectFromOffsetAndSize(rawMagnifierPosition, CupertinoMagnifier.DefaultSize),
+                (rawMagnifierPosition & CupertinoMagnifier.DefaultSize),
                 paddedBounds).TopLeft;
 
             SetState(() =>

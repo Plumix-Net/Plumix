@@ -594,7 +594,7 @@ internal sealed class Submenu : StatelessWidget
             .Add(EdgeInsetsGeometry.Symmetric(horizontal: densityDx))
             .Clamp(EdgeInsetsGeometry.Zero, EdgeInsetsGeometry.Infinity);
         Rect layoutAnchorRect = LayerLink is null
-            ? DartGeometry.RectFromLTWH(
+            ? Rect.FromLTWH(
                 MenuPosition.AnchorRect.Left + densityDx,
                 MenuPosition.AnchorRect.Top,
                 Math.Max(0.0, MenuPosition.AnchorRect.Right - MenuPosition.AnchorRect.Left - densityDx),
@@ -2428,7 +2428,7 @@ internal sealed class MenuLayout : SingleChildLayoutDelegate
 
     public override Offset GetPositionForChild(Size size, Size childSize)
     {
-        Rect overlayRect = DeflateRect(ViewPadding, DeflateRect(ViewInsets, DartGeometry.RectFromOffsetAndSize(default, size)));
+        Rect overlayRect = DeflateRect(ViewPadding, DeflateRect(ViewInsets, (Offset.Zero & size)));
 
         // Position the menu using its *unfolded* height so a growing panel does not slide across
         // the screen while it opens.
@@ -2585,7 +2585,7 @@ internal sealed class MenuLayout : SingleChildLayoutDelegate
     {
         double left = rect.Left + insets.Left;
         double top = rect.Top + insets.Top;
-        return DartGeometry.RectFromLTWH(
+        return Rect.FromLTWH(
             left,
             top,
             Math.Max(0.0, rect.Right - insets.Right - left),

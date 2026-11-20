@@ -820,7 +820,7 @@ public class RenderEditable : RenderBox,
             return;
         }
 
-        var visibleRegion = DartGeometry.RectFromSize(Size);
+        var visibleRegion = Plumix.UI.Offset.Zero & Size;
 
         Offset startOffset = _textPainter.GetOffsetForCaret(
             new TextPosition(selection.Start, selection.Affinity),
@@ -1611,7 +1611,7 @@ public class RenderEditable : RenderBox,
 
                 // Any of the text boxes may have had infinite dimensions. We shouldn't pass infinite
                 // dimensions up to the bridges.
-                rect = DartGeometry.RectFromLTWH(
+                rect = Rect.FromLTWH(
                     Math.Max(0.0, rect.Left),
                     Math.Max(0.0, rect.Top),
                     Math.Min(rect.Width, Constraints.MaxWidth),
@@ -1696,7 +1696,7 @@ public class RenderEditable : RenderBox,
 
     private static Rect FromLTRB(double left, double top, double right, double bottom)
     {
-        return DartGeometry.RectFromLTWH(left, top, Math.Max(0.0, right - left), Math.Max(0.0, bottom - top));
+        return Rect.FromLTWH(left, top, Math.Max(0.0, right - left), Math.Max(0.0, bottom - top));
     }
 
     // Dart's `Rect.isEmpty`.
@@ -2022,7 +2022,7 @@ public class RenderEditable : RenderBox,
         double scrollableWidth = Math.Max(_textPainter.Width + CaretMargin, Size.Width);
 
         double caretX = Math.Clamp(caretRect.Left, 0, Math.Max(scrollableWidth - CaretMargin, 0));
-        caretRect = DartGeometry.RectFromOffsetAndSize(new Offset(caretX, caretRect.Top), caretRect.Size);
+        caretRect = new Offset(caretX, caretRect.Top) & caretRect.Size;
 
         double fullHeight = _textPainter.GetFullHeightForCaret(caretPosition, caretPrototype);
         switch (PlatformDefaults.TargetPlatform)
@@ -2032,7 +2032,7 @@ public class RenderEditable : RenderBox,
             {
                 // Center the caret vertically along the text.
                 double heightDiff = fullHeight - caretRect.Height;
-                caretRect = DartGeometry.RectFromLTWH(
+                caretRect = Rect.FromLTWH(
                     caretRect.Left,
                     caretRect.Top + (heightDiff / 2),
                     caretRect.Width,
@@ -2049,7 +2049,7 @@ public class RenderEditable : RenderBox,
                 // TODO(garyq): See the TODO for _computeCaretPrototype().
                 double caretHeight = EffectiveCursorHeight;
                 double heightDiff = fullHeight - caretHeight;
-                caretRect = DartGeometry.RectFromLTWH(
+                caretRect = Rect.FromLTWH(
                     caretRect.Left,
                     caretRect.Top - KCaretHeightOffset + (heightDiff / 2),
                     caretRect.Width,
@@ -2515,13 +2515,13 @@ public class RenderEditable : RenderBox,
         {
             case TargetPlatform.IOS:
             case TargetPlatform.MacOS:
-                _caretPrototype = DartGeometry.RectFromLTWH(0.0, 0.0, CursorWidth, EffectiveCursorHeight + 2);
+                _caretPrototype = Rect.FromLTWH(0.0, 0.0, CursorWidth, EffectiveCursorHeight + 2);
                 break;
             case TargetPlatform.Android:
             case TargetPlatform.Fuchsia:
             case TargetPlatform.Linux:
             case TargetPlatform.Windows:
-                _caretPrototype = DartGeometry.RectFromLTWH(
+                _caretPrototype = Rect.FromLTWH(
                     0.0,
                     KCaretHeightOffset,
                     CursorWidth,
@@ -2717,7 +2717,7 @@ public class RenderEditable : RenderBox,
     // `CalculateAdjustedCursorOffset` reads its edges only.
     private static Rect FromLTRBUnclamped(double left, double top, double right, double bottom)
     {
-        return DartGeometry.RectFromLTWH(left, top, Math.Max(0.0, right - left), Math.Max(0.0, bottom - top));
+        return Rect.FromLTWH(left, top, Math.Max(0.0, right - left), Math.Max(0.0, bottom - top));
     }
 
     /// <summary>Sets the screen position of the floating cursor and the text position closest to the
@@ -2878,7 +2878,7 @@ public class RenderEditable : RenderBox,
             _clipRectLayer.Layer = context.PushClipRect(
                 NeedsCompositing,
                 offset,
-                DartGeometry.RectFromSize(Size),
+                (Plumix.UI.Offset.Zero & Size),
                 PaintContents,
                 clipBehavior: ClipBehavior,
                 oldLayer: _clipRectLayer.Layer);
@@ -2903,7 +2903,7 @@ public class RenderEditable : RenderBox,
             case Clip.None:
                 return null;
             default:
-                return HasVisualOverflow ? DartGeometry.RectFromSize(Size) : null;
+                return HasVisualOverflow ? (Plumix.UI.Offset.Zero & Size) : null;
         }
     }
 

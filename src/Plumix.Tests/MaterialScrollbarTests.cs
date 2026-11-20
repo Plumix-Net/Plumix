@@ -87,7 +87,7 @@ public sealed class MaterialScrollbarTests
         ScrollbarPainter painter = RequirePainter(harness);
         var geometry = Assert.IsType<ScrollbarGeometry>(painter.Geometry);
         Assert.Equal(Axis.Vertical, geometry.Axis);
-        Assert.Equal(DartGeometry.RectFromLTWH(194, 0, 6, 240), geometry.TrackRect);
+        Assert.Equal(Rect.FromLTWH(194, 0, 6, 240), geometry.TrackRect);
         Assert.Equal(72, geometry.ThumbRect.Height, precision: 3);
         Assert.Equal(0, geometry.ThumbRect.Top, precision: 3);
         Assert.Equal(6, painter.Thickness);
@@ -835,8 +835,8 @@ public sealed class MaterialScrollbarTests
         harness.Pump(ViewportSize);
 
         ScrollbarGeometry geometry = Assert.IsType<ScrollbarGeometry>(painter.Geometry);
-        Assert.Equal(DartGeometry.RectFromLTWH(188, 0, 12, 240), geometry.TrackRect);
-        Assert.Equal(DartGeometry.RectFromLTWH(190, 0, 8, 72), geometry.ThumbRect);
+        Assert.Equal(Rect.FromLTWH(188, 0, 12, 240), geometry.TrackRect);
+        Assert.Equal(Rect.FromLTWH(190, 0, 8, 72), geometry.ThumbRect);
         Assert.True(painter.HitTestOnlyThumbInteractive(
             new Offset(geometry.ThumbRect.Left - 20, geometry.ThumbRect.Center.Dy),
             PointerDeviceKind.Touch));
@@ -897,8 +897,8 @@ public sealed class MaterialScrollbarTests
         Settle(harness, new Size(800, 600));
 
         ScrollbarGeometry geometry = RequirePainter(harness).Geometry!.Value;
-        Assert.Equal(explicitPadding ? DartGeometry.RectFromLTWH(694, 100, 6, 400) : DartGeometry.RectFromLTWH(744, 50, 6, 500), geometry.TrackRect);
-        Assert.Equal(explicitPadding ? DartGeometry.RectFromLTWH(694, 100, 6, 21) : DartGeometry.RectFromLTWH(744, 50, 6, 21), geometry.ThumbRect);
+        Assert.Equal(explicitPadding ? Rect.FromLTWH(694, 100, 6, 400) : Rect.FromLTWH(744, 50, 6, 500), geometry.TrackRect);
+        Assert.Equal(explicitPadding ? Rect.FromLTWH(694, 100, 6, 21) : Rect.FromLTWH(744, 50, 6, 21), geometry.ThumbRect);
     }
 
     [Fact]
@@ -920,7 +920,7 @@ public sealed class MaterialScrollbarTests
         Settle(harness);
 
         Assert.Same(painter, RequirePainter(harness));
-        Assert.Equal(DartGeometry.RectFromLTWH(181, 11, 6, 212), painter.Geometry!.Value.TrackRect);
+        Assert.Equal(Rect.FromLTWH(181, 11, 6, 212), painter.Geometry!.Value.TrackRect);
         Assert.Equal(80, controller.Offset);
         Assert.Equal(240, controller.Position.ViewportDimension);
     }
@@ -963,10 +963,10 @@ public sealed class MaterialScrollbarTests
             padding: EdgeInsetsGeometry.DirectionalOnly(start: 1, top: 2, end: 3, bottom: 4));
         painter.Update(TestScrollMetrics(0, 0, 340, 80), AxisDirection.Down);
         painter.Paint(new PaintingContext(new OffsetLayer()), new Size(60, 80));
-        Assert.Equal(DartGeometry.RectFromLTWH(51, 2, 6, 74), painter.Geometry!.Value.TrackRect);
+        Assert.Equal(Rect.FromLTWH(51, 2, 6, 74), painter.Geometry!.Value.TrackRect);
         painter.TextDirection = TextDirection.Rtl;
         painter.Paint(new PaintingContext(new OffsetLayer()), new Size(60, 80));
-        Assert.Equal(DartGeometry.RectFromLTWH(3, 2, 6, 74), painter.Geometry!.Value.TrackRect);
+        Assert.Equal(Rect.FromLTWH(3, 2, 6, 74), painter.Geometry!.Value.TrackRect);
         painter.Padding = EdgeInsetsGeometry.DirectionalOnly(start: 5, end: 9);
         painter.Paint(new PaintingContext(new OffsetLayer()), new Size(60, 80));
         Assert.Equal(9, painter.Geometry!.Value.TrackRect.Left);
@@ -1066,7 +1066,7 @@ public sealed class MaterialScrollbarTests
         painter.Update(TestScrollMetrics(0, 0, 560, 240), AxisDirection.Down);
         painter.Paint(new PaintingContext(new OffsetLayer()), ViewportSize);
         Assert.Equal(preferInterior ? new[] { "interior", "border" } : new[] { "path", "border" }, shape.Calls);
-        Assert.Equal(DartGeometry.RectFromLTWH(194, 0, 6, 72), shape.PaintedRect);
+        Assert.Equal(Rect.FromLTWH(194, 0, 6, 72), shape.PaintedRect);
         if (preferInterior)
         {
             Assert.Equal(128, shape.InteriorColor!.Alpha);

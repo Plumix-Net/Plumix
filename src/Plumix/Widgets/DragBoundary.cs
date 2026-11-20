@@ -56,11 +56,11 @@ public sealed class DragBoundary : InheritedWidget
             Offset bottomRight = MatrixUtils.TransformPoint(
                 transform,
                 new Offset(renderBox.Size.Width, renderBox.Size.Height));
-            boundary = DartGeometry.RectFromCorners(topLeft, bottomRight);
+            boundary = Rect.FromLTRB(topLeft.Dx, topLeft.Dy, bottomRight.Dx, bottomRight.Dy);
         }
         else
         {
-            boundary = DartGeometry.RectFromOffsetAndSize(default, renderBox.Size);
+            boundary = Offset.Zero & renderBox.Size;
         }
 
         return new RectDragBoundaryDelegate(boundary);
@@ -113,7 +113,7 @@ public sealed class DragBoundary : InheritedWidget
                 draggedObject.Top,
                 boundary.Top,
                 boundary.Bottom - draggedObject.Height);
-            return DartGeometry.RectFromLTWH(left, top, draggedObject.Width, draggedObject.Height);
+            return Rect.FromLTWH(left, top, draggedObject.Width, draggedObject.Height);
         }
 
         private static bool Contains(Rect rect, Offset point)

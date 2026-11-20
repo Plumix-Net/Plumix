@@ -166,7 +166,7 @@ public sealed class GradientTests
     [Fact]
     public void LinearGradient_WithAlignmentDirectional_RequiresTextDirection()
     {
-        var rect = DartGeometry.RectFromLTWH(1.0, 2.0, 3.0, 4.0);
+        var rect = Rect.FromLTWH(1.0, 2.0, 3.0, 4.0);
         var directional = new LinearGradient(
             begin: AlignmentDirectional.TopStart,
             colors: [Colors.Red, Colors.Blue]);
@@ -337,7 +337,7 @@ public sealed class GradientTests
     [Fact]
     public void RadialGradient_WithAlignmentDirectional_RequiresTextDirection()
     {
-        var rect = DartGeometry.RectFromLTWH(1.0, 2.0, 3.0, 4.0);
+        var rect = Rect.FromLTWH(1.0, 2.0, 3.0, 4.0);
         var directional = new RadialGradient(
             center: AlignmentDirectional.TopStart,
             colors: [Colors.Red, Colors.Blue]);
@@ -454,7 +454,7 @@ public sealed class GradientTests
     [Fact]
     public void Gradient_CreateShader_HandlesMissingStopsAndReportsMismatchedStops()
     {
-        var rect = DartGeometry.RectFromLTWH(1.0, 2.0, 3.0, 4.0);
+        var rect = Rect.FromLTWH(1.0, 2.0, 3.0, 4.0);
         var linear = new LinearGradient(colors: [Colors.Red, Colors.Green, Colors.Blue]);
         var radial = new RadialGradient(colors: [Colors.Red, Colors.Green, Colors.Blue]);
 
@@ -476,7 +476,7 @@ public sealed class GradientTests
     public void Gradient_ImpliedStops_RequireTwoColors()
     {
         var single = new LinearGradient(colors: [Colors.Red]);
-        Assert.Throws<Plumix.Foundation.AssertionError>(() => single.CreateShader(DartGeometry.RectFromLTWH(0, 0, 10, 10)));
+        Assert.Throws<Plumix.Foundation.AssertionError>(() => single.CreateShader(Rect.FromLTWH(0, 0, 10, 10)));
     }
 
     [Fact]
@@ -488,7 +488,7 @@ public sealed class GradientTests
             colors: [Colors.Red, Colors.Blue],
             tileMode: TileMode.Repeated);
 
-        var brush = Assert.IsType<GradientShader>(gradient.CreateShader(DartGeometry.RectFromLTWH(0, 0, 100, 50)));
+        var brush = Assert.IsType<GradientShader>(gradient.CreateShader(Rect.FromLTWH(0, 0, 100, 50)));
 
         Assert.Equal(new Offset(0, 0), brush.Start);
         Assert.Equal(new Offset(100, 50), brush.End);
@@ -507,7 +507,7 @@ public sealed class GradientTests
             colors: [Colors.Red, Colors.Blue],
             focal: Alignment.TopLeft);
 
-        var brush = Assert.IsType<GradientShader>(gradient.CreateShader(DartGeometry.RectFromLTWH(0, 0, 100, 40)));
+        var brush = Assert.IsType<GradientShader>(gradient.CreateShader(Rect.FromLTWH(0, 0, 100, 40)));
 
         Assert.Equal(new Offset(50, 20), brush.End);
         Assert.Equal(new Offset(0, 0), brush.Start);
@@ -524,7 +524,7 @@ public sealed class GradientTests
             startAngle: Math.PI / 2,
             endAngle: Math.PI);
 
-        var brush = Assert.IsType<GradientShader>(gradient.CreateShader(DartGeometry.RectFromLTWH(0, 0, 60, 60)));
+        var brush = Assert.IsType<GradientShader>(gradient.CreateShader(Rect.FromLTWH(0, 0, 60, 60)));
 
         Assert.Equal(Math.PI / 2, brush.StartAngle);
         Assert.Equal(Math.PI, brush.EndAngle);
@@ -540,7 +540,7 @@ public sealed class GradientTests
             colors: [Colors.Red, Colors.Blue],
             transform: new GradientRotation(Math.PI / 2));
 
-        var brush = Assert.IsType<GradientShader>(gradient.CreateShader(DartGeometry.RectFromLTWH(10, 20, 40, 40)));
+        var brush = Assert.IsType<GradientShader>(gradient.CreateShader(Rect.FromLTWH(10, 20, 40, 40)));
 
         // The local shader matrix maps the absolute top-left onto the absolute top-right.
         SkiaSharp.SKPoint rotated = brush.LocalMatrix.MapPoint(new SkiaSharp.SKPoint(10, 20));
@@ -680,9 +680,9 @@ public sealed class GradientTests
         var sweep = new SweepGradient(colors: [Colors.Red, Colors.Blue], center: AlignmentDirectional.TopStart);
         Assert.Equal(0.0, sweep.StartAngle);
         Assert.Equal(Math.PI * 2.0, sweep.EndAngle);
-        Assert.Throws<ArgumentNullException>(() => sweep.CreateShader(DartGeometry.RectFromLTWH(0, 0, 100, 100)));
-        var ltr = Assert.IsType<GradientShader>(sweep.CreateShader(DartGeometry.RectFromLTWH(10, 20, 100, 50), TextDirection.Ltr));
-        var rtl = Assert.IsType<GradientShader>(sweep.CreateShader(DartGeometry.RectFromLTWH(10, 20, 100, 50), TextDirection.Rtl));
+        Assert.Throws<ArgumentNullException>(() => sweep.CreateShader(Rect.FromLTWH(0, 0, 100, 100)));
+        var ltr = Assert.IsType<GradientShader>(sweep.CreateShader(Rect.FromLTWH(10, 20, 100, 50), TextDirection.Ltr));
+        var rtl = Assert.IsType<GradientShader>(sweep.CreateShader(Rect.FromLTWH(10, 20, 100, 50), TextDirection.Rtl));
         Assert.Equal(new Offset(10, 20), ltr.End);
         Assert.Equal(new Offset(110, 20), rtl.End);
         var smaller = new RadialGradient(colors: [Colors.Red, Colors.Blue], radius: 0.1);

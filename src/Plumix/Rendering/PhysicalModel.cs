@@ -173,7 +173,7 @@ public class RenderPhysicalModel : RenderPhysicalModelBase<RRect>
         get
         {
             Debug.Assert(HasSize);
-            var rect = DartGeometry.RectFromOffsetAndSize(new Offset(0, 0), Size);
+            var rect = new Offset(0, 0) & Size;
             return _shape switch
             {
                 BoxShape.Rectangle => (BorderRadius ?? Rendering.BorderRadius.Zero).ToRRect(rect),
@@ -243,7 +243,7 @@ public class RenderPhysicalModel : RenderPhysicalModelBase<RRect>
         Layer = context.PushClipRRect(
             NeedsCompositing,
             offset,
-            DartGeometry.RectFromOffsetAndSize(new Offset(0, 0), Size),
+            (new Offset(0, 0) & Size),
             _clip,
             (clippedContext, clippedOffset) =>
             {
@@ -306,7 +306,7 @@ public class RenderPhysicalShape : RenderPhysicalModelBase<Path>
         get
         {
             var path = new Path();
-            path.AddRect(DartGeometry.RectFromOffsetAndSize(new Offset(0, 0), Size));
+            path.AddRect(new Offset(0, 0) & Size);
             return path;
         }
     }
@@ -369,7 +369,7 @@ public class RenderPhysicalShape : RenderPhysicalModelBase<Path>
         Layer = context.PushClipPath(
             NeedsCompositing,
             offset,
-            DartGeometry.RectFromOffsetAndSize(new Offset(0, 0), Size),
+            (new Offset(0, 0) & Size),
             _clip,
             (clippedContext, clippedOffset) =>
             {

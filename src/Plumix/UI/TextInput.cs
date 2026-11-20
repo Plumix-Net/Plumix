@@ -325,7 +325,7 @@ public class TextInputConnection
                         && double.IsFinite(rect.Top)
                         && double.IsFinite(rect.Right)
                         && double.IsFinite(rect.Bottom);
-        return isFinite ? rect : DartGeometry.RectFromLTWH(0.0, 0.0, -1.0, -1.0);
+        return isFinite ? rect : Rect.FromLTWH(0.0, 0.0, -1.0, -1.0);
     }
 
     private static void Require(bool condition)
@@ -625,7 +625,7 @@ public static class TextInput
 
             case "TextInputClient.requestElementsInRect":
             {
-                var rect = DartGeometry.RectFromLTWH(
+                var rect = Rect.FromLTWH(
                     Convert.ToDouble(arguments![0]),
                     Convert.ToDouble(arguments[1]),
                     Convert.ToDouble(arguments[2]),

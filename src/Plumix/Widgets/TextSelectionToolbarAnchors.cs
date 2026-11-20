@@ -59,7 +59,7 @@ public readonly record struct TextSelectionToolbarAnchors(
             return default;
         }
 
-        return DartGeometry.RectFromLTWH(
+        return Rect.FromLTWH(
             rect.left,
             rect.top,
             Math.Max(0.0, rect.right - rect.left),
@@ -73,7 +73,7 @@ public readonly record struct TextSelectionToolbarAnchors(
         Offset b = renderBox.LocalToGlobal(new Offset(renderBox.Size.Width, renderBox.Size.Height));
         double left = Math.Min(a.Dx, b.Dx);
         double top = Math.Min(a.Dy, b.Dy);
-        return DartGeometry.RectFromLTWH(left, top, Math.Max(a.Dx, b.Dx) - left, Math.Max(a.Dy, b.Dy) - top);
+        return Rect.FromLTWH(left, top, Math.Max(a.Dx, b.Dx) - left, Math.Max(a.Dy, b.Dy) - top);
     }
 
     // The body of Dart's `getSelectionRect`; null stands for its `Rect.zero` result.

@@ -549,9 +549,7 @@ public static class ImagePainting
         double dx = halfWidthDelta + ((flipHorizontally ? -alignment.X : alignment.X) * halfWidthDelta);
         double dy = halfHeightDelta + (alignment.Y * halfHeightDelta);
         var destinationPosition = new Offset(rect.Left + dx, rect.Top + dy);
-        var destinationRect = DartGeometry.RectFromOffsetAndSize(
-            destinationPosition,
-            new Size(Math.Max(0.0, destinationWidth), Math.Max(0.0, destinationHeight)));
+        var destinationRect = destinationPosition & new Size(Math.Max(0.0, destinationWidth), Math.Max(0.0, destinationHeight));
 
         // Set to true if we added a saveLayer to the canvas to invert/flip the image.
         bool invertedCanvas = false;
@@ -669,7 +667,7 @@ public static class ImagePainting
         {
             Rect sourceRect = alignment.Inscribe(
                 new Size(Math.Max(0.0, sourceWidth), Math.Max(0.0, sourceHeight)),
-                DartGeometry.RectFromLTWH(0.0, 0.0, Math.Max(0.0, inputWidth), Math.Max(0.0, inputHeight)));
+                Rect.FromLTWH(0.0, 0.0, Math.Max(0.0, inputWidth), Math.Max(0.0, inputHeight)));
             if (repeat == ImageRepeat.NoRepeat)
             {
                 canvas.DrawImageRect(image, sourceRect, destinationRect, paint);
@@ -768,9 +766,7 @@ public static class ImagePainting
     }
 
     private static Rect ScaleRect(Rect rect, double scale) =>
-        DartGeometry.RectFromCorners(
-            new Offset(rect.Left * scale, rect.Top * scale),
-            new Offset(rect.Right * scale, rect.Bottom * scale));
+        Rect.FromLTRB(rect.Left * scale, rect.Top * scale, rect.Right * scale, rect.Bottom * scale);
 
     /// <summary>dart:ui <c>Rect.toString</c>.</summary>
     internal static string RectToString(Rect rect) =>

@@ -34,10 +34,10 @@ internal sealed class TestSemantics(
     Uri? linkUrl = null,
     IReadOnlyList<TestSemantics>? children = null)
 {
-    public static readonly Rect FullScreen = DartGeometry.RectFromLTWH(0, 0, 800, 600);
+    public static readonly Rect FullScreen = Rect.FromLTWH(0, 0, 800, 600);
 
     public static TestSemantics Root(IReadOnlyList<TestSemantics> children) =>
-        new(id: 0, rect: DartGeometry.RectFromLTWH(0, 0, 2400, 1800), children: children);
+        new(id: 0, rect: Rect.FromLTWH(0, 0, 2400, 1800), children: children);
 
     public static TestSemantics RootChild(IReadOnlyList<TestSemantics> children) =>
         new(transform: Matrix4.Diagonal3Values(3, 3, 1), children: children);

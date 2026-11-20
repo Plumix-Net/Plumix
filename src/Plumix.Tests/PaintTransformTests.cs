@@ -132,17 +132,17 @@ public sealed class PaintTransformTests
     public void PathCombine_DifferenceRemovesTheSecondPath()
     {
         var outer = new Path();
-        outer.AddRect(DartGeometry.RectFromLTWH(0, 0, 100, 50));
+        outer.AddRect(Rect.FromLTWH(0, 0, 100, 50));
         var gap = new Path();
-        gap.AddRect(DartGeometry.RectFromLTWH(20, -1, 30, 2));
+        gap.AddRect(Rect.FromLTWH(20, -1, 30, 2));
 
         Path combined = Path.Combine(PathOperation.Difference, outer, gap);
 
         Assert.True(combined.Contains(new Offset(10, 0.5)));
         Assert.False(combined.Contains(new Offset(30, 0.5)));
         Assert.True(combined.Contains(new Offset(30, 10)));
-        Assert.Equal(DartGeometry.RectFromLTWH(0, 0, 100, 50), combined.GetBounds());
-        combined.AddRect(DartGeometry.RectFromLTWH(120, 0, 10, 10));
+        Assert.Equal(Rect.FromLTWH(0, 0, 100, 50), combined.GetBounds());
+        combined.AddRect(Rect.FromLTWH(120, 0, 10, 10));
         Assert.True(combined.Contains(new Offset(125, 5)));
     }
 
@@ -150,9 +150,9 @@ public sealed class PaintTransformTests
     public void PathCombine_IntersectUnionAndXorFollowTheirSetOperations()
     {
         var left = new Path();
-        left.AddRect(DartGeometry.RectFromLTWH(0, 0, 40, 40));
+        left.AddRect(Rect.FromLTWH(0, 0, 40, 40));
         var right = new Path();
-        right.AddRect(DartGeometry.RectFromLTWH(20, 0, 40, 40));
+        right.AddRect(Rect.FromLTWH(20, 0, 40, 40));
 
         // Boolean results are concrete independent contours, shared by paint and containment.
         Assert.False(Path.Combine(PathOperation.Difference, left, right).ToGeometry().FillContains(new Offset(30, 20).ToAvalonia()));

@@ -389,7 +389,7 @@ public abstract class RenderSliverPersistentHeader : RenderSliver, IRenderObject
         double newTop = Math.Max(rect.Top, top);
         double newRight = Math.Min(rect.Right, right);
         double newBottom = Math.Min(rect.Bottom, bottom);
-        return DartGeometry.RectFromLTWH(newLeft, newTop, newRight - newLeft, newBottom - newTop);
+        return Rect.FromLTWH(newLeft, newTop, newRight - newLeft, newBottom - newTop);
     }
 }
 

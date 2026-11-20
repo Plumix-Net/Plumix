@@ -307,7 +307,7 @@ public sealed class TextPainterTests
     {
         using var painter = new TextPainter(text: new TextSpan("aa"), textDirection: TextDirection.Ltr);
         painter.Layout();
-        var prototype = DartGeometry.RectFromLTWH(0, 0, 5, 5);
+        var prototype = Rect.FromLTWH(0, 0, 5, 5);
         Assert.Equal(
             painter.GetOffsetForCaret(new TextPosition(1), prototype),
             painter.GetOffsetForCaret(new TextPosition(1, TextAffinity.Upstream), prototype));
@@ -316,7 +316,7 @@ public sealed class TextPainterTests
     [Fact]
     public void Caret_TrailingSpacesInLtrAndRtl()
     {
-        var prototype = DartGeometry.RectFromLTWH(0, 0, 5, 5);
+        var prototype = Rect.FromLTWH(0, 0, 5, 5);
         using var ltr = new TextPainter(text: new TextSpan("a    "), textDirection: TextDirection.Ltr);
         ltr.Layout(minWidth: 1000, maxWidth: 1000);
         Assert.Equal(SizeOfA * 5, ltr.GetOffsetForCaret(new TextPosition(5), prototype).Dx);
@@ -329,7 +329,7 @@ public sealed class TextPainterTests
     [Fact]
     public void Caret_EndOfTextWithAPlusOneBidiLevel()
     {
-        var prototype = DartGeometry.RectFromLTWH(0, 0, 5, 5);
+        var prototype = Rect.FromLTWH(0, 0, 5, 5);
         using var painter = new TextPainter(text: new TextSpan("a\u0644"), textDirection: TextDirection.Ltr);
         painter.Layout(minWidth: 1000, maxWidth: 1000);
         Assert.Equal(0.0, painter.GetOffsetForCaret(new TextPosition(0), prototype).Dx);
@@ -1027,8 +1027,8 @@ public sealed class TextPainterTests
             textDirection: TextDirection.Ltr);
         painter.Layout();
         IReadOnlyList<TextBox> boxes = painter.GetBoxesForSelection(new TextSelection(0, 2));
-        Assert.Equal(DartGeometry.RectFromLTWH(0, 0, 128, 128), boxes[0].ToRect());
-        Assert.Equal(DartGeometry.RectFromLTWH(128, 48, 64, 64), boxes[1].ToRect());
+        Assert.Equal(Rect.FromLTWH(0, 0, 128, 128), boxes[0].ToRect());
+        Assert.Equal(Rect.FromLTWH(128, 48, 64, 64), boxes[1].ToRect());
 
         painter.DebugPaintTextLayoutBoxes = true;
         Assert.Equal(3, PaintedDrawCommands(painter));

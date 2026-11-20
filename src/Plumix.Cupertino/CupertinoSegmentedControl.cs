@@ -720,7 +720,7 @@ internal sealed class RenderCupertinoSegmentedControl : RenderBox,
             bool firstPhysical = position == 0.0;
             bool lastPhysical = position + childSize.Width == Size.Width;
             data.SurroundingRect = RSuperellipse.FromRectAndCorners(
-                DartGeometry.RectFromOffsetAndSize(data.offset, childSize),
+                (data.offset & childSize),
                 topLeft: firstPhysical ? Radius.Circular(CornerRadius) : Radius.Zero,
                 topRight: lastPhysical ? Radius.Circular(CornerRadius) : Radius.Zero,
                 bottomRight: lastPhysical ? Radius.Circular(CornerRadius) : Radius.Zero,

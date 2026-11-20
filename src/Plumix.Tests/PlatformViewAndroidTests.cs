@@ -114,7 +114,7 @@ public sealed class PlatformViewAndroidTests : IDisposable
 
         List<Layer> layers = Layers(_tester);
         var clipRectLayer = Assert.IsType<ClipRectLayer>(layers[^2]);
-        Assert.Equal(DartGeometry.RectFromLTWH(0.0, 0.0, 100.0, 50.0), clipRectLayer.ClipRect);
+        Assert.Equal(Rect.FromLTWH(0.0, 0.0, 100.0, 50.0), clipRectLayer.ClipRect);
 
         // Resize is still in progress.
         // We should clip the texture to the size of the widget.
@@ -662,10 +662,10 @@ public sealed class PlatformViewAndroidTests : IDisposable
 
         // Resize trigger clip when the clip behavior is not Clip.none .
         _tester.PumpWidget(BuildView(50.0, 100.0, Clip.HardEdge));
-        Assert.Equal(DartGeometry.RectFromLTWH(0.0, 0.0, 50.0, 100.0), Assert.Single(ClipLayers()).ClipRect);
+        Assert.Equal(Rect.FromLTWH(0.0, 0.0, 50.0, 100.0), Assert.Single(ClipLayers()).ClipRect);
 
         _tester.PumpWidget(BuildView(50.0, 50.0, Clip.HardEdge));
-        Assert.Equal(DartGeometry.RectFromLTWH(0.0, 0.0, 50.0, 50.0), Assert.Single(ClipLayers()).ClipRect);
+        Assert.Equal(Rect.FromLTWH(0.0, 0.0, 50.0, 50.0), Assert.Single(ClipLayers()).ClipRect);
     }
 
     [Fact]

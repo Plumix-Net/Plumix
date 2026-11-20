@@ -2212,7 +2212,7 @@ public sealed class InkWellDartParityTests : IDisposable
     private static FrameworkDartTester CreateTester() => new(fakeGestureTimers: true);
 
     private static Rect Ltrb(double left, double top, double right, double bottom) =>
-        DartGeometry.RectFromCorners(new Offset(left, top), new Offset(right, bottom));
+        Rect.FromLTRB(left, top, right, bottom);
 
     private static Path RoundedPath(Rect rect, double radius)
     {

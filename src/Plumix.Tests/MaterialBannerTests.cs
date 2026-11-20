@@ -33,7 +33,7 @@ public sealed class MaterialBannerTests
         Assert.Equal(expectedX, painter.TranslationX(200), precision: 5);
         Assert.Equal(expectedY, painter.TranslationY(120), precision: 5);
         Assert.Equal(rotationSign * Math.PI / 4, painter.Rotation, precision: 10);
-        Assert.Equal(DartGeometry.RectFromLTWH(-40, 28, 80, 12), BannerPainter.BannerRect);
+        Assert.Equal(Rect.FromLTWH(-40, 28, 80, 12), BannerPainter.BannerRect);
         Assert.Equal(Color.FromARGB(0xA0, 0xB7, 0x1C, 0x1C), painter.Color);
         Assert.Equal(10.2, painter.TextStyle.FontSize!.Value, precision: 10);
         Assert.False(painter.HitTest(default));

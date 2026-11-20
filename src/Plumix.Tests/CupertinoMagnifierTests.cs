@@ -17,7 +17,7 @@ namespace Plumix.Tests;
 [Collection(SchedulerTestCollection.Name)]
 public sealed class CupertinoMagnifierTests : IDisposable
 {
-    private static readonly Rect ReasonableTextField = DartGeometry.RectFromLTWH(0, 100, 200, 100);
+    private static readonly Rect ReasonableTextField = Rect.FromLTWH(0, 100, 200, 100);
     private static readonly Size ScreenSize = new(400, 300);
 
     public CupertinoMagnifierTests()

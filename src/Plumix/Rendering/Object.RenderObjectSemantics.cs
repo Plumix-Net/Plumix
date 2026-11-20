@@ -178,7 +178,7 @@ internal sealed record SemanticsGeometry(
         double top = Math.Max(a.Top, b.Top);
         double right = Math.Min(a.Right, b.Right);
         double bottom = Math.Min(a.Bottom, b.Bottom);
-        return DartGeometry.RectFromLTWH(left, top, Math.Max(0.0, right - left), Math.Max(0.0, bottom - top));
+        return Rect.FromLTWH(left, top, Math.Max(0.0, right - left), Math.Max(0.0, bottom - top));
     }
 
     internal static bool IsEmpty(Rect rect) => rect.Width <= 0 || rect.Height <= 0;
@@ -1185,7 +1185,7 @@ internal sealed class RenderObjectSemantics : DiagnosticableTree, ISemanticsFrag
         double minY = Math.Min(current.Top, addition.Top);
         double maxX = Math.Max(current.Right, addition.Right);
         double maxY = Math.Max(current.Bottom, addition.Bottom);
-        return DartGeometry.RectFromLTWH(minX, minY, maxX - minX, maxY - minY);
+        return Rect.FromLTWH(minX, minY, maxX - minX, maxY - minY);
     }
 
     // ---- invalidation --------------------------------------------------------------------------

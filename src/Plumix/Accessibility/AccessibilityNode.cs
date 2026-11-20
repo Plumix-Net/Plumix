@@ -334,7 +334,7 @@ public sealed class AccessibilityNode
             return rect;
         }
 
-        return DartGeometry.RectFromLTWH(rect.Left / scale, rect.Top / scale, rect.Width / scale, rect.Height / scale);
+        return Rect.FromLTWH(rect.Left / scale, rect.Top / scale, rect.Width / scale, rect.Height / scale);
     }
 
     /// <summary>Asks the framework to perform <paramref name="action"/> on this node.</summary>

@@ -650,8 +650,8 @@ public sealed class MaterialNavigationSurfacesTests
             selectedIndex: 0,
             minWidth: 50.0));
 
-        Assert.All(allLabels, rect => Assert.Equal(DartGeometry.RectFromLTWH(12.0, 0.0, 56.0, 32.0), rect));
-        Assert.All(compact, rect => Assert.Equal(DartGeometry.RectFromLTWH(-3.0, 6.0, 56.0, 32.0), rect));
+        Assert.All(allLabels, rect => Assert.Equal(Rect.FromLTWH(12.0, 0.0, 56.0, 32.0), rect));
+        Assert.All(compact, rect => Assert.Equal(Rect.FromLTWH(-3.0, 6.0, 56.0, 32.0), rect));
     }
 
     [Fact]
@@ -695,7 +695,7 @@ public sealed class MaterialNavigationSurfacesTests
                 extended: true),
             textDirection);
 
-        Assert.All(rects, rect => Assert.Equal(DartGeometry.RectFromLTWH(expectedLeft, 6.0, 56.0, 32.0), rect));
+        Assert.All(rects, rect => Assert.Equal(Rect.FromLTWH(expectedLeft, 6.0, 56.0, 32.0), rect));
     }
 
     [Fact]
@@ -711,7 +711,7 @@ public sealed class MaterialNavigationSurfacesTests
             selectedIconTheme: new IconThemeData(Size: 50.0),
             unselectedIconTheme: new IconThemeData(Size: 50.0)));
 
-        Assert.All(rects, rect => Assert.Equal(DartGeometry.RectFromLTWH(12.0, 15.0, 56.0, 32.0), rect));
+        Assert.All(rects, rect => Assert.Equal(Rect.FromLTWH(12.0, 15.0, 56.0, 32.0), rect));
     }
 
     [Fact]

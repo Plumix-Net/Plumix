@@ -75,7 +75,7 @@ internal sealed class DecoratorHarness : IDisposable
         box is null ? default : ((BoxParentData)box.parentData!).offset;
 
     public static Rect RectOf(RenderBox? box) =>
-        box is null ? default : DartGeometry.RectFromOffsetAndSize(OffsetOf(box), box.Size);
+        box is null ? default : (OffsetOf(box) & box.Size);
 
     public static T? Find<T>(RenderObject? root) where T : RenderObject
     {

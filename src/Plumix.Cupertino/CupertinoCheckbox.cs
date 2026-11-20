@@ -403,7 +403,7 @@ internal sealed class CupertinoCheckboxPainter : ToggleablePainter
 
     private static Rect OuterRectAt(Offset origin)
     {
-        return DartGeometry.RectFromLTWH(origin.Dx, origin.Dy, CupertinoCheckbox.Width, CupertinoCheckbox.Width);
+        return Rect.FromLTWH(origin.Dx, origin.Dy, CupertinoCheckbox.Width, CupertinoCheckbox.Width);
     }
 
     // The checkbox's border color if value == false, or its fill color when value == true or null.

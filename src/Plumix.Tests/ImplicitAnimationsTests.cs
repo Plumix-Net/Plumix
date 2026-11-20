@@ -585,7 +585,7 @@ public sealed class ImplicitAnimationsTests : IDisposable
         Assert.Null(positioned.OnEnd);
 
         var fromRect = AnimatedPositioned.FromRect(
-            rect: DartGeometry.RectFromLTWH(3, 5, 40, 20),
+            rect: Rect.FromLTWH(3, 5, 40, 20),
             child: child,
             duration: TimeSpan.FromMilliseconds(200));
         Assert.Equal(3, fromRect.Left);

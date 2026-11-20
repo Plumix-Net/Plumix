@@ -291,12 +291,12 @@ public sealed class CupertinoSegmentedControlTests : IDisposable
     public void RSuperellipsePrimitivePreservesBoundsShiftRadiiAndExactPath()
     {
         var shape = RSuperellipse.FromRectAndCorners(
-            DartGeometry.RectFromLTWH(10.0, 20.0, 100.0, 40.0),
+            Rect.FromLTWH(10.0, 20.0, 100.0, 40.0),
             topLeft: Radius.Circular(12.0),
             bottomRight: Radius.Elliptical(8.0, 6.0));
 
         Assert.Equal(shape.Rect, shape.OuterRect);
-        Assert.Equal(DartGeometry.RectFromLTWH(15.0, 27.0, 100.0, 40.0), shape.Shift(new Offset(5.0, 7.0)).OuterRect);
+        Assert.Equal(Rect.FromLTWH(15.0, 27.0, 100.0, 40.0), shape.Shift(new Offset(5.0, 7.0)).OuterRect);
         Assert.Equal(shape.OuterRect, shape.ToPath().GetBounds());
         Assert.True(shape.Contains(new Offset(60.0, 40.0)));
         Assert.False(shape.Contains(new Offset(10.0, 20.0)));

@@ -1264,7 +1264,7 @@ public sealed class CalendarDatePickerDartParityTests : IDisposable
         Assert.Equal(1, PaintRecording.Record(inkFeatures).CountCalls("clipPath"));
 
         // Rect.fromCircle(center: const Offset(400.0, 241.0), radius: 35.0)
-        var expectedClipRect = DartGeometry.RectFromLTWH(365.0, 206.0, 70.0, 70.0);
+        var expectedClipRect = Rect.FromLTWH(365.0, 206.0, 70.0, 70.0);
         var expectedClipPath = new Plumix.UI.Path();
         expectedClipPath.AddRect(expectedClipRect);
         PaintAssert.Paints(

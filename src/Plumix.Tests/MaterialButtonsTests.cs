@@ -566,8 +566,8 @@ public sealed class MaterialButtonsTests
 
             Assert.Empty(buttonNode.Children);
             Assert.Equal("ABC", buttonNode.Label);
-            Assert.Equal(DartGeometry.RectFromLTWH(0, 0, 88, 48), buttonNode.Rect);
-            Assert.Equal(DartGeometry.RectFromLTWH(356, 276, 88, 48), buttonNode.GlobalRect);
+            Assert.Equal(Rect.FromLTWH(0, 0, 88, 48), buttonNode.Rect);
+            Assert.Equal(Rect.FromLTWH(356, 276, 88, 48), buttonNode.GlobalRect);
             Assert.True(buttonNode.Flags.HasFlag(SemanticsFlags.HasEnabledState));
             Assert.True(buttonNode.Flags.HasFlag(SemanticsFlags.IsEnabled));
             Assert.True(buttonNode.Flags.HasFlag(SemanticsFlags.IsButton));

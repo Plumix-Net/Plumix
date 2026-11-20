@@ -58,7 +58,7 @@ public sealed class MaterialScaffoldGeometryTests
         Assert.NotNull(area);
 
         // endFloat: x = width - kFloatingActionButtonMargin - fabWidth, y = contentBottom - fabHeight - margin.
-        Assert.Equal(DartGeometry.RectFromOffsetAndSize(new Offset(728, 528), new Size(56, 56)), area!.Value);
+        Assert.Equal((new Offset(728, 528) & new Size(56, 56)), area!.Value);
         Assert.Equal(area.Value.TopLeft, ((MultiChildLayoutParentData)slot.parentData!).offset);
     }
 
@@ -379,7 +379,7 @@ public sealed class MaterialScaffoldGeometryTests
         harness.Pump(Viewport);
 
         Assert.Equal(
-            DartGeometry.RectFromOffsetAndSize(new Offset(728, 528), new Size(56, 56)),
+            (new Offset(728, 528) & new Size(56, 56)),
             RequireGeometry(context).FloatingActionButtonArea!.Value);
     }
 

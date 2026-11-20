@@ -447,8 +447,8 @@ public sealed class TextInputServiceTests : IDisposable
     [Fact]
     public void SelectionRect_EqualityLeavesDirectionOutOfTheHash()
     {
-        var ltr = new SelectionRect(1, DartGeometry.RectFromLTWH(2, 3, 4, 5));
-        var rtl = new SelectionRect(1, DartGeometry.RectFromLTWH(2, 3, 4, 5), TextDirection.Rtl);
+        var ltr = new SelectionRect(1, Rect.FromLTWH(2, 3, 4, 5));
+        var rtl = new SelectionRect(1, Rect.FromLTWH(2, 3, 4, 5), TextDirection.Rtl);
 
         Assert.NotEqual(ltr, rtl);
         Assert.Equal(ltr.GetHashCode(), rtl.GetHashCode());
@@ -1036,17 +1036,17 @@ public sealed class TextInputServiceTests : IDisposable
         Assert.Equal(TextInputType.Multiline, control.InputType);
         Assert.Equal("TextInput.updateConfig", _log[^1].Method);
 
-        connection.SetComposingRect(DartGeometry.RectFromLTWH(0, 0, 0, 0));
+        connection.SetComposingRect(Rect.FromLTWH(0, 0, 0, 0));
         Assert.Equal("TextInput.setMarkedTextRect", _log[^1].Method);
 
-        connection.SetCaretRect(DartGeometry.RectFromLTWH(0, 0, 0, 0));
+        connection.SetCaretRect(Rect.FromLTWH(0, 0, 0, 0));
         Assert.Equal("TextInput.setCaretRect", _log[^1].Method);
 
         connection.SetEditableSizeAndTransform(default, Matrix4.Identity());
         Assert.Equal("TextInput.setEditableSizeAndTransform", _log[^1].Method);
 
         connection.SetSelectionRects(
-            [new SelectionRect(1, DartGeometry.RectFromLTWH(2, 3, 4, 5), TextDirection.Rtl)]);
+            [new SelectionRect(1, Rect.FromLTWH(2, 3, 4, 5), TextDirection.Rtl)]);
         Assert.Equal("TextInput.setSelectionRects", _log[^1].Method);
         var rects = (IList)_log[^1].Arguments!;
         var first = (IList)rects[0]!;
@@ -1124,16 +1124,16 @@ public sealed class TextInputServiceTests : IDisposable
         TextInputConnection connection = UI.TextInput.Attach(client, new TextInputConfiguration());
         _log.Clear();
 
-        connection.SetCaretRect(DartGeometry.RectFromLTWH(1, 2, 3, 4));
-        connection.SetCaretRect(DartGeometry.RectFromLTWH(1, 2, 3, 4));
+        connection.SetCaretRect(Rect.FromLTWH(1, 2, 3, 4));
+        connection.SetCaretRect(Rect.FromLTWH(1, 2, 3, 4));
         Assert.Single(_log);
 
         connection.SetEditableSizeAndTransform(new Size(2, 3), Matrix4.Identity());
         connection.SetEditableSizeAndTransform(new Size(2, 3), Matrix4.Identity());
         Assert.Equal(2, _log.Count);
 
-        connection.SetSelectionRects([new SelectionRect(0, DartGeometry.RectFromLTWH(0, 0, 1, 1))]);
-        connection.SetSelectionRects([new SelectionRect(0, DartGeometry.RectFromLTWH(0, 0, 1, 1))]);
+        connection.SetSelectionRects([new SelectionRect(0, Rect.FromLTWH(0, 0, 1, 1))]);
+        connection.SetSelectionRects([new SelectionRect(0, Rect.FromLTWH(0, 0, 1, 1))]);
         Assert.Equal(3, _log.Count);
     }
 
@@ -1144,7 +1144,7 @@ public sealed class TextInputServiceTests : IDisposable
         TextInputConnection connection = UI.TextInput.Attach(client, new TextInputConfiguration());
         _log.Clear();
 
-        connection.SetComposingRect(DartGeometry.RectFromLTWH(0, 0, double.PositiveInfinity, 2));
+        connection.SetComposingRect(Rect.FromLTWH(0, 0, double.PositiveInfinity, 2));
 
         var arguments = (IDictionary)Assert.Single(_log).Arguments!;
         Assert.Equal(-1.0, arguments["width"]);
@@ -1186,8 +1186,8 @@ public sealed class TextInputServiceTests : IDisposable
     [Fact]
     public void TextInput_FocusElementOnlyReachesTheNamedClient()
     {
-        var target = new FakeScribbleClient("target", DartGeometry.RectFromLTWH(0, 0, 100, 100));
-        var other = new FakeScribbleClient("other", DartGeometry.RectFromLTWH(0, 100, 100, 100));
+        var target = new FakeScribbleClient("target", Rect.FromLTWH(0, 0, 100, 100));
+        var other = new FakeScribbleClient("other", Rect.FromLTWH(0, 100, 100, 100));
         UI.TextInput.RegisterScribbleElement(target.ElementIdentifier, target);
         UI.TextInput.RegisterScribbleElement(other.ElementIdentifier, other);
 
@@ -1202,9 +1202,9 @@ public sealed class TextInputServiceTests : IDisposable
     [Fact]
     public void TextInput_RequestElementsInRectReturnsOverlappingElements()
     {
-        var first = new FakeScribbleClient("target1", DartGeometry.RectFromLTWH(0, 0, 100, 100));
-        var second = new FakeScribbleClient("target2", DartGeometry.RectFromLTWH(0, 100, 100, 100));
-        var away = new FakeScribbleClient("target3", DartGeometry.RectFromLTWH(0, 500, 100, 100));
+        var first = new FakeScribbleClient("target1", Rect.FromLTWH(0, 0, 100, 100));
+        var second = new FakeScribbleClient("target2", Rect.FromLTWH(0, 100, 100, 100));
+        var away = new FakeScribbleClient("target3", Rect.FromLTWH(0, 500, 100, 100));
         UI.TextInput.RegisterScribbleElement(first.ElementIdentifier, first);
         UI.TextInput.RegisterScribbleElement(second.ElementIdentifier, second);
         UI.TextInput.RegisterScribbleElement(away.ElementIdentifier, away);
@@ -1248,9 +1248,9 @@ public sealed class TextInputServiceTests : IDisposable
         connection.UpdateConfig(new TextInputConfiguration());
         connection.SetEditingState(new TextEditingValue("x"));
         connection.SetEditableSizeAndTransform(new Size(1, 1), Matrix4.Identity());
-        connection.SetComposingRect(DartGeometry.RectFromLTWH(0, 0, 1, 1));
-        connection.SetCaretRect(DartGeometry.RectFromLTWH(0, 0, 1, 1));
-        connection.SetSelectionRects([new SelectionRect(0, DartGeometry.RectFromLTWH(0, 0, 1, 1))]);
+        connection.SetComposingRect(Rect.FromLTWH(0, 0, 1, 1));
+        connection.SetCaretRect(Rect.FromLTWH(0, 0, 1, 1));
+        connection.SetSelectionRects([new SelectionRect(0, Rect.FromLTWH(0, 0, 1, 1))]);
         connection.UpdateStyle(new TextInputStyle(TextDirection.Ltr, TextAlign.Left));
         connection.RequestAutofill();
         UI.TextInput.FinishAutofillContext();

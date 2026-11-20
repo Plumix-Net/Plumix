@@ -112,11 +112,11 @@ public sealed class TableBorderTests
             BorderRadius.Circular(8));
         Assert.True(border.IsUniform);
         var canvas = new CapturingCanvas();
-        border.Paint(canvas, DartGeometry.RectFromLTWH(10, 20, 100, 60), [], []);
+        border.Paint(canvas, Rect.FromLTWH(10, 20, 100, 60), [], []);
         Ring ring = Assert.Single(canvas.Rings);
-        Assert.Equal(DartGeometry.RectFromLTWH(10, 20, 100, 60), ring.Outer.Rect);
+        Assert.Equal(Rect.FromLTWH(10, 20, 100, 60), ring.Outer.Rect);
         // Dart's uniform branch deflates by width, irrespective of each side's strokeAlign.
-        Assert.Equal(DartGeometry.RectFromLTWH(12, 22, 96, 56), ring.Inner.Rect);
+        Assert.Equal(Rect.FromLTWH(12, 22, 96, 56), ring.Inner.Rect);
     }
 
     [Fact]
@@ -126,7 +126,7 @@ public sealed class TableBorderTests
             new BorderRadius(Radius.Circular(8), Radius.Circular(12), Radius.Circular(16), Radius.Circular(4)));
         Assert.False(border.IsUniform);
         var canvas = new CapturingCanvas();
-        border.Paint(canvas, DartGeometry.RectFromLTWH(10, 20, 100, 60), [30], [50]);
+        border.Paint(canvas, Rect.FromLTWH(10, 20, 100, 60), [30], [50]);
         Ring ring = Assert.Single(canvas.Rings);
         Assert.Equal(Radius.Circular(8), ring.Outer.TopLeft);
         Assert.Equal(Radius.Circular(12), ring.Outer.TopRight);
@@ -148,10 +148,10 @@ public sealed class TableBorderTests
             borderRadius: new BorderRadius(Radius.Circular(20), Radius.Circular(12),
                 Radius.Circular(16), Radius.Circular(10)));
         var canvas = new CapturingCanvas();
-        border.Paint(canvas, DartGeometry.RectFromLTWH(20, 30, 100, 60), [], []);
+        border.Paint(canvas, Rect.FromLTWH(20, 30, 100, 60), [], []);
         Ring ring = Assert.Single(canvas.Rings);
-        Assert.Equal(DartGeometry.RectFromLTWH(20, 27, 104, 63), ring.Outer.Rect);
-        Assert.Equal(DartGeometry.RectFromLTWH(28, 33, 92, 55), ring.Inner.Rect);
+        Assert.Equal(Rect.FromLTWH(20, 27, 104, 63), ring.Outer.Rect);
+        Assert.Equal(Rect.FromLTWH(28, 33, 92, 55), ring.Inner.Rect);
         Assert.Equal(Radius.Elliptical(12, 17), ring.Inner.TopLeft);
         Assert.Equal(Radius.Elliptical(12, 9), ring.Inner.TopRight);
         Assert.Equal(Radius.Elliptical(16, 14), ring.Inner.BottomRight);
@@ -167,10 +167,10 @@ public sealed class TableBorderTests
             right: new BorderSide(Colors.Blue, 20, BorderStyle.None, 1),
             bottom: new BorderSide(Colors.Red, 2), borderRadius: BorderRadius.Circular(12));
         var canvas = new CapturingCanvas();
-        border.Paint(canvas, DartGeometry.RectFromLTWH(20, 30, 100, 60), [], []);
+        border.Paint(canvas, Rect.FromLTWH(20, 30, 100, 60), [], []);
         Ring ring = Assert.Single(canvas.Rings);
-        Assert.Equal(DartGeometry.RectFromLTWH(20, 30, 100, 60), ring.Outer.Rect);
-        Assert.Equal(DartGeometry.RectFromLTWH(20, 34, 100, 54), ring.Inner.Rect);
+        Assert.Equal(Rect.FromLTWH(20, 30, 100, 60), ring.Outer.Rect);
+        Assert.Equal(Rect.FromLTWH(20, 34, 100, 54), ring.Inner.Rect);
         Assert.Equal(Radius.Elliptical(12, 8), ring.Inner.TopRight);
     }
 
@@ -181,13 +181,13 @@ public sealed class TableBorderTests
             right: new BorderSide(Colors.Green, 0), bottom: new BorderSide(Colors.Blue, 2),
             left: new BorderSide(Colors.Black, 4), borderRadius: BorderRadius.Circular(12));
         var canvas = new CapturingCanvas();
-        border.Paint(canvas, DartGeometry.RectFromLTWH(10, 20, 100, 60), [], []);
+        border.Paint(canvas, Rect.FromLTWH(10, 20, 100, 60), [], []);
         Assert.Empty(canvas.Rings);
         Assert.Equal(new[] { Colors.Red, Colors.Green, Colors.Blue, Colors.Black },
             canvas.Paths.Select(draw => draw.Paint.Color));
         Assert.Equal(PaintingStyle.Stroke, canvas.Paths[1].Paint.Style);
         Assert.Equal(0, canvas.Paths[1].Paint.StrokeWidth);
-        Assert.Equal(DartGeometry.RectFromLTWH(110, 20, 0, 60), canvas.Paths[1].Path.GetBounds());
+        Assert.Equal(Rect.FromLTWH(110, 20, 0, 60), canvas.Paths[1].Path.GetBounds());
         Assert.Equal(PaintingStyle.Fill, canvas.Paths[0].Paint.Style);
         Assert.True(canvas.Paths[0].Path.Contains(new Offset(50, 21)));
         Assert.False(canvas.Paths[0].Path.Contains(new Offset(50, 25)));
@@ -198,10 +198,10 @@ public sealed class TableBorderTests
     {
         var border = TableBorder.Symmetric(new BorderSide(Colors.Blue, 3));
         var canvas = new CapturingCanvas();
-        border.Paint(canvas, DartGeometry.RectFromLTWH(10, 20, 100, 60), [20, 40], [25, 75]);
+        border.Paint(canvas, Rect.FromLTWH(10, 20, 100, 60), [20, 40], [25, 75]);
         Assert.Equal(2, canvas.Paths.Count);
-        Assert.Equal(DartGeometry.RectFromLTWH(35, 20, 50, 60), canvas.Paths[0].Path.GetBounds());
-        Assert.Equal(DartGeometry.RectFromLTWH(10, 40, 100, 20), canvas.Paths[1].Path.GetBounds());
+        Assert.Equal(Rect.FromLTWH(35, 20, 50, 60), canvas.Paths[0].Path.GetBounds());
+        Assert.Equal(Rect.FromLTWH(10, 40, 100, 20), canvas.Paths[1].Path.GetBounds());
         Assert.All(canvas.Paths, draw =>
         {
             Assert.Equal(PaintingStyle.Stroke, draw.Paint.Style);
@@ -209,7 +209,7 @@ public sealed class TableBorderTests
             Assert.Equal(Colors.Blue, draw.Paint.Color);
         });
         var empty = new CapturingCanvas();
-        border.Paint(empty, DartGeometry.RectFromLTWH(0, 0, 100, 60), [], []);
+        border.Paint(empty, Rect.FromLTWH(0, 0, 100, 60), [], []);
         Assert.Empty(empty.Order);
     }
 
@@ -218,7 +218,7 @@ public sealed class TableBorderTests
     {
         var border = new TableBorder();
         var canvas = new CapturingCanvas();
-        var rect = DartGeometry.RectFromLTWH(0, 0, 100, 60);
+        var rect = Rect.FromLTWH(0, 0, 100, 60);
         Assert.Throws<AssertionError>(() => border.Paint(canvas, rect, [-1], []));
         Assert.Throws<AssertionError>(() => border.Paint(canvas, rect, [61], []));
         Assert.Throws<AssertionError>(() => border.Paint(canvas, rect, [], [-1]));
@@ -236,7 +236,7 @@ public sealed class TableBorderTests
             bottom: new BorderSide(Colors.Red, 2), left: new BorderSide(Colors.Red, 8),
             borderRadius: new BorderRadius(Radius.Circular(20), Radius.Circular(4),
                 Radius.Circular(12), Radius.Circular(4)));
-        border.Paint(canvas, DartGeometry.RectFromLTWH(20, 20, 100, 60), [], []);
+        border.Paint(canvas, Rect.FromLTWH(20, 20, 100, 60), [], []);
         Picture picture = recorder.EndRecording();
         var builder = new SceneBuilder();
         builder.AddPicture(default, picture);
@@ -261,7 +261,7 @@ public sealed class TableBorderTests
             right: new BorderSide(Colors.Green, 4), bottom: new BorderSide(Colors.Blue, 4),
             left: new BorderSide(Colors.Black, 4), horizontalInside: new BorderSide(Colors.Blue, 4),
             verticalInside: new BorderSide(Colors.Red, 4));
-        border.Paint(canvas, DartGeometry.RectFromLTWH(10, 10, 80, 60), [30], [20, 60]);
+        border.Paint(canvas, Rect.FromLTWH(10, 10, 80, 60), [30], [20, 60]);
         Picture picture = recorder.EndRecording();
         var builder = new SceneBuilder();
         builder.AddPicture(default, picture);

@@ -502,7 +502,7 @@ internal sealed class RenderCupertinoTextSelectionToolbarShape : RenderShiftedBo
         _clipPathLayer.Layer = context.PushClipPath(
             NeedsCompositing,
             childOffset,
-            DartGeometry.RectFromSize(Child.Size),
+            (Offset.Zero & Child.Size),
             clipPath,
             (childContext, clippedOffset) => childContext.PaintChild(Child, clippedOffset),
             oldLayer: _clipPathLayer.Layer);
@@ -517,7 +517,7 @@ internal sealed class RenderCupertinoTextSelectionToolbarShape : RenderShiftedBo
 
         // Positions outside of the clipped area of the child are not counted as hits.
         var childParentData = (BoxParentData)Child.parentData!;
-        var hitBox = DartGeometry.RectFromLTWH(
+        var hitBox = Rect.FromLTWH(
             childParentData.offset.Dx,
             childParentData.offset.Dy + CupertinoTextSelectionToolbar.ToolbarArrowSize.Height,
             Child.Size.Width,
@@ -572,7 +572,7 @@ internal sealed class RenderCupertinoTextSelectionToolbarShape : RenderShiftedBo
     /// <summary>Dart's `_shapeRRect`: the rounded body of the toolbar, in child coordinates.</summary>
     internal Plumix.UI.RRect ShapeRRect(RenderBox child)
     {
-        var rect = DartGeometry.RectFromLTWH(
+        var rect = Rect.FromLTWH(
             0.0,
             CupertinoTextSelectionToolbar.ToolbarArrowSize.Height,
             child.Size.Width,
@@ -656,7 +656,7 @@ internal sealed class RenderCupertinoTextSelectionToolbarShape : RenderShiftedBo
 
     private static Rect RectFromPoints(Offset a, Offset b)
     {
-        return DartGeometry.RectFromLTWH(
+        return Rect.FromLTWH(
             Math.Min(a.Dx, b.Dx),
             Math.Min(a.Dy, b.Dy),
             Math.Abs(a.Dx - b.Dx),

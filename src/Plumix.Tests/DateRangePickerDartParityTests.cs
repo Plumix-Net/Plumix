@@ -1538,7 +1538,7 @@ public sealed class DateRangePickerDartParityTests : IDisposable
                 DisplayFeatures:
                 [
                     new DisplayFeature(
-                        Bounds: DartGeometry.RectFromCorners(new Offset(390, 0), new Offset(410, 600)),
+                        Bounds: Rect.FromLTRB(390, 0, 410, 600),
                         Type: DisplayFeatureType.Hinge,
                         State: DisplayFeatureState.Unknown),
                 ]),
@@ -1795,7 +1795,7 @@ public sealed class DateRangePickerDartParityTests : IDisposable
             PaintAssert.Paints(
                 buttonFinder,
                 PaintPattern.Paints.Rect(
-                    rect: DartGeometry.RectFromLTWH(0.0, 0.0, 40.0, 40.0),
+                    rect: Rect.FromLTWH(0.0, 0.0, 40.0, 40.0),
                     color: theme.ColorScheme.OnSurfaceVariant.WithOpacity(0.08)));
         }, useMaterial3: true);
     }

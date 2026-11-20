@@ -102,7 +102,7 @@ internal static class ParagraphDecorations
             }
 
             void Rectangle(double x, double length, double centerY) =>
-                canvas.DrawRect(DartGeometry.RectFromLTWH(x, centerY - thickness / 2.0, length, thickness), fill);
+                canvas.DrawRect(Rect.FromLTWH(x, centerY - thickness / 2.0, length, thickness), fill);
         }
     }
 

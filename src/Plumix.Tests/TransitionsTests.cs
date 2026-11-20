@@ -421,7 +421,7 @@ public sealed class TransitionsTests : IDisposable
         Assert.Same(child, positioned.Child);
 
         var rectAnimation = new TestValueAnimation<Rect?>(
-            DartGeometry.RectFromLTWH(20, 24, 40, 32),
+            Rect.FromLTWH(20, 24, 40, 32),
             AnimationStatus.Forward);
         var relative = new RelativePositionedTransition(
             rect: rectAnimation,
@@ -520,7 +520,7 @@ public sealed class TransitionsTests : IDisposable
     public void RelativePositionedTransition_ConvertsAnimatedRectAgainstDeclaredSize()
     {
         var animation = new TestValueAnimation<Rect?>(
-            DartGeometry.RectFromLTWH(20, 15, 50, 30),
+            Rect.FromLTWH(20, 15, 50, 30),
             AnimationStatus.Forward);
         var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new Stack(

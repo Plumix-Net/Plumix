@@ -215,7 +215,7 @@ internal sealed class TextHighlightPainter : RenderEditablePainter
             .Distinct();
 
         Offset paintOffset = renderEditable.PaintOffset;
-        var textRect = DartGeometry.RectFromLTWH(0, 0, textPainter.Width, textPainter.Height);
+        var textRect = Rect.FromLTWH(0, 0, textPainter.Width, textPainter.Height);
         foreach (TextBox box in boxes)
         {
             Rect shifted = box.ToRect().Shift(new Offset(paintOffset.Dx, paintOffset.Dy));
@@ -231,7 +231,7 @@ internal sealed class TextHighlightPainter : RenderEditablePainter
         double top = Math.Max(a.Top, b.Top);
         double right = Math.Min(a.Right, b.Right);
         double bottom = Math.Min(a.Bottom, b.Bottom);
-        return DartGeometry.RectFromLTWH(left, top, Math.Max(0.0, right - left), Math.Max(0.0, bottom - top));
+        return Rect.FromLTWH(left, top, Math.Max(0.0, right - left), Math.Max(0.0, bottom - top));
     }
 
     public override bool ShouldRepaint(RenderEditablePainter? oldDelegate)

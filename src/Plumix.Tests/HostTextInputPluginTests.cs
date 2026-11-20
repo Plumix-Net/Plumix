@@ -388,13 +388,13 @@ public sealed class HostTextInputPluginTests : IDisposable
                 10.0, 20.0, 0.0, 1.0,
             },
         });
-        Invoke("TextInput.setMarkedTextRect", RectJson(DartGeometry.RectFromLTWH(3, 4, 5, 6)));
+        Invoke("TextInput.setMarkedTextRect", RectJson(Rect.FromLTWH(3, 4, 5, 6)));
 
-        Assert.Equal(DartGeometry.RectFromLTWH(16, 28, 10, 12), _plugin.GetCaretRect());
+        Assert.Equal(Rect.FromLTWH(16, 28, 10, 12), _plugin.GetCaretRect());
 
         // The caret rect wins over the marked text rect, as the macOS plugin positions only the caret.
-        Invoke("TextInput.setCaretRect", RectJson(DartGeometry.RectFromLTWH(1, 1, 2, 18)));
-        Assert.Equal(DartGeometry.RectFromLTWH(12, 22, 4, 36), _plugin.GetCaretRect());
+        Invoke("TextInput.setCaretRect", RectJson(Rect.FromLTWH(1, 1, 2, 18)));
+        Assert.Equal(Rect.FromLTWH(12, 22, 4, 36), _plugin.GetCaretRect());
         Assert.Equal(3, changes);
     }
 
@@ -414,7 +414,7 @@ public sealed class HostTextInputPluginTests : IDisposable
                 0.0, 0.0, 0.0, 0.0,
             },
         });
-        Invoke("TextInput.setCaretRect", RectJson(DartGeometry.RectFromLTWH(1, 1, 2, 18)));
+        Invoke("TextInput.setCaretRect", RectJson(Rect.FromLTWH(1, 1, 2, 18)));
 
         Assert.Equal(default(Rect), _plugin.GetCaretRect());
     }

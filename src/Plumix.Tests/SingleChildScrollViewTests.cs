@@ -214,14 +214,14 @@ public sealed class SingleChildScrollViewTests
         viewport.Layout(BoxConstraints.Tight(horizontal ? new Size(200, 300) : new Size(300, 200)));
         var pipeline = new PipelineOwner();
         pipeline.Attach(viewport);
-        var targetRect = horizontal ? DartGeometry.RectFromLTWH(1400, 0, 100, 300) : DartGeometry.RectFromLTWH(0, 1400, 300, 100);
+        var targetRect = horizontal ? Rect.FromLTWH(1400, 0, 100, 300) : Rect.FromLTWH(0, 1400, 300, 100);
         RevealedOffset leading = viewport.GetOffsetToReveal(child, 0, targetRect, axis: Axis.Horizontal);
         RevealedOffset trailing = viewport.GetOffsetToReveal(child, 1, targetRect);
         Assert.Equal(500, leading.Offset);
         Assert.Equal(400, trailing.Offset);
-        Assert.Equal(horizontal ? DartGeometry.RectFromLTWH(100, 0, 100, 300) : DartGeometry.RectFromLTWH(0, 100, 300, 100), leading.Rect);
-        Assert.Equal(horizontal ? DartGeometry.RectFromLTWH(0, 0, 100, 300) : DartGeometry.RectFromLTWH(0, 0, 300, 100), trailing.Rect);
-        var subrect = horizontal ? DartGeometry.RectFromLTWH(1440, 40, 10, 10) : DartGeometry.RectFromLTWH(40, 1440, 10, 10);
+        Assert.Equal(horizontal ? Rect.FromLTWH(100, 0, 100, 300) : Rect.FromLTWH(0, 100, 300, 100), leading.Rect);
+        Assert.Equal(horizontal ? Rect.FromLTWH(0, 0, 100, 300) : Rect.FromLTWH(0, 0, 300, 100), trailing.Rect);
+        var subrect = horizontal ? Rect.FromLTWH(1440, 40, 10, 10) : Rect.FromLTWH(40, 1440, 10, 10);
         Assert.Equal(550, viewport.GetOffsetToReveal(child, 0, subrect).Offset);
         Assert.Equal(360, viewport.GetOffsetToReveal(child, 1, subrect).Offset);
         Rect semanticsClip = viewport.InvokeDescribeSemanticsClip(child)!.Value;

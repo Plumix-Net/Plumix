@@ -733,7 +733,7 @@ internal sealed class NavigationRailIndicatorInkWell : InkResponse
                 horizontalCenter = referenceBox.Size.Width - horizontalCenter;
             }
 
-            return DartGeometry.RectFromLTWH(
+            return Rect.FromLTWH(
                 horizontalCenter - 28.0,
                 IndicatorOffset.Dy,
                 56.0,

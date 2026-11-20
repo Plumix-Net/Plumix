@@ -78,19 +78,19 @@ public sealed class MagnifierTests : IDisposable
     [Fact]
     public void MagnifierController_ShiftWithinBoundsUsesShortestTranslationAndGuardsSize()
     {
-        var bounds = DartGeometry.RectFromLTWH(10, 20, 100, 80);
+        var bounds = Rect.FromLTWH(10, 20, 100, 80);
 
         Assert.Equal(
-            DartGeometry.RectFromLTWH(10, 20, 30, 20),
-            MagnifierController.ShiftWithinBounds(DartGeometry.RectFromLTWH(0, 5, 30, 20), bounds));
+            Rect.FromLTWH(10, 20, 30, 20),
+            MagnifierController.ShiftWithinBounds(Rect.FromLTWH(0, 5, 30, 20), bounds));
         Assert.Equal(
-            DartGeometry.RectFromLTWH(80, 80, 30, 20),
-            MagnifierController.ShiftWithinBounds(DartGeometry.RectFromLTWH(95, 95, 30, 20), bounds));
+            Rect.FromLTWH(80, 80, 30, 20),
+            MagnifierController.ShiftWithinBounds(Rect.FromLTWH(95, 95, 30, 20), bounds));
         Assert.Equal(
-            DartGeometry.RectFromLTWH(30, 40, 30, 20),
-            MagnifierController.ShiftWithinBounds(DartGeometry.RectFromLTWH(30, 40, 30, 20), bounds));
+            Rect.FromLTWH(30, 40, 30, 20),
+            MagnifierController.ShiftWithinBounds(Rect.FromLTWH(30, 40, 30, 20), bounds));
         Assert.Throws<ArgumentException>(() =>
-            MagnifierController.ShiftWithinBounds(DartGeometry.RectFromLTWH(0, 0, 101, 20), bounds));
+            MagnifierController.ShiftWithinBounds(Rect.FromLTWH(0, 0, 101, 20), bounds));
     }
 
     [Fact]
@@ -220,9 +220,9 @@ public sealed class MagnifierTests : IDisposable
     {
         var info = new ValueNotifier<MagnifierInfo>(new MagnifierInfo(
             GlobalGesturePosition: new Offset(8, 12),
-            CaretRect: DartGeometry.RectFromLTWH(8, 10, 2, 20),
-            FieldBounds: DartGeometry.RectFromLTWH(20, 5, 140, 80),
-            CurrentLineBoundaries: DartGeometry.RectFromLTWH(20, 10, 120, 20)));
+            CaretRect: Rect.FromLTWH(8, 10, 2, 20),
+            FieldBounds: Rect.FromLTWH(20, 5, 140, 80),
+            CurrentLineBoundaries: Rect.FromLTWH(20, 10, 120, 20)));
         using var harness = new WidgetRenderHarness(
             new MediaQuery(
                 new MediaQueryData(Size: new Size(200, 120)),
@@ -239,8 +239,8 @@ public sealed class MagnifierTests : IDisposable
         info.Value = info.Value with
         {
             GlobalGesturePosition = new Offset(100, 60),
-            CaretRect = DartGeometry.RectFromLTWH(100, 58, 2, 20),
-            CurrentLineBoundaries = DartGeometry.RectFromLTWH(20, 58, 120, 20),
+            CaretRect = Rect.FromLTWH(100, 58, 2, 20),
+            CurrentLineBoundaries = Rect.FromLTWH(20, 58, 120, 20),
         };
         harness.Pump(new Size(200, 120));
 
