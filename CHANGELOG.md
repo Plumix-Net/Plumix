@@ -8,6 +8,8 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased]
+
+## v1.0.0-preview.4 — 2026-11-20
 - Predictive back pops the route: the user gesture stops only when its settle animation ends (routes.dart).
 
 ## v1.0.0-preview.3 — 2026-11-20
