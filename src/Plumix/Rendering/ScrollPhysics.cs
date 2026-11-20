@@ -1,6 +1,5 @@
 // Dart parity source: flutter/packages/flutter/lib/src/widgets/scroll_physics.dart
 
-using Avalonia;
 using Plumix.Physics;
 using Plumix.Widgets;
 

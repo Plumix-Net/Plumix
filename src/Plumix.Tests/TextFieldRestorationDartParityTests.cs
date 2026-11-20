@@ -1,4 +1,3 @@
-using Avalonia;
 using Plumix.Cupertino;
 using Plumix.Foundation;
 using Plumix.Material;

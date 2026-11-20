@@ -2,7 +2,6 @@
 // Mirrors material-ui-src/test/material_test.dart
 
 using System.Globalization;
-using Avalonia;
 using Plumix.Foundation;
 using Plumix.Material;
 using Plumix.Rendering;

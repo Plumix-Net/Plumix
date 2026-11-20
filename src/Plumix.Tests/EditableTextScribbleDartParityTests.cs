@@ -1,5 +1,4 @@
 
-using Avalonia;
 using Plumix.Painting;
 using Plumix.Rendering;
 using Plumix.UI;

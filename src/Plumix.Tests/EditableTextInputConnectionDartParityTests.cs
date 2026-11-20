@@ -1,7 +1,5 @@
 using System.Collections;
-using Avalonia;
 using Avalonia.Input.TextInput;
-using Avalonia.Media;
 using Plumix.Rendering;
 using Plumix.Material;
 using Plumix.UI;

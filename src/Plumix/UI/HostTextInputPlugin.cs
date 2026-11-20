@@ -2,7 +2,6 @@ using System.Buffers;
 using System.Collections;
 using System.Globalization;
 using System.Text;
-using Avalonia;
 using Plumix.Widgets;
 
 // C#-only infrastructure; no Dart parity source. The platform side of `flutter/textinput`, which in

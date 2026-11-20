@@ -2,7 +2,6 @@ using Plumix.Foundation;
 using Plumix.Rendering;
 using Plumix.Widgets;
 using Xunit;
-using Avalonia;
 
 // Dart parity sources:
 // - flutter/packages/flutter/lib/src/rendering/object.dart

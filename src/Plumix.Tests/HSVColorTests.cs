@@ -1,5 +1,4 @@
-﻿using Avalonia.Media;
-using Plumix.Painting;
+﻿using Plumix.Painting;
 using Xunit;
 
 // Dart parity source: flutter/packages/flutter/lib/src/painting/colors.dart (HSVColor)

@@ -1,7 +1,6 @@
 // These tests read Dart-deprecated members (`ignoringSemantics`, `filter`) on purpose.
 #pragma warning disable CS0618
 
-using Avalonia;
 using Plumix.Foundation;
 using Plumix.Rendering;
 using Plumix.UI;

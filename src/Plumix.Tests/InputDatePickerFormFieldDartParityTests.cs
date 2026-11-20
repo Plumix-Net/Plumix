@@ -1,7 +1,6 @@
 // Dart parity source: material_ui/lib/src/input_date_picker_form_field.dart
 // Mirrors material-ui-src/test/input_date_picker_form_field_test.dart
 
-using Avalonia;
 using Plumix.Foundation;
 using Plumix.Material;
 using Plumix.Rendering;

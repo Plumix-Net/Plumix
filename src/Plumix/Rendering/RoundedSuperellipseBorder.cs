@@ -1,4 +1,3 @@
-using Avalonia;
 using Avalonia.Media;
 using Plumix.UI;
 using Path = Plumix.UI.Path;

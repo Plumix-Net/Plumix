@@ -1,5 +1,4 @@
 using System.Text.RegularExpressions;
-using Avalonia;
 using Plumix.Foundation;
 using Plumix.Painting;
 using Plumix.Rendering;

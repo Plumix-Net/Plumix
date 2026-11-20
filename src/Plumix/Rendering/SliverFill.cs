@@ -1,6 +1,4 @@
 using System.Diagnostics;
-using Avalonia;
-using Avalonia.Media;
 using Plumix.Widgets;
 
 namespace Plumix.Rendering;

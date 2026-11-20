@@ -1,5 +1,4 @@
 using System.Diagnostics;
-using Avalonia;
 using Avalonia.Media;
 using Plumix.Foundation;
 using Plumix.Painting;

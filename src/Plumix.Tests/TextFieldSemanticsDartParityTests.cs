@@ -2,7 +2,6 @@
 // flutter/packages/flutter/lib/src/widgets/editable_text.dart, flutter/packages/flutter/lib/src/rendering/editable.dart
 // Ports the semantics cases of material-ui-src/test/text_field_test.dart.
 
-using Avalonia;
 using Plumix.Cupertino;
 using Plumix.Foundation;
 using Plumix.Material;

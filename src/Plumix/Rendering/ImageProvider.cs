@@ -2,8 +2,6 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Globalization;
 using System.Net;
-using Avalonia;
-using Avalonia.Media.Imaging;
 using Avalonia.Platform;
 using Plumix.UI;
 using IOPath = System.IO.Path;

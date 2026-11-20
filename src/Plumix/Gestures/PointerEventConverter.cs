@@ -1,4 +1,3 @@
-using Avalonia;
 using Plumix.UI;
 
 // Dart parity source: flutter/packages/flutter/lib/src/gestures/converter.dart

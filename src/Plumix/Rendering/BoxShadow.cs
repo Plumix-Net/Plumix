@@ -1,5 +1,3 @@
-using Avalonia;
-using Avalonia.Media;
 using Plumix.UI;
 
 namespace Plumix.Rendering;

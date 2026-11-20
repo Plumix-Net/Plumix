@@ -1,4 +1,3 @@
-using Avalonia;
 using Avalonia.Media;
 using Avalonia.Media.Immutable;
 using Plumix.Rendering;

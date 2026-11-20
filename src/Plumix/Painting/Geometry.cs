@@ -1,4 +1,3 @@
-using Avalonia;
 
 // Dart parity source: flutter/packages/flutter/lib/src/painting/geometry.dart
 

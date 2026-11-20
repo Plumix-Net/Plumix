@@ -1,7 +1,6 @@
 using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
-using Avalonia;
 using Avalonia.Media;
 using Avalonia.Platform;
 using Plumix.Cupertino;

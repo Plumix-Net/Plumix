@@ -1,4 +1,3 @@
-using Avalonia;
 
 // Dart parity source (reference): flutter/bin/cache/pkg/sky_engine/lib/ui/platform_dispatcher.dart
 // (Display, adapted)

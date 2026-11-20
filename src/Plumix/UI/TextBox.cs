@@ -1,5 +1,4 @@
 using System.Globalization;
-using Avalonia;
 using Plumix.UI;
 
 // C#-only counterpart of the dart:ui text geometry types (flutter/engine/src/flutter/lib/ui/text.dart:

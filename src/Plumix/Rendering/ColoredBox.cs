@@ -1,4 +1,3 @@
-using Avalonia;
 using Avalonia.Media;
 
 // Dart parity source: flutter/packages/flutter/lib/src/widgets/basic.dart (_RenderColoredBox)

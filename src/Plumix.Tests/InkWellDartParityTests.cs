@@ -1,7 +1,6 @@
 // Dart parity source: material_ui/lib/src/ink_well.dart
 // Mirrors material-ui-src/test/ink_well_test.dart
 
-using Avalonia;
 using Plumix.Foundation;
 using Plumix.Gestures;
 using Plumix.Material;

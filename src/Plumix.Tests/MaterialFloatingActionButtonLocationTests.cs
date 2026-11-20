@@ -1,4 +1,3 @@
-using Avalonia;
 using Plumix.Material;
 using Plumix.UI;
 using Plumix.Widgets;

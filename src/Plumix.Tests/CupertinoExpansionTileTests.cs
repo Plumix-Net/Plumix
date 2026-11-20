@@ -1,4 +1,3 @@
-using Avalonia;
 using Plumix;
 using Plumix.Cupertino;
 using Plumix.Gestures;

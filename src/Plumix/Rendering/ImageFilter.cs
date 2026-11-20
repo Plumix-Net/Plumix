@@ -1,4 +1,3 @@
-using Avalonia;
 
 namespace Plumix.Rendering;
 

@@ -1,5 +1,3 @@
-using Avalonia;
-using Avalonia.Media;
 using Plumix.Rendering;
 using BoxShadow = Plumix.Rendering.BoxShadow;
 

@@ -2,7 +2,6 @@
 // Mirrors material-ui-src/test/range_slider_test.dart (lines 1-1984)
 
 using System.Globalization;
-using Avalonia;
 using Plumix.Foundation;
 using Plumix.Gestures;
 using Plumix.Material;

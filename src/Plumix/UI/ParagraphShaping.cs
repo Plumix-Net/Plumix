@@ -1,5 +1,4 @@
 using System.Runtime.InteropServices;
-using Avalonia;
 using Avalonia.Media;
 using Avalonia.Media.TextFormatting;
 using RunGlyph = Avalonia.Media.TextFormatting.GlyphInfo;

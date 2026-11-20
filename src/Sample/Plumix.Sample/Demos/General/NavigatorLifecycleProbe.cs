@@ -1,6 +1,5 @@
 using System;
 using System.Threading.Tasks;
-using Avalonia;
 using Plumix.Rendering;
 using Plumix.Widgets;
 

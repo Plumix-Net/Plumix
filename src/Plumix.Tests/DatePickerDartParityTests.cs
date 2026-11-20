@@ -2,7 +2,6 @@
 // Mirrors material-ui-src/test/date_picker_test.dart
 
 using System.Collections;
-using Avalonia;
 using Plumix.Foundation;
 using Plumix.Gestures;
 using Plumix.Material;

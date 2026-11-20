@@ -1,4 +1,3 @@
-using Avalonia.Media;
 using MaterialTheming;
 using Plumix.UI;
 

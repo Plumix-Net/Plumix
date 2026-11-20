@@ -1,6 +1,5 @@
 using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
-using Avalonia;
 using Plumix.Foundation;
 using Plumix.Gestures;
 using Plumix.Rendering;

@@ -1,5 +1,4 @@
 using System.Buffers.Binary;
-using Avalonia;
 using Avalonia.Media;
 using Avalonia.Media.TextFormatting;
 using Plumix.Painting;

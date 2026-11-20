@@ -1,5 +1,4 @@
 using System.Diagnostics;
-using Avalonia;
 using Plumix.Foundation;
 
 // Dart parity source: flutter/packages/flutter/lib/src/services/platform_views.dart

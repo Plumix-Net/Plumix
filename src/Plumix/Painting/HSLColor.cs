@@ -1,4 +1,3 @@
-using Avalonia.Media;
 
 namespace Plumix.Painting;
 

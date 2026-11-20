@@ -5,7 +5,6 @@
 // count plus the completer's disposal; Dart's `await null` / `await extractOneFrame` drain the
 // microtask queue; `endOfFrame` is a pumped frame.
 using System.Diagnostics;
-using Avalonia;
 using Avalonia.Media;
 using Plumix.Rendering;
 using Plumix.UI;

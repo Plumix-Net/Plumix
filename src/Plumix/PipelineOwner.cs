@@ -1,6 +1,5 @@
 using System.Diagnostics;
 using System.Globalization;
-using Avalonia;
 using Plumix.Rendering;
 using Plumix.UI;
 using Plumix.Widgets;

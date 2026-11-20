@@ -1,5 +1,4 @@
 using System.Runtime.CompilerServices;
-using Avalonia;
 using Plumix.Rendering;
 using Plumix.UI;
 using Xunit;

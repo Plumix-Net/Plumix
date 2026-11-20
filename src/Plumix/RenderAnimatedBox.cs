@@ -1,5 +1,4 @@
-﻿using Avalonia;
-using Avalonia.Media;
+﻿using Avalonia.Media;
 using Plumix.Rendering;
 
 // C#-only infrastructure: an early hand-written demo render object with no Dart counterpart.

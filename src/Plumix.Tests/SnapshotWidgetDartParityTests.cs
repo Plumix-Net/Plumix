@@ -1,8 +1,6 @@
 // Dart parity source: flutter/packages/flutter/lib/src/widgets/snapshot_widget.dart
 // Mirrors flutter/packages/flutter/test/widgets/snapshot_widget_test.dart. The two golden-file tests
 // sample the RepaintBoundary's image instead of comparing against the checked-in PNGs.
-using Avalonia;
-using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Plumix.Foundation;
 using Plumix.Rendering;

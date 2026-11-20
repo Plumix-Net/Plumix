@@ -1,4 +1,3 @@
-using Avalonia;
 using Avalonia.Controls.Platform;
 using Xunit;
 using Plumix.Rendering;

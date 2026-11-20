@@ -1,4 +1,3 @@
-using Avalonia.Media;
 using Plumix.Cupertino;
 using Plumix.Widgets;
 using Xunit;

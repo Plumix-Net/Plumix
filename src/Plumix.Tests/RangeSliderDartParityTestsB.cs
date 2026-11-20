@@ -3,7 +3,6 @@
 
 using System.Globalization;
 using System.Text;
-using Avalonia;
 using Plumix.Foundation;
 using Plumix.Gestures;
 using Plumix.Material;

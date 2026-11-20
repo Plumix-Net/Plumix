@@ -1,5 +1,4 @@
 using System;
-using Avalonia;
 using Plumix.Material;
 using Plumix.Widgets;
 using Xunit;

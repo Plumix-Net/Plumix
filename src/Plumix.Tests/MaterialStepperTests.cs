@@ -2,8 +2,6 @@
 // Mirrors material-ui-src/test/stepper_test.dart, plus C#-only checks of the composition the
 // sample screen comparison depends on.
 
-using Avalonia;
-using Avalonia.Media;
 using Plumix.Foundation;
 using Plumix.Gestures;
 using Plumix.Material;

@@ -1,6 +1,5 @@
 using System.Globalization;
 using System.Text;
-using Avalonia;
 using Avalonia.Media;
 using Plumix.Painting;
 using Plumix.Widgets;

@@ -1,6 +1,5 @@
 // Dart parity source: material_ui/lib/src/slider.dart
 // Mirrors material-ui-src/test/slider_test.dart (lines 1-2373)
-using Avalonia;
 using Plumix.Foundation;
 using Plumix.Gestures;
 using Plumix.Material;

@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using Avalonia;
 using Plumix.Rendering;
 using Plumix.Widgets;
 using Xunit;

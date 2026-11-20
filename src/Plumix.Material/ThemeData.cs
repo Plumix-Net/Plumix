@@ -1,6 +1,4 @@
 using System.Runtime.CompilerServices;
-using Avalonia;
-using Avalonia.Media;
 using Plumix.Cupertino;
 using Plumix.Foundation;
 using Plumix.Painting;

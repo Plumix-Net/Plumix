@@ -1,7 +1,4 @@
 using System;
-using Avalonia;
-using Avalonia.Media;
-using Avalonia.Media.Imaging;
 using Plumix.Foundation;
 using Plumix.Painting;
 using Plumix.Rendering;

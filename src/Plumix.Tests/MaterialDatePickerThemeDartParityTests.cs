@@ -1,7 +1,6 @@
 // Dart parity source: material_ui/lib/src/date_picker_theme.dart
 // Mirrors material-ui-src/test/date_picker_theme_test.dart
 
-using Avalonia;
 using Plumix.Foundation;
 using Plumix.Gestures;
 using Plumix.Material;

@@ -1,5 +1,3 @@
-using Avalonia;
-using Avalonia.Media;
 using System.Collections.Generic;
 using Plumix.Material;
 using Plumix.Rendering;

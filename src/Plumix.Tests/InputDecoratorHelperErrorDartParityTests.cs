@@ -1,7 +1,6 @@
 // Dart parity source: material_ui/lib/src/input_decorator.dart (_HelperError)
 // Mirrors the errorText live-region test of material-ui-src/test/text_field_test.dart.
 
-using Avalonia;
 using Plumix.Cupertino;
 using Plumix.Foundation;
 using Plumix.Material;

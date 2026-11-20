@@ -1,7 +1,5 @@
 using System;
 using System.Globalization;
-using Avalonia;
-using Avalonia.Media;
 using Plumix.Painting;
 using Plumix.Material;
 using Plumix.Rendering;

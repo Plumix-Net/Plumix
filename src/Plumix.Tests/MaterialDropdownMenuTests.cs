@@ -1,5 +1,3 @@
-using Avalonia;
-using Avalonia.Media;
 using System.Text.RegularExpressions;
 using Plumix;
 using Plumix.Foundation;

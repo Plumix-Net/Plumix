@@ -2,7 +2,6 @@
 // Mirrors the thumb-shadow paint expectations of material-ui-src/test/switch_test.dart and
 // cupertino-ui-src/test/switch_test.dart: the thumb shadows are drawn through BoxShadow.toPaint
 // (Material: the thumb's ShapeDecoration; Cupertino: one drawRRect per shadow) before the thumb.
-using Avalonia;
 using Plumix.Cupertino;
 using Plumix.Foundation;
 using Plumix.Gestures;

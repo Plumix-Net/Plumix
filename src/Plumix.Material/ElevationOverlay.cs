@@ -1,4 +1,3 @@
-using Avalonia.Media;
 using Plumix.Widgets;
 
 namespace Plumix.Material;

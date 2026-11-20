@@ -1,11 +1,9 @@
-﻿using Avalonia;
-using Avalonia.Media;
+﻿using Avalonia.Media;
 using Plumix.Foundation;
 using Plumix.Painting;
 using Plumix.Rendering;
 using Plumix.UI;
 using Xunit;
-using Avalonia;
 using Plumix.Widgets;
 
 // Dart parity source: flutter/packages/flutter/lib/src/rendering/debug.dart

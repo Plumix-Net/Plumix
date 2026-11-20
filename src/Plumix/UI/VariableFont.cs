@@ -1,6 +1,5 @@
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
-using Avalonia;
 using Avalonia.Media;
 using Avalonia.Media.TextFormatting;
 using HarfBuzzSharp;

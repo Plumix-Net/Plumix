@@ -1,6 +1,4 @@
 using System.Collections.Generic;
-using Avalonia;
-using Avalonia.Media.Imaging;
 using Plumix.Foundation;
 using Plumix.Rendering;
 using Plumix.UI;

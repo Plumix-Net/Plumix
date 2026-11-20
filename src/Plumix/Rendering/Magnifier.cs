@@ -1,5 +1,3 @@
-using Avalonia;
-using Avalonia.Media;
 using Plumix.UI;
 
 // Dart parity source: flutter/packages/flutter/lib/src/widgets/magnifier.dart

@@ -1,4 +1,3 @@
-using Avalonia;
 using Avalonia.Media;
 using Plumix.Gestures;
 using Plumix.Material;

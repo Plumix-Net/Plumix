@@ -1,5 +1,3 @@
-using Avalonia;
-using Avalonia.Media;
 using Plumix.Material;
 using Plumix.Painting;
 using Plumix.Rendering;

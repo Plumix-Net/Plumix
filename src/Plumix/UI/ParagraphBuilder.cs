@@ -1,5 +1,4 @@
 using System.Text;
-using Avalonia.Media;
 using Plumix.Painting;
 
 // C#-only counterpart of dart:ui `ParagraphBuilder` (flutter/engine/src/flutter/lib/ui/text.dart). The

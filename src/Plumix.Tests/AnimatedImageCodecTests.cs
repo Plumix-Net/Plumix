@@ -1,4 +1,3 @@
-using Avalonia;
 using Avalonia.Media.Imaging;
 using Plumix.UI;
 using Xunit;

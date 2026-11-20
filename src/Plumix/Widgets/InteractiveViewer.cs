@@ -1,5 +1,4 @@
 using System.Globalization;
-using Avalonia;
 using Plumix.Foundation;
 using Plumix.Gestures;
 using Plumix.Physics;

@@ -1,4 +1,3 @@
-using Avalonia;
 
 // Dart parity source: flutter/packages/flutter/lib/src/rendering/performance_overlay.dart
 

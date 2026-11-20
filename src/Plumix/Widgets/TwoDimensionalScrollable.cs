@@ -2,7 +2,6 @@ using System.Diagnostics;
 using Plumix.Foundation;
 using Plumix.Gestures;
 using Plumix.Rendering;
-using Avalonia;
 using Plumix.UI;
 
 // Dart parity source: flutter/packages/flutter/lib/src/widgets/scrollable.dart (2D SCROLLING)

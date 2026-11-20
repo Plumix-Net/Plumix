@@ -1,5 +1,4 @@
 using System.Reflection;
-using Avalonia;
 using Plumix.Foundation;
 using Plumix.Gestures;
 using Plumix.Material;

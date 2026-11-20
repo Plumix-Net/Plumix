@@ -1,6 +1,4 @@
-﻿using Avalonia;
-using Avalonia.Media;
-using Plumix.Rendering;
+﻿using Plumix.Rendering;
 using Plumix.UI;
 
 namespace Plumix.Painting;

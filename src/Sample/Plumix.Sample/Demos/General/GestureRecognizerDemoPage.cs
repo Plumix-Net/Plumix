@@ -1,7 +1,5 @@
 using System;
 using System.Collections.Generic;
-using Avalonia;
-using Avalonia.Media;
 using Plumix.Gestures;
 using Plumix.Material;
 using Plumix.Rendering;

@@ -1,4 +1,3 @@
-using Avalonia;
 using Plumix.Foundation;
 using Xunit;
 

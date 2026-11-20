@@ -1,4 +1,3 @@
-using Avalonia;
 
 // C#-only host bridge for dart:ui's HitTestRequest and HitTestResponse.
 

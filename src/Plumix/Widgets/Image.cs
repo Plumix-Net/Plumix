@@ -1,6 +1,3 @@
-using Avalonia;
-using Avalonia.Media;
-using Avalonia.Media.Imaging;
 using Plumix.Foundation;
 using Plumix.UI;
 using Plumix.Rendering;

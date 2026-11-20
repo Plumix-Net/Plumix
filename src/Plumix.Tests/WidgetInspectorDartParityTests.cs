@@ -1,5 +1,4 @@
 using System.Runtime.CompilerServices;
-using Avalonia;
 using Plumix.Foundation;
 using Plumix.Gestures;
 using Plumix.Painting;
