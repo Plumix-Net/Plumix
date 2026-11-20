@@ -1183,7 +1183,11 @@ public abstract class RenderSliver : RenderObject
             constraints.AxisDirection,
             constraints.GrowthDirection) switch
         {
-            AxisDirection.Left => Rect.FromLTRB(paintExtent - rect.Right, rect.Top, paintExtent - rect.Left, rect.Bottom),
+            AxisDirection.Left => Rect.FromLTRB(
+                paintExtent - rect.Right,
+                rect.Top,
+                paintExtent - rect.Left,
+                rect.Bottom),
             AxisDirection.Up => Rect.FromLTRB(rect.Left, paintExtent - rect.Bottom, rect.Right, paintExtent - rect.Top),
             _ => rect,
         };

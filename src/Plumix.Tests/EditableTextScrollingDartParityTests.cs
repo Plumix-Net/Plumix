@@ -846,11 +846,13 @@ public sealed class EditableTextScrollingDartParityTests : IDisposable
         {
             EditableText.EditableTextState state = State(tester);
             state.UpdateFloatingCursor(new RawFloatingCursorPoint(FloatingCursorDragState.Start, new Offset(20, 20)));
-            state.UpdateFloatingCursor(new RawFloatingCursorPoint(FloatingCursorDragState.Update, new Offset(-250, 20)));
+            state.UpdateFloatingCursor(
+                new RawFloatingCursorPoint(FloatingCursorDragState.Update, new Offset(-250, 20)));
             state.UpdateFloatingCursor(new RawFloatingCursorPoint(FloatingCursorDragState.End));
             state.UpdateFloatingCursor(new RawFloatingCursorPoint(FloatingCursorDragState.Start, new Offset(20, 20)));
             tester.PumpAndSettle();
-            state.UpdateFloatingCursor(new RawFloatingCursorPoint(FloatingCursorDragState.Update, new Offset(-250, 20)));
+            state.UpdateFloatingCursor(
+                new RawFloatingCursorPoint(FloatingCursorDragState.Update, new Offset(-250, 20)));
             state.UpdateFloatingCursor(new RawFloatingCursorPoint(FloatingCursorDragState.End));
             tester.PumpAndSettle();
 

@@ -120,7 +120,9 @@ public sealed class MaterialDesktopTextSelectionToolbarTests : IDisposable
         Assert.Equal(FontWeight.Normal, paragraph.FontWeight);
         Assert.Equal(TextOverflow.Ellipsis, paragraph.Overflow);
         // Colors.black87 (0xDD000000) on a light color scheme, whatever its onSurface.
-        Assert.Equal(Plumix.Material.Colors.Black87, Assert.IsType<SolidColorBrush>(paragraph.Foreground).Color.ToPlumix());
+        Assert.Equal(
+            Plumix.Material.Colors.Black87,
+            Assert.IsType<SolidColorBrush>(paragraph.Foreground).Color.ToPlumix());
 
         SemanticsNode actionNode = Assert.IsType<SemanticsNode>(FindSemantics(
             semantics,
@@ -166,7 +168,9 @@ public sealed class MaterialDesktopTextSelectionToolbarTests : IDisposable
             value.PlainText == "Custom");
 
         // TODO(hansmuller) in Dart: the color follows the brightness only, not onSurface.
-        Assert.Equal(Plumix.Material.Colors.Black87, Assert.IsType<SolidColorBrush>(paragraph.Foreground).Color.ToPlumix());
+        Assert.Equal(
+            Plumix.Material.Colors.Black87,
+            Assert.IsType<SolidColorBrush>(paragraph.Foreground).Color.ToPlumix());
     }
 
     [Fact]

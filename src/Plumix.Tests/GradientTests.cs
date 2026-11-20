@@ -679,8 +679,10 @@ public sealed class GradientTests
         Assert.Equal(0.0, sweep.StartAngle);
         Assert.Equal(Math.PI * 2.0, sweep.EndAngle);
         Assert.Throws<ArgumentNullException>(() => sweep.CreateShader(Rect.FromLTWH(0, 0, 100, 100)));
-        var ltr = Assert.IsType<GradientShader>(sweep.CreateShader(Rect.FromLTWH(10, 20, 100, 50), TextDirection.Ltr).Brush);
-        var rtl = Assert.IsType<GradientShader>(sweep.CreateShader(Rect.FromLTWH(10, 20, 100, 50), TextDirection.Rtl).Brush);
+        var ltr = Assert.IsType<GradientShader>(
+            sweep.CreateShader(Rect.FromLTWH(10, 20, 100, 50), TextDirection.Ltr).Brush);
+        var rtl = Assert.IsType<GradientShader>(
+            sweep.CreateShader(Rect.FromLTWH(10, 20, 100, 50), TextDirection.Rtl).Brush);
         Assert.Equal(new Offset(10, 20), ltr.End);
         Assert.Equal(new Offset(110, 20), rtl.End);
         var smaller = new RadialGradient(colors: [Colors.Red, Colors.Blue], radius: 0.1);

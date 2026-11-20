@@ -339,7 +339,10 @@ public sealed class UpstreamDelta347Tests : IDisposable
 
         public global::Avalonia.Size Size { get; }
 
-        public void Draw(Avalonia.Media.DrawingContext context, global::Avalonia.Rect sourceRect, global::Avalonia.Rect destRect)
+        public void Draw(
+            Avalonia.Media.DrawingContext context,
+            global::Avalonia.Rect sourceRect,
+            global::Avalonia.Rect destRect)
         {
         }
     }

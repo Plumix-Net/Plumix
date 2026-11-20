@@ -1068,7 +1068,11 @@ internal sealed class InspectorOverlayLayer : Layer
             Color = WidgetInspectorOverlay.TooltipBackgroundColor,
         };
         canvas.DrawRect(
-            Rect.FromLTRB(tipOffset.Dx, tipOffset.Dy, tipOffset.Dx + tooltipSize.Width, tipOffset.Dy + tooltipSize.Height),
+            Rect.FromLTRB(
+                tipOffset.Dx,
+                tipOffset.Dy,
+                tipOffset.Dx + tooltipSize.Width,
+                tipOffset.Dy + tooltipSize.Height),
             tooltipBackground);
 
         double wedgeY = tipOffset.Dy;

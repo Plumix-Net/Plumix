@@ -113,7 +113,9 @@ public sealed class TextMagnifier : StatefulWidget
                 selectionInfo.GlobalGesturePosition.Dx,
                 selectionInfo.CurrentLineBoundaries.Left,
                 selectionInfo.CurrentLineBoundaries.Right);
-            var unadjustedMagnifierRect = new Offset(magnifierX, selectionInfo.CaretRect.Center.Dy) - basicMagnifierOffset & Magnifier.DefaultMagnifierSize;
+            var unadjustedMagnifierRect = new Offset(
+                magnifierX,
+                selectionInfo.CaretRect.Center.Dy) - basicMagnifierOffset & Magnifier.DefaultMagnifierSize;
             Rect adjustedMagnifierRect = MagnifierController.ShiftWithinBounds(
                 unadjustedMagnifierRect,
                 screenRect);

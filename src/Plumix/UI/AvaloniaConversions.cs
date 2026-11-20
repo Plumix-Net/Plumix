@@ -61,7 +61,8 @@ internal static class AvaloniaConversions
 
     extension(global::Avalonia.Media.FontStyle style)
     {
-        public FontStyle ToPlumix() => style == global::Avalonia.Media.FontStyle.Normal ? FontStyle.Normal : FontStyle.Italic;
+        public FontStyle ToPlumix() =>
+            style == global::Avalonia.Media.FontStyle.Normal ? FontStyle.Normal : FontStyle.Italic;
     }
 
     extension(Color color)

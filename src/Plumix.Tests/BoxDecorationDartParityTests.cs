@@ -149,7 +149,9 @@ public sealed class BoxDecorationDartParityTests
             new BoxShadow(color: new Color(0xFF112233)),
             new BoxShadow().CopyWith(color: new Color(0xFF112233)));
         Assert.NotEqual(new BoxShadow(), new BoxShadow(offset: new Offset(1.0, 2.0)));
-        Assert.Equal(new BoxShadow(offset: new Offset(1.0, 2.0)), new BoxShadow().CopyWith(offset: new Offset(1.0, 2.0)));
+        Assert.Equal(
+            new BoxShadow(offset: new Offset(1.0, 2.0)),
+            new BoxShadow().CopyWith(offset: new Offset(1.0, 2.0)));
         Assert.NotEqual(new BoxShadow(), new BoxShadow(blurRadius: 123.0));
         Assert.Equal(new BoxShadow(blurRadius: 123.0), new BoxShadow().CopyWith(blurRadius: 123.0));
         Assert.NotEqual(new BoxShadow(), new BoxShadow(spreadRadius: 123.0));

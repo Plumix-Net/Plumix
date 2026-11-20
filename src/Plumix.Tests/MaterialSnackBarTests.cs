@@ -220,7 +220,8 @@ public sealed class MaterialSnackBarTests : IDisposable
             box.Color == ThemeData.Light.ColorScheme.InverseSurface);
         Assert.Equal(
             ThemeData.Light.ColorScheme.OnInverseSurface,
-            Assert.IsType<SolidColorBrush>(FindParagraph(material3.RenderView, "Message")!.Foreground).Color.ToPlumix());
+            Assert.IsType<SolidColorBrush>(
+                FindParagraph(material3.RenderView, "Message")!.Foreground).Color.ToPlumix());
         Assert.Equal(
             ThemeData.Light.ColorScheme.InversePrimary,
             Assert.IsType<SolidColorBrush>(FindParagraph(material3.RenderView, "UNDO")!.Foreground).Color.ToPlumix());

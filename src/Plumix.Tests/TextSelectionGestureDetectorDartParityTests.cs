@@ -52,7 +52,10 @@ public sealed class TextSelectionGestureDetectorDartParityTests : IDisposable
         return tester;
     }
 
-    private static void TapAt(FrameworkDartTester tester, Offset location, PointerDeviceKind kind = PointerDeviceKind.Touch)
+    private static void TapAt(
+        FrameworkDartTester tester,
+        Offset location,
+        PointerDeviceKind kind = PointerDeviceKind.Touch)
     {
         TestGesture gesture = tester.StartGesture(location, kind);
         gesture.Up();

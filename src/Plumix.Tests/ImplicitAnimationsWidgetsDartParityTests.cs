@@ -31,7 +31,10 @@ public sealed class ImplicitAnimationsWidgetsDartParityTests
         Assert.Equal(description.Trim(), description);
     }
 
-    private static Offset Lerp(Offset a, Offset b, double t) => new(a.Dx + ((b.Dx - a.Dx) * t), a.Dy + ((b.Dy - a.Dy) * t));
+    private static Offset Lerp(
+        Offset a,
+        Offset b,
+        double t) => new(a.Dx + ((b.Dx - a.Dx) * t), a.Dy + ((b.Dy - a.Dy) * t));
 
     // ---- animated_container_test.dart ----
 

@@ -871,8 +871,16 @@ public abstract class RenderViewportBase<TParentData> : RenderBox,
         }
 
         return Axis == Axis.Vertical
-            ? Rect.FromLTRB(semanticBounds.Left, semanticBounds.Top - cacheExtent, semanticBounds.Right, semanticBounds.Bottom + cacheExtent)
-            : Rect.FromLTRB(semanticBounds.Left - cacheExtent, semanticBounds.Top, semanticBounds.Right + cacheExtent, semanticBounds.Bottom);
+            ? Rect.FromLTRB(
+                semanticBounds.Left,
+                semanticBounds.Top - cacheExtent,
+                semanticBounds.Right,
+                semanticBounds.Bottom + cacheExtent)
+            : Rect.FromLTRB(
+                semanticBounds.Left - cacheExtent,
+                semanticBounds.Top,
+                semanticBounds.Right + cacheExtent,
+                semanticBounds.Bottom);
     }
 
     public override void VisitChildrenForSemantics(Action<RenderObject> visitor)

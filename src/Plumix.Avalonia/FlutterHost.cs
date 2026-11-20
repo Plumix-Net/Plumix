@@ -988,9 +988,13 @@ public partial class PlumixHost : Control, ICustomHitTest
         // Avalonia assigns Bounds after ArrangeOverride returns; metrics published during that
         // callback must use its finalSize, including the first layout and subsequent resizes.
         var size = _lastArrangedSize;
-        Offset origin = (_attachedTopLevel is null ? default : this.TranslatePoint(default, _attachedTopLevel) ?? default).ToPlumix();
+        Offset origin = (
+            _attachedTopLevel is null ? default : this.TranslatePoint(
+                default,
+                _attachedTopLevel) ?? default).ToPlumix();
         EdgeInsets viewInsets = ResolveViewInsets(
-            _inputPane?.State ?? InputPaneState.Closed, (_inputPane?.OccludedRect ?? default).ToPlumix(), (origin & size));
+            _inputPane?.State ?? InputPaneState.Closed, (
+                _inputPane?.OccludedRect ?? default).ToPlumix(), (origin & size));
         double scale = _attachedTopLevel?.RenderScaling ?? 1.0;
         if (!double.IsFinite(scale) || scale <= 0)
         {
@@ -1685,7 +1689,9 @@ public partial class PlumixHost : Control, ICustomHitTest
         {
             if (_attachedTopLevel != null)
             {
-                TopLevel.SetSystemBarColor(_attachedTopLevel, new SolidColorBrush(fallbackSystemBarColor.ToAvalonia()!));
+                TopLevel.SetSystemBarColor(
+                    _attachedTopLevel,
+                    new SolidColorBrush(fallbackSystemBarColor.ToAvalonia()!));
             }
 
             insetsManager.SystemBarColor = fallbackSystemBarColor.ToAvalonia()!;

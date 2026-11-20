@@ -814,7 +814,11 @@ internal sealed class PaddleSliderValueIndicatorPathPainter
         {
             Offset leftCenter = _topLobeCenter - new Offset(leftWidthNeeded, 0.0) + neckStretch;
             Offset rightCenter = _topLobeCenter + new Offset(rightWidthNeeded, 0.0) + neckStretch;
-            var valueRect = Rect.FromLTRB(leftCenter.Dx - _topLobeRadius, leftCenter.Dy - _topLobeRadius, rightCenter.Dx + _topLobeRadius, rightCenter.Dy + _topLobeRadius);
+            var valueRect = Rect.FromLTRB(
+                leftCenter.Dx - _topLobeRadius,
+                leftCenter.Dy - _topLobeRadius,
+                rightCenter.Dx + _topLobeRadius,
+                rightCenter.Dy + _topLobeRadius);
             var outlinePaint = new Pen(new SolidColorBrush(new Color(0xffff0000).ToAvalonia()), 1.0);
             canvas.DrawRectangle(null, outlinePaint, valueRect);
         }

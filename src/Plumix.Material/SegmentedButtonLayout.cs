@@ -399,7 +399,9 @@ internal sealed class RenderSegmentedButton : RenderBox,
         Move((RenderBox)child, after as RenderBox);
     void IRenderObjectContainer.Remove(RenderObject child) => Remove((RenderBox)child);
 
-    private Rect LocalBorderRect => new Offset(0.0, TapTargetVerticalPadding / 2.0) & new Size(Size.Width, Math.Max(0.0, Size.Height - TapTargetVerticalPadding));
+    private Rect LocalBorderRect => new Offset(
+        0.0,
+        TapTargetVerticalPadding / 2.0) & new Size(Size.Width, Math.Max(0.0, Size.Height - TapTargetVerticalPadding));
 
     private double MaximumIntrinsic(Func<RenderBox, double, double> getter, double extent)
     {

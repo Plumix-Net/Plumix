@@ -210,7 +210,9 @@ public sealed class PaintingBindingTests : IDisposable
         FrameInfo second = await EventLoopPump.WaitFor(codec.GetNextFrame());
         codec.Dispose();
         Assert.Equal(1, calls);
-        Assert.Equal(RasterBackend.ReadPixels(first.Image.NativeBitmap), RasterBackend.ReadPixels(second.Image.NativeBitmap));
+        Assert.Equal(
+            RasterBackend.ReadPixels(first.Image.NativeBitmap),
+            RasterBackend.ReadPixels(second.Image.NativeBitmap));
         Assert.Equal((15, 10), (first.Image.Width, first.Image.Height));
         first.Image.Dispose();
         second.Image.Dispose();

@@ -277,8 +277,10 @@ public sealed class ShapeBorderTests
         // A directional radius resolves per text direction.
         var directional = new RoundedRectangleBorder(
             borderRadius: BorderRadiusDirectional.Only(topStart: 20.0));
-        Assert.True(directional.GetOuterPath(Rect.FromLTWH(0, 0, 100, 100), TextDirection.Ltr).Contains(new Offset(99, 1)));
-        Assert.False(directional.GetOuterPath(Rect.FromLTWH(0, 0, 100, 100), TextDirection.Ltr).Contains(new Offset(1, 1)));
+        Assert.True(
+            directional.GetOuterPath(Rect.FromLTWH(0, 0, 100, 100), TextDirection.Ltr).Contains(new Offset(99, 1)));
+        Assert.False(
+            directional.GetOuterPath(Rect.FromLTWH(0, 0, 100, 100), TextDirection.Ltr).Contains(new Offset(1, 1)));
     }
 
     [Fact]

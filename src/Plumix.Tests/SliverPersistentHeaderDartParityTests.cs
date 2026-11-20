@@ -706,7 +706,9 @@ public sealed class SliverPersistentHeaderDartParityTests
         ScrollPosition position = Position(tester);
         _ = position.AnimateTo(bigHeight + @delegate.MaxExtent - 5.0, curve: Curves.Linear, duration: OneMinute);
         tester.PumpAndSettle(TimeSpan.FromMilliseconds(1000));
-        Assert.Equal(Rect.FromLTWH(0.0, -195.0, 800.0, 200.0), tester.GetRect(Text(tester, "Sliver Persistent Header")));
+        Assert.Equal(
+            Rect.FromLTWH(0.0, -195.0, 800.0, 200.0),
+            tester.GetRect(Text(tester, "Sliver Persistent Header")));
     }
 
     // Flutter: 'SliverPersistentHeader - scrolling - overscroll gap is below header'
@@ -803,7 +805,9 @@ public sealed class SliverPersistentHeaderDartParityTests
         _ = position.AnimateTo(@delegate.MaxExtent - 20.0, curve: Curves.Linear, duration: OneMinute);
         tester.PumpAndSettle(TimeSpan.FromMilliseconds(1000));
         FlushSemantics(tester);
-        Assert.Equal(Rect.FromLTWH(0.0, -180.0, 800.0, 200.0), tester.GetRect(Text(tester, "Sliver Persistent Header")));
+        Assert.Equal(
+            Rect.FromLTWH(0.0, -180.0, 800.0, 200.0),
+            tester.GetRect(Text(tester, "Sliver Persistent Header")));
 
         SemanticsNode sliver = Assert.Single(SemanticsNodesWithLabel(tester, "Sliver Persistent Header"));
         Assert.False(sliver.GetSemanticsData().HasFlag(SemanticsFlags.IsHidden));

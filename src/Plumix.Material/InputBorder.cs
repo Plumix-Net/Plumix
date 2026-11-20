@@ -511,7 +511,12 @@ public record ShapedInputBorder : InputBorder
         var gapRect = new Path();
         // The band extends slightly beyond the top edge to ensure a clean cut, and is kept short so
         // that only the top edge is affected.
-        gapRect.AddRect(Rect.FromLTRB(Math.Clamp(start, rect.Left, rect.Right), rect.Top - 1.0, Math.Clamp(gapRight, rect.Left, rect.Right), rect.Top + 1.0));
+        gapRect.AddRect(
+            Rect.FromLTRB(
+                Math.Clamp(start, rect.Left, rect.Right),
+                rect.Top - 1.0,
+                Math.Clamp(gapRight, rect.Left, rect.Right),
+                rect.Top + 1.0));
         return Path.Combine(PathOperation.Difference, outerPath, gapRect);
     }
 }

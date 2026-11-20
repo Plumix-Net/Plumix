@@ -45,7 +45,8 @@ internal sealed class DebugOverflowIndicator : IDisposable
         },
     }.ToImmutable();
 
-    private static readonly IBrush LabelBackgroundPaint = new SolidColorBrush(new Color(0xFFFFFFFF).ToAvalonia()).ToImmutable();
+    private static readonly IBrush LabelBackgroundPaint = new SolidColorBrush(
+        new Color(0xFFFFFFFF).ToAvalonia()).ToImmutable();
 
     // One label painter per `_OverflowSide`; the labels are in English.
     private readonly TextPainter[] _indicatorLabel =

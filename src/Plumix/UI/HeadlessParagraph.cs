@@ -1339,7 +1339,11 @@ internal sealed class HeadlessParagraph : Paragraph
         }
 
         double fontSize = item.Style.FontSize;
-        var bounds = Rect.FromLTRB(item.X, line.Baseline - (fontSize * AscentRatio), item.X + item.Width, line.Baseline + (fontSize * DescentRatio));
+        var bounds = Rect.FromLTRB(
+            item.X,
+            line.Baseline - (fontSize * AscentRatio),
+            item.X + item.Width,
+            line.Baseline + (fontSize * DescentRatio));
         return new GlyphInfo(bounds, new TextRange(cluster.Start, cluster.End), direction);
     }
 
@@ -1752,7 +1756,8 @@ internal sealed class HeadlessParagraph : Paragraph
             case GlyphShape.DescentOnly:
                 return new RectangleGeometry(Rect.FromLTWH(x, baseline, Math.Max(width, 0.0), descent).ToAvalonia());
             case GlyphShape.AscentOnly:
-                return new RectangleGeometry(Rect.FromLTWH(x, baseline - ascent, Math.Max(width, 0.0), ascent).ToAvalonia());
+                return new RectangleGeometry(
+                    Rect.FromLTWH(x, baseline - ascent, Math.Max(width, 0.0), ascent).ToAvalonia());
             case GlyphShape.NotDef:
                 double unit = fontSize / 1024.0;
                 var outer = Rect.FromLTWH(x + (128 * unit), baseline - (768 * unit), 768 * unit, 768 * unit);
@@ -1760,7 +1765,8 @@ internal sealed class HeadlessParagraph : Paragraph
                 return new CombinedGeometry(GeometryCombineMode.Exclude,
                     new RectangleGeometry(outer.ToAvalonia()), new RectangleGeometry(inner.ToAvalonia()));
             default:
-                return new RectangleGeometry(Rect.FromLTWH(x, baseline - ascent, Math.Max(width, 0.0), ascent + descent).ToAvalonia());
+                return new RectangleGeometry(
+                    Rect.FromLTWH(x, baseline - ascent, Math.Max(width, 0.0), ascent + descent).ToAvalonia());
         }
     }
 

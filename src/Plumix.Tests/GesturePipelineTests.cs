@@ -182,7 +182,9 @@ public sealed class GesturePipelineTests
                 binding.HandlePointerEvent(pipeline.Root, new PointerDownEvent(
                     pointer, PointerDeviceKind.Mouse, new Offset(12, 12), PointerButtons.Primary, now));
                 binding.HandlePointerEvent(pipeline.Root, new PointerUpEvent(
-                    pointer, PointerDeviceKind.Mouse, new Offset(12, 12), PointerButtons.None, now.AddMilliseconds(20)));
+                    pointer, PointerDeviceKind.Mouse, new Offset(
+                        12,
+                        12), PointerButtons.None, now.AddMilliseconds(20)));
                 // Past kDoubleTapMinTime (40 ms), well inside kDoubleTapTimeout (300 ms).
                 timers.Elapse(TimeSpan.FromMilliseconds(80));
                 now = now.AddMilliseconds(80);
@@ -794,7 +796,12 @@ public sealed class GesturePipelineTests
 
             binding.HandlePointerEvent(
                 pipeline.Root,
-                new PointerDownEvent(3, PointerDeviceKind.Mouse, new Offset(10, 10), PointerButtons.Primary, DateTime.UtcNow));
+                new PointerDownEvent(
+                    3,
+                    PointerDeviceKind.Mouse,
+                    new Offset(10, 10),
+                    PointerButtons.Primary,
+                    DateTime.UtcNow));
 
             binding.HandlePointerEvent(
                 pipeline.Root,

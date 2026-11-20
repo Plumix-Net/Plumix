@@ -31,7 +31,9 @@ public sealed class PlumixHostViewInsetsTests
 
         Assert.Equal(default, PlumixHost.ResolveViewInsets(InputPaneState.Closed, below, Screen));
         Assert.Equal(default, PlumixHost.ResolveViewInsets(InputPaneState.Open, below, Screen));
-        Assert.Equal(default, PlumixHost.ResolveViewInsets(InputPaneState.Closed, Rect.FromLTWH(0, 538, 402, 336), Screen));
+        Assert.Equal(
+            default,
+            PlumixHost.ResolveViewInsets(InputPaneState.Closed, Rect.FromLTWH(0, 538, 402, 336), Screen));
     }
 
     [Fact]

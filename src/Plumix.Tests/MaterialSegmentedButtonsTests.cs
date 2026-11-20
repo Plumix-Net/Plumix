@@ -62,7 +62,8 @@ public sealed class MaterialSegmentedButtonsTests
                 isSelected: [true])));
         disabled.Pump(new Size(320, 120));
         Assert.Equal(NavigationSurfaceUtilities.WithOpacity(Colors.DarkSlateBlue, 0.38),
-            Assert.IsType<SolidColorBrush>(FindParagraph(disabled.RenderView, "Disabled")!.Foreground).Color.ToPlumix());
+            Assert.IsType<SolidColorBrush>(
+                FindParagraph(disabled.RenderView, "Disabled")!.Foreground).Color.ToPlumix());
     }
 
     [Fact]

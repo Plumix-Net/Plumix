@@ -1236,7 +1236,12 @@ public sealed class MaterialScaffoldTests
             Assert.True(scaffoldContext is not null);
 
             var start = new DateTime(2026, 4, 12, 8, 0, 0, DateTimeKind.Utc);
-            DispatchPointerDown(binding, harness.RenderView, pointer: 7101, position: new Offset(2, 120), timestampUtc: start);
+            DispatchPointerDown(
+                binding,
+                harness.RenderView,
+                pointer: 7101,
+                position: new Offset(2, 120),
+                timestampUtc: start);
             DispatchPointerMove(
                 binding, harness.RenderView, 7101, new Offset(40, 120), start.AddMilliseconds(30));
             DispatchPointerMove(
@@ -1298,7 +1303,12 @@ public sealed class MaterialScaffoldTests
             Assert.True(state.IsDrawerOpen);
 
             var start = new DateTime(2026, 4, 12, 8, 1, 0, DateTimeKind.Utc);
-            DispatchPointerDown(binding, harness.RenderView, pointer: 7102, position: new Offset(240, 120), timestampUtc: start);
+            DispatchPointerDown(
+                binding,
+                harness.RenderView,
+                pointer: 7102,
+                position: new Offset(240, 120),
+                timestampUtc: start);
             DispatchPointerMove(
                 binding, harness.RenderView, 7102, new Offset(220, 120), start.AddMilliseconds(30));
             DispatchPointerMove(
@@ -1491,7 +1501,12 @@ public sealed class MaterialScaffoldTests
             Assert.True(scaffoldContext is not null);
 
             var start = new DateTime(2026, 4, 12, 8, 5, 0, DateTimeKind.Utc);
-            DispatchPointerDown(binding, harness.RenderView, pointer: 7111, position: new Offset(398, 120), timestampUtc: start);
+            DispatchPointerDown(
+                binding,
+                harness.RenderView,
+                pointer: 7111,
+                position: new Offset(398, 120),
+                timestampUtc: start);
             DispatchPointerMove(
                 binding, harness.RenderView, 7111, new Offset(360, 120), start.AddMilliseconds(30));
             DispatchPointerMove(
@@ -1553,7 +1568,12 @@ public sealed class MaterialScaffoldTests
             Assert.True(state.IsEndDrawerOpen);
 
             var start = new DateTime(2026, 4, 12, 8, 6, 0, DateTimeKind.Utc);
-            DispatchPointerDown(binding, harness.RenderView, pointer: 7112, position: new Offset(160, 120), timestampUtc: start);
+            DispatchPointerDown(
+                binding,
+                harness.RenderView,
+                pointer: 7112,
+                position: new Offset(160, 120),
+                timestampUtc: start);
             DispatchPointerMove(
                 binding, harness.RenderView, 7112, new Offset(180, 120), start.AddMilliseconds(30));
             DispatchPointerMove(
@@ -1701,7 +1721,12 @@ public sealed class MaterialScaffoldTests
             var state = Scaffold.Of(scaffoldContext!);
 
             var startOpenAt = new DateTime(2026, 5, 3, 9, 0, 0, DateTimeKind.Utc);
-            DispatchPointerDown(binding, harness.RenderView, pointer: 7121, position: new Offset(2, 120), timestampUtc: startOpenAt);
+            DispatchPointerDown(
+                binding,
+                harness.RenderView,
+                pointer: 7121,
+                position: new Offset(2, 120),
+                timestampUtc: startOpenAt);
             DispatchPointerMove(
                 binding, harness.RenderView, 7121, new Offset(40, 120), startOpenAt.AddMilliseconds(30));
             DispatchPointerMove(
@@ -1721,7 +1746,12 @@ public sealed class MaterialScaffoldTests
             Assert.Null(FindParagraphByText(harness.RenderView, "Alternating end drawer panel"));
 
             var startCloseAt = new DateTime(2026, 5, 3, 9, 1, 0, DateTimeKind.Utc);
-            DispatchPointerDown(binding, harness.RenderView, pointer: 7122, position: new Offset(240, 120), timestampUtc: startCloseAt);
+            DispatchPointerDown(
+                binding,
+                harness.RenderView,
+                pointer: 7122,
+                position: new Offset(240, 120),
+                timestampUtc: startCloseAt);
             DispatchPointerMove(
                 binding, harness.RenderView, 7122, new Offset(220, 120), startCloseAt.AddMilliseconds(30));
             DispatchPointerMove(
@@ -1740,7 +1770,12 @@ public sealed class MaterialScaffoldTests
             Assert.Null(FindParagraphByText(harness.RenderView, "Alternating start drawer panel"));
 
             var endOpenAt = new DateTime(2026, 5, 3, 9, 2, 0, DateTimeKind.Utc);
-            DispatchPointerDown(binding, harness.RenderView, pointer: 7123, position: new Offset(398, 120), timestampUtc: endOpenAt);
+            DispatchPointerDown(
+                binding,
+                harness.RenderView,
+                pointer: 7123,
+                position: new Offset(398, 120),
+                timestampUtc: endOpenAt);
             DispatchPointerMove(
                 binding, harness.RenderView, 7123, new Offset(360, 120), endOpenAt.AddMilliseconds(30));
             DispatchPointerMove(
@@ -1796,7 +1831,12 @@ public sealed class MaterialScaffoldTests
             var state = Scaffold.Of(scaffoldContext!);
 
             var endOpenAt = new DateTime(2026, 5, 3, 9, 3, 0, DateTimeKind.Utc);
-            DispatchPointerDown(binding, harness.RenderView, pointer: 7124, position: new Offset(398, 120), timestampUtc: endOpenAt);
+            DispatchPointerDown(
+                binding,
+                harness.RenderView,
+                pointer: 7124,
+                position: new Offset(398, 120),
+                timestampUtc: endOpenAt);
             DispatchPointerMove(
                 binding, harness.RenderView, 7124, new Offset(360, 120), endOpenAt.AddMilliseconds(30));
             DispatchPointerMove(
@@ -1816,7 +1856,12 @@ public sealed class MaterialScaffoldTests
             Assert.Null(FindParagraphByText(harness.RenderView, "Alternating second start drawer panel"));
 
             var endCloseAt = new DateTime(2026, 5, 3, 9, 4, 0, DateTimeKind.Utc);
-            DispatchPointerDown(binding, harness.RenderView, pointer: 7125, position: new Offset(160, 120), timestampUtc: endCloseAt);
+            DispatchPointerDown(
+                binding,
+                harness.RenderView,
+                pointer: 7125,
+                position: new Offset(160, 120),
+                timestampUtc: endCloseAt);
             DispatchPointerMove(
                 binding, harness.RenderView, 7125, new Offset(180, 120), endCloseAt.AddMilliseconds(30));
             DispatchPointerMove(
@@ -1835,7 +1880,12 @@ public sealed class MaterialScaffoldTests
             Assert.Null(FindParagraphByText(harness.RenderView, "Alternating first end drawer panel"));
 
             var startOpenAt = new DateTime(2026, 5, 3, 9, 5, 0, DateTimeKind.Utc);
-            DispatchPointerDown(binding, harness.RenderView, pointer: 7126, position: new Offset(2, 120), timestampUtc: startOpenAt);
+            DispatchPointerDown(
+                binding,
+                harness.RenderView,
+                pointer: 7126,
+                position: new Offset(2, 120),
+                timestampUtc: startOpenAt);
             DispatchPointerMove(
                 binding, harness.RenderView, 7126, new Offset(40, 120), startOpenAt.AddMilliseconds(30));
             DispatchPointerMove(

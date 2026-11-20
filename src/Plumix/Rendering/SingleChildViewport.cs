@@ -105,10 +105,26 @@ public sealed class RenderSingleChildViewport : RenderProxyBox, IRenderAbstractV
         double remainingOffset = MaxScrollExtent - OffsetPixels;
         return AxisDirection switch
         {
-            AxisDirection.Up => Rect.FromLTRB(semanticBounds.Left, semanticBounds.Top - remainingOffset, semanticBounds.Right, semanticBounds.Bottom + OffsetPixels),
-            AxisDirection.Right => Rect.FromLTRB(semanticBounds.Left - OffsetPixels, semanticBounds.Top, semanticBounds.Right + remainingOffset, semanticBounds.Bottom),
-            AxisDirection.Down => Rect.FromLTRB(semanticBounds.Left, semanticBounds.Top - OffsetPixels, semanticBounds.Right, semanticBounds.Bottom + remainingOffset),
-            _ => Rect.FromLTRB(semanticBounds.Left - remainingOffset, semanticBounds.Top, semanticBounds.Right + OffsetPixels, semanticBounds.Bottom)
+            AxisDirection.Up => Rect.FromLTRB(
+                semanticBounds.Left,
+                semanticBounds.Top - remainingOffset,
+                semanticBounds.Right,
+                semanticBounds.Bottom + OffsetPixels),
+            AxisDirection.Right => Rect.FromLTRB(
+                semanticBounds.Left - OffsetPixels,
+                semanticBounds.Top,
+                semanticBounds.Right + remainingOffset,
+                semanticBounds.Bottom),
+            AxisDirection.Down => Rect.FromLTRB(
+                semanticBounds.Left,
+                semanticBounds.Top - OffsetPixels,
+                semanticBounds.Right,
+                semanticBounds.Bottom + remainingOffset),
+            _ => Rect.FromLTRB(
+                semanticBounds.Left - remainingOffset,
+                semanticBounds.Top,
+                semanticBounds.Right + OffsetPixels,
+                semanticBounds.Bottom)
         };
     }
 

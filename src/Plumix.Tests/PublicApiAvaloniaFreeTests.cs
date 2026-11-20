@@ -22,7 +22,8 @@ public sealed class PublicApiAvaloniaFreeTests
         Assert.True(leaks.Count == 0,
             $"{package} public API mentions Avalonia types:\n" + string.Join("\n", leaks
                 .OrderBy(pair => pair.Key, StringComparer.Ordinal)
-                .Select(pair => $"{pair.Key}:\n    " + string.Join("\n    ", pair.Value.Order(StringComparer.Ordinal)))));
+                .Select(
+                    pair => $"{pair.Key}:\n    " + string.Join("\n    ", pair.Value.Order(StringComparer.Ordinal)))));
     }
 
     private static Assembly Load(string package) => package switch
@@ -104,7 +105,8 @@ public sealed class PublicApiAvaloniaFreeTests
     {
         bool exposedProtected = !owner.IsSealed;
         static bool Accessible(MethodBase? method, bool exposedProtected) =>
-            method is not null && (method.IsPublic || (exposedProtected && (method.IsFamily || method.IsFamilyOrAssembly)));
+            method is not null && (
+                method.IsPublic || (exposedProtected && (method.IsFamily || method.IsFamilyOrAssembly)));
 
         return member switch
         {
@@ -121,7 +123,10 @@ public sealed class PublicApiAvaloniaFreeTests
     {
         foreach (Type part in Flatten(type))
         {
-            if (part.Assembly.GetName().Name is { } assemblyName && assemblyName.StartsWith("Avalonia", StringComparison.Ordinal))
+            if (
+                part.Assembly.GetName().Name is { } assemblyName && assemblyName.StartsWith(
+                    "Avalonia",
+                    StringComparison.Ordinal))
             {
                 string key = part.IsGenericType ? part.GetGenericTypeDefinition().Name : part.Name;
                 if (!leaks.TryGetValue(key, out HashSet<string>? members))

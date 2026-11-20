@@ -721,7 +721,9 @@ internal sealed class RenderSelectToggleButton : RenderShiftedBox
         }
 
         double half = side.Width / 2.0;
-        var rect = offset + new Offset(half, half) & new Size(Math.Max(0.0, Size.Width - side.Width), Math.Max(0.0, Size.Height - side.Width));
+        var rect = offset + new Offset(
+            half,
+            half) & new Size(Math.Max(0.0, Size.Width - side.Width), Math.Max(0.0, Size.Height - side.Width));
         context.Canvas.DrawRectangle(
             new SolidColorBrush(Colors.Transparent.ToAvalonia()),
             PenFor(side),

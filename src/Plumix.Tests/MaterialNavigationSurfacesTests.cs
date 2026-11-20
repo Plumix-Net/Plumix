@@ -756,7 +756,9 @@ public sealed class MaterialNavigationSurfacesTests
             Assert.IsType<SolidColorBrush>(FindParagraph(harness.RenderView, "Rail two")!.Foreground).Color.ToPlumix());
         Assert.Equal(colors.Primary,
             Assert.IsType<SolidColorBrush>(
-                FindParagraph(harness.RenderView, char.ConvertFromUtf32(Icons.Menu.CodePoint))!.Foreground).Color.ToPlumix());
+                FindParagraph(
+                    harness.RenderView,
+                    char.ConvertFromUtf32(Icons.Menu.CodePoint))!.Foreground).Color.ToPlumix());
         Assert.Equal(unselectedIconColor,
             Assert.IsType<SolidColorBrush>(
                 FindParagraph(

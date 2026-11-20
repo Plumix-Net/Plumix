@@ -61,7 +61,9 @@ public sealed class TextSelectionToolbarAnchorsTests
             new(new Offset(10, 42), TextDirection.Ltr),
         ];
 
-        Assert.Equal(Rect.FromLTWH(100, 50, 200, 42), TextSelectionToolbarAnchors.GetSelectionRect(box, 14, 14, points));
+        Assert.Equal(
+            Rect.FromLTWH(100, 50, 200, 42),
+            TextSelectionToolbarAnchors.GetSelectionRect(box, 14, 14, points));
         TextSelectionToolbarAnchors anchors = TextSelectionToolbarAnchors.FromSelection(box, 14, 14, points);
         Assert.Equal(new Offset(200, 50), anchors.PrimaryAnchor);
         Assert.Equal(new Offset(200, 92), anchors.SecondaryAnchor);

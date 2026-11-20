@@ -32,7 +32,12 @@ public partial class Canvas
             {
                 EdgeMode = isAntiAlias ? EdgeMode.Antialias : EdgeMode.Aliased,
             });
-            ShaderDrawing.DrawRectangle(context, brush, pen, new RoundedRect(rect.ToAvalonia(), radiusX, radiusY), boxShadows);
+            ShaderDrawing.DrawRectangle(
+                context,
+                brush,
+                pen,
+                new RoundedRect(rect.ToAvalonia(), radiusX, radiusY),
+                boxShadows);
         });
     }
 
@@ -846,7 +851,8 @@ public partial class Canvas
                     (int)Math.Round(color.Alpha * 0.12 * (1.0 - (fraction * 0.75))),
                     1,
                     byte.MaxValue);
-                var shadowBrush = new SolidColorBrush(Color.FromARGB(alpha, color.Red, color.Green, color.Blue).ToAvalonia());
+                var shadowBrush = new SolidColorBrush(
+                    Color.FromARGB(alpha, color.Red, color.Green, color.Blue).ToAvalonia());
                 var shadowPen = new Pen(shadowBrush, step * 2.0);
                 ShaderDrawing.DrawGeometry(context, transparentOccluder ? shadowBrush : null, shadowPen, geometry);
             }
@@ -870,7 +876,12 @@ public partial class Canvas
             image.Native,
             paint,
             destination,
-            (context, source) => context.DrawImage(source, (Offset.Zero & source.Size.ToPlumix()).ToAvalonia(), destination.ToAvalonia()));
+            (
+                context,
+                source) => context.DrawImage(
+                    source,
+                    (Offset.Zero & source.Size.ToPlumix()).ToAvalonia(),
+                    destination.ToAvalonia()));
     }
 
     /// <summary>
@@ -943,7 +954,11 @@ public partial class Canvas
             for (int column = 0; column < 3; column++)
             {
                 Rect source = Rect.FromLTRB(sourceX[column], sourceY[row], sourceX[column + 1], sourceY[row + 1]);
-                Rect destination = Rect.FromLTRB(destinationX[column], destinationY[row], destinationX[column + 1], destinationY[row + 1]);
+                Rect destination = Rect.FromLTRB(
+                    destinationX[column],
+                    destinationY[row],
+                    destinationX[column + 1],
+                    destinationY[row + 1]);
                 if (source.Width > 0.0 && source.Height > 0.0 && destination.Width > 0.0 && destination.Height > 0.0)
                 {
                     yield return (source, destination);

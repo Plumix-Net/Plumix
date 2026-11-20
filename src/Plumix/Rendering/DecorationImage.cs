@@ -547,7 +547,9 @@ public static class ImagePainting
         double dx = halfWidthDelta + ((flipHorizontally ? -alignment.X : alignment.X) * halfWidthDelta);
         double dy = halfHeightDelta + (alignment.Y * halfHeightDelta);
         var destinationPosition = new Offset(rect.Left + dx, rect.Top + dy);
-        var destinationRect = destinationPosition & new Size(Math.Max(0.0, destinationWidth), Math.Max(0.0, destinationHeight));
+        var destinationRect = destinationPosition & new Size(
+            Math.Max(0.0, destinationWidth),
+            Math.Max(0.0, destinationHeight));
 
         // Set to true if we added a saveLayer to the canvas to invert/flip the image.
         bool invertedCanvas = false;

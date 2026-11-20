@@ -174,7 +174,8 @@ public sealed class CupertinoMenuAnchorTests : IDisposable
         destructive.Pump(ViewSize);
         Assert.Equal(
             CupertinoColors.SystemRed.Color,
-            Assert.IsType<SolidColorBrush>(FindParagraph(destructive.RenderView, "Delete").Foreground).Color.ToPlumix());
+            Assert.IsType<SolidColorBrush>(
+                FindParagraph(destructive.RenderView, "Delete").Foreground).Color.ToPlumix());
 
         using var dark = new CupertinoThemeTestHarness(Wrap(
             new CupertinoMenuItem(child: new Text("Dark"), onPressed: static () => { }),

@@ -346,7 +346,11 @@ public sealed class CanvasDartParityTests
 
         canvas.Save();
         canvas.Scale(2, 2);
-        var scaledExpandedBounds = Rect.FromLTRB(clipExpandedBounds.Left / 2.0, clipExpandedBounds.Top / 2.0, clipExpandedBounds.Right / 2.0, clipExpandedBounds.Bottom / 2.0);
+        var scaledExpandedBounds = Rect.FromLTRB(
+            clipExpandedBounds.Left / 2.0,
+            clipExpandedBounds.Top / 2.0,
+            clipExpandedBounds.Right / 2.0,
+            clipExpandedBounds.Bottom / 2.0);
         AssertCloseToRect(scaledExpandedBounds, canvas.GetLocalClipBounds());
         AssertCloseToRect(clipExpandedBounds, canvas.GetDestinationClipBounds());
         canvas.Restore();

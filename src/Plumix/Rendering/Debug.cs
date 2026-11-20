@@ -337,7 +337,10 @@ public static partial class RenderingDebug
     /// <remarks>Flutter's <c>_debugDrawDoubleRect</c>.</remarks>
     private static void DrawDoubleRect(PaintingContext context, Rect outerRect, Rect innerRect, Color color)
     {
-        context.Canvas.DrawPath(BuildDoubleRectPath(outerRect, innerRect), new SolidColorBrush(color.ToAvalonia()), pen: null);
+        context.Canvas.DrawPath(
+            BuildDoubleRectPath(outerRect, innerRect),
+            new SolidColorBrush(color.ToAvalonia()),
+            pen: null);
     }
 
     /// <summary>The even-odd ring between two nested rectangles.</summary>

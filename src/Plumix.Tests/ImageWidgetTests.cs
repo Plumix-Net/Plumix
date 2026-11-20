@@ -176,7 +176,8 @@ public sealed class ImageWidgetTests : IDisposable
 
         await PumpUntilAsync(
             harness,
-            () => FindRenderImages(harness.RenderView).Any(image => ReferenceEquals(image.Image?.Native, placeholderImage)));
+            () => FindRenderImages(
+                harness.RenderView).Any(image => ReferenceEquals(image.Image?.Native, placeholderImage)));
         IReadOnlyList<RenderImage> initialImages = FindRenderImages(harness.RenderView);
         RenderImage initialTarget = Assert.Single(initialImages, image => image.Image is null);
         RenderImage placeholder = Assert.Single(
@@ -327,7 +328,8 @@ public sealed class ImageWidgetTests : IDisposable
 
         Assert.Null(observedFrame);
         Assert.True(loadingReceivedFrameResult);
-        completion.SetResult(new ImageInfo(new RasterImage(new FakeImage(new Size(16, 12))), scale: 1.0, debugLabel: "test"));
+        completion.SetResult(
+            new ImageInfo(new RasterImage(new FakeImage(new Size(16, 12))), scale: 1.0, debugLabel: "test"));
         await PumpUntilAsync(harness, () => observedFrame == 0);
 
         Assert.False(observedSynchronous);

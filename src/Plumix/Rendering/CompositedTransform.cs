@@ -278,7 +278,11 @@ public class RenderFollowerLayer : RenderProxyBox
             layer,
             base.Paint,
             default,
-            childPaintBounds: Rect.FromLTRB(double.NegativeInfinity, double.NegativeInfinity, double.PositiveInfinity, double.PositiveInfinity));
+            childPaintBounds: Rect.FromLTRB(
+                double.NegativeInfinity,
+                double.NegativeInfinity,
+                double.PositiveInfinity,
+                double.PositiveInfinity));
         if (Constants.KDebugMode)
         {
             layer.DebugCreator = DebugCreator;

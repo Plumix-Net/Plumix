@@ -293,7 +293,10 @@ public sealed class Path
                     WriteConic(context, points, iterator.ConicWeight());
                     break;
                 case SKPathVerb.Cubic:
-                    context.CubicBezierTo(FromNative(points[1]).ToAvalonia(), FromNative(points[2]).ToAvalonia(), FromNative(points[3]).ToAvalonia());
+                    context.CubicBezierTo(
+                        FromNative(points[1]).ToAvalonia(),
+                        FromNative(points[2]).ToAvalonia(),
+                        FromNative(points[3]).ToAvalonia());
                     break;
                 case SKPathVerb.Close:
                     context.EndFigure(true);

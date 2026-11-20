@@ -501,7 +501,8 @@ public class RoundSliderTickMarkShape : SliderTickMarkShape
                 sliderTheme.DisabledActiveTickMarkColor,
                 sliderTheme.ActiveTickMarkColor),
         };
-        var paint = new SolidColorBrush(new ColorTween(begin: begin, end: end).Transform(enableAnimation.Value)!.ToAvalonia());
+        var paint = new SolidColorBrush(
+            new ColorTween(begin: begin, end: end).Transform(enableAnimation.Value)!.ToAvalonia());
 
         // The tick marks are tiny circles that are the same height as the track.
         double tickMarkRadius =

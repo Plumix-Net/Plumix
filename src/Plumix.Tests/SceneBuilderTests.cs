@@ -494,7 +494,8 @@ public sealed class SceneBuilderTests
     public void OffsetLayerToImageSync_CropsToTheBoundsAtThePixelRatio()
     {
         var layer = new OffsetLayer(new Offset(100, 100));
-        var picture = new PictureLayer(Rect.FromLTWH(0, 0, 20, 20)) { Picture = DrawRectPicture(Rect.FromLTWH(5, 5, 5, 5)) };
+        var picture = new PictureLayer(
+            Rect.FromLTWH(0, 0, 20, 20)) { Picture = DrawRectPicture(Rect.FromLTWH(5, 5, 5, 5)) };
         layer.Append(picture);
 
         Bitmap image = layer.ToImageSync(Rect.FromLTWH(5, 5, 10, 10), pixelRatio: 2.0).NativeBitmap;

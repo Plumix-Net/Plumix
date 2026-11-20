@@ -62,7 +62,11 @@ internal static partial class FilterLayerRasterizer
                 drawChildren(drawingContext);
             }
 
-            using var readable = new WriteableBitmap(pixelSize, Dpi.ToAvaloniaVector(), PixelFormats.Bgra8888, AlphaFormat.Premul);
+            using var readable = new WriteableBitmap(
+                pixelSize,
+                Dpi.ToAvaloniaVector(),
+                PixelFormats.Bgra8888,
+                AlphaFormat.Premul);
             using (ILockedFramebuffer framebuffer = readable.Lock())
             {
                 target.CopyPixels(framebuffer);
@@ -124,7 +128,9 @@ internal static partial class FilterLayerRasterizer
             return null;
         }
 
-        RasterFrame frame = Rasterize(context => context.DrawImage(image, bounds.ToAvalonia(), bounds.ToAvalonia()), bounds);
+        RasterFrame frame = Rasterize(
+            context => context.DrawImage(image, bounds.ToAvalonia(), bounds.ToAvalonia()),
+            bounds);
         if (colorFilter is not null)
         {
             ApplyColorFilter(frame.Pixels, colorFilter);
@@ -166,7 +172,11 @@ internal static partial class FilterLayerRasterizer
                 blur.SigmaY * scale,
                 blur.TileMode,
                 blur.Bounds is { } bounds
-                    ? Rect.FromLTWH(bounds.Left * scale, bounds.Top * scale, bounds.Width * scale, bounds.Height * scale)
+                    ? Rect.FromLTWH(
+                        bounds.Left * scale,
+                        bounds.Top * scale,
+                        bounds.Width * scale,
+                        bounds.Height * scale)
                     : null),
             ImageFilter.Matrix matrix => new ImageFilter.Matrix(
                 ScaleMatrix(matrix.Values, scale),

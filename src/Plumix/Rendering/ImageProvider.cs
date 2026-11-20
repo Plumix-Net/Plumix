@@ -175,7 +175,10 @@ public sealed class PlatformAssetBundle : AssetBundle
 
         // Dart's `packages/<package>/<path>` keys name an asset of another package (assembly).
         const string packagesPrefix = "packages/";
-        if (key.StartsWith(packagesPrefix, StringComparison.Ordinal) && key.IndexOf('/', packagesPrefix.Length) is > 0 and int end)
+        if (
+            key.StartsWith(
+                packagesPrefix,
+                StringComparison.Ordinal) && key.IndexOf('/', packagesPrefix.Length) is > 0 and int end)
         {
             return new Uri($"avares://{key[packagesPrefix.Length..end]}/{key[(end + 1)..]}");
         }

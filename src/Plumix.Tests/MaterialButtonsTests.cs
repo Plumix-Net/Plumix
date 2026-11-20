@@ -2347,7 +2347,9 @@ public sealed class MaterialButtonsTests
         Assert.NotNull(decorated);
         Assert.Equal(theme.ColorScheme.Primary, decorated!.Color);
         Assert.NotNull(paragraph);
-        Assert.Equal(theme.ColorScheme.OnPrimary, Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color.ToPlumix());
+        Assert.Equal(
+            theme.ColorScheme.OnPrimary,
+            Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color.ToPlumix());
     }
 
     [Fact]

@@ -313,9 +313,13 @@ public sealed class RenderOverflowBar : RenderBox,
     }
 
     public override void Paint(PaintingContext ctx, Offset offset) => DefaultPaint(ctx, offset);
-    protected override bool HitTestChildren(BoxHitTestResult result, Offset position) => DefaultHitTestChildren(result, position);
+    protected override bool HitTestChildren(
+        BoxHitTestResult result,
+        Offset position) => DefaultHitTestChildren(result, position);
     public void DefaultPaint(PaintingContext ctx, Offset offset) => _container.DefaultPaint(ctx, offset);
-    public bool DefaultHitTestChildren(BoxHitTestResult result, Offset position) => _container.DefaultHitTestChildren(result, position);
+    public bool DefaultHitTestChildren(
+        BoxHitTestResult result,
+        Offset position) => _container.DefaultHitTestChildren(result, position);
     public override void VisitChildren(Action<RenderObject> visitor) { for (var child = FirstChild; child is not null; child = ChildAfter(child)) visitor(child); }
     public override void VisitChildrenForSemantics(Action<RenderObject> visitor)
     {

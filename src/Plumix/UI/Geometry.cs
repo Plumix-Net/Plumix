@@ -128,7 +128,9 @@ public readonly struct Size : IEquatable<Size>
     public Offset BottomCenter(Offset origin) => new(origin.Dx + Width / 2.0, origin.Dy + Height);
     public Offset BottomRight(Offset origin) => new(origin.Dx + Width, origin.Dy + Height);
 
-    /// <summary>Whether <paramref name="offset"/> lies inside, top/left edges included, bottom/right excluded.</summary>
+    /// <summary>
+    /// Whether <paramref name="offset"/> lies inside: top/left edges included, bottom/right excluded.
+    /// </summary>
     public bool Contains(Offset offset) =>
         offset.Dx >= 0.0 && offset.Dx < Width && offset.Dy >= 0.0 && offset.Dy < Height;
 
@@ -274,7 +276,9 @@ public readonly struct Rect : IEquatable<Rect>
     public Offset BottomCenter => new(Left + Width / 2.0, Bottom);
     public Offset BottomRight => new(Right, Bottom);
 
-    /// <summary>Whether <paramref name="offset"/> lies inside, top/left edges included, bottom/right excluded.</summary>
+    /// <summary>
+    /// Whether <paramref name="offset"/> lies inside: top/left edges included, bottom/right excluded.
+    /// </summary>
     public bool Contains(Offset offset) =>
         offset.Dx >= Left && offset.Dx < Right && offset.Dy >= Top && offset.Dy < Bottom;
 
@@ -307,7 +311,8 @@ public readonly struct Rect : IEquatable<Rect>
     public override int GetHashCode() => HashCode.Combine(Left, Top, Right, Bottom);
 
     public override string ToString() =>
-        $"Rect.fromLTRB({GeometryMath.Fixed(Left)}, {GeometryMath.Fixed(Top)}, {GeometryMath.Fixed(Right)}, {GeometryMath.Fixed(Bottom)})";
+        $"Rect.fromLTRB({GeometryMath.Fixed(Left)}, {GeometryMath.Fixed(Top)}, "
+        + $"{GeometryMath.Fixed(Right)}, {GeometryMath.Fixed(Bottom)})";
 }
 
 /// <summary>Number helpers shared by the geometry types.</summary>

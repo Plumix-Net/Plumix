@@ -216,7 +216,10 @@ internal sealed class ScrollableSelectionContainerDelegate : MultiSelectableSele
         else
         {
             _currentDragStartRelatedToOrigin = InferPositionRelatedToOrigin(@event.GlobalPosition);
-            Offset startOffset = Translate(_currentDragStartRelatedToOrigin.Value, -deltaToOrigin.Dx, -deltaToOrigin.Dy);
+            Offset startOffset = Translate(
+                _currentDragStartRelatedToOrigin.Value,
+                -deltaToOrigin.Dx,
+                -deltaToOrigin.Dy);
             @event = SelectionEdgeUpdateEvent.ForStart(startOffset, @event.Granularity);
         }
 

@@ -33,13 +33,17 @@ public sealed class CanvasSaveLayerTests
         {
             canvas.DrawRect(Rect.FromLTWH(0, 0, 20, 20), new Paint { Color = Red });
             canvas.SaveLayer(Rect.FromLTWH(0, 0, 20, 20), new Paint());
-            canvas.DrawRect(Rect.FromLTWH(0, 0, 10, 20), new Paint { Color = Blue, BlendMode = BlendMode.DestinationOut });
+            canvas.DrawRect(
+                Rect.FromLTWH(0, 0, 10, 20),
+                new Paint { Color = Blue, BlendMode = BlendMode.DestinationOut });
             canvas.Restore();
         });
         Bitmap direct = Render(canvas =>
         {
             canvas.DrawRect(Rect.FromLTWH(0, 0, 20, 20), new Paint { Color = Red });
-            canvas.DrawRect(Rect.FromLTWH(0, 0, 10, 20), new Paint { Color = Blue, BlendMode = BlendMode.DestinationOut });
+            canvas.DrawRect(
+                Rect.FromLTWH(0, 0, 10, 20),
+                new Paint { Color = Blue, BlendMode = BlendMode.DestinationOut });
         });
 
         Assert.Equal(((byte)0xFF, (byte)0, (byte)0, (byte)0xFF), RasterBackend.PixelAt(isolated, 5, 10));
@@ -224,7 +228,8 @@ public sealed class CanvasSaveLayerTests
         Bitmap image = Render(canvas =>
         {
             canvas.SaveLayer(null, new Paint());
-            canvas.DrawImageRect(new RasterImage(green), Rect.FromLTWH(0, 0, 2, 2), Rect.FromLTWH(0, 0, 20, 20), new Paint
+            canvas.DrawImageRect(new RasterImage(
+                green), Rect.FromLTWH(0, 0, 2, 2), Rect.FromLTWH(0, 0, 20, 20), new Paint
             {
                 Color = Color.FromRGBO(0, 0, 0, 0.5),
             });
@@ -291,7 +296,8 @@ public sealed class CanvasSaveLayerTests
     private static IReadOnlyList<CanvasCall> PaintRecordingFor(Clip clip)
     {
         var canvas = new Canvas(new PictureRecorder());
-        new CanvasClipContext(canvas).ClipRectAndPaint(Rect.FromLTWH(0, 0, 5, 5), clip, Rect.FromLTWH(0, 0, 5, 5), () => { });
+        new CanvasClipContext(
+            canvas).ClipRectAndPaint(Rect.FromLTWH(0, 0, 5, 5), clip, Rect.FromLTWH(0, 0, 5, 5), () => { });
         return canvas.DebugCalls;
     }
 

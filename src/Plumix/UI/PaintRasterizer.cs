@@ -355,7 +355,11 @@ internal static class PaintRasterizer
             draw(drawingContext);
         }
 
-        using var readable = new WriteableBitmap(pixelSize, Dpi.ToAvaloniaVector(), PixelFormats.Bgra8888, AlphaFormat.Premul);
+        using var readable = new WriteableBitmap(
+            pixelSize,
+            Dpi.ToAvaloniaVector(),
+            PixelFormats.Bgra8888,
+            AlphaFormat.Premul);
         using ILockedFramebuffer framebuffer = readable.Lock();
         target.CopyPixels(framebuffer);
         int rowBytes = checked(width * 4);

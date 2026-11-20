@@ -86,7 +86,8 @@ public sealed class DisplayFeatureSubScreen : StatelessWidget
                     // The display feature splits this sub-screen vertically.
                     if (screen.Left < bounds.Left)
                     {
-                        newSubScreens.Add(Rect.FromLTWH(screen.Left, screen.Top, bounds.Left - screen.Left, screen.Height));
+                        newSubScreens.Add(
+                            Rect.FromLTWH(screen.Left, screen.Top, bounds.Left - screen.Left, screen.Height));
                     }
 
                     if (screen.Right > bounds.Right)
@@ -100,7 +101,8 @@ public sealed class DisplayFeatureSubScreen : StatelessWidget
                     // The display feature splits this sub-screen horizontally.
                     if (screen.Top < bounds.Top)
                     {
-                        newSubScreens.Add(Rect.FromLTWH(screen.Left, screen.Top, screen.Width, bounds.Top - screen.Top));
+                        newSubScreens.Add(
+                            Rect.FromLTWH(screen.Left, screen.Top, screen.Width, bounds.Top - screen.Top));
                     }
 
                     if (screen.Bottom > bounds.Bottom)

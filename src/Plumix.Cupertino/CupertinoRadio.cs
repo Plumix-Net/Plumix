@@ -523,7 +523,11 @@ internal sealed class CupertinoRadioPainter : ToggleablePainter
             }
             else
             {
-                context.Canvas.DrawCircle(new SolidColorBrush(outerColor.ToAvalonia()), pen: null, center, KOuterRadius);
+                context.Canvas.DrawCircle(
+                    new SolidColorBrush(outerColor.ToAvalonia()),
+                    pen: null,
+                    center,
+                    KOuterRadius);
             }
             // The outer circle's opacity changes when the radio is pressed.
             if (DownPosition is not null)
@@ -555,7 +559,11 @@ internal sealed class CupertinoRadioPainter : ToggleablePainter
             }
             else
             {
-                context.Canvas.DrawCircle(new SolidColorBrush(paintColor.ToAvalonia()), pen: null, center, KOuterRadius);
+                context.Canvas.DrawCircle(
+                    new SolidColorBrush(paintColor.ToAvalonia()),
+                    pen: null,
+                    center,
+                    KOuterRadius);
             }
             // The entire circle's opacity changes when the radio is pressed.
             if (DownPosition is not null)

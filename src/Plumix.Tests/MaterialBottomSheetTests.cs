@@ -1285,13 +1285,28 @@ public sealed class MaterialBottomSheetTests : IDisposable
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.60));
     }
 
-    private static void DispatchDown(GestureBinding binding, RenderView view, int pointer, Offset position, DateTime time) =>
+    private static void DispatchDown(
+        GestureBinding binding,
+        RenderView view,
+        int pointer,
+        Offset position,
+        DateTime time) =>
         binding.HandlePointerEvent(view, new PointerDownEvent(pointer, PointerDeviceKind.Mouse, position, PointerButtons.Primary, time));
-    private static void DispatchMove(GestureBinding binding, RenderView view, int pointer, Offset position, DateTime time) =>
+    private static void DispatchMove(
+        GestureBinding binding,
+        RenderView view,
+        int pointer,
+        Offset position,
+        DateTime time) =>
         binding.HandlePointerEvent(
             view,
             new PointerMoveEvent(pointer, PointerDeviceKind.Mouse, position, PointerButtons.Primary, time));
-    private static void DispatchUp(GestureBinding binding, RenderView view, int pointer, Offset position, DateTime time) =>
+    private static void DispatchUp(
+        GestureBinding binding,
+        RenderView view,
+        int pointer,
+        Offset position,
+        DateTime time) =>
         binding.HandlePointerEvent(view, new PointerUpEvent(pointer, PointerDeviceKind.Mouse, position, PointerButtons.None, time));
 
     private static RenderParagraph? FindParagraph(RenderObject? root, string text) =>

@@ -175,7 +175,12 @@ public sealed class DecorationImageDartParityTests : IDisposable
         var image = new TestImage(300, 300);
         var rect = Rect.FromLTWH(50.0, 75.0, 200.0, 100.0);
 
-        Record(canvas => ImagePainting.PaintImage(canvas: canvas, rect: rect, image: new RasterImage(image), debugImageLabel: "test.png"));
+        Record(
+            canvas => ImagePainting.PaintImage(
+                canvas: canvas,
+                rect: rect,
+                image: new RasterImage(image),
+                debugImageLabel: "test.png"));
 
         ImageSizeInfo info = Assert.Single(imageSizeInfos);
         Assert.Equal("test.png", info.Source);
@@ -186,7 +191,12 @@ public sealed class DecorationImageDartParityTests : IDisposable
         SchedulerBinding.Instance.ScheduleForcedFrame();
         tester.Pump();
 
-        Record(canvas => ImagePainting.PaintImage(canvas: canvas, rect: rect, image: new RasterImage(image), debugImageLabel: "test.png"));
+        Record(
+            canvas => ImagePainting.PaintImage(
+                canvas: canvas,
+                rect: rect,
+                image: new RasterImage(image),
+                debugImageLabel: "test.png"));
         Assert.Single(imageSizeInfos);
     }
 
@@ -435,7 +445,11 @@ public sealed class DecorationImageDartParityTests : IDisposable
                 Assert.Equal(Rect.FromLTWH(0, 0, 100, 100), call.SourceRect);
                 double side = 100 / scale;
                 AssertCloseToRect(
-                    Rect.FromLTRB(outputRect.Right - side, outputRect.Bottom - side, outputRect.BottomRight.Dx, outputRect.BottomRight.Dy),
+                    Rect.FromLTRB(
+                        outputRect.Right - side,
+                        outputRect.Bottom - side,
+                        outputRect.BottomRight.Dx,
+                        outputRect.BottomRight.Dy),
                     call.Rect!.Value);
             }
         }
@@ -870,7 +884,11 @@ public sealed class DecorationImageDartParityTests : IDisposable
         DecorationImagePainter painter = image.CreatePainter(() => { });
         var recorder = new PictureRecorder();
         var canvas = new Canvas(recorder);
-        painter.Paint(canvas, Rect.FromLTWH(0, 0, 20, 20), null, new ImageConfiguration(TextDirection: TextDirection.Ltr));
+        painter.Paint(
+            canvas,
+            Rect.FromLTWH(0, 0, 20, 20),
+            null,
+            new ImageConfiguration(TextDirection: TextDirection.Ltr));
         Bitmap bitmap = recorder.EndRecording().ToImageSync(20, 20).NativeBitmap;
         painter.Dispose();
         return RasterBackend.PixelAt(bitmap, 10, 10);
@@ -889,7 +907,11 @@ public sealed class DecorationImageDartParityTests : IDisposable
 
     private static WriteableBitmap SolidBitmap(uint argb)
     {
-        var bitmap = new WriteableBitmap(new PixelSize(1, 1), new Offset(96, 96).ToAvaloniaVector(), PixelFormats.Bgra8888, AlphaFormat.Premul);
+        var bitmap = new WriteableBitmap(
+            new PixelSize(1, 1),
+            new Offset(96, 96).ToAvaloniaVector(),
+            PixelFormats.Bgra8888,
+            AlphaFormat.Premul);
         using ILockedFramebuffer framebuffer = bitmap.Lock();
         byte[] pixel = [(byte)argb, (byte)(argb >> 8), (byte)(argb >> 16), (byte)(argb >> 24)];
         Marshal.Copy(pixel, 0, framebuffer.Address, 4);
@@ -919,7 +941,8 @@ public sealed class DecorationImageDartParityTests : IDisposable
 
         public override ValueTask<string> ObtainKey(ImageConfiguration configuration) => ValueTask.FromResult(_key);
 
-        protected override ImageStreamCompleter LoadImage(string key) => new SynchronousCompleter(new ImageInfo(new RasterImage(_image)));
+        protected override ImageStreamCompleter LoadImage(
+            string key) => new SynchronousCompleter(new ImageInfo(new RasterImage(_image)));
 
         public override string ToString() => "SynchronousTestImageProvider()";
     }
@@ -930,7 +953,8 @@ public sealed class DecorationImageDartParityTests : IDisposable
 
         public override ValueTask<string> ObtainKey(ImageConfiguration configuration) => ValueTask.FromResult(_key);
 
-        protected override ImageStreamCompleter LoadImage(string key) => new SynchronousCompleter(new ImageInfo(new RasterImage(image)));
+        protected override ImageStreamCompleter LoadImage(
+            string key) => new SynchronousCompleter(new ImageInfo(new RasterImage(image)));
     }
 
     private sealed class SynchronousErrorTestImageProvider(string message) : ImageProvider<string>

@@ -1433,7 +1433,9 @@ public sealed class ScrollPipelineTests
             GestureBinding.Instance.HandlePointerEvent(
                 harness.RenderView,
                 new PointerMoveEvent(
-                    821, PointerDeviceKind.Touch, new Offset(80, 170), PointerButtons.Primary, now.AddMilliseconds(16)));
+                    821, PointerDeviceKind.Touch, new Offset(
+                        80,
+                        170), PointerButtons.Primary, now.AddMilliseconds(16)));
             Assert.IsType<DragScrollActivity>(controller.PrimaryPosition!.Activity);
             Assert.True(ignorePointer.Ignoring);
 

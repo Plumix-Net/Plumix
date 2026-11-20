@@ -613,7 +613,8 @@ public sealed class InteractiveViewer : StatefulWidget
             // TODO(justinmc): This needs some work to handle rotation properly. The translation
             // should align with the corrected rotation.
             Matrix4 correctedMatrix = matrix.Clone();
-            correctedMatrix.SetTranslation(new Vector3(correctedTotalTranslation.Dx, correctedTotalTranslation.Dy, 0.0));
+            correctedMatrix.SetTranslation(
+                new Vector3(correctedTotalTranslation.Dx, correctedTotalTranslation.Dy, 0.0));
 
             // Double check that the corrected translation fits.
             Quad correctedViewport = TransformViewport(correctedMatrix, Viewport);

@@ -348,7 +348,9 @@ public sealed class PointerEventsTests
 
         Assert.Equal(position, PointerEvent.TransformPosition(null, position));
         Assert.Equal(position, PointerEvent.TransformPosition(Matrix4.Identity(), position));
-        Assert.Equal(new Offset(30, 50), PointerEvent.TransformPosition(Matrix4.TranslationValues(10, 20, 0), position));
+        Assert.Equal(
+            new Offset(30, 50),
+            PointerEvent.TransformPosition(Matrix4.TranslationValues(10, 20, 0), position));
     }
 
     [Fact]

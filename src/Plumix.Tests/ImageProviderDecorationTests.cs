@@ -85,7 +85,9 @@ public sealed class ImageProviderDecorationTests : IDisposable
     [Fact]
     public async Task ImageProvider_UsesGlobalCacheAndEvictionReloadsKey()
     {
-        var provider = new TestImageProvider("same", () => Task.FromResult(new ImageInfo(new RasterImage(new FakeImage(new Size(10, 10))))));
+        var provider = new TestImageProvider(
+            "same",
+            () => Task.FromResult(new ImageInfo(new RasterImage(new FakeImage(new Size(10, 10))))));
 
         var first = provider.Resolve(ImageConfiguration.Empty);
         var second = provider.Resolve(ImageConfiguration.Empty);
@@ -206,7 +208,9 @@ public sealed class ImageProviderDecorationTests : IDisposable
     [Fact]
     public async Task ResizeImage_ValidatesDimensionsAndKeysUnderlyingProvider()
     {
-        var provider = new TestImageProvider("source", () => Task.FromResult(new ImageInfo(new RasterImage(new FakeImage(new Size(10, 10))))));
+        var provider = new TestImageProvider(
+            "source",
+            () => Task.FromResult(new ImageInfo(new RasterImage(new FakeImage(new Size(10, 10))))));
         Assert.Same(provider, ResizeImage.ResizeIfNeeded(null, null, provider));
         Assert.Throws<ArgumentException>(() => new ResizeImage(provider));
         Assert.Throws<ArgumentOutOfRangeException>(() => new ResizeImage(provider, width: 0));
@@ -265,12 +269,20 @@ public sealed class ImageProviderDecorationTests : IDisposable
             matchTextDirection: true).CreatePainter(() => repaint.TrySetResult(true));
         var canvas = new Canvas(new PictureRecorder());
 
-        painter.Paint(canvas, Rect.FromLTWH(0, 0, 40, 20), null, new ImageConfiguration(TextDirection: TextDirection.Rtl));
+        painter.Paint(
+            canvas,
+            Rect.FromLTWH(0, 0, 40, 20),
+            null,
+            new ImageConfiguration(TextDirection: TextDirection.Rtl));
         Assert.Empty(canvas.DebugCalls);
 
         completion.SetResult(new ImageInfo(new RasterImage(image)));
         await EventLoopPump.WaitFor(repaint.Task);
-        painter.Paint(canvas, Rect.FromLTWH(0, 0, 40, 20), null, new ImageConfiguration(TextDirection: TextDirection.Rtl));
+        painter.Paint(
+            canvas,
+            Rect.FromLTWH(0, 0, 40, 20),
+            null,
+            new ImageConfiguration(TextDirection: TextDirection.Rtl));
 
         Assert.Contains(canvas.DebugCalls, call => call.Method == "drawImageRect");
         Assert.Contains(canvas.DebugCalls, call => call.Method == "scale" && call.Dx == -1.0);
@@ -279,8 +291,12 @@ public sealed class ImageProviderDecorationTests : IDisposable
     [Fact]
     public void BoxDecoration_ImageUpdateDisposesOldPainterListener()
     {
-        var first = new TestImageProvider("first", () => Task.FromResult(new ImageInfo(new RasterImage(new FakeImage(new Size(10, 10))))));
-        var second = new TestImageProvider("second", () => Task.FromResult(new ImageInfo(new RasterImage(new FakeImage(new Size(10, 10))))));
+        var first = new TestImageProvider(
+            "first",
+            () => Task.FromResult(new ImageInfo(new RasterImage(new FakeImage(new Size(10, 10))))));
+        var second = new TestImageProvider(
+            "second",
+            () => Task.FromResult(new ImageInfo(new RasterImage(new FakeImage(new Size(10, 10))))));
         var render = new RenderDecoratedBox(
             new BoxDecoration(Image: new DecorationImage(first)),
             configuration: new ImageConfiguration(TextDirection: TextDirection.Ltr));

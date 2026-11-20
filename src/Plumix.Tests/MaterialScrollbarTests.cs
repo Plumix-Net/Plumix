@@ -895,8 +895,12 @@ public sealed class MaterialScrollbarTests
         Settle(harness, new Size(800, 600));
 
         ScrollbarGeometry geometry = RequirePainter(harness).Geometry!.Value;
-        Assert.Equal(explicitPadding ? Rect.FromLTWH(694, 100, 6, 400) : Rect.FromLTWH(744, 50, 6, 500), geometry.TrackRect);
-        Assert.Equal(explicitPadding ? Rect.FromLTWH(694, 100, 6, 21) : Rect.FromLTWH(744, 50, 6, 21), geometry.ThumbRect);
+        Assert.Equal(
+            explicitPadding ? Rect.FromLTWH(694, 100, 6, 400) : Rect.FromLTWH(744, 50, 6, 500),
+            geometry.TrackRect);
+        Assert.Equal(
+            explicitPadding ? Rect.FromLTWH(694, 100, 6, 21) : Rect.FromLTWH(744, 50, 6, 21),
+            geometry.ThumbRect);
     }
 
     [Fact]
@@ -1151,7 +1155,10 @@ public sealed class MaterialScrollbarTests
             timestampUtc: PressTime.AddMilliseconds(20)));
         harness.Pump(ViewportSize);
         Rect after = RequirePainter(harness).Geometry!.Value.ThumbRect;
-        Assert.Equal(horizontal ? before.Left - 10 : before.Top - 10, horizontal ? after.Left : after.Top, precision: 3);
+        Assert.Equal(
+            horizontal ? before.Left - 10 : before.Top - 10,
+            horizontal ? after.Left : after.Top,
+            precision: 3);
         Assert.True(controller.Offset > 10);
         Dispatch(harness, new PointerUpEvent(
             92, PointerDeviceKind.Mouse, end, PointerButtons.None, PressTime.AddMilliseconds(40)));
