@@ -281,6 +281,46 @@ public sealed class MaterialPageTransitionsTests : IDisposable
         root.UnmountRoot();
     }
 
+    // Android sends onBackProgressed(0) right after onBackStarted: the dragged value is exactly 1.0, the
+    // controller reports Completed, and that must not end the gesture before the user lets go.
+    [Fact]
+    public async Task MaterialPageRoute_PredictiveGestureSurvivesAZeroProgressUpdateAndCommits()
+    {
+        NavigatorState? navigator = null;
+        var initialRoute = new MaterialPageRoute(
+            context =>
+            {
+                navigator ??= Navigator.Of(context);
+                return new SizedBox(width: 20.0, height: 20.0);
+            },
+            settings: new RouteSettings(Name: "root"));
+        var root = MountNavigator(initialRoute);
+        var detailsRoute = new MaterialPageRoute(
+            _ => new SizedBox(width: 20.0, height: 20.0),
+            settings: new RouteSettings(Name: "details"));
+        navigator!.Push(detailsRoute);
+        Settle(root.TestOwner);
+
+        Assert.True(WidgetsBinding.Instance.HandleStartBackGesture(
+            new PredictiveBackEvent(0.0, SwipeEdge.Left, new Point(8.0, 300.0))));
+        WidgetsBinding.Instance.HandleUpdateBackGestureProgress(
+            new PredictiveBackEvent(0.0, SwipeEdge.Left, new Point(8.0, 300.0)));
+        Assert.True(navigator.UserGestureInProgress);
+        WidgetsBinding.Instance.HandleUpdateBackGestureProgress(
+            new PredictiveBackEvent(0.5, SwipeEdge.Left, new Point(200.0, 300.0)));
+        root.TestOwner.PumpFrame();
+        Assert.Equal(0.5, detailsRoute.Animation.Value, precision: 6);
+
+        _ = await WidgetsBinding.Instance.HandleCommitBackGesture();
+        root.TestOwner.PumpFrame();
+        Assert.Same(initialRoute, navigator.CurrentRoute);
+        Assert.True(navigator.UserGestureInProgress);
+        Settle(root.TestOwner);
+        Assert.False(navigator.UserGestureInProgress);
+
+        root.UnmountRoot();
+    }
+
     [Fact]
     public void ModalRoute_UsesTheIncomingRoutesDelegatedTransition()
     {

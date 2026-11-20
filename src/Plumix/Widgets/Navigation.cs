@@ -636,6 +636,10 @@ public abstract partial class TransitionRoute : OverlayRoute
     private bool _isPopped;
     private bool _popFinalized;
     private bool _handlingPopGesture;
+    // Set once a back gesture was released while its settle animation runs (Dart's one-shot listener in
+    // _handleDragEnd): the user gesture stops when that animation ends, not when the dragged value merely
+    // reaches a bound mid-gesture.
+    private bool _popGestureSettling;
 
     protected TransitionRoute(RouteSettings? settings = null, bool? requestFocus = null)
         : base(settings, requestFocus)
@@ -835,7 +839,7 @@ public abstract partial class TransitionRoute : OverlayRoute
             _performanceModeRequestHandle = null;
         }
 
-        if (_handlingPopGesture && status is AnimationStatus.Completed or AnimationStatus.Dismissed)
+        if (_popGestureSettling && status is AnimationStatus.Completed or AnimationStatus.Dismissed)
         {
             StopPopGestureIfNeeded();
         }
@@ -860,6 +864,7 @@ public abstract partial class TransitionRoute : OverlayRoute
     protected void StartPopGesture(double progress)
     {
         Controller.SetValueForUserGesture(progress);
+        _popGestureSettling = false;
         if (_handlingPopGesture)
         {
             return;
@@ -878,25 +883,55 @@ public abstract partial class TransitionRoute : OverlayRoute
         }
     }
 
+    // Dart's handleCancelBackGesture: _handleDragEnd(animateForward: true).
     protected void CancelPopGesture()
     {
-        if (_handlingPopGesture)
-        {
-            Controller.Forward();
-        }
-    }
-
-    protected void CommitPopGesture()
-    {
-        if (!_handlingPopGesture || Navigator is null)
+        if (!_handlingPopGesture)
         {
             return;
         }
 
-        Navigator.Pop();
+        if (IsCurrent && Controller.Status != AnimationStatus.Completed)
+        {
+            Controller.Forward();
+        }
+
+        EndPopGesture();
+    }
+
+    // Dart's handleCommitBackGesture: _handleDragEnd(animateForward: false).
+    protected void CommitPopGesture()
+    {
+        if (!_handlingPopGesture)
+        {
+            return;
+        }
+
+        if (IsCurrent)
+        {
+            // This route is destined to pop at this point. Reuse navigator's pop.
+            Navigator?.Pop();
+
+            // The popping may have finished inline if already at the target destination.
+            if (Controller.Status.IsAnimating())
+            {
+                Controller.Reverse(from: 1.0);
+            }
+        }
+
+        EndPopGesture();
+    }
+
+    // The tail of Dart's _handleDragEnd: the user gesture stays in progress until the settle animation ends.
+    private protected void EndPopGesture()
+    {
         if (Controller.Status.IsAnimating())
         {
-            Controller.Reverse(from: 1.0);
+            _popGestureSettling = true;
+        }
+        else
+        {
+            StopPopGestureIfNeeded();
         }
     }
 
@@ -908,6 +943,7 @@ public abstract partial class TransitionRoute : OverlayRoute
         }
 
         _handlingPopGesture = false;
+        _popGestureSettling = false;
         Navigator?.StopUserGesture();
         NotifyRouteChanged();
     }
@@ -1525,15 +1561,19 @@ public abstract class PageRoute : ModalRoute
         if (animateForward)
         {
             _ = Controller.AnimateTo(1.0, duration, curve);
-            return;
         }
-
-        if (IsCurrent)
+        else
         {
-            Navigator!.Pop();
+            if (IsCurrent)
+            {
+                Navigator!.Pop();
+            }
+
+            _ = Controller.AnimateBack(0.0, duration, curve);
         }
 
-        _ = Controller.AnimateBack(0.0, duration, curve);
+        // _CupertinoBackGestureController.dragEnd: the user gesture stops once the settle animation ends.
+        EndPopGesture();
     }
 }
 
