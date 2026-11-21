@@ -1,4 +1,3 @@
-using Avalonia.Threading;
 
 // C#-only infrastructure. Dart's gesture recognizers use `dart:async`'s `Timer`, whose `isActive`
 // flag and `FakeAsync`-driven test clock have no .NET counterpart. `GestureTimer` supplies both: the
@@ -54,19 +53,19 @@ public abstract class GestureTimer : IDisposable
     }
 }
 
-/// <summary>The default <see cref="GestureTimer"/>: an Avalonia dispatcher timer.</summary>
+/// <summary>The default <see cref="GestureTimer"/>: a timer on the host's UI thread.</summary>
 public sealed class DispatcherGestureTimer : GestureTimer
 {
-    private readonly DispatcherTimer _timer = new() { Interval = TimeSpan.FromTicks(1) };
+    private readonly IPlatformTimer _timer;
 
     public DispatcherGestureTimer(TimeSpan duration, Action callback)
     {
-        _timer.Interval = duration <= TimeSpan.Zero ? TimeSpan.FromTicks(1) : duration;
-        _timer.Tick += (_, _) =>
+        _timer = PlatformThread.Current.CreateTimer(PlatformTaskPriority.Task, () =>
         {
-            _timer.Stop();
+            _timer!.Stop();
             Fire(callback);
-        };
+        });
+        _timer.Interval = duration <= TimeSpan.Zero ? TimeSpan.FromTicks(1) : duration;
         _timer.Start();
     }
 

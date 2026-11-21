@@ -277,14 +277,6 @@ internal sealed class MagnifierEngineLayer : EngineLayer
     }
 }
 
-/// <summary>Plumix-only: the handle <see cref="SceneBuilder.PushClipGeometry"/> returns.</summary>
-internal sealed class ClipGeometryEngineLayer : EngineLayer
-{
-    internal ClipGeometryEngineLayer(NativeEngineLayer nativeLayer) : base(nativeLayer)
-    {
-    }
-}
-
 /// <summary>
 /// An exception thrown by <see cref="Scene.ToImageSync"/> when the scene cannot be rasterized.
 /// </summary>
@@ -605,20 +597,6 @@ public class SceneBuilder
     {
         DebugCheckCanBeUsedAsOldLayer(oldLayer, "pushMagnifier");
         var layer = new MagnifierEngineLayer(PushNativeLayer(magnifier));
-        DebugPushLayer(layer);
-        return layer;
-    }
-
-    /// <summary>Plumix-only: pushes the backend-geometry clip of a <see cref="Rendering.ClipGeometryLayer"/>.</summary>
-    internal ClipGeometryEngineLayer PushClipGeometry(
-        Geometry geometry,
-        Offset geometryOffset,
-        Clip clipBehavior,
-        ClipGeometryEngineLayer? oldLayer)
-    {
-        DebugCheckCanBeUsedAsOldLayer(oldLayer, "pushClipGeometry");
-        var layer = new ClipGeometryEngineLayer(
-            PushNativeLayer(new ClipGeometryFlowLayer(geometry, geometryOffset, clipBehavior)));
         DebugPushLayer(layer);
         return layer;
     }

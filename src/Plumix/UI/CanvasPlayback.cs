@@ -44,9 +44,6 @@ internal static class CanvasPlayback
         }
     }
 
-    /// <summary>A clip to backend geometry, offset by <see cref="Offset"/> (decoration outlines).</summary>
-    internal sealed record GeometryClip(Geometry Geometry, Offset Offset);
-
     // Replays ops [start, end): a balanced range, so every save in it is restored in it (or at its end).
     private static void PlayRange(IReadOnlyList<CanvasOp> ops, DrawingContext context, int start, int end,
         double deviceScale)
@@ -91,9 +88,6 @@ internal static class CanvasPlayback
                     case ClipPathOp clipPath:
                         var clipGeometry = (Geometry)(clipPath.BackendState ??= clipPath.Path.ToGeometry());
                         pushed.Add(context.PushGeometryClip(clipGeometry));
-                        break;
-                    case BackendOp { Payload: GeometryClip geometryClip }:
-                        PushGeometryClip(context, pushed, geometryClip);
                         break;
                     case FadeMaskOp fade:
                         pushed.Add(context.PushOpacityMask(FadeBrush(fade), fade.Bounds.ToAvalonia()));
@@ -188,24 +182,6 @@ internal static class CanvasPlayback
             new RectangleGeometry(Canvas.LargestRect.ToAvalonia()),
             new RectangleGeometry(clip.Rect.ToAvalonia())));
         return context.PushGeometryClip(difference);
-    }
-
-    // Backend geometry cannot be shifted, so the offset is applied around it.
-    private static void PushGeometryClip(
-        DrawingContext context,
-        List<DrawingContext.PushedState> pushed,
-        GeometryClip clip)
-    {
-        Offset offset = clip.Offset;
-        if (offset.Dx == 0.0 && offset.Dy == 0.0)
-        {
-            pushed.Add(context.PushGeometryClip(clip.Geometry));
-            return;
-        }
-
-        pushed.Add(context.PushTransform(Matrix.CreateTranslation(offset.Dx, offset.Dy)));
-        pushed.Add(context.PushGeometryClip(clip.Geometry));
-        pushed.Add(context.PushTransform(Matrix.CreateTranslation(-offset.Dx, -offset.Dy)));
     }
 
     // An alpha-only layer: an opacity mask of the paint's alpha opens an isolated offscreen group on the

@@ -327,8 +327,7 @@ internal sealed class DrawImageOp(ImageDrawKind kind, RasterImage image, Rect so
 
 /// <summary>
 /// Plumix-only: an entry whose content only the backend that recorded it can interpret — a laid-out
-/// paragraph or a clip to backend geometry. Each goes once text and decoration outlines are typed data
-/// too (docs/product avalonia-free-core.md, stage 3).
+/// paragraph. It goes once text is typed data too (docs/product avalonia-free-core.md, stage 3).
 /// </summary>
 internal sealed class BackendOp(object payload, bool isDraw) : CanvasOp
 {

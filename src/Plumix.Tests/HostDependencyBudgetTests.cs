@@ -24,7 +24,7 @@ public sealed class HostDependencyBudgetTests
 {
     private static readonly Dictionary<string, int> Budgets = new(StringComparer.Ordinal)
     {
-        ["Plumix"] = 650,
+        ["Plumix"] = 620,
         ["Plumix.Material"] = 0,
         ["Plumix.Cupertino"] = 0,
     };

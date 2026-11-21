@@ -1,4 +1,3 @@
-using Avalonia;
 using Plumix.UI;
 using Path = Plumix.UI.Path;
 
@@ -427,14 +426,12 @@ public sealed record StarBorder : OutlinedBorder
                 ? new Offset(scale.Dx, (squash * scale.Dy) + ((1 - squash) * scale.Dx))
                 : new Offset((squash * scale.Dx) + ((1 - squash) * scale.Dy), scale.Dy);
 
-            Matrix squashMatrix = Matrix.CreateTranslation(-center.Dx, -center.Dy)
-                                  * Matrix.CreateRotation(rotation)
-                                  * Matrix.CreateScale(scale.Dx, scale.Dy)
-                                  * Matrix.CreateTranslation(center.Dx, center.Dy);
-            return path.Transform(
-                squashMatrix.M11, squashMatrix.M12,
-                squashMatrix.M21, squashMatrix.M22,
-                squashMatrix.M31, squashMatrix.M32);
+            // Translate the centre to the origin, rotate, scale, translate back (Dart's Matrix4 chain).
+            Matrix4 squashMatrix = Matrix4.TranslationValues(center.Dx, center.Dy, 0.0);
+            squashMatrix.Multiply(Matrix4.Diagonal3Values(scale.Dx, scale.Dy, 1.0));
+            squashMatrix.Multiply(Matrix4.RotationZ(rotation));
+            squashMatrix.Multiply(Matrix4.TranslationValues(-center.Dx, -center.Dy, 0.0));
+            return path.Transform(squashMatrix.Storage);
         }
 
         private double GeneratePoints(List<PointInfo> pointList, Offset center, double radius, double innerRadius)

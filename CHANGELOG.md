@@ -8,6 +8,10 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased]
+- The event loop, frame clock and gesture timers post through an internal `IPlatformThread` the host installs.
+- Avalonia's dispatcher, its clock fix and the host keyboard maps move to `Plumix.Avalonia` (`AvaloniaBackend`).
+- The unused backend-geometry clip (`PushClipGeometry`, `ClipGeometryLayer`) and `BorderSide.ToPen` are removed.
+- `StarBorder` builds its squash matrix with `Matrix4`, as Dart does, instead of Avalonia's `Matrix`.
 - `Shader`, gradients and fragment shaders are framework data; `SkiaShaders` builds the backend brushes.
 - `Path.Combine` runs a line-for-line C# port of Skia's PathOps (UI/PathOps) instead of SkiaSharp's.
 - `Path.Contains` and `Path.ComputeMetrics` port SkPath::contains and SkContourMeasure to managed code.

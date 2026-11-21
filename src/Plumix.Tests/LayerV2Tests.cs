@@ -155,27 +155,6 @@ public sealed class LayerV2Tests
     }
 
     [Fact]
-    public void PushClipGeometry_CreatesGeometryLayer_WhenCompositingIsNeeded()
-    {
-        var geometry = new RectangleGeometry(Rect.FromLTWH(0, 0, 50, 30).ToAvalonia());
-
-        var rootLayer = new ContainerLayer();
-        var context = new PaintingContext(rootLayer);
-        context.PushClipGeometry(
-            needsCompositing: true,
-            new Offset(0, 0),
-            Rect.FromLTWH(0, 0, 50, 30),
-            geometry,
-            (clipped, _) => clipped.Canvas.DrawRect(
-                Rect.FromLTWH(0, 0, 80, 40),
-                new Paint { Color = new Color(0xFFFFD700) }));
-
-        var clipLayer = Assert.IsType<ClipGeometryLayer>(Assert.Single(rootLayer.Children));
-        Assert.Same(geometry, clipLayer.Geometry);
-        Assert.IsType<PictureLayer>(Assert.Single(clipLayer.Children));
-    }
-
-    [Fact]
     public void RenderClipRRect_UpdatesLayerClip_WhenSizeChanges()
     {
         var clip = new RenderClipRRect(

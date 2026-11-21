@@ -1,4 +1,3 @@
-using Avalonia.Threading;
 
 // C#-only infrastructure; no Dart parity source. A Dart isolate owns exactly one event loop: every
 // `Future` continuation is a microtask (dart:async `scheduleMicrotask`) on the thread that owns the
@@ -100,7 +99,7 @@ public static partial class EventLoop
 
         if (scheduleDrain)
         {
-            Dispatcher.UIThread.Post(FlushMicrotasks, DispatcherPriority.Send);
+            PlatformThread.Current.Post(FlushMicrotasks, PlatformTaskPriority.Microtask);
         }
     }
 

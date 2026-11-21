@@ -383,14 +383,6 @@ public sealed class CanvasRecordingTests
             (_, _) => painted++,
             clipBehavior));
         Assert.Null(context.PushClipPath(true, default, bounds, path, (_, _) => painted++, clipBehavior));
-        Assert.Null(context.PushClipGeometry(
-            true,
-            default,
-            bounds,
-            new RectangleGeometry(bounds.ToAvalonia()),
-            (_, _) => painted++,
-            clipBehavior));
-
-        Assert.Equal(4, painted);
+        Assert.Equal(3, painted);
     }
 }

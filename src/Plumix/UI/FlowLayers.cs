@@ -295,28 +295,6 @@ internal sealed class ClipPathFlowLayer(Path clipPath, Clip clipBehavior) : Cont
     }
 }
 
-/// <summary>Plumix-only: a clip by a backend geometry (<see cref="Rendering.ClipGeometryLayer"/>).</summary>
-internal sealed class ClipGeometryFlowLayer(Geometry geometry, Offset geometryOffset, Clip clipBehavior)
-    : ContainerFlowLayer
-{
-    public Geometry Geometry { get; } = geometry;
-
-    public Offset GeometryOffset { get; } = geometryOffset;
-
-    public Clip ClipBehavior { get; } = clipBehavior;
-
-    public override void Paint(FlowPaintContext context)
-    {
-        using (context.Canvas.PushTransform(Matrix.CreateTranslation(GeometryOffset.Dx, GeometryOffset.Dy)))
-        using (context.Canvas.PushGeometryClip(Geometry))
-        using (SaveLayerIfNeeded(context, ClipBehavior, Geometry.Bounds.ToPlumix()))
-        using (context.Canvas.PushTransform(Matrix.CreateTranslation(-GeometryOffset.Dx, -GeometryOffset.Dy)))
-        {
-            PaintChildren(context);
-        }
-    }
-}
-
 /// <summary>The engine's <c>flutter::ColorFilterLayer</c>, over the CPU filter backend.</summary>
 internal sealed class ColorFilterFlowLayer(ColorFilter filter, Rect? bounds) : ContainerFlowLayer
 {

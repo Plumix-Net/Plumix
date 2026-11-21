@@ -110,9 +110,10 @@ Blockers (all must close):
   zero). In progress: stages 0–1 done 2026-11-21 — Material and Cupertino at zero, Canvas brush/pen
   overloads removed; stage 2a (typed `Canvas` entries, one Avalonia/Skia playback) and 2b-1 (managed
   `Path` data and builders), 2b-2 (containment), 2b-3 (measurement) and 2b-4 (boolean operations, a
-  port of Skia's PathOps) and 2c (`Shader`/filters as data) done, core at 650; next is stage 3
-  (backend interfaces; the Avalonia/Skia backend moves to `Plumix.Avalonia`). Perspective transforms
-  of paths are the one native path operation left.
+  port of Skia's PathOps) and 2c (`Shader`/filters as data) done; stage 3 under way: 3a (incidental
+  Avalonia uses), 3b (UI thread and timers behind `IPlatformThread`) and 3c (keyboard maps) done,
+  their Avalonia code in `Plumix.Avalonia`, core at 620; next are images, scene rasterization and text.
+  Perspective transforms of paths are the one native path operation left.
 
 Release gates (on the commit that gets the tag):
 

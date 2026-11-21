@@ -1,5 +1,4 @@
 using System.Diagnostics;
-using Avalonia.Threading;
 
 // C#-only infrastructure: the engine side of `FrameTiming`. A port of the engine's
 // `flow/frame_timings.{h,cc}` (`FrameTimingsRecorder`) and of `Shell::OnFrameRasterized`/`ReportTimings`
@@ -196,6 +195,6 @@ internal static class FrameTimingsReporter
     {
         // The engine posts this report to the UI task runner, not to idle time: at background priority
         // Android would hold the batch for as long as an animation keeps the main thread busy.
-        DispatcherTimer.RunOnce(callback, delay, PlatformDispatcher.EventLoopTaskPriority);
+        PlatformThread.Current.RunOnce(callback, delay, PlatformTaskPriority.Task);
     }
 }

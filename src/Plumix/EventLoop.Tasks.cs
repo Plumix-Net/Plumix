@@ -1,4 +1,3 @@
-using Avalonia.Threading;
 using Plumix.UI;
 
 // C#-only infrastructure; no Dart parity source. The engine hands work it finished off the UI thread
@@ -43,7 +42,7 @@ public static partial class EventLoop
             _tasks.Enqueue(callback);
         }
 
-        Dispatcher.UIThread.Post(() => RunNextTask(), PlatformDispatcher.EventLoopTaskPriority);
+        PlatformThread.Current.Post(() => RunNextTask(), PlatformTaskPriority.Task);
     }
 
     /// <summary>

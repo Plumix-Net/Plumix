@@ -73,12 +73,6 @@ internal sealed class InspectorMulticastCanvas : Canvas
         _screenshot.ClipRect(rect, doAntiAlias, clipOp);
     }
 
-    internal override void ClipGeometry(Geometry geometry, bool doAntiAlias = true, Offset geometryOffset = default)
-    {
-        _main.ClipGeometry(geometry, doAntiAlias, geometryOffset);
-        _screenshot.ClipGeometry(geometry, doAntiAlias, geometryOffset);
-    }
-
     public override void ClipRSuperellipse(RSuperellipse rsuperellipse, bool doAntiAlias = true)
     {
         throw NoSuchMethod(nameof(ClipRSuperellipse));

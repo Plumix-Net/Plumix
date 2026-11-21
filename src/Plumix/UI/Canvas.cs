@@ -540,24 +540,6 @@ public partial class Canvas
         AddOp(new ClipPathOp(new Path(path)));
     }
 
-    /// <summary>Plumix-only: clips to an Avalonia geometry the caller already built.</summary>
-    /// <remarks>
-    /// Dart clips through <c>Path</c> only; Plumix models a few shapes (notched app bars, decoration
-    /// outlines) as backend geometry, which cannot be shifted, so the offset is applied around it.
-    /// </remarks>
-    internal virtual void ClipGeometry(
-        Avalonia.Media.Geometry geometry,
-        bool doAntiAlias = true,
-        Offset geometryOffset = default)
-    {
-        ArgumentNullException.ThrowIfNull(geometry);
-        Rect geometryBounds = geometry.Bounds.ToPlumix();
-        IntersectClipBounds(
-            (geometryBounds.TopLeft + geometryOffset & geometryBounds.Size),
-            doAntiAlias);
-        AddOp(new BackendOp(new CanvasPlayback.GeometryClip(geometry, geometryOffset), isDraw: false));
-    }
-
     // The engine's clip-coverage tracking: the clip's bounds in destination space, rounded out to whole
     // pixels for an anti-aliased clip, intersected with the current coverage.
     private void IntersectClipBounds(Rect localBounds, bool doAntiAlias)

@@ -28,6 +28,9 @@ Allowed dependency direction (mirrors Flutter's `widgets <- cupertino <- materia
 - The number of `Avalonia*`/`SkiaSharp`/`HarfBuzzSharp` types and members each of those packages references
   only goes down (`HostDependencyBudgetTests`; zero for `Plumix.Material` and `Plumix.Cupertino`). Draw through
   `Paint`/`Path`, never a backend brush, pen or geometry; lower the budget when a change removes references.
+- Host services the framework needs (UI thread and timers today; rendering, text, images next) are internal
+  interfaces in `Plumix` with a static `Current` the host installs; `Plumix.Avalonia`'s `AvaloniaBackend`
+  registers the Avalonia implementations from a module initializer, and the test assembly calls it first.
 
 - Versioning follows SemVer: breaking public API/behavior changes require a major bump; new API is minor; fixes are patch.
 - Breaking changes must be called out explicitly in `CHANGELOG.md` (a `Breaking:` prefix on the entry) — never shipped silently inside a parity pass.

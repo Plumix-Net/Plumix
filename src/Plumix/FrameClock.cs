@@ -1,5 +1,4 @@
 using System.Diagnostics;
-using Avalonia.Threading;
 using Plumix.UI;
 
 // C#-only infrastructure; no Dart parity source. Flutter's engine answers
@@ -19,7 +18,7 @@ public static class FrameClock
     private static readonly Stopwatch _sw = Stopwatch.StartNew();
     private static readonly DateTime _anchorUtc = DateTime.UtcNow;
 
-    private static DispatcherTimer? _timer;
+    private static IPlatformTimer? _timer;
     private static bool _frameRequested;
 
     /// <summary>The elapsed time of the clock frame timestamps are read from, in seconds.</summary>
@@ -52,10 +51,8 @@ public static class FrameClock
             return;
         }
 
-        _timer = new DispatcherTimer(
-            TimeSpan.FromMilliseconds(16),
-            DispatcherPriority.Render,
-            (_, _) => Tick());
+        _timer = PlatformThread.Current.CreateTimer(PlatformTaskPriority.Frame, Tick);
+        _timer.Interval = TimeSpan.FromMilliseconds(16);
         _timer.Start();
     }
 

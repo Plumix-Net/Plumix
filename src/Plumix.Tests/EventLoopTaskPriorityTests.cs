@@ -12,8 +12,8 @@ namespace Plumix.Tests;
 [Collection(SchedulerTestCollection.Name)]
 public sealed class EventLoopTaskPriorityTests : IDisposable
 {
-    // The warm-up frame's Timer.run turns, on a fake clock: the queue's dispatcher wake-up runs at
-    // EventLoopTaskPriority, which EventLoopTask_IsForegroundWork pins above the idle priorities.
+    // The warm-up frame's Timer.run turns, on a fake clock: the queue's dispatcher wake-up runs at the
+    // task priority, which EventLoopTask_IsForegroundWork pins above the idle priorities.
     private readonly FakeGestureTimers _looper = new();
     private TimeSpan _vsync;
 
@@ -37,8 +37,9 @@ public sealed class EventLoopTaskPriorityTests : IDisposable
     {
         // Avalonia runs jobs at or below Input only when the platform reports no pending input, and
         // Android only from the looper's idle handler.
-        Assert.True(PlatformDispatcher.EventLoopTaskPriority > DispatcherPriority.Input);
-        Assert.True(PlatformDispatcher.EventLoopTaskPriority < DispatcherPriority.Send);
+        DispatcherPriority task = AvaloniaPlatformThread.ToPriority(PlatformTaskPriority.Task);
+        Assert.True(task > DispatcherPriority.Input);
+        Assert.True(task < DispatcherPriority.Send);
     }
 
     public static TheoryData<string> Indicators() => ["circular", "refresh"];
