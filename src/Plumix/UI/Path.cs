@@ -113,6 +113,21 @@ public sealed class Path
         _shape = source._shape;
     }
 
+    /// <summary>Skia's <c>SkPath::operator=</c>: this path becomes a copy of <paramref name="source"/>.</summary>
+    internal void CopyFrom(Path source)
+    {
+        _verbs.Clear();
+        _verbs.AddRange(source._verbs);
+        _points.Clear();
+        _points.AddRange(source._points);
+        _weights.Clear();
+        _weights.AddRange(source._weights);
+        _fillType = source._fillType;
+        _lastMoveToIndex = source._lastMoveToIndex;
+        _shape = source._shape;
+        _version++;
+    }
+
     public PathFillType FillType
     {
         get => _fillType;
@@ -423,8 +438,14 @@ public sealed class Path
     {
         ArgumentNullException.ThrowIfNull(path1);
         ArgumentNullException.ThrowIfNull(path2);
-        return SkiaPathInterop.Combine(operation, path1, path2) ?? throw new InvalidOperationException(
-            "Path.combine() failed.  This may be due an invalid path; in particular, check for NaN values.");
+        var result = new Path();
+        if (!PathOps.SkPathOps.Op(path1, path2, (PathOps.SkPathOp)operation, result))
+        {
+            throw new InvalidOperationException(
+                "Path.combine() failed.  This may be due an invalid path; in particular, check for NaN values.");
+        }
+
+        return result;
     }
 
     public PathMetrics ComputeMetrics(bool forceClosed = false) => new(this, forceClosed);

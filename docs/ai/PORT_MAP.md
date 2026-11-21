@@ -78,7 +78,7 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `engine/src/flutter/lib/ui/compositing.dart` | `src/Plumix/UI/Compositing.cs` | `src/Plumix.Tests/CompositingLayerTests.cs` | `dart_sample/lib/demos/general/scene_compositing_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/SceneCompositingDemoPage.cs` |
 | `engine/src/flutter/lib/ui/geometry.dart` | `src/Plumix/Rendering/Decoration.cs`<br>`src/Plumix/UI/Geometry.cs`<br>`src/Plumix/UI/RRect.cs`<br>`src/Plumix/UI/RSTransform.cs`<br>`src/Plumix/UI/RSuperellipse.cs`<br>`src/Plumix/UI/RoundRectGeometry.cs`<br>`src/Plumix/UI/SuperellipseGeometry.cs` | `src/Plumix.Tests/AlignmentGeometryTests.cs`<br>`src/Plumix.Tests/BoxDecorationDartParityTests.cs`<br>`src/Plumix.Tests/DecorationImageDartParityTests.cs`<br>`src/Plumix.Tests/ImageProviderDecorationTests.cs`<br>`src/Plumix.Tests/InputDecorationDartParityTests.cs`<br>`src/Plumix.Tests/MaterialScaffoldGeometryTests.cs`<br>`src/Plumix.Tests/RSuperellipseGeometryTests.cs`<br>`src/Plumix.Tests/ShapeDecorationDartParityTests.cs`<br>`src/Plumix.Tests/SliverGeometryTests.cs`<br>`src/Plumix.Tests/UiGeometryDartParityTests.cs` | — |
 | `engine/src/flutter/lib/ui/key.dart` | `src/Plumix/UI/Key.cs` | `src/Plumix.Tests/FocusOnKeyDartParityTests.cs`<br>`src/Plumix.Tests/GlobalKeysDuplicatedDartParityTests.cs`<br>`src/Plumix.Tests/GlobalKeysMovingDartParityTests.cs`<br>`src/Plumix.Tests/HardwareKeyboardDartParityTests.cs`<br>`src/Plumix.Tests/HardwareKeyboardTests.cs`<br>`src/Plumix.Tests/HostKeyEventMessageTests.cs`<br>`src/Plumix.Tests/KeyDartParityTests.cs`<br>`src/Plumix.Tests/KeyParityTests.cs`<br>`src/Plumix.Tests/KeyboardListenerTests.cs`<br>`src/Plumix.Tests/KeyboardMapsTests.cs`<br>`src/Plumix.Tests/LayoutBuilderAndGlobalKeysDartParityTests.cs`<br>`src/Plumix.Tests/RawKeyEventDataAppleAndroidDartParityTests.cs`<br>`src/Plumix.Tests/RawKeyEventDataDesktopWebDartParityTests.cs`<br>`src/Plumix.Tests/RawKeyboardDartParityTests.cs` | `dart_sample/lib/demos/general/keyboard_listener_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/KeyboardListenerDemoPage.cs` |
-| `engine/src/flutter/lib/ui/painting.dart` | `src/Plumix/UI/GradientShader.cs`<br>`src/Plumix/UI/Path.cs`<br>`src/Plumix/UI/PathMetrics.cs`<br>`src/Plumix/UI/RasterImage.cs`<br>`src/Plumix/UI/Shader.cs`<br>`src/Plumix/UI/ShadowDraw.cs`<br>`src/Plumix/UI/ShadowTessellator.cs` | `src/Plumix.Tests/FragmentShaderBackendTests.cs`<br>`src/Plumix.Tests/GradientShaderTests.cs`<br>`src/Plumix.Tests/PathDartParityTests.cs` | — |
+| `engine/src/flutter/lib/ui/painting.dart` | `src/Plumix/UI/GradientShader.cs`<br>`src/Plumix/UI/Path.cs`<br>`src/Plumix/UI/PathMetrics.cs`<br>`src/Plumix/UI/RasterImage.cs`<br>`src/Plumix/UI/Shader.cs`<br>`src/Plumix/UI/ShadowDraw.cs`<br>`src/Plumix/UI/ShadowTessellator.cs` | `src/Plumix.Tests/FragmentShaderBackendTests.cs`<br>`src/Plumix.Tests/GradientShaderTests.cs`<br>`src/Plumix.Tests/PathDartParityTests.cs`<br>`src/Plumix.Tests/PathSkiaParityTests.cs` | — |
 | `engine/src/flutter/lib/ui/platform_dispatcher.dart` | `src/Plumix/UI/ViewPadding.cs` | — | — |
 | `engine/src/flutter/lib/ui/text.dart` | `src/Plumix/UI/FontWeight.cs` | — | — |
 | `engine/src/flutter/lib/ui/window.dart` | `src/Plumix/UI/AccessibilityFeatures.cs`<br>`src/Plumix/UI/Brightness.cs` | `src/Plumix.Tests/AccessibilityFeaturesDartParityTests.cs` | — |
@@ -688,6 +688,8 @@ Either C#-only infrastructure (fine — say so in a header comment) or an undocu
 - `src/Plumix/UI/BrowserDetection.cs`
 - `src/Plumix/UI/Canvas.Draw.cs`
 - `src/Plumix/UI/Canvas.cs`
+- `src/Plumix/UI/CanvasOps.cs`
+- `src/Plumix/UI/CanvasPlayback.cs`
 - `src/Plumix/UI/Clip.cs`
 - `src/Plumix/UI/Color.cs`
 - `src/Plumix/UI/Display.cs`
@@ -711,11 +713,54 @@ Either C#-only infrastructure (fine — say so in a header comment) or an undocu
 - `src/Plumix/UI/ParagraphBuilder.cs`
 - `src/Plumix/UI/ParagraphDecorations.cs`
 - `src/Plumix/UI/ParagraphShaping.cs`
+- `src/Plumix/UI/PathContainment.cs`
+- `src/Plumix/UI/PathGeometry.cs`
+- `src/Plumix/UI/PathMatrix.cs`
+- `src/Plumix/UI/PathOps/SkAddIntersections.cs`
+- `src/Plumix/UI/PathOps/SkDConicLineIntersection.cs`
+- `src/Plumix/UI/PathOps/SkDCubicLineIntersection.cs`
+- `src/Plumix/UI/PathOps/SkDLineIntersection.cs`
+- `src/Plumix/UI/PathOps/SkDQuadLineIntersection.cs`
+- `src/Plumix/UI/PathOps/SkGeometry.cs`
+- `src/Plumix/UI/PathOps/SkIntersectionHelper.cs`
+- `src/Plumix/UI/PathOps/SkIntersections.cs`
+- `src/Plumix/UI/PathOps/SkLineParameters.cs`
+- `src/Plumix/UI/PathOps/SkOpAngle.cs`
+- `src/Plumix/UI/PathOps/SkOpCoincidence.cs`
+- `src/Plumix/UI/PathOps/SkOpContour.cs`
+- `src/Plumix/UI/PathOps/SkOpCubicHull.cs`
+- `src/Plumix/UI/PathOps/SkOpEdgeBuilder.cs`
+- `src/Plumix/UI/PathOps/SkOpSegment.cs`
+- `src/Plumix/UI/PathOps/SkOpSpan.cs`
+- `src/Plumix/UI/PathOps/SkPath.cs`
+- `src/Plumix/UI/PathOps/SkPathOp.cs`
+- `src/Plumix/UI/PathOps/SkPathOpsBase.cs`
+- `src/Plumix/UI/PathOps/SkPathOpsBounds.cs`
+- `src/Plumix/UI/PathOps/SkPathOpsCommon.cs`
+- `src/Plumix/UI/PathOps/SkPathOpsConic.cs`
+- `src/Plumix/UI/PathOps/SkPathOpsCubic.cs`
+- `src/Plumix/UI/PathOps/SkPathOpsCurve.cs`
+- `src/Plumix/UI/PathOps/SkPathOpsLine.cs`
+- `src/Plumix/UI/PathOps/SkPathOpsOp.cs`
+- `src/Plumix/UI/PathOps/SkPathOpsPoint.cs`
+- `src/Plumix/UI/PathOps/SkPathOpsQuad.cs`
+- `src/Plumix/UI/PathOps/SkPathOpsRect.cs`
+- `src/Plumix/UI/PathOps/SkPathOpsSimplify.cs`
+- `src/Plumix/UI/PathOps/SkPathOpsTCurve.cs`
+- `src/Plumix/UI/PathOps/SkPathOpsTSect.cs`
+- `src/Plumix/UI/PathOps/SkPathOpsTypes.cs`
+- `src/Plumix/UI/PathOps/SkPathOpsWinding.cs`
+- `src/Plumix/UI/PathOps/SkPathWriter.cs`
+- `src/Plumix/UI/PathOps/SkPointPriv.cs`
+- `src/Plumix/UI/PathOps/SkRect.cs`
+- `src/Plumix/UI/PathOps/SkReduceOrder.cs`
+- `src/Plumix/UI/PathOps/SkTSort.cs`
 - `src/Plumix/UI/PlatformDispatcher.cs`
 - `src/Plumix/UI/PointerData.cs`
 - `src/Plumix/UI/RuntimeFragmentShader.cs`
 - `src/Plumix/UI/ShaderDrawing.cs`
 - `src/Plumix/UI/SkiaImageCodec.cs`
+- `src/Plumix/UI/SkiaPathInterop.cs`
 - `src/Plumix/UI/Text.cs`
 - `src/Plumix/UI/TextBox.cs`
 - `src/Plumix/UI/TextInputModel.cs`
@@ -737,7 +782,7 @@ Either C#-only infrastructure (fine — say so in a header comment) or an undocu
 
 - Flutter files mapped: 604
 - C# files carrying a marker: 814
-- C# files without a marker: 99
+- C# files without a marker: 144
 - Markers not resolvable in the pinned checkout: 0
 - C# files with a qualified (non-strict) marker: 0
 

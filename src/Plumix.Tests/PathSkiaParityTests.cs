@@ -649,6 +649,123 @@ public sealed class PathSkiaParityTests
         Assert.True(checkedQueries > 10000);
     }
 
+    [Fact]
+    public void Combine_MatchesSkia()
+    {
+        var random = new Random(2024);
+        var operands = OpOperands(random).ToList();
+        int compared = 0;
+        var failures = new List<string>();
+        for (int index = 0; index < operands.Count; index++)
+        {
+            for (int other = 0; other < operands.Count; other += 1 + (index % 3))
+            {
+                foreach (PathOperation operation in Enum.GetValues<PathOperation>())
+                {
+                    Path one = operands[index];
+                    Path two = operands[other];
+                    using var expected = new SKPath();
+                    bool nativeOk = SkiaPathInterop.ToNative(one).Op(
+                        SkiaPathInterop.ToNative(two), (SKPathOp)operation, expected);
+                    var actual = new Path();
+                    bool managedOk = Plumix.UI.PathOps.SkPathOps.Op(
+                        one, two, (Plumix.UI.PathOps.SkPathOp)operation, actual);
+                    compared++;
+                    string label = $"{operation} #{index} x #{other}";
+                    if (nativeOk != managedOk)
+                    {
+                        failures.Add($"{label}: Skia {nativeOk}, Path {managedOk}");
+                        continue;
+                    }
+
+                    if (!nativeOk)
+                    {
+                        continue;
+                    }
+
+                    PathFillType expectedFill = expected.FillType == SKPathFillType.EvenOdd
+                        ? PathFillType.EvenOdd : PathFillType.NonZero;
+                    if (expectedFill != actual.FillType || !Matches(Describe(expected), Describe(actual), 1e-5f))
+                    {
+                        failures.Add($"{label}:\n  one {string.Join(" ", Describe(one))}\n"
+                                     + $"  two {string.Join(" ", Describe(two))}\n"
+                                     + $"  expected {expected.FillType} {string.Join(" ", Describe(expected))}\n"
+                                     + $"  actual   {actual.FillType} {string.Join(" ", Describe(actual))}");
+                    }
+                }
+            }
+        }
+
+        Assert.True(compared > 2000, $"only {compared} ops compared");
+        Assert.True(failures.Count == 0,
+            $"{failures.Count} of {compared} ops differ:\n" + string.Join("\n", failures.Take(6)));
+    }
+
+    private static IEnumerable<Path> OpOperands(Random random)
+    {
+        var rect = new Path();
+        rect.AddRect(Rect.FromLTWH(0, 0, 40, 30));
+        yield return rect;
+        var rect2 = new Path();
+        rect2.AddRect(Rect.FromLTWH(20, 10, 40, 30));
+        yield return rect2;
+        var oval = new Path();
+        oval.AddOval(Rect.FromLTWH(10, 5, 35, 35));
+        yield return oval;
+        var rrect = new Path();
+        rrect.AddRRect(RRect.FromRectXY(Rect.FromLTWH(5, 15, 50, 20), 8, 6));
+        yield return rrect;
+        var stadium = new Path();
+        stadium.AddRRect(RRect.FromRectXY(Rect.FromLTWH(0, 20, 60, 20), 10, 10));
+        yield return stadium;
+        var notch = new Path();
+        notch.AddOval(Rect.FromLTWH(22, 8, 16, 16));
+        yield return notch;
+        var empty = new Path();
+        yield return empty;
+        var star = new Path { FillType = PathFillType.EvenOdd };
+        star.AddPolygon(
+            [new Offset(30, 0), new Offset(40, 40), new Offset(5, 15), new Offset(55, 15), new Offset(20, 40)], true);
+        yield return star;
+        var ring = new Path { FillType = PathFillType.EvenOdd };
+        ring.AddOval(Rect.FromLTWH(0, 0, 50, 50));
+        ring.AddOval(Rect.FromLTWH(15, 15, 20, 20));
+        yield return ring;
+        var coincident = new Path();
+        coincident.AddRect(Rect.FromLTWH(40, 0, 20, 30));
+        yield return coincident;
+        for (int index = 0; index < 22; index++)
+        {
+            var path = new Path { FillType = random.Next(2) == 0 ? PathFillType.NonZero : PathFillType.EvenOdd };
+            double Coordinate() => random.Next(3) == 0 ? random.Next(0, 13) * 5.0 : random.NextDouble() * 60;
+            path.MoveTo(Coordinate(), Coordinate());
+            int segments = random.Next(2, 6);
+            for (int segment = 0; segment < segments; segment++)
+            {
+                switch (random.Next(4))
+                {
+                    case 0:
+                        path.LineTo(Coordinate(), Coordinate());
+                        break;
+                    case 1:
+                        path.QuadraticBezierTo(Coordinate(), Coordinate(), Coordinate(), Coordinate());
+                        break;
+                    case 2:
+                        path.ConicTo(Coordinate(), Coordinate(), Coordinate(), Coordinate(),
+                            0.3 + random.NextDouble() * 2);
+                        break;
+                    default:
+                        path.CubicTo(Coordinate(), Coordinate(), Coordinate(), Coordinate(), Coordinate(),
+                            Coordinate());
+                        break;
+                }
+            }
+
+            path.Close();
+            yield return path;
+        }
+    }
+
     private static IEnumerable<Path> MeasuredPaths()
     {
         var arcs = new Path();

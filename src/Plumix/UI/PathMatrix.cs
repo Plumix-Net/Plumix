@@ -206,6 +206,12 @@ internal struct PathMatrix
 /// <summary>A path point: Skia's <c>SkPoint</c>, two floats compared with float equality.</summary>
 internal readonly record struct PathPoint(float X, float Y)
 {
+    // SkPoint::operator==: float comparison, so a NaN coordinate is unequal to everything (the record's
+    // default equality would call NaN equal to NaN).
+    public bool Equals(PathPoint other) => X == other.X && Y == other.Y;
+
+    public override int GetHashCode() => HashCode.Combine(X, Y);
+
     public static PathPoint operator +(PathPoint a, PathPoint b) => new(a.X + b.X, a.Y + b.Y);
 
     public static PathPoint operator -(PathPoint a, PathPoint b) => new(a.X - b.X, a.Y - b.Y);

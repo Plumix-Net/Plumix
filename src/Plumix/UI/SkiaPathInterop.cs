@@ -153,18 +153,6 @@ internal static class SkiaPathInterop
         return segments;
     }
 
-    internal static Path? Combine(PathOperation operation, Path path1, Path path2)
-    {
-        var result = new SKPath();
-        if (!ToNative(path1).Op(ToNative(path2), (SKPathOp)operation, result))
-        {
-            result.Dispose();
-            return null;
-        }
-
-        return FromNative(result);
-    }
-
     // SkPath::transform with perspective (curves promoted, perspective-clipped).
     internal static Path TransformWithPerspective(Path path, PathMatrix matrix)
     {

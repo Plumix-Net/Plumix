@@ -108,6 +108,7 @@ ln -s /path/to/your/flutter flutter-src     # Flutter checkout (see pin below)
 ln -s ~/.pub-cache/hosted/pub.dev/material_ui-1.0.0 material-ui-src    # Material pub package
 ln -s ~/.pub-cache/hosted/pub.dev/cupertino_ui-1.0.0 cupertino-ui-src  # Cupertino pub package
 ln -s /path/to/your/Avalonia avalonia-src   # optional, for host/backend questions
+ln -s /path/to/your/skia skia-src           # optional: google/skia chrome/m119 (SkiaSharp 3.119), for Path ports
 ```
 
 - `material-ui-src` / `cupertino-ui-src` — source of truth for Material/Cupertino controls. Flutter
@@ -119,6 +120,9 @@ ln -s /path/to/your/Avalonia avalonia-src   # optional, for host/backend questio
   `gestures`, `semantics`, ...): `flutter-src/packages/flutter/lib/src/<library>/`, tests under
   `flutter-src/packages/flutter/test/<library>/`.
 - `avalonia-src` — Avalonia source, host/platform questions only.
+- `skia-src` — Skia at `chrome/m119`, the version inside SkiaSharp 3.119 (a sparse checkout of `src/pathops`
+  and the `SkPath`/`SkGeometry` sources is enough). Source of truth for `Path`'s managed geometry
+  (`src/Plumix/UI/Path*.cs`), which must match the Skia the engine ships.
 
 **Pinned Flutter revision: 3.47.0 (`4cf24164269`, `flutter-3.47-candidate.0`). Pinned packages:
 `material_ui` 1.0.0, `cupertino_ui` 1.0.0, `intl` 0.20.3** (what `dart_sample` resolves; at these pins the package
