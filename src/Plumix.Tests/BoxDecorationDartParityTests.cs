@@ -438,7 +438,7 @@ public sealed class BoxDecorationDartParityTests
         public SynchronousImageCompleter(IImage image, string debugLabel)
         {
             DebugLabel = debugLabel;
-            SetImage(new ImageInfo(new RasterImage(image), debugLabel: debugLabel));
+            SetImage(new ImageInfo(AvaloniaImages.Wrap(image), debugLabel: debugLabel));
         }
     }
 

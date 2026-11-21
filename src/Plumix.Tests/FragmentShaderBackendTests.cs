@@ -138,7 +138,7 @@ public sealed class FragmentShaderBackendTests
     {
         var bitmap = new RenderTargetBitmap(new PixelSize(40, 40));
         using DrawingContext context = bitmap.CreateDrawingContext();
-        picture.Playback(context, default);
+        CanvasPlayback.Play(picture, context, default);
         return bitmap;
     }
 

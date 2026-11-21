@@ -11,7 +11,8 @@ namespace Plumix.UI;
 // SkShadowUtils::ComputeTonalColors and SkDevice::drawShadow (src/utils/SkShadowUtils.cpp, Skia 8df24be6).
 // dart:ui paths are volatile, so Skia takes the uncached branch: both meshes are tessellated in device space
 // (ShadowTessellator) and drawn with SkCanvas::drawVertices through the Gaussian colour filter; a path the
-// tessellator refuses (a concave outline) falls back to Skia's blurred-path approximation.
+// tessellator refuses (a concave outline) falls back to Skia's blurred-path approximation. Part of the
+// Avalonia/Skia backend in Plumix.Avalonia; the framework records drawShadow as a DrawShadowOp.
 internal sealed class ShadowDraw(Path path, Color color, double elevation, bool transparentOccluder, double dpr)
     : ICustomDrawOperation
 {

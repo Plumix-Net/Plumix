@@ -6,7 +6,8 @@ namespace Plumix.UI;
 
 // C#-only infrastructure: the colour-filtered copies of images that `Canvas.drawImage*` paints with a
 // `Paint.colorFilter` or `Paint.invertColors` draw. Avalonia's drawing context cannot filter a bitmap
-// draw, so the image's pixels are filtered once per (image, filter) and the copy is drawn instead.
+// draw, so the image's pixels are filtered once per (image, filter) and the copy is drawn instead. Part of
+// the Avalonia/Skia backend in Plumix.Avalonia (CanvasPlayback's image draws).
 
 /// <summary>A cache of colour-filtered image copies, kept alive as long as the source image.</summary>
 internal static class FilteredImages

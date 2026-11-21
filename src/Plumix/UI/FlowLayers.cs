@@ -1,8 +1,3 @@
-using System.Globalization;
-using Avalonia;
-using Avalonia.Media;
-using Avalonia.Media.Imaging;
-using Plumix.Foundation;
 using Plumix.Painting;
 using Plumix.Rendering;
 
@@ -10,32 +5,15 @@ namespace Plumix.UI;
 
 // C#-only infrastructure: the engine side of dart:ui's `SceneBuilder`. A `Scene` holds a tree of these
 // retained layers — the counterpart of the engine's `flow/layers` (`ContainerLayer`, `TransformLayer`,
-// `ClipRectLayer`, `OpacityLayer`, `DisplayListLayer`, ...) — and `SceneRasterizer` paints that tree
-// into an Avalonia drawing context, the way the engine's rasterizer paints a `LayerTree` into a surface.
-// Filters, shader masks and backdrops have no native Avalonia layer, so they go through the CPU raster
-// backend (`FilterLayerRasterizer`); see docs/ai/DIVERGENCES.md. No Dart source maps to this file.
+// `ClipRectLayer`, `OpacityLayer`, `DisplayListLayer`, ...). They are framework data only: the host's
+// rasterizer paints the tree (Plumix.Avalonia's SceneRasterizer and FlowLayerPainter, the way the engine's
+// rasterizer paints a `LayerTree` into a surface), and Scene.toImage reaches it through RenderBackend.
+// No Dart source maps to this file.
 
 /// <summary>A layer of the engine's retained layer tree.</summary>
 /// <remarks>The engine's <c>flutter::Layer</c>.</remarks>
 internal abstract class FlowLayer
 {
-    // The engine's ClipShapeLayer: `Clip.antiAliasWithSaveLayer` paints the children into a save layer
-    // (an isolated backend group) bounded by the clip, so their edges blend once against the clip.
-    private static readonly IBrush SaveLayerMask = new Avalonia.Media.Immutable.ImmutableSolidColorBrush(Colors.White);
-
-    private protected static IDisposable? SaveLayerIfNeeded(FlowPaintContext context, Clip clipBehavior, Rect bounds)
-    {
-        if (clipBehavior != Clip.AntiAliasWithSaveLayer)
-        {
-            return null;
-        }
-
-        return context.Canvas.PushOpacityMask(SaveLayerMask, bounds.ToAvalonia());
-    }
-
-    /// <summary>Paints this layer: the engine's <c>Layer::Paint</c>.</summary>
-    public abstract void Paint(FlowPaintContext context);
-
     /// <summary>Adds this subtree's backdrop filters to <paramref name="filters"/>, in paint order.</summary>
     internal virtual void CollectBackdropFilters(List<BackdropFilterFlowLayer> filters)
     {
@@ -57,43 +35,6 @@ internal class ContainerFlowLayer : FlowLayer
     public void Add(FlowLayer layer)
     {
         _layers.Add(layer);
-    }
-
-    public override void Paint(FlowPaintContext context)
-    {
-        PaintChildren(context);
-    }
-
-    /// <summary>Paints every child in order: the engine's <c>ContainerLayer::PaintChildren</c>.</summary>
-    protected void PaintChildren(FlowPaintContext context)
-    {
-        foreach (FlowLayer layer in _layers)
-        {
-            if (context.State.Stopped)
-            {
-                return;
-            }
-
-            layer.Paint(context);
-        }
-    }
-
-    /// <summary>Paints every child under <paramref name="transform"/>, tracking it in the context.</summary>
-    protected void PaintChildrenTransformed(FlowPaintContext context, Matrix transform)
-    {
-        Matrix previous = context.Transform;
-        using (context.Canvas.PushTransform(transform))
-        {
-            context.Transform = transform * previous;
-            try
-            {
-                PaintChildren(context);
-            }
-            finally
-            {
-                context.Transform = previous;
-            }
-        }
     }
 
     internal override void CollectBackdropFilters(List<BackdropFilterFlowLayer> filters)
@@ -166,11 +107,6 @@ internal class ContainerFlowLayer : FlowLayer
 internal sealed class TransformFlowLayer(Matrix4 transform) : ContainerFlowLayer
 {
     public Matrix4 Transform { get; } = transform;
-
-    public override void Paint(FlowPaintContext context)
-    {
-        PaintChildrenTransformed(context, Transform.ToAvaloniaMatrix());
-    }
 }
 
 /// <summary>The engine's <c>flutter::OpacityLayer</c>: children at an offset, with an alpha.</summary>
@@ -179,36 +115,6 @@ internal sealed class OpacityFlowLayer(int alpha, Offset offset) : ContainerFlow
     public int Alpha { get; } = alpha;
 
     public Offset Offset { get; } = offset;
-
-    public override void Paint(FlowPaintContext context)
-    {
-        Matrix previous = context.Transform;
-        Matrix translation = Matrix.CreateTranslation(Offset.Dx, Offset.Dy);
-        using (context.Canvas.PushTransform(translation))
-        {
-            context.Transform = translation * previous;
-            try
-            {
-                if (Alpha >= 255)
-                {
-                    PaintChildren(context);
-                    return;
-                }
-
-                // The engine's opacity layer is a save-layer: overlapping children blend with each other
-                // first and the alpha applies once. Avalonia folds opacity into every draw unless asked.
-                using (context.Canvas.PushRenderOptions(new RenderOptions { RequiresFullOpacityHandling = true }))
-                using (context.Canvas.PushOpacity(Math.Clamp(Alpha, 0, 255) / 255.0))
-                {
-                    PaintChildren(context);
-                }
-            }
-            finally
-            {
-                context.Transform = previous;
-            }
-        }
-    }
 }
 
 /// <summary>The engine's <c>flutter::ClipRectLayer</c>.</summary>
@@ -217,15 +123,6 @@ internal sealed class ClipRectFlowLayer(Rect clipRect, Clip clipBehavior) : Cont
     public Rect ClipRect { get; } = clipRect;
 
     public Clip ClipBehavior { get; } = clipBehavior;
-
-    public override void Paint(FlowPaintContext context)
-    {
-        using (context.Canvas.PushClip(ClipRect.ToAvalonia()))
-        using (SaveLayerIfNeeded(context, ClipBehavior, ClipRect))
-        {
-            PaintChildren(context);
-        }
-    }
 }
 
 /// <summary>The engine's <c>flutter::ClipRRectLayer</c>.</summary>
@@ -234,15 +131,6 @@ internal sealed class ClipRRectFlowLayer(RRect clipRRect, Clip clipBehavior) : C
     public RRect ClipRRect { get; } = clipRRect;
 
     public Clip ClipBehavior { get; } = clipBehavior;
-
-    public override void Paint(FlowPaintContext context)
-    {
-        using (SceneRasterizer.PushRoundedRectClip(context.Canvas, ClipRRect))
-        using (SaveLayerIfNeeded(context, ClipBehavior, ClipRRect.Rect))
-        {
-            PaintChildren(context);
-        }
-    }
 }
 
 /// <summary>The engine's <c>flutter::ClipRSuperellipseLayer</c>.</summary>
@@ -252,25 +140,17 @@ internal sealed class ClipRSuperellipseFlowLayer(RSuperellipse clipRSuperellipse
     public RSuperellipse ClipRSuperellipse { get; } = clipRSuperellipse;
 
     public Clip ClipBehavior { get; } = clipBehavior;
-
-    public override void Paint(FlowPaintContext context)
-    {
-        using (context.Canvas.PushGeometryClip(ClipRSuperellipse.ToPath().ToGeometry()))
-        using (SaveLayerIfNeeded(context, ClipBehavior, ClipRSuperellipse.OuterRect))
-        {
-            PaintChildren(context);
-        }
-    }
 }
 
 /// <summary>The engine's <c>flutter::ClipPathLayer</c>.</summary>
 internal sealed class ClipPathFlowLayer(Path clipPath, Clip clipBehavior) : ContainerFlowLayer
 {
-    private Geometry? _geometry;
-
     public Path ClipPath { get; } = clipPath;
 
     public Clip ClipBehavior { get; } = clipBehavior;
+
+    /// <summary>The clip geometry the host's rasterizer built from <see cref="ClipPath"/> on first paint.</summary>
+    internal object? BackendGeometry { get; set; }
 
     /// <summary>
     /// Reuses the geometry <paramref name="oldLayer"/> converted for the same path: the counterpart of the
@@ -280,17 +160,7 @@ internal sealed class ClipPathFlowLayer(Path clipPath, Clip clipBehavior) : Cont
     {
         if (oldLayer != null && ReferenceEquals(oldLayer.ClipPath, ClipPath))
         {
-            _geometry ??= oldLayer._geometry;
-        }
-    }
-
-    public override void Paint(FlowPaintContext context)
-    {
-        _geometry ??= ClipPath.ToGeometry();
-        using (context.Canvas.PushGeometryClip(_geometry))
-        using (SaveLayerIfNeeded(context, ClipBehavior, ClipPath.GetBounds()))
-        {
-            PaintChildren(context);
+            BackendGeometry ??= oldLayer.BackendGeometry;
         }
     }
 }
@@ -302,21 +172,6 @@ internal sealed class ColorFilterFlowLayer(ColorFilter filter, Rect? bounds) : C
 
     /// <summary>The Plumix-only rasterization bounds, in this layer's coordinates.</summary>
     public Rect? Bounds { get; } = bounds;
-
-    public override void Paint(FlowPaintContext context)
-    {
-        if (Bounds is not { } bounds)
-        {
-            PaintChildren(context);
-            return;
-        }
-
-        context.Track(FilterLayerRasterizer.DrawColorFiltered(
-            context.Canvas,
-            canvas => PaintChildren(context.WithCanvas(canvas, Matrix.Identity)),
-            Filter,
-            bounds));
-    }
 }
 
 /// <summary>The engine's <c>flutter::ImageFilterLayer</c>, over the CPU filter backend.</summary>
@@ -328,57 +183,19 @@ internal sealed class ImageFilterFlowLayer(ImageFilter filter, Offset offset, Re
 
     /// <summary>The Plumix-only rasterization bounds, in the children's (offset) coordinates.</summary>
     public Rect? Bounds { get; } = bounds;
-
-    public override void Paint(FlowPaintContext context)
-    {
-        if (Filter is ImageFilter.Matrix matrix)
-        {
-            // A matrix filter only moves pixels, so the children are drawn through the matrix at device
-            // resolution instead of through the CPU backend, which samples a 1 px-per-logical-pixel raster:
-            // the stretch overscroll (Transform with a filter quality) would otherwise blur all text by the
-            // device pixel ratio. Vectors stay sharp where Skia resamples the layer (DIVERGENCES.md).
-            IReadOnlyList<double> m = matrix.Values;
-            var transform = new Matrix(m[0], m[1], m[3], m[4], m[5], m[7], m[12], m[13], m[15]);
-            PaintChildrenTransformed(context, transform * Matrix.CreateTranslation(Offset.Dx, Offset.Dy));
-            return;
-        }
-
-        if (Bounds is not { } bounds)
-        {
-            PaintChildrenTransformed(context, Matrix.CreateTranslation(Offset.Dx, Offset.Dy));
-            return;
-        }
-
-        context.Track(FilterLayerRasterizer.DrawImageFiltered(
-            context.Canvas,
-            canvas => PaintChildren(context.WithCanvas(canvas, Matrix.Identity)),
-            Filter,
-            Offset,
-            bounds));
-    }
 }
 
 /// <summary>The engine's <c>flutter::ShaderMaskLayer</c>, over the CPU filter backend.</summary>
-internal sealed class ShaderMaskFlowLayer(IBrush shader, Rect maskRect, BlendMode blendMode, FilterQuality quality)
+internal sealed class ShaderMaskFlowLayer(Shader shader, Rect maskRect, BlendMode blendMode, FilterQuality quality)
     : ContainerFlowLayer
 {
-    public IBrush Shader { get; } = shader;
+    public Shader Shader { get; } = shader;
 
     public Rect MaskRect { get; } = maskRect;
 
     public BlendMode BlendMode { get; } = blendMode;
 
     public FilterQuality FilterQuality { get; } = quality;
-
-    public override void Paint(FlowPaintContext context)
-    {
-        context.Track(FilterLayerRasterizer.DrawShaderMasked(
-            context.Canvas,
-            canvas => PaintChildren(context.WithCanvas(canvas, Matrix.Identity)),
-            Shader,
-            BlendMode,
-            MaskRect));
-    }
 }
 
 /// <summary>
@@ -386,7 +203,7 @@ internal sealed class ShaderMaskFlowLayer(IBrush shader, Rect maskRect, BlendMod
 /// children on top.
 /// </summary>
 /// <remarks>
-/// The backdrop is a capture of the scene prefix painted before this layer (<see cref="SceneRasterizer"/>);
+/// The backdrop is a capture of the scene prefix painted before this layer (the host's rasterizer);
 /// layers sharing a backdrop id share one capture, the way the engine shares a backdrop-id snapshot.
 /// </remarks>
 internal sealed class BackdropFilterFlowLayer(ImageFilter filter, BlendMode blendMode, int? backdropId)
@@ -397,33 +214,6 @@ internal sealed class BackdropFilterFlowLayer(ImageFilter filter, BlendMode blen
     public BlendMode BlendMode { get; } = blendMode;
 
     public int? BackdropId { get; } = backdropId;
-
-    public override void Paint(FlowPaintContext context)
-    {
-        FlowRasterState state = context.State;
-        if (ReferenceEquals(state.StopAt, this))
-        {
-            state.Stopped = true;
-            return;
-        }
-
-        if (state.Backdrops.TryGetValue(this, out BackdropCapture? backdrop)
-            && context.Transform.TryInvert(out Matrix toBase))
-        {
-            // The capture is in the target's coordinates; draw it there, under the clips in effect.
-            using (context.Canvas.PushTransform(toBase))
-            {
-                context.Track(FilterLayerRasterizer.DrawBackdropFiltered(
-                    context.Canvas,
-                    backdrop.Image,
-                    backdrop.Bounds,
-                    Filter,
-                    BlendMode));
-            }
-        }
-
-        PaintChildren(context);
-    }
 
     internal override void CollectBackdropFilters(List<BackdropFilterFlowLayer> filters)
     {
@@ -454,147 +244,6 @@ internal sealed class MagnifierFlowLayer(
     public Clip ClipBehavior { get; } = clipBehavior;
 
     internal override bool ContainsMagnifier => true;
-
-    public override void Paint(FlowPaintContext context)
-    {
-        FlowRasterState state = context.State;
-        if (state.CapturingMagnifier || state.StopAt != null)
-        {
-            return;
-        }
-
-        Matrix toTarget = context.Transform;
-        if (!toTarget.TryInvert(out Matrix toBase))
-        {
-            return;
-        }
-
-        Rect lensRect = LensRect.ToAvalonia().TransformToAABB(toTarget).ToPlumix();
-        if (lensRect.Width <= 0 || lensRect.Height <= 0)
-        {
-            return;
-        }
-
-        var focalPointOffset = new Offset(
-            (FocalPointOffset.Dx * toTarget.M11) + (FocalPointOffset.Dy * toTarget.M21),
-            (FocalPointOffset.Dx * toTarget.M12) + (FocalPointOffset.Dy * toTarget.M22));
-        BorderRadius borderRadius = ResolveBorderRadius(lensRect);
-        double opacity = Math.Clamp(Decoration.Opacity, 0.0, 1.0);
-        using (context.Canvas.PushTransform(toBase))
-        using (context.Canvas.PushOpacity(opacity))
-        using (SceneRasterizer.PushRoundedRectClip(context.Canvas, lensRect, borderRadius))
-        {
-            DrawMagnifiedBackdrop(context.Canvas, state.MagnifierBackdrop, lensRect, focalPointOffset);
-            using (context.Canvas.PushTransform(toTarget))
-            {
-                PaintChildren(context);
-            }
-        }
-
-        // RawMagnifier.build's younger sibling has its own Opacity, so the decoration fades
-        // separately from the magnified image.
-        using (context.Canvas.PushOpacity(opacity))
-        {
-            DrawDecoration(context.Canvas);
-        }
-    }
-
-    /// <summary>
-    /// Resolves the decoration shape to the per-corner radii the lens is clipped and stroked with.
-    /// Radii too large for the lens shrink together by one factor, the way Dart's RRect does when
-    /// it is drawn, so an oversized elliptical radius gives a stadium rather than an ellipse.
-    /// </summary>
-    private BorderRadius ResolveBorderRadius(Rect lensRect)
-    {
-        double maxX = lensRect.Width / 2.0;
-        double maxY = lensRect.Height / 2.0;
-        switch (Decoration.Shape)
-        {
-            case CircleBorder or StadiumBorder:
-                return BorderRadius.Circular(Math.Min(maxX, maxY));
-            case RoundedRectangleBorder rounded:
-                RRect scaled = rounded.BorderRadius.Resolve(TextDirection.Ltr).ToRRect(lensRect).NormalizeForPaint();
-                return new BorderRadius(scaled.TopLeft, scaled.TopRight, scaled.BottomRight, scaled.BottomLeft);
-            default:
-                return BorderRadius.Zero;
-        }
-    }
-
-    private void DrawMagnifiedBackdrop(
-        DrawingContext context,
-        BackdropCapture? backdrop,
-        Rect lensRect,
-        Offset focalPointOffset)
-    {
-        if (backdrop == null)
-        {
-            return;
-        }
-
-        double scale = MagnificationScale;
-        double absoluteScale = Math.Abs(scale);
-        if (absoluteScale <= double.Epsilon)
-        {
-            return;
-        }
-
-        Offset focalPoint = lensRect.Center + focalPointOffset;
-        var sourceSize = new Size(lensRect.Width / absoluteScale, lensRect.Height / absoluteScale);
-        var sourceRect = Rect.FromLTWH(
-            focalPoint.Dx - (sourceSize.Width / 2.0),
-            focalPoint.Dy - (sourceSize.Height / 2.0),
-            sourceSize.Width,
-            sourceSize.Height);
-        if (scale > 0)
-        {
-            context.DrawImage(backdrop.Image, sourceRect.ToAvalonia(), lensRect.ToAvalonia());
-            return;
-        }
-
-        using (context.PushTransform(
-                   Matrix.CreateTranslation(lensRect.Center.Dx, lensRect.Center.Dy)
-                   * Matrix.CreateScale(-1, -1)
-                   * Matrix.CreateTranslation(-lensRect.Center.Dx, -lensRect.Center.Dy)))
-        {
-            context.DrawImage(backdrop.Image, sourceRect.ToAvalonia(), lensRect.ToAvalonia());
-        }
-    }
-
-    /// <summary>
-    /// RawMagnifier.build's decoration sibling, in the layer's local coordinates:
-    /// <c>ClipPath(clipBehavior, clipper: _NegativeClip(shape))</c> over a <c>DecoratedBox</c> of
-    /// <c>ShapeDecoration(shape, shadows)</c> the size of the lens, drawn through the strict
-    /// decoration painter (mask-filtered shadows, then the shape's border).
-    /// </summary>
-    private void DrawDecoration(DrawingContext context)
-    {
-        Rect rect = LensRect;
-        var recorder = new PictureRecorder();
-        var canvas = new Canvas(recorder);
-        var paintingContext = new CanvasPaintingContext(canvas);
-        var decoration = new ShapeDecoration(Shape: Decoration.Shape, Shadows: Decoration.Shadows);
-        using BoxPainter painter = decoration.CreateBoxPainter();
-        var configuration = new ImageConfiguration(Size: rect.Size, TextDirection: TextDirection.Ltr);
-
-        void PaintDecoration() => painter.Paint(paintingContext, rect.TopLeft, configuration);
-
-        if (ClipBehavior == Clip.None)
-        {
-            PaintDecoration();
-        }
-        else
-        {
-            // _NegativeClip.getClip: everything except the inside of the shape.
-            var clip = new Path { FillType = PathFillType.EvenOdd };
-            clip.AddRect(ShapeDecorationPainter.LargestRect);
-            clip.AddPath(Decoration.Shape.GetInnerPath(rect, TextDirection.Ltr));
-            paintingContext.ClipPathAndPaint(clip, ClipBehavior, rect, PaintDecoration);
-        }
-
-        Picture picture = recorder.EndRecording();
-        picture.Playback(context, default);
-        picture.Dispose();
-    }
 }
 
 /// <summary>The engine's <c>flutter::DisplayListLayer</c>: a recorded picture at an offset.</summary>
@@ -608,11 +257,6 @@ internal sealed class DisplayListFlowLayer(Offset offset, Picture picture, bool 
     public bool IsComplex { get; } = isComplex;
 
     public bool WillChange { get; } = willChange;
-
-    public override void Paint(FlowPaintContext context)
-    {
-        Picture.Playback(context.Canvas, Offset);
-    }
 }
 
 /// <summary>The engine's <c>flutter::TextureLayer</c>: a registered backend texture.</summary>
@@ -628,18 +272,6 @@ internal sealed class TextureFlowLayer(Offset offset, Size size, int textureId, 
     public bool Freeze { get; } = freeze;
 
     public FilterQuality FilterQuality { get; } = quality;
-
-    public override void Paint(FlowPaintContext context)
-    {
-        EngineTexture? texture = context.State.Textures?.GetTexture(TextureId);
-        if (texture == null)
-        {
-            // An unknown texture paints nothing: the engine's "null texture" trace.
-            return;
-        }
-
-        texture.Paint(context.Canvas, (Offset & Size), Freeze, FilterQuality);
-    }
 }
 
 /// <summary>
@@ -653,10 +285,6 @@ internal sealed class PlatformViewFlowLayer(Offset offset, Size size, int viewId
     public Size Size { get; } = size;
 
     public int ViewId { get; } = viewId;
-
-    public override void Paint(FlowPaintContext context)
-    {
-    }
 }
 
 /// <summary>The engine's <c>flutter::PerformanceOverlayLayer</c>.</summary>
@@ -677,448 +305,4 @@ internal sealed class PerformanceOverlayFlowLayer(int options, Rect bounds) : Fl
     public int Options { get; } = options;
 
     public Rect Bounds { get; } = bounds;
-
-    /// <summary>
-    /// The statistics line: the engine's <c>PerformanceOverlayLayer::MakeStatisticsText</c>.
-    /// </summary>
-    internal static string MakeStatisticsText(FrameStopwatch stopwatch, string labelPrefix)
-    {
-        double maxMillisecondsPerFrame = stopwatch.MaxDelta().TotalMilliseconds;
-        double averageMillisecondsPerFrame = stopwatch.AverageDelta().TotalMilliseconds;
-        return string.Create(
-            CultureInfo.InvariantCulture,
-            $"{labelPrefix}  max {maxMillisecondsPerFrame:F1} ms/frame, avg {averageMillisecondsPerFrame:F1} ms/frame");
-    }
-
-    public override void Paint(FlowPaintContext context)
-    {
-        const int padding = 8;
-        if (Options == 0)
-        {
-            return;
-        }
-
-        CompositorContext compositor = context.State.Compositor;
-        double x = Bounds.Left + padding;
-        double y = Bounds.Top + padding;
-        double width = Bounds.Width - (padding * 2);
-        double height = Bounds.Height / 2;
-        VisualizeStopwatch(
-            context.Canvas,
-            compositor.RasterTime,
-            x,
-            y,
-            width,
-            height - padding,
-            (Options & VisualizeRasterizerStatistics) != 0,
-            (Options & DisplayRasterizerStatistics) != 0,
-            "Raster");
-        VisualizeStopwatch(
-            context.Canvas,
-            compositor.UiTime,
-            x,
-            y + height,
-            width,
-            height - padding,
-            (Options & VisualizeEngineStatistics) != 0,
-            (Options & DisplayEngineStatistics) != 0,
-            "UI");
-    }
-
-    /// <remarks>The engine's file-local <c>VisualizeStopWatch</c>.</remarks>
-    private static void VisualizeStopwatch(
-        DrawingContext canvas,
-        FrameStopwatch stopwatch,
-        double x,
-        double y,
-        double width,
-        double height,
-        bool showGraph,
-        bool showLabels,
-        string labelPrefix)
-    {
-        const int labelX = 8; // distance from x
-        const int labelY = -10; // distance from y+height
-        if (showGraph && width > 0 && height > 0)
-        {
-            stopwatch.Visualize(canvas, Rect.FromLTWH(x, y, width, height));
-        }
-
-        if (!showLabels)
-        {
-            return;
-        }
-
-        FormattedText? text = SceneRasterizer.TryMakeStatisticsText(MakeStatisticsText(stopwatch, labelPrefix));
-        if (text == null)
-        {
-            return;
-        }
-
-        // The engine draws the text with its baseline at (x + labelX, y + height + labelY).
-        canvas.DrawText(text, new Offset(x + labelX, y + height + labelY - text.Baseline).ToAvalonia());
-    }
-}
-
-/// <summary>A backdrop input: an image of the scene prefix painted before a backdrop filter.</summary>
-internal sealed class BackdropCapture : IDisposable
-{
-    private readonly bool _ownsImage;
-
-    public BackdropCapture(IImage image, Rect bounds, bool ownsImage = false)
-    {
-        Image = image ?? throw new ArgumentNullException(nameof(image));
-        Bounds = bounds;
-        _ownsImage = ownsImage;
-    }
-
-    public IImage Image { get; }
-
-    public Rect Bounds { get; }
-
-    public void Dispose()
-    {
-        if (_ownsImage && Image is IDisposable disposable)
-        {
-            disposable.Dispose();
-        }
-    }
-}
-
-/// <summary>The state one rasterization pass shares across every drawing context it paints into.</summary>
-internal sealed class FlowRasterState(Size targetSize, CompositorContext compositor, TextureRegistry? textures)
-{
-    /// <summary>The size of the surface, in the drawing context's own (target) units.</summary>
-    public Size TargetSize { get; } = targetSize;
-
-    public CompositorContext Compositor { get; } = compositor;
-
-    public TextureRegistry? Textures { get; } = textures;
-
-    /// <summary>The backdrop filter a prefix capture stops at; null for a full paint.</summary>
-    public BackdropFilterFlowLayer? StopAt { get; init; }
-
-    /// <summary>Whether the prefix capture reached <see cref="StopAt"/>.</summary>
-    public bool Stopped { get; set; }
-
-    /// <summary>Whether this pass captures the magnifier input, which paints no lens.</summary>
-    public bool CapturingMagnifier { get; init; }
-
-    /// <summary>The captured backdrop of every backdrop filter, by layer.</summary>
-    public Dictionary<BackdropFilterFlowLayer, BackdropCapture> Backdrops { get; init; } =
-        new(ReferenceEqualityComparer.Instance);
-
-    /// <summary>The captured scene a magnifier lens draws from.</summary>
-    public BackdropCapture? MagnifierBackdrop { get; set; }
-
-    /// <summary>The raster outputs the drawing context draws from, kept alive until the next frame.</summary>
-    public List<IDisposable> Resources { get; init; } = [];
-}
-
-/// <summary>
-/// One drawing context of a rasterization pass: the engine's <c>PaintContext</c> (its canvas and state
-/// stack). <see cref="Transform"/> maps the current local coordinates to the target's.
-/// </summary>
-internal sealed class FlowPaintContext(DrawingContext canvas, Matrix transform, FlowRasterState state)
-{
-    public DrawingContext Canvas { get; } = canvas;
-
-    public Matrix Transform { get; set; } = transform;
-
-    public FlowRasterState State { get; } = state;
-
-    /// <summary>A context drawing into <paramref name="canvas"/>, an offscreen of this one.</summary>
-    public FlowPaintContext WithCanvas(DrawingContext canvas, Matrix transform) => new(canvas, transform, State);
-
-    /// <summary>Keeps a raster output alive until the next frame of the same surface.</summary>
-    public void Track(IDisposable? resource)
-    {
-        if (resource != null)
-        {
-            State.Resources.Add(resource);
-        }
-    }
-}
-
-/// <summary>Paints a scene's layer tree: the engine's rasterizer, over Avalonia's drawing context.</summary>
-internal static class SceneRasterizer
-{
-    private static readonly Offset Dpi = new(96.0, 96.0);
-
-    [ThreadStatic]
-    private static int t_captureDepth;
-
-    /// <summary>Whether the current thread is painting a backdrop or magnifier capture.</summary>
-    internal static bool Capturing => t_captureDepth > 0;
-
-    /// <summary>
-    /// Paints <paramref name="root"/> into <paramref name="context"/> under <paramref name="rootTransform"/>,
-    /// which maps the scene's (physical) pixels to the context's units.
-    /// </summary>
-    /// <returns>The raster outputs the context draws from; the caller disposes them after the next frame.</returns>
-    public static List<IDisposable> Draw(
-        DrawingContext context,
-        ContainerFlowLayer root,
-        Size targetSize,
-        Matrix rootTransform,
-        CompositorContext compositor,
-        TextureRegistry? textures,
-        List<IDisposable>? resources = null)
-    {
-        ArgumentNullException.ThrowIfNull(context);
-        ArgumentNullException.ThrowIfNull(root);
-        compositor.RasterTime.Start();
-        var state = new FlowRasterState(targetSize, compositor, textures) { Resources = resources ?? [] };
-        try
-        {
-            PrepareBackdropCaptures(root, state, filter => CaptureScene(root, state, rootTransform, filter, false));
-            if (root.ContainsMagnifier)
-            {
-                state.MagnifierBackdrop = CaptureScene(root, state, rootTransform, null, true);
-            }
-
-            using (context.PushTransform(rootTransform))
-            {
-                root.Paint(new FlowPaintContext(context, rootTransform, state));
-            }
-        }
-        finally
-        {
-            foreach (BackdropCapture capture in state.Backdrops.Values.Distinct())
-            {
-                capture.Dispose();
-            }
-
-            state.MagnifierBackdrop?.Dispose();
-            compositor.RasterTime.Stop();
-        }
-
-        return state.Resources;
-    }
-
-    /// <summary>
-    /// <see cref="Draw"/> for a host's frame: an exception is reported through
-    /// <see cref="FlutterError.ReportError"/> instead of propagating, and the raster outputs created
-    /// before it are still returned, because the context may already draw from them.
-    /// </summary>
-    /// <remarks>
-    /// The engine logs a failed rasterization to the console. Avalonia swallows exceptions thrown from
-    /// <c>Control.Render</c>, so a host that let them propagate showed a blank view with nothing logged.
-    /// </remarks>
-    public static List<IDisposable> DrawFrame(
-        DrawingContext context,
-        ContainerFlowLayer root,
-        Size targetSize,
-        Matrix rootTransform,
-        CompositorContext compositor,
-        TextureRegistry? textures)
-    {
-        var resources = new List<IDisposable>();
-        try
-        {
-            Draw(context, root, targetSize, rootTransform, compositor, textures, resources);
-        }
-        catch (Exception exception)
-        {
-            FlutterError.ReportError(new FlutterErrorDetails(
-                exception: exception,
-                stack: exception.StackTrace,
-                library: "Plumix rasterizer",
-                context: new ErrorDescription("while rasterizing a frame")));
-        }
-
-        return resources;
-    }
-
-    /// <summary>
-    /// Rasterizes <paramref name="root"/> into a new <paramref name="width"/> by <paramref name="height"/>
-    /// bitmap, one scene pixel per image pixel: the engine's <c>Scene::toImageSync</c>.
-    /// </summary>
-    public static Bitmap RasterizeToImage(ContainerFlowLayer root, int width, int height)
-    {
-        var image = new RenderTargetBitmap(new PixelSize(width, height), Dpi.ToAvaloniaVector());
-        List<IDisposable> resources = [];
-        try
-        {
-            using (DrawingContext context = image.CreateDrawingContext())
-            {
-                resources = Draw(
-                    context,
-                    root,
-                    new Size(width, height),
-                    Matrix.Identity,
-                    new CompositorContext(),
-                    TextureRegistry.Instance);
-            }
-
-            return image;
-        }
-        catch
-        {
-            image.Dispose();
-            throw;
-        }
-        finally
-        {
-            foreach (IDisposable resource in resources)
-            {
-                resource.Dispose();
-            }
-        }
-    }
-
-    /// <summary>
-    /// Assigns every backdrop filter its captured input, capturing once per backdrop id.
-    /// </summary>
-    internal static void PrepareBackdropCaptures(
-        ContainerFlowLayer root,
-        FlowRasterState state,
-        Func<BackdropFilterFlowLayer, BackdropCapture> capture)
-    {
-        var filters = new List<BackdropFilterFlowLayer>();
-        root.CollectBackdropFilters(filters);
-        var groupedBackdrops = new Dictionary<int, BackdropCapture>();
-        foreach (BackdropFilterFlowLayer filter in filters)
-        {
-            if (filter.BackdropId is { } id && groupedBackdrops.TryGetValue(id, out BackdropCapture? grouped))
-            {
-                state.Backdrops[filter] = grouped;
-                continue;
-            }
-
-            BackdropCapture backdrop = capture(filter)
-                ?? throw new InvalidOperationException("Backdrop capture must return an image.");
-            state.Backdrops[filter] = backdrop;
-            if (filter.BackdropId is { } key)
-            {
-                groupedBackdrops[key] = backdrop;
-            }
-        }
-    }
-
-    private static BackdropCapture CaptureScene(
-        ContainerFlowLayer root,
-        FlowRasterState state,
-        Matrix rootTransform,
-        BackdropFilterFlowLayer? stopAt,
-        bool capturingMagnifier)
-    {
-        int width = Math.Max(1, (int)Math.Ceiling(state.TargetSize.Width));
-        int height = Math.Max(1, (int)Math.Ceiling(state.TargetSize.Height));
-        var bounds = Rect.FromLTWH(0.0, 0.0, width, height);
-        var image = new RenderTargetBitmap(new PixelSize(width, height), Dpi.ToAvaloniaVector());
-        t_captureDepth++;
-        try
-        {
-            var captureState = new FlowRasterState(state.TargetSize, state.Compositor, state.Textures)
-            {
-                StopAt = stopAt,
-                CapturingMagnifier = capturingMagnifier,
-                Backdrops = state.Backdrops,
-                Resources = state.Resources,
-            };
-            using (DrawingContext captureContext = image.CreateDrawingContext())
-            using (captureContext.PushTransform(rootTransform))
-            {
-                root.Paint(new FlowPaintContext(captureContext, rootTransform, captureState));
-            }
-
-            return new BackdropCapture(image, bounds, ownsImage: true);
-        }
-        catch
-        {
-            image.Dispose();
-            throw;
-        }
-        finally
-        {
-            t_captureDepth--;
-        }
-    }
-
-    /// <summary>The statistics label of the performance overlay, or null without a font backend.</summary>
-    internal static FormattedText? TryMakeStatisticsText(string text)
-    {
-        try
-        {
-            var formatted = new FormattedText(
-                text,
-                CultureInfo.InvariantCulture,
-                FlowDirection.LeftToRight,
-                Typeface.Default,
-                15,
-                // Historically SK_ColorGRAY (== 0xFF888888) was used here.
-                new SolidColorBrush(Avalonia.Media.Color.FromUInt32(0xFF888888)));
-            // Lays the text out now, so a missing font backend surfaces here rather than in the draw.
-            _ = formatted.Baseline;
-            return formatted;
-        }
-        catch (InvalidOperationException)
-        {
-            return null;
-        }
-    }
-
-    internal static DrawingContext.PushedState PushRoundedRectClip(DrawingContext context, RRect rrect)
-    {
-        return PushRoundedRectClip(context, rrect.Rect, rrect.Radii);
-    }
-
-    internal static DrawingContext.PushedState PushRoundedRectClip(
-        DrawingContext context,
-        Rect rect,
-        double radius)
-    {
-        double clampedRadius = Math.Min(Math.Max(0, radius), Math.Min(rect.Width, rect.Height) / 2.0);
-        if (Capturing)
-        {
-            // Avalonia's recording context does not implement PushClip(RoundedRect) in every backend, but
-            // its geometry-clip path records the equivalent rounded rectangle correctly.
-            return context.PushGeometryClip(new RectangleGeometry(rect.ToAvalonia(), clampedRadius, clampedRadius));
-        }
-
-        return context.PushClip(new RoundedRect(rect.ToAvalonia(), clampedRadius));
-    }
-
-    internal static DrawingContext.PushedState PushRoundedRectClip(
-        DrawingContext context,
-        Rect rect,
-        BorderRadius borderRadius)
-    {
-        // SkRRect::setRectRadii: oversized radii shrink by one factor for every corner, keeping each corner's
-        // aspect ratio — BorderRadius.circular(100) on an 8 px tall bar is a stadium, not a lens-shaped ellipse
-        // that clamping X to half the width and Y to half the height would give.
-        RRect scaled = new RRect(
-            rect,
-            ClipRadius(borderRadius.TopLeftRadius),
-            ClipRadius(borderRadius.TopRightRadius),
-            ClipRadius(borderRadius.BottomRightRadius),
-            ClipRadius(borderRadius.BottomLeftRadius)).ScaleRadii();
-        Radius topLeft = scaled.TopLeft;
-        Radius topRight = scaled.TopRight;
-        Radius bottomRight = scaled.BottomRight;
-        Radius bottomLeft = scaled.BottomLeft;
-        if (Capturing)
-        {
-            double fallbackX = Math.Max(
-                Math.Max(topLeft.X, topRight.X),
-                Math.Max(bottomRight.X, bottomLeft.X));
-            double fallbackY = Math.Max(
-                Math.Max(topLeft.Y, topRight.Y),
-                Math.Max(bottomRight.Y, bottomLeft.Y));
-            return context.PushGeometryClip(new RectangleGeometry(rect.ToAvalonia(), fallbackX, fallbackY));
-        }
-
-        return context.PushClip(new RoundedRect(
-            rect.ToAvalonia(),
-            new Offset(topLeft.X, topLeft.Y).ToAvaloniaVector(),
-            new Offset(topRight.X, topRight.Y).ToAvaloniaVector(),
-            new Offset(bottomRight.X, bottomRight.Y).ToAvaloniaVector(),
-            new Offset(bottomLeft.X, bottomLeft.Y).ToAvaloniaVector()));
-    }
-
-    private static Radius ClipRadius(Radius radius) =>
-        radius.X > 0.0 && radius.Y > 0.0 && double.IsFinite(radius.X) && double.IsFinite(radius.Y)
-            ? radius
-            : Radius.Zero;
 }

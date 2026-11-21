@@ -35,7 +35,7 @@ public sealed class ImageByteDataTests
     {
         using WriteableBitmap bitmap = TwoPixels();
 
-        ByteData data = (await bitmap.ToByteData())!;
+        ByteData data = (await AvaloniaImages.Wrap(bitmap).ToByteData())!;
 
         Assert.Equal(8, data.LengthInBytes);
         Assert.Equal(0x0000FFFFu, data.GetUint32(0));
@@ -47,7 +47,7 @@ public sealed class ImageByteDataTests
     {
         using WriteableBitmap bitmap = TwoPixels();
 
-        ByteData data = (await bitmap.ToByteData(ImageByteFormat.RawStraightRgba))!;
+        ByteData data = (await AvaloniaImages.Wrap(bitmap).ToByteData(ImageByteFormat.RawStraightRgba))!;
 
         Assert.Equal(0x0000FFFFu, data.GetUint32(0));
         Assert.InRange(data.GetUint8(4), (byte)254, (byte)255);
@@ -61,7 +61,7 @@ public sealed class ImageByteDataTests
     {
         using WriteableBitmap bitmap = TwoPixels();
 
-        ByteData data = (await bitmap.ToByteData(ImageByteFormat.RawExtendedRgba128))!;
+        ByteData data = (await AvaloniaImages.Wrap(bitmap).ToByteData(ImageByteFormat.RawExtendedRgba128))!;
 
         Assert.Equal(32, data.LengthInBytes);
         float[] floats = MemoryMarshal.Cast<byte, float>(data.Buffer.AsSpan(0, 32)).ToArray();
@@ -74,7 +74,7 @@ public sealed class ImageByteDataTests
     {
         using WriteableBitmap bitmap = TwoPixels();
 
-        ByteData data = (await bitmap.ToByteData(ImageByteFormat.Png))!;
+        ByteData data = (await AvaloniaImages.Wrap(bitmap).ToByteData(ImageByteFormat.Png))!;
 
         Assert.Equal(0x89504E47u, data.GetUint32(0));
     }

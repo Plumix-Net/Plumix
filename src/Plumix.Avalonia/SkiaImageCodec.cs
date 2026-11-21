@@ -73,7 +73,7 @@ internal sealed class SkiaImageCodec : Codec
             ? TimeSpan.FromMilliseconds(_frames[_nextFrame].Duration)
             : TimeSpan.Zero;
         _nextFrame = (_nextFrame + 1) % FrameCount;
-        return Task.FromResult(new FrameInfo(duration, new RasterImage(image)));
+        return Task.FromResult(new FrameInfo(duration, AvaloniaImages.Wrap(image)));
     }
 
     public override void Dispose()

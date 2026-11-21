@@ -240,7 +240,7 @@ public sealed class InkSparkleDartParityTests
     {
         var image = new RenderTargetBitmap(new PixelSize(160, 80));
         using DrawingContext context = image.CreateDrawingContext();
-        picture.Playback(context, default);
+        CanvasPlayback.Play(picture, context, default);
         return image;
     }
 

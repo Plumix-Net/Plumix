@@ -7,7 +7,8 @@ namespace Plumix.UI;
 // SkInsetConvexPolygon/SkComputeRadialSteps helpers of src/utils/SkPolyUtils.cpp, at the Skia revision the
 // pinned Flutter engine DEPS names (8df24be6). Curves are flattened the way a Ganesh-enabled build does
 // (GrPathUtils + Wang's formula), which is how the Flutter engine compiles Skia. SkiaSharp does not bind
-// SkShadowUtils, so the tessellation runs here and only the mesh rasterization stays native.
+// SkShadowUtils, so the tessellation runs here and only the mesh rasterization stays native. Lives in
+// Plumix.Avalonia with ShadowDraw, its only caller.
 
 /// <summary>The float geometry Skia's shadow code is written in (SkPoint/SkVector).</summary>
 internal readonly record struct ShadowPoint(float X, float Y)

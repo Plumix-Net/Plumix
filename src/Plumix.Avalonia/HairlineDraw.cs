@@ -6,7 +6,8 @@ using SkiaSharp;
 
 namespace Plumix.UI;
 
-// C#-only backend bridge: Skia's zero-width stroke remains one device pixel under every transform.
+// C#-only backend bridge (Plumix.Avalonia, under CanvasPlayback): Skia's zero-width stroke remains one
+// device pixel under every transform.
 internal sealed class HairlineDraw(Offset start, Offset end, Color color, bool isAntiAlias, StrokeCap cap)
     : ICustomDrawOperation
 {

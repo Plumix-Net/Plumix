@@ -283,11 +283,11 @@ public sealed class SceneRasterizerTests
         TextureRegistry.Instance.RegisterTexture(texture);
         try
         {
-            texture.SetImage(new RasterImage(SolidImage(Red)));
+            texture.SetImage(AvaloniaImages.Wrap(SolidImage(Red)));
             var red = ((byte)0xFF, (byte)0, (byte)0, (byte)0xFF);
             Assert.Equal(red, RasterBackend.PixelAt(TextureScene(textureId, false), 5, 5));
 
-            texture.SetImage(new RasterImage(SolidImage(0xFF0000FF)));
+            texture.SetImage(AvaloniaImages.Wrap(SolidImage(0xFF0000FF)));
             Assert.Equal(red, RasterBackend.PixelAt(TextureScene(textureId, true), 5, 5));
             var blue = ((byte)0, (byte)0, (byte)0xFF, (byte)0xFF);
             Assert.Equal(blue, RasterBackend.PixelAt(TextureScene(textureId, false), 5, 5));
@@ -312,7 +312,7 @@ public sealed class SceneRasterizerTests
         try
         {
             TextureRegistry.Instance.RegisterTexture(texture);
-            texture.SetImage(new RasterImage(SolidImage(Red)));
+            texture.SetImage(AvaloniaImages.Wrap(SolidImage(Red)));
             TextureRegistry.Instance.MarkTextureFrameAvailable(textureId);
         }
         finally
@@ -362,7 +362,7 @@ public sealed class SceneRasterizerTests
         Assert.Equal(TimeSpan.FromMilliseconds(1), stopwatch.MaxDelta());
         Assert.Equal(
             "Raster  max 1.0 ms/frame, avg 1.0 ms/frame",
-            PerformanceOverlayFlowLayer.MakeStatisticsText(stopwatch, "Raster"));
+            FlowLayerPainter.MakeStatisticsText(stopwatch, "Raster"));
     }
 
     [Fact]
@@ -510,9 +510,9 @@ public sealed class SceneRasterizerTests
         }
     }
 
-    private sealed class ProbeFlowLayer(Action<FlowPaintContext> paint) : FlowLayer
+    private sealed class ProbeFlowLayer(Action<FlowPaintContext> paint) : HostFlowLayer
     {
-        public override void Paint(FlowPaintContext context) => paint(context);
+        internal override void Paint(FlowPaintContext context) => paint(context);
     }
 
     private sealed class TrackedResource : IDisposable

@@ -479,7 +479,7 @@ public static class ImagePainting
             return;
         }
 
-        Size imagePixels = Canvas.ImageSize(image.Native);
+        Size imagePixels = Canvas.ImageSize(image);
         double outputWidth = rect.Width;
         double outputHeight = rect.Height;
         double inputWidth = imagePixels.Width;

@@ -6,7 +6,8 @@ using SkiaSharp;
 
 namespace Plumix.UI;
 
-// C#-only backend bridge: draw framework native shaders through Avalonia's supported Skia lease.
+// C#-only backend bridge (Plumix.Avalonia, under CanvasPlayback): draw framework native shaders through
+// Avalonia's supported Skia lease.
 // Geometry clips remain Avalonia-owned; the shader uses absolute canvas coordinates and local matrix.
 internal static class ShaderDrawing
 {

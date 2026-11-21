@@ -4,7 +4,8 @@ using Plumix.Rendering;
 namespace Plumix.UI;
 
 // Dart parity source: dart:ui Canvas/Picture/PictureRecorder (a recording canvas; the picture is a list
-// of typed entries, CanvasOps.cs, that a backend plays back — CanvasPlayback.cs for Avalonia/Skia)
+// of typed entries, CanvasOps.cs, that a backend plays back — CanvasPlayback.cs in Plumix.Avalonia for
+// Avalonia/Skia)
 
 /// <summary>Defines how a new clip region should be merged with the existing clip region.</summary>
 /// <remarks>Dart's <c>ClipOp</c>; used by <see cref="Canvas.ClipRect"/>.</remarks>
@@ -217,19 +218,6 @@ public sealed class Picture
 
     /// <summary>The recorded entries, in order.</summary>
     internal IReadOnlyList<CanvasOp> Ops => _commands;
-
-    /// <summary>Replays the recorded operations, translated by <paramref name="offset"/>.</summary>
-    internal void Playback(Avalonia.Media.DrawingContext context, Offset offset)
-    {
-        Playback(context, offset, PaintRasterizer.RasterScale);
-    }
-
-    /// <summary>
-    /// Replays the recorded operations, translated by <paramref name="offset"/>, rasterizing any layer that
-    /// needs it at <paramref name="deviceScale"/> device pixels per picture unit.
-    /// </summary>
-    internal void Playback(Avalonia.Media.DrawingContext context, Offset offset, double deviceScale) =>
-        CanvasPlayback.Play(_commands, context, offset, deviceScale);
 }
 
 /// <summary>Records a <see cref="Picture"/> containing the drawing operations of a <see cref="Canvas"/>.</summary>
@@ -568,8 +556,7 @@ public partial class Canvas
     {
         ArgumentNullException.ThrowIfNull(paragraph);
         DebugRecordCall(new CanvasCall("drawParagraph", Offset: offset));
-        Action<Avalonia.Media.DrawingContext>? draw = paragraph.CreateDrawAction(offset);
-        AddOp(new BackendOp(draw ?? (static _ => { }), isDraw: true));
+        AddOp(paragraph.CreateDrawOp(offset) ?? new BackendOp(BackendOp.NothingToDraw, isDraw: true));
     }
 
     /// <summary>

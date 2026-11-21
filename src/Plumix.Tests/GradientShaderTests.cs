@@ -230,7 +230,7 @@ public sealed class GradientShaderTests
         using (DrawingContext context = image.CreateDrawingContext())
         using (context.PushOpacity(0.5))
         {
-            picture.Playback(context, default);
+            CanvasPlayback.Play(picture, context, default);
         }
 
         double coverage = 0.0;
@@ -411,7 +411,7 @@ public sealed class GradientShaderTests
         Picture picture = recorder.EndRecording();
         var bitmap = new RenderTargetBitmap(new PixelSize(width, height));
         using DrawingContext context = bitmap.CreateDrawingContext();
-        picture.Playback(context, default);
+        CanvasPlayback.Play(picture, context, default);
         return bitmap;
     }
 

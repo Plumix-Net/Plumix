@@ -2,7 +2,6 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Globalization;
 using System.Net;
-using Avalonia.Platform;
 using Plumix.UI;
 using IOPath = System.IO.Path;
 
@@ -135,7 +134,7 @@ public sealed class PlatformAssetBundle : AssetBundle
     {
         cancellationToken.ThrowIfCancellationRequested();
         var uri = ResolveUri(key);
-        return Task.FromResult(AssetLoader.Open(uri, BaseUri));
+        return Task.FromResult(ImageBackend.Assets.Open(uri, BaseUri));
     }
 
     // Embedded resources are already in memory: hand the bytes over without a continuation, so a
@@ -145,7 +144,7 @@ public sealed class PlatformAssetBundle : AssetBundle
         CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        using Stream stream = AssetLoader.Open(ResolveUri(key), BaseUri);
+        using Stream stream = ImageBackend.Assets.Open(ResolveUri(key), BaseUri);
         using var buffer = new MemoryStream();
         stream.CopyTo(buffer);
         return Task.FromResult<ReadOnlyMemory<byte>>(buffer.ToArray());
@@ -161,7 +160,7 @@ public sealed class PlatformAssetBundle : AssetBundle
         int slash = path.LastIndexOf('/');
         string directoryPath = slash >= 0 ? path[..(slash + 1)] : "/";
         var directory = new UriBuilder(uri) { Path = directoryPath }.Uri;
-        string[] assets = AssetLoader.GetAssets(directory, BaseUri).Select(asset => asset.ToString()).ToArray();
+        string[] assets = ImageBackend.Assets.GetAssets(directory, BaseUri).Select(asset => asset.ToString()).ToArray();
         return Task.FromResult<IReadOnlyList<string>>(assets);
     }
 

@@ -5,7 +5,8 @@ namespace Plumix.UI;
 // C#-only infrastructure: the engine side of `SceneBuilder.addPerformanceOverlay`. A port of the engine's
 // `flow/stopwatch.{h,cc}` (`Stopwatch`, `FixedRefreshRateStopwatch`, `StopwatchVisualizer`) and
 // `flow/stopwatch_dl.cc` (`DlStopwatchVisualizer`), drawn into an Avalonia drawing context instead of a
-// display-list vertex buffer. No Dart source maps to this file.
+// display-list vertex buffer. Lives in Plumix.Avalonia with the rasterizer that laps it and the painter that
+// draws it (FlowLayerPainter's performance overlay). No Dart source maps to this file.
 
 /// <summary>Records the last <see cref="MaxSamples"/> lap times of a repeating task.</summary>
 /// <remarks>

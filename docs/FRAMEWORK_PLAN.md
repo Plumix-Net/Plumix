@@ -111,8 +111,9 @@ Blockers (all must close):
   overloads removed; stage 2a (typed `Canvas` entries, one Avalonia/Skia playback) and 2b-1 (managed
   `Path` data and builders), 2b-2 (containment), 2b-3 (measurement) and 2b-4 (boolean operations, a
   port of Skia's PathOps) and 2c (`Shader`/filters as data) done; stage 3 under way: 3a (incidental
-  Avalonia uses), 3b (UI thread and timers behind `IPlatformThread`) and 3c (keyboard maps) done,
-  their Avalonia code in `Plumix.Avalonia`, core at 620; next are images, scene rasterization and text.
+  Avalonia uses), 3b (UI thread and timers behind `IPlatformThread`), 3c (keyboard maps) and 3d
+  (images and assets behind `IImageBackend`/`IAssetSource`) and 3e (scene and picture rasterization
+  behind `IRenderBackend`) done, their Avalonia code in `Plumix.Avalonia`, core at 432; next is text.
   Perspective transforms of paths are the one native path operation left.
 
 Release gates (on the commit that gets the tag):

@@ -189,10 +189,10 @@ public sealed class RenderErrorBoxTests
         public override IReadOnlyList<LineMetrics> ComputeLineMetrics() => [];
         public override LineMetrics? GetLineMetricsAt(int lineNumber) => null;
         public override int? GetLineNumberAt(int codeUnitOffset) => null;
-        internal override Action<DrawingContext>? CreateDrawAction(Offset offset)
+        internal override CanvasOp? CreateDrawOp(Offset offset)
         {
             PaintedOffset = offset;
-            return static _ => { };
+            return new BackendOp(new Action<DrawingContext>(static _ => { }), isDraw: true);
         }
     }
 }

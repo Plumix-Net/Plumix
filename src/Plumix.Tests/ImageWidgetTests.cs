@@ -186,7 +186,7 @@ public sealed class ImageWidgetTests : IDisposable
         Assert.Equal(0.0, initialTarget.Opacity!.Value, 6);
         Assert.Equal(1.0, placeholder.Opacity!.Value, 6);
 
-        targetCompletion.SetResult(new ImageInfo(new RasterImage(targetImage)));
+        targetCompletion.SetResult(new ImageInfo(AvaloniaImages.Wrap(targetImage)));
         await PumpUntilAsync(
             harness,
             () => FindRenderImages(harness.RenderView).Any(image => ReferenceEquals(image.Image?.Native, targetImage)));
@@ -247,7 +247,7 @@ public sealed class ImageWidgetTests : IDisposable
     public void RenderImage_PreservesIntrinsicAspectRatioAndHonorsExplicitDimensions()
     {
         var image = new FakeImage(new Size(240, 120));
-        var renderImage = new RenderImage(image: new RasterImage(image), scale: 2.0);
+        var renderImage = new RenderImage(image: AvaloniaImages.Wrap(image), scale: 2.0);
 
         renderImage.Layout(new BoxConstraints(MaxWidth: 80, MaxHeight: 80));
         Assert.Equal(new Size(80, 40), renderImage.Size);
@@ -272,7 +272,7 @@ public sealed class ImageWidgetTests : IDisposable
     {
         using var opacity = new ValueNotifier<double>(1.0);
         var renderImage = new RenderImage(
-            image: new RasterImage(new FakeImage(new Size(20, 10))),
+            image: AvaloniaImages.Wrap(new FakeImage(new Size(20, 10))),
             width: 40,
             height: 20,
             opacity: opacity,
@@ -329,7 +329,7 @@ public sealed class ImageWidgetTests : IDisposable
         Assert.Null(observedFrame);
         Assert.True(loadingReceivedFrameResult);
         completion.SetResult(
-            new ImageInfo(new RasterImage(new FakeImage(new Size(16, 12))), scale: 1.0, debugLabel: "test"));
+            new ImageInfo(AvaloniaImages.Wrap(new FakeImage(new Size(16, 12))), scale: 1.0, debugLabel: "test"));
         await PumpUntilAsync(harness, () => observedFrame == 0);
 
         Assert.False(observedSynchronous);
@@ -363,7 +363,7 @@ public sealed class ImageWidgetTests : IDisposable
         }
 
         using var harness = new WidgetRenderHarness(Build(firstProvider, gapless: true));
-        firstCompletion.SetResult(new ImageInfo(new RasterImage(firstImage)));
+        firstCompletion.SetResult(new ImageInfo(AvaloniaImages.Wrap(firstImage)));
         await PumpUntilAsync(harness, () => FindRenderImage(harness.RenderView)?.Image is not null);
 
         harness.Update(Build(secondProvider, gapless: true));
@@ -385,7 +385,7 @@ public sealed class ImageWidgetTests : IDisposable
         using var harness = new WidgetRenderHarness(image);
 
         Assert.True(provider.LastCompleter!.HasListeners);
-        completion.SetResult(new ImageInfo(new RasterImage(new FakeImage(new Size(20, 20)))));
+        completion.SetResult(new ImageInfo(AvaloniaImages.Wrap(new FakeImage(new Size(20, 20)))));
         await PumpUntilAsync(
             harness,
             () => FindRenderImage(harness.RenderView)?.Image is not null
@@ -489,7 +489,7 @@ public sealed class ImageWidgetTests : IDisposable
         public SynchronousImageCompleter(IImage image, string debugLabel)
         {
             DebugLabel = debugLabel;
-            SetImage(new ImageInfo(new RasterImage(image), debugLabel: debugLabel));
+            SetImage(new ImageInfo(AvaloniaImages.Wrap(image), debugLabel: debugLabel));
         }
     }
 

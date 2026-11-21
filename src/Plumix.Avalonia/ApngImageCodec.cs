@@ -186,7 +186,7 @@ internal sealed class ApngImageCodec : Codec
         int denominator = BinaryPrimitives.ReadUInt16BigEndian(control[18..]);
         int milliseconds = numerator * 1000 / (denominator == 0 ? 100 : denominator);
         _nextFrame = (_nextFrame + 1) % FrameCount;
-        return new FrameInfo(TimeSpan.FromMilliseconds(milliseconds), new RasterImage(image));
+        return new FrameInfo(TimeSpan.FromMilliseconds(milliseconds), AvaloniaImages.Wrap(image));
     }
 
     private static uint ReadUInt(ReadOnlySpan<byte> bytes) => BinaryPrimitives.ReadUInt32BigEndian(bytes);

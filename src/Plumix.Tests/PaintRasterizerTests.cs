@@ -28,7 +28,7 @@ public sealed class PaintRasterizerTests
             new PixelSize(80, 120), new Offset(96.0 * dpiScale, 96.0 * dpiScale).ToAvaloniaVector());
         using (DrawingContext context = bitmap.CreateDrawingContext())
         {
-            picture.Playback(context, default);
+            CanvasPlayback.Play(picture, context, default);
         }
 
         int y = (int)(4.0 * scale * 2.0 * dpiScale);
@@ -59,7 +59,7 @@ public sealed class PaintRasterizerTests
         using (DrawingContext context = bitmap.CreateDrawingContext())
         {
             using DrawingContext.PushedState opacity = context.PushOpacity(0.5);
-            picture.Playback(context, default);
+            CanvasPlayback.Play(picture, context, default);
         }
 
         var visible = RasterBackend.PixelAt(bitmap, 4, 3);

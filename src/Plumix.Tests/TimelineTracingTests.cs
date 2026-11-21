@@ -256,7 +256,7 @@ public sealed class TimelineTracingTests : IDisposable
         cache.PutIfAbsent("Test", () => completer1);
         cache.Clear();
 
-        completer2.TestSetImage(new ImageInfo(new RasterImage(new FakeImage(new Size(1, 1)))));
+        completer2.TestSetImage(new ImageInfo(AvaloniaImages.Wrap(new FakeImage(new Size(1, 1)))));
         cache.PutIfAbsent("Test2", () => completer2);
         cache.Evict("Test2");
 
@@ -298,7 +298,7 @@ public sealed class TimelineTracingTests : IDisposable
         Assert.True(cache.Evict("pending"));
 
         var completer = new TestImageStreamCompleter();
-        completer.TestSetImage(new ImageInfo(new RasterImage(new FakeImage(new Size(1, 1)))));
+        completer.TestSetImage(new ImageInfo(AvaloniaImages.Wrap(new FakeImage(new Size(1, 1)))));
         cache.PutIfAbsent("cached", () => completer);
         cache.MaximumSize = 0;
         cache.MaximumSize = 0;

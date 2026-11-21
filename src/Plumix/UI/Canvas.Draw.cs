@@ -170,7 +170,7 @@ public partial class Canvas
     /// <remarks>
     /// The paint is read when the call is made, as Dart's canvas does: the entry keeps a snapshot of it,
     /// with a fragment shader's current uniforms. How a mask filter or blend mode is honoured is the
-    /// backend's business (<see cref="CanvasPlayback"/>).
+    /// backend's business (Plumix.Avalonia's CanvasPlayback).
     /// </remarks>
     private void DrawShape(
         string method,
@@ -205,6 +205,9 @@ public partial class Canvas
         return snapshot;
     }
 
+    // Skia's three-sigma blur pad, as the host's mask-filter rasterizer (PaintRasterizer.BlurExtent) pads.
+    private static double BlurExtent(double sigma) => sigma > 0.0 ? Math.Ceiling(sigma * 3.0) : 0.0;
+
     // Paragraph glyph outlines use the same Paint pipeline as framework-owned shapes.
     internal void DrawTextGeometry(Avalonia.Media.Geometry geometry, Paint paint)
     {
@@ -214,7 +217,7 @@ public partial class Canvas
             Avalonia.Rect bounds = geometry.GetRenderBounds(
                 new Avalonia.Media.Pen(Avalonia.Media.Brushes.Black, paint.StrokeWidth));
             SaveLayer(
-                bounds.Inflate(PaintRasterizer.BlurExtent(paint.MaskFilter?.Sigma ?? 0.0) + 1.0).ToPlumix(),
+                bounds.Inflate(BlurExtent(paint.MaskFilter?.Sigma ?? 0.0) + 1.0).ToPlumix(),
                 new Paint
                 {
                     ColorFilter = paint.ColorFilter,
@@ -270,7 +273,7 @@ public partial class Canvas
     /// </summary>
     /// <remarks>
     /// Dart's <c>Canvas.drawShadow(path, color, elevation, transparentOccluder)</c>, rendered as the Flutter
-    /// engine's Skia backend does (see <see cref="ShadowDraw"/>): the elevation is scaled by the implicit
+    /// engine's Skia backend does (see Plumix.Avalonia's ShadowDraw): the elevation is scaled by the implicit
     /// view's device pixel ratio, and the shadow combines an ambient and a directional spot shadow.
     /// </remarks>
     public virtual void DrawShadow(
@@ -393,9 +396,7 @@ public partial class Canvas
 
     // The image's size in dart:ui image pixels: the backend image's own size (decoded bitmaps are 96 DPI,
     // one unit per pixel), as RenderImage and ImageInfo measure it.
-    internal static Size ImageSize(RasterImage image) => ImageSize(image.Native);
-
-    internal static Size ImageSize(Avalonia.Media.IImage image) => image.Size.ToPlumix();
+    internal static Size ImageSize(RasterImage image) => image.LogicalSize;
 
     // Records one image draw of a Paint-taking method. The paint is read now, as Dart's canvas does.
     private void RecordImageDraw(

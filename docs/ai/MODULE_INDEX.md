@@ -399,8 +399,9 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
   - `src/Plumix/Rendering/Layer.cs`
   - `src/Plumix/Rendering/Object.PaintingContext.cs`
   - `src/Plumix/UI/Compositing.cs` (dart:ui `SceneBuilder`/`Scene`/`EngineLayer`)
-  - `src/Plumix/UI/FlowLayers.cs` (engine-side retained layers + `SceneRasterizer`, what hosts draw)
-  - `src/Plumix/UI/TextureRegistry.cs`, `src/Plumix/UI/FrameStopwatch.cs` (texture and performance-overlay engine)
+  - `src/Plumix/UI/FlowLayers.cs` (engine-side retained layers, as data); `src/Plumix.Avalonia/SceneRasterizer.cs`,
+    `FlowLayerPainter.cs` (what hosts draw)
+  - `src/Plumix/UI/TextureRegistry.cs`, `src/Plumix.Avalonia/FrameStopwatch.cs` (texture and performance-overlay engine)
   - `src/Plumix/Rendering/Texture.cs`, `src/Plumix/Rendering/PerformanceOverlay.cs`
   - `src/Plumix/UI/PlatformViews.cs`, `src/Plumix/Rendering/PlatformView.cs`, `src/Plumix/Widgets/PlatformView.cs`
     (platform views: controllers/channel, render objects, `AndroidView`/`UiKitView`/`PlatformViewLink`)
@@ -465,7 +466,7 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
 
 - Goal: Flutter-like image resolution, caching, stream lifetime, and decoration paint geometry.
 - Read First:
-  - `src/Plumix/Rendering/Gradient.cs`, `src/Plumix/UI/GradientShader.cs`, `ShaderDrawing.cs`
+  - `src/Plumix/Rendering/Gradient.cs`, `src/Plumix/UI/GradientShader.cs`, `src/Plumix.Avalonia/ShaderDrawing.cs`
     (painting gradients, full shader matrices and native Skia gradient draws; covered by `GradientTests.cs`
     and `GradientShaderTests.cs`, including decoration, mask, blur, alpha and gallery rendering)
   - `src/Plumix/UI/RuntimeFragmentShader.cs`, `NativeShader.cs` (internal float scalar/vector SkSL
@@ -486,7 +487,7 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
   - `src/Plumix/Rendering/ImageFilter.cs`
   - `src/Plumix/Rendering/ImageFilterConfig.cs`
   - `src/Plumix/Rendering/Filter.RenderBox.cs`
-  - `src/Plumix/Rendering/FilterLayerRasterizer.cs`
+  - `src/Plumix.Avalonia/FilterLayerRasterizer.cs`
   - `src/Plumix/Rendering/Proxy.DecoratedBox.cs`
 - Primary Tests:
   - `src/Plumix.Tests/ImageProviderDecorationTests.cs`

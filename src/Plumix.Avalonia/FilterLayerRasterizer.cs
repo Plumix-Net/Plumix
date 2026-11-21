@@ -6,6 +6,10 @@ using Avalonia.Platform;
 
 namespace Plumix.Rendering;
 
+// C#-only host infrastructure (Plumix.Avalonia): the CPU raster backend behind colour/image filter, shader
+// mask and backdrop filter layers (FlowLayerPainter) and filtered save layers and images (CanvasPlayback),
+// none of which Avalonia's drawing context can express. The namespace stays the framework's.
+
 internal static partial class FilterLayerRasterizer
 {
     private static readonly Offset Dpi = new(96.0, 96.0);

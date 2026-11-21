@@ -1,13 +1,10 @@
-using Avalonia.Media;
-using Avalonia.Media.Imaging;
-using Plumix.Rendering;
-
 namespace Plumix.UI;
 
 // C#-only infrastructure: the engine side of `SceneBuilder.addTexture` — a port of the engine's
 // `common/graphics/texture.{h,cc}` (`flutter::Texture`, `flutter::TextureRegistry`). A host or plugin
 // registers a texture under an id, a `Texture` widget (`TextureBox`/`TextureLayer`) shows it, and the
-// scene rasterizer paints whatever the texture's current frame is. No Dart source maps to this file.
+// host's scene rasterizer (Plumix.Avalonia's FlowLayerPainter.PaintTextureFrame) paints whatever frame
+// the texture hands it. No Dart source maps to this file.
 
 /// <summary>A backend texture a <see cref="TextureRegistry"/> serves to texture layers.</summary>
 /// <remarks>The engine's <c>flutter::Texture</c>.</remarks>
@@ -22,11 +19,11 @@ public abstract class EngineTexture
     public long Id { get; }
 
     /// <summary>
-    /// Paints the texture's current frame into <paramref name="bounds"/>; a <paramref name="freeze"/>d
-    /// texture keeps painting the frame it last painted.
+    /// The frame a paint shows, or null for none; a <paramref name="freeze"/>d texture keeps the frame it
+    /// last handed out.
     /// </summary>
-    /// <remarks>The engine's <c>Texture::Paint</c>.</remarks>
-    internal abstract void Paint(DrawingContext context, Rect bounds, bool freeze, FilterQuality filterQuality);
+    /// <remarks>The frame-selection half of the engine's <c>Texture::Paint</c>; the host draws the frame.</remarks>
+    internal abstract RasterImage? FrameToPaint(bool freeze);
 
     /// <summary>Called when the producer has a new frame: <c>Texture::MarkNewFrameAvailable</c>.</summary>
     public abstract void MarkNewFrameAvailable();
@@ -35,15 +32,15 @@ public abstract class EngineTexture
     public abstract void OnTextureUnregistered();
 }
 
-/// <summary>An <see cref="EngineTexture"/> whose frames are Avalonia images pushed by the producer.</summary>
+/// <summary>An <see cref="EngineTexture"/> whose frames are images pushed by the producer.</summary>
 /// <remarks>
 /// Plumix-only: the engine's platform textures (<c>EmbedderExternalTextureGL</c>, the Android/iOS
 /// external textures) wrap a GPU texture; this one wraps the latest <see cref="RasterImage"/> a producer set.
 /// </remarks>
 public sealed class ImageTexture : EngineTexture
 {
-    private IImage? _pending;
-    private IImage? _current;
+    private RasterImage? _pending;
+    private RasterImage? _current;
 
     public ImageTexture(long id) : base(id)
     {
@@ -52,38 +49,19 @@ public sealed class ImageTexture : EngineTexture
     /// <summary>Sets the image the next unfrozen paint shows, then marks a new frame available.</summary>
     public void SetImage(RasterImage? image)
     {
-        _pending = image?.Native;
+        _pending = image;
         TextureRegistry.Instance.MarkTextureFrameAvailable(Id);
     }
 
     /// <inheritdoc />
-    internal override void Paint(DrawingContext context, Rect bounds, bool freeze, FilterQuality filterQuality)
+    internal override RasterImage? FrameToPaint(bool freeze)
     {
-        ArgumentNullException.ThrowIfNull(context);
         if (!freeze)
         {
             _current = _pending;
         }
 
-        if (_current is not { } image || bounds.Width <= 0 || bounds.Height <= 0)
-        {
-            return;
-        }
-
-        Size size = image.Size.ToPlumix();
-        using (context.PushRenderOptions(new RenderOptions
-               {
-                   BitmapInterpolationMode = filterQuality switch
-                   {
-                       FilterQuality.None => BitmapInterpolationMode.None,
-                       FilterQuality.Low => BitmapInterpolationMode.LowQuality,
-                       FilterQuality.Medium => BitmapInterpolationMode.MediumQuality,
-                       _ => BitmapInterpolationMode.HighQuality,
-                   },
-               }))
-        {
-            context.DrawImage(image, (Offset.Zero & size).ToAvalonia(), bounds.ToAvalonia());
-        }
+        return _current;
     }
 
     /// <inheritdoc />

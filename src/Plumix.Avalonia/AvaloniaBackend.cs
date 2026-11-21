@@ -18,5 +18,8 @@ internal static class AvaloniaBackend
         }
 
         PlatformThread.Current = AvaloniaPlatformThread.Instance;
+        UI.ImageBackend.Current = AvaloniaImageBackend.Instance;
+        UI.ImageBackend.Assets = AvaloniaAssetSource.Instance;
+        UI.RenderBackend.Current = AvaloniaRenderBackend.Instance;
     }
 }

@@ -61,6 +61,6 @@ public static class AvaloniaInterop
     {
         ArgumentNullException.ThrowIfNull(picture);
         ArgumentNullException.ThrowIfNull(context);
-        picture.Playback(context, offset);
+        CanvasPlayback.Play(picture, context, offset);
     }
 }

@@ -2,8 +2,8 @@ namespace Plumix.UI;
 
 // C#-only infrastructure: the typed entries a recording Canvas appends to a Picture, the counterpart of
 // the engine's DisplayList ops (display_list/dl_op_records.h). They hold framework data only — paths,
-// paints, rects, images — so a picture can be played back by any backend; CanvasPlayback is the
-// Avalonia/Skia one (docs/product avalonia-free-core.md, stage 2).
+// paints, rects, images, nested pictures — so a picture can be played back by any backend; CanvasPlayback
+// in Plumix.Avalonia is the Avalonia/Skia one (docs/product avalonia-free-core.md, stages 2 and 3).
 
 /// <summary>One recorded canvas entry.</summary>
 internal abstract class CanvasOp
@@ -326,11 +326,25 @@ internal sealed class DrawImageOp(ImageDrawKind kind, RasterImage image, Rect so
 }
 
 /// <summary>
+/// A recorded picture drawn at an offset: the engine's <c>DrawDisplayListOp</c>. A laid-out paragraph
+/// records its paint as a picture and draws it this way.
+/// </summary>
+internal sealed class DrawPictureOp(Picture picture, Offset offset) : CanvasOp
+{
+    internal Picture Picture { get; } = picture;
+
+    internal Offset Offset { get; } = offset;
+}
+
+/// <summary>
 /// Plumix-only: an entry whose content only the backend that recorded it can interpret — a laid-out
 /// paragraph. It goes once text is typed data too (docs/product avalonia-free-core.md, stage 3).
 /// </summary>
 internal sealed class BackendOp(object payload, bool isDraw) : CanvasOp
 {
+    /// <summary>The payload of a draw with nothing to draw (a paragraph that is not laid out).</summary>
+    internal static readonly object NothingToDraw = new();
+
     internal object Payload { get; } = payload;
 
     internal override bool IsDraw { get; } = isDraw;

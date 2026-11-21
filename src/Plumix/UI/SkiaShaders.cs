@@ -11,6 +11,13 @@ namespace Plumix.UI;
 // builds the IBrush the Avalonia drawing pipeline carries (an INativeShader, which ShaderDrawing draws
 // through Skia) once per shader and keeps it on the shader.
 
+// C#-only transport for engine shaders through the published Avalonia IBrush slots. It lives here, beside
+// its brushes, until SkiaShaders moves to Plumix.Avalonia with the text backend (stage 3f).
+internal interface INativeShader
+{
+    SKShader? CreateNativeShader();
+}
+
 /// <summary>Builds and caches the backend brush of a <see cref="Shader"/>.</summary>
 internal static class SkiaShaders
 {

@@ -11,7 +11,8 @@ namespace Plumix.UI;
 // for shape draws. Avalonia's DrawingContext has neither, so a shape drawn with a mask filter or a
 // non-srcOver blend mode is rasterized into a coverage mask, blurred and merged per `BlurStyle` the way
 // Skia's `SkBlurMaskFilter` does (`SkBlurMask::BoxBlur`'s normal/solid/outer/inner merges), coloured
-// with the paint's colour or shader and composited as a bitmap under the paint's blend mode.
+// with the paint's colour or shader and composited as a bitmap under the paint's blend mode. Part of the
+// Avalonia/Skia backend in Plumix.Avalonia (CanvasPlayback's draws).
 
 /// <summary>A shape draw that needs <see cref="PaintRasterizer"/>: everything the canvas captured.</summary>
 internal sealed class RasterizedShapeDraw

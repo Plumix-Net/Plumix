@@ -8,6 +8,10 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased]
+- Scene and picture rasterization move to `Plumix.Avalonia`; core flow layers are data, `IRenderBackend` rasterizes.
+- `Paragraph` hands the canvas a typed draw entry (`DrawPictureOp` for laid-out text) instead of an Avalonia action.
+- `RasterImage` is an opaque backend image; decoding, `toByteData` and assets go through host-installed seams.
+- Avalonia/Skia image codecs (bitmap, Skia multi-frame, APNG) and the asset loader move to `Plumix.Avalonia`.
 - The event loop, frame clock and gesture timers post through an internal `IPlatformThread` the host installs.
 - Avalonia's dispatcher, its clock fix and the host keyboard maps move to `Plumix.Avalonia` (`AvaloniaBackend`).
 - The unused backend-geometry clip (`PushClipGeometry`, `ClipGeometryLayer`) and `BorderSide.ToPen` are removed.

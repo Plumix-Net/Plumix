@@ -735,7 +735,7 @@ public sealed class ImageCacheDartParityTests : IDisposable
         {
             // TestImageInfo(imageValue, image: image.clone()).
             return new OneFrameImageStreamCompleter(Task.FromResult(new ImageInfo(
-                new RasterImage(Image),
+                AvaloniaImages.Wrap(Image),
                 debugLabel: imageValue.ToString(System.Globalization.CultureInfo.InvariantCulture))));
         }
 
@@ -768,6 +768,6 @@ public sealed class ImageCacheDartParityTests : IDisposable
     // mocks_for_image_cache.dart `TestImageStreamCompleter`.
     private sealed class TestImageStreamCompleter : ImageStreamCompleter
     {
-        public void TestSetImage(TestImage image) => SetImage(new ImageInfo(new RasterImage(image)));
+        public void TestSetImage(TestImage image) => SetImage(new ImageInfo(AvaloniaImages.Wrap(image)));
     }
 }

@@ -1423,7 +1423,7 @@ internal sealed class HeadlessParagraph : Paragraph
     /// whitespace nothing, and any code point the font does not cover its `.notdef` frame. The shapes are
     /// painted with the run's foreground paint, or its color.
     /// </remarks>
-    internal override Action<DrawingContext>? CreateDrawAction(Offset offset)
+    internal override CanvasOp? CreateDrawOp(Offset offset)
     {
         if (!_laidOut)
         {
@@ -1541,13 +1541,14 @@ internal sealed class HeadlessParagraph : Paragraph
         };
 
         List<Action<DrawingContext>> draws = steps.Select(ToDraw).ToList();
-        return context =>
+        Action<DrawingContext> drawAll = context =>
         {
             foreach (Action<DrawingContext> draw in draws)
             {
                 draw(context);
             }
         };
+        return new BackendOp(drawAll, isDraw: true);
     }
 
     private static Action<DrawingContext> CustomDraw(FlutterTestGlyphDraw draw) => context => context.Custom(draw);

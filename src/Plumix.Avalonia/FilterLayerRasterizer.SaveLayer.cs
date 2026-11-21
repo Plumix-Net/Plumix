@@ -10,7 +10,7 @@ namespace Plumix.Rendering;
 // context can open an isolated group but composites it only with an alpha, so a layer whose paint carries a
 // blend mode, a colour or image filter or inverted colours is drawn into an offscreen image, filtered the way
 // Skia applies a layer paint on restore (image filter, then colour filter, then inversion, then the paint's
-// alpha) and drawn back under the paint's blend mode.
+// alpha) and drawn back under the paint's blend mode. Part of the Avalonia/Skia backend in Plumix.Avalonia.
 
 internal static partial class FilterLayerRasterizer
 {

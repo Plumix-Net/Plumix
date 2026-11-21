@@ -84,7 +84,7 @@ public sealed class PaintingBindingTests : IDisposable
         var listener = new ImageStreamListener((image, _) => image.Dispose());
         completer.AddListener(listener);
         cache.PutIfAbsent(1, () => completer);
-        completer.Emit(new ImageInfo(new RasterImage(NewImage(8, 4))));
+        completer.Emit(new ImageInfo(AvaloniaImages.Wrap(NewImage(8, 4))));
         Assert.Equal(1, cache.CurrentSize);
         Assert.True(cache.StatusForKey(1).Live);
         var pending = new TestCompleter();

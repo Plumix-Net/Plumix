@@ -5,10 +5,11 @@ using Plumix.Rendering;
 
 namespace Plumix.UI;
 
-// C#-only infrastructure: the Avalonia/Skia backend that plays a Picture's typed entries (CanvasOps.cs)
-// onto an Avalonia DrawingContext, the counterpart of the engine's DlSkCanvasDispatcher. Everything a
-// draw needs from Avalonia or Skia — brushes, pens, geometry, rasterized layers and mask-filter
-// draws — is built here on first playback and kept on the entry for the next one.
+// C#-only host infrastructure (Plumix.Avalonia): the Avalonia/Skia backend that plays a Picture's typed
+// entries (src/Plumix/UI/CanvasOps.cs) onto an Avalonia DrawingContext, the counterpart of the engine's
+// DlSkCanvasDispatcher. Everything a draw needs from Avalonia or Skia — brushes, pens, geometry,
+// rasterized layers and mask-filter draws — is built here on first playback and kept on the entry for
+// the next one.
 
 /// <summary>Plays recorded canvas entries onto an Avalonia drawing context.</summary>
 internal static class CanvasPlayback
@@ -43,6 +44,13 @@ internal static class CanvasPlayback
             translation?.Dispose();
         }
     }
+
+    /// <summary>
+    /// Replays <paramref name="picture"/>, translated by <paramref name="offset"/>, rasterizing any layer that
+    /// needs it at the implicit view's device pixel ratio.
+    /// </summary>
+    internal static void Play(Picture picture, DrawingContext context, Offset offset) =>
+        Play(picture.Ops, context, offset, PaintRasterizer.RasterScale);
 
     // Replays ops [start, end): a balanced range, so every save in it is restored in it (or at its end).
     private static void PlayRange(IReadOnlyList<CanvasOp> ops, DrawingContext context, int start, int end,
@@ -94,6 +102,11 @@ internal static class CanvasPlayback
                         break;
                     case BackendOp { Payload: Action<DrawingContext> draw }:
                         draw(context);
+                        break;
+                    case BackendOp nothing when ReferenceEquals(nothing.Payload, BackendOp.NothingToDraw):
+                        break;
+                    case DrawPictureOp picture:
+                        Play(picture.Picture, context, picture.Offset);
                         break;
                     case DrawShapeOp shape:
                         DrawShape(context, shape);
@@ -493,7 +506,7 @@ internal static class CanvasPlayback
             return;
         }
 
-        IImage image = op.Image.Native;
+        IImage image = op.Image.NativeImage;
         IImage source = paint.ColorFilter is null && !paint.InvertColors
             ? image
             : FilteredImages.Get(image, paint.ColorFilter, paint.InvertColors);
@@ -532,7 +545,7 @@ internal static class CanvasPlayback
                     break;
                 default:
                     foreach ((Rect patchSource, Rect patchDestination) in Canvas.NinePatches(
-                                 Canvas.ImageSize(image), op.Source, dst))
+                                 Canvas.ImageSize(op.Image), op.Source, dst))
                     {
                         context.DrawImage(source, patchSource.ToAvalonia(), patchDestination.ToAvalonia());
                     }

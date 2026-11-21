@@ -652,7 +652,7 @@ internal sealed class AvaloniaParagraph : Paragraph
     public override LineMetrics? GetLineMetricsAt(int lineNumber) =>
         lineNumber >= 0 && lineNumber < NumberOfLines ? MetricsFor(lineNumber) : null;
 
-    internal override Action<DrawingContext>? CreateDrawAction(Offset offset)
+    internal override CanvasOp? CreateDrawOp(Offset offset)
     {
         if (_layout is null)
         {
@@ -660,7 +660,7 @@ internal sealed class AvaloniaParagraph : Paragraph
         }
 
         Picture picture = _paintedPicture ??= RecordPaint();
-        return context => picture.Playback(context, offset);
+        return new DrawPictureOp(picture, offset);
     }
 
     private Picture RecordPaint()
