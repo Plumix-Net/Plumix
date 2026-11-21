@@ -550,6 +550,249 @@ public sealed class PathSkiaParityTests
         }
     }
 
+    [Fact]
+    public void Contains_MatchesSkia()
+    {
+        var random = new Random(99);
+        int checkedPoints = 0;
+        foreach (Path path in ContainmentPaths(random))
+        {
+            SKPath native = SkiaPathInterop.ToNative(path);
+            foreach ((float x, float y) in ProbePoints(path, random))
+            {
+                bool expected = native.Contains(x, y);
+                bool actual = path.Contains(new Offset(x, y));
+                Assert.True(expected == actual,
+                    $"contains({F(x)}, {F(y)}): Skia {expected}, Path {actual}, path {string.Join(" ", Describe(path))}"
+                    + $" fill {path.FillType}");
+                checkedPoints++;
+            }
+        }
+
+        Assert.True(checkedPoints > 10000);
+    }
+
+    [Fact]
+    public void Metrics_MatchSkia()
+    {
+        var random = new Random(5);
+        int checkedQueries = 0;
+        foreach (Path path in ContainmentPaths(random).Concat(MeasuredPaths()))
+        {
+            foreach (bool forceClosed in new[] { false, true })
+            {
+                SKPath native = SkiaPathInterop.ToNative(path);
+                using var measure = new SKPathMeasure(native, forceClosed, 1.0f);
+                var metrics = path.ComputeMetrics(forceClosed).ToList();
+                var lengths = new List<float>();
+                do
+                {
+                    if (measure.Length > 0.0f)
+                    {
+                        lengths.Add(measure.Length);
+                    }
+                }
+                while (measure.NextContour());
+
+                string label = $"{string.Join(" ", Describe(path))} forceClosed={forceClosed}";
+                Assert.True(lengths.Count == metrics.Count, $"contours {lengths.Count} vs {metrics.Count}: {label}");
+                measure.SetPath(native, forceClosed);
+                foreach (PathMetric metric in metrics)
+                {
+                    while (measure.Length <= 0.0f)
+                    {
+                        measure.NextContour();
+                    }
+
+                    Assert.True(measure.Length == (float)metric.Length,
+                        $"length {F(measure.Length)} vs {F((float)metric.Length)}: {label}");
+                    Assert.Equal(measure.IsClosed, metric.IsClosed);
+                    foreach (float distance in Distances(measure.Length, random))
+                    {
+                        bool found = measure.GetPositionAndTangent(distance, out SKPoint position, out SKPoint tangent);
+                        Tangent? actual = metric.GetTangentForOffset(distance);
+                        Assert.True(found == actual is not null, $"tangent at {F(distance)}: {label}");
+                        if (actual is not null)
+                        {
+                            Assert.True(
+                                Matches(
+                                    [$"T{F(position.X)},{F(position.Y)},{F(tangent.X)},{F(tangent.Y)}"],
+                                    [$"T{F((float)actual.Position.Dx)},{F((float)actual.Position.Dy)},"
+                                     + $"{F((float)actual.Vector.Dx)},{F((float)actual.Vector.Dy)}"],
+                                    1e-5f),
+                                $"tangent at {F(distance)}: {position} {tangent} vs {actual.Position} {actual.Vector}: "
+                                + label);
+                        }
+
+                        checkedQueries++;
+                    }
+
+                    foreach ((float start, float stop) in Ranges(measure.Length, random))
+                    {
+                        foreach (bool moveTo in new[] { true, false })
+                        {
+                            using var expected = new SKPath();
+                            measure.GetSegment(start, stop, expected, moveTo);
+                            Path extracted = metric.ExtractPath(start, stop, moveTo);
+                            Assert.True(Matches(Describe(expected), Describe(extracted), 1e-5f),
+                                $"extract {F(start)}..{F(stop)} moveTo={moveTo}: {label}\n"
+                                + $"expected {string.Join(" ", Describe(expected))}\n"
+                                + $"actual   {string.Join(" ", Describe(extracted))}");
+                        }
+                    }
+
+                    measure.NextContour();
+                }
+            }
+        }
+
+        Assert.True(checkedQueries > 10000);
+    }
+
+    private static IEnumerable<Path> MeasuredPaths()
+    {
+        var arcs = new Path();
+        arcs.AddArc(Rect.FromLTWH(0, 0, 100, 60), 0.3, 4.0);
+        arcs.ArcToPoint(new Offset(10, 90), radius: Radius.Circular(40));
+        yield return arcs;
+        var long_ = new Path();
+        long_.MoveTo(0, 0);
+        long_.CubicTo(1000, -500, -800, 900, 300, 300);
+        long_.LineTo(300, 300);
+        long_.QuadraticBezierTo(5000, 0, 0, 1);
+        yield return long_;
+        var rrect = new Path();
+        rrect.AddRRect(RRect.FromRectAndCorners(Rect.FromLTWH(3, 4, 50, 40),
+            new BorderRadius(Radius.Circular(9), Radius.Elliptical(20, 5), Radius.Zero, Radius.Circular(15))));
+        yield return rrect;
+    }
+
+    private static IEnumerable<float> Distances(float length, Random random)
+    {
+        yield return -1.0f;
+        yield return 0.0f;
+        yield return length;
+        yield return length + 1.0f;
+        yield return float.NaN;
+        for (int index = 0; index < 20; index++)
+        {
+            yield return (float)(random.NextDouble() * length);
+        }
+    }
+
+    private static IEnumerable<(float Start, float Stop)> Ranges(float length, Random random)
+    {
+        yield return (0.0f, length);
+        yield return (-5.0f, length + 5.0f);
+        yield return (length / 3, length / 3);
+        yield return (length / 2, length / 4);
+        for (int index = 0; index < 5; index++)
+        {
+            float a = (float)(random.NextDouble() * length);
+            float b = (float)(random.NextDouble() * length);
+            yield return (Math.Min(a, b), Math.Max(a, b));
+        }
+    }
+
+    private static IEnumerable<Path> ContainmentPaths(Random random)
+    {
+        foreach (Path shape in Shapes())
+        {
+            yield return shape;
+        }
+
+        var empty = new Path();
+        yield return empty;
+        var trailingMove = new Path();
+        trailingMove.AddRect(Rect.FromLTWH(0, 0, 10, 10));
+        trailingMove.MoveTo(50, 50);
+        yield return trailingMove;
+
+        // Two overlapping squares wound the same way and the opposite way, under both fill rules.
+        foreach (PathFillType fill in new[] { PathFillType.NonZero, PathFillType.EvenOdd })
+        {
+            var same = new Path { FillType = fill };
+            same.AddRect(Rect.FromLTWH(0, 0, 20, 20));
+            same.AddRect(Rect.FromLTWH(10, 10, 20, 20));
+            yield return same;
+            var opposite = new Path { FillType = fill };
+            opposite.AddRect(Rect.FromLTWH(0, 0, 20, 20));
+            opposite.AddPolygon([new Offset(10, 10), new Offset(10, 30), new Offset(30, 30), new Offset(30, 10)], true);
+            yield return opposite;
+            // Coincident edges: the shared edge is hit twice.
+            var adjacent = new Path { FillType = fill };
+            adjacent.AddRect(Rect.FromLTWH(0, 0, 10, 10));
+            adjacent.AddRect(Rect.FromLTWH(10, 0, 10, 10));
+            yield return adjacent;
+            var ring = new Path { FillType = fill };
+            ring.AddOval(Rect.FromLTWH(0, 0, 40, 40));
+            ring.AddOval(Rect.FromLTWH(10, 10, 20, 20));
+            yield return ring;
+        }
+
+        for (int index = 0; index < 300; index++)
+        {
+            var path = new Path { FillType = random.Next(2) == 0 ? PathFillType.NonZero : PathFillType.EvenOdd };
+            double Coordinate() => random.Next(4) == 0 ? random.Next(0, 9) * 5.0 : random.NextDouble() * 40;
+            path.MoveTo(Coordinate(), Coordinate());
+            int segments = random.Next(1, 7);
+            for (int segment = 0; segment < segments; segment++)
+            {
+                switch (random.Next(5))
+                {
+                    case 0:
+                        path.LineTo(Coordinate(), Coordinate());
+                        break;
+                    case 1:
+                        path.QuadraticBezierTo(Coordinate(), Coordinate(), Coordinate(), Coordinate());
+                        break;
+                    case 2:
+                        path.ConicTo(Coordinate(), Coordinate(), Coordinate(), Coordinate(),
+                            0.2 + random.NextDouble() * 3);
+                        break;
+                    case 3:
+                        path.CubicTo(Coordinate(), Coordinate(), Coordinate(), Coordinate(), Coordinate(),
+                            Coordinate());
+                        break;
+                    default:
+                        path.Close();
+                        path.MoveTo(Coordinate(), Coordinate());
+                        break;
+                }
+            }
+
+            if (random.Next(2) == 0)
+            {
+                path.Close();
+            }
+
+            yield return path;
+        }
+    }
+
+    // Grid points (often exactly on axis-aligned edges), the path's own points, and random points.
+    private static IEnumerable<(float X, float Y)> ProbePoints(Path path, Random random)
+    {
+        for (int x = -1; x <= 9; x++)
+        {
+            for (int y = -1; y <= 9; y++)
+            {
+                yield return (x * 5.0f, y * 5.0f);
+            }
+        }
+
+        foreach (PathPoint point in path.Points)
+        {
+            yield return (point.X, point.Y);
+            yield return (point.X + 0.5f, point.Y);
+        }
+
+        for (int index = 0; index < 30; index++)
+        {
+            yield return ((float)(random.NextDouble() * 50 - 5), (float)(random.NextDouble() * 50 - 5));
+        }
+    }
+
     private static void AssertSameTransformed(Path managed, SKPath expected, string label)
     {
         SKPath rebuilt = SkiaPathInterop.ToNative(managed);

@@ -8,8 +8,9 @@ namespace Plumix.UI;
 // Engine adapter: engine/src/flutter/lib/ui/painting/path.cc over skia/src/core/SkPath.cpp. The path keeps
 // SkPath's own data — verbs, float points, conic weights, the last-move index and the oval/rrect shape
 // it was built as — and every builder appends exactly what SkPath's does (PathSkiaParityTests checks
-// this against the Skia the engine ships). Containment, boolean operations and measurement still run
-// on a native copy (SkiaPathInterop).
+// this against the Skia the engine ships); containment ports SkPath::contains (PathContainment) and
+// measurement SkContourMeasure (PathMetrics). Boolean operations and perspective transforms still run on
+// a native copy (SkiaPathInterop).
 public enum PathFillType
 {
     NonZero,
@@ -351,7 +352,7 @@ public sealed class Path
     public bool Contains(Offset point)
     {
         CheckPoint(point);
-        return SkiaPathInterop.Contains(this, Narrow(point.Dx), Narrow(point.Dy));
+        return PathContainment.Contains(this, Narrow(point.Dx), Narrow(point.Dy));
     }
 
     // SkPath::offset.
@@ -426,7 +427,7 @@ public sealed class Path
             "Path.combine() failed.  This may be due an invalid path; in particular, check for NaN values.");
     }
 
-    public PathMetrics ComputeMetrics(bool forceClosed = false) => SkiaPathInterop.ComputeMetrics(this, forceClosed);
+    public PathMetrics ComputeMetrics(bool forceClosed = false) => new(this, forceClosed);
 
     public override string ToString() => "Path";
 

@@ -4,9 +4,8 @@ using SkiaSharp;
 namespace Plumix.UI;
 
 // C#-only infrastructure: the bridge between the framework's Path (SkPath's data in managed code) and a
-// native SKPath. Drawing backends get a native copy here; containment, boolean operations, perspective
-// transforms and measurement still run on it until they are ported (docs/product avalonia-free-core.md,
-// stage 2b).
+// native SKPath. Drawing backends get a native copy here; boolean operations and perspective transforms
+// still run on it until they are ported (docs/product avalonia-free-core.md, stage 2b).
 
 /// <summary>Converts paths to and from native Skia paths.</summary>
 internal static class SkiaPathInterop
@@ -154,8 +153,6 @@ internal static class SkiaPathInterop
         return segments;
     }
 
-    internal static bool Contains(Path path, float x, float y) => ToNative(path).Contains(x, y);
-
     internal static Path? Combine(PathOperation operation, Path path1, Path path2)
     {
         var result = new SKPath();
@@ -175,8 +172,6 @@ internal static class SkiaPathInterop
         ToNative(path).Transform(ToNative(matrix), result);
         return FromNative(result);
     }
-
-    internal static PathMetrics ComputeMetrics(Path path, bool forceClosed) => new(ToNative(path), forceClosed);
 
     private static SKMatrix ToNative(PathMatrix matrix) => new(
         matrix[0], matrix[1], matrix[2],

@@ -109,8 +109,8 @@ Blockers (all must close):
   `Plumix.Avalonia` (product doc `avalonia-free-core.md`, stages 0–3; `HostDependencyBudgetTests` at
   zero). In progress: stages 0–1 done 2026-11-21 — Material and Cupertino at zero, Canvas brush/pen
   overloads removed; stage 2a (typed `Canvas` entries, one Avalonia/Skia playback) and 2b-1 (managed
-  `Path` data and builders) done, core at 661; next are 2b-2..4 (containment, measurement, boolean
-  operations in managed code), then 2c (`Shader`/filters as data).
+  `Path` data and builders), 2b-2 (containment) and 2b-3 (measurement) done, core at 652; next is
+  2b-4 (boolean operations in managed code), then 2c (`Shader`/filters as data).
 
 Release gates (on the commit that gets the tag):
 
