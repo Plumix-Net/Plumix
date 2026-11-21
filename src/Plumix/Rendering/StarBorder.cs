@@ -431,7 +431,10 @@ public sealed record StarBorder : OutlinedBorder
                                   * Matrix.CreateRotation(rotation)
                                   * Matrix.CreateScale(scale.Dx, scale.Dy)
                                   * Matrix.CreateTranslation(center.Dx, center.Dy);
-            return path.Transform(squashMatrix);
+            return path.Transform(
+                squashMatrix.M11, squashMatrix.M12,
+                squashMatrix.M21, squashMatrix.M22,
+                squashMatrix.M31, squashMatrix.M32);
         }
 
         private double GeneratePoints(List<PointInfo> pointList, Offset center, double radius, double innerRadius)

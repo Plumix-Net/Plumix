@@ -119,7 +119,9 @@ internal enum CanvasShapeKind
     /// <summary>`drawRRect`: <see cref="DrawShapeOp.RRect"/>.</summary>
     RRect,
 
-    /// <summary>`drawDRRect`: the ring between <see cref="DrawShapeOp.RRect"/> and <see cref="DrawShapeOp.Inner"/>.</summary>
+    /// <summary>
+    /// `drawDRRect`: the ring between <see cref="DrawShapeOp.RRect"/> and <see cref="DrawShapeOp.Inner"/>.
+    /// </summary>
     DRRect,
 
     /// <summary>`drawOval`: the oval inscribed in <see cref="DrawShapeOp.Rect"/>.</summary>
@@ -131,7 +133,9 @@ internal enum CanvasShapeKind
     /// <summary>`drawPath`, `drawRSuperellipse`, `drawArc`: <see cref="DrawShapeOp.Path"/>.</summary>
     Path,
 
-    /// <summary>`drawLine`: from <see cref="DrawShapeOp.Start"/> to <see cref="DrawShapeOp.End"/>, always stroked.</summary>
+    /// <summary>
+    /// `drawLine`: from <see cref="DrawShapeOp.Start"/> to <see cref="DrawShapeOp.End"/>, always stroked.
+    /// </summary>
     Line,
 
     /// <summary>

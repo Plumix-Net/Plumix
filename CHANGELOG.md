@@ -8,6 +8,7 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased]
+- `Path` keeps SkPath's verbs, points and weights in managed code; builders and transforms port SkPath (path.cc).
 - `Picture` records typed entries (shapes, paints, images, clips) that `CanvasPlayback` plays onto Avalonia.
 - `Canvas.DrawArc(rect, startAngle, sweepAngle, useCenter, paint)` draws an arc or pie wedge (dart:ui painting.dart).
 - Material and Cupertino painters draw through `Paint`/`Path`; both packages reference no Avalonia/Skia member.

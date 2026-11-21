@@ -107,7 +107,7 @@ public sealed class PathMetric
     {
         var result = new SKPath();
         _measure.At(ContourIndex).GetSegment(Path.Narrow(start), Path.Narrow(end), result, startWithMoveTo);
-        return new Path(result);
+        return SkiaPathInterop.FromNative(result);
     }
 
     public override string ToString()
