@@ -9,15 +9,19 @@ namespace Plumix.UI;
 // collection (`fonts:Plumix`) under the family name they were loaded with, and the paragraph
 // builders turn a style's family strings into an Avalonia `FontFamily` here. Registration can come
 // before Avalonia's platform is set up (a `FontLoader` in `Main`), so fonts wait in a queue until
-// the collection can be created.
+// the collection can be created. A process can also see more than one Avalonia font manager
+// (headless test sessions each set up their own), so every loaded font is kept and registered
+// again with a new manager.
 internal static class AvaloniaFonts
 {
     private static readonly Uri CollectionKey = new("fonts:Plumix");
     private static readonly object Gate = new();
     private static readonly List<(ReadOnlyMemory<byte> Bytes, string? Family)> Pending = [];
+    private static readonly List<(ReadOnlyMemory<byte> Bytes, string? Family)> Loaded = [];
     private static readonly HashSet<string> Registered = new(StringComparer.OrdinalIgnoreCase);
     private static readonly HashSet<string> RequestedMissing = new(StringComparer.OrdinalIgnoreCase);
     private static RuntimeFontCollection? s_collection;
+    private static FontManager? s_fontManager;
 
     /// <summary>Adds a font file; false when the bytes are not a font Avalonia can read.</summary>
     public static bool Register(ReadOnlyMemory<byte> bytes, string? family)
@@ -105,18 +109,26 @@ internal static class AvaloniaFonts
     private static bool TryFlush(out bool allValid)
     {
         allValid = true;
-        if (s_collection is null)
+        FontManager fontManager;
+        try
         {
-            try
+            fontManager = FontManager.Current;
+        }
+        catch (InvalidOperationException)
+        {
+            // No Avalonia font manager yet.
+            return false;
+        }
+
+        if (s_collection is null || !ReferenceEquals(fontManager, s_fontManager))
+        {
+            var collection = new RuntimeFontCollection(CollectionKey);
+            fontManager.AddFontCollection(collection);
+            s_collection = collection;
+            s_fontManager = fontManager;
+            foreach ((ReadOnlyMemory<byte> bytes, string? family) in Loaded)
             {
-                var collection = new RuntimeFontCollection(CollectionKey);
-                FontManager.Current.AddFontCollection(collection);
-                s_collection = collection;
-            }
-            catch (InvalidOperationException)
-            {
-                // No Avalonia font manager yet.
-                return false;
+                collection.Add(bytes, family);
             }
         }
 
@@ -125,6 +137,7 @@ internal static class AvaloniaFonts
             if (s_collection.Add(bytes, family) is { } name)
             {
                 Registered.Add(name);
+                Loaded.Add((bytes, family));
             }
             else
             {

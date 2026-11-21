@@ -85,4 +85,17 @@ public sealed class FontLoaderTests
         await Assert.ThrowsAsync<ArgumentException>(
             () => PlatformFonts.LoadFontFromList(new byte[] { 1, 2, 3 }, "Broken"));
     }
+
+    [Fact]
+    public void LoadedFamily_FallsBackToTheNearestFaceForAMissingWeight()
+    {
+        string family = TestFonts.Ahem;
+        var typeface = new Avalonia.Media.Typeface(
+            AvaloniaFonts.Resolve(family),
+            Avalonia.Media.FontStyle.Normal,
+            Avalonia.Media.FontWeight.ExtraBold);
+
+        Assert.True(Avalonia.Media.FontManager.Current.TryGetGlyphTypeface(typeface, out var glyphs));
+        Assert.Equal("Ahem", glyphs.FamilyName);
+    }
 }
