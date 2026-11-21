@@ -1,5 +1,3 @@
-using Avalonia;
-using Avalonia.Media;
 using Plumix.Foundation;
 using Plumix.Gestures;
 using Plumix.Rendering;
@@ -540,34 +538,33 @@ internal sealed class RenderCupertinoTextSelectionToolbarShape : RenderShiftedBo
             return;
         }
 
-        IPen debugPaint = _debugPaint ??= new Pen(
-            new LinearGradientBrush
-            {
-                StartPoint = new RelativePoint(0.0, 0.0, RelativeUnit.Absolute),
-                EndPoint = new RelativePoint(10.0, 10.0, RelativeUnit.Absolute),
-                SpreadMethod = GradientSpreadMethod.Repeat,
-                GradientStops =
+        // Dart's `ui.Gradient.linear(Offset.zero, const Offset(10.0, 10.0), ..., TileMode.repeated)`:
+        // the alignments resolve to those two points within the 10x10 rect.
+        Paint debugPaint = _debugPaint ??= new Paint
+        {
+            Shader = new LinearGradient(
+                colors:
                 [
-                    new GradientStop(new Color(0x00000000).ToAvalonia(), 0.25),
-                    new GradientStop(new Color(0xFFFF00FF).ToAvalonia(), 0.25),
-                    new GradientStop(new Color(0xFFFF00FF).ToAvalonia(), 0.75),
-                    new GradientStop(new Color(0x00000000).ToAvalonia(), 0.75),
+                    new Color(0x00000000),
+                    new Color(0xFFFF00FF),
+                    new Color(0xFFFF00FF),
+                    new Color(0x00000000),
                 ],
-            },
-            2.0);
+                begin: Alignment.TopLeft,
+                end: Alignment.BottomRight,
+                stops: [0.25, 0.25, 0.75, 0.75],
+                tileMode: TileMode.Repeated).CreateShader(Rect.FromLTWH(0.0, 0.0, 10.0, 10.0)),
+            StrokeWidth = 2.0,
+            Style = PaintingStyle.Stroke,
+        };
 
         var childParentData = (BoxParentData)Child.parentData!;
         Plumix.UI.Path clipPath = ClipPath(Child, ShapeRRect(Child));
-        Offset shift = offset + childParentData.offset;
-        context.Canvas.DrawGeometry(
-            null,
-            debugPaint,
-            clipPath.ToGeometry(),
-            geometryOffset: shift);
+        context.Canvas.DrawPath(clipPath.Shift(offset + childParentData.offset), debugPaint);
     }
 
     /// <remarks>Flutter's <c>_RenderCupertinoTextSelectionToolbarShape._debugPaint</c>.</remarks>
-    private IPen? _debugPaint;
+    private Paint? _debugPaint;
 
     /// <summary>Dart's `_shapeRRect`: the rounded body of the toolbar, in child coordinates.</summary>
     internal Plumix.UI.RRect ShapeRRect(RenderBox child)
@@ -1347,15 +1344,19 @@ internal abstract class CupertinoChevronPainter : CustomPainter
     {
         (Offset firstPoint, Offset middlePoint, Offset lowerPoint) = ChevronPoints(size);
 
-        var pen = new Pen(
-            new SolidColorBrush(Color.ToAvalonia()),
-            CupertinoTextSelectionToolbar.ToolbarChevronThickness,
-            lineCap: PenLineCap.Round,
-            lineJoin: PenLineJoin.Round);
+        var paint = new Paint
+        {
+            Color = Color,
+            Style = PaintingStyle.Stroke,
+            StrokeWidth = CupertinoTextSelectionToolbar.ToolbarChevronThickness,
+            StrokeCap = StrokeCap.Round,
+            StrokeJoin = StrokeJoin.Round,
+        };
 
-        // `drawPath` is used here because it renders a smoother chevron than `drawLine`.
-        context.Canvas.DrawLine(pen, firstPoint, middlePoint);
-        context.Canvas.DrawLine(pen, middlePoint, lowerPoint);
+        // `drawLine` is used here because it's testable. When using `drawPath`,
+        // there's no way to test that the chevron points to the correct side.
+        context.Canvas.DrawLine(firstPoint, middlePoint, paint);
+        context.Canvas.DrawLine(middlePoint, lowerPoint, paint);
     }
 
     public override bool ShouldRepaint(CustomPainter oldDelegate)

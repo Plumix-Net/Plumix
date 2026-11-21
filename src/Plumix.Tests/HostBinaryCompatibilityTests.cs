@@ -2,7 +2,6 @@ using System.Reflection;
 using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
 using System.Reflection.PortableExecutable;
-using Plumix.Material;
 using Xunit;
 
 // C#-only test infrastructure: Dart is compiled from source with the engine it runs on, so it has no
@@ -28,11 +27,11 @@ public sealed class HostBinaryCompatibilityTests
     private static readonly string[] FrameworkAssemblies =
         ["Plumix", "Plumix.Material", "Plumix.Cupertino", "Plumix.Avalonia"];
 
+    // Plumix.Material and Plumix.Cupertino reference no host member at all; HostDependencyBudgetTests
+    // keeps them that way.
     public static TheoryData<string> ShippedAssemblies() =>
     [
         typeof(Plumix.Widgets.Widget).Assembly.GetName().Name!,
-        typeof(MaterialApp).Assembly.GetName().Name!,
-        typeof(Plumix.Cupertino.CupertinoApp).Assembly.GetName().Name!,
         typeof(PlumixHost).Assembly.GetName().Name!,
     ];
 
@@ -114,12 +113,12 @@ public sealed class HostBinaryCompatibilityTests
         }
     }
 
-    private static bool IsHostAssembly(string name) =>
+    internal static bool IsHostAssembly(string name) =>
         HostAssemblyPrefixes.Any(prefix => name.StartsWith(prefix, StringComparison.Ordinal));
 
     private static bool IsFrameworkAssembly(string name) => FrameworkAssemblies.Contains(name);
 
-    private static bool IsInScope(MetadataReader metadata, TypeReferenceHandle type, Func<string, bool> inScope)
+    internal static bool IsInScope(MetadataReader metadata, TypeReferenceHandle type, Func<string, bool> inScope)
     {
         EntityHandle scope = metadata.GetTypeReference(type).ResolutionScope;
         switch (scope.Kind)
@@ -134,7 +133,7 @@ public sealed class HostBinaryCompatibilityTests
         }
     }
 
-    private static string TypeName(MetadataReader metadata, TypeReferenceHandle handle)
+    internal static string TypeName(MetadataReader metadata, TypeReferenceHandle handle)
     {
         TypeReference type = metadata.GetTypeReference(handle);
         string name = metadata.GetString(type.Name);

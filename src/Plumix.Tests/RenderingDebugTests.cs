@@ -596,7 +596,9 @@ public sealed class RenderingDebugTests : IDisposable
         RenderingDebug.PaintLayerBordersEnabled = true;
         var probe = new PaintCallbackRenderBox(
             new Size(40.0, 40.0),
-            (context, offset) => context.Canvas.DrawRectangle(Brushes.Red, null, (offset & new Size(4.0, 4.0))));
+            (context, offset) => context.Canvas.DrawRect(
+                offset & new Size(4.0, 4.0),
+                new Paint { Color = new Color(0xFFFF0000) }));
 
         OffsetLayer layer = Paint(probe, new Size(40.0, 40.0));
 

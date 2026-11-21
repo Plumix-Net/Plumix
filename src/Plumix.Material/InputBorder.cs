@@ -1,4 +1,3 @@
-using Avalonia.Media;
 using Plumix.Rendering;
 using Plumix.UI;
 using Plumix.Widgets;
@@ -200,9 +199,9 @@ public record UnderlineInputBorder : InputBorder
 
         var alignInsideOffset = new Offset(0, BorderSide.Width / 2.0);
         context.Canvas.DrawLine(
-            BorderSide.ToPen()!,
             rect.BottomLeft - alignInsideOffset,
-            rect.BottomRight - alignInsideOffset);
+            rect.BottomRight - alignInsideOffset,
+            BorderSide.ToPaint());
     }
 }
 
@@ -306,13 +305,13 @@ public record OutlineInputBorder : InputBorder
             return;
         }
 
-        IPen pen = BorderSide.ToPen()!;
+        Paint paint = BorderSide.ToPaint();
         RRect outer = BorderRadius.ToRRect(rect);
         RRect center = outer.Inflate(BorderSide.StrokeOffset / 2.0);
 
         if (gapStart is null || gapExtent <= 0.0 || gapPercentage == 0.0)
         {
-            context.Canvas.DrawRectangle(Brushes.Transparent, pen, center.Rect, center.Radii);
+            context.Canvas.DrawRRect(center, paint);
             return;
         }
 
@@ -321,7 +320,7 @@ public record OutlineInputBorder : InputBorder
             ? gapStart.Value + GapPadding - extent
             : gapStart.Value - GapPadding;
         Path path = GapBorderPath(center, outer.Width, Math.Max(0.0, start), extent);
-        context.Canvas.DrawGeometry(null, pen, path.ToGeometry());
+        context.Canvas.DrawPath(path, paint);
     }
 
     private Path GapBorderPath(RRect center, double outerWidth, double start, double extent)
@@ -484,10 +483,7 @@ public record ShapedInputBorder : InputBorder
                 return;
             }
 
-            context.Canvas.DrawGeometry(
-                null,
-                BorderSide.ToPen(),
-                Shape.GetOuterPath(deflatedRect, textDirection).ToGeometry());
+            context.Canvas.DrawPath(Shape.GetOuterPath(deflatedRect, textDirection), BorderSide.ToPaint());
             return;
         }
 
@@ -496,7 +492,7 @@ public record ShapedInputBorder : InputBorder
             ? gapStart.Value + GapPadding - extent
             : gapStart.Value - GapPadding;
         Path path = GapBorderPath(deflatedRect, Math.Max(0.0, start), extent, textDirection);
-        context.Canvas.DrawGeometry(null, BorderSide.ToPen(), path.ToGeometry());
+        context.Canvas.DrawPath(path, BorderSide.ToPaint());
     }
 
     private Path GapBorderPath(Rect rect, double start, double extent, TextDirection? textDirection)

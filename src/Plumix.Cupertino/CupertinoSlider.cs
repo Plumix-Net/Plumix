@@ -1,4 +1,3 @@
-using Avalonia.Media;
 using Plumix.Foundation;
 using Plumix.Gestures;
 using Plumix.Rendering;
@@ -560,16 +559,14 @@ internal sealed class RenderCupertinoSlider : RenderBox, IMouseTrackerAnnotation
             // visual difference.
             context.Canvas.DrawRRect(
                 RRect.FromLTRBXY(trackLeft, trackTop, trackActive, trackBottom, 1.0, 1.0),
-                new SolidColorBrush(rightColor.ToAvalonia()),
-                null);
+                new Paint { Color = rightColor });
         }
 
         if (visualPosition < 1.0)
         {
             context.Canvas.DrawRRect(
                 RRect.FromLTRBXY(trackActive, trackTop, trackRight, trackBottom, 1.0, 1.0),
-                new SolidColorBrush(leftColor.ToAvalonia()),
-                null);
+                new Paint { Color = leftColor });
         }
 
         var thumbCenter = new Offset(trackActive, trackCenter);

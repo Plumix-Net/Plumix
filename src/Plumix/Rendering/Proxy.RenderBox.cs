@@ -1,6 +1,5 @@
 using System.Diagnostics;
 using System.Globalization;
-using Avalonia.Media;
 using Plumix.Foundation;
 using Plumix.Painting;
 using Plumix.UI;
@@ -341,10 +340,9 @@ public class RenderConstrainedBox : RenderProxyBox
             // Dart's `child!.size.isEmpty`.
             if (Child == null || Child.Size.Width <= 0.0 || Child.Size.Height <= 0.0)
             {
-                context.Canvas.DrawRectangle(
-                    new SolidColorBrush(new Color(0x90909090).ToAvalonia()),
-                    null,
-                    (offset & Size));
+                context.Canvas.DrawRect(
+                    (offset & Size),
+                    new Paint { Color = new Color(0x90909090) });
             }
         }
     }

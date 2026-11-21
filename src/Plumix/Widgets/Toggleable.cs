@@ -1,4 +1,3 @@
-using Avalonia.Media;
 using Plumix.Foundation;
 using Plumix.Gestures;
 using Plumix.Rendering;
@@ -549,10 +548,9 @@ public abstract class ToggleablePainter : CustomPainter
         }
 
         context.Canvas.DrawCircle(
-            new SolidColorBrush(color.ToAvalonia()),
-            null,
             new Offset(origin.Dx + offset.Dx, origin.Dy + offset.Dy),
-            reactionRadius);
+            reactionRadius,
+            new Paint { Color = color });
     }
 
     private void SetField<T>(ref T field, T value)

@@ -1,4 +1,3 @@
-using Avalonia.Media;
 using Plumix.Foundation;
 using Plumix.Rendering;
 using Plumix.UI;
@@ -167,19 +166,20 @@ internal sealed class TextSelectionHandlePainter : CustomPainter
 
     public override void Paint(PaintingContext context, Size size)
     {
-        context.Canvas.DrawGeometry(new SolidColorBrush(Color.ToAvalonia()), pen: null, BuildPath(size));
+        context.Canvas.DrawPath(BuildPath(size), new Paint { Color = Color });
     }
 
     /// <summary>
-    /// The circle unioned with the square corner, as one path, so a translucent handle colour never
+    /// The circle and the square corner as one non-zero path, so a translucent handle colour never
     /// double-blends where the two shapes overlap.
     /// </summary>
-    internal static Geometry BuildPath(Size size)
+    internal static Plumix.UI.Path BuildPath(Size size)
     {
         double radius = size.Width / 2.0;
-        var circle = new EllipseGeometry(Rect.FromLTWH(0.0, 0.0, radius * 2, radius * 2).ToAvalonia());
-        var point = new RectangleGeometry(Rect.FromLTWH(0.0, 0.0, radius, radius).ToAvalonia());
-        return new CombinedGeometry(GeometryCombineMode.Union, circle, point);
+        var path = new Plumix.UI.Path();
+        path.AddOval(Rect.FromLTWH(0.0, 0.0, radius * 2, radius * 2));
+        path.AddRect(Rect.FromLTWH(0.0, 0.0, radius, radius));
+        return path;
     }
 
     public override bool ShouldRepaint(CustomPainter oldDelegate)

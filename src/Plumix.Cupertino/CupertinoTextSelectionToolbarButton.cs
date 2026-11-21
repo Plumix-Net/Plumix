@@ -1,4 +1,3 @@
-using Avalonia.Media;
 using Plumix.Foundation;
 using Plumix.Rendering;
 using Plumix.UI;
@@ -203,10 +202,13 @@ public sealed class CupertinoTextSelectionToolbarButton : StatefulWidget
 
         public override void Paint(PaintingContext context, Size size)
         {
-            var pen = new Pen(new SolidColorBrush(_color.ToAvalonia()), 1.0)
+            var paint = new Paint
             {
-                LineCap = PenLineCap.Round,
-                LineJoin = PenLineJoin.Round,
+                Color = _color,
+                Style = PaintingStyle.Stroke,
+                StrokeWidth = 1.0,
+                StrokeCap = StrokeCap.Round,
+                StrokeJoin = StrokeJoin.Round,
             };
             var origin = new Offset(-size.Width / 2.0, -size.Height / 2.0);
 
@@ -229,14 +231,14 @@ public sealed class CupertinoTextSelectionToolbarButton : StatefulWidget
             {
                 context.Canvas.Save();
                 context.Canvas.Rotate(quarter * Math.PI / 2.0);
-                context.Canvas.DrawPath(path, null, pen);
+                context.Canvas.DrawPath(path, paint);
                 context.Canvas.Restore();
             }
 
             // Draw three lines.
-            context.Canvas.DrawLine(pen, new Offset(-3.0, -3.0), new Offset(3.0, -3.0));
-            context.Canvas.DrawLine(pen, new Offset(-3.0, 0.0), new Offset(3.0, 0.0));
-            context.Canvas.DrawLine(pen, new Offset(-3.0, 3.0), new Offset(1.0, 3.0));
+            context.Canvas.DrawLine(new Offset(-3.0, -3.0), new Offset(3.0, -3.0), paint);
+            context.Canvas.DrawLine(new Offset(-3.0, 0.0), new Offset(3.0, 0.0), paint);
+            context.Canvas.DrawLine(new Offset(-3.0, 3.0), new Offset(1.0, 3.0), paint);
             context.Canvas.Restore();
         }
 

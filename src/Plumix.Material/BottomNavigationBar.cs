@@ -1,4 +1,3 @@
-using Avalonia.Media;
 using Plumix;
 using Plumix.Foundation;
 using Plumix.Painting;
@@ -1106,7 +1105,7 @@ internal sealed class BottomNavigationBarRadialPainter : CustomPainter
     {
         foreach (BottomNavigationBarCircle circle in Circles)
         {
-            var brush = new SolidColorBrush(circle.Color.ToAvalonia());
+            var brush = new Paint { Color = circle.Color };
             var rect = Rect.FromLTWH(0.0, 0.0, size.Width, size.Height);
             double leftFraction = TextDirection switch
             {
@@ -1118,7 +1117,7 @@ internal sealed class BottomNavigationBarRadialPainter : CustomPainter
                 .Transform(circle.Animation.Value);
             context.Canvas.Save();
             context.Canvas.ClipRect(rect, doAntiAlias: false);
-            context.Canvas.DrawCircle(brush, null, center, radius);
+            context.Canvas.DrawCircle(center, radius, brush);
             context.Canvas.Restore();
         }
     }

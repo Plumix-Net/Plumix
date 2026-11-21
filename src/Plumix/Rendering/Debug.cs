@@ -179,7 +179,7 @@ public static partial class RenderingDebug
         }
         else
         {
-            context.Canvas.DrawRectangle(new SolidColorBrush(new Color(0x90909090).ToAvalonia()), null, outerRect);
+            context.Canvas.DrawRect(outerRect, new Paint { Color = new Color(0x90909090) });
         }
     }
 
@@ -339,8 +339,7 @@ public static partial class RenderingDebug
     {
         context.Canvas.DrawPath(
             BuildDoubleRectPath(outerRect, innerRect),
-            new SolidColorBrush(color.ToAvalonia()),
-            pen: null);
+            new Paint { Color = color });
     }
 
     /// <summary>The even-odd ring between two nested rectangles.</summary>

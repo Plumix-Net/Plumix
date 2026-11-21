@@ -25,6 +25,9 @@ Allowed dependency direction (mirrors Flutter's `widgets <- cupertino <- materia
 
 - No public or protected member of those three packages names a type from an `Avalonia*` assembly
   (`PublicApiAvaloniaFreeTests`). Backend types stay `internal`; host-facing API goes in `Plumix.Avalonia`.
+- The number of `Avalonia*`/`SkiaSharp`/`HarfBuzzSharp` types and members each of those packages references
+  only goes down (`HostDependencyBudgetTests`; zero for `Plumix.Material` and `Plumix.Cupertino`). Draw through
+  `Paint`/`Path`, never a backend brush, pen or geometry; lower the budget when a change removes references.
 
 - Versioning follows SemVer: breaking public API/behavior changes require a major bump; new API is minor; fixes are patch.
 - Breaking changes must be called out explicitly in `CHANGELOG.md` (a `Breaking:` prefix on the entry) — never shipped silently inside a parity pass.

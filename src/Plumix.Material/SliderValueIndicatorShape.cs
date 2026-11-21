@@ -1,4 +1,3 @@
-using Avalonia.Media;
 using Plumix.Foundation;
 using Plumix.Painting;
 using Plumix.Rendering;
@@ -128,10 +127,9 @@ public class RoundSliderOverlayShape : SliderComponentShape
         var radiusTween = new DoubleTween(begin: 0.0, end: OverlayRadius);
 
         canvas.DrawCircle(
-            new SolidColorBrush(sliderTheme.OverlayColor!.ToAvalonia()),
-            null,
             center,
-            radiusTween.Transform(activationAnimation.Value));
+            radiusTween.Transform(activationAnimation.Value),
+            new Paint { Color = sliderTheme.OverlayColor! });
     }
 }
 
@@ -384,7 +382,7 @@ internal sealed class RectangularSliderValueIndicatorPathPainter
         trianglePath.LineTo(-_triangleHeight, -_triangleHeight);
         trianglePath.LineTo(_triangleHeight, -_triangleHeight);
         trianglePath.Close();
-        var fillPaint = new SolidColorBrush(backgroundPaintColor.ToAvalonia());
+        var fillPaint = new Paint { Color = backgroundPaintColor };
         RRect upperRRect = RRect.FromRectAndRadius(upperRect, Radius.Circular(_upperRectRadius));
         trianglePath.AddRRect(upperRRect);
 
@@ -395,11 +393,11 @@ internal sealed class RectangularSliderValueIndicatorPathPainter
         canvas.Scale(scale, scale);
         if (strokePaintColor != null)
         {
-            var strokePaint = new Pen(new SolidColorBrush(strokePaintColor.ToAvalonia()), 1.0);
-            canvas.DrawPath(trianglePath, null, strokePaint);
+            var strokePaint = new Paint { Color = strokePaintColor, Style = PaintingStyle.Stroke, StrokeWidth = 1.0 };
+            canvas.DrawPath(trianglePath, strokePaint);
         }
 
-        canvas.DrawPath(trianglePath, fillPaint, null);
+        canvas.DrawPath(trianglePath, fillPaint);
 
         // The label text is centered within the value indicator.
         double bottomTipToUpperRectTranslateY = (-_preferredHalfHeight / 2) - upperRect.Height;
@@ -819,8 +817,13 @@ internal sealed class PaddleSliderValueIndicatorPathPainter
                 leftCenter.Dy - _topLobeRadius,
                 rightCenter.Dx + _topLobeRadius,
                 rightCenter.Dy + _topLobeRadius);
-            var outlinePaint = new Pen(new SolidColorBrush(new Color(0xffff0000).ToAvalonia()), 1.0);
-            canvas.DrawRectangle(null, outlinePaint, valueRect);
+            var outlinePaint = new Paint
+            {
+                Color = new Color(0xffff0000),
+                Style = PaintingStyle.Stroke,
+                StrokeWidth = 1.0,
+            };
+            canvas.DrawRect(valueRect, outlinePaint);
         }
 
         AddArc(path, leftTopNeckCenter + neckStretch, _topNeckRadius, 0.0, -leftNeckArcAngle);
@@ -840,11 +843,11 @@ internal sealed class PaddleSliderValueIndicatorPathPainter
 
         if (strokePaintColor != null)
         {
-            var strokePaint = new Pen(new SolidColorBrush(strokePaintColor.ToAvalonia()), 1.0);
-            canvas.DrawPath(path, null, strokePaint);
+            var strokePaint = new Paint { Color = strokePaintColor, Style = PaintingStyle.Stroke, StrokeWidth = 1.0 };
+            canvas.DrawPath(path, strokePaint);
         }
 
-        canvas.DrawPath(path, new SolidColorBrush(paint.Color.ToAvalonia()), null);
+        canvas.DrawPath(path, new Paint { Color = paint.Color });
 
         // Draw the label.
         canvas.Save();

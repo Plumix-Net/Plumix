@@ -1,4 +1,3 @@
-using Avalonia.Media;
 using Plumix.Rendering;
 using Plumix.UI;
 using BoxShadow = Plumix.Rendering.BoxShadow;
@@ -67,11 +66,9 @@ public sealed class CupertinoThumbPainter
 
         context.Canvas.DrawRRect(
             RRect.FromRectAndRadius(rect.Inflate(0.5), radius + 0.5),
-            new SolidColorBrush(ThumbBorderColor.ToAvalonia()),
-            null);
+            new Paint { Color = ThumbBorderColor });
         context.Canvas.DrawRRect(
             RRect.FromRectAndRadius(rect, radius),
-            new SolidColorBrush(Color.ToAvalonia()),
-            null);
+            new Paint { Color = Color });
     }
 }

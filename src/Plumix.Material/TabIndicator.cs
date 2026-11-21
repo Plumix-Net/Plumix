@@ -1,4 +1,3 @@
-using Avalonia.Media;
 using Plumix.Rendering;
 using Plumix.UI;
 
@@ -122,8 +121,7 @@ internal sealed class UnderlinePainter : BoxPainter
             Rect rounded = _decoration.IndicatorRectFor(rect, textDirection);
             context.Canvas.DrawRRect(
                 Plumix.UI.RRect.FromRectAndCorners(rounded, borderRadius),
-                new SolidColorBrush(_decoration.BorderSide.Color.ToAvalonia()),
-                pen: null);
+                new Paint { Color = _decoration.BorderSide.Color });
             return;
         }
 
@@ -138,11 +136,14 @@ internal sealed class UnderlinePainter : BoxPainter
         // exactly `width` tall, so the deflated bottom edge sits on the strip's vertical centre.
         double y = strip.Bottom - (width / 2.0);
         context.Canvas.DrawLine(
-            new Pen(
-                new SolidColorBrush(_decoration.BorderSide.Color.ToAvalonia()),
-                width,
-                lineCap: PenLineCap.Square),
             new Offset(strip.Left + (width / 2.0), y),
-            new Offset(strip.Right - (width / 2.0), y));
+            new Offset(strip.Right - (width / 2.0), y),
+            new Paint
+            {
+                Color = _decoration.BorderSide.Color,
+                Style = PaintingStyle.Stroke,
+                StrokeWidth = width,
+                StrokeCap = StrokeCap.Square,
+            });
     }
 }

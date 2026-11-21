@@ -1,4 +1,3 @@
-using Avalonia.Media;
 using Plumix.Foundation;
 using Plumix.Rendering;
 using Plumix.UI;
@@ -149,8 +148,8 @@ internal sealed class AnimatedIconPainter : CustomPainter
         {
             double opacity = AnimatedIconInterpolation.Interpolate(path.Opacities, clampedProgress);
             byte alpha = (byte)Math.Clamp((int)Math.Round(Color.Alpha * opacity), 0, 255);
-            var brush = new SolidColorBrush(Color.FromARGB(alpha, Color.Red, Color.Green, Color.Blue).ToAvalonia());
-            context.Canvas.DrawGeometry(brush, null, path.BuildGeometry(clampedProgress));
+            var paint = new Paint { Color = Color.FromARGB(alpha, Color.Red, Color.Green, Color.Blue) };
+            context.Canvas.DrawPath(path.BuildPath(clampedProgress), paint);
         }
 
         context.Canvas.Restore();
@@ -182,46 +181,34 @@ internal sealed class PathFrames
 
     internal IReadOnlyList<double> Opacities { get; }
 
-    internal Geometry BuildGeometry(double progress)
+    // Dart's `_PathFrames.paint`: the commands of one frame applied to a fresh `Path`.
+    internal Plumix.UI.Path BuildPath(double progress)
     {
-        var geometry = new StreamGeometry();
-        using StreamGeometryContext path = geometry.Open();
-        bool figureOpen = false;
-
+        var path = new Plumix.UI.Path();
         foreach (PathCommand command in Commands)
         {
             switch (command)
             {
                 case PathMoveTo moveTo:
-                    if (figureOpen)
-                    {
-                        path.EndFigure(isClosed: false);
-                    }
-                    path.BeginFigure(moveTo.Interpolate(progress).ToAvalonia(), isFilled: true);
-                    figureOpen = true;
+                    Offset point = moveTo.Interpolate(progress);
+                    path.MoveTo(point.Dx, point.Dy);
                     break;
                 case PathCubicTo cubicTo:
-                    path.CubicBezierTo(
-                        cubicTo.InterpolateControlPoint1(progress).ToAvalonia(),
-                        cubicTo.InterpolateControlPoint2(progress).ToAvalonia(),
-                        cubicTo.InterpolateTargetPoint(progress).ToAvalonia());
+                    Offset controlPoint1 = cubicTo.InterpolateControlPoint1(progress);
+                    Offset controlPoint2 = cubicTo.InterpolateControlPoint2(progress);
+                    Offset targetPoint = cubicTo.InterpolateTargetPoint(progress);
+                    path.CubicTo(
+                        controlPoint1.Dx, controlPoint1.Dy,
+                        controlPoint2.Dx, controlPoint2.Dy,
+                        targetPoint.Dx, targetPoint.Dy);
                     break;
                 case PathClose:
-                    if (figureOpen)
-                    {
-                        path.EndFigure(isClosed: true);
-                        figureOpen = false;
-                    }
+                    path.Close();
                     break;
             }
         }
 
-        if (figureOpen)
-        {
-            path.EndFigure(isClosed: false);
-        }
-
-        return geometry;
+        return path;
     }
 }
 

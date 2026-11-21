@@ -1,4 +1,3 @@
-using Avalonia.Media;
 using Plumix.Foundation;
 using Plumix.Painting;
 using Plumix.UI;
@@ -205,7 +204,7 @@ internal sealed class TextHighlightPainter : RenderEditablePainter
             return;
         }
 
-        var highlightBrush = new SolidColorBrush(highlightColor.ToAvalonia());
+        var highlightBrush = new Paint { Color = highlightColor };
         TextPainter textPainter = renderEditable.TextPainter;
         IEnumerable<TextBox> boxes = textPainter.GetBoxesForSelection(
                 new TextSelection(highlightedRange.Start, highlightedRange.End),
@@ -218,7 +217,7 @@ internal sealed class TextHighlightPainter : RenderEditablePainter
         foreach (TextBox box in boxes)
         {
             Rect shifted = box.ToRect().Shift(new Offset(paintOffset.Dx, paintOffset.Dy));
-            canvas.DrawRectangle(highlightBrush, null, Intersect(shifted, textRect));
+            canvas.DrawRect(Intersect(shifted, textRect), highlightBrush);
         }
     }
 
@@ -390,15 +389,15 @@ internal sealed class CaretPainter : RenderEditablePainter
             }
 
             Radius? radius = CursorRadius;
-            var caretBrush = new SolidColorBrush(caretColor.ToAvalonia());
+            var caretBrush = new Paint { Color = caretColor };
             if (radius is null)
             {
-                canvas.DrawRectangle(caretBrush, null, integralRect);
+                canvas.DrawRect(integralRect, caretBrush);
             }
             else
             {
                 RRect caretRRect = RRect.FromRectAndRadius(integralRect, radius.Value);
-                canvas.DrawRRect(caretRRect, caretBrush, null);
+                canvas.DrawRRect(caretRRect, caretBrush);
             }
         }
     }
@@ -439,8 +438,7 @@ internal sealed class CaretPainter : RenderEditablePainter
 
         canvas.DrawRRect(
             RRect.FromRectAndRadius(floatingRect, KFloatingCursorRadius),
-            new SolidColorBrush(floatingColor.ToAvalonia()),
-            null);
+            new Paint { Color = floatingColor });
     }
 
     public override bool ShouldRepaint(RenderEditablePainter? oldDelegate)

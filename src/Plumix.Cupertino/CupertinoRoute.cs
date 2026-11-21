@@ -1,4 +1,3 @@
-using Avalonia.Media;
 using Plumix.Foundation;
 using Plumix.Gestures;
 using Plumix.Physics;
@@ -818,10 +817,9 @@ internal sealed record CupertinoEdgeShadowDecoration : Decoration
                 double localT = (dx % bandWidth) / bandWidth;
                 Color color = LerpColor(colors[bandColorIndex], colors[bandColorIndex + 1], localT);
                 double x = start + (shadowDirection * dx);
-                context.Canvas.DrawRectangle(
-                    new SolidColorBrush(color.ToAvalonia()),
-                    null,
-                    Rect.FromLTWH(x - 1.0, offset.Dy, 1.0, shadowHeight));
+                context.Canvas.DrawRect(
+                    Rect.FromLTWH(x - 1.0, offset.Dy, 1.0, shadowHeight),
+                    new Paint { Color = color });
             }
         }
     }

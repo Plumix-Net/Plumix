@@ -219,8 +219,8 @@ public sealed class CupertinoActivityIndicatorTests : IDisposable
         var painter = (CupertinoLinearActivityIndicatorPainter)renderPaint.Painter!;
         Assert.Equal(0.2, painter.Progress, 3);
         Assert.Null(painter.Color);
-        Assert.Equal(CupertinoColors.SystemFill.ToAvalonia(), painter.BackgroundPaint.Color);
-        Assert.Equal(CupertinoColors.ActiveBlue.ToAvalonia(), painter.ProgressPaint.Color);
+        Assert.Equal<Color>(CupertinoColors.SystemFill, painter.BackgroundPaint.Color);
+        Assert.Equal<Color>(CupertinoColors.ActiveBlue, painter.ProgressPaint.Color);
         painter.Paint(new PaintingContext(new ContainerLayer()), renderPaint.Size);
     }
 
@@ -241,8 +241,8 @@ public sealed class CupertinoActivityIndicatorTests : IDisposable
 
         var painter = (CupertinoLinearActivityIndicatorPainter)renderPaint.Painter!;
         Assert.Equal(0.5, painter.Progress, 3);
-        Assert.Equal(CupertinoColors.ActiveGreen.ToAvalonia(), painter.ProgressPaint.Color);
-        Assert.Equal(CupertinoColors.SystemFill.ToAvalonia(), painter.BackgroundPaint.Color);
+        Assert.Equal<Color>(CupertinoColors.ActiveGreen, painter.ProgressPaint.Color);
+        Assert.Equal<Color>(CupertinoColors.SystemFill, painter.BackgroundPaint.Color);
     }
 
     [Fact]

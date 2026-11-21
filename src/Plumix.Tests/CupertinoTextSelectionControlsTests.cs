@@ -1,4 +1,3 @@
-using Avalonia.Media;
 using Plumix.Cupertino;
 using Plumix.Foundation;
 using Plumix.Material;
@@ -85,16 +84,14 @@ public sealed class CupertinoTextSelectionControlsTests : IDisposable
     {
         Color color = Color.FromARGB(0x55, 0x00, 0x00, 0xAA);
         var painter = new CupertinoTextSelectionHandlePainter(color);
-        var geometry = Assert.IsType<CombinedGeometry>(
-            CupertinoTextSelectionHandlePainter.BuildPath(new Size(12.0, 20.5)));
+        Plumix.UI.Path path = CupertinoTextSelectionHandlePainter.BuildPath(new Size(12.0, 20.5));
 
-        Assert.Equal(GeometryCombineMode.Union, geometry.GeometryCombineMode);
-        Assert.Equal(
-            Rect.FromLTWH(0.0, 0.0, 12.0, 12.0),
-            Assert.IsType<EllipseGeometry>(geometry.Geometry1).Rect.ToPlumix());
-        Assert.Equal(
-            Rect.FromLTWH(5.0, 10.5, 2.0, 10.0),
-            Assert.IsType<RectangleGeometry>(geometry.Geometry2).Rect.ToPlumix());
+        // The 12x12 circle and the 2x10 line below it (overlapping the circle by 1.5) in one path.
+        Assert.Equal(PathFillType.NonZero, path.FillType);
+        Assert.Equal(Rect.FromLTWH(0.0, 0.0, 12.0, 20.5), path.GetBounds());
+        Assert.True(path.Contains(new Offset(6.0, 6.0)));
+        Assert.True(path.Contains(new Offset(6.0, 20.0)));
+        Assert.False(path.Contains(new Offset(1.0, 20.0)));
 
         var root = new ContainerLayer();
         var context = new PaintingContext(root);

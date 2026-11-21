@@ -1,4 +1,3 @@
-using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Plumix.Foundation;
 using Plumix.UI;
@@ -186,20 +185,5 @@ public sealed class CanvasDrawShadowTests
         {
             dispatcher.EngineDevicePixelRatioOverride = previous;
         }
-    }
-
-    [Fact]
-    public void RectangleGeometry_DrawsTheSameShadowAsItsPath()
-    {
-        Bitmap fromGeometry = Render(canvas => canvas.DrawShadow(
-            new RectangleGeometry(Occluder.ToAvalonia(), 4, 4), Colors.Black, 3, transparentOccluder: true));
-        Bitmap fromPath = Render(canvas =>
-        {
-            var path = new UI.Path();
-            path.AddRRect(RRect.FromRectXY(Occluder, 4, 4));
-            canvas.DrawShadow(path, Colors.Black, 3, transparentOccluder: true);
-        });
-
-        Assert.Equal(RasterBackend.ReadPixels(fromPath), RasterBackend.ReadPixels(fromGeometry));
     }
 }

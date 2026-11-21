@@ -8,6 +8,11 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased]
+- `Canvas.DrawArc(rect, startAngle, sweepAngle, useCenter, paint)` draws an arc or pie wedge (dart:ui painting.dart).
+- Material and Cupertino painters draw through `Paint`/`Path`; both packages reference no Avalonia/Skia member.
+- Canvas's internal brush/pen/backend-geometry draw overloads are gone; framework painters use `Paint`/`Path`.
+- Animated icons fill non-zero and framework strokes use Flutter's miter limit 4, as Dart's `Paint`/`Path` do.
+- `HostDependencyBudgetTests` holds each package's Avalonia/Skia/HarfBuzz reference count to a falling budget.
 
 ## v1.0.0-preview.5 — 2026-11-21
 - Migration notes for this release: `docs/MIGRATION.md`.

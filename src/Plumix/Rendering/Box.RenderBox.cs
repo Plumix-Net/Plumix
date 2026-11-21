@@ -1,4 +1,3 @@
-using Avalonia.Media;
 using Plumix.Foundation;
 using Plumix.UI;
 
@@ -1103,8 +1102,8 @@ public abstract class RenderBox : RenderObject
     protected internal virtual void DebugPaintSize(PaintingContext context, Offset offset)
     {
         ArgumentNullException.ThrowIfNull(context);
-        var pen = new Pen(new SolidColorBrush(new Color(0xFF00FFFF).ToAvalonia()), 1.0);
-        context.Canvas.DrawGeometry(null, pen, new RectangleGeometry(Deflate((offset & Size), 0.5).ToAvalonia()));
+        var paint = new Paint { Color = new Color(0xFF00FFFF), Style = PaintingStyle.Stroke, StrokeWidth = 1.0 };
+        context.Canvas.DrawRect(Deflate(offset & Size, 0.5), paint);
     }
 
     /// <summary>In debug mode, paints a line for each baseline.</summary>
@@ -1120,22 +1119,22 @@ public abstract class RenderBox : RenderObject
         double? baselineI = GetDistanceToBaseline(TextBaseline.Ideographic, onlyReal: true);
         if (baselineI is { } ideographic)
         {
-            var pen = new Pen(new SolidColorBrush(new Color(0xFFFFD000).ToAvalonia()), 0.25);
+            var pen = new Paint { Color = new Color(0xFFFFD000), Style = PaintingStyle.Stroke, StrokeWidth = 0.25 };
             context.Canvas.DrawLine(
-                pen,
                 new Offset(offset.Dx, offset.Dy + ideographic),
-                new Offset(offset.Dx + Size.Width, offset.Dy + ideographic));
+                new Offset(offset.Dx + Size.Width, offset.Dy + ideographic),
+                pen);
         }
 
         // Alphabetic baseline.
         double? baselineA = GetDistanceToBaseline(TextBaseline.Alphabetic, onlyReal: true);
         if (baselineA is { } alphabetic)
         {
-            var pen = new Pen(new SolidColorBrush(new Color(0xFF00FF00).ToAvalonia()), 0.25);
+            var pen = new Paint { Color = new Color(0xFF00FF00), Style = PaintingStyle.Stroke, StrokeWidth = 0.25 };
             context.Canvas.DrawLine(
-                pen,
                 new Offset(offset.Dx, offset.Dy + alphabetic),
-                new Offset(offset.Dx + Size.Width, offset.Dy + alphabetic));
+                new Offset(offset.Dx + Size.Width, offset.Dy + alphabetic),
+                pen);
         }
     }
 
@@ -1157,7 +1156,7 @@ public abstract class RenderBox : RenderObject
         }
 
         var color = new Color(0x00BBBBu | (uint)(0x04000000 * Depth & 0xFF000000));
-        context.Canvas.DrawRectangle(new SolidColorBrush(color.ToAvalonia()), null, (offset & Size));
+        context.Canvas.DrawRect((offset & Size), new Paint { Color = color });
     }
 
     /// <inheritdoc />

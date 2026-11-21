@@ -742,7 +742,7 @@ public sealed class FilterWidgetsTests
         public override void Paint(PaintingContext ctx, Offset offset)
         {
             PaintCount++;
-            ctx.Canvas.DrawRectangle(Brushes.Red, null, (offset & Size));
+            ctx.Canvas.DrawRect((offset & Size), new Paint { Color = new Color(0xFFFF0000) });
         }
     }
 

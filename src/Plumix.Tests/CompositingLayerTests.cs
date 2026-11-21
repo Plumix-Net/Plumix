@@ -1,4 +1,3 @@
-using Avalonia.Media;
 using Plumix.Rendering;
 using Xunit;
 using Plumix.UI;
@@ -580,7 +579,7 @@ public sealed class CompositingLayerTests
         public override void Paint(PaintingContext ctx, Offset offset)
         {
             PaintCount += 1;
-            ctx.Canvas.DrawRectangle(Brushes.CadetBlue, null, (offset & Size));
+            ctx.Canvas.DrawRect((offset & Size), new Paint { Color = new Color(0xFF5F9EA0) });
         }
     }
 
@@ -599,7 +598,7 @@ public sealed class CompositingLayerTests
         public override void Paint(PaintingContext ctx, Offset offset)
         {
             PaintCount += 1;
-            ctx.Canvas.DrawRectangle(Brushes.CadetBlue, null, (offset & Size));
+            ctx.Canvas.DrawRect((offset & Size), new Paint { Color = new Color(0xFF5F9EA0) });
         }
     }
 
@@ -657,7 +656,7 @@ public sealed class CompositingLayerTests
         public override void Paint(PaintingContext ctx, Offset offset)
         {
             PaintCount += 1;
-            ctx.Canvas.DrawRectangle(Brushes.Transparent, null, (offset & Size));
+            ctx.Canvas.DrawRect((offset & Size), new Paint { Color = new Color(0x00FFFFFF) });
             base.Paint(ctx, offset);
         }
     }

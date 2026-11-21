@@ -1,4 +1,3 @@
-using Avalonia.Media;
 using Plumix.Foundation;
 using Plumix.Gestures;
 using Plumix.Painting;
@@ -2083,7 +2082,7 @@ public sealed class RenderEditableDartParityTests
         public override void Paint(Canvas canvas, Size size, RenderEditable renderEditable)
         {
             PaintCount += 1;
-            canvas.DrawRectangle(new SolidColorBrush(Color.ToAvalonia()), null, Rect.FromLTWH(1, 1, 0, 0));
+            canvas.DrawRect(Rect.FromLTWH(1, 1, 0, 0), new Paint { Color = Color });
         }
 
         public override bool ShouldRepaint(RenderEditablePainter? oldDelegate) => Repaint;

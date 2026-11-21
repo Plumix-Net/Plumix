@@ -1,4 +1,3 @@
-using Avalonia.Media;
 using Plumix.UI;
 using Path = Plumix.UI.Path;
 
@@ -113,14 +112,14 @@ public sealed record RoundedRectangleBorder : OutlinedBorder
         BorderRadius resolved = BorderRadius.Resolve(textDirection ?? TextDirection.Ltr);
         if (Side.Width == 0.0)
         {
-            context.Canvas.DrawRRect(resolved.ToRRect(rect), null, Side.ToPen());
+            context.Canvas.DrawRRect(resolved.ToRRect(rect), Side.ToPaint());
             return;
         }
 
         RRect borderRect = resolved.ToRRect(rect);
         RRect inner = borderRect.Deflate(Side.StrokeInset);
         RRect outer = borderRect.Inflate(Side.StrokeOutset);
-        context.Canvas.DrawDRRect(outer, inner, new SolidColorBrush(Side.Color.ToAvalonia()));
+        context.Canvas.DrawDRRect(outer, inner, new Paint { Color = Side.Color });
     }
 
     public override string ToString()
@@ -256,8 +255,7 @@ internal sealed record RoundedRectangleToCircleBorder : OutlinedBorder
             context,
             AdjustRect(rect),
             AdjustBorderRadius(rect, textDirection),
-            null,
-            Side.ToPen(),
+            Side.ToPaint(),
             Side.StrokeOffset / 2.0);
     }
 
@@ -304,8 +302,7 @@ internal sealed record RoundedRectangleToCircleBorder : OutlinedBorder
         PaintingContext context,
         Rect rect,
         BorderRadius radius,
-        IBrush? brush,
-        IPen? pen,
+        Paint paint,
         double? inflation)
     {
         RRect rrect = radius.ToRRect(rect);
@@ -314,7 +311,7 @@ internal sealed record RoundedRectangleToCircleBorder : OutlinedBorder
             rrect = rrect.Inflate(amount);
         }
 
-        context.Canvas.DrawRRect(rrect, brush, pen);
+        context.Canvas.DrawRRect(rrect, paint);
     }
 
     private Rect AdjustRect(Rect rect)

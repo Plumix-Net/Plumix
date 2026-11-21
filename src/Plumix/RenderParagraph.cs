@@ -602,10 +602,9 @@ public sealed partial class RenderParagraph : RenderBox,
         LayoutTextWithConstraints(Constraints);
         if (Constants.KDebugMode && RenderingDebug.RepaintTextRainbowEnabled)
         {
-            context.Canvas.DrawRectangle(
-                new SolidColorBrush(RenderingDebug.CurrentRepaintColor.ToColor().ToAvalonia()),
-                null,
-                (offset & Size));
+            context.Canvas.DrawRect(
+                (offset & Size),
+                new Paint { Color = RenderingDebug.CurrentRepaintColor.ToColor() });
         }
 
         if (_lastSelectableFragments is not null)

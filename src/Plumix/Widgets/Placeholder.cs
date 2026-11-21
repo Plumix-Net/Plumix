@@ -1,7 +1,7 @@
-using Avalonia.Media;
 using Plumix.Foundation;
 using Plumix.Painting;
 using Plumix.Rendering;
+using Plumix.UI;
 
 namespace Plumix.Widgets;
 
@@ -21,11 +21,11 @@ internal sealed class PlaceholderPainter : CustomPainter
 
     public override void Paint(PaintingContext context, Size size)
     {
-        var pen = new Pen(new SolidColorBrush(Color.ToAvalonia()), StrokeWidth);
+        var paint = new Paint { Color = Color, Style = PaintingStyle.Stroke, StrokeWidth = StrokeWidth };
         var rect = Offset.Zero & size;
-        context.Canvas.DrawRectangle(Brushes.Transparent, pen, rect);
-        context.Canvas.DrawLine(pen, rect.TopRight, rect.BottomLeft);
-        context.Canvas.DrawLine(pen, rect.TopLeft, rect.BottomRight);
+        context.Canvas.DrawRect(rect, paint);
+        context.Canvas.DrawLine(rect.TopRight, rect.BottomLeft, paint);
+        context.Canvas.DrawLine(rect.TopLeft, rect.BottomRight, paint);
     }
 
     public override bool ShouldRepaint(CustomPainter oldDelegate)

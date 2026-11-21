@@ -1,4 +1,3 @@
-using Avalonia.Media;
 using Plumix.Rendering;
 using Plumix.UI;
 using Plumix.Widgets;
@@ -765,22 +764,19 @@ internal sealed class RenderChip : RenderBox, ISlottedRenderObjectContainer
         if (_avatar is not null)
         {
             avatarRect = ParentDataOf(_avatar).offset + offset & _avatar.Size;
-            var scrim = new SolidColorBrush(Color.FromARGB(0x60, 0x19, 0x19, 0x19).ToAvalonia());
+            var scrim = new Paint { Color = Color.FromARGB(0x60, 0x19, 0x19, 0x19) };
             if (_avatarBorder is CircleBorder)
             {
                 context.Canvas.DrawCircle(
-                    scrim,
-                    null,
                     avatarRect.Center,
-                    Math.Min(avatarRect.Width, avatarRect.Height) / 2.0);
+                    Math.Min(avatarRect.Width, avatarRect.Height) / 2.0,
+                    scrim);
             }
             else
             {
-                context.Canvas.DrawRectangle(
-                    scrim,
-                    null,
-                    avatarRect,
-                    ShapeBorderGeometry.ResolveRadius(_avatarBorder));
+                context.Canvas.DrawRRect(
+                    RRect.FromRectAndCorners(avatarRect, ShapeBorderGeometry.ResolveRadius(_avatarBorder)),
+                    scrim);
             }
         }
         else
@@ -807,15 +803,20 @@ internal sealed class RenderChip : RenderBox, ISlottedRenderObjectContainer
             _checkmarkColor.Red,
             _checkmarkColor.Green,
             _checkmarkColor.Blue);
-        var pen = new Pen(new SolidColorBrush(color.ToAvalonia()), 2.0 * avatarRect.Height / 24.0);
+        var paint = new Paint
+        {
+            Color = color,
+            Style = PaintingStyle.Stroke,
+            StrokeWidth = 2.0 * avatarRect.Height / 24.0,
+        };
         if (progress < 0.5)
         {
-            context.Canvas.DrawLine(pen, start, Lerp(start, middle, progress * 2.0));
+            context.Canvas.DrawLine(start, Lerp(start, middle, progress * 2.0), paint);
             return;
         }
 
-        context.Canvas.DrawLine(pen, start, middle);
-        context.Canvas.DrawLine(pen, middle, Lerp(middle, end, (progress - 0.5) * 2.0));
+        context.Canvas.DrawLine(start, middle, paint);
+        context.Canvas.DrawLine(middle, Lerp(middle, end, (progress - 0.5) * 2.0), paint);
     }
 
     private static Offset Lerp(Offset begin, Offset end, double t)

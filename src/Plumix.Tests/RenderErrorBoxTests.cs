@@ -126,16 +126,11 @@ public sealed class RenderErrorBoxTests
                 var root = new ContainerLayer();
                 var context = new PaintingContext(root);
                 box.Paint(context, new Offset(7, 11));
+                CanvasCall call = Assert.Single(context.Canvas.DebugCalls);
                 context.DebugStopRecordingIfNeeded();
-                Picture picture = Assert.IsType<PictureLayer>(Assert.Single(root.Children)).Picture!;
-                var commands = (IReadOnlyList<CanvasCommand>)typeof(Picture)
-                    .GetField("_commands", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(picture)!;
-                object closure = Assert.Single(commands).Draw!.Target!;
-                object?[] captured = closure.GetType()
-                    .GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
-                    .Select(field => field.GetValue(closure)).ToArray();
-                Assert.Equal(Rect.FromLTWH(7, 11, 800, 600), Assert.Single(captured.OfType<Rect>()));
-                Assert.Equal(color, Assert.Single(captured.OfType<SolidColorBrush>()).Color.ToPlumix());
+                Assert.Equal("drawRect", call.Method);
+                Assert.Equal(Rect.FromLTWH(7, 11, 800, 600), call.Rect);
+                Assert.Equal(color, call.Color);
             }
         }
         finally

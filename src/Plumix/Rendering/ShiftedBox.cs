@@ -1,5 +1,3 @@
-using Avalonia;
-using Avalonia.Media;
 using Plumix.Foundation;
 using Plumix.UI;
 using Plumix.Widgets;
@@ -535,7 +533,7 @@ public class RenderPositionedBox : RenderAligningShiftedBox
         if (Child is { } child && child.Size.Width != 0.0 && child.Size.Height != 0.0)
         {
             var childParentData = (BoxParentData)child.parentData!;
-            var pen = new Pen(new SolidColorBrush(new Color(0xFFFFFF00).ToAvalonia()), 1.0);
+            var pen = new Paint { Color = new Color(0xFFFFFF00), Style = PaintingStyle.Stroke, StrokeWidth = 1.0 };
             var path = new UI.Path();
             bool drew = false;
 
@@ -579,15 +577,14 @@ public class RenderPositionedBox : RenderAligningShiftedBox
 
             if (drew)
             {
-                context.Canvas.DrawPath(path, brush: null, pen: pen);
+                context.Canvas.DrawPath(path, pen);
             }
         }
         else
         {
-            context.Canvas.DrawRectangle(
-                new SolidColorBrush(new Color(0x90909090).ToAvalonia()),
-                null,
-                (offset & Size));
+            context.Canvas.DrawRect(
+                (offset & Size),
+                new Paint { Color = new Color(0x90909090) });
         }
     }
 

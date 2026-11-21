@@ -1,4 +1,3 @@
-using Avalonia.Media;
 using Plumix.Foundation;
 using Plumix.Painting;
 using Plumix.Rendering;
@@ -1590,11 +1589,11 @@ internal sealed partial class SelectableFragment : ChangeNotifier, ISelectable, 
         }
 
         var selection = new TextSelection(start.Offset, end.Offset);
-        var brush = new SolidColorBrush(color.ToAvalonia());
+        var brush = new Paint { Color = color };
         foreach (TextBox box in _paragraph.GetBoxesForSelection(selection))
         {
             Rect rect = box.ToRect();
-            context.Canvas.DrawRectangle(brush, null, (rect.TopLeft + offset & rect.Size));
+            context.Canvas.DrawRect((rect.TopLeft + offset & rect.Size), brush);
         }
     }
 

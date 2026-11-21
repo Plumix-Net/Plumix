@@ -65,7 +65,9 @@ public sealed class LayerV2Tests
             needsCompositing: true,
             new Offset(3, 5),
             Rect.FromLTWH(0, 0, 10, 10),
-            (clipped, offset) => clipped.Canvas.DrawRectangle(Brushes.Gold, null, (offset & new Size(4, 4))),
+            (clipped, offset) => clipped.Canvas.DrawRect(
+                offset & new Size(4, 4),
+                new Paint { Color = new Color(0xFFFFD700) }),
             Clip.None);
 
         Assert.Null(layer);
@@ -142,7 +144,9 @@ public sealed class LayerV2Tests
             new Offset(2, 4),
             Rect.FromLTWH(0, 0, 50, 30),
             path,
-            (clipped, _) => clipped.Canvas.DrawRectangle(Brushes.Gold, null, Rect.FromLTWH(0, 0, 80, 40)));
+            (clipped, _) => clipped.Canvas.DrawRect(
+                Rect.FromLTWH(0, 0, 80, 40),
+                new Paint { Color = new Color(0xFFFFD700) }));
 
         Assert.NotNull(layer);
         Assert.Same(layer, Assert.Single(rootLayer.Children));
@@ -162,7 +166,9 @@ public sealed class LayerV2Tests
             new Offset(0, 0),
             Rect.FromLTWH(0, 0, 50, 30),
             geometry,
-            (clipped, _) => clipped.Canvas.DrawRectangle(Brushes.Gold, null, Rect.FromLTWH(0, 0, 80, 40)));
+            (clipped, _) => clipped.Canvas.DrawRect(
+                Rect.FromLTWH(0, 0, 80, 40),
+                new Paint { Color = new Color(0xFFFFD700) }));
 
         var clipLayer = Assert.IsType<ClipGeometryLayer>(Assert.Single(rootLayer.Children));
         Assert.Same(geometry, clipLayer.Geometry);
@@ -281,10 +287,9 @@ public sealed class LayerV2Tests
                 _needsCompositing,
                 offset,
                 (new Offset(4, 6) & new Size(40, 24)),
-                (clipContext, clipOffset) => clipContext.Canvas.DrawRectangle(
-                    Brushes.Crimson,
-                    null,
-                    (clipOffset & Size)));
+                (clipContext, clipOffset) => clipContext.Canvas.DrawRect(
+                    (clipOffset & Size),
+                    new Paint { Color = new Color(0xFFDC143C) }));
         }
     }
 
@@ -304,10 +309,9 @@ public sealed class LayerV2Tests
                     true,
                     opacityOffset,
                     Matrix4.TranslationValues(12, 8, 0.0),
-                    (transformContext, transformOffset) => transformContext.Canvas.DrawRectangle(
-                        Brushes.MediumSeaGreen,
-                        null,
-                        (transformOffset & new Size(20, 10)))));
+                    (transformContext, transformOffset) => transformContext.Canvas.DrawRect(
+                        (transformOffset & new Size(20, 10)),
+                        new Paint { Color = new Color(0xFF3CB371) })));
         }
     }
 
@@ -327,10 +331,9 @@ public sealed class LayerV2Tests
                 RRect.FromRectAndCorners(
                     (new Offset(5, 7) & new Size(44, 26)),
                     BorderRadius.Circular(8)),
-                (clipContext, clipOffset) => clipContext.Canvas.DrawRectangle(
-                    Brushes.CornflowerBlue,
-                    null,
-                    (clipOffset & Size)));
+                (clipContext, clipOffset) => clipContext.Canvas.DrawRect(
+                    (clipOffset & Size),
+                    new Paint { Color = new Color(0xFF6495ED) }));
         }
     }
 
@@ -346,7 +349,7 @@ public sealed class LayerV2Tests
 
         public override void Paint(PaintingContext ctx, Offset offset)
         {
-            ctx.Canvas.DrawRectangle(Brushes.Transparent, null, (offset & Size));
+            ctx.Canvas.DrawRect((offset & Size), new Paint { Color = new Color(0x00FFFFFF) });
         }
     }
 }

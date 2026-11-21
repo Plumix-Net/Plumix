@@ -8,10 +8,10 @@ Use this block as the fastest machine-readable status summary.
 
 ```yaml
 framework_plan_version: 2
-last_updated: 2026-10-27
+last_updated: 2026-11-21
 north_star: "Flutter-like widget/rendering framework in C# with Avalonia as host infrastructure."
-current_phase: "RC preparation: every blocker met (2026-10-27); next are the release gates on the tagged commit."
-latest_release: "v0.4.0-beta.3 (2026-10-24); next: v1.0.0-rc.1, criteria in the Release Candidate section"
+current_phase: "RC preparation: Avalonia-free core (avalonia-free-core.md) is the open blocker; stages 0-1 done 2026-11-21."
+latest_release: "v1.0.0-preview.5 (2026-11-21); next: v1.0.0-rc.1, criteria in the Release Candidate section"
 flutter_pin: "3.47.0 (4cf24164269); material_ui 1.0.0; cupertino_ui 1.0.0 — see AGENTS.md"
 open_work_outside_controls: "docs/ai/BACKLOG.md (control-level gaps, host-level gaps; the 3.44->3.47 re-port table is down to subsystem-blocked rows)"
 status:
@@ -104,6 +104,11 @@ Blockers (all must close):
   native host can come later without breaking it (met 2026-11-21: framework `Offset`/`Size`/`Rect`,
   `FontWeight`/`FontLoader`, `RasterImage`, `Shader`, host package `Plumix.Avalonia`;
   `PublicApiAvaloniaFreeTests`; migration notes in `docs/MIGRATION.md`).
+- The `Plumix` assembly references no `Avalonia*`, `SkiaSharp` or `HarfBuzzSharp` member: drawing is
+  typed command data played back by a host backend, and the Avalonia/Skia backend lives in
+  `Plumix.Avalonia` (product doc `avalonia-free-core.md`, stages 0–3; `HostDependencyBudgetTests` at
+  zero). In progress: stages 0–1 done 2026-11-21 — Material and Cupertino at zero, Canvas brush/pen
+  overloads removed, core at 684; next is stage 2 (typed `Canvas` commands, managed `Path` geometry).
 
 Release gates (on the commit that gets the tag):
 

@@ -1,4 +1,3 @@
-using Avalonia.Media;
 using Plumix.Foundation;
 using Plumix.Painting;
 using Plumix.Rendering;
@@ -603,9 +602,9 @@ internal sealed class DividerPainter : CustomPainter
 
         double y = size.Height - (DividerHeight / 2);
         context.Canvas.DrawLine(
-            new Pen(new SolidColorBrush(DividerColor.ToAvalonia()), DividerHeight),
             new Offset(0, y),
-            new Offset(size.Width, y));
+            new Offset(size.Width, y),
+            new Paint { Color = DividerColor, Style = PaintingStyle.Stroke, StrokeWidth = DividerHeight });
     }
 
     public override bool ShouldRepaint(CustomPainter oldDelegate)
@@ -813,9 +812,9 @@ internal sealed class IndicatorPainter : CustomPainter
         {
             double y = size.Height - (DividerHeight.Value / 2);
             context.Canvas.DrawLine(
-                new Pen(new SolidColorBrush(DividerColor!.ToAvalonia()), DividerHeight.Value),
                 new Offset(0, y),
-                new Offset(size.Width, y));
+                new Offset(size.Width, y),
+                new Paint { Color = DividerColor!, Style = PaintingStyle.Stroke, StrokeWidth = DividerHeight.Value });
         }
 
         var configuration = new ImageConfiguration(

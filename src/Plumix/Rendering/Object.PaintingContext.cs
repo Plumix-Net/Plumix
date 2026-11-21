@@ -296,14 +296,24 @@ public class PaintingContext : ClipContext
         {
             if (RenderingDebug.RepaintRainbowEnabled)
             {
-                var pen = new Pen(new SolidColorBrush(RenderingDebug.CurrentRepaintColor.ToColor().ToAvalonia()), 6.0);
-                Canvas.DrawGeometry(null, pen, new RectangleGeometry(DeflateRect(EstimatedBounds, 3.0).ToAvalonia()));
+                var paint = new Paint
+                {
+                    Color = RenderingDebug.CurrentRepaintColor.ToColor(),
+                    Style = PaintingStyle.Stroke,
+                    StrokeWidth = 6.0,
+                };
+                Canvas.DrawRect(DeflateRect(EstimatedBounds, 3.0), paint);
             }
 
             if (RenderingDebug.PaintLayerBordersEnabled)
             {
-                var pen = new Pen(new SolidColorBrush(new Color(0xFFFF9800).ToAvalonia()), 1.0);
-                Canvas.DrawGeometry(null, pen, new RectangleGeometry(EstimatedBounds.ToAvalonia()));
+                var paint = new Paint
+                {
+                    Color = new Color(0xFFFF9800),
+                    Style = PaintingStyle.Stroke,
+                    StrokeWidth = 1.0,
+                };
+                Canvas.DrawRect(EstimatedBounds, paint);
             }
         }
 
