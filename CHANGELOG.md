@@ -8,6 +8,9 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased]
+
+## v1.0.0-preview.5 — 2026-11-21
+- Migration notes for this release: `docs/MIGRATION.md`.
 - Breaking: Avalonia host moves to the new `Plumix.Avalonia` package; reference it for `PlumixApplication`/`PlumixHost`.
 - Breaking: `PlumixExtensions.Run(widget, lifetime)` is `PlumixApplication.Run`; `RunApp`/`RunWidget` stay in core.
 - Breaking: `Offset`, `Size`, `Rect` are framework structs with Dart members and `Dx`/`Dy` (geometry.dart).
