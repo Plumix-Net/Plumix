@@ -108,7 +108,8 @@ Blockers (all must close):
   typed command data played back by a host backend, and the Avalonia/Skia backend lives in
   `Plumix.Avalonia` (product doc `avalonia-free-core.md`, stages 0–3; `HostDependencyBudgetTests` at
   zero). In progress: stages 0–1 done 2026-11-21 — Material and Cupertino at zero, Canvas brush/pen
-  overloads removed, core at 684; next is stage 2 (typed `Canvas` commands, managed `Path` geometry).
+  overloads removed; stage 2a (typed `Canvas` entries, one Avalonia/Skia playback) done, core at 681;
+  next is stage 2b (managed `Path` geometry), then 2c (`Shader`/filters as data).
 
 Release gates (on the commit that gets the tag):
 

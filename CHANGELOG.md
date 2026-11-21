@@ -8,6 +8,7 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased]
+- `Picture` records typed entries (shapes, paints, images, clips) that `CanvasPlayback` plays onto Avalonia.
 - `Canvas.DrawArc(rect, startAngle, sweepAngle, useCenter, paint)` draws an arc or pie wedge (dart:ui painting.dart).
 - Material and Cupertino painters draw through `Paint`/`Path`; both packages reference no Avalonia/Skia member.
 - Canvas's internal brush/pen/backend-geometry draw overloads are gone; framework painters use `Paint`/`Path`.

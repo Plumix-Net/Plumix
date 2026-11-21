@@ -74,7 +74,7 @@ public sealed class DecorationImageDartParityTests : IDisposable
             alignment: Alignment.CenterLeft));
 
         CanvasCall command = calls.First(call => call.Method == "drawImageRect");
-        Assert.Same(image, command.Image);
+        Assert.Same(image, command.Image!.Native);
         Assert.Equal(Rect.FromLTWH(0.0, 75.0, 300.0, 150.0), command.SourceRect);
         Assert.Equal(Rect.FromLTWH(50.0, 75.0, 200.0, 100.0), command.Rect);
     }

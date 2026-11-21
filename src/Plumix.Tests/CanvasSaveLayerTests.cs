@@ -289,7 +289,7 @@ public sealed class CanvasSaveLayerTests
         CanvasCall call = Assert.Single(canvas.DebugCalls);
         Assert.Equal("drawImage", call.Method);
         Assert.Equal(new Offset(3, 4), call.Offset);
-        Assert.Same(image, call.Image);
+        Assert.Same(image, call.Image!.Native);
         Assert.Equal(FilterQuality.High, call.Paint!.FilterQuality);
     }
 

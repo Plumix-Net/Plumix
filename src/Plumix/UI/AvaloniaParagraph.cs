@@ -738,11 +738,12 @@ internal sealed class AvaloniaParagraph : Paragraph
                     var retained = new GlyphRun(glyphs.GlyphTypeface, glyphs.FontRenderingEmSize,
                         glyphs.Characters, glyphs.GlyphInfos.ToArray(), glyphs.BaselineOrigin, glyphs.BiDiLevel);
                     var brush = new SolidColorBrush(style.Color.ToAvalonia());
-                    canvas.AddDrawCommand(context =>
+                    Action<DrawingContext> draw = context =>
                     {
                         using DrawingContext.PushedState edging = context.PushTextOptions(GlyphTextOptions);
                         context.DrawGlyphRun(brush, retained);
-                    });
+                    };
+                    canvas.AddOp(new BackendOp(draw, isDraw: true));
                 }
 
                 break;

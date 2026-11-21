@@ -276,10 +276,10 @@ internal sealed class InspectorMulticastCanvas : Canvas
         _screenshot.PushOpacityMask(mask, bounds);
     }
 
-    internal override void AddDrawCommand(Action<DrawingContext> draw)
+    internal override void AddOp(CanvasOp op)
     {
-        _main.AddDrawCommand(draw);
-        _screenshot.AddDrawCommand(draw);
+        _main.AddOp(op);
+        _screenshot.AddOp(op);
     }
 
     // The main canvas is guaranteed to be consistent with the canvas expected by the normal paint

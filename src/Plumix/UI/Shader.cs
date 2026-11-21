@@ -32,6 +32,22 @@ public abstract class Shader : IDisposable
     /// <summary>Wraps a backend brush that carries a shader description.</summary>
     internal static Shader FromBrush(IBrush brush) => new BrushShader(brush);
 
+    /// <summary>
+    /// This shader as it is now: a fragment shader whose uniforms can still change is copied, an
+    /// immutable shader is returned as is. A canvas records a paint's shader this way, since Dart's
+    /// canvas reads the paint when the call is made.
+    /// </summary>
+    internal Shader Snapshot()
+    {
+        if (Brush is not INativeShader native)
+        {
+            return this;
+        }
+
+        IBrush snapshot = native.Snapshot();
+        return ReferenceEquals(snapshot, Brush) ? this : FromBrush(snapshot);
+    }
+
     private sealed class BrushShader(IBrush brush) : Shader
     {
         internal override IBrush Brush { get; } = brush ?? throw new ArgumentNullException(nameof(brush));
