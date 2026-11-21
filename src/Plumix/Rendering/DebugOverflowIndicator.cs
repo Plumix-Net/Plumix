@@ -31,13 +31,13 @@ internal sealed class DebugOverflowIndicator : IDisposable
 
     private static readonly Paint IndicatorPaint = new()
     {
-        Shader = Shader.FromBrush(GradientShader.Linear(
+        Shader = GradientShader.Linear(
             Offset.Zero,
             new Offset(10.0, 10.0),
             [Black, Yellow, Yellow, Black],
             [0.25, 0.25, 0.75, 0.75],
             TileMode.Repeated,
-            matrix: null)),
+            matrix: null),
     };
 
     private static readonly Paint LabelBackgroundPaint = new() { Color = new Color(0xFFFFFFFF) };

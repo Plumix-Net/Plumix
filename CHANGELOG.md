@@ -8,6 +8,7 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased]
+- `Shader`, gradients and fragment shaders are framework data; `SkiaShaders` builds the backend brushes.
 - `Path.Combine` runs a line-for-line C# port of Skia's PathOps (UI/PathOps) instead of SkiaSharp's.
 - `Path.Contains` and `Path.ComputeMetrics` port SkPath::contains and SkContourMeasure to managed code.
 - `Path` keeps SkPath's verbs, points and weights in managed code; builders and transforms port SkPath (path.cc).

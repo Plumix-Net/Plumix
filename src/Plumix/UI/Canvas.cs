@@ -591,17 +591,17 @@ public partial class Canvas
     }
 
     /// <summary>
-    /// Plumix-only: multiplies the alpha of everything drawn until the matching restore by the alpha of
-    /// <paramref name="mask"/> over <paramref name="bounds"/>.
+    /// Plumix-only: multiplies the alpha of everything drawn until the matching restore by a linear fade
+    /// from opaque at <paramref name="from"/> to transparent at <paramref name="to"/> (both relative to a
+    /// box of <paramref name="size"/>), over <paramref name="bounds"/>.
     /// </summary>
     /// <remarks>
     /// Stands in for Dart's <c>saveLayer</c> + <c>drawRect(BlendMode.modulate, shader)</c> fade, which
     /// needs an isolated layer Avalonia's drawing context does not expose.
     /// </remarks>
-    internal virtual void PushOpacityMask(Avalonia.Media.IBrush mask, Rect bounds)
+    internal virtual void PushFadeMask(Offset from, Offset to, Size size, Rect bounds)
     {
-        ArgumentNullException.ThrowIfNull(mask);
-        AddOp(new BackendOp(new CanvasPlayback.OpacityMask(mask, bounds), isDraw: false));
+        AddOp(new FadeMaskOp(from, to, size, bounds));
     }
 
     /// <summary>Plumix-only: appends a recorded entry to the picture.</summary>

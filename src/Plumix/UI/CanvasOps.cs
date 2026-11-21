@@ -110,6 +110,25 @@ internal sealed class ClipPathOp(Path path) : CanvasStateOp
     internal Path Path { get; } = path;
 }
 
+/// <summary>
+/// Plumix-only: multiplies the alpha of what follows, until the matching restore, by a linear fade
+/// from opaque at <see cref="From"/> to transparent at <see cref="To"/>, over <see cref="Bounds"/>.
+/// </summary>
+/// <remarks>
+/// Stands in for Dart's <c>saveLayer</c> + <c>drawRect(BlendMode.modulate, shader)</c> fade of
+/// <c>TextOverflow.fade</c>; <see cref="Size"/> is the box the fade's end points are relative to.
+/// </remarks>
+internal sealed class FadeMaskOp(Offset from, Offset to, Size size, Rect bounds) : CanvasStateOp
+{
+    internal Offset From { get; } = from;
+
+    internal Offset To { get; } = to;
+
+    internal Size Size { get; } = size;
+
+    internal Rect Bounds { get; } = bounds;
+}
+
 /// <summary>The shapes a <see cref="DrawShapeOp"/> can describe.</summary>
 internal enum CanvasShapeKind
 {
@@ -308,8 +327,8 @@ internal sealed class DrawImageOp(ImageDrawKind kind, RasterImage image, Rect so
 
 /// <summary>
 /// Plumix-only: an entry whose content only the backend that recorded it can interpret — a laid-out
-/// paragraph, a clip to backend geometry, an opacity mask. Each goes once text, decoration outlines
-/// and fades are typed data too (docs/product avalonia-free-core.md, stage 3).
+/// paragraph or a clip to backend geometry. Each goes once text and decoration outlines are typed data
+/// too (docs/product avalonia-free-core.md, stage 3).
 /// </summary>
 internal sealed class BackendOp(object payload, bool isDraw) : CanvasOp
 {

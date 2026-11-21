@@ -47,9 +47,6 @@ internal static class CanvasPlayback
     /// <summary>A clip to backend geometry, offset by <see cref="Offset"/> (decoration outlines).</summary>
     internal sealed record GeometryClip(Geometry Geometry, Offset Offset);
 
-    /// <summary>Multiplies the alpha of what follows by <see cref="Mask"/>'s over <see cref="Bounds"/>.</summary>
-    internal sealed record OpacityMask(IBrush Mask, Rect Bounds);
-
     // Replays ops [start, end): a balanced range, so every save in it is restored in it (or at its end).
     private static void PlayRange(IReadOnlyList<CanvasOp> ops, DrawingContext context, int start, int end,
         double deviceScale)
@@ -98,8 +95,8 @@ internal static class CanvasPlayback
                     case BackendOp { Payload: GeometryClip geometryClip }:
                         PushGeometryClip(context, pushed, geometryClip);
                         break;
-                    case BackendOp { Payload: OpacityMask opacityMask }:
-                        pushed.Add(context.PushOpacityMask(opacityMask.Mask, opacityMask.Bounds.ToAvalonia()));
+                    case FadeMaskOp fade:
+                        pushed.Add(context.PushOpacityMask(FadeBrush(fade), fade.Bounds.ToAvalonia()));
                         break;
                     case BackendOp { Payload: Action<DrawingContext> draw }:
                         draw(context);
@@ -134,6 +131,30 @@ internal static class CanvasPlayback
         {
             Unwind(pushed, 0);
         }
+    }
+
+    // The white-to-transparent gradient Dart builds for TextOverflow.fade, relative to the fade's box.
+    private static IBrush FadeBrush(FadeMaskOp fade)
+    {
+        if (fade.BackendState is IBrush cached)
+        {
+            return cached;
+        }
+
+        double width = Math.Max(fade.Size.Width, double.Epsilon);
+        double height = Math.Max(fade.Size.Height, double.Epsilon);
+        var brush = new LinearGradientBrush
+        {
+            StartPoint = new RelativePoint(fade.From.Dx / width, fade.From.Dy / height, RelativeUnit.Relative),
+            EndPoint = new RelativePoint(fade.To.Dx / width, fade.To.Dy / height, RelativeUnit.Relative),
+            GradientStops = new GradientStops
+            {
+                new GradientStop(new Color(0xFFFFFFFF).ToAvalonia(), 0),
+                new GradientStop(new Color(0x00FFFFFF).ToAvalonia(), 1),
+            },
+        };
+        fade.BackendState = brush;
+        return brush;
     }
 
     private static Matrix ToMatrix(TransformOp transform)
@@ -281,7 +302,7 @@ internal static class CanvasPlayback
 
     /// <summary>The paint's backend brush: its shader, or a brush of its colour.</summary>
     internal static IBrush BrushOf(Paint paint) =>
-        paint.Shader?.Brush ?? new SolidColorBrush(paint.Color.ToAvalonia());
+        paint.Shader is { } shader ? SkiaShaders.ToBrush(shader) : new SolidColorBrush(paint.Color.ToAvalonia());
 
     internal static Pen CreatePen(Paint paint, IBrush brush) => new(
         brush,

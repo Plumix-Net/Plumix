@@ -1,6 +1,5 @@
 using System.Globalization;
 using System.Text;
-using Avalonia.Media;
 using Plumix.Painting;
 using Plumix.Rendering;
 
@@ -76,9 +75,7 @@ public sealed class MaskFilter : IEquatable<MaskFilter>
 /// A description of the style to use when drawing on a canvas.
 ///
 /// Dart packs the fields into a byte buffer shared with the engine; Plumix keeps them as plain
-/// properties with the same defaults. The published shader slot is an Avalonia <see cref="IBrush"/>;
-/// the framework canvas accepts both backend brushes and native shader descriptions, as does
-/// <see cref="ShaderCallback"/>. Like Dart, `Paint` has identity equality.
+/// properties with the same defaults. Like Dart, `Paint` has identity equality.
 public sealed class Paint
 {
     // Dart's `_kColorDefault`.

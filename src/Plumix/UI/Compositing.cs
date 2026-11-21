@@ -595,7 +595,7 @@ public class SceneBuilder
         ArgumentNullException.ThrowIfNull(shader);
         DebugCheckCanBeUsedAsOldLayer(oldLayer, "pushShaderMask");
         var layer = new ShaderMaskEngineLayer(
-            PushNativeLayer(new ShaderMaskFlowLayer(shader.Brush, maskRect, blendMode, filterQuality)));
+            PushNativeLayer(new ShaderMaskFlowLayer(SkiaShaders.ToBrush(shader), maskRect, blendMode, filterQuality)));
         DebugPushLayer(layer);
         return layer;
     }

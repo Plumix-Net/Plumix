@@ -865,8 +865,8 @@ internal sealed class ParagraphTextSource : ITextSource
         AvaloniaFonts.Resolve(style.FontFamily, style.FontFamilyFallback);
 
     // A `Paint` reaches Avalonia as its shader, or else as a solid brush of its color.
-    private static IBrush PaintBrush(
-        Paint paint) => paint.Shader?.Brush ?? new SolidColorBrush(paint.Color.ToAvalonia());
+    private static IBrush PaintBrush(Paint paint) =>
+        paint.Shader is { } shader ? SkiaShaders.ToBrush(shader) : new SolidColorBrush(paint.Color.ToAvalonia());
 
     private static FontFeatureCollection? ResolveFontFeatures(IReadOnlyList<FontFeature>? features)
     {

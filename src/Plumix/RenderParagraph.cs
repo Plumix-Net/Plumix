@@ -1,5 +1,3 @@
-using Avalonia;
-using Avalonia.Media;
 using Plumix.Gestures;
 using Plumix.Painting;
 using Plumix.Rendering;
@@ -630,7 +628,7 @@ public sealed partial class RenderParagraph : RenderBox,
             {
                 // Dart saves a layer here and modulates it with the shader after the text and the inline
                 // children are painted; Plumix applies the same gradient as an opacity mask up front.
-                context.Canvas.PushOpacityMask(shader.CreateBrush(Size), bounds);
+                context.Canvas.PushFadeMask(shader.From, shader.To, Size, bounds);
             }
 
             context.Canvas.ClipRect(bounds);
@@ -1011,22 +1009,5 @@ public sealed partial class RenderParagraph : RenderBox,
 
     /// The linear white-to-transparent gradient Dart builds for `TextOverflow.fade`, in paragraph
     /// coordinates.
-    private readonly record struct OverflowShader(Offset From, Offset To)
-    {
-        public IBrush CreateBrush(Size size)
-        {
-            double width = Math.Max(size.Width, double.Epsilon);
-            double height = Math.Max(size.Height, double.Epsilon);
-            return new LinearGradientBrush
-            {
-                StartPoint = new RelativePoint(From.Dx / width, From.Dy / height, RelativeUnit.Relative),
-                EndPoint = new RelativePoint(To.Dx / width, To.Dy / height, RelativeUnit.Relative),
-                GradientStops = new GradientStops
-                {
-                    new GradientStop(new Color(0xFFFFFFFF).ToAvalonia(), 0),
-                    new GradientStop(new Color(0x00FFFFFF).ToAvalonia(), 1),
-                },
-            };
-        }
-    }
+    private readonly record struct OverflowShader(Offset From, Offset To);
 }

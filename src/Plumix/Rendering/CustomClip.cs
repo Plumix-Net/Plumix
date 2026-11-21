@@ -229,13 +229,13 @@ public abstract class RenderCustomClip<T> : RenderProxyBox
         {
             _debugPaint ??= new Paint
             {
-                Shader = Shader.FromBrush(GradientShader.Linear(
+                Shader = GradientShader.Linear(
                     Offset.Zero,
                     new Offset(10.0, 10.0),
                     [new Color(0x00000000), new Color(0xFFFF00FF), new Color(0xFFFF00FF), new Color(0x00000000)],
                     [0.25, 0.25, 0.75, 0.75],
                     TileMode.Repeated,
-                    matrix: null)),
+                    matrix: null),
                 StrokeWidth = 2.0,
                 Style = PaintingStyle.Stroke,
             };

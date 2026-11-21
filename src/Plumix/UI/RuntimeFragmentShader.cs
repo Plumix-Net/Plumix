@@ -1,90 +1,52 @@
 using System.Text.RegularExpressions;
-using Avalonia.Media;
-using Avalonia.Media.Immutable;
-using SkiaSharp;
 
 namespace Plumix.UI;
 
-// C#-only Skia adapter for the float-uniform runtime-effect path used by InkSparkle.
+// C#-only infrastructure for the float-uniform runtime-effect path used by InkSparkle.
 // Engine contract: flutter/engine/src/flutter/lib/ui/painting/fragment_{program,shader}.cc.
-// This internal adapter consumes SkSL, not Flutter's compiled asset container or image samplers.
+// This internal program consumes SkSL, not Flutter's compiled asset container or image samplers. It is data
+// (the source and its uniform layout); the backend compiles it (SkiaShaders.CompileProgram).
 internal sealed class RuntimeFragmentProgram
 {
-    private readonly SKRuntimeEffect _effect;
-    private readonly (string Name, int Count)[] _layout;
-
-    private RuntimeFragmentProgram(SKRuntimeEffect effect, string source)
+    private RuntimeFragmentProgram(string source)
     {
-        _effect = effect;
-        _layout = [.. Regex.Matches(source, @"\buniform\s+(?:float|half|vec)([234])?\s+(\w+)\s*;")
+        Source = source;
+        Layout = [.. Regex.Matches(source, @"\buniform\s+(?:float|half|vec)([234])?\s+(\w+)\s*;")
             .Select(match => (match.Groups[2].Value,
                 match.Groups[1].Success ? int.Parse(match.Groups[1].Value) : 1))];
-        FloatCount = _layout.Sum(entry => entry.Count);
-        if (effect.UniformSize != FloatCount * sizeof(float)
-            || !effect.Uniforms.SequenceEqual(_layout.Select(entry => entry.Name))
-            || effect.Children.Count != 0)
-        {
-            throw new NotSupportedException("This runtime adapter accepts only float scalar/vector uniforms.");
-        }
+        FloatCount = Layout.Sum(entry => entry.Count);
     }
+
+    internal string Source { get; }
+
+    /// <summary>The uniforms in declaration order: name and float count.</summary>
+    internal (string Name, int Count)[] Layout { get; }
 
     internal int FloatCount { get; }
 
+    /// <summary>The backend's compiled program.</summary>
+    internal object? BackendState { get; set; }
+
+    /// <summary>Parses and compiles <paramref name="source"/>; compilation errors throw here.</summary>
     internal static RuntimeFragmentProgram Compile(string source)
     {
-        SKRuntimeEffect? effect = SKRuntimeEffect.CreateShader(source, out string errors);
-        if (effect is null)
-        {
-            throw new InvalidOperationException($"Fragment shader compilation failed: {errors}");
-        }
-
-        try
-        {
-            return new RuntimeFragmentProgram(effect, source);
-        }
-        catch
-        {
-            effect.Dispose();
-            throw;
-        }
+        var program = new RuntimeFragmentProgram(source);
+        SkiaShaders.CompileProgram(program);
+        return program;
     }
 
     internal RuntimeFragmentShader FragmentShader() => new(this);
-
-    internal SKShader CreateNativeShader(float[] values)
-    {
-        using var uniforms = new SKRuntimeEffectUniforms(_effect);
-        int offset = 0;
-        foreach ((string name, int count) in _layout)
-        {
-            if (count == 1)
-            {
-                uniforms[name] = values[offset];
-            }
-            else
-            {
-                uniforms[name] = values.AsSpan(offset, count);
-            }
-
-            offset += count;
-        }
-
-        return _effect.ToShader(uniforms);
-    }
 }
 
-internal sealed class RuntimeFragmentShader(RuntimeFragmentProgram program)
-    : ImmutableGradientBrush([], 1.0, null, null, GradientSpreadMethod.Pad), INativeShader, IDisposable
+/// <summary>A fragment shader of a <see cref="RuntimeFragmentProgram"/>: the program and its float uniforms.</summary>
+internal sealed class RuntimeFragmentShader(RuntimeFragmentProgram program) : Shader
 {
     private float[]? _values = new float[program.FloatCount];
-    private Shader? _shader;
 
-    // A fragment shader is a dart:ui Shader; the public type wraps this brush once, so the same
-    // shader object comes back every time.
-    public static implicit operator Shader(RuntimeFragmentShader shader) =>
-        shader._shader ??= Shader.FromBrush(shader);
+    internal RuntimeFragmentProgram Program => program;
 
-    internal bool DebugDisposed => _values is null;
+    /// <summary>The current uniforms; null once disposed.</summary>
+    internal float[]? Values => _values;
 
     internal void SetFloat(int index, double value)
     {
@@ -92,30 +54,26 @@ internal sealed class RuntimeFragmentShader(RuntimeFragmentProgram program)
         _values[index] = (float)value;
     }
 
-    public IBrush Snapshot()
+    // Display-list draws copy the uniform buffer, so later setFloat/dispose calls cannot change a
+    // previously recorded picture.
+    internal override Shader Snapshot()
     {
         ObjectDisposedException.ThrowIf(_values is null, this);
-        return new FrozenShader(program, (float[])_values.Clone());
+        return new FrozenFragmentShader(program, (float[])_values.Clone());
     }
 
-    public SKShader CreateNativeShader()
-    {
-        ObjectDisposedException.ThrowIf(_values is null, this);
-        return program.CreateNativeShader(_values);
-    }
-
-    public void Dispose()
+    public override void Dispose()
     {
         ObjectDisposedException.ThrowIf(_values is null, this);
         _values = null;
+        base.Dispose();
     }
+}
 
-    // Display-list draws copy the uniform buffer. The program and copied values outlive the mutable
-    // shader, so later setFloat/dispose calls cannot change a previously recorded picture.
-    private sealed class FrozenShader(RuntimeFragmentProgram program, float[] values)
-        : ImmutableGradientBrush([], 1.0, null, null, GradientSpreadMethod.Pad), INativeShader
-    {
-        public IBrush Snapshot() => this;
-        public SKShader CreateNativeShader() => program.CreateNativeShader(values);
-    }
+/// <summary>A recorded copy of a <see cref="RuntimeFragmentShader"/>'s program and uniforms.</summary>
+internal sealed class FrozenFragmentShader(RuntimeFragmentProgram program, float[] values) : Shader
+{
+    internal RuntimeFragmentProgram Program => program;
+
+    internal float[] Values => values;
 }

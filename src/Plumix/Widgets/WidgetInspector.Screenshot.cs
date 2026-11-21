@@ -270,10 +270,10 @@ internal sealed class InspectorMulticastCanvas : Canvas
         _screenshot.Translate(dx, dy);
     }
 
-    internal override void PushOpacityMask(IBrush mask, Rect bounds)
+    internal override void PushFadeMask(Offset from, Offset to, Size size, Rect bounds)
     {
-        _main.PushOpacityMask(mask, bounds);
-        _screenshot.PushOpacityMask(mask, bounds);
+        _main.PushFadeMask(from, to, size, bounds);
+        _screenshot.PushFadeMask(from, to, size, bounds);
     }
 
     internal override void AddOp(CanvasOp op)

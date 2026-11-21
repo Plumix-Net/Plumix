@@ -1,4 +1,3 @@
-using Avalonia.Media;
 using SkiaSharp;
 
 namespace Plumix.UI;
@@ -7,7 +6,6 @@ namespace Plumix.UI;
 internal interface INativeShader
 {
     SKShader? CreateNativeShader();
-    IBrush Snapshot();
 }
 
 // A paint's solid color as a native shader, so shapes Avalonia's geometry would approximate (conic
@@ -16,6 +14,4 @@ internal interface INativeShader
 internal sealed class SolidColorNativeShader(Color color) : INativeShader
 {
     public SKShader? CreateNativeShader() => SKShader.CreateColor(new SKColor(color.WithAlpha(255).ToARGB32()));
-
-    public IBrush Snapshot() => new SolidColorBrush(color.ToAvalonia());
 }

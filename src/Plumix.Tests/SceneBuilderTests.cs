@@ -545,7 +545,7 @@ public sealed class SceneBuilderTests
             "opacity" => builder.PushOpacity(100, oldLayer: (OpacityEngineLayer?)oldLayer),
             "backdropFilter" => builder.PushBackdropFilter(filter, oldLayer: (BackdropFilterEngineLayer?)oldLayer),
             "shaderMask" => builder.PushShaderMask(
-                Plumix.UI.Shader.FromBrush(new Avalonia.Media.RadialGradientBrush()),
+                TestShaders.Solid(new Color(0xFF000000)),
                 default,
                 BlendMode.Color,
                 oldLayer: (ShaderMaskEngineLayer?)oldLayer),
