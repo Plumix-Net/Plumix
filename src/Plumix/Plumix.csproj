@@ -13,12 +13,8 @@
         <Description>A Flutter-inspired declarative UI framework for .NET. Provides the widget/element/render-object architecture, state management and the render pipeline with Flutter's own API shapes; run it with a host package such as Plumix.Avalonia.</Description>
     </PropertyGroup>
 
-    <ItemGroup>
-        <PackageReference Include="Avalonia" />
-        <PackageReference Include="Avalonia.Skia" />
-        <PackageReference Include="SkiaSharp" />
-        <PackageReference Include="HarfBuzzSharp" />
-    </ItemGroup>
+    <!-- No package references: the core names no host or drawing-backend type
+         (docs/product/avalonia-free-core.md; HostDependencyBudgetTests keeps it at zero). -->
 
     <ItemGroup>
         <None Include="..\..\README.md" Pack="true" PackagePath="\" />

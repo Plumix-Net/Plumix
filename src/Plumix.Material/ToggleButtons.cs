@@ -1,4 +1,3 @@
-using Avalonia.Media;
 using Plumix.Foundation;
 using Plumix.Painting;
 using Plumix.Rendering;
@@ -724,11 +723,7 @@ internal sealed class RenderSelectToggleButton : RenderShiftedBox
         var rect = offset + new Offset(
             half,
             half) & new Size(Math.Max(0.0, Size.Width - side.Width), Math.Max(0.0, Size.Height - side.Width));
-        context.Canvas.DrawRectangle(
-            new SolidColorBrush(Colors.Transparent.ToAvalonia()),
-            PenFor(side),
-            rect,
-            NormalizeRadius(BorderRadius));
+        context.Canvas.DrawRRect(RRect.FromRectAndCorners(rect, NormalizeRadius(BorderRadius)), PaintFor(side));
     }
 
     private void PaintHorizontalBorder(
@@ -843,11 +838,11 @@ internal sealed class RenderSelectToggleButton : RenderShiftedBox
         double half = side.Width / 2.0;
         double y = offset.Dy + (top ? half : Size.Height - half);
         context.Canvas.DrawLine(
-            PenFor(side),
             new Offset(offset.Dx + half + startInset, y),
             new Offset(
                 offset.Dx + Math.Max(half + startInset, Size.Width - half - endInset),
-                y));
+                y),
+            PaintFor(side));
     }
 
     private void PaintVerticalLine(
@@ -866,11 +861,11 @@ internal sealed class RenderSelectToggleButton : RenderShiftedBox
         double half = side.Width / 2.0;
         double x = offset.Dx + (left ? half : Size.Width - half);
         context.Canvas.DrawLine(
-            PenFor(side),
             new Offset(x, offset.Dy + half + startInset),
             new Offset(
                 x,
-                offset.Dy + Math.Max(half + startInset, Size.Height - half - endInset)));
+                offset.Dy + Math.Max(half + startInset, Size.Height - half - endInset)),
+            PaintFor(side));
     }
 
     private void PaintCorner(
@@ -905,10 +900,11 @@ internal sealed class RenderSelectToggleButton : RenderShiftedBox
             _ => throw new ArgumentOutOfRangeException(nameof(corner), corner, null),
         };
         context.Canvas.DrawArc(
-            PenFor(side),
-            (position & new Size(radius.X * 2.0, radius.Y * 2.0)),
+            position & new Size(radius.X * 2.0, radius.Y * 2.0),
             startAngle,
-            Math.PI / 2.0);
+            Math.PI / 2.0,
+            useCenter: false,
+            PaintFor(side));
     }
 
     private Radius ClampRadius(Radius radius)
@@ -942,9 +938,9 @@ internal sealed class RenderSelectToggleButton : RenderShiftedBox
         return side.Style != BorderStyle.None && side.Width > 0.0 && side.Color.Alpha > 0;
     }
 
-    private static Pen PenFor(BorderSide side)
+    private static Paint PaintFor(BorderSide side)
     {
-        return new Pen(new SolidColorBrush(side.Color.ToAvalonia()), side.Width);
+        return new Paint { Color = side.Color, Style = PaintingStyle.Stroke, StrokeWidth = side.Width };
     }
 
     private enum Corner

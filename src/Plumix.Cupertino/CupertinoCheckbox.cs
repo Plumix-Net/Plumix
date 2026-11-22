@@ -1,4 +1,3 @@
-using Avalonia.Media;
 using Plumix.Foundation;
 using Plumix.Painting;
 using Plumix.Rendering;
@@ -412,9 +411,15 @@ internal sealed class CupertinoCheckboxPainter : ToggleablePainter
     }
 
     // White stroke used to paint the check and dash.
-    private IPen CreateStrokePen()
+    private Paint CreateStrokePaint()
     {
-        return new Pen(new SolidColorBrush(_checkColor.ToAvalonia()), 2.0, lineCap: PenLineCap.Round);
+        return new Paint
+        {
+            Color = _checkColor,
+            Style = PaintingStyle.Stroke,
+            StrokeWidth = 2.0,
+            StrokeCap = StrokeCap.Round,
+        };
     }
 
     // Draw a gradient from the top to the bottom of the checkbox.
@@ -424,7 +429,7 @@ internal sealed class CupertinoCheckboxPainter : ToggleablePainter
             colors: [topColor, bottomColor],
             begin: Alignment.TopCenter,
             end: Alignment.BottomCenter);
-        DrawShape(context, outer, fillGradient.CreateShader(outer).Brush, pen: null);
+        DrawShape(context, outer, new Paint { Shader = fillGradient.CreateShader(outer) });
     }
 
     private void DrawBox(
@@ -450,32 +455,30 @@ internal sealed class CupertinoCheckboxPainter : ToggleablePainter
         }
         else if (strokeWidth is null)
         {
-            DrawShape(context, outer, new SolidColorBrush(paintColor.ToAvalonia()), pen: null);
+            DrawShape(context, outer, new Paint { Color = paintColor });
         }
         else
         {
             DrawShape(
                 context,
                 outer,
-                brush: null,
-                new Pen(new SolidColorBrush(paintColor.ToAvalonia()), strokeWidth.Value));
+                new Paint { Color = paintColor, Style = PaintingStyle.Stroke, StrokeWidth = strokeWidth.Value });
         }
 
         DrawSide(context, outer, side);
     }
 
-    private void DrawShape(PaintingContext context, Rect rect, IBrush? brush, IPen? pen)
+    private void DrawShape(PaintingContext context, Rect rect, Paint paint)
     {
         if (_shape is CircleBorder)
         {
-            context.Canvas.DrawOval(rect, brush, pen);
+            context.Canvas.DrawOval(rect, paint);
             return;
         }
 
         context.Canvas.DrawRRect(
             Plumix.UI.RRect.FromRectAndCorners(rect, ShapeBorderGeometry.ResolveRadius(_shape)),
-            brush,
-            pen);
+            paint);
     }
 
     // Flutter's `shape.copyWith(side: side).paint(canvas, outer)`: the side strokes inward from the
@@ -491,8 +494,7 @@ internal sealed class CupertinoCheckboxPainter : ToggleablePainter
         {
             context.Canvas.DrawOval(
                 outer.Deflate(side.Width / 2.0),
-                brush: null,
-                new Pen(new SolidColorBrush(side.Color.ToAvalonia()), side.Width));
+                new Paint { Color = side.Color, Style = PaintingStyle.Stroke, StrokeWidth = side.Width });
             return;
         }
 
@@ -502,10 +504,10 @@ internal sealed class CupertinoCheckboxPainter : ToggleablePainter
         context.Canvas.DrawDRRect(
             outerRRect,
             outerRRect.Deflate(side.Width),
-            new SolidColorBrush(side.Color.ToAvalonia()));
+            new Paint { Color = side.Color });
     }
 
-    private void DrawCheck(PaintingContext context, Offset origin, IPen pen)
+    private void DrawCheck(PaintingContext context, Offset origin, Paint paint)
     {
         // The ratios for the offsets below were found from looking at the checkbox examples in the
         // HIG docs. The distance from the needed point to the edge was measured, then divided by
@@ -519,11 +521,11 @@ internal sealed class CupertinoCheckboxPainter : ToggleablePainter
         var end = new Offset(
             origin.Dx + (CupertinoCheckbox.Width * 0.78),
             origin.Dy + (CupertinoCheckbox.Width * 0.25));
-        context.Canvas.DrawLine(pen, start, mid);
-        context.Canvas.DrawLine(pen, mid, end);
+        context.Canvas.DrawLine(start, mid, paint);
+        context.Canvas.DrawLine(mid, end, paint);
     }
 
-    private void DrawDash(PaintingContext context, Offset origin, IPen pen)
+    private void DrawDash(PaintingContext context, Offset origin, Paint paint)
     {
         // From measuring the checkbox example in the HIG docs, the dash was found to be half the
         // total width, centered in the middle.
@@ -531,12 +533,12 @@ internal sealed class CupertinoCheckboxPainter : ToggleablePainter
             origin.Dx + (CupertinoCheckbox.Width * 0.25),
             origin.Dy + (CupertinoCheckbox.Width * 0.5));
         var end = new Offset(origin.Dx + (CupertinoCheckbox.Width * 0.75), origin.Dy + (CupertinoCheckbox.Width * 0.5));
-        context.Canvas.DrawLine(pen, start, end);
+        context.Canvas.DrawLine(start, end, paint);
     }
 
     public override void Paint(PaintingContext context, Size size)
     {
-        IPen strokePen = CreateStrokePen();
+        Paint strokePaint = CreateStrokePaint();
         var origin = new Offset(
             (size.Width / 2.0) - (CupertinoCheckbox.Width / 2.0),
             (size.Height / 2.0) - (CupertinoCheckbox.Width / 2.0));
@@ -550,11 +552,11 @@ internal sealed class CupertinoCheckboxPainter : ToggleablePainter
                 break;
             case true:
                 DrawBox(context, outer, paintColor, strokeWidth: null, _side, _value ?? true);
-                DrawCheck(context, origin, strokePen);
+                DrawCheck(context, origin, strokePaint);
                 break;
             case null:
                 DrawBox(context, outer, paintColor, strokeWidth: null, _side, _value ?? true);
-                DrawDash(context, origin, strokePen);
+                DrawDash(context, origin, strokePaint);
                 break;
         }
 
@@ -564,7 +566,7 @@ internal sealed class CupertinoCheckboxPainter : ToggleablePainter
             Color pressedColor = _brightness == Plumix.UI.Brightness.Light
                 ? WithOpacity(CupertinoColors.Black, KPressedOverlayOpacity)
                 : WithOpacity(CupertinoColors.White, KPressedOverlayOpacity);
-            DrawShape(context, outer, new SolidColorBrush(pressedColor.ToAvalonia()), pen: null);
+            DrawShape(context, outer, new Paint { Color = pressedColor });
         }
 
         if (IsFocused)

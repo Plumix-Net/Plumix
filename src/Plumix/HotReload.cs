@@ -1,6 +1,5 @@
 using System.Diagnostics;
 using System.Reflection.Metadata;
-using Avalonia.Threading;
 using Plumix.Foundation;
 
 [assembly: MetadataUpdateHandler(typeof(Plumix.HotReloadManager))]
@@ -46,7 +45,7 @@ public static class HotReloadManager
     {
         Log($"received {updatedTypes?.Length.ToString() ?? "unknown number of"} updated type(s), "
             + "scheduling reassemble");
-        Dispatcher.UIThread.Post(() => _ = ReassembleApplication());
+        PlatformThread.Current.Post(() => _ = ReassembleApplication(), PlatformTaskPriority.Task);
     }
 
     /// <summary>

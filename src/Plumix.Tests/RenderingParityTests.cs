@@ -1,4 +1,3 @@
-using Avalonia.Media;
 using Plumix.Rendering;
 using Plumix.UI;
 using Plumix.Foundation;
@@ -423,10 +422,9 @@ public sealed class RenderingParityTests
 
         public override void Paint(PaintingContext ctx, Offset offset)
         {
-            ctx.Canvas.DrawRectangle(
-                new SolidColorBrush(new Color(0xFFC8E6C9).ToAvalonia()),
-                null,
-                (offset & Size));
+            ctx.Canvas.DrawRect(
+                (offset & Size),
+                new Paint { Color = new Color(0xFFC8E6C9) });
         }
     }
 

@@ -8,6 +8,30 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased]
+- Relative asset keys resolve on Android: `PlumixApplication` names its assembly when there is no entry assembly.
+- Breaking: `Plumix` no longer depends on Avalonia, SkiaSharp or HarfBuzzSharp; they come with `Plumix.Avalonia`.
+- Material/Cupertino icon fonts are plain embedded resources; `PlatformAssetBundle` resolves them without a host.
+- `Plumix.Elmish` marshals background dispatches through `EventLoop` instead of Avalonia's dispatcher.
+- `Path.Transform` with perspective ports Skia's perspective clip (SkPath.cpp, SkEdgeClipper) to managed code.
+- Text (paragraphs, fonts, HarfBuzz shaping, system fonts) moves to `Plumix.Avalonia` behind an internal `ITextBackend`.
+- Scene and picture rasterization move to `Plumix.Avalonia`; core flow layers are data, `IRenderBackend` rasterizes.
+- `Paragraph` hands the canvas a typed draw entry (`DrawPictureOp` for laid-out text) instead of an Avalonia action.
+- `RasterImage` is an opaque backend image; decoding, `toByteData` and assets go through host-installed seams.
+- Avalonia/Skia image codecs (bitmap, Skia multi-frame, APNG) and the asset loader move to `Plumix.Avalonia`.
+- The event loop, frame clock and gesture timers post through an internal `IPlatformThread` the host installs.
+- Avalonia's dispatcher, its clock fix and the host keyboard maps move to `Plumix.Avalonia` (`AvaloniaBackend`).
+- The unused backend-geometry clip (`PushClipGeometry`, `ClipGeometryLayer`) and `BorderSide.ToPen` are removed.
+- `StarBorder` builds its squash matrix with `Matrix4`, as Dart does, instead of Avalonia's `Matrix`.
+- `Shader`, gradients and fragment shaders are framework data; `SkiaShaders` builds the backend brushes.
+- `Path.Combine` runs a line-for-line C# port of Skia's PathOps (UI/PathOps) instead of SkiaSharp's.
+- `Path.Contains` and `Path.ComputeMetrics` port SkPath::contains and SkContourMeasure to managed code.
+- `Path` keeps SkPath's verbs, points and weights in managed code; builders and transforms port SkPath (path.cc).
+- `Picture` records typed entries (shapes, paints, images, clips) that `CanvasPlayback` plays onto Avalonia.
+- `Canvas.DrawArc(rect, startAngle, sweepAngle, useCenter, paint)` draws an arc or pie wedge (dart:ui painting.dart).
+- Material and Cupertino painters draw through `Paint`/`Path`; both packages reference no Avalonia/Skia member.
+- Canvas's internal brush/pen/backend-geometry draw overloads are gone; framework painters use `Paint`/`Path`.
+- Animated icons fill non-zero and framework strokes use Flutter's miter limit 4, as Dart's `Paint`/`Path` do.
+- `HostDependencyBudgetTests` holds each package's Avalonia/Skia/HarfBuzz reference count to a falling budget.
 
 ## v1.0.0-preview.5 — 2026-11-21
 - Migration notes for this release: `docs/MIGRATION.md`.

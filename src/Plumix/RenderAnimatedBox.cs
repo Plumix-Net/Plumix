@@ -1,5 +1,5 @@
-﻿using Avalonia.Media;
-using Plumix.Rendering;
+﻿using Plumix.Rendering;
+using Plumix.UI;
 
 // C#-only infrastructure: an early hand-written demo render object with no Dart counterpart.
 
@@ -20,7 +20,7 @@ internal sealed class RenderAnimatedBox : RenderBox, IDisposable
     private readonly double _fromH, _toH;
     private readonly Color _fromC, _toC;
 
-    public SolidColorBrush Brush { get; } = new SolidColorBrush(Colors.White);
+    private readonly Paint _paint = new() { Color = new Color(0xFFFFFFFF) };
 
     public RenderAnimatedBox(
         AnimationController controller,
@@ -53,7 +53,7 @@ internal sealed class RenderAnimatedBox : RenderBox, IDisposable
 
         _currentW = nextW;
         _currentH = nextH;
-        Brush.Color = nextC.ToAvalonia();
+        _paint.Color = nextC;
 
         if (affectsLayout) MarkNeedsLayout();
         else MarkNeedsPaint();
@@ -71,7 +71,7 @@ internal sealed class RenderAnimatedBox : RenderBox, IDisposable
     public override void Paint(PaintingContext ctx, Offset offset)
     {
         var rect = offset & Size;
-        ctx.Canvas.DrawRectangle(Brush, null, rect, 16, 16);
+        ctx.Canvas.DrawRRect(RRect.FromRectXY(rect, 16, 16), _paint);
     }
 
     public override void Dispose()

@@ -199,17 +199,17 @@ public sealed class CanvasSaveLayerTests
         WriteableBitmap white = SolidBitmap(4, 4, 0xFFFFFFFF);
 
         Bitmap faded = Render(canvas => canvas.DrawImageRect(
-            new RasterImage(white),
+            AvaloniaImages.Wrap(white),
             Rect.FromLTWH(0, 0, 4, 4),
             Rect.FromLTWH(0, 0, 20, 20),
             new Paint { Color = Color.FromRGBO(0, 0, 0, 0.5) }));
         Bitmap filtered = Render(canvas => canvas.DrawImageRect(
-            new RasterImage(white),
+            AvaloniaImages.Wrap(white),
             Rect.FromLTWH(0, 0, 4, 4),
             Rect.FromLTWH(0, 0, 20, 20),
             new Paint { ColorFilter = new ColorFilter.Mode(Red, BlendMode.SourceIn) }));
         Bitmap inverted = Render(canvas => canvas.DrawImageRect(
-            new RasterImage(white),
+            AvaloniaImages.Wrap(white),
             Rect.FromLTWH(0, 0, 4, 4),
             Rect.FromLTWH(0, 0, 20, 20),
             new Paint { InvertColors = true }));
@@ -228,12 +228,16 @@ public sealed class CanvasSaveLayerTests
         Bitmap image = Render(canvas =>
         {
             canvas.SaveLayer(null, new Paint());
-            canvas.DrawImageRect(new RasterImage(
+            canvas.DrawImageRect(AvaloniaImages.Wrap(
                 green), Rect.FromLTWH(0, 0, 2, 2), Rect.FromLTWH(0, 0, 20, 20), new Paint
             {
                 Color = Color.FromRGBO(0, 0, 0, 0.5),
             });
-            canvas.DrawImageRect(new RasterImage(red), Rect.FromLTWH(0, 0, 2, 2), Rect.FromLTWH(0, 0, 20, 20), new Paint
+            canvas.DrawImageRect(
+                AvaloniaImages.Wrap(red),
+                Rect.FromLTWH(0, 0, 2, 2),
+                Rect.FromLTWH(0, 0, 20, 20),
+                new Paint
             {
                 Color = Color.FromRGBO(0, 0, 0, 0.5),
                 BlendMode = BlendMode.Plus,
@@ -283,13 +287,13 @@ public sealed class CanvasSaveLayerTests
         var paint = new Paint { Color = Color.FromRGBO(0, 0, 0, 0.25), FilterQuality = FilterQuality.High };
         WriteableBitmap image = SolidBitmap(4, 2, 0xFFFFFFFF);
 
-        canvas.DrawImage(new RasterImage(image), new Offset(3, 4), paint);
+        canvas.DrawImage(AvaloniaImages.Wrap(image), new Offset(3, 4), paint);
         paint.FilterQuality = FilterQuality.None;
 
         CanvasCall call = Assert.Single(canvas.DebugCalls);
         Assert.Equal("drawImage", call.Method);
         Assert.Equal(new Offset(3, 4), call.Offset);
-        Assert.Same(image, call.Image);
+        Assert.Same(image, call.Image!.Native);
         Assert.Equal(FilterQuality.High, call.Paint!.FilterQuality);
     }
 

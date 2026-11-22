@@ -2,7 +2,6 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Globalization;
 using System.Net;
-using Avalonia.Platform;
 using Plumix.UI;
 using IOPath = System.IO.Path;
 
@@ -131,11 +130,16 @@ public sealed class PlatformAssetBundle : AssetBundle
     public static PlatformAssetBundle Root { get; } = new();
     public Uri? BaseUri { get; }
 
+    /// <summary>
+    /// The assembly that owns the app's relative asset keys, set by a host whose runtime has no entry
+    /// assembly (.NET for Android); null falls back to the entry assembly.
+    /// </summary>
+    internal static string? ApplicationAssemblyName { get; set; }
+
     public override Task<Stream> LoadAsync(string key, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        var uri = ResolveUri(key);
-        return Task.FromResult(AssetLoader.Open(uri, BaseUri));
+        return Task.FromResult(Open(ResolveUri(key)));
     }
 
     // Embedded resources are already in memory: hand the bytes over without a continuation, so a
@@ -145,7 +149,7 @@ public sealed class PlatformAssetBundle : AssetBundle
         CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        using Stream stream = AssetLoader.Open(ResolveUri(key), BaseUri);
+        using Stream stream = Open(ResolveUri(key));
         using var buffer = new MemoryStream();
         stream.CopyTo(buffer);
         return Task.FromResult<ReadOnlyMemory<byte>>(buffer.ToArray());
@@ -161,9 +165,18 @@ public sealed class PlatformAssetBundle : AssetBundle
         int slash = path.LastIndexOf('/');
         string directoryPath = slash >= 0 ? path[..(slash + 1)] : "/";
         var directory = new UriBuilder(uri) { Path = directoryPath }.Uri;
-        string[] assets = AssetLoader.GetAssets(directory, BaseUri).Select(asset => asset.ToString()).ToArray();
+        IEnumerable<Uri> found = EmbeddedAssets.GetAssets(directory, BaseUri);
+        if (ImageBackend.HasHostAssets)
+        {
+            found = found.Concat(ImageBackend.Assets.GetAssets(directory, BaseUri));
+        }
+
+        string[] assets = found.Select(asset => asset.ToString()).Distinct().ToArray();
         return Task.FromResult<IReadOnlyList<string>>(assets);
     }
+
+    // Assets a package embeds as manifest resources resolve without a host; the rest are the host's.
+    private Stream Open(Uri uri) => EmbeddedAssets.TryOpen(uri, BaseUri) ?? ImageBackend.Assets.Open(uri, BaseUri);
 
     private Uri ResolveUri(string key)
     {
@@ -183,11 +196,20 @@ public sealed class PlatformAssetBundle : AssetBundle
             return new Uri($"avares://{key[packagesPrefix.Length..end]}/{key[(end + 1)..]}");
         }
 
-        string assemblyName = System.Reflection.Assembly.GetEntryAssembly()?.GetName().Name
-                              ?? throw new InvalidOperationException(
-                                  "A relative asset key requires an entry assembly or an explicit PlatformAssetBundle baseUri.");
+        string assemblyName = ResolveApplicationAssemblyName(
+            ApplicationAssemblyName,
+            System.Reflection.Assembly.GetEntryAssembly());
         return new Uri($"avares://{assemblyName}/{key.TrimStart('/')}");
     }
+
+    // The assembly a relative key belongs to: the host's application assembly, else the entry assembly.
+    internal static string ResolveApplicationAssemblyName(
+        string? applicationAssemblyName,
+        System.Reflection.Assembly? entryAssembly) =>
+        applicationAssemblyName
+        ?? entryAssembly?.GetName().Name
+        ?? throw new InvalidOperationException(
+            "A relative asset key requires an entry assembly or an explicit PlatformAssetBundle baseUri.");
 }
 
 public abstract class ImageProvider

@@ -1,4 +1,3 @@
-using Avalonia.Media;
 using Plumix.Cupertino;
 using Plumix.Foundation;
 using Plumix.Rendering;
@@ -645,8 +644,8 @@ internal sealed class RenderLinearProgressIndicator : RenderBox
             return;
         }
 
-        var trackBrush = new SolidColorBrush(TrackColor.ToAvalonia());
-        var valueBrush = new SolidColorBrush(ValueColor.ToAvalonia());
+        var trackPaint = new Paint { Color = TrackColor };
+        var valuePaint = new Paint { Color = ValueColor };
         double radius = ResolveRadius(Size.Width, Size.Height, BorderRadius.Radius);
 
         double effectiveTrackGap = Size.Width > 0
@@ -665,14 +664,14 @@ internal sealed class RenderLinearProgressIndicator : RenderBox
 
             if (trackStartFraction < 1.0)
             {
-                DrawBar(ctx, offset, trackBrush, trackStartFraction, 1.0, radius);
+                DrawBar(ctx, offset, trackPaint, trackStartFraction, 1.0, radius);
             }
 
             DrawStopIndicator(ctx, offset);
 
             if (effectiveValue > 0)
             {
-                DrawBar(ctx, offset, valueBrush, 0.0, effectiveValue, radius);
+                DrawBar(ctx, offset, valuePaint, 0.0, effectiveValue, radius);
             }
 
             return;
@@ -689,10 +688,10 @@ internal sealed class RenderLinearProgressIndicator : RenderBox
             double trackStartFraction = line1Head > 0
                 ? line1Head + GetEffectiveTrackGapFraction(line1Head, trackGapFraction)
                 : 0.0;
-            DrawBar(ctx, offset, trackBrush, trackStartFraction, 1.0, radius);
+            DrawBar(ctx, offset, trackPaint, trackStartFraction, 1.0, radius);
         }
 
-        DrawBar(ctx, offset, valueBrush, line1Tail, line1Head, radius);
+        DrawBar(ctx, offset, valuePaint, line1Tail, line1Head, radius);
 
         if (line1Tail > trackGapFraction)
         {
@@ -703,24 +702,24 @@ internal sealed class RenderLinearProgressIndicator : RenderBox
                 ? line1Tail - GetEffectiveTrackGapFraction(1 - line1Tail, trackGapFraction)
                 : 1.0;
 
-            DrawBar(ctx, offset, trackBrush, trackStartFraction, trackEndFraction, radius);
+            DrawBar(ctx, offset, trackPaint, trackStartFraction, trackEndFraction, radius);
         }
 
-        DrawBar(ctx, offset, valueBrush, line2Tail, line2Head, radius);
+        DrawBar(ctx, offset, valuePaint, line2Tail, line2Head, radius);
 
         if (line2Tail > trackGapFraction)
         {
             double trackEndFraction = line2Tail < 1
                 ? line2Tail - GetEffectiveTrackGapFraction(1 - line2Tail, trackGapFraction)
                 : 1.0;
-            DrawBar(ctx, offset, trackBrush, 0.0, trackEndFraction, radius);
+            DrawBar(ctx, offset, trackPaint, 0.0, trackEndFraction, radius);
         }
     }
 
     private void DrawBar(
         PaintingContext ctx,
         Offset offset,
-        IBrush brush,
+        Paint paint,
         double startFraction,
         double endFraction,
         double radius)
@@ -740,12 +739,13 @@ internal sealed class RenderLinearProgressIndicator : RenderBox
 
         var barRect = Rect.FromLTWH(left, offset.Dy, width, Size.Height);
         double barRadius = ResolveRadius(barRect.Width, barRect.Height, radius);
-        ctx.Canvas.DrawRectangle(
-            brush,
-            null,
-            barRect,
-            barRadius,
-            barRadius);
+        if (barRadius == 0.0)
+        {
+            ctx.Canvas.DrawRect(barRect, paint);
+            return;
+        }
+
+        ctx.Canvas.DrawRRect(RRect.FromRectXY(barRect, barRadius, barRadius), paint);
     }
 
     private void DrawStopIndicator(PaintingContext ctx, Offset offset)
@@ -766,7 +766,7 @@ internal sealed class RenderLinearProgressIndicator : RenderBox
             ? offset.Dx + maxRadius
             : offset.Dx + (Size.Width - maxRadius);
         var center = new Offset(centerX, offset.Dy + maxRadius);
-        ctx.Canvas.DrawCircle(new SolidColorBrush(_stopIndicatorColor.ToAvalonia()!), null, center, radius);
+        ctx.Canvas.DrawCircle(center, radius, new Paint { Color = _stopIndicatorColor });
     }
 
     private static double GetEffectiveTrackGapFraction(double currentValue, double trackGapFraction)
@@ -1738,17 +1738,20 @@ internal sealed class RenderCircularProgressIndicator : RenderBox
 
         if (TrackColor != null)
         {
-            var trackPen = new Pen(
-                new SolidColorBrush(TrackColor.ToAvalonia()!),
-                strokeWidth,
-                lineCap: ResolveTrackLineCap(StrokeCap));
+            var trackPaint = new Paint
+            {
+                Color = TrackColor,
+                Style = PaintingStyle.Stroke,
+                StrokeWidth = strokeWidth,
+                StrokeCap = ResolveTrackLineCap(StrokeCap),
+            };
             if (TryResolveTrackGapArc(arcRect, strokeWidth, resolvedValue, out double gapArcStart, out double gapArcSweep))
             {
-                ctx.Canvas.DrawArc(trackPen, arcRect, startAngleRadians: gapArcStart, sweepAngleRadians: gapArcSweep);
+                ctx.Canvas.DrawArc(arcRect, gapArcStart, gapArcSweep, useCenter: false, trackPaint);
             }
             else
             {
-                ctx.Canvas.DrawArc(trackPen, arcRect, startAngleRadians: 0, sweepAngleRadians: FullSweep);
+                ctx.Canvas.DrawArc(arcRect, 0, FullSweep, useCenter: false, trackPaint);
             }
         }
 
@@ -1764,8 +1767,14 @@ internal sealed class RenderCircularProgressIndicator : RenderBox
             ? DeterminateStartAngle
             : ArcStart;
         var lineCap = ResolveIndicatorLineCap(resolvedValue, StrokeCap, Year2023);
-        var indicatorPen = new Pen(new SolidColorBrush(ValueColor.ToAvalonia()), strokeWidth, lineCap: lineCap);
-        ctx.Canvas.DrawArc(indicatorPen, arcRect, startAngleRadians: start, sweepAngleRadians: sweep);
+        var indicatorPaint = new Paint
+        {
+            Color = ValueColor,
+            Style = PaintingStyle.Stroke,
+            StrokeWidth = strokeWidth,
+            StrokeCap = lineCap,
+        };
+        ctx.Canvas.DrawArc(arcRect, start, sweep, useCenter: false, indicatorPaint);
         DrawArrowhead(ctx, arcRect, strokeWidth, start + sweep);
     }
 
@@ -1783,14 +1792,12 @@ internal sealed class RenderCircularProgressIndicator : RenderBox
         var point = new Offset(
             center.Dx + (ux * radius) - (uy * strokeWidth * 2.0 * ArrowheadScale),
             center.Dy + (uy * radius) + (ux * strokeWidth * 2.0 * ArrowheadScale));
-        context.Canvas.DrawPolygon(
-            new SolidColorBrush(ValueColor.ToAvalonia()),
-            null,
-            [
-                new Offset(center.Dx + (ux * innerRadius), center.Dy + (uy * innerRadius)),
-                new Offset(center.Dx + (ux * outerRadius), center.Dy + (uy * outerRadius)),
-                point,
-            ]);
+        var path = new Plumix.UI.Path();
+        path.MoveTo(center.Dx + (ux * innerRadius), center.Dy + (uy * innerRadius));
+        path.LineTo(center.Dx + (ux * outerRadius), center.Dy + (uy * outerRadius));
+        path.LineTo(point.Dx, point.Dy);
+        path.Close();
+        context.Canvas.DrawPath(path, new Paint { Color = ValueColor });
     }
 
     private bool TryResolveTrackGapArc(
@@ -1837,36 +1844,25 @@ internal sealed class RenderCircularProgressIndicator : RenderBox
         return true;
     }
 
-    private static PenLineCap ResolveTrackLineCap(StrokeCap? strokeCap)
+    private static StrokeCap ResolveTrackLineCap(StrokeCap? strokeCap)
     {
-        return ToPenLineCap(strokeCap ?? Plumix.UI.StrokeCap.Round);
+        return strokeCap ?? Plumix.UI.StrokeCap.Round;
     }
 
-    private static PenLineCap ResolveIndicatorLineCap(double? resolvedValue, StrokeCap? strokeCap, bool useYear2023)
+    private static StrokeCap ResolveIndicatorLineCap(double? resolvedValue, StrokeCap? strokeCap, bool useYear2023)
     {
         if (strokeCap.HasValue)
         {
-            return ToPenLineCap(strokeCap.Value);
+            return strokeCap.Value;
         }
 
         if (!useYear2023)
         {
-            return PenLineCap.Round;
+            return Plumix.UI.StrokeCap.Round;
         }
 
         // Flutter parity: indeterminate + null cap uses square; determinate + null cap uses butt.
-        return resolvedValue.HasValue ? PenLineCap.Flat : PenLineCap.Square;
-    }
-
-    private static PenLineCap ToPenLineCap(StrokeCap strokeCap)
-    {
-        return strokeCap switch
-        {
-            Plumix.UI.StrokeCap.Butt => PenLineCap.Flat,
-            Plumix.UI.StrokeCap.Round => PenLineCap.Round,
-            Plumix.UI.StrokeCap.Square => PenLineCap.Square,
-            _ => PenLineCap.Flat
-        };
+        return resolvedValue.HasValue ? Plumix.UI.StrokeCap.Butt : Plumix.UI.StrokeCap.Square;
     }
 
     private static double ResolveDeterminateSweep(double value)

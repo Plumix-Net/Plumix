@@ -1,4 +1,3 @@
-using Avalonia.Media;
 using Plumix;
 using Plumix.Cupertino;
 using Plumix.Foundation;
@@ -1665,8 +1664,7 @@ internal sealed class SwitchPainter : ToggleablePainter
             _trackHeight);
         context.Canvas.DrawRRect(
             RRect.FromRectAndRadius(trackRect, trackRadius),
-            new SolidColorBrush(trackColor.ToAvalonia()),
-            null);
+            new Paint { Color = trackColor });
         if (trackOutlineColor != null)
         {
             var outlineRect = Rect.FromLTWH(
@@ -1676,8 +1674,12 @@ internal sealed class SwitchPainter : ToggleablePainter
                 _trackHeight - 2.0);
             context.Canvas.DrawRRect(
                 RRect.FromRectAndRadius(outlineRect, trackRadius),
-                null,
-                new Pen(new SolidColorBrush(trackOutlineColor.ToAvalonia()!), trackOutlineWidth ?? 2.0));
+                new Paint
+                {
+                    Color = trackOutlineColor,
+                    Style = PaintingStyle.Stroke,
+                    StrokeWidth = trackOutlineWidth ?? 2.0,
+                });
         }
 
         if (_isCupertino)
@@ -1687,10 +1689,12 @@ internal sealed class SwitchPainter : ToggleablePainter
                 context.Canvas.DrawRRect(
                     RRect.FromRectAndRadius(trackRect, trackRadius)
                         .Inflate(SwitchConfigCupertino.FocusTrackOutline / 2.0),
-                    null,
-                    new Pen(
-                        new SolidColorBrush(FocusColor.ToAvalonia()),
-                        SwitchConfigCupertino.FocusTrackOutline));
+                    new Paint
+                    {
+                        Color = FocusColor,
+                        Style = PaintingStyle.Stroke,
+                        StrokeWidth = SwitchConfigCupertino.FocusTrackOutline,
+                    });
             }
 
             context.PushClipRRect(

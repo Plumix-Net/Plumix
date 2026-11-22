@@ -1,6 +1,6 @@
-using Avalonia.Media;
 using Plumix.Foundation;
 using Plumix.Rendering;
+using Plumix.UI;
 using Plumix.Widgets;
 using Xunit;
 
@@ -286,7 +286,7 @@ public sealed class SliverOpacityTests : IDisposable
         public override void Paint(PaintingContext ctx, Offset offset)
         {
             PaintCount += 1;
-            ctx.Canvas.DrawRectangle(Brushes.Blue, null, (offset & Size));
+            ctx.Canvas.DrawRect((offset & Size), new Paint { Color = new Color(0xFF0000FF) });
         }
     }
 

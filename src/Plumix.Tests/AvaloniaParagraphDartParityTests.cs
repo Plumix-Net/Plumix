@@ -511,7 +511,7 @@ public sealed class AvaloniaParagraphDartParityTests
         var group = new DrawingGroup();
         using (DrawingContext context = group.Open())
         {
-            picture.Playback(context, default);
+            CanvasPlayback.Play(picture, context, default);
         }
 
         Assert.Equal([TextRenderingMode.Antialias], GlyphRunTextRenderingModes(group, default));

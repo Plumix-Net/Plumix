@@ -1,5 +1,4 @@
 using System.Diagnostics;
-using Avalonia.Threading;
 using Plumix.Foundation;
 using Plumix.Rendering;
 using Plumix.Widgets;
@@ -1020,20 +1019,6 @@ public sealed class PlatformDispatcher
     /// <summary>The last mode passed to <see cref="RequestDartPerformanceMode"/>, if any.</summary>
     /// <remarks>Plumix-only observability; dart:ui hands the request straight to the VM.</remarks>
     public DartPerformanceMode? LastRequestedPerformanceMode { get; private set; }
-
-    /// <summary>
-    /// The dispatcher priority of an event-loop task (the wake-up of <see cref="Timer"/>'s queue):
-    /// below the <c>DispatcherPriority.Send</c> that <c>EventLoop.ScheduleMicrotask</c> drains at, which
-    /// keeps the microtask-before-next-turn ordering, and above <c>DispatcherPriority.Input</c>.
-    /// </summary>
-    /// <remarks>
-    /// A Dart timer is an ordinary event-loop task, never idle work. Avalonia runs jobs at or below
-    /// <c>Input</c> only when the platform reports no pending input; Android's dispatcher runs them
-    /// from the looper's idle handler, which never fires while an animation keeps the main thread
-    /// busy. At background priority the warm-up frame's draw half never ran behind an indeterminate
-    /// progress indicator, and every vsync frame was dropped while that warm-up frame was pending.
-    /// </remarks>
-    internal static readonly DispatcherPriority EventLoopTaskPriority = DispatcherPriority.Default;
 
     /// <summary>Requests that the operating system schedule a new frame.</summary>
     /// <remarks>dart:ui's <c>PlatformDispatcher.scheduleFrame</c>.</remarks>

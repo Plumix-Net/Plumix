@@ -1,5 +1,4 @@
 using System.Diagnostics;
-using Avalonia.Media;
 using Plumix.Foundation;
 using Plumix.Painting;
 using Plumix.UI;
@@ -296,14 +295,24 @@ public class PaintingContext : ClipContext
         {
             if (RenderingDebug.RepaintRainbowEnabled)
             {
-                var pen = new Pen(new SolidColorBrush(RenderingDebug.CurrentRepaintColor.ToColor().ToAvalonia()), 6.0);
-                Canvas.DrawGeometry(null, pen, new RectangleGeometry(DeflateRect(EstimatedBounds, 3.0).ToAvalonia()));
+                var paint = new Paint
+                {
+                    Color = RenderingDebug.CurrentRepaintColor.ToColor(),
+                    Style = PaintingStyle.Stroke,
+                    StrokeWidth = 6.0,
+                };
+                Canvas.DrawRect(DeflateRect(EstimatedBounds, 3.0), paint);
             }
 
             if (RenderingDebug.PaintLayerBordersEnabled)
             {
-                var pen = new Pen(new SolidColorBrush(new Color(0xFFFF9800).ToAvalonia()), 1.0);
-                Canvas.DrawGeometry(null, pen, new RectangleGeometry(EstimatedBounds.ToAvalonia()));
+                var paint = new Paint
+                {
+                    Color = new Color(0xFFFF9800),
+                    Style = PaintingStyle.Stroke,
+                    StrokeWidth = 1.0,
+                };
+                Canvas.DrawRect(EstimatedBounds, paint);
             }
         }
 
@@ -477,44 +486,6 @@ public class PaintingContext : ClipContext
         }
 
         ClipPathAndPaint(offsetClipPath, clipBehavior, offsetBounds, () => painter(this, offset));
-        return null;
-    }
-
-    /// <summary>Plumix-only: clips using a backend geometry, then paints.</summary>
-    /// <remarks>
-    /// Dart's clip family goes through <c>Path</c> only; a handful of Plumix shapes (notched app bars,
-    /// decoration outlines) arrive as an Avalonia <c>Geometry</c> that cannot be shifted, so the offset
-    /// travels alongside it. Everything else matches <see cref="PushClipPath"/>.
-    /// </remarks>
-    internal ClipGeometryLayer? PushClipGeometry(
-        bool needsCompositing,
-        Offset offset,
-        Rect bounds,
-        Geometry geometry,
-        PaintingContextCallback painter,
-        Clip clipBehavior = Clip.AntiAlias,
-        ClipGeometryLayer? oldLayer = null)
-    {
-        ArgumentNullException.ThrowIfNull(geometry);
-        ArgumentNullException.ThrowIfNull(painter);
-        if (clipBehavior == Clip.None)
-        {
-            painter(this, offset);
-            return null;
-        }
-
-        Rect offsetBounds = ShiftRect(bounds, offset);
-        if (needsCompositing)
-        {
-            ClipGeometryLayer layer = oldLayer ?? new ClipGeometryLayer();
-            layer.Geometry = geometry;
-            layer.GeometryOffset = offset;
-            layer.ClipBehavior = clipBehavior;
-            PushLayer(layer, painter, offset, offsetBounds);
-            return layer;
-        }
-
-        ClipGeometryAndPaint(geometry, offset, clipBehavior, offsetBounds, () => painter(this, offset));
         return null;
     }
 

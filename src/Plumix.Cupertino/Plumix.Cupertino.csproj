@@ -28,7 +28,10 @@
     </ItemGroup>
 
     <ItemGroup>
-        <AvaloniaResource Include="Assets\**" />
+        <!-- Package assets, addressed as packages/<assembly>/<path>: the logical name is the path, which
+             PlatformAssetBundle (src/Plumix/Rendering/ImageProvider.cs) looks up before asking the host. -->
+        <EmbeddedResource Include="Assets\Fonts\CupertinoIcons.ttf" LogicalName="Assets/Fonts/CupertinoIcons.ttf" />
+        <None Include="Assets\Fonts\CupertinoIcons_LICENSE.txt" Pack="true" PackagePath="licenses" />
     </ItemGroup>
 
 </Project>

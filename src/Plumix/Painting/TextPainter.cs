@@ -1,4 +1,3 @@
-using Avalonia.Media;
 using Plumix.Foundation;
 using Plumix.UI;
 using Plumix.Widgets;
@@ -871,12 +870,12 @@ public sealed class TextPainter : IDisposable
 
     private void DebugPaintCharacterLayoutBoxes(Canvas canvas, Offset offset)
     {
-        var pen = new Pen(new SolidColorBrush(new Color(0xFF00FFFF).ToAvalonia()), 1.0);
+        var pen = new Paint { Color = new Color(0xFF00FFFF), Style = PaintingStyle.Stroke, StrokeWidth = 1.0 };
         IReadOnlyList<TextBox> textBoxes = GetBoxesForSelection(new TextSelection(0, PlainText.Length));
         foreach (TextBox textBox in textBoxes)
         {
             Rect rect = textBox.ToRect();
-            canvas.DrawRectangle(null, pen, rect.Shift(new Offset(offset.Dx, offset.Dy)));
+            canvas.DrawRect(rect.Shift(new Offset(offset.Dx, offset.Dy)), pen);
         }
     }
 

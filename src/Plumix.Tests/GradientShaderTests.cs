@@ -24,9 +24,9 @@ public sealed class GradientShaderTests
     public void Linear_TilesOutsideTheShaderRectangleInAbsoluteCoordinates(TileMode mode)
     {
         var gradient = new LinearGradient(colors: [Colors.Red, Colors.Blue], tileMode: mode);
-        IBrush shader = gradient.CreateShader(Rect.FromLTWH(20, 10, 40, 40)).Brush;
+        Shader shader = gradient.CreateShader(Rect.FromLTWH(20, 10, 40, 40));
         using RenderTargetBitmap image = Render(canvas => canvas.DrawRect(
-            Rect.FromLTWH(0, 0, 100, 60), new Paint { Shader = Plumix.UI.Shader.FromBrush(shader) }));
+            Rect.FromLTWH(0, 0, 100, 60), new Paint { Shader = shader }));
 
         AssertPixel(image, 40, 30, 124, 0, 131, 255);
         switch (mode)
@@ -179,10 +179,10 @@ public sealed class GradientShaderTests
         matrix.Storage[3] = 0.01;
         var gradient = new LinearGradient(colors: [Colors.Red, Colors.Blue],
             transform: new PerspectiveTransform(matrix));
-        IBrush shader = gradient.CreateShader(Rect.FromLTWH(0, 0, 100, 100)).Brush;
+        Shader shader = gradient.CreateShader(Rect.FromLTWH(0, 0, 100, 100));
         matrix.Storage[3] = 0.5;
         using RenderTargetBitmap actual = Render(canvas => canvas.DrawRect(Rect.FromLTWH(0, 0, 100, 100),
-            new Paint { Shader = Plumix.UI.Shader.FromBrush(shader) }), 100, 100);
+            new Paint { Shader = shader }), 100, 100);
         using SKShader expected = SKShader.CreateLinearGradient(new SKPoint(0, 50), new SKPoint(100, 50),
             [SKColors.Red, SKColors.Blue], [0.0f, 1.0f], SKShaderTileMode.Clamp,
             new SKMatrix(1, 0, 0, 0, 1, 0, 0.01f, 0, 1));
@@ -192,13 +192,13 @@ public sealed class GradientShaderTests
     [Fact]
     public void ShaderMask_AndBlurredPaintUseTheSameDecalShader()
     {
-        IBrush shader = new LinearGradient(colors: [Colors.Red, Colors.Blue], tileMode: TileMode.Decal)
-            .CreateShader(Rect.FromLTWH(20, 0, 40, 60)).Brush;
+        Shader shader = new LinearGradient(colors: [Colors.Red, Colors.Blue], tileMode: TileMode.Decal)
+            .CreateShader(Rect.FromLTWH(20, 0, 40, 60));
         using var masked = new RenderTargetBitmap(new PixelSize(100, 60));
         using (DrawingContext context = masked.CreateDrawingContext())
         using (FilterLayerRasterizer.DrawShaderMasked(context,
             target => target.DrawRectangle(Brushes.White, null, Rect.FromLTWH(0, 0, 100, 60).ToAvalonia()),
-            shader, BlendMode.SourceIn, Rect.FromLTWH(0, 0, 100, 60)))
+            SkiaShaders.ToBrush(shader), BlendMode.SourceIn, Rect.FromLTWH(0, 0, 100, 60)))
         {
         }
 
@@ -206,7 +206,7 @@ public sealed class GradientShaderTests
         Assert.Equal(0, RasterBackend.PixelAt(masked, 10, 30).A);
         using RenderTargetBitmap blurred = Render(canvas => canvas.DrawRect(Rect.FromLTWH(0, 0, 100, 60), new Paint
         {
-            Shader = Plumix.UI.Shader.FromBrush(shader),
+            Shader = shader,
             MaskFilter = MaskFilter.Blur(BlurStyle.Normal, 2.0),
         }));
         AssertPixel(blurred, 40, 30, 124, 0, 131, 255);
@@ -216,9 +216,9 @@ public sealed class GradientShaderTests
     [Fact]
     public void PathStroke_PreservesRecordingClipOpacityAndDevicePixelHairlines()
     {
-        IBrush shader = new LinearGradient(colors: [Colors.Red, Colors.Blue])
-            .CreateShader(Rect.FromLTWH(0, 0, 100, 60)).Brush;
-        var paint = new Paint { Shader = Plumix.UI.Shader.FromBrush(shader) };
+        Shader shader = new LinearGradient(colors: [Colors.Red, Colors.Blue])
+            .CreateShader(Rect.FromLTWH(0, 0, 100, 60));
+        var paint = new Paint { Shader = shader };
         var recorder = new PictureRecorder();
         var canvas = new Canvas(recorder);
         canvas.ClipRect(Rect.FromLTWH(0, 0, 100, 40));
@@ -230,7 +230,7 @@ public sealed class GradientShaderTests
         using (DrawingContext context = image.CreateDrawingContext())
         using (context.PushOpacity(0.5))
         {
-            picture.Playback(context, default);
+            CanvasPlayback.Play(picture, context, default);
         }
 
         double coverage = 0.0;
@@ -411,7 +411,7 @@ public sealed class GradientShaderTests
         Picture picture = recorder.EndRecording();
         var bitmap = new RenderTargetBitmap(new PixelSize(width, height));
         using DrawingContext context = bitmap.CreateDrawingContext();
-        picture.Playback(context, default);
+        CanvasPlayback.Play(picture, context, default);
         return bitmap;
     }
 

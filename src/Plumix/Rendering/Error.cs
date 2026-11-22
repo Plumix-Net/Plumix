@@ -1,4 +1,3 @@
-using Avalonia.Media;
 using Plumix.Foundation;
 using Plumix.UI;
 using Plumix.Widgets;
@@ -93,10 +92,9 @@ public class RenderErrorBox : RenderBox
     {
         try
         {
-            ctx.Canvas.DrawRectangle(
-                new SolidColorBrush(BackgroundColor.ToAvalonia()),
-                null,
-                (offset & Size));
+            ctx.Canvas.DrawRect(
+                (offset & Size),
+                new Paint { Color = BackgroundColor });
             if (_paragraph is not null)
             {
                 EdgeInsets padding = Padding;

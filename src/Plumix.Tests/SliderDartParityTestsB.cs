@@ -1316,10 +1316,9 @@ public sealed class SliderDartParityTestsB : IDisposable
             Size sizeWithOverflow)
         {
             Canvas canvas = context.Canvas;
-            var paint = new Avalonia.Media.SolidColorBrush(
-                (sliderTheme.ValueIndicatorColor ?? MaterialColors.Purple).ToAvalonia());
+            var paint = new Paint { Color = sliderTheme.ValueIndicatorColor ?? MaterialColors.Purple };
 
-            canvas.DrawCircle(paint, null, center, CircleDiameter / 2);
+            canvas.DrawCircle(center, CircleDiameter / 2, paint);
             labelPainter.Paint(canvas, center);
         }
     }

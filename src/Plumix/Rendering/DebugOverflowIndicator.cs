@@ -1,5 +1,3 @@
-using Avalonia;
-using Avalonia.Media;
 using Plumix.Foundation;
 using Plumix.Painting;
 using Plumix.UI;
@@ -31,22 +29,18 @@ internal sealed class DebugOverflowIndicator : IDisposable
         FontSize: IndicatorFontSizePixels,
         FontWeight: FontWeight.W800);
 
-    private static readonly IBrush IndicatorPaint = new LinearGradientBrush
+    private static readonly Paint IndicatorPaint = new()
     {
-        StartPoint = new RelativePoint(0.0, 0.0, RelativeUnit.Absolute),
-        EndPoint = new RelativePoint(10.0, 10.0, RelativeUnit.Absolute),
-        SpreadMethod = GradientSpreadMethod.Repeat,
-        GradientStops = new GradientStops
-        {
-            new GradientStop(Black.ToAvalonia(), 0.25),
-            new GradientStop(Yellow.ToAvalonia(), 0.25),
-            new GradientStop(Yellow.ToAvalonia(), 0.75),
-            new GradientStop(Black.ToAvalonia(), 0.75),
-        },
-    }.ToImmutable();
+        Shader = GradientShader.Linear(
+            Offset.Zero,
+            new Offset(10.0, 10.0),
+            [Black, Yellow, Yellow, Black],
+            [0.25, 0.25, 0.75, 0.75],
+            TileMode.Repeated,
+            matrix: null),
+    };
 
-    private static readonly IBrush LabelBackgroundPaint = new SolidColorBrush(
-        new Color(0xFFFFFFFF).ToAvalonia()).ToImmutable();
+    private static readonly Paint LabelBackgroundPaint = new() { Color = new Color(0xFFFFFFFF) };
 
     // One label painter per `_OverflowSide`; the labels are in English.
     private readonly TextPainter[] _indicatorLabel =
@@ -238,7 +232,7 @@ internal sealed class DebugOverflowIndicator : IDisposable
         List<OverflowRegionData> overflowRegions = CalculateOverflowRegions(overflow, containerRect);
         foreach (OverflowRegionData region in overflowRegions)
         {
-            context.Canvas.DrawRectangle(IndicatorPaint, null, region.Rect.Shift((Offset)offset));
+            context.Canvas.DrawRect(region.Rect.Shift((Offset)offset), IndicatorPaint);
             TextPainter label = _indicatorLabel[(int)region.Side];
             var textSpan = label.Text as TextSpan;
             if (textSpan?.Text != region.Label)
@@ -253,7 +247,7 @@ internal sealed class DebugOverflowIndicator : IDisposable
             context.Canvas.Save();
             context.Canvas.Translate(labelOffset.Dx, labelOffset.Dy);
             context.Canvas.Rotate(region.Rotation);
-            context.Canvas.DrawRectangle(LabelBackgroundPaint, null, textBackgroundRect);
+            context.Canvas.DrawRect(textBackgroundRect, LabelBackgroundPaint);
             label.Paint(context.Canvas, centerOffset);
             context.Canvas.Restore();
         }

@@ -1,4 +1,3 @@
-using Avalonia.Media;
 using Plumix.UI;
 using Path = Plumix.UI.Path;
 
@@ -170,29 +169,31 @@ public abstract record BoxBorder : ShapeBorder
         BorderSide side,
         BorderRadius borderRadius)
     {
-        var brush = new SolidColorBrush(side.Color.ToAvalonia());
+        var paint = new Paint { Color = side.Color };
         double width = side.Width;
         if (width == 0.0)
         {
-            context.Canvas.DrawRRect(borderRadius.ToRRect(rect), null, new Pen(brush, 0.0));
+            paint.Style = PaintingStyle.Stroke;
+            paint.StrokeWidth = 0.0;
+            context.Canvas.DrawRRect(borderRadius.ToRRect(rect), paint);
             return;
         }
 
         RRect borderRect = borderRadius.ToRRect(rect);
         RRect inner = borderRect.Deflate(side.StrokeInset);
         RRect outer = borderRect.Inflate(side.StrokeOutset);
-        context.Canvas.DrawDRRect(outer, inner, brush);
+        context.Canvas.DrawDRRect(outer, inner, paint);
     }
 
     protected static void PaintUniformBorderWithCircle(PaintingContext context, Rect rect, BorderSide side)
     {
         double radius = (ShortestSide(rect) + side.StrokeOffset) / 2.0;
-        context.Canvas.DrawCircle(Brushes.Transparent, side.ToPen(), rect.Center, radius);
+        context.Canvas.DrawCircle(rect.Center, radius, side.ToPaint());
     }
 
     protected static void PaintUniformBorderWithRectangle(PaintingContext context, Rect rect, BorderSide side)
     {
-        context.Canvas.DrawRectangle(Brushes.Transparent, side.ToPen(), rect.Inflate(side.StrokeOffset / 2.0));
+        context.Canvas.DrawRect(rect.Inflate(side.StrokeOffset / 2.0), side.ToPaint());
     }
 
     /// Paints a border with a single visible color but non-uniform widths.
@@ -234,7 +235,7 @@ public abstract record BoxBorder : ShapeBorder
                 throw new ArgumentOutOfRangeException(nameof(shape));
         }
 
-        var brush = new SolidColorBrush(color.ToAvalonia());
+        var brush = new Paint { Color = color };
         RRect inner = EdgeInsets.FromLTRB(left.StrokeInset, top.StrokeInset, right.StrokeInset, bottom.StrokeInset)
             .DeflateRRect(borderRect);
         RRect outer = EdgeInsets.FromLTRB(left.StrokeOutset, top.StrokeOutset, right.StrokeOutset, bottom.StrokeOutset)

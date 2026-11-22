@@ -1,5 +1,4 @@
 using System.Globalization;
-using Avalonia.Media;
 using Plumix.Gestures;
 using Plumix.Foundation;
 using Plumix.Painting;
@@ -1425,7 +1424,7 @@ internal sealed class TimeDialPainter : CustomPainter
             TimePickerConstants.DialMinRadius);
         var center = new Offset(size.Width / 2, size.Height / 2);
         Offset centerPoint = center;
-        canvas.DrawCircle(new SolidColorBrush(BackgroundColor.ToAvalonia()), null, centerPoint, dialRadius);
+        canvas.DrawCircle(centerPoint, dialRadius, new Paint { Color = BackgroundColor });
 
         Offset GetOffsetForTheta(double theta, double radius) => new(
             center.Dx + (radius * Math.Cos(theta)),
@@ -1463,11 +1462,12 @@ internal sealed class TimeDialPainter : CustomPainter
 
         PaintInnerOuterLabels(PrimaryLabels);
 
-        var selectorPaint = new SolidColorBrush(HandColor.ToAvalonia());
+        var selectorPaint = new Paint { Color = HandColor };
         Offset focusedPoint = GetOffsetForTheta(Theta, handleRadius);
-        canvas.DrawCircle(selectorPaint, null, centerPoint, CenterRadius);
-        canvas.DrawCircle(selectorPaint, null, focusedPoint, DotRadius);
-        canvas.DrawLine(new Pen(selectorPaint, HandWidth), centerPoint, focusedPoint);
+        canvas.DrawCircle(centerPoint, CenterRadius, selectorPaint);
+        canvas.DrawCircle(focusedPoint, DotRadius, selectorPaint);
+        selectorPaint.StrokeWidth = HandWidth;
+        canvas.DrawLine(centerPoint, focusedPoint, selectorPaint);
 
         // Add a dot inside the selector but only when it isn't over the labels.
         // This checks that the selector's theta is between two labels. A remainder
@@ -1476,7 +1476,7 @@ internal sealed class TimeDialPainter : CustomPainter
         double labelThetaIncrement = -TimePickerConstants.TwoPi / PrimaryLabels.Count;
         if (DartModulo(Theta, labelThetaIncrement) > 0.1 && DartModulo(Theta, labelThetaIncrement) < 0.45)
         {
-            canvas.DrawCircle(new SolidColorBrush(DotColor.ToAvalonia()), null, focusedPoint, 2);
+            canvas.DrawCircle(focusedPoint, 2, new Paint { Color = DotColor });
         }
 
         Rect focusedRect = Rect.FromLTWH(

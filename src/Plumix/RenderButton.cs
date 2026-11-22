@@ -1,4 +1,3 @@
-using Avalonia.Media;
 using Plumix.Painting;
 using Plumix.Rendering;
 using Plumix.UI;
@@ -132,12 +131,12 @@ public sealed class RenderButton : RenderBox
 
     public override void Paint(PaintingContext ctx, Offset offset)
     {
-        var background = OnPressed == null
-            ? new SolidColorBrush(Background.ToAvalonia(), 0.45)
-            : new SolidColorBrush(Background.ToAvalonia());
+        Color background = OnPressed == null
+            ? Background.WithAlpha((int)Math.Round(Background.Alpha * 0.45))
+            : Background;
 
         var rect = offset & Size;
-        ctx.Canvas.DrawRectangle(background, null, rect, 10, 10);
+        ctx.Canvas.DrawRRect(RRect.FromRectXY(rect, 10, 10), new Paint { Color = background });
 
         double textX = offset.Dx + (Size.Width - _textPainter.Width) / 2;
         double textY = offset.Dy + (Size.Height - _textPainter.Height) / 2;

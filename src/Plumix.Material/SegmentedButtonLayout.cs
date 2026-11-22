@@ -1,4 +1,3 @@
-using Avalonia.Media;
 using Plumix.Foundation;
 using Plumix.Rendering;
 using Plumix.UI;
@@ -485,16 +484,16 @@ internal sealed class RenderSegmentedButton : RenderBox,
             }
 
             var data = (SegmentedButtonParentData)children[index].parentData!;
-            var pen = new Pen(new SolidColorBrush(side.Color.ToAvalonia()), side.Width);
+            var paint = new Paint { Color = side.Color, Style = PaintingStyle.Stroke, StrokeWidth = side.Width };
             if (Direction == Axis.Horizontal)
             {
                 double x = TextDirection == TextDirection.Ltr
                     ? data.SurroundingRect.Right
                     : data.SurroundingRect.Left;
                 context.Canvas.DrawLine(
-                    pen,
                     offset + new Offset(x, borderRect.Top),
-                    offset + new Offset(x, borderRect.Bottom));
+                    offset + new Offset(x, borderRect.Bottom),
+                    paint);
                 continue;
             }
 
@@ -505,9 +504,9 @@ internal sealed class RenderSegmentedButton : RenderBox,
             context.Canvas.Save();
             context.Canvas.ClipPath(clipPath.Shift(offset));
             context.Canvas.DrawLine(
-                pen,
                 offset + new Offset(borderRect.Left, y),
-                offset + new Offset(borderRect.Right, y));
+                offset + new Offset(borderRect.Right, y),
+                paint);
             context.Canvas.Restore();
         }
     }

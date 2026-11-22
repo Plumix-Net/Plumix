@@ -1,4 +1,3 @@
-using Avalonia.Media;
 using Plumix.Foundation;
 using Plumix.Rendering;
 using Plumix.UI;
@@ -674,7 +673,7 @@ public sealed class ClipWidgetsTests
 
         public override void Paint(PaintingContext ctx, Offset offset)
         {
-            ctx.Canvas.DrawRectangle(Brushes.Red, null, (offset & Size));
+            ctx.Canvas.DrawRect((offset & Size), new Paint { Color = new Color(0xFFFF0000) });
         }
     }
 
@@ -689,7 +688,7 @@ public sealed class ClipWidgetsTests
 
         public override void Paint(PaintingContext ctx, Offset offset)
         {
-            ctx.Canvas.DrawRectangle(Brushes.Red, null, (offset & Size));
+            ctx.Canvas.DrawRect((offset & Size), new Paint { Color = new Color(0xFFFF0000) });
         }
     }
 

@@ -1,4 +1,4 @@
-using Avalonia.Media;
+using Plumix.UI;
 
 // Dart parity source: flutter/packages/flutter/lib/src/widgets/basic.dart (_RenderColoredBox)
 
@@ -52,11 +52,7 @@ public sealed class RenderColoredBox : RenderProxyBoxWithHitTestBehavior
     {
         if (Size.Width > 0.0 && Size.Height > 0.0)
         {
-            context.Canvas.DrawRectangle(
-                new SolidColorBrush(Color.ToAvalonia()),
-                null,
-                (offset & Size),
-                isAntiAlias: IsAntiAlias);
+            context.Canvas.DrawRect(offset & Size, new Paint { Color = Color, IsAntiAlias = IsAntiAlias });
         }
 
         base.Paint(context, offset);

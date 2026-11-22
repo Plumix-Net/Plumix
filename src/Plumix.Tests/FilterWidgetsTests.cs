@@ -182,7 +182,6 @@ public sealed class FilterWidgetsTests
 
         Assert.Same(colorFilter, colorWidget.ColorFilter);
         Assert.Equal(BlendMode.Modulate, dartColorFilter.BlendMode);
-        Assert.Equal(Avalonia.Media.Imaging.BitmapBlendingMode.Multiply, dartColorFilter.AvaloniaBlendMode);
         Assert.Null(colorWidget.Child);
         Assert.Same(imageFilter, imageWidget.ImageFilter);
         Assert.True(imageWidget.Enabled);
@@ -245,8 +244,10 @@ public sealed class FilterWidgetsTests
     [Fact]
     public void ShaderMask_ExposesFlutterDefaultsAndUpdatesExistingRenderObject()
     {
-        ShaderCallback initialCallback = _ => Plumix.UI.Shader.FromBrush(Brushes.Red);
-        ShaderCallback updatedCallback = _ => Plumix.UI.Shader.FromBrush(Brushes.Blue);
+        Shader red = TestShaders.Solid(new Color(0xFFFF0000));
+        Shader blue = TestShaders.Solid(new Color(0xFF0000FF));
+        ShaderCallback initialCallback = _ => red;
+        ShaderCallback updatedCallback = _ => blue;
         var widget = new ShaderMask(initialCallback);
 
         Assert.Same(initialCallback, widget.ShaderCallback);
@@ -376,12 +377,14 @@ public sealed class FilterWidgetsTests
     public void RenderShaderMask_UsesOriginBoundsAndRetainsLayerAcrossUpdates()
     {
         Rect callbackBounds = default;
+        Shader red = TestShaders.Solid(new Color(0xFFFF0000));
+        Shader blue = TestShaders.Solid(new Color(0xFF0000FF));
         var child = new PaintProbeRenderBox();
         var renderObject = new RenderShaderMask(
             bounds =>
             {
                 callbackBounds = bounds;
-                return Plumix.UI.Shader.FromBrush(Brushes.Red);
+                return red;
             },
             child: child);
         var padding = new RenderPadding(EdgeInsets.FromLTRB(7.0, 5.0, 0.0, 0.0))
@@ -398,11 +401,11 @@ public sealed class FilterWidgetsTests
         var layer = Assert.IsType<ShaderMaskLayer>(Assert.Single(pipeline.RootLayer.Children));
         Assert.Equal(Rect.FromLTWH(7.0, 5.0, 20.0, 10.0), layer.MaskRect);
         Assert.Equal(BlendMode.Modulate, layer.BlendMode);
-        Assert.Same(Brushes.Red, layer.Shader!.Brush);
+        Assert.Same(red, layer.Shader);
         Assert.IsType<PictureLayer>(Assert.Single(layer.Children));
         Assert.Equal(1, child.PaintCount);
 
-        renderObject.ShaderCallback = _ => Plumix.UI.Shader.FromBrush(Brushes.Blue);
+        renderObject.ShaderCallback = _ => blue;
         renderObject.BlendMode = BlendMode.Screen;
         pipeline.FlushCompositingBits();
         pipeline.FlushPaint();
@@ -410,7 +413,7 @@ public sealed class FilterWidgetsTests
 
         Assert.Same(layer, Assert.Single(pipeline.RootLayer.Children));
         Assert.Equal(BlendMode.Screen, layer.BlendMode);
-        Assert.Same(Brushes.Blue, layer.Shader!.Brush);
+        Assert.Same(blue, layer.Shader);
         Assert.Equal(2, child.PaintCount);
     }
 
@@ -742,7 +745,7 @@ public sealed class FilterWidgetsTests
         public override void Paint(PaintingContext ctx, Offset offset)
         {
             PaintCount++;
-            ctx.Canvas.DrawRectangle(Brushes.Red, null, (offset & Size));
+            ctx.Canvas.DrawRect((offset & Size), new Paint { Color = new Color(0xFFFF0000) });
         }
     }
 

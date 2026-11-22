@@ -1,4 +1,3 @@
-using Avalonia.Media;
 using Plumix.Foundation;
 using Plumix.Gestures;
 using Plumix.Rendering;
@@ -326,23 +325,30 @@ public sealed class ScrollbarPainter : CustomPainter, IListenable
 
         ScrollbarGeometry value = geometry.Value;
         double opacity = Math.Clamp(_fadeoutOpacityAnimation.Value, 0, 1);
-        var trackBrush = new SolidColorBrush(ApplyOpacity(TrackColor, opacity).ToAvalonia());
-        context.Canvas.DrawRectangle(trackBrush, null, value.TrackRect, TrackRadius?.X ?? 0, TrackRadius?.Y ?? 0);
+        var trackPaint = new Paint { Color = ApplyOpacity(TrackColor, opacity) };
+        if (TrackRadius is { } trackRadius)
+        {
+            context.Canvas.DrawRRect(RRect.FromRectAndRadius(value.TrackRect, trackRadius), trackPaint);
+        }
+        else
+        {
+            context.Canvas.DrawRect(value.TrackRect, trackPaint);
+        }
 
         Color borderColor = ApplyOpacity(TrackBorderColor, opacity);
-        var pen = new Pen(new SolidColorBrush(borderColor.ToAvalonia()), 1);
+        var borderPaint = new Paint { Color = borderColor, Style = PaintingStyle.Stroke, StrokeWidth = 1 };
         (Offset start, Offset end) = TrackBorderLine(value);
-        context.Canvas.DrawLine(pen, start, end);
+        context.Canvas.DrawLine(start, end, borderPaint);
 
         Color thumbColor = ApplyOpacity(Color, opacity);
-        var thumbBrush = new SolidColorBrush(thumbColor.ToAvalonia());
+        var thumbPaint = new Paint { Color = thumbColor };
         if (Radius is { } radius)
         {
-            context.Canvas.DrawRectangle(thumbBrush, null, value.ThumbRect, radius.X, radius.Y);
+            context.Canvas.DrawRRect(RRect.FromRectAndRadius(value.ThumbRect, radius), thumbPaint);
         }
         else if (Shape is null)
         {
-            context.Canvas.DrawRectangle(thumbBrush, null, value.ThumbRect);
+            context.Canvas.DrawRect(value.ThumbRect, thumbPaint);
         }
         else
         {
@@ -352,7 +358,7 @@ public sealed class ScrollbarPainter : CustomPainter, IListenable
             }
             else
             {
-                context.Canvas.DrawPath(Shape.GetOuterPath(value.ThumbRect), thumbBrush, null);
+                context.Canvas.DrawPath(Shape.GetOuterPath(value.ThumbRect), thumbPaint);
             }
             Shape.Paint(context, value.ThumbRect);
         }

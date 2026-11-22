@@ -1,4 +1,3 @@
-using Avalonia;
 using System.Diagnostics;
 using System.Text;
 using Plumix.Foundation;

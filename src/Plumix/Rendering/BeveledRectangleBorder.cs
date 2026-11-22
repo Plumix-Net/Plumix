@@ -82,7 +82,7 @@ public sealed record BeveledRectangleBorder : OutlinedBorder
         RRect adjustedRect = borderRect.Inflate(Side.StrokeOutset);
         Path path = GetPath(adjustedRect);
         path.AddPath(GetInnerPath(rect, textDirection));
-        context.Canvas.DrawPath(path, null, Side.ToPen());
+        context.Canvas.DrawPath(path, Side.ToPaint());
     }
 
     public override string ToString()

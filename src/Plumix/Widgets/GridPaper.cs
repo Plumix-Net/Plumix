@@ -1,6 +1,6 @@
-using Avalonia.Media;
 using Plumix.Foundation;
 using Plumix.Rendering;
+using Plumix.UI;
 
 namespace Plumix.Widgets;
 
@@ -28,18 +28,18 @@ internal sealed class GridPaperPainter : CustomPainter
     {
         double allDivisions = Divisions * Subdivisions;
         double step = Interval / allDivisions;
-        var brush = new SolidColorBrush(Color.ToAvalonia());
+        var linePaint = new Paint { Color = Color };
 
         for (double x = 0.0; x <= size.Width; x += step)
         {
-            var pen = new Pen(brush, StrokeWidthAt(x));
-            context.Canvas.DrawLine(pen, new Offset(x, 0.0), new Offset(x, size.Height));
+            linePaint.StrokeWidth = StrokeWidthAt(x);
+            context.Canvas.DrawLine(new Offset(x, 0.0), new Offset(x, size.Height), linePaint);
         }
 
         for (double y = 0.0; y <= size.Height; y += step)
         {
-            var pen = new Pen(brush, StrokeWidthAt(y));
-            context.Canvas.DrawLine(pen, new Offset(0.0, y), new Offset(size.Width, y));
+            linePaint.StrokeWidth = StrokeWidthAt(y);
+            context.Canvas.DrawLine(new Offset(0.0, y), new Offset(size.Width, y), linePaint);
         }
     }
 

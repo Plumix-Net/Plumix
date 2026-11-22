@@ -19,7 +19,8 @@ normative may live only there.
 - Build a Flutter-like framework in C# where `Widget`/`Element`/`RenderObject` concepts stay close to Flutter.
 - Keep render object behavior and APIs close enough to Flutter to simplify rewriting controls from Dart to C#.
 - Reuse Avalonia mainly as platform infrastructure: windowing/app host, lifecycle, input plumbing, and drawing backend abstractions.
-- Keep Avalonia types out of the public API of `Plumix`, `Plumix.Material` and `Plumix.Cupertino`; host integration goes in `Plumix.Avalonia`.
+- Keep Avalonia, SkiaSharp and HarfBuzzSharp out of `Plumix`, `Plumix.Material` and `Plumix.Cupertino` entirely (not
+  even a package reference); host integration and the drawing/text backend go in `Plumix.Avalonia`.
 - Keep layout/paint logic in the new framework, not in Avalonia control implementations (except thin host adapters).
 
 ## Expected End State (Definition of Done)
@@ -32,10 +33,13 @@ normative may live only there.
 
 ## Repository Map
 
-- `src/Plumix`: core framework (`Foundation`, `Widgets`, `Rendering`, `UI`, scheduler/ticker pipeline). Its public API
-  names no Avalonia type (`PublicApiAvaloniaFreeTests`); Avalonia stays an internal backend.
+- `src/Plumix`: core framework (`Foundation`, `Widgets`, `Rendering`, `UI`, scheduler/ticker pipeline). It references
+  no Avalonia/SkiaSharp/HarfBuzzSharp assembly (`HostDependencyBudgetTests`); drawing, text, images and
+  the UI thread go through internal seams (`RenderBackend`, `TextBackend`, `ImageBackend`, `PlatformThread`).
 - `src/Plumix.Avalonia`: the Avalonia host package (`PlumixHost`, `PlumixApplication`, windowing, automation peers,
-  `Plumix.Hosting.AvaloniaInterop` conversions); types keep the `Plumix` namespace.
+  `Plumix.Hosting.AvaloniaInterop` conversions) and the Avalonia/Skia backend behind the core's seams
+  (`AvaloniaBackend` installs it: canvas playback, scene rasterizer, paragraphs and fonts, codecs); types keep the
+  `Plumix` namespace.
 - `src/Sample/Plumix.Sample`: shared sample app/widgets.
 - `dart_sample`: reference sample app on real Flutter (Dart), kept in lockstep with `src/Sample/Plumix.Sample`.
 - `src/Sample/Plumix.Desktop`: desktop entry point.
@@ -108,6 +112,7 @@ ln -s /path/to/your/flutter flutter-src     # Flutter checkout (see pin below)
 ln -s ~/.pub-cache/hosted/pub.dev/material_ui-1.0.0 material-ui-src    # Material pub package
 ln -s ~/.pub-cache/hosted/pub.dev/cupertino_ui-1.0.0 cupertino-ui-src  # Cupertino pub package
 ln -s /path/to/your/Avalonia avalonia-src   # optional, for host/backend questions
+ln -s /path/to/your/skia skia-src           # optional: google/skia chrome/m119 (SkiaSharp 3.119), for Path ports
 ```
 
 - `material-ui-src` / `cupertino-ui-src` — source of truth for Material/Cupertino controls. Flutter
@@ -119,6 +124,9 @@ ln -s /path/to/your/Avalonia avalonia-src   # optional, for host/backend questio
   `gestures`, `semantics`, ...): `flutter-src/packages/flutter/lib/src/<library>/`, tests under
   `flutter-src/packages/flutter/test/<library>/`.
 - `avalonia-src` — Avalonia source, host/platform questions only.
+- `skia-src` — Skia at `chrome/m119`, the version inside SkiaSharp 3.119 (a sparse checkout of `src/pathops`
+  and the `SkPath`/`SkGeometry` sources is enough). Source of truth for `Path`'s managed geometry
+  (`src/Plumix/UI/Path*.cs`), which must match the Skia the engine ships.
 
 **Pinned Flutter revision: 3.47.0 (`4cf24164269`, `flutter-3.47-candidate.0`). Pinned packages:
 `material_ui` 1.0.0, `cupertino_ui` 1.0.0, `intl` 0.20.3** (what `dart_sample` resolves; at these pins the package

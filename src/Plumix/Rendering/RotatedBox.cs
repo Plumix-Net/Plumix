@@ -1,5 +1,4 @@
 using System.Diagnostics;
-using Avalonia;
 using Plumix.Foundation;
 using Plumix.Painting;
 using Plumix.UI;
@@ -167,25 +166,4 @@ public sealed class RenderRotatedBox : RenderProxyBox
             Layer as TransformLayer);
     }
 
-    private static Matrix CreateRotationMatrix(double radians)
-    {
-        double sine = Math.Sin(radians);
-        if (sine == 1.0)
-        {
-            return new Matrix(0, 1, -1, 0, 0, 0);
-        }
-
-        if (sine == -1.0)
-        {
-            return new Matrix(0, -1, 1, 0, 0, 0);
-        }
-
-        double cosine = Math.Cos(radians);
-        if (cosine == -1.0)
-        {
-            return new Matrix(-1, 0, 0, -1, 0, 0);
-        }
-
-        return new Matrix(cosine, sine, -sine, cosine, 0, 0);
-    }
 }

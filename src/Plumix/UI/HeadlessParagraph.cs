@@ -1,10 +1,11 @@
 using System.Globalization;
 using System.Text;
-using Avalonia.Media;
 using Plumix.Painting;
 using Plumix.Widgets;
+using static Plumix.UI.FlutterTestText;
 
-// C#-only infrastructure: the paragraph engine Plumix uses when no Avalonia font manager exists.
+// C#-only infrastructure: the paragraph engine Plumix uses when no host text engine is installed (ITextBackend's
+// default), and the one the Avalonia host picks when no Avalonia font manager exists.
 // It reproduces the metrics of Flutter's `FlutterTest` font (every glyph one em wide, ascent 0.75 em,
 // descent 0.25 em, visible glyphs painted as solid em boxes), so Flutter's own text layout and
 // pixel-reading tests port with their expected values. Line breaking
@@ -16,8 +17,8 @@ namespace Plumix.UI;
 /// A <see cref="Paragraph"/> laid out with the metrics of Flutter's `FlutterTest` font.
 internal sealed class HeadlessParagraph : Paragraph
 {
-    private const double AscentRatio = 0.75;
-    private const double DescentRatio = 0.25;
+    private const double AscentRatio = FlutterTestText.AscentRatio;
+    private const double DescentRatio = FlutterTestText.DescentRatio;
     private const double Epsilon = 1e-9;
     private const int FlutterTestFontWeight = 400;
 
@@ -1423,23 +1424,24 @@ internal sealed class HeadlessParagraph : Paragraph
     /// whitespace nothing, and any code point the font does not cover its `.notdef` frame. The shapes are
     /// painted with the run's foreground paint, or its color.
     /// </remarks>
-    internal override Action<DrawingContext>? CreateDrawAction(Offset offset)
+    internal override CanvasOp? CreateDrawOp(Offset offset)
     {
         if (!_laidOut)
         {
             return null;
         }
 
-        // Skia operations batch into one custom draw; shader-painted glyphs are Avalonia geometry.
-        var steps = new List<PaintStep>();
+        // Consecutive operations batch into one backend draw; a shader-painted glyph is a step of its own.
+        var steps = new List<Step>();
+        List<Operation>? batch = null;
         Rect? bounds = null;
         void Include(Rect rect) => bounds = bounds is { } current ? current.ExpandToInclude(rect) : rect;
-        void AddOperation(FlutterTestGlyphDraw.Operation operation)
+        void AddOperation(Operation operation)
         {
-            if (steps.Count == 0 || steps[^1] is not List<FlutterTestGlyphDraw.Operation> batch)
+            if (batch is null)
             {
                 batch = [];
-                steps.Add(batch);
+                steps.Add(new GlyphBatch(batch));
             }
 
             batch.Add(operation);
@@ -1455,7 +1457,7 @@ internal sealed class HeadlessParagraph : Paragraph
             {
                 if (run.Style.Background is { } background)
                 {
-                    AddOperation(new FlutterTestGlyphDraw.BackgroundOperation(run.Clip, background.Color));
+                    AddOperation(new BackgroundOperation(run.Clip, background.Color));
                     Include(run.Clip);
                 }
             }
@@ -1467,7 +1469,7 @@ internal sealed class HeadlessParagraph : Paragraph
                     continue;
                 }
 
-                List<FlutterTestGlyphDraw.Glyph> glyphs = GlyphsOf(run, offset.Dx, baseline);
+                List<Glyph> glyphs = GlyphsOf(run, offset.Dx, baseline);
                 foreach (Rendering.Shadow shadow in shadows)
                 {
                     // TextShadow::hasShadow.
@@ -1476,9 +1478,9 @@ internal sealed class HeadlessParagraph : Paragraph
                         continue;
                     }
 
-                    AddOperation(new FlutterTestGlyphDraw.GlyphsOperation(
+                    AddOperation(new GlyphsOperation(
                         glyphs,
-                        new FlutterTestGlyphDraw.TextShadowDraw(shadow.Offset, shadow.Color, shadow.BlurSigma)));
+                        new TextShadowDraw(shadow.Offset, shadow.Color, shadow.BlurSigma)));
                     Include(run.Clip.Shift(shadow.Offset).Inflate((shadow.BlurSigma * 3.0) + 1.0));
                 }
             }
@@ -1487,17 +1489,16 @@ internal sealed class HeadlessParagraph : Paragraph
             {
                 if (run.Style.Foreground is { Shader: { } shader })
                 {
-                    foreach (FlutterTestGlyphDraw.Glyph glyph in GlyphsOf(run, offset.Dx, baseline))
+                    foreach (Glyph glyph in GlyphsOf(run, offset.Dx, baseline))
                     {
-                        steps.Add(new ShaderGlyphStep(
-                            FlutterTestGlyph(ShapeOf(glyph.CodePoint), glyph.X, glyph.FontSize,
-                                glyph.Baseline, glyph.FontSize),
-                            shader.Brush));
+                        steps.Add(new ShaderGlyph(ShapeOf(glyph.CodePoint), glyph.X, glyph.FontSize,
+                            glyph.Baseline, glyph.FontSize, shader));
+                        batch = null;
                     }
                 }
                 else
                 {
-                    AddOperation(new FlutterTestGlyphDraw.GlyphsOperation(GlyphsOf(run, offset.Dx, baseline)));
+                    AddOperation(new GlyphsOperation(GlyphsOf(run, offset.Dx, baseline)));
                 }
 
                 Include(run.Clip.ExpandToInclude(Rect.FromLTWH(
@@ -1515,7 +1516,7 @@ internal sealed class HeadlessParagraph : Paragraph
                     continue;
                 }
 
-                AddOperation(new FlutterTestGlyphDraw.DecorationOperation(
+                AddOperation(new DecorationOperation(
                     run.Clip,
                     run.CorrectAscent,
                     style.FontSize * AscentRatio,
@@ -1533,29 +1534,8 @@ internal sealed class HeadlessParagraph : Paragraph
             return null;
         }
 
-        Rect inflated = drawBounds.Inflate(1.0);
-        Action<DrawingContext> ToDraw(PaintStep step) => step switch
-        {
-            List<FlutterTestGlyphDraw.Operation> batch => CustomDraw(new FlutterTestGlyphDraw(batch, inflated)),
-            ShaderGlyphStep(Geometry shape, IBrush brush) => context => context.DrawGeometry(brush, null, shape),
-        };
-
-        List<Action<DrawingContext>> draws = steps.Select(ToDraw).ToList();
-        return context =>
-        {
-            foreach (Action<DrawingContext> draw in draws)
-            {
-                draw(context);
-            }
-        };
+        return new FlutterTestTextOp(steps, drawBounds.Inflate(1.0));
     }
-
-    private static Action<DrawingContext> CustomDraw(FlutterTestGlyphDraw draw) => context => context.Custom(draw);
-
-    // One paint step: a batch of Skia operations, or a shader-painted glyph drawn as Avalonia geometry.
-    private union PaintStep(List<FlutterTestGlyphDraw.Operation>, ShaderGlyphStep);
-
-    private sealed record ShaderGlyphStep(Geometry Shape, IBrush Brush);
 
     /// <summary>
     /// SkParagraph's `TextLine::iterateThroughSingleRunByStyles` pieces of a line: consecutive visual items of
@@ -1617,9 +1597,9 @@ internal sealed class HeadlessParagraph : Paragraph
         return runs;
     }
 
-    private List<FlutterTestGlyphDraw.Glyph> GlyphsOf(StyleRun run, double offsetX, double baseline)
+    private List<Glyph> GlyphsOf(StyleRun run, double offsetX, double baseline)
     {
-        var glyphs = new List<FlutterTestGlyphDraw.Glyph>();
+        var glyphs = new List<Glyph>();
         ResolvedTextStyle style = run.Style;
         // OneLineShaper::shape fakes the weight and slant the regular, upright FlutterTest lacks.
         int weight = style.FontWeight.Value;
@@ -1640,7 +1620,7 @@ internal sealed class HeadlessParagraph : Paragraph
                     if (glyph.Advance > 0.0
                         && (!Rune.IsValid(glyph.CodePoint) || !Rune.IsWhiteSpace(new Rune(glyph.CodePoint))))
                     {
-                        glyphs.Add(new FlutterTestGlyphDraw.Glyph(
+                        glyphs.Add(new Glyph(
                             glyph.CodePoint, x, baseline, style.FontSize, color, fakeBold, fakeItalic));
                     }
 
@@ -1662,7 +1642,7 @@ internal sealed class HeadlessParagraph : Paragraph
 
                 if (!Rune.IsValid(codePoint) || !Rune.IsWhiteSpace(new Rune(codePoint)))
                 {
-                    glyphs.Add(new FlutterTestGlyphDraw.Glyph(
+                    glyphs.Add(new Glyph(
                         codePoint, x, baseline, style.FontSize, color, fakeBold, fakeItalic));
                 }
 
@@ -1692,14 +1672,6 @@ internal sealed class HeadlessParagraph : Paragraph
         public double Right { get; set; }
 
         public Rect Clip { get; set; }
-    }
-
-    private enum GlyphShape
-    {
-        Box,
-        DescentOnly,
-        AscentOnly,
-        NotDef,
     }
 
     // The code points `kFlutterTestFont` maps to its full `Square` glyph; `p` and `É` have their own
@@ -1743,31 +1715,6 @@ internal sealed class HeadlessParagraph : Paragraph
         }
 
         return GlyphShape.NotDef;
-    }
-
-    // The outlines in font units (1024 per em, ascent 768, descent 256) scaled to `fontSize`.
-    private static Geometry FlutterTestGlyph(GlyphShape shape, double x, double width, double baseline,
-        double fontSize)
-    {
-        double ascent = fontSize * AscentRatio;
-        double descent = fontSize * DescentRatio;
-        switch (shape)
-        {
-            case GlyphShape.DescentOnly:
-                return new RectangleGeometry(Rect.FromLTWH(x, baseline, Math.Max(width, 0.0), descent).ToAvalonia());
-            case GlyphShape.AscentOnly:
-                return new RectangleGeometry(
-                    Rect.FromLTWH(x, baseline - ascent, Math.Max(width, 0.0), ascent).ToAvalonia());
-            case GlyphShape.NotDef:
-                double unit = fontSize / 1024.0;
-                var outer = Rect.FromLTWH(x + (128 * unit), baseline - (768 * unit), 768 * unit, 768 * unit);
-                var inner = Rect.FromLTWH(x + (256 * unit), baseline - (640 * unit), 512 * unit, 512 * unit);
-                return new CombinedGeometry(GeometryCombineMode.Exclude,
-                    new RectangleGeometry(outer.ToAvalonia()), new RectangleGeometry(inner.ToAvalonia()));
-            default:
-                return new RectangleGeometry(
-                    Rect.FromLTWH(x, baseline - ascent, Math.Max(width, 0.0), ascent + descent).ToAvalonia());
-        }
     }
 
     // -- Model -----------------------------------------------------------------------

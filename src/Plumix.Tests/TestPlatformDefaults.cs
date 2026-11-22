@@ -25,6 +25,8 @@ internal static class TestPlatformDefaults
     internal static void PinTargetPlatform()
     {
         PlatformDefaults.DebugDefaultTargetPlatform = TargetPlatform.Android;
+        // The tests run the framework on the Avalonia backend, as an app does through Plumix.Avalonia.
+        AvaloniaBackend.EnsureRegistered();
         ServicesBinding.Instance = new TestServicesBinding();
     }
 }

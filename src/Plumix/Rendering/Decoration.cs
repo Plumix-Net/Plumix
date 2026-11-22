@@ -1,4 +1,3 @@
-using Avalonia.Media;
 using Plumix.UI;
 using Plumix.Foundation;
 using Plumix.Painting;
@@ -694,16 +693,6 @@ public readonly record struct BorderSide : IDiagnosticable
                 StrokeWidth = 0.0,
                 Style = PaintingStyle.Stroke,
             },
-        };
-    }
-
-    /// Creates a stroke [IPen] that describes this border side, or null when nothing is painted.
-    internal IPen? ToPen()
-    {
-        return Style switch
-        {
-            BorderStyle.Solid => new Pen(new SolidColorBrush(Color.ToAvalonia()), Width),
-            _ => null,
         };
     }
 

@@ -1,8 +1,5 @@
-using Avalonia.Media;
-using Avalonia.Media.Immutable;
 using Plumix.Rendering;
 using Plumix.Widgets;
-using SkiaSharp;
 using TileMode = Plumix.Rendering.TileMode;
 
 namespace Plumix.UI;
@@ -12,16 +9,11 @@ namespace Plumix.UI;
 // engine/src/flutter/display_list/skia/dl_sk_conversions.cc.
 
 /// <summary>
-/// A shader description consumed by the framework canvas and shader-mask layers. It implements the
-/// published IBrush shader contract; native resources belong to a draw, never to this description.
+/// Dart's <c>ui.Gradient</c>: a linear, radial, two-point conical or sweep gradient, as data. The
+/// backend builds the native gradient from it (Plumix.Avalonia's SkiaShaders).
 /// </summary>
-internal sealed class GradientShader : ImmutableGradientBrush, INativeShader
+internal sealed class GradientShader : Shader
 {
-    // Avalonia 12 prevents implementing IBrush directly. Its immutable base supplies that transport
-    // contract; ShaderDrawing consumes this descriptor before a draw reaches Avalonia's brush switch.
-    private readonly SKColor[] _colors;
-    private readonly float[] _stops;
-    private readonly SKMatrix _matrix;
 
     private GradientShader(
         GradientKind kind,
@@ -35,9 +27,6 @@ internal sealed class GradientShader : ImmutableGradientBrush, INativeShader
         Matrix4? matrix,
         double startAngle = 0.0,
         double endAngle = 0.0)
-        : base([.. colors.Select((color, index) => new ImmutableGradientStop(
-            index < stops.Count ? stops[index] : 0.0, color.ToAvalonia()))],
-            1.0, null, null, GradientSpreadMethod.Pad)
     {
         if (colors.Count != stops.Count)
         {
@@ -52,24 +41,36 @@ internal sealed class GradientShader : ImmutableGradientBrush, INativeShader
         TileMode = tileMode;
         StartAngle = startAngle;
         EndAngle = endAngle;
-        _colors = [.. colors.Select(color => new SKColor(color.WithValues(
-            colorSpace: ColorSpace.ExtendedSRGB).ToARGB32()))];
-        _stops = [.. stops.Select(value => (float)value)];
-        if (matrix is null)
-        {
-            _matrix = SKMatrix.Identity;
-        }
-        else
+        Colors = [.. colors];
+        Stops = [.. stops];
+        // The engine hands Skia extended-sRGB 32-bit colours and float stops.
+        ColorValues = [.. colors.Select(color => color.WithValues(colorSpace: ColorSpace.ExtendedSRGB).ToARGB32())];
+        StopValues = [.. stops.Select(value => (float)value)];
+        if (matrix is not null)
         {
             double[] values = matrix.Storage;
             DebugAssertions.Assert(values.Length == 16 && values.All(double.IsFinite),
                 "'matrix4' must have 16 finite entries.");
-            _matrix = new SKMatrix(
+            // The 3x3 local matrix, row-major (Skia's SkMatrix order).
+            LocalMatrix =
+            [
                 Path.Narrow(values[0]), Path.Narrow(values[4]), Path.Narrow(values[12]),
                 Path.Narrow(values[1]), Path.Narrow(values[5]), Path.Narrow(values[13]),
-                Path.Narrow(values[3]), Path.Narrow(values[7]), Path.Narrow(values[15]));
+                Path.Narrow(values[3]), Path.Narrow(values[7]), Path.Narrow(values[15]),
+            ];
         }
     }
+
+    internal IReadOnlyList<Color> Colors { get; }
+    internal IReadOnlyList<double> Stops { get; }
+
+    /// <summary>The colours as extended-sRGB ARGB32 values.</summary>
+    internal uint[] ColorValues { get; }
+
+    internal float[] StopValues { get; }
+
+    /// <summary>The local matrix as nine row-major floats, or null for the identity.</summary>
+    internal float[]? LocalMatrix { get; }
 
     internal GradientKind Kind { get; }
     internal Offset Start { get; }
@@ -79,7 +80,6 @@ internal sealed class GradientShader : ImmutableGradientBrush, INativeShader
     internal TileMode TileMode { get; }
     internal double StartAngle { get; }
     internal double EndAngle { get; }
-    internal SKMatrix LocalMatrix => _matrix;
 
     internal static GradientShader Linear(
         Offset from, Offset to, IReadOnlyList<Color> colors, IReadOnlyList<double> stops,
@@ -111,35 +111,6 @@ internal sealed class GradientShader : ImmutableGradientBrush, INativeShader
         return new GradientShader(GradientKind.Sweep, center, center, 0.0, 0.0,
             colors, stops, tileMode, matrix, startAngle, endAngle);
     }
-
-    public IBrush Snapshot() => this;
-
-    public SKShader? CreateNativeShader()
-    {
-        SKShaderTileMode tileMode = TileMode switch
-        {
-            TileMode.Repeated => SKShaderTileMode.Repeat,
-            TileMode.Mirror => SKShaderTileMode.Mirror,
-            TileMode.Decal => SKShaderTileMode.Decal,
-            _ => SKShaderTileMode.Clamp,
-        };
-        SKPoint start = new(Path.Narrow(Start.Dx), Path.Narrow(Start.Dy));
-        SKPoint end = new(Path.Narrow(End.Dx), Path.Narrow(End.Dy));
-        // Skia owns stop sanitization and degenerate geometry, just as in Flutter's Skia backend.
-        return Kind switch
-        {
-            GradientKind.Linear => SKShader.CreateLinearGradient(
-                start, end, _colors, _stops, tileMode, _matrix),
-            GradientKind.Radial => SKShader.CreateRadialGradient(
-                end, Path.Narrow(Radius), _colors, _stops, tileMode, _matrix),
-            GradientKind.Conical => SKShader.CreateTwoPointConicalGradient(
-                start, Path.Narrow(FocalRadius), end, Path.Narrow(Radius), _colors, _stops, tileMode, _matrix),
-            _ => SKShader.CreateSweepGradient(end, _colors, _stops, tileMode,
-                Degrees(StartAngle), Degrees(EndAngle), _matrix),
-        };
-    }
-
-    private static float Degrees(double radians) => Path.Narrow(radians) * 180.0f / (float)Math.PI;
 
     private static void CheckPoint(Offset point) => DebugAssertions.Assert(
         !double.IsNaN(point.Dx) && !double.IsNaN(point.Dy), "Offset argument contained a NaN value.");

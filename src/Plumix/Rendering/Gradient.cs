@@ -1,4 +1,3 @@
-using Avalonia.Media;
 using Plumix.UI;
 using Plumix.Widgets;
 
@@ -82,17 +81,15 @@ public abstract record Gradient
         return stops;
     }
 
-    /// <summary>Creates a shader for the framework Canvas and ShaderMask, in absolute canvas coordinates.</summary>
-    /// <remarks>
-    /// The IBrush return type is retained for compatibility. Native shader descriptions are interpreted
-    /// by Plumix's drawing pipeline; they are not standalone Avalonia gradient brushes.
-    /// </remarks>
-    /// <summary>Creates a shader that paints this gradient within <paramref name="rect"/>.</summary>
+    /// <summary>
+    /// Creates a shader that paints this gradient within <paramref name="rect"/>, in absolute canvas
+    /// coordinates.
+    /// </summary>
     public Shader CreateShader(Rect rect, TextDirection? textDirection = null) =>
-        Shader.FromBrush(CreateBrush(rect, textDirection));
+        CreateGradientShader(rect, textDirection);
 
-    /// <summary>The backend description of <see cref="CreateShader"/>.</summary>
-    internal abstract IBrush CreateBrush(Rect rect, TextDirection? textDirection = null);
+    /// <summary>The <see cref="CreateShader"/> gradient, as the framework's gradient data.</summary>
+    internal abstract GradientShader CreateGradientShader(Rect rect, TextDirection? textDirection = null);
 
     /// <summary>Returns a new gradient with its colors' alpha scaled by the given factor.</summary>
     public abstract Gradient Scale(double factor);
@@ -310,7 +307,7 @@ public sealed record LinearGradient : Gradient
     /// <summary>How this gradient should tile the plane beyond the region before/after its ends.</summary>
     public TileMode TileMode { get; }
 
-    internal override IBrush CreateBrush(Rect rect, TextDirection? textDirection = null)
+    internal override GradientShader CreateGradientShader(Rect rect, TextDirection? textDirection = null)
     {
         return GradientShader.Linear(
             Begin.Resolve(textDirection).WithinRect(rect),
@@ -443,7 +440,7 @@ public sealed record RadialGradient : Gradient
     /// <summary>The radius of the focal point, as a fraction of the shortest side of the paint box.</summary>
     public double FocalRadius { get; }
 
-    internal override IBrush CreateBrush(Rect rect, TextDirection? textDirection = null)
+    internal override GradientShader CreateGradientShader(Rect rect, TextDirection? textDirection = null)
     {
         double shortestSide = Math.Min(Math.Abs(rect.Width), Math.Abs(rect.Height));
         return GradientShader.Radial(
@@ -598,7 +595,7 @@ public sealed record SweepGradient : Gradient
     /// <summary>How this gradient should tile the plane outside its sweep.</summary>
     public TileMode TileMode { get; }
 
-    internal override IBrush CreateBrush(Rect rect, TextDirection? textDirection = null)
+    internal override GradientShader CreateGradientShader(Rect rect, TextDirection? textDirection = null)
     {
         return GradientShader.Sweep(
             Center.Resolve(textDirection).WithinRect(rect),

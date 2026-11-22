@@ -404,8 +404,7 @@ public sealed class LayerTreeTests
         CheckNeedsAddToScene(shaderMaskLayer, () => shaderMaskLayer.BlendMode = BlendMode.Source);
         CheckNeedsAddToScene(
             shaderMaskLayer,
-            () => shaderMaskLayer.Shader = Plumix.UI.Shader.FromBrush(
-                new Avalonia.Media.SolidColorBrush(Colors.Red.ToAvalonia())));
+            () => shaderMaskLayer.Shader = TestShaders.Solid(Colors.Red));
 
         var backdropFilterLayer = new BackdropFilterLayer { ImageFilter = new ImageFilter.Blur(1.0, 1.0) };
         CheckNeedsAddToScene(

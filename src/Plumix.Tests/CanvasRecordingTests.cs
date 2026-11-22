@@ -11,6 +11,9 @@ namespace Plumix.Tests;
 
 public sealed class CanvasRecordingTests
 {
+    private static Paint RedStroke() =>
+        new() { Color = new Color(0xFFFF0000), Style = PaintingStyle.Stroke, StrokeWidth = 1.0 };
+
     [Fact]
     public void PathCopy_PreservesOpenContoursAndFillTypeAfterSourceMutation()
     {
@@ -111,7 +114,7 @@ public sealed class CanvasRecordingTests
 
         var canvas = new Canvas(recorder);
         Assert.True(recorder.IsRecording);
-        canvas.DrawLine(new Pen(Brushes.Red), new Offset(0, 0), new Offset(1, 1));
+        canvas.DrawLine(new Offset(0, 0), new Offset(1, 1), RedStroke());
 
         Picture picture = recorder.EndRecording();
 
@@ -138,7 +141,7 @@ public sealed class CanvasRecordingTests
 
         canvas.Save();
         canvas.ClipRect(Rect.FromLTWH(0, 0, 5, 5));
-        canvas.DrawRectangle(Brushes.Red, null, Rect.FromLTWH(0, 0, 4, 4));
+        canvas.DrawRect(Rect.FromLTWH(0, 0, 4, 4), new Paint { Color = new Color(0xFFFF0000) });
         canvas.Restore();
 
         Picture picture = recorder.EndRecording();
@@ -216,8 +219,8 @@ public sealed class CanvasRecordingTests
         var root = new ContainerLayer();
         var context = new PaintingContext(root);
 
-        context.Canvas.DrawLine(new Pen(Brushes.Red), new Offset(0, 0), new Offset(1, 1));
-        context.Canvas.DrawLine(new Pen(Brushes.Red), new Offset(1, 1), new Offset(2, 2));
+        context.Canvas.DrawLine(new Offset(0, 0), new Offset(1, 1), RedStroke());
+        context.Canvas.DrawLine(new Offset(1, 1), new Offset(2, 2), RedStroke());
 
         var picture = Assert.IsType<PictureLayer>(Assert.Single(root.Children));
         Assert.Null(picture.Picture);
@@ -233,7 +236,7 @@ public sealed class CanvasRecordingTests
     {
         var root = new ContainerLayer();
         var context = new PaintingContext(root);
-        context.Canvas.DrawLine(new Pen(Brushes.Red), new Offset(0, 0), new Offset(1, 1));
+        context.Canvas.DrawLine(new Offset(0, 0), new Offset(1, 1), RedStroke());
 
         var added = new ContainerLayer();
         context.AddLayer(added);
@@ -265,7 +268,7 @@ public sealed class CanvasRecordingTests
         var bounds = Rect.FromLTWH(0, 0, 40, 20);
         var context = new PaintingContext(root, bounds);
 
-        context.Canvas.DrawLine(new Pen(Brushes.Red), new Offset(0, 0), new Offset(1, 1));
+        context.Canvas.DrawLine(new Offset(0, 0), new Offset(1, 1), RedStroke());
 
         var picture = Assert.IsType<PictureLayer>(Assert.Single(root.Children));
         Assert.Equal(bounds, picture.CanvasBounds);
@@ -380,14 +383,6 @@ public sealed class CanvasRecordingTests
             (_, _) => painted++,
             clipBehavior));
         Assert.Null(context.PushClipPath(true, default, bounds, path, (_, _) => painted++, clipBehavior));
-        Assert.Null(context.PushClipGeometry(
-            true,
-            default,
-            bounds,
-            new RectangleGeometry(bounds.ToAvalonia()),
-            (_, _) => painted++,
-            clipBehavior));
-
-        Assert.Equal(4, painted);
+        Assert.Equal(3, painted);
     }
 }

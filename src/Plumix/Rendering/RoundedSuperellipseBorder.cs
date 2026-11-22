@@ -1,4 +1,3 @@
-using Avalonia.Media;
 using Plumix.UI;
 using Path = Plumix.UI.Path;
 
@@ -117,14 +116,13 @@ public sealed record RoundedSuperellipseBorder : OutlinedBorder
         double strokeOffset = Side.StrokeOffset / 2.0;
         if (BorderRadius.IsZero)
         {
-            context.Canvas.DrawRectangle(Brushes.Transparent, Side.ToPen(), rect.Inflate(strokeOffset));
+            context.Canvas.DrawRect(rect.Inflate(strokeOffset), Side.ToPaint());
             return;
         }
 
         context.Canvas.DrawRSuperellipse(
             ResolveRSuperellipse(rect, textDirection).Inflate(strokeOffset),
-            null,
-            Side.ToPen());
+            Side.ToPaint());
     }
 
     public override string ToString()

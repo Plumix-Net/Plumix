@@ -1,5 +1,3 @@
-using Avalonia;
-using Avalonia.Media;
 using Plumix.Foundation;
 using Plumix.Rendering;
 
@@ -277,14 +275,6 @@ internal sealed class MagnifierEngineLayer : EngineLayer
     }
 }
 
-/// <summary>Plumix-only: the handle <see cref="SceneBuilder.PushClipGeometry"/> returns.</summary>
-internal sealed class ClipGeometryEngineLayer : EngineLayer
-{
-    internal ClipGeometryEngineLayer(NativeEngineLayer nativeLayer) : base(nativeLayer)
-    {
-    }
-}
-
 /// <summary>
 /// An exception thrown by <see cref="Scene.ToImageSync"/> when the scene cannot be rasterized.
 /// </summary>
@@ -322,7 +312,7 @@ public sealed class PictureRasterizationException : Exception
 /// <remarks>
 /// dart:ui's <c>Scene</c> (with <c>_NativeScene</c>). Created by <see cref="SceneBuilder.Build"/> and
 /// shown with <see cref="Widgets.FlutterView.Render"/>. The scene holds the engine's layer tree; its
-/// images are rasterized by the Plumix scene rasterizer through Avalonia's render interface.
+/// images are rasterized by the host's scene rasterizer (<see cref="RenderBackend"/>).
 /// </remarks>
 public sealed class Scene : IDisposable
 {
@@ -349,7 +339,7 @@ public sealed class Scene : IDisposable
 
         ContainerFlowLayer root = _rootLayer
             ?? throw new PictureRasterizationException("Scene has been disposed.");
-        return new RasterImage(SceneRasterizer.RasterizeToImage(root, width, height));
+        return RenderBackend.Current.RasterizeScene(root, width, height);
     }
 
     /// <summary>Creates a <paramref name="width"/> by <paramref name="height"/> image of this scene.</summary>
@@ -369,7 +359,7 @@ public sealed class Scene : IDisposable
             throw new InvalidOperationException("Scene has been disposed.");
         }
 
-        return Task.FromResult(new RasterImage(SceneRasterizer.RasterizeToImage(_rootLayer, width, height)));
+        return Task.FromResult(RenderBackend.Current.RasterizeScene(_rootLayer, width, height));
     }
 
     /// <summary>
@@ -584,7 +574,7 @@ public class SceneBuilder
     }
 
     /// <summary>Pushes a shader mask operation onto the operation stack.</summary>
-    /// <remarks>Dart's <c>pushShaderMask</c>; the shader is an Avalonia brush (docs/ai/DIVERGENCES.md).</remarks>
+    /// <remarks>Dart's <c>pushShaderMask</c>.</remarks>
     public virtual ShaderMaskEngineLayer PushShaderMask(
         Shader shader,
         Rect maskRect,
@@ -595,7 +585,7 @@ public class SceneBuilder
         ArgumentNullException.ThrowIfNull(shader);
         DebugCheckCanBeUsedAsOldLayer(oldLayer, "pushShaderMask");
         var layer = new ShaderMaskEngineLayer(
-            PushNativeLayer(new ShaderMaskFlowLayer(shader.Brush, maskRect, blendMode, filterQuality)));
+            PushNativeLayer(new ShaderMaskFlowLayer(shader, maskRect, blendMode, filterQuality)));
         DebugPushLayer(layer);
         return layer;
     }
@@ -605,20 +595,6 @@ public class SceneBuilder
     {
         DebugCheckCanBeUsedAsOldLayer(oldLayer, "pushMagnifier");
         var layer = new MagnifierEngineLayer(PushNativeLayer(magnifier));
-        DebugPushLayer(layer);
-        return layer;
-    }
-
-    /// <summary>Plumix-only: pushes the backend-geometry clip of a <see cref="Rendering.ClipGeometryLayer"/>.</summary>
-    internal ClipGeometryEngineLayer PushClipGeometry(
-        Geometry geometry,
-        Offset geometryOffset,
-        Clip clipBehavior,
-        ClipGeometryEngineLayer? oldLayer)
-    {
-        DebugCheckCanBeUsedAsOldLayer(oldLayer, "pushClipGeometry");
-        var layer = new ClipGeometryEngineLayer(
-            PushNativeLayer(new ClipGeometryFlowLayer(geometry, geometryOffset, clipBehavior)));
         DebugPushLayer(layer);
         return layer;
     }

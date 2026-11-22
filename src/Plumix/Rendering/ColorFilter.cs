@@ -96,48 +96,8 @@ public abstract record ColorFilter
 
         public BlendMode BlendMode { get; }
 
-        /// <summary>The backend's spelling of <see cref="BlendMode"/>.</summary>
-        internal Avalonia.Media.Imaging.BitmapBlendingMode AvaloniaBlendMode => ToBitmapBlendingMode(BlendMode);
-
         /// <summary>Dart's <c>ColorFilter.toString</c> for a mode filter.</summary>
         public override string ToString() =>
             $"ColorFilter.mode({(Plumix.UI.Color)Color}, {Plumix.UI.Paint.BlendModeName(BlendMode)})";
-
-        private static Avalonia.Media.Imaging.BitmapBlendingMode ToBitmapBlendingMode(BlendMode blendMode)
-        {
-            return blendMode switch
-            {
-                Rendering.BlendMode.Clear => Avalonia.Media.Imaging.BitmapBlendingMode.Source,
-                Rendering.BlendMode.Source => Avalonia.Media.Imaging.BitmapBlendingMode.Source,
-                Rendering.BlendMode.Destination => Avalonia.Media.Imaging.BitmapBlendingMode.Destination,
-                Rendering.BlendMode.SourceOver => Avalonia.Media.Imaging.BitmapBlendingMode.SourceOver,
-                Rendering.BlendMode.DestinationOver => Avalonia.Media.Imaging.BitmapBlendingMode.DestinationOver,
-                Rendering.BlendMode.SourceIn => Avalonia.Media.Imaging.BitmapBlendingMode.SourceIn,
-                Rendering.BlendMode.DestinationIn => Avalonia.Media.Imaging.BitmapBlendingMode.DestinationIn,
-                Rendering.BlendMode.SourceOut => Avalonia.Media.Imaging.BitmapBlendingMode.SourceOut,
-                Rendering.BlendMode.DestinationOut => Avalonia.Media.Imaging.BitmapBlendingMode.DestinationOut,
-                Rendering.BlendMode.SourceAtop => Avalonia.Media.Imaging.BitmapBlendingMode.SourceAtop,
-                Rendering.BlendMode.DestinationAtop => Avalonia.Media.Imaging.BitmapBlendingMode.DestinationAtop,
-                Rendering.BlendMode.Xor => Avalonia.Media.Imaging.BitmapBlendingMode.Xor,
-                Rendering.BlendMode.Plus => Avalonia.Media.Imaging.BitmapBlendingMode.Plus,
-                Rendering.BlendMode.Modulate => Avalonia.Media.Imaging.BitmapBlendingMode.Multiply,
-                Rendering.BlendMode.Screen => Avalonia.Media.Imaging.BitmapBlendingMode.Screen,
-                Rendering.BlendMode.Overlay => Avalonia.Media.Imaging.BitmapBlendingMode.Overlay,
-                Rendering.BlendMode.Darken => Avalonia.Media.Imaging.BitmapBlendingMode.Darken,
-                Rendering.BlendMode.Lighten => Avalonia.Media.Imaging.BitmapBlendingMode.Lighten,
-                Rendering.BlendMode.ColorDodge => Avalonia.Media.Imaging.BitmapBlendingMode.ColorDodge,
-                Rendering.BlendMode.ColorBurn => Avalonia.Media.Imaging.BitmapBlendingMode.ColorBurn,
-                Rendering.BlendMode.HardLight => Avalonia.Media.Imaging.BitmapBlendingMode.HardLight,
-                Rendering.BlendMode.SoftLight => Avalonia.Media.Imaging.BitmapBlendingMode.SoftLight,
-                Rendering.BlendMode.Difference => Avalonia.Media.Imaging.BitmapBlendingMode.Difference,
-                Rendering.BlendMode.Exclusion => Avalonia.Media.Imaging.BitmapBlendingMode.Exclusion,
-                Rendering.BlendMode.Multiply => Avalonia.Media.Imaging.BitmapBlendingMode.Multiply,
-                Rendering.BlendMode.Hue => Avalonia.Media.Imaging.BitmapBlendingMode.Hue,
-                Rendering.BlendMode.Saturation => Avalonia.Media.Imaging.BitmapBlendingMode.Saturation,
-                Rendering.BlendMode.Color => Avalonia.Media.Imaging.BitmapBlendingMode.Color,
-                Rendering.BlendMode.Luminosity => Avalonia.Media.Imaging.BitmapBlendingMode.Luminosity,
-                _ => Avalonia.Media.Imaging.BitmapBlendingMode.SourceOver,
-            };
-        }
     }
 }

@@ -1,4 +1,3 @@
-using Avalonia.Media;
 using Plumix.Foundation;
 using Plumix.Material;
 using Plumix.Rendering;
@@ -98,10 +97,12 @@ public sealed class MaterialTextSelectionControlsTests : IDisposable
 
         // A single filled path (circle unioned with the square corner) so a translucent handle never
         // double-blends where the two shapes overlap. `radius` comes from the width alone.
-        var combined = Assert.IsType<CombinedGeometry>(TextSelectionHandlePainter.BuildPath(new Size(22, 40)));
-        Assert.Equal(GeometryCombineMode.Union, combined.GeometryCombineMode);
-        Assert.Equal(Rect.FromLTWH(0, 0, 22, 22), Assert.IsType<EllipseGeometry>(combined.Geometry1).Rect.ToPlumix());
-        Assert.Equal(Rect.FromLTWH(0, 0, 11, 11), Assert.IsType<RectangleGeometry>(combined.Geometry2).Rect.ToPlumix());
+        Plumix.UI.Path path = TextSelectionHandlePainter.BuildPath(new Size(22, 40));
+        Assert.Equal(PathFillType.NonZero, path.FillType);
+        Assert.Equal(Rect.FromLTWH(0, 0, 22, 22), path.GetBounds());
+        Assert.True(path.Contains(new Offset(0.5, 0.5)));
+        Assert.True(path.Contains(new Offset(11, 11)));
+        Assert.False(path.Contains(new Offset(21.5, 21.5)));
 
         var root = new ContainerLayer();
         var context = new PaintingContext(root);

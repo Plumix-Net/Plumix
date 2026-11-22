@@ -1,71 +1,11 @@
-using Avalonia;
-using Avalonia.Media;
-using Avalonia.Media.Imaging;
 using Plumix.Rendering;
 
 namespace Plumix.UI;
 
-// Dart parity source: dart:ui Canvas (the drawing half; Avalonia brushes/pens stand in for `Paint`)
+// Dart parity source: dart:ui Canvas (the drawing half: each call records a typed entry, CanvasOps.cs)
 
 public partial class Canvas
 {
-    // Dart parity source: dart:ui Canvas.drawRect / Canvas.drawRRect.
-    internal virtual void DrawRectangle(
-        IBrush? brush,
-        IPen? pen,
-        Rect rect,
-        double radiusX = 0,
-        double radiusY = 0,
-        BoxShadows boxShadows = default,
-        bool isAntiAlias = true)
-    {
-        DebugRecordCall(radiusX == 0 && radiusY == 0
-            ? new CanvasCall("drawRect", Rect: rect, Brush: brush, Pen: pen)
-            : new CanvasCall(
-                "drawRRect",
-                RRect: RRect.FromRectXY(rect, radiusX, radiusY),
-                Brush: brush,
-                Pen: pen));
-        AddDrawCommand(context =>
-        {
-            using var renderOptions = context.PushRenderOptions(new RenderOptions
-            {
-                EdgeMode = isAntiAlias ? EdgeMode.Antialias : EdgeMode.Aliased,
-            });
-            ShaderDrawing.DrawRectangle(
-                context,
-                brush,
-                pen,
-                new RoundedRect(rect.ToAvalonia(), radiusX, radiusY),
-                boxShadows);
-        });
-    }
-
-    // Dart parity source: dart:ui Canvas.drawRRect (corner radii given as a BorderRadius).
-    internal virtual void DrawRectangle(
-        IBrush? brush,
-        IPen? pen,
-        Rect rect,
-        BorderRadius borderRadius,
-        BoxShadows boxShadows = default)
-    {
-        DebugRecordCall(new CanvasCall(
-            "drawRRect",
-            RRect: RRect.FromRectAndCorners(rect, borderRadius),
-            Brush: brush,
-            Pen: pen));
-        AddDrawCommand(context =>
-        {
-            var roundedRect = new RoundedRect(
-                rect.ToAvalonia(),
-                new Offset(borderRadius.TopLeftRadius.X, borderRadius.TopLeftRadius.Y).ToAvaloniaVector(),
-                new Offset(borderRadius.TopRightRadius.X, borderRadius.TopRightRadius.Y).ToAvaloniaVector(),
-                new Offset(borderRadius.BottomRightRadius.X, borderRadius.BottomRightRadius.Y).ToAvaloniaVector(),
-                new Offset(borderRadius.BottomLeftRadius.X, borderRadius.BottomLeftRadius.Y).ToAvaloniaVector());
-            ShaderDrawing.DrawRectangle(context, brush, pen, roundedRect, boxShadows);
-        });
-    }
-
     /// <summary>Draws a rectangle with the given <see cref="Paint"/>.</summary>
     /// <remarks>
     /// Dart's <c>Canvas.drawRect(rect, paint)</c>. The paint's colour (or shader), style, stroke, anti-alias
@@ -74,36 +14,7 @@ public partial class Canvas
     public virtual void DrawRect(Rect rect, Paint paint)
     {
         ArgumentNullException.ThrowIfNull(paint);
-        DrawShape(
-            "drawRect",
-            paint,
-            call => call with { Rect = rect },
-            () => new RectangleGeometry(rect.ToAvalonia()),
-            (context, fill, pen) => ShaderDrawing.DrawRectangle(context, fill, pen, rect),
-            () => CreateRectPath(rect));
-    }
-
-    private static PenLineCap ToPenLineCap(StrokeCap cap) => cap switch
-    {
-        StrokeCap.Round => PenLineCap.Round,
-        StrokeCap.Square => PenLineCap.Square,
-        _ => PenLineCap.Flat,
-    };
-
-    private static PenLineJoin ToPenLineJoin(StrokeJoin join) => join switch
-    {
-        StrokeJoin.Round => PenLineJoin.Round,
-        StrokeJoin.Bevel => PenLineJoin.Bevel,
-        _ => PenLineJoin.Miter,
-    };
-
-    // Dart parity source: dart:ui Canvas.drawPaint.
-    /// <summary>Fills the canvas's current clip with the given brush. Avalonia exposes no clip-bounds
-    /// query, so the fill is a rectangle large enough to cover any practical clip.</summary>
-    internal virtual void DrawPaint(IBrush brush)
-    {
-        DebugRecordCall(new CanvasCall("drawPaint", Brush: brush));
-        AddDrawCommand(context => ShaderDrawing.DrawRectangle(context, brush, null, DrawPaintBounds));
+        DrawShape("drawRect", call => call with { Rect = rect }, CanvasShapeKind.Rect, paint, op => op.Rect = rect);
     }
 
     /// <summary>Fills the canvas's current clip with the given <see cref="Paint"/>.</summary>
@@ -111,35 +22,10 @@ public partial class Canvas
     public virtual void DrawPaint(Paint paint)
     {
         ArgumentNullException.ThrowIfNull(paint);
-        IBrush brush = paint.Shader?.Brush is INativeShader nativeShader
-            ? nativeShader.Snapshot() : paint.Shader?.Brush ?? new SolidColorBrush(paint.Color.ToAvalonia());
-        DebugRecordCall(new CanvasCall("drawPaint", Brush: brush));
-        if (brush is INativeShader shader)
-        {
-            var snapshot = new Paint(paint) { Style = PaintingStyle.Fill };
-            AddDrawCommand(context => ShaderDrawing.Fill(
-                context, shader, DrawPaintBounds, snapshot, fillCanvas: true));
-            return;
-        }
-
-        AddDrawCommand(context => ShaderDrawing.DrawRectangle(context, brush, null, DrawPaintBounds));
-    }
-
-    private static readonly Rect DrawPaintBounds = Rect.FromLTWH(-1.0e9, -1.0e9, 2.0e9, 2.0e9);
-
-    // Dart parity source: dart:ui Canvas.drawRRect.
-    internal virtual void DrawRRect(RRect rrect, IBrush? brush, IPen? pen)
-    {
-        DebugRecordCall(new CanvasCall("drawRRect", RRect: rrect, Brush: brush, Pen: pen));
-        var path = new Path();
-        path.AddRRect(rrect);
-        if (TryAddNativeSolidDraw(path, brush, pen))
-        {
-            return;
-        }
-
-        Geometry? geometry = null;
-        AddDrawCommand(context => ShaderDrawing.DrawGeometry(context, brush, pen, geometry ??= path.ToGeometry()));
+        Paint snapshot = Snapshot(paint);
+        snapshot.Style = PaintingStyle.Fill;
+        DebugRecordCall(new CanvasCall("drawPaint", Paint: snapshot));
+        AddOp(new DrawPaintOp(snapshot));
     }
 
     /// <summary>Draws a rounded rectangle with the given <see cref="Paint"/>.</summary>
@@ -147,16 +33,8 @@ public partial class Canvas
     public virtual void DrawRRect(RRect rrect, Paint paint)
     {
         ArgumentNullException.ThrowIfNull(paint);
-        Geometry? geometry = null;
-        Geometry Source() => geometry ??= rrect.ToPath().ToGeometry();
         DrawShape(
-            "drawRRect",
-            paint,
-            call => call with { RRect = rrect },
-            Source,
-            (context, fill, pen) => ShaderDrawing.DrawGeometry(context, fill, pen, Source()),
-            rrect.ToPath,
-            nativeSolid: true);
+            "drawRRect", call => call with { RRect = rrect }, CanvasShapeKind.RRect, paint, op => op.RRect = rrect);
     }
 
     /// <summary>Draws the ring between two rounded rectangles with the given <see cref="Paint"/>.</summary>
@@ -164,19 +42,11 @@ public partial class Canvas
     public virtual void DrawDRRect(RRect outer, RRect inner, Paint paint)
     {
         ArgumentNullException.ThrowIfNull(paint);
-        Geometry? geometry = null;
-        Geometry Source() => geometry ??= new CombinedGeometry(
-            GeometryCombineMode.Exclude,
-            outer.ToPath().ToGeometry(),
-            inner.ToPath().ToGeometry());
-        DrawShape(
-            "drawDRRect",
-            paint,
-            call => call with { RRect = outer },
-            Source,
-            (context, fill, pen) => ShaderDrawing.DrawGeometry(context, fill, pen, Source()),
-            () => CreateDRRectPath(outer, inner),
-            nativeSolid: true);
+        DrawShape("drawDRRect", call => call with { RRect = outer }, CanvasShapeKind.DRRect, paint, op =>
+        {
+            op.RRect = outer;
+            op.Inner = inner;
+        });
     }
 
     /// <summary>Draws an axis-aligned oval with the given <see cref="Paint"/>.</summary>
@@ -184,14 +54,7 @@ public partial class Canvas
     public virtual void DrawOval(Rect oval, Paint paint)
     {
         ArgumentNullException.ThrowIfNull(paint);
-        DrawShape(
-            "drawOval",
-            paint,
-            call => call with { Rect = oval },
-            () => new EllipseGeometry(oval.ToAvalonia()),
-            (context, fill, pen) => ShaderDrawing.DrawEllipse(
-                context, fill, pen, oval.Center, oval.Width / 2.0, oval.Height / 2.0),
-            () => CreateOvalPath(oval));
+        DrawShape("drawOval", call => call with { Rect = oval }, CanvasShapeKind.Oval, paint, op => op.Rect = oval);
     }
 
     /// <summary>Draws a path with the given <see cref="Paint"/>.</summary>
@@ -201,16 +64,8 @@ public partial class Canvas
         ArgumentNullException.ThrowIfNull(path);
         ArgumentNullException.ThrowIfNull(paint);
         var snapshot = new Path(path);
-        Geometry? geometry = null;
-        Geometry Source() => geometry ??= snapshot.ToGeometry();
         DrawShape(
-            "drawPath",
-            paint,
-            call => call with { Path = snapshot },
-            Source,
-            (context, fill, pen) => ShaderDrawing.DrawGeometry(context, fill, pen, Source()),
-            () => snapshot,
-            nativeSolid: true);
+            "drawPath", call => call with { Path = snapshot }, CanvasShapeKind.Path, paint, op => op.Path = snapshot);
     }
 
     /// <summary>Draws a rounded superellipse with the given <see cref="Paint"/>.</summary>
@@ -219,179 +74,180 @@ public partial class Canvas
     {
         ArgumentNullException.ThrowIfNull(paint);
         Path path = rsuperellipse.ToPath();
-        Geometry? geometry = null;
-        Geometry Source() => geometry ??= path.ToGeometry();
         DrawShape(
-            "drawRSuperellipse",
+            "drawRSuperellipse", call => call with { Path = path }, CanvasShapeKind.Path, paint, op => op.Path = path);
+    }
+
+    /// <summary>Draws a circle with the given <see cref="Paint"/>.</summary>
+    /// <remarks>Dart's <c>Canvas.drawCircle(c, radius, paint)</c>; see <see cref="DrawShape"/>.</remarks>
+    public virtual void DrawCircle(Offset center, double radius, Paint paint)
+    {
+        ArgumentNullException.ThrowIfNull(paint);
+        DrawShape(
+            "drawCircle",
+            call => call with { Center = center, Radius = radius },
+            CanvasShapeKind.Circle,
             paint,
-            call => call with { Path = path },
-            Source,
-            (context, fill, pen) => ShaderDrawing.DrawGeometry(context, fill, pen, Source()),
-            () => path,
-            nativeSolid: true);
+            op =>
+            {
+                op.Start = center;
+                op.Radius = Math.Max(0, radius);
+            });
     }
 
     /// <summary>
-    /// Records and plays back one shape draw of a <see cref="Paint"/>-taking method: the shared tail of
-    /// <c>drawRect</c>, <c>drawRRect</c>, <c>drawDRRect</c>, <c>drawOval</c>, <c>drawCircle</c>,
-    /// <c>drawPath</c> and <c>drawRSuperellipse</c>.
+    /// Draws an arc scaled to fit inside <paramref name="rect"/>, from <paramref name="startAngle"/>
+    /// through <paramref name="sweepAngle"/> radians clockwise, with the given <see cref="Paint"/>.
     /// </summary>
     /// <remarks>
-    /// The paint is read when the call is made, as Dart's canvas does. A plain paint plays back through
-    /// <paramref name="draw"/>. A paint with a <see cref="MaskFilter"/> or a blend mode other than
-    /// <see cref="BlendMode.SourceOver"/> goes through <see cref="RasterizedShapeDraw"/>, the raster
-    /// backend for both (Avalonia's drawing context has neither); where no raster backend exists the
-    /// shape is drawn through <paramref name="draw"/> with a Gaussian-ring blur approximation.
+    /// Dart's <c>Canvas.drawArc(rect, startAngle, sweepAngle, useCenter, paint)</c>: with
+    /// <paramref name="useCenter"/> the arc is closed back to the centre (a pie wedge), otherwise it
+    /// is an open contour; see <see cref="DrawShape"/>.
     /// </remarks>
-    private void DrawShape(
-        string method,
-        Paint paint,
-        Func<CanvasCall, CanvasCall> describe,
-        Func<Geometry> geometrySource,
-        Action<DrawingContext, IBrush?, IPen?> draw,
-        Func<Path>? nativePathSource = null,
-        bool nativeSolid = false)
+    public virtual void DrawArc(Rect rect, double startAngle, double sweepAngle, bool useCenter, Paint paint)
     {
-        IBrush brush = paint.Shader?.Brush is INativeShader nativeShader
-            ? nativeShader.Snapshot() : paint.Shader?.Brush ?? new SolidColorBrush(paint.Color.ToAvalonia());
-        bool stroke = paint.Style == PaintingStyle.Stroke;
-        IPen? pen = stroke ? CreatePen(paint, brush) : null;
-        IBrush? fill = stroke ? null : brush;
-        MaskFilter? maskFilter = paint.MaskFilter;
-        BlendMode blendMode = paint.BlendMode;
-        bool isAntiAlias = paint.IsAntiAlias;
-        Color color = paint.Color;
-        CanvasCall recorded = describe(new CanvasCall(
-            method,
-            Brush: fill,
-            Pen: pen,
-            MaskFilter: maskFilter,
-            BlendMode: blendMode)
+        ArgumentNullException.ThrowIfNull(paint);
+        var path = new Path();
+        if (useCenter)
         {
-            RecordedColor = color,
-        });
-        DebugRecordCall(recorded);
-
-        void DrawPlain(DrawingContext context)
+            path.MoveTo(rect.Center.Dx, rect.Center.Dy);
+            path.ArcTo(rect, startAngle, sweepAngle, forceMoveTo: false);
+            path.Close();
+        }
+        else
         {
-            using DrawingContext.PushedState alpha = brush is INativeShader
-                ? context.PushOpacity(color.A) : default;
-            using DrawingContext.PushedState edge = context.PushRenderOptions(new RenderOptions
-            {
-                EdgeMode = isAntiAlias ? EdgeMode.Antialias : EdgeMode.Aliased,
-            });
-            draw(context, fill, pen);
+            path.AddArc(rect, startAngle, sweepAngle);
         }
 
-        if (maskFilter is null && blendMode == BlendMode.SourceOver)
-        {
-            INativeShader? native = brush as INativeShader
-                ?? (nativeSolid && paint.Shader is null ? new SolidColorNativeShader(color) : null);
-            if (native is { } shader && nativePathSource?.Invoke() is { } path)
-            {
-                var snapshot = new Paint(paint);
-                AddDrawCommand(context => ShaderDrawing.DrawPath(context, shader, path, snapshot));
-                return;
-            }
+        DrawShape(
+            "drawArc",
+            call => call with { Rect = rect, Path = path },
+            CanvasShapeKind.Path,
+            paint,
+            op => op.Path = path);
+    }
 
-            AddDrawCommand(DrawPlain);
+    /// <summary>Draws a line between the given points with the given <see cref="Paint"/>.</summary>
+    /// <remarks>
+    /// Dart's <c>Canvas.drawLine(p1, p2, paint)</c>: the paint's style is ignored and the line is
+    /// always stroked; see <see cref="DrawShape"/> for the mask filter and blend mode. A zero-width
+    /// solid stroke is Skia's one-device-pixel hairline.
+    /// </remarks>
+    public virtual void DrawLine(Offset startPoint, Offset endPoint, Paint paint)
+    {
+        ArgumentNullException.ThrowIfNull(paint);
+        var stroke = new Paint(paint) { Style = PaintingStyle.Stroke };
+        if (paint.StrokeWidth == 0.0 && paint.Shader is null
+            && paint.MaskFilter is null && paint.BlendMode == BlendMode.SourceOver)
+        {
+            DebugRecordCall(new CanvasCall(
+                "drawLine",
+                Offset: startPoint,
+                EndOffset: endPoint,
+                BlendMode: paint.BlendMode,
+                Paint: stroke) { RecordedColor = paint.Color });
+            AddOp(new DrawHairlineOp(startPoint, endPoint, paint.Color, paint.IsAntiAlias, paint.StrokeCap));
             return;
         }
 
-        var rasterized = new RasterizedShapeDraw(
-            geometrySource,
-            brush,
-            color,
-            pen,
-            maskFilter,
-            blendMode,
-            isAntiAlias,
-            context =>
+        DrawShape(
+            "drawLine",
+            call => call with { Offset = startPoint, EndOffset = endPoint },
+            CanvasShapeKind.Line,
+            stroke,
+            op =>
             {
-                if (maskFilter is null || stroke)
-                {
-                    DrawPlain(context);
-                    return;
-                }
-
-                DrawBlurApproximation(context, geometrySource(), color, maskFilter, DrawPlain);
+                op.Start = startPoint;
+                op.End = endPoint;
             });
-        AddDrawCommand(rasterized.Draw);
     }
 
-    // SkCanvas::onDrawDRRect: both outlines in one even-odd path.
-    private static Path CreateDRRectPath(RRect outer, RRect inner)
+    /// <summary>
+    /// Records one shape draw of a <see cref="Paint"/>-taking method: the shared tail of <c>drawRect</c>,
+    /// <c>drawRRect</c>, <c>drawDRRect</c>, <c>drawOval</c>, <c>drawCircle</c>, <c>drawPath</c>,
+    /// <c>drawArc</c>, <c>drawLine</c> and <c>drawRSuperellipse</c>.
+    /// </summary>
+    /// <remarks>
+    /// The paint is read when the call is made, as Dart's canvas does: the entry keeps a snapshot of it,
+    /// with a fragment shader's current uniforms. How a mask filter or blend mode is honoured is the
+    /// backend's business (Plumix.Avalonia's CanvasPlayback).
+    /// </remarks>
+    private void DrawShape(
+        string method,
+        Func<CanvasCall, CanvasCall> describe,
+        CanvasShapeKind kind,
+        Paint paint,
+        Action<DrawShapeOp> shape)
     {
-        var result = new Path { FillType = PathFillType.EvenOdd };
-        result.AddRRect(outer);
-        result.AddRRect(inner);
-        return result;
+        Paint snapshot = Snapshot(paint);
+        DebugRecordCall(describe(new CanvasCall(
+            method,
+            MaskFilter: snapshot.MaskFilter,
+            BlendMode: snapshot.BlendMode,
+            Paint: snapshot)
+        {
+            RecordedColor = snapshot.Color,
+        }));
+        var op = new DrawShapeOp(kind, snapshot);
+        shape(op);
+        AddOp(op);
     }
 
-    private static Path CreateRectPath(Rect rect)
+    // The paint as it is now, owning a snapshot of its shader.
+    private static Paint Snapshot(Paint paint)
     {
-        var result = new Path();
-        result.AddRect(rect);
-        return result;
+        var snapshot = new Paint(paint);
+        if (paint.Shader is { } shader)
+        {
+            snapshot.Shader = shader.Snapshot();
+        }
+
+        return snapshot;
     }
 
-    private static Path CreateOvalPath(Rect rect)
-    {
-        var result = new Path();
-        result.AddOval(rect);
-        return result;
-    }
+    // Skia's three-sigma blur pad, as the host's mask-filter rasterizer (PaintRasterizer.BlurExtent) pads.
+    private static double BlurExtent(double sigma) => sigma > 0.0 ? Math.Ceiling(sigma * 3.0) : 0.0;
 
-    private static Path CreateLinePath(Offset start, Offset end)
-    {
-        var result = new Path();
-        result.MoveTo(start.Dx, start.Dy);
-        result.LineTo(end.Dx, end.Dy);
-        return result;
-    }
+    /// <summary>
+    /// Whether <see cref="DrawTextShape"/> draws <paramref name="paint"/> through a layer, and so reads the
+    /// shape's render bounds.
+    /// </summary>
+    internal static bool TextShapeNeedsLayer(Paint paint) =>
+        paint.ColorFilter is not null || paint.ImageFilter is not null || paint.InvertColors;
 
-    // Paragraph glyph outlines use the same Paint pipeline as framework-owned shapes.
-    internal void DrawTextGeometry(Geometry geometry, Paint paint)
+    /// <summary>
+    /// Draws a paragraph glyph outline, background or decoration the text backend built (its geometry,
+    /// opaque to the framework) with the same Paint pipeline as framework-owned shapes.
+    /// </summary>
+    /// <param name="shape">The backend's shape, played back by the backend that built it.</param>
+    /// <param name="renderBounds">
+    /// The shape's bounds stroked with <paramref name="paint"/>'s stroke width; read only when
+    /// <see cref="TextShapeNeedsLayer"/> is true.
+    /// </param>
+    /// <param name="paint">The paint to fill the shape with.</param>
+    internal void DrawTextShape(object shape, Rect renderBounds, Paint paint)
     {
-        bool filter = paint.ColorFilter is not null || paint.ImageFilter is not null || paint.InvertColors;
+        bool filter = TextShapeNeedsLayer(paint);
         if (filter)
         {
-            SaveLayer(geometry.GetRenderBounds(new Pen(Brushes.Black, paint.StrokeWidth)).Inflate(
-                PaintRasterizer.BlurExtent(paint.MaskFilter?.Sigma ?? 0.0) + 1.0).ToPlumix(), new Paint
-            {
-                ColorFilter = paint.ColorFilter,
-                ImageFilter = paint.ImageFilter,
-                InvertColors = paint.InvertColors,
-                BlendMode = paint.BlendMode,
-            });
+            SaveLayer(
+                renderBounds.Inflate(BlurExtent(paint.MaskFilter?.Sigma ?? 0.0) + 1.0),
+                new Paint
+                {
+                    ColorFilter = paint.ColorFilter,
+                    ImageFilter = paint.ImageFilter,
+                    InvertColors = paint.InvertColors,
+                    BlendMode = paint.BlendMode,
+                });
         }
 
         Paint effective = filter ? new Paint(paint) { BlendMode = BlendMode.SourceOver } : paint;
-        DrawShape(
-            "drawTextGeometry",
-            effective,
-            call => call,
-            () => geometry,
-            (context, fill, pen) => ShaderDrawing.DrawGeometry(context, fill, pen, geometry));
+        DrawShape("drawTextGeometry", call => call, CanvasShapeKind.BackendShape, effective,
+            op => op.BackendShape = shape);
         if (filter)
         {
             Restore();
         }
-    }
-
-    private static Pen CreatePen(Paint paint, IBrush brush) => new(
-        brush,
-        paint.StrokeWidth,
-        lineCap: ToPenLineCap(paint.StrokeCap),
-        lineJoin: ToPenLineJoin(paint.StrokeJoin),
-        miterLimit: paint.StrokeMiterLimit);
-
-    // Dart parity source: dart:ui Canvas.drawRSuperellipse.
-    internal virtual void DrawRSuperellipse(RSuperellipse rsuperellipse, IBrush? brush, IPen? pen)
-    {
-        var path = new Path();
-        path.AddRSuperellipse(rsuperellipse);
-        DrawPath(path, brush, pen);
     }
 
     /// <summary>Draws a blurred box shadow using the exact rounded-superellipse contour.</summary>
@@ -425,346 +281,13 @@ public partial class Canvas
         });
     }
 
-    // The no-raster-backend stand-in for a blur mask filter: concentric strokes sampled from one Gaussian
-    // falloff keep the contour exact; the shape itself is filled last unless the style is outer.
-    private static void DrawBlurApproximation(
-        DrawingContext context,
-        Geometry geometry,
-        Color color,
-        MaskFilter maskFilter,
-        Action<DrawingContext> drawShape)
-    {
-        double blurSigma = maskFilter.Sigma;
-        if (blurSigma > 0.0 && maskFilter.Style != BlurStyle.Inner)
-        {
-            double outerRadius = blurSigma * 3.0;
-            int steps = Math.Max(2, (int)Math.Ceiling(outerRadius));
-            double previousOpacity = 0.0;
-            for (int step = 0; step < steps; step++)
-            {
-                double radius = outerRadius * (steps - step) / steps;
-                double targetOpacity = Math.Exp(-(radius * radius) / (2.0 * blurSigma * blurSigma));
-                double layerOpacity = 1.0 - ((1.0 - targetOpacity) / (1.0 - previousOpacity));
-                previousOpacity = targetOpacity;
-                byte layerAlpha = (byte)Math.Clamp(
-                    (int)Math.Round(color.Alpha * layerOpacity),
-                    0,
-                    byte.MaxValue);
-                if (layerAlpha > 0)
-                {
-                    Color layerColor = Color.FromARGB(layerAlpha, color.Red, color.Green, color.Blue);
-                    ShaderDrawing.DrawGeometry(context, null,
-                        new Pen(new SolidColorBrush(layerColor.ToAvalonia()), radius * 2.0), geometry);
-                }
-            }
-        }
-
-        if (maskFilter.Style != BlurStyle.Outer)
-        {
-            drawShape(context);
-        }
-    }
-
-    // Dart parity source: dart:ui Canvas.drawDRRect (the ring between two rounded rectangles).
-    internal virtual void DrawDRRect(RRect outer, RRect inner, IBrush brush)
-    {
-        if (TryAddNativeSolidDraw(CreateDRRectPath(outer, inner), brush, null))
-        {
-            return;
-        }
-
-        var outerPath = new Path();
-        outerPath.AddRRect(outer);
-        var innerPath = new Path();
-        innerPath.AddRRect(inner);
-        Geometry? geometry = null;
-        AddDrawCommand(context => ShaderDrawing.DrawGeometry(context,
-            brush,
-            null,
-            geometry ??= new CombinedGeometry(
-                GeometryCombineMode.Exclude,
-                outerPath.ToGeometry(),
-                innerPath.ToGeometry())));
-    }
-
-    // Dart parity source: dart:ui Canvas.drawOval.
-    internal virtual void DrawOval(Rect oval, IBrush? brush, IPen? pen)
-    {
-        DebugRecordCall(new CanvasCall("drawOval", Rect: oval, Brush: brush, Pen: pen));
-        AddDrawCommand(context =>
-            ShaderDrawing.DrawEllipse(context, brush, pen, oval.Center, oval.Width / 2.0, oval.Height / 2.0));
-    }
-
-    // Dart parity source: dart:ui Canvas.drawPath.
-    internal virtual void DrawPath(Path path, IBrush? brush, IPen? pen)
-    {
-        ArgumentNullException.ThrowIfNull(path);
-        DebugRecordCall(new CanvasCall("drawPath", Brush: brush, Pen: pen, Path: path));
-
-        if (TryAddNativeSolidDraw(new Path(path), brush, pen))
-        {
-            return;
-        }
-
-        // The backend geometry is built on playback: recording must not need a render backend.
-        Geometry? geometry = null;
-        AddDrawCommand(context => ShaderDrawing.DrawGeometry(context, brush, pen, geometry ??= path.ToGeometry()));
-    }
-
-    // A solid fill or an undashed solid stroke of a path whose curves Avalonia's geometry would
-    // approximate goes to Skia as the exact path, the way Dart's canvas draws it with a color paint.
-    private bool TryAddNativeSolidDraw(Path path, IBrush? brush, IPen? pen)
-    {
-        Paint paint;
-        if (pen is null && brush is ISolidColorBrush fill)
-        {
-            paint = new Paint { Color = SolidColor(fill) };
-        }
-        else if (IsTransparentOrNull(brush) && pen is { Brush: ISolidColorBrush stroke, DashStyle: null })
-        {
-            paint = new Paint
-            {
-                Color = SolidColor(stroke),
-                Style = PaintingStyle.Stroke,
-                StrokeWidth = pen.Thickness,
-                StrokeMiterLimit = pen.MiterLimit,
-                StrokeCap = pen.LineCap switch
-                {
-                    PenLineCap.Round => StrokeCap.Round,
-                    PenLineCap.Square => StrokeCap.Square,
-                    _ => StrokeCap.Butt,
-                },
-                StrokeJoin = pen.LineJoin switch
-                {
-                    PenLineJoin.Round => StrokeJoin.Round,
-                    PenLineJoin.Bevel => StrokeJoin.Bevel,
-                    _ => StrokeJoin.Miter,
-                },
-            };
-        }
-        else
-        {
-            return false;
-        }
-
-        var shader = new SolidColorNativeShader(paint.Color);
-        AddDrawCommand(context => ShaderDrawing.DrawPath(context, shader, path, paint));
-        return true;
-
-        static bool IsTransparentOrNull(IBrush? value) =>
-            value is null || (value is ISolidColorBrush solid && (solid.Color.A == 0 || solid.Opacity == 0.0));
-
-        static Color SolidColor(ISolidColorBrush value)
-        {
-            var color = value.Color.ToPlumix();
-            return value.Opacity >= 1.0 ? color : color.WithAlpha((int)Math.Round(color.Alpha * value.Opacity));
-        }
-    }
-
-    // Dart parity source: dart:ui Canvas.drawCircle.
-    internal virtual void DrawCircle(IBrush? brush, IPen? pen, Offset center, double radius)
-    {
-        DebugRecordCall(new CanvasCall("drawCircle", Brush: brush, Pen: pen, Center: center, Radius: radius));
-        double clampedRadius = Math.Max(0, radius);
-        AddDrawCommand(context => ShaderDrawing.DrawEllipse(context, brush, pen, center, clampedRadius, clampedRadius));
-    }
-
-    /// <summary>Draws a circle with the given <see cref="Paint"/>.</summary>
-    /// <remarks>Dart's <c>Canvas.drawCircle(c, radius, paint)</c>; see <see cref="DrawShape"/>.</remarks>
-    public virtual void DrawCircle(Offset center, double radius, Paint paint)
-    {
-        ArgumentNullException.ThrowIfNull(paint);
-        double clampedRadius = Math.Max(0, radius);
-        DrawShape(
-            "drawCircle",
-            paint,
-            call => call with { Center = center, Radius = radius },
-            () => new EllipseGeometry(Rect.FromLTWH(
-                center.Dx - clampedRadius,
-                center.Dy - clampedRadius,
-                clampedRadius * 2.0,
-                clampedRadius * 2.0).ToAvalonia()),
-            (context, fill, pen) => ShaderDrawing.DrawEllipse(context, fill, pen, center, clampedRadius, clampedRadius),
-            () => CreateOvalPath(Rect.FromLTWH(center.Dx - clampedRadius, center.Dy - clampedRadius,
-                clampedRadius * 2.0, clampedRadius * 2.0)));
-    }
-
-    // Dart parity source: dart:ui Canvas.drawArc.
-    internal virtual void DrawArc(IPen pen, Rect rect, double startAngleRadians, double sweepAngleRadians)
-    {
-        DebugRecordCall(new CanvasCall("drawArc", Rect: rect, Pen: pen));
-        if (rect.Width <= 0 || rect.Height <= 0)
-        {
-            return;
-        }
-
-        if (Math.Abs(sweepAngleRadians) <= 0.0001)
-        {
-            return;
-        }
-
-        AddDrawCommand(context =>
-        {
-            var geometry = new StreamGeometry();
-            using (var geometryContext = geometry.Open())
-            {
-                Offset startPoint = PointOnEllipse(rect, startAngleRadians);
-                Offset endPoint = PointOnEllipse(rect, startAngleRadians + sweepAngleRadians);
-                geometryContext.BeginFigure(startPoint.ToAvalonia(), isFilled: false);
-                geometryContext.ArcTo(
-                    point: endPoint.ToAvalonia(),
-                    size: new Size(rect.Width / 2.0, rect.Height / 2.0).ToAvalonia(),
-                    rotationAngle: 0.0,
-                    isLargeArc: Math.Abs(sweepAngleRadians) > Math.PI,
-                    sweepDirection: sweepAngleRadians >= 0
-                        ? SweepDirection.Clockwise
-                        : SweepDirection.CounterClockwise);
-                geometryContext.EndFigure(isClosed: false);
-            }
-
-            ShaderDrawing.DrawGeometry(context, brush: null, pen: pen, geometry: geometry);
-        });
-    }
-
-    // Dart parity source: dart:ui Canvas.drawLine.
-    internal virtual void DrawLine(IPen pen, Offset startPoint, Offset endPoint)
-    {
-        DebugRecordCall(new CanvasCall("drawLine", Pen: pen, Offset: startPoint, EndOffset: endPoint));
-        if (pen is { Thickness: 0.0, DashStyle: null, Brush: ISolidColorBrush solid })
-        {
-            // A zero-width stroke is Skia's one-device-pixel hairline, as with Dart's strokeWidth 0.
-            var hairline = new HairlineDraw(
-                startPoint,
-                endPoint,
-                solid.Color.ToPlumix(),
-                isAntiAlias: true,
-                pen.LineCap switch
-                {
-                    PenLineCap.Round => StrokeCap.Round,
-                    PenLineCap.Square => StrokeCap.Square,
-                    _ => StrokeCap.Butt,
-                });
-            AddDrawCommand(context => context.Custom(hairline));
-            return;
-        }
-
-        AddDrawCommand(context => ShaderDrawing.DrawLine(context, pen, startPoint, endPoint));
-    }
-
-    /// <summary>Draws a line between the given points with the given <see cref="Paint"/>.</summary>
-    /// <remarks>
-    /// Dart's <c>Canvas.drawLine(p1, p2, paint)</c>: the paint's style is ignored and the line is
-    /// always stroked; see <see cref="DrawShape"/> for the mask filter and blend mode.
-    /// </remarks>
-    public virtual void DrawLine(Offset startPoint, Offset endPoint, Paint paint)
-    {
-        ArgumentNullException.ThrowIfNull(paint);
-        if (paint.StrokeWidth == 0.0 && paint.Shader is null
-            && paint.MaskFilter is null && paint.BlendMode == BlendMode.SourceOver)
-        {
-            DebugRecordCall(new CanvasCall(
-                "drawLine",
-                Pen: CreatePen(paint, new SolidColorBrush(paint.Color.ToAvalonia())),
-                Offset: startPoint,
-                EndOffset: endPoint,
-                BlendMode: paint.BlendMode) { RecordedColor = paint.Color });
-            var hairline = new HairlineDraw(startPoint, endPoint, paint.Color, paint.IsAntiAlias, paint.StrokeCap);
-            AddDrawCommand(context => context.Custom(hairline));
-            return;
-        }
-
-        var stroke = new Paint(paint) { Style = PaintingStyle.Stroke };
-        DrawShape(
-            "drawLine",
-            stroke,
-            call => call with { Offset = startPoint, EndOffset = endPoint },
-            () => new LineGeometry(startPoint.ToAvalonia(), endPoint.ToAvalonia()),
-            (context, _, pen) => ShaderDrawing.DrawLine(context, pen!, startPoint, endPoint),
-            () => CreateLinePath(startPoint, endPoint));
-    }
-
-    // Dart parity source: dart:ui Canvas.drawPath over a closed polygon contour.
-    internal virtual void DrawPolygon(IBrush? brush, IPen? pen, IReadOnlyList<Offset> points)
-    {
-        ArgumentNullException.ThrowIfNull(points);
-        if (points.Count < 3)
-        {
-            return;
-        }
-
-        AddDrawCommand(context =>
-        {
-            var geometry = new StreamGeometry();
-            using (var geometryContext = geometry.Open())
-            {
-                geometryContext.BeginFigure(points[0].ToAvalonia(), isFilled: true);
-                for (int index = 1; index < points.Count; index++)
-                {
-                    geometryContext.LineTo(points[index].ToAvalonia());
-                }
-
-                geometryContext.EndFigure(isClosed: true);
-            }
-
-            ShaderDrawing.DrawGeometry(context, brush, pen, geometry);
-        });
-    }
-
-    /// <summary>Plumix-only: draws an Avalonia geometry the caller already built.</summary>
-    internal virtual void DrawGeometry(
-        IBrush? brush,
-        IPen? pen,
-        Geometry geometry,
-        Offset geometryOffset = default)
-    {
-        ArgumentNullException.ThrowIfNull(geometry);
-        if (geometryOffset.Dx == 0.0 && geometryOffset.Dy == 0.0)
-        {
-            AddDrawCommand(context => ShaderDrawing.DrawGeometry(context, brush, pen, geometry));
-            return;
-        }
-
-        AddDrawCommand(context =>
-        {
-            using var transform = context.PushTransform(
-                Matrix.CreateTranslation(geometryOffset.Dx, geometryOffset.Dy));
-            ShaderDrawing.DrawGeometry(context, brush, pen, geometry);
-        });
-    }
-
-    /// <summary>
-    /// Draws a shadow for a <see cref="RectangleGeometry"/> or <see cref="EllipseGeometry"/> occluder, as
-    /// <see cref="DrawShadow(Path, Color, double, bool, Point)"/> over the matching path.
-    /// </summary>
-    /// <remarks>
-    /// Plumix-only: Avalonia does not expose a geometry's native path, so any other geometry gets an
-    /// offset, stroked approximation (see <c>docs/ai/DIVERGENCES.md</c>); pass a <see cref="Path"/> instead.
-    /// </remarks>
-    internal virtual void DrawShadow(
-        Geometry geometry,
-        Color color,
-        double elevation,
-        bool transparentOccluder,
-        Offset geometryOffset = default)
-    {
-        ArgumentNullException.ThrowIfNull(geometry);
-        if (ShadowPathOf(geometry) is { } path)
-        {
-            DrawShadow(path, color, elevation, transparentOccluder, geometryOffset);
-            return;
-        }
-
-        DebugRecordCall(new CanvasCall("drawShadow", ShadowColor: color, Elevation: elevation));
-        DrawApproximateShadow(geometry, color, elevation, transparentOccluder, geometryOffset);
-    }
-
     /// <summary>
     /// Draws a shadow for a rectangle, rounded rectangle, or arbitrary path, as if it were the outline of a
     /// physical object at <paramref name="elevation"/> above the canvas.
     /// </summary>
     /// <remarks>
     /// Dart's <c>Canvas.drawShadow(path, color, elevation, transparentOccluder)</c>, rendered as the Flutter
-    /// engine's Skia backend does (see <see cref="ShadowDraw"/>): the elevation is scaled by the implicit
+    /// engine's Skia backend does (see Plumix.Avalonia's ShadowDraw): the elevation is scaled by the implicit
     /// view's device pixel ratio, and the shadow combines an ambient and a directional spot shadow.
     /// </remarks>
     public virtual void DrawShadow(
@@ -783,105 +306,25 @@ public partial class Canvas
 
         Path occluder = geometryOffset.Dx == 0.0 && geometryOffset.Dy == 0.0 ? path : path.Shift(geometryOffset);
         double devicePixelRatio = PlatformDispatcher.Instance.EngineDevicePixelRatio;
-        var shadow = new ShadowDraw(occluder, color, elevation, transparentOccluder, devicePixelRatio);
-        AddDrawCommand(context => context.Custom(shadow));
-    }
-
-    private static Path? ShadowPathOf(Geometry geometry)
-    {
-        switch (geometry)
-        {
-            case RectangleGeometry { Transform: null or { Value.IsIdentity: true } } rectangle:
-            {
-                var path = new Path();
-                if (rectangle.RadiusX > 0.0 && rectangle.RadiusY > 0.0)
-                {
-                    path.AddRRect(RRect.FromRectXY(rectangle.Rect.ToPlumix(), rectangle.RadiusX, rectangle.RadiusY));
-                }
-                else
-                {
-                    path.AddRect(rectangle.Rect.ToPlumix());
-                }
-
-                return path;
-            }
-
-            case EllipseGeometry { Transform: null or { Value.IsIdentity: true } } ellipse:
-            {
-                var path = new Path();
-                // An unset Rect means the ellipse is given by its centre and radii (Avalonia's two modes).
-                path.AddOval(ellipse.Rect != default
-                    ? ellipse.Rect.ToPlumix()
-                    : Rect.FromLTWH(
-                        ellipse.Center.X - ellipse.RadiusX,
-                        ellipse.Center.Y - ellipse.RadiusY,
-                        ellipse.RadiusX * 2.0,
-                        ellipse.RadiusY * 2.0));
-                return path;
-            }
-
-            default:
-                return null;
-        }
-    }
-
-    private void DrawApproximateShadow(
-        Geometry geometry,
-        Color color,
-        double elevation,
-        bool transparentOccluder,
-        Offset geometryOffset)
-    {
-        if (elevation <= 0.0 || color.Alpha == 0)
-        {
-            return;
-        }
-
-        AddDrawCommand(context =>
-        {
-            Offset effectiveOffset = geometryOffset + new Offset(0.0, elevation * 0.5);
-            using var transform = context.PushTransform(Matrix.CreateTranslation(
-                effectiveOffset.Dx,
-                effectiveOffset.Dy));
-            int steps = Math.Max(1, (int)Math.Ceiling(elevation * 2.0));
-            for (int step = steps; step >= 1; step--)
-            {
-                double fraction = step / (double)steps;
-                byte alpha = (byte)Math.Clamp(
-                    (int)Math.Round(color.Alpha * 0.12 * (1.0 - (fraction * 0.75))),
-                    1,
-                    byte.MaxValue);
-                var shadowBrush = new SolidColorBrush(
-                    Color.FromARGB(alpha, color.Red, color.Green, color.Blue).ToAvalonia());
-                var shadowPen = new Pen(shadowBrush, step * 2.0);
-                ShaderDrawing.DrawGeometry(context, transparentOccluder ? shadowBrush : null, shadowPen, geometry);
-            }
-        });
+        AddOp(new DrawShadowOp(occluder, color, elevation, transparentOccluder, devicePixelRatio));
     }
 
     /// <summary>
     /// Draws the given image into the canvas with its top-left corner at the given offset, composited
     /// with the given <see cref="Paint"/>.
     /// </summary>
-    /// <remarks>Dart's <c>Canvas.drawImage(image, offset, paint)</c>; the image is an Avalonia
-    /// <see cref="RasterImage"/> (see <c>docs/ai/DIVERGENCES.md</c>).</remarks>
+    /// <remarks>Dart's <c>Canvas.drawImage(image, offset, paint)</c>.</remarks>
     public virtual void DrawImage(RasterImage image, Offset offset, Paint paint)
     {
         ArgumentNullException.ThrowIfNull(image);
         ArgumentNullException.ThrowIfNull(paint);
-        Size size = ImageSize(image.Native);
-        var destination = offset & size;
         RecordImageDraw(
-            new CanvasCall("drawImage", Offset: offset, Image: image.Native),
-            image.Native,
-            paint,
-            destination,
-            (
-                context,
-                source) => context.DrawImage(
-                    source,
-                    (Offset.Zero & source.Size.ToPlumix()).ToAvalonia(),
-                    destination.ToAvalonia()));
+            new CanvasCall("drawImage", Offset: offset, Image: image),
+            ImageDrawKind.Image,
+            image,
+            default,
+            offset & ImageSize(image),
+            paint);
     }
 
     /// <summary>
@@ -898,19 +341,12 @@ public partial class Canvas
         ArgumentNullException.ThrowIfNull(image);
         ArgumentNullException.ThrowIfNull(paint);
         RecordImageDraw(
-            new CanvasCall("drawImageRect", Rect: dst, SourceRect: src, Image: image.Native),
-            image.Native,
-            paint,
+            new CanvasCall("drawImageRect", Rect: dst, SourceRect: src, Image: image),
+            ImageDrawKind.ImageRect,
+            image,
+            src,
             dst,
-            (context, source) =>
-            {
-                if (src.Width <= 0.0 || src.Height <= 0.0 || dst.Width <= 0.0 || dst.Height <= 0.0)
-                {
-                    return;
-                }
-
-                context.DrawImage(source, src.ToAvalonia(), dst.ToAvalonia());
-            });
+            paint);
     }
 
     /// <summary>
@@ -927,19 +363,13 @@ public partial class Canvas
     {
         ArgumentNullException.ThrowIfNull(image);
         ArgumentNullException.ThrowIfNull(paint);
-        Size size = ImageSize(image.Native);
         RecordImageDraw(
-            new CanvasCall("drawImageNine", Rect: dst, SourceRect: center, Image: image.Native),
-            image.Native,
-            paint,
+            new CanvasCall("drawImageNine", Rect: dst, SourceRect: center, Image: image),
+            ImageDrawKind.ImageNine,
+            image,
+            center,
             dst,
-            (context, source) =>
-            {
-                foreach ((Rect patchSource, Rect patchDestination) in NinePatches(size, center, dst))
-                {
-                    context.DrawImage(source, patchSource.ToAvalonia(), patchDestination.ToAvalonia());
-                }
-            });
+            paint);
     }
 
     /// <summary>The source and destination rect of each visible patch of a nine-patch draw.</summary>
@@ -978,87 +408,35 @@ public partial class Canvas
         return [start, first, Math.Max(first, last), start + extent];
     }
 
-    // The image's size in dart:ui image pixels: the Avalonia image's own size (decoded bitmaps are 96 DPI,
+    // The image's size in dart:ui image pixels: the backend image's own size (decoded bitmaps are 96 DPI,
     // one unit per pixel), as RenderImage and ImageInfo measure it.
-    internal static Size ImageSize(IImage image) => image.Size.ToPlumix();
+    internal static Size ImageSize(RasterImage image) => image.LogicalSize;
 
     // Records one image draw of a Paint-taking method. The paint is read now, as Dart's canvas does.
     private void RecordImageDraw(
         CanvasCall call,
-        IImage image,
-        Paint paint,
-        Rect bounds,
-        Action<DrawingContext, IImage> draw)
+        ImageDrawKind kind,
+        RasterImage image,
+        Rect source,
+        Rect destination,
+        Paint paint)
     {
         var snapshot = new Paint(paint);
         DebugRecordCall(call with { Paint = snapshot, BlendMode = snapshot.BlendMode, RecordedColor = snapshot.Color });
-        double opacity = snapshot.Color.Opacity;
-        BitmapBlendingMode blendMode = FilterLayerRasterizer.ToBitmapBlendingMode(snapshot.BlendMode);
-        BitmapInterpolationMode interpolation = snapshot.FilterQuality switch
-        {
-            FilterQuality.None => BitmapInterpolationMode.None,
-            FilterQuality.Low => BitmapInterpolationMode.LowQuality,
-            FilterQuality.High => BitmapInterpolationMode.HighQuality,
-            _ => BitmapInterpolationMode.MediumQuality,
-        };
-        EdgeMode edgeMode = snapshot.IsAntiAlias ? EdgeMode.Antialias : EdgeMode.Aliased;
-        ColorFilter? colorFilter = snapshot.ColorFilter;
-        bool invertColors = snapshot.InvertColors;
+        var draw = new DrawImageOp(kind, image, source, destination, snapshot);
 
         // Skia applies a draw's image filter to the draw's output, as if the draw had its own layer.
-        bool filterLayer = snapshot.ImageFilter is not null;
-        if (filterLayer)
+        if (snapshot.ImageFilter is null)
         {
-            var layerPaint = new Paint { ImageFilter = snapshot.ImageFilter };
-            var layer = new CanvasLayer(bounds, layerPaint, Matrix4.Copy(_transform));
-            _commands.Add(CanvasCommand.ForSaveLayer(layer));
-            AddImageDraw();
-            layer.RestoreIndex = _commands.Count;
-            _commands.Add(CanvasCommand.ForRestore());
+            AddOp(draw);
             return;
         }
 
-        AddImageDraw();
-
-        void AddImageDraw()
-        {
-            AddDrawCommand(context =>
-            {
-                if (opacity <= 0.0 && blendMode == BitmapBlendingMode.SourceOver)
-                {
-                    return;
-                }
-
-                IImage source = colorFilter is null && !invertColors
-                    ? image
-                    : FilteredImages.Get(image, colorFilter, invertColors);
-                DrawingContext.PushedState? alpha = opacity < 1.0 ? context.PushOpacity(opacity) : null;
-                try
-                {
-                    using DrawingContext.PushedState options = context.PushRenderOptions(new RenderOptions
-                    {
-                        BitmapInterpolationMode = interpolation,
-                        EdgeMode = edgeMode,
-                        BitmapBlendingMode = blendMode,
-                    });
-                    draw(context, source);
-                }
-                finally
-                {
-                    alpha?.Dispose();
-                }
-            });
-        }
-    }
-
-    private static Offset PointOnEllipse(Rect rect, double angleRadians)
-    {
-        double centerX = rect.Left + (rect.Width / 2.0);
-        double centerY = rect.Top + (rect.Height / 2.0);
-        double radiusX = rect.Width / 2.0;
-        double radiusY = rect.Height / 2.0;
-        return new Offset(
-            centerX + (Math.Cos(angleRadians) * radiusX),
-            centerY + (Math.Sin(angleRadians) * radiusY));
+        var layerPaint = new Paint { ImageFilter = snapshot.ImageFilter };
+        var layer = new CanvasLayer(destination, layerPaint, Matrix4.Copy(_transform));
+        AddOp(new SaveLayerOp(layer));
+        AddOp(draw);
+        layer.RestoreIndex = _commands.Count;
+        AddOp(RestoreOp.Instance);
     }
 }

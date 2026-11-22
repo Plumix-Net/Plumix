@@ -75,27 +75,4 @@ public abstract class ClipContext
         ArgumentNullException.ThrowIfNull(painter);
         ClipAndPaint(doAntiAlias => Canvas.ClipRect(rect, doAntiAlias), clipBehavior, bounds, painter);
     }
-
-    /// <summary>
-    /// Plumix-only: clips <see cref="Canvas"/> with an Avalonia geometry the caller already built.
-    /// </summary>
-    /// <remarks>
-    /// Flutter has no counterpart because every Dart clip goes through <c>Path</c>; Plumix keeps this
-    /// door open for render objects that receive a backend geometry (ovals, decoration outlines).
-    /// </remarks>
-    internal void ClipGeometryAndPaint(
-        Avalonia.Media.Geometry geometry,
-        Offset geometryOffset,
-        Clip clipBehavior,
-        Rect bounds,
-        Action painter)
-    {
-        ArgumentNullException.ThrowIfNull(geometry);
-        ArgumentNullException.ThrowIfNull(painter);
-        ClipAndPaint(
-            doAntiAlias => Canvas.ClipGeometry(geometry, doAntiAlias, geometryOffset),
-            clipBehavior,
-            bounds,
-            painter);
-    }
 }

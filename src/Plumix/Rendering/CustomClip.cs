@@ -1,6 +1,4 @@
 using System.Diagnostics;
-using Avalonia;
-using Avalonia.Media;
 using Plumix.Foundation;
 using Plumix.Painting;
 using Plumix.UI;
@@ -219,7 +217,7 @@ public abstract class RenderCustomClip<T> : RenderProxyBox
     }
 
     /// <remarks>Flutter's <c>_RenderCustomClip._debugPaint</c>.</remarks>
-    private protected IPen? _debugPaint;
+    private protected Paint? _debugPaint;
 
     /// <remarks>Flutter's <c>_RenderCustomClip._debugText</c>.</remarks>
     private protected TextPainter? _debugText;
@@ -229,21 +227,18 @@ public abstract class RenderCustomClip<T> : RenderProxyBox
     {
         if (Constants.KDebugMode)
         {
-            _debugPaint ??= new Pen(
-                new LinearGradientBrush
-                {
-                    StartPoint = new RelativePoint(0.0, 0.0, RelativeUnit.Absolute),
-                    EndPoint = new RelativePoint(10.0, 10.0, RelativeUnit.Absolute),
-                    SpreadMethod = GradientSpreadMethod.Repeat,
-                    GradientStops =
-                    [
-                        new GradientStop(new Color(0x00000000).ToAvalonia(), 0.25),
-                        new GradientStop(new Color(0xFFFF00FF).ToAvalonia(), 0.25),
-                        new GradientStop(new Color(0xFFFF00FF).ToAvalonia(), 0.75),
-                        new GradientStop(new Color(0x00000000).ToAvalonia(), 0.75),
-                    ],
-                },
-                2.0);
+            _debugPaint ??= new Paint
+            {
+                Shader = GradientShader.Linear(
+                    Offset.Zero,
+                    new Offset(10.0, 10.0),
+                    [new Color(0x00000000), new Color(0xFFFF00FF), new Color(0xFFFF00FF), new Color(0x00000000)],
+                    [0.25, 0.25, 0.75, 0.75],
+                    TileMode.Repeated,
+                    matrix: null),
+                StrokeWidth = 2.0,
+                Style = PaintingStyle.Stroke,
+            };
             if (_debugText is null)
             {
                 _debugText = new TextPainter(
@@ -334,7 +329,7 @@ public class RenderClipRect : RenderCustomClip<Rect>
                 base.DebugPaintSize(context, offset);
                 if (ClipBehavior != Clip.None)
                 {
-                    context.Canvas.DrawRectangle(null, _debugPaint, (_clip.TopLeft + offset & _clip.Size));
+                    context.Canvas.DrawRect((_clip.TopLeft + offset & _clip.Size), _debugPaint!);
                     _debugText!.Paint(
                         context.Canvas,
                         offset + new Offset(_clip.Width / 8.0, -DebugTextFontSize * 1.1));
@@ -455,7 +450,7 @@ public class RenderClipRRect : RenderCustomClip<RRect>
                 base.DebugPaintSize(context, offset);
                 if (ClipBehavior != Clip.None)
                 {
-                    context.Canvas.DrawRRect(_clip.Shift(offset), brush: null, pen: _debugPaint);
+                    context.Canvas.DrawRRect(_clip.Shift(offset), _debugPaint!);
                     _debugText!.Paint(
                         context.Canvas,
                         offset + new Offset(_clip.TopLeft.X, -DebugTextFontSize * 1.1));
@@ -573,7 +568,7 @@ public class RenderClipRSuperellipse : RenderCustomClip<RSuperellipse>
                 base.DebugPaintSize(context, offset);
                 if (ClipBehavior != Clip.None)
                 {
-                    context.Canvas.DrawRSuperellipse(_clip.Shift(offset), brush: null, pen: _debugPaint);
+                    context.Canvas.DrawRSuperellipse(_clip.Shift(offset), _debugPaint!);
                     _debugText!.Paint(
                         context.Canvas,
                         offset + new Offset(_clip.TopLeft.X, -DebugTextFontSize * 1.1));
@@ -669,7 +664,7 @@ public class RenderClipOval : RenderCustomClip<Rect>
                 base.DebugPaintSize(context, offset);
                 if (ClipBehavior != Clip.None)
                 {
-                    context.Canvas.DrawPath(GetClipPath(_clip).Shift(offset), brush: null, pen: _debugPaint);
+                    context.Canvas.DrawPath(GetClipPath(_clip).Shift(offset), _debugPaint!);
                     _debugText!.Paint(
                         context.Canvas,
                         offset + new Offset((_clip.Width - _debugText.Width) / 2.0, -DebugTextFontSize * 1.1));
@@ -754,7 +749,7 @@ public class RenderClipPath : RenderCustomClip<Path>
                 base.DebugPaintSize(context, offset);
                 if (ClipBehavior != Clip.None)
                 {
-                    context.Canvas.DrawPath(_clip.Shift(offset), brush: null, pen: _debugPaint);
+                    context.Canvas.DrawPath(_clip.Shift(offset), _debugPaint!);
                     _debugText!.Paint(context.Canvas, offset);
                 }
             }

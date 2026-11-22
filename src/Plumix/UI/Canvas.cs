@@ -1,32 +1,11 @@
-using Avalonia;
-using Avalonia.Media;
-using Avalonia.Media.Imaging;
 using Plumix.Foundation;
 using Plumix.Rendering;
 
 namespace Plumix.UI;
 
-// Dart parity source: dart:ui Canvas/Picture/PictureRecorder (recording surface over Avalonia's
-// DrawingContext; some paint arguments stay Avalonia brushes/pens, see docs/ai/DIVERGENCES.md)
-
-/// <summary>The kinds of entry a <see cref="Canvas"/> records into a <see cref="Picture"/>.</summary>
-internal enum CanvasCommandKind
-{
-    /// <summary>A drawing operation that leaves no state behind.</summary>
-    Draw,
-
-    /// <summary>A clip/transform that stays in effect until the matching restore.</summary>
-    Push,
-
-    /// <summary>`Canvas.save`: marks the point a later restore unwinds to.</summary>
-    Save,
-
-    /// <summary>`Canvas.restore`: unwinds every push made since the matching save.</summary>
-    Restore,
-
-    /// <summary>`Canvas.saveLayer`: a save that also opens an isolated group, composited on restore.</summary>
-    SaveLayer,
-}
+// Dart parity source: dart:ui Canvas/Picture/PictureRecorder (a recording canvas; the picture is a list
+// of typed entries, CanvasOps.cs, that a backend plays back — CanvasPlayback.cs in Plumix.Avalonia for
+// Avalonia/Skia)
 
 /// <summary>Defines how a new clip region should be merged with the existing clip region.</summary>
 /// <remarks>Dart's <c>ClipOp</c>; used by <see cref="Canvas.ClipRect"/>.</remarks>
@@ -84,32 +63,6 @@ internal sealed class CanvasLayer
     internal bool NeedsRaster =>
         BlendMode != BlendMode.SourceOver || ColorFilter is not null || ImageFilter is not null || InvertColors;
 
-    /// <summary>The rasterized group and the scale it was rasterized at, reused across playbacks.</summary>
-    internal (WriteableBitmap? Bitmap, Rect Destination, double Scale)? Raster { get; set; }
-
-    /// <summary>Whether rasterizing failed once (no raster backend), so playback falls back for good.</summary>
-    internal bool RasterUnavailable { get; set; }
-}
-
-/// <summary>One recorded canvas entry.</summary>
-internal readonly record struct CanvasCommand(
-    CanvasCommandKind Kind,
-    Action<DrawingContext>? Draw,
-    Func<DrawingContext, DrawingContext.PushedState>? Push,
-    CanvasLayer? Layer = null)
-{
-    internal static CanvasCommand ForDraw(Action<DrawingContext> draw) =>
-        new(CanvasCommandKind.Draw, draw, null);
-
-    internal static CanvasCommand ForPush(Func<DrawingContext, DrawingContext.PushedState> push) =>
-        new(CanvasCommandKind.Push, null, push);
-
-    internal static CanvasCommand ForSave() => new(CanvasCommandKind.Save, null, null);
-
-    internal static CanvasCommand ForSaveLayer(CanvasLayer layer) =>
-        new(CanvasCommandKind.SaveLayer, null, null, layer);
-
-    internal static CanvasCommand ForRestore() => new(CanvasCommandKind.Restore, null, null);
 }
 
 /// <summary>
@@ -122,8 +75,6 @@ internal readonly record struct CanvasCall(
     string Method,
     Rect? Rect = null,
     RRect? RRect = null,
-    IBrush? Brush = null,
-    IPen? Pen = null,
     Offset? Offset = null,
     Path? Path = null,
     Offset? Center = null,
@@ -137,32 +88,22 @@ internal readonly record struct CanvasCall(
     BlendMode? BlendMode = null,
     Rect? SourceRect = null,
     Paint? Paint = null,
-    IImage? Image = null)
+    RasterImage? Image = null)
 {
     /// <summary>
-    /// The paint colour (Dart's <c>Paint.color</c>): the shadow colour, else the fill brush's, else the
-    /// stroke pen's.
+    /// The paint colour (Dart's <c>Paint.color</c>): the colour captured with the call, else the shadow
+    /// colour, else the colour of a paint without a shader.
     /// </summary>
-    public Color? Color => RecordedColor ?? ResolvePaintColor();
+    public Color? Color => RecordedColor ?? ShadowColor ?? (Paint is { Shader: null } paint ? paint.Color : null);
 
     /// <summary>The paint colour captured when the call was recorded.</summary>
     public Color? RecordedColor { get; init; }
 
-    internal Color? ResolvePaintColor() => ShadowColor ?? SolidColor(Brush) ?? SolidColor(Pen?.Brush);
+    /// <summary>Dart's <c>Paint.style</c> of the call's paint; a call without a paint fills.</summary>
+    public PaintingStyle Style => Paint?.Style ?? PaintingStyle.Fill;
 
-    // A mutable Avalonia brush is thread-affine; one created on another thread reports no colour.
-    private static Color? SolidColor(IBrush? brush) => brush switch
-    {
-        ISolidColorBrush solid when brush is not Avalonia.AvaloniaObject owner || owner.CheckAccess() =>
-            solid.Color.ToPlumix(),
-        _ => null,
-    };
-
-    /// <summary>Dart's <c>Paint.style</c>: a pen without a brush strokes, anything else fills.</summary>
-    public PaintingStyle Style => Brush is null && Pen is not null ? PaintingStyle.Stroke : PaintingStyle.Fill;
-
-    /// <summary>Dart's <c>Paint.strokeWidth</c>: the pen thickness of a stroke, 0 for a fill.</summary>
-    public double StrokeWidth => Brush is null && Pen is not null ? Pen.Thickness : 0.0;
+    /// <summary>Dart's <c>Paint.strokeWidth</c> of a stroking call, 0 for a fill.</summary>
+    public double StrokeWidth => Paint is { Style: PaintingStyle.Stroke } paint ? paint.StrokeWidth : 0.0;
 }
 
 /// <summary>Signature for <see cref="Picture"/> lifecycle events.</summary>
@@ -171,16 +112,15 @@ public delegate void PictureEventCallback(Picture picture);
 
 /// <summary>An object representing a sequence of recorded graphical operations.</summary>
 /// <remarks>
-/// Dart's <c>ui.Picture</c>. Plumix records Avalonia draw calls rather than a Skia display list, so
-/// <see cref="Playback"/> replays them onto a live <see cref="DrawingContext"/> instead of being
-/// handed to a scene builder.
+/// Dart's <c>ui.Picture</c>: the typed entries a <see cref="Canvas"/> recorded (the engine's display
+/// list), which the host backend plays back.
 /// </remarks>
 public sealed class Picture
 {
-    private readonly IReadOnlyList<CanvasCommand> _commands;
+    private readonly IReadOnlyList<CanvasOp> _commands;
     private bool _disposed;
 
-    internal Picture(IReadOnlyList<CanvasCommand> commands, IReadOnlyList<CanvasCall>? debugCalls = null)
+    internal Picture(IReadOnlyList<CanvasOp> commands, IReadOnlyList<CanvasCall>? debugCalls = null)
     {
         _commands = commands;
         DebugCalls = debugCalls ?? [];
@@ -219,7 +159,7 @@ public sealed class Picture
             int count = 0;
             for (int index = 0; index < _commands.Count; index++)
             {
-                if (_commands[index].Kind == CanvasCommandKind.Draw)
+                if (_commands[index].IsDraw)
                 {
                     count++;
                 }
@@ -276,180 +216,22 @@ public sealed class Picture
     public Task<RasterImage> ToImage(int width, int height) =>
         Task.FromResult(ToImageSync(width, height));
 
-    /// <summary>Replays the recorded operations, translated by <paramref name="offset"/>.</summary>
-    internal void Playback(DrawingContext context, Offset offset)
-    {
-        Playback(context, offset, PaintRasterizer.RasterScale);
-    }
-
-    /// <summary>
-    /// Replays the recorded operations, translated by <paramref name="offset"/>, rasterizing any layer that
-    /// needs it at <paramref name="deviceScale"/> device pixels per picture unit.
-    /// </summary>
-    internal void Playback(DrawingContext context, Offset offset, double deviceScale)
-    {
-        ArgumentNullException.ThrowIfNull(context);
-        if (_commands.Count == 0)
-        {
-            return;
-        }
-
-        DrawingContext.PushedState? translation = null;
-        try
-        {
-            if (offset.Dx != 0.0 || offset.Dy != 0.0)
-            {
-                translation = context.PushTransform(Matrix.CreateTranslation(offset.Dx, offset.Dy));
-            }
-
-            PlayRange(context, 0, _commands.Count, deviceScale);
-        }
-        finally
-        {
-            translation?.Dispose();
-        }
-    }
-
-    // Replays commands [start, end): a balanced range, so every save in it is restored in it (or at its end).
-    private void PlayRange(DrawingContext context, int start, int end, double deviceScale)
-    {
-        var pushed = new List<DrawingContext.PushedState>();
-        var saves = new Stack<int>();
-        try
-        {
-            for (int index = start; index < end; index++)
-            {
-                CanvasCommand command = _commands[index];
-                switch (command.Kind)
-                {
-                    case CanvasCommandKind.Save:
-                        saves.Push(pushed.Count);
-                        break;
-                    case CanvasCommandKind.SaveLayer:
-                        CanvasLayer layer = command.Layer!;
-                        int restore = Math.Min(layer.RestoreIndex < 0 ? end : layer.RestoreIndex, end);
-                        if (layer.NeedsRaster
-                            && TryDrawRasterizedLayer(context, layer, index + 1, restore, deviceScale))
-                        {
-                            // The group, and its restore, were composited as one image.
-                            index = restore;
-                            break;
-                        }
-
-                        saves.Push(pushed.Count);
-                        pushed.Add(PushIsolatedGroup(context, layer));
-                        break;
-                    case CanvasCommandKind.Restore:
-                        Unwind(pushed, saves.Count > 0 ? saves.Pop() : 0);
-                        break;
-                    case CanvasCommandKind.Push:
-                        pushed.Add(command.Push!(context));
-                        break;
-                    default:
-                        command.Draw!(context);
-                        break;
-                }
-            }
-        }
-        finally
-        {
-            Unwind(pushed, 0);
-        }
-    }
-
-    // An alpha-only layer: an opacity mask of the paint's alpha opens an isolated offscreen group on the
-    // backend (Skia's saveLayer), which is composited with that alpha when the group is popped.
-    private static DrawingContext.PushedState PushIsolatedGroup(DrawingContext context, CanvasLayer layer)
-    {
-        var mask = new Avalonia.Media.Immutable.ImmutableSolidColorBrush(
-            Avalonia.Media.Color.FromArgb(layer.Alpha, 0xFF, 0xFF, 0xFF));
-        return context.PushOpacityMask(mask, ClampLayerBounds(layer.Bounds).ToAvalonia());
-    }
-
-    // Avalonia needs finite group bounds; an unbounded layer is bounded by the largest finite rect instead.
-    private static Rect ClampLayerBounds(Rect? bounds)
-    {
-        Rect largest = Canvas.LargestRect;
-        if (bounds is not { } rect || !double.IsFinite(rect.Width) || !double.IsFinite(rect.Height))
-        {
-            return largest;
-        }
-
-        return rect.Intersect(largest);
-    }
-
-    private bool TryDrawRasterizedLayer(
-        DrawingContext context,
-        CanvasLayer layer,
-        int start,
-        int end,
-        double deviceScale)
-    {
-        if (layer.RasterUnavailable)
-        {
-            return false;
-        }
-
-        double scale = Math.Clamp(deviceScale * layer.Transform.GetMaxScaleOnAxis(), 0.25, 8.0);
-        if (layer.Raster is not { } raster || raster.Scale != scale)
-        {
-            if (layer.Bounds is not { } bounds || !PaintRasterizer.CanRasterize(bounds))
-            {
-                return false;
-            }
-
-            try
-            {
-                (WriteableBitmap? bitmap, Rect destination) = FilterLayerRasterizer.RasterizeSaveLayer(
-                    drawingContext => PlayRange(drawingContext, start, end, deviceScale),
-                    bounds,
-                    scale,
-                    layer);
-                raster = (bitmap, destination, scale);
-                layer.Raster = raster;
-            }
-            catch (InvalidOperationException)
-            {
-                layer.RasterUnavailable = true;
-                return false;
-            }
-            catch (NotSupportedException)
-            {
-                layer.RasterUnavailable = true;
-                return false;
-            }
-        }
-
-        if (raster.Bitmap is { } image)
-        {
-            FilterLayerRasterizer.DrawSaveLayer(context, image, raster.Destination, layer.BlendMode);
-        }
-
-        return true;
-    }
-
-    private static void Unwind(List<DrawingContext.PushedState> pushed, int target)
-    {
-        for (int index = pushed.Count - 1; index >= target; index--)
-        {
-            pushed[index].Dispose();
-            pushed.RemoveAt(index);
-        }
-    }
+    /// <summary>The recorded entries, in order.</summary>
+    internal IReadOnlyList<CanvasOp> Ops => _commands;
 }
 
 /// <summary>Records a <see cref="Picture"/> containing the drawing operations of a <see cref="Canvas"/>.</summary>
 /// <remarks>Dart's <c>ui.PictureRecorder</c>.</remarks>
 public sealed class PictureRecorder
 {
-    private List<CanvasCommand>? _commands;
+    private List<CanvasOp>? _commands;
     private List<CanvasCall>? _debugCalls;
     private Picture? _picture;
 
     /// <summary>Whether this object is currently recording commands.</summary>
     public bool IsRecording => _commands is not null && _picture is null;
 
-    internal List<CanvasCommand> BeginRecording()
+    internal List<CanvasOp> BeginRecording()
     {
         if (_commands is not null)
         {
@@ -483,14 +265,14 @@ public sealed class PictureRecorder
 /// <summary>An interface for recording graphical operations.</summary>
 /// <remarks>
 /// Dart's <c>ui.Canvas</c>. The clip/transform/save stack, its queries and <c>saveLayer</c> are ported 1:1;
-/// some drawing calls still take Avalonia brushes and pens where Dart takes a <c>Paint</c>.
+/// every call appends a typed entry (<see cref="CanvasOp"/>) to the picture.
 /// </remarks>
 public partial class Canvas
 {
     // Dart's Rect.largest: the default cull rect of a recording canvas.
     internal static readonly Rect LargestRect = Rect.FromLTWH(-1.0e9, -1.0e9, 2.0e9, 2.0e9);
 
-    private readonly List<CanvasCommand> _commands;
+    private readonly List<CanvasOp> _commands;
     private readonly List<CanvasCall> _debugCalls;
 
     // One entry per save/saveLayer: the transform and clip to restore, and the layer it opened (if any).
@@ -548,9 +330,7 @@ public partial class Canvas
     {
         if (Constants.KDebugMode || DebugRecordCallsInEveryBuildMode)
         {
-            // Avalonia brushes are thread-affine: read the paint colour while recording, on the
-            // painting thread, so tests can inspect it from any thread.
-            _debugCalls.Add(call with { RecordedColor = call.RecordedColor ?? call.ResolvePaintColor() });
+            _debugCalls.Add(call);
         }
     }
 
@@ -564,7 +344,7 @@ public partial class Canvas
         DebugRecordCall(new CanvasCall("save"));
         _saveStack.Push((Matrix4.Copy(_transform), _destinationClipBounds, null));
         _saveCount++;
-        _commands.Add(CanvasCommand.ForSave());
+        AddOp(SaveOp.Instance);
     }
 
     /// <summary>
@@ -590,7 +370,7 @@ public partial class Canvas
         var layer = new CanvasLayer(layerBounds, paint, Matrix4.Copy(_transform));
         _saveStack.Push((Matrix4.Copy(_transform), _destinationClipBounds, layer));
         _saveCount++;
-        _commands.Add(CanvasCommand.ForSaveLayer(layer));
+        AddOp(new SaveLayerOp(layer));
     }
 
     /// <summary>Pops the current save stack, if there is anything to pop.</summary>
@@ -611,7 +391,7 @@ public partial class Canvas
             layer.RestoreIndex = _commands.Count;
         }
 
-        _commands.Add(CanvasCommand.ForRestore());
+        AddOp(RestoreOp.Instance);
     }
 
     /// <summary>Restores the save stack to a previous level as returned by <see cref="GetSaveCount"/>.</summary>
@@ -633,8 +413,7 @@ public partial class Canvas
         }
 
         _transform.Multiply(Matrix4.TranslationValues(dx, dy, 0.0));
-        _commands.Add(CanvasCommand.ForPush(context =>
-            context.PushTransform(Matrix.CreateTranslation(dx, dy))));
+        AddOp(TransformOp.Translate(dx, dy));
     }
 
     /// <summary>Adds an axis-aligned scale to the current transform.</summary>
@@ -643,7 +422,7 @@ public partial class Canvas
         double scaleY = sy ?? sx;
         DebugRecordCall(new CanvasCall("scale", Dx: sx, Dy: scaleY));
         _transform.Multiply(Matrix4.Diagonal3Values(sx, scaleY, 1.0));
-        _commands.Add(CanvasCommand.ForPush(context => context.PushTransform(Matrix.CreateScale(sx, scaleY))));
+        AddOp(TransformOp.Scale(sx, scaleY));
     }
 
     /// <summary>Adds a rotation, in radians, to the current transform.</summary>
@@ -651,7 +430,7 @@ public partial class Canvas
     {
         DebugRecordCall(new CanvasCall("rotate", Radius: radians));
         _transform.Multiply(Matrix4.RotationZ(radians));
-        _commands.Add(CanvasCommand.ForPush(context => context.PushTransform(Matrix.CreateRotation(radians))));
+        AddOp(TransformOp.Rotate(radians));
     }
 
     /// <summary>
@@ -667,8 +446,7 @@ public partial class Canvas
         skew.SetEntry(0, 1, sx);
         skew.SetEntry(1, 0, sy);
         _transform.Multiply(skew);
-        Matrix avaloniaMatrix = skew.ToAvaloniaMatrix();
-        _commands.Add(CanvasCommand.ForPush(context => context.PushTransform(avaloniaMatrix)));
+        AddOp(TransformOp.ForMatrix(skew));
     }
 
     /// <summary>Multiplies the current transform by the given matrix.</summary>
@@ -677,8 +455,7 @@ public partial class Canvas
     {
         ArgumentNullException.ThrowIfNull(matrix);
         _transform.Multiply(matrix);
-        Matrix avaloniaMatrix = matrix.ToAvaloniaMatrix();
-        _commands.Add(CanvasCommand.ForPush(context => context.PushTransform(avaloniaMatrix)));
+        AddOp(TransformOp.ForMatrix(Matrix4.Copy(matrix)));
     }
 
     /// <summary>Returns the current transform including the combined result of all transform methods
@@ -720,17 +497,12 @@ public partial class Canvas
         DebugRecordCall(new CanvasCall("clipRect", Rect: rect));
         if (clipOp == ClipOp.Difference)
         {
-            Geometry? difference = null;
-            Geometry Difference() => difference ??= new CombinedGeometry(
-                GeometryCombineMode.Exclude,
-                new RectangleGeometry(LargestRect.ToAvalonia()),
-                new RectangleGeometry(rect.ToAvalonia()));
-            _commands.Add(CanvasCommand.ForPush(context => context.PushGeometryClip(Difference())));
+            AddOp(new ClipRectOp(rect, ClipOp.Difference));
             return;
         }
 
         IntersectClipBounds(rect, doAntiAlias);
-        _commands.Add(CanvasCommand.ForPush(context => context.PushClip(rect.ToAvalonia())));
+        AddOp(new ClipRectOp(rect, ClipOp.Intersect));
     }
 
     /// <summary>Reduces the clip region to the intersection of the current clip and the given rounded rect.</summary>
@@ -738,7 +510,7 @@ public partial class Canvas
     {
         DebugRecordCall(new CanvasCall("clipRRect", RRect: rrect));
         IntersectClipBounds(rrect.Rect, doAntiAlias);
-        _commands.Add(CanvasCommand.ForPush(context => SceneRasterizer.PushRoundedRectClip(context, rrect)));
+        AddOp(new ClipRRectOp(rrect));
     }
 
     /// <summary>Reduces the clip region to the intersection of the current clip and the given shape.</summary>
@@ -753,35 +525,7 @@ public partial class Canvas
         ArgumentNullException.ThrowIfNull(path);
         DebugRecordCall(new CanvasCall("clipPath", Path: path));
         IntersectClipBounds(path.GetBounds(), doAntiAlias);
-
-        // The backend geometry is built on playback: recording must not need a render backend.
-        Geometry? geometry = null;
-        _commands.Add(CanvasCommand.ForPush(context => context.PushGeometryClip(geometry ??= path.ToGeometry())));
-    }
-
-    /// <summary>Plumix-only: clips to an Avalonia geometry the caller already built.</summary>
-    /// <remarks>
-    /// Dart clips through <c>Path</c> only; Plumix models a few shapes (notched app bars, decoration
-    /// outlines) as backend geometry, which cannot be shifted, so the offset is applied around it.
-    /// </remarks>
-    internal virtual void ClipGeometry(Geometry geometry, bool doAntiAlias = true, Offset geometryOffset = default)
-    {
-        ArgumentNullException.ThrowIfNull(geometry);
-        Rect geometryBounds = geometry.Bounds.ToPlumix();
-        IntersectClipBounds(
-            (geometryBounds.TopLeft + geometryOffset & geometryBounds.Size),
-            doAntiAlias);
-        if (geometryOffset.Dx != 0.0 || geometryOffset.Dy != 0.0)
-        {
-            _commands.Add(CanvasCommand.ForPush(context =>
-                context.PushTransform(Matrix.CreateTranslation(geometryOffset.Dx, geometryOffset.Dy))));
-            _commands.Add(CanvasCommand.ForPush(context => context.PushGeometryClip(geometry)));
-            _commands.Add(CanvasCommand.ForPush(context =>
-                context.PushTransform(Matrix.CreateTranslation(-geometryOffset.Dx, -geometryOffset.Dy))));
-            return;
-        }
-
-        _commands.Add(CanvasCommand.ForPush(context => context.PushGeometryClip(geometry)));
+        AddOp(new ClipPathOp(new Path(path)));
     }
 
     // The engine's clip-coverage tracking: the clip's bounds in destination space, rounded out to whole
@@ -812,28 +556,27 @@ public partial class Canvas
     {
         ArgumentNullException.ThrowIfNull(paragraph);
         DebugRecordCall(new CanvasCall("drawParagraph", Offset: offset));
-        Action<DrawingContext>? draw = paragraph.CreateDrawAction(offset);
-        AddDrawCommand(draw ?? (static _ => { }));
+        AddOp(paragraph.CreateDrawOp(offset) ?? new BackendOp(BackendOp.NothingToDraw, isDraw: true));
     }
 
     /// <summary>
-    /// Plumix-only: multiplies the alpha of everything drawn until the matching restore by the alpha of
-    /// <paramref name="mask"/> over <paramref name="bounds"/>.
+    /// Plumix-only: multiplies the alpha of everything drawn until the matching restore by a linear fade
+    /// from opaque at <paramref name="from"/> to transparent at <paramref name="to"/> (both relative to a
+    /// box of <paramref name="size"/>), over <paramref name="bounds"/>.
     /// </summary>
     /// <remarks>
     /// Stands in for Dart's <c>saveLayer</c> + <c>drawRect(BlendMode.modulate, shader)</c> fade, which
     /// needs an isolated layer Avalonia's drawing context does not expose.
     /// </remarks>
-    internal virtual void PushOpacityMask(IBrush mask, Rect bounds)
+    internal virtual void PushFadeMask(Offset from, Offset to, Size size, Rect bounds)
     {
-        ArgumentNullException.ThrowIfNull(mask);
-        _commands.Add(CanvasCommand.ForPush(context => context.PushOpacityMask(mask, bounds.ToAvalonia())));
+        AddOp(new FadeMaskOp(from, to, size, bounds));
     }
 
-    /// <summary>Plumix-only: records a draw call that renders itself onto the backend context.</summary>
-    internal virtual void AddDrawCommand(Action<DrawingContext> draw)
+    /// <summary>Plumix-only: appends a recorded entry to the picture.</summary>
+    internal virtual void AddOp(CanvasOp op)
     {
-        ArgumentNullException.ThrowIfNull(draw);
-        _commands.Add(CanvasCommand.ForDraw(draw));
+        ArgumentNullException.ThrowIfNull(op);
+        _commands.Add(op);
     }
 }

@@ -1,4 +1,3 @@
-using Avalonia.Media;
 using Plumix.Cupertino;
 using Plumix.Foundation;
 using Plumix.Rendering;
@@ -708,23 +707,21 @@ internal sealed class RadioPainter : ToggleablePainter
             _activeBackgroundColor,
             Position.Value);
         context.Canvas.DrawCircle(
-            new SolidColorBrush(backgroundColor.ToAvalonia()),
-            null,
             origin,
-            OuterRadius);
+            OuterRadius,
+            new Paint { Color = backgroundColor });
 
         BorderSide side = MaterialThemeLerp.BorderSide(
             _inactiveSide,
             _activeSide,
             Position.Value) ?? _activeSide;
-        Pen? pen = side.Width > 0.0
-            ? new Pen(new SolidColorBrush(side.Color.ToAvalonia()), side.Width)
-            : null;
-        context.Canvas.DrawCircle(
-            new SolidColorBrush(Colors.Transparent.ToAvalonia()),
-            pen,
-            origin,
-            OuterRadius);
+        if (side.Width > 0.0)
+        {
+            context.Canvas.DrawCircle(
+                origin,
+                OuterRadius,
+                new Paint { Color = side.Color, Style = PaintingStyle.Stroke, StrokeWidth = side.Width });
+        }
 
         if (Position.Value <= 0.0)
         {
@@ -733,10 +730,9 @@ internal sealed class RadioPainter : ToggleablePainter
 
         Color innerColor = LerpColor(InactiveColor, ActiveColor, Position.Value);
         context.Canvas.DrawCircle(
-            new SolidColorBrush(innerColor.ToAvalonia()),
-            null,
             origin,
-            Math.Max(0.0, _innerRadius * Position.Value));
+            Math.Max(0.0, _innerRadius * Position.Value),
+            new Paint { Color = innerColor });
     }
 
     public override bool ShouldRepaint(CustomPainter oldDelegate)

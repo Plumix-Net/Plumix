@@ -2,7 +2,6 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
-using Avalonia.Media.Imaging;
 using Plumix.Developer;
 using Plumix.Foundation;
 using Plumix.Rendering;
@@ -629,11 +628,15 @@ public abstract partial class WidgetInspectorService
                     return new Dictionary<string, object?> { ["result"] = null };
                 }
 
-                using var stream = new MemoryStream();
-                ((Bitmap)image.Native).Save(stream, PngBitmapEncoderOptions.Default);
+                ByteData? png = await image.ToByteData(ImageByteFormat.Png).ConfigureAwait(true);
                 image.Dispose();
 
-                return new Dictionary<string, object?> { ["result"] = Convert.ToBase64String(stream.ToArray()) };
+                return new Dictionary<string, object?>
+                {
+                    ["result"] = png is null
+                        ? null
+                        : Convert.ToBase64String(png.Buffer, png.OffsetInBytes, png.LengthInBytes),
+                };
             },
             registerExtension);
         RegisterServiceExtension(

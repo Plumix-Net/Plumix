@@ -310,9 +310,9 @@ public sealed class BoxDecorationDartParityTests
         BoxPainter painter = new BoxDecoration(Gradient: gradient).CreateBoxPainter();
         var configuration = new ImageConfiguration(Size: new Size(10.0, 10.0));
 
-        IBrush? first = Assert.Single(PaintDecoration(painter, default, configuration)).Brush;
-        IBrush? same = Assert.Single(PaintDecoration(painter, default, configuration)).Brush;
-        IBrush? moved = Assert.Single(PaintDecoration(painter, new Offset(5.0, 0.0), configuration)).Brush;
+        Shader? first = Assert.Single(PaintDecoration(painter, default, configuration)).Paint?.Shader;
+        Shader? same = Assert.Single(PaintDecoration(painter, default, configuration)).Paint?.Shader;
+        Shader? moved = Assert.Single(PaintDecoration(painter, new Offset(5.0, 0.0), configuration)).Paint?.Shader;
 
         Assert.NotNull(first);
         Assert.Same(first, same);
@@ -438,7 +438,7 @@ public sealed class BoxDecorationDartParityTests
         public SynchronousImageCompleter(IImage image, string debugLabel)
         {
             DebugLabel = debugLabel;
-            SetImage(new ImageInfo(new RasterImage(image), debugLabel: debugLabel));
+            SetImage(new ImageInfo(AvaloniaImages.Wrap(image), debugLabel: debugLabel));
         }
     }
 

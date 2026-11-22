@@ -430,7 +430,7 @@ public sealed class MultiFrameImageStreamCompleterTests : IDisposable
         ImageStreamCompleterHandle handle;
         try
         {
-            image = new ImageInfo(new RasterImage(NewBitmap()), 2, "test");
+            image = new ImageInfo(AvaloniaImages.Wrap(NewBitmap()), 2, "test");
             clone = image.Clone();
             Assert.True(image.IsCloneOf(clone));
             image.Dispose();
@@ -494,7 +494,7 @@ public sealed class MultiFrameImageStreamCompleterTests : IDisposable
         }
 
         public void Complete(int milliseconds) => _pending.Dequeue().SetResult(new FrameInfo(
-            TimeSpan.FromMilliseconds(milliseconds), new RasterImage(NewBitmap())));
+            TimeSpan.FromMilliseconds(milliseconds), AvaloniaImages.Wrap(NewBitmap())));
         public void Fail(Exception exception) => _pending.Dequeue().SetException(exception);
         public override void Dispose() => Disposed = true;
     }
@@ -503,7 +503,7 @@ public sealed class MultiFrameImageStreamCompleterTests : IDisposable
 
     private sealed class TestCompleter : ImageStreamCompleter
     {
-        public void Emit() => SetImage(new ImageInfo(new RasterImage(NewBitmap())));
+        public void Emit() => SetImage(new ImageInfo(AvaloniaImages.Wrap(NewBitmap())));
     }
 
     private sealed class ChunkSource : IObservable<ImageChunkEvent>, IDisposable

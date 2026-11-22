@@ -1,0 +1,326 @@
+using Avalonia;
+using Avalonia.Media;
+using Avalonia.Media.Immutable;
+using Avalonia.Rendering.SceneGraph;
+using Avalonia.Skia;
+using SkiaSharp;
+using static Plumix.UI.FlutterTestText;
+
+namespace Plumix.UI;
+
+// C#-only host backend bridge: draws HeadlessParagraph lines (the operations of a FlutterTestTextOp,
+// src/Plumix/UI/FlutterTestText.cs) with Skia and the engine's own `FlutterTest` font (`kFlutterTestFont` in
+// flutter/runtime/test_font_data.cc, embedded in the core assembly as Assets/FlutterTest.ttf), so glyph
+// positioning (quarter-pixel x, whole-pixel baselines) and coverage match what flutter_tester paints. The
+// operations follow SkParagraph's `TextLine::paint` (modules/skparagraph/src/TextLine.cpp): backgrounds,
+// shadows, glyphs, then decorations (`Decorations.cpp`), each drawn the way Flutter's
+// `DisplayListParagraphPainter` (txt/src/skia/paragraph_skia.cc) hands them to Skia. CanvasPlayback plays
+// the op: a FlutterTestGlyphDraw per glyph batch, and FlutterTestGlyph geometry for shader-painted glyphs.
+internal sealed class FlutterTestGlyphDraw(IReadOnlyList<Operation> operations, Rect bounds)
+    : ICustomDrawOperation
+{
+    // Decorations.cpp: kDoubleDecorationSpacing.
+    private const float DoubleDecorationSpacing = 3.0f;
+
+    private static readonly Lazy<SKTypeface?> Typeface = new(LoadTypeface);
+
+    public global::Avalonia.Rect Bounds => bounds.ToAvalonia();
+
+    public bool HitTest(global::Avalonia.Point point) => false;
+
+    public bool Equals(ICustomDrawOperation? other) => ReferenceEquals(this, other);
+
+    public void Dispose()
+    {
+    }
+
+    public void Render(ImmediateDrawingContext context)
+    {
+        ISkiaSharpApiLeaseFeature? feature = context.TryGetFeature<ISkiaSharpApiLeaseFeature>();
+        SKTypeface? typeface = Typeface.Value;
+        if (feature is null || typeface is null)
+        {
+            RenderWithoutSkia(context);
+            return;
+        }
+
+        using ISkiaSharpApiLease lease = feature.Lease();
+        SKCanvas canvas = lease.SkCanvas;
+        foreach (Operation operation in operations)
+        {
+            switch (operation)
+            {
+                case BackgroundOperation background:
+                    using (var paint = new SKPaint { IsAntialias = true, Color = ToSk(background.Color) })
+                    {
+                        canvas.DrawRect(ToSk(background.Rect), paint);
+                    }
+
+                    break;
+                case GlyphsOperation run:
+                    DrawGlyphs(canvas, typeface, run);
+                    break;
+                case DecorationOperation decoration:
+                    DrawDecoration(canvas, typeface, decoration);
+                    break;
+            }
+        }
+    }
+
+    private void RenderWithoutSkia(ImmediateDrawingContext context)
+    {
+        foreach (Operation operation in operations)
+        {
+            switch (operation)
+            {
+                case BackgroundOperation background:
+                    context.FillRectangle(
+                        new ImmutableSolidColorBrush(background.Color.ToAvalonia()),
+                        background.Rect.ToAvalonia());
+                    break;
+                case GlyphsOperation { Shadow: null } run:
+                    foreach (Glyph glyph in run.Glyphs)
+                    {
+                        context.FillRectangle(
+                            new ImmutableSolidColorBrush(glyph.Color.ToAvalonia()),
+                            Rect.FromLTWH(
+                                glyph.X,
+                                glyph.Baseline - (glyph.FontSize * 0.75),
+                                glyph.FontSize,
+                                glyph.FontSize).ToAvalonia());
+                    }
+
+                    break;
+                // Shadows and decorations need Skia's blur and path effects.
+                case GlyphsOperation:
+                case DecorationOperation:
+                    break;
+            }
+        }
+    }
+
+    private static void DrawGlyphs(SKCanvas canvas, SKTypeface typeface, GlyphsOperation run)
+    {
+        IReadOnlyList<Glyph> glyphs = run.Glyphs;
+        // SkParagraph's TextStyle font settings.
+        using var font = new SKFont(typeface)
+        {
+            Subpixel = true,
+            Edging = SKFontEdging.Antialias,
+            Hinting = SKFontHinting.Slight,
+        };
+        using var paint = new SKPaint { IsAntialias = true };
+        using SKMaskFilter? blur = run.Shadow is { BlurSigma: > 0.0 } blurred
+            ? SKMaskFilter.CreateBlur(SKBlurStyle.Normal, (float)blurred.BlurSigma, false)
+            : null;
+        paint.MaskFilter = blur;
+        float dx = (float)(run.Shadow?.Offset.Dx ?? 0.0);
+        float dy = (float)(run.Shadow?.Offset.Dy ?? 0.0);
+        int start = 0;
+        while (start < glyphs.Count)
+        {
+            Glyph first = glyphs[start];
+            int end = start + 1;
+            while (end < glyphs.Count
+                   && glyphs[end].FontSize == first.FontSize
+                   && glyphs[end].Color == first.Color
+                   && glyphs[end].FakeBold == first.FakeBold
+                   && glyphs[end].FakeItalic == first.FakeItalic)
+            {
+                end++;
+            }
+
+            font.Size = (float)first.FontSize;
+            // OneLineShaper::shape: font.setEmbolden(fakeBold); font.setSkewX(fakeItalic ? -SK_Scalar1 / 4 : 0).
+            font.Embolden = first.FakeBold;
+            font.SkewX = first.FakeItalic ? -0.25f : 0.0f;
+            paint.Color = ToSk(run.Shadow?.Color ?? first.Color);
+            using var builder = new SKTextBlobBuilder();
+            SKPositionedRunBuffer buffer = builder.AllocatePositionedRun(font, end - start);
+            Span<ushort> ids = buffer.GetGlyphSpan();
+            Span<SKPoint> positions = buffer.GetPositionSpan();
+            for (int index = start; index < end; index++)
+            {
+                Glyph glyph = glyphs[index];
+                ids[index - start] = font.GetGlyph(glyph.CodePoint);
+                positions[index - start] = new SKPoint((float)glyph.X, (float)glyph.Baseline);
+            }
+
+            using SKTextBlob? blob = builder.Build();
+            if (blob is not null)
+            {
+                canvas.DrawText(blob, dx, dy, paint);
+            }
+
+            start = end;
+        }
+    }
+
+    private static void DrawDecoration(SKCanvas canvas, SKTypeface typeface, DecorationOperation decoration)
+    {
+        using var font = new SKFont(typeface, (float)decoration.FontSize);
+        SKFontMetrics metrics = font.Metrics;
+        float fontSize = (float)decoration.FontSize;
+        float correctAscent = (float)-decoration.CorrectAscent;
+        float rawAscent = (float)-decoration.RawAscent;
+        SKRect clip = ToSk(decoration.Clip);
+
+        // Decorations::calculateThickness.
+        float thickness = fontSize / 14.0f;
+        if (metrics.UnderlineThickness is > 0.0f and float underlineThickness)
+        {
+            thickness = underlineThickness;
+        }
+
+        if (decoration.Decoration == TextDecoration.LineThrough
+            && metrics.StrikeoutThickness is > 0.0f and float strikeoutThickness)
+        {
+            thickness = strikeoutThickness;
+        }
+
+        thickness *= (float)decoration.ThicknessMultiplier;
+        foreach (TextDecoration kind in (ReadOnlySpan<TextDecoration>)
+                 [TextDecoration.Underline, TextDecoration.Overline, TextDecoration.LineThrough])
+        {
+            if ((decoration.Decoration & kind) == 0)
+            {
+                continue;
+            }
+
+            // Decorations::calculatePosition.
+            float ascent = kind == TextDecoration.Overline ? correctAscent - rawAscent : correctAscent;
+            float position = kind switch
+            {
+                TextDecoration.Underline => metrics.UnderlinePosition is > 0.0f and float underline
+                    ? underline
+                    : thickness,
+                TextDecoration.Overline => 0.0f,
+                _ => metrics.StrikeoutPosition ?? metrics.XHeight / -2.0f,
+            };
+            position -= ascent;
+            float x = clip.Left;
+            float y = clip.Top + position;
+            float width = clip.Width;
+
+            // Decorations::calculatePaint; DisplayListParagraphPainter::toDlPaint.
+            float scaleFactor = fontSize / 14.0f;
+            using var paint = new SKPaint
+            {
+                IsAntialias = true,
+                Color = ToSk(decoration.Color),
+                StrokeWidth = thickness,
+                Style = SKPaintStyle.Stroke,
+            };
+            switch (decoration.Style)
+            {
+                case TextDecorationStyle.Wavy:
+                    using (SKPath waves = CalculateWaves(thickness, width))
+                    {
+                        waves.Offset(x, y);
+                        canvas.DrawPath(waves, paint);
+                    }
+
+                    break;
+                case TextDecorationStyle.Double:
+                    paint.Style = SKPaintStyle.Fill;
+                    DrawLineAsRect(canvas, x, y, width, thickness, paint);
+                    DrawLineAsRect(canvas, x, y + DoubleDecorationSpacing, width, thickness, paint);
+                    break;
+                case TextDecorationStyle.Dashed:
+                case TextDecorationStyle.Dotted:
+                    // DlSkCanvasDispatcher::drawDashedLine: a dash path effect with phase 0.
+                    float[] intervals = decoration.Style == TextDecorationStyle.Dotted
+                        ? [1.0f * scaleFactor, 1.5f * scaleFactor]
+                        : [4.0f * scaleFactor, 2.0f * scaleFactor];
+                    using (var dash = SKPathEffect.CreateDash(intervals, 0.0f))
+                    {
+                        paint.PathEffect = dash;
+                        canvas.DrawLine(x, y, x + width, y, paint);
+                        paint.PathEffect = null;
+                    }
+
+                    break;
+                default:
+                    paint.Style = SKPaintStyle.Fill;
+                    DrawLineAsRect(canvas, x, y, width, thickness, paint);
+                    break;
+            }
+        }
+    }
+
+    // Decorations.cpp: draw_line_as_rect.
+    private static void DrawLineAsRect(SKCanvas canvas, float x, float y, float width, float thickness, SKPaint paint)
+    {
+        float radius = thickness * 0.5f;
+        canvas.DrawRect(new SKRect(x, y - radius, x + width, y + radius), paint);
+    }
+
+    // Decorations::calculateWaves.
+    private static SKPath CalculateWaves(float thickness, float width)
+    {
+        var path = new SKPath();
+        int waveCount = 0;
+        float xStart = 0.0f;
+        float quarterWave = thickness;
+        path.MoveTo(0.0f, 0.0f);
+        while (xStart + (quarterWave * 2.0f) < width)
+        {
+            path.RQuadTo(quarterWave, waveCount % 2 != 0 ? quarterWave : -quarterWave, quarterWave * 2.0f, 0.0f);
+            xStart += quarterWave * 2.0f;
+            ++waveCount;
+        }
+
+        float remaining = width - xStart;
+        if (remaining > 0.0f)
+        {
+            double sign = waveCount % 2 == 0 ? -1.0 : 1.0;
+            double x1 = remaining / 2.0;
+            double y1 = remaining / 2.0 * sign;
+            double x2 = remaining;
+            double y2 = (remaining - (remaining * remaining / (quarterWave * 2.0))) * sign;
+            path.RQuadTo((float)x1, (float)y1, (float)x2, (float)y2);
+        }
+
+        return path;
+    }
+
+    private static SKColor ToSk(Color color) => new(color.ToARGB32());
+
+    private static SKRect ToSk(Rect rect) =>
+        new((float)rect.Left, (float)rect.Top, (float)rect.Right, (float)rect.Bottom);
+
+    private static SKTypeface? LoadTypeface()
+    {
+        using Stream? stream = typeof(FlutterTestText).Assembly
+            .GetManifestResourceStream("Plumix.UI.Assets.FlutterTest.ttf");
+        return stream is null ? null : SKTypeface.FromStream(stream);
+    }
+
+    /// <summary>
+    /// A `FlutterTest` glyph's outline as geometry: the outlines in font units (1024 per em, ascent 768,
+    /// descent 256) scaled to <paramref name="fontSize"/>.
+    /// </summary>
+    internal static Geometry FlutterTestGlyph(GlyphShape shape, double x, double width, double baseline,
+        double fontSize)
+    {
+        double ascent = fontSize * AscentRatio;
+        double descent = fontSize * DescentRatio;
+        switch (shape)
+        {
+            case GlyphShape.DescentOnly:
+                return new RectangleGeometry(Rect.FromLTWH(x, baseline, Math.Max(width, 0.0), descent).ToAvalonia());
+            case GlyphShape.AscentOnly:
+                return new RectangleGeometry(
+                    Rect.FromLTWH(x, baseline - ascent, Math.Max(width, 0.0), ascent).ToAvalonia());
+            case GlyphShape.NotDef:
+                double unit = fontSize / 1024.0;
+                var outer = Rect.FromLTWH(x + (128 * unit), baseline - (768 * unit), 768 * unit, 768 * unit);
+                var inner = Rect.FromLTWH(x + (256 * unit), baseline - (640 * unit), 512 * unit, 512 * unit);
+                return new CombinedGeometry(GeometryCombineMode.Exclude,
+                    new RectangleGeometry(outer.ToAvalonia()), new RectangleGeometry(inner.ToAvalonia()));
+            default:
+                return new RectangleGeometry(
+                    Rect.FromLTWH(x, baseline - ascent, Math.Max(width, 0.0), ascent + descent).ToAvalonia());
+        }
+    }
+}

@@ -1,6 +1,4 @@
 using System.Diagnostics;
-using Avalonia;
-using Avalonia.Media;
 using Plumix.Gestures;
 using Plumix.UI;
 using Plumix.Foundation;
@@ -2573,102 +2571,6 @@ public sealed class ClipPathLayer : ContainerLayer
     }
 }
 
-/// <summary>Plumix-only clip layer for shapes the framework models as a backend geometry.</summary>
-/// <remarks>
-/// Dart has no counterpart: every clip layer there takes a <c>Path</c>. See
-/// <c>PaintingContext.PushClipGeometry</c>.
-/// </remarks>
-internal sealed class ClipGeometryLayer : ContainerLayer
-{
-    private Geometry _geometry = new RectangleGeometry();
-    private Clip _clipBehavior = Clip.AntiAlias;
-    private Offset _geometryOffset;
-
-    public Geometry Geometry
-    {
-        get => _geometry;
-        set
-        {
-            ArgumentNullException.ThrowIfNull(value);
-            if (ReferenceEquals(value, _geometry))
-            {
-                return;
-            }
-
-            _geometry = value;
-            MarkNeedsAddToScene();
-        }
-    }
-
-    public Clip ClipBehavior
-    {
-        get => _clipBehavior;
-        set
-        {
-            if (value == _clipBehavior)
-            {
-                return;
-            }
-
-            _clipBehavior = value;
-            MarkNeedsAddToScene();
-        }
-    }
-
-    public Offset GeometryOffset
-    {
-        get => _geometryOffset;
-        set
-        {
-            if (value == _geometryOffset)
-            {
-                return;
-            }
-
-            _geometryOffset = value;
-            MarkNeedsAddToScene();
-        }
-    }
-
-    protected internal override void AddToScene(SceneBuilder builder)
-    {
-        bool enabled = true;
-        if (Constants.KDebugMode)
-        {
-            enabled = !RenderingDebug.DisableClipLayers;
-        }
-
-        if (enabled)
-        {
-            EngineLayer = builder.PushClipGeometry(
-                Geometry,
-                GeometryOffset,
-                ClipBehavior,
-                EngineLayer as ClipGeometryEngineLayer);
-        }
-        else
-        {
-            EngineLayer = null;
-        }
-
-        AddChildrenToScene(builder);
-        if (enabled)
-        {
-            builder.Pop();
-        }
-    }
-
-    protected internal override bool FindAnnotations<T>(
-        AnnotationResult<T> result,
-        Offset localPosition,
-        bool onlyFirst)
-    {
-        return Geometry.FillContains((localPosition - GeometryOffset).ToAvalonia())
-            && base.FindAnnotations(result, localPosition, onlyFirst);
-    }
-}
-
-// Dart parity source: flutter/packages/flutter/lib/src/rendering/layer.dart
 /// <summary>A composited layer that applies a given transformation matrix to its children.</summary>
 /// <remarks>
 /// Flutter's <c>TransformLayer</c>. This class inherits from <see cref="OffsetLayer"/> to make it one of

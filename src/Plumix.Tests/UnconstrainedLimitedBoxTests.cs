@@ -1,4 +1,3 @@
-using Avalonia.Media;
 using Plumix.Foundation;
 using Plumix.Rendering;
 using Plumix.UI;
@@ -414,7 +413,7 @@ public sealed class UnconstrainedLimitedBoxTests
         {
             if (_paints)
             {
-                ctx.Canvas.DrawRectangle(Brushes.Red, pen: null, (offset & Size));
+                ctx.Canvas.DrawRect((offset & Size), new Paint { Color = new Color(0xFFFF0000) });
             }
         }
     }

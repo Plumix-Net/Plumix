@@ -1,5 +1,3 @@
-using Avalonia.Media;
-using Avalonia.Media.Imaging;
 using Plumix.Foundation;
 
 namespace Plumix.UI;
@@ -15,13 +13,19 @@ namespace Plumix.UI;
 /// each handle must be disposed. <see cref="Clone"/> creates another handle to the same pixels, which
 /// are released when the last handle is disposed.
 /// </summary>
+/// <remarks>The pixels are the drawing backend's own image object, which the framework never looks into.</remarks>
 public sealed class RasterImage : IDisposable
 {
     private readonly SharedPixels _pixels;
     private int _disposed;
 
-    internal RasterImage(IImage native)
-        : this(new SharedPixels(native ?? throw new ArgumentNullException(nameof(native))))
+    /// <summary>
+    /// Wraps a backend image of <paramref name="width"/> by <paramref name="height"/> pixels that covers
+    /// <paramref name="logicalSize"/> canvas units when drawn whole.
+    /// </summary>
+    internal RasterImage(object native, int width, int height, Size logicalSize)
+        : this(new SharedPixels(native ?? throw new ArgumentNullException(nameof(native)), width, height,
+            logicalSize))
     {
     }
 
@@ -31,16 +35,16 @@ public sealed class RasterImage : IDisposable
     }
 
     /// <summary>The backend image the pixels live in.</summary>
-    internal IImage Native => _pixels.Native;
+    internal object Native => _pixels.Native;
 
-    /// <summary>The backend image as a bitmap; images Plumix decodes or rasterizes always are.</summary>
-    internal Bitmap NativeBitmap => (Bitmap)_pixels.Native;
+    /// <summary>The image's size in canvas units, as <c>drawImage</c> draws it.</summary>
+    internal Size LogicalSize => _pixels.LogicalSize;
 
     /// <summary>The number of image pixels along the image's horizontal axis.</summary>
-    public int Width => Native is Bitmap bitmap ? bitmap.PixelSize.Width : (int)Math.Ceiling(Native.Size.Width);
+    public int Width => _pixels.Width;
 
     /// <summary>The number of image pixels along the image's vertical axis.</summary>
-    public int Height => Native is Bitmap bitmap ? bitmap.PixelSize.Height : (int)Math.Ceiling(Native.Size.Height);
+    public int Height => _pixels.Height;
 
     /// <summary>Whether this handle has been disposed.</summary>
     public bool DebugDisposed => Volatile.Read(ref _disposed) != 0;
@@ -80,11 +84,17 @@ public sealed class RasterImage : IDisposable
 
     public override string ToString() => $"[{Width}×{Height}]";
 
-    private sealed class SharedPixels(IImage native)
+    private sealed class SharedPixels(object native, int width, int height, Size logicalSize)
     {
         private int _references = 1;
 
-        public IImage Native { get; } = native;
+        public object Native { get; } = native;
+
+        public int Width { get; } = width;
+
+        public int Height { get; } = height;
+
+        public Size LogicalSize { get; } = logicalSize;
 
         public void AddReference()
         {

@@ -1,4 +1,3 @@
-using Avalonia.Media;
 using Plumix.UI;
 using Path = Plumix.UI.Path;
 
@@ -273,19 +272,20 @@ public sealed record LinearBorder : OutlinedBorder
 
     private static void DrawEdge(PaintingContext context, Rect rect, Color color)
     {
-        var brush = new SolidColorBrush(color.ToAvalonia());
+        // A zero-width paint: a degenerate edge strokes as a one-device-pixel hairline.
+        var paint = new Paint { Color = color };
         if (rect.Width == 0.0)
         {
-            context.Canvas.DrawLine(new Pen(brush, 0.0), rect.TopLeft, new Offset(rect.Left, rect.Bottom));
+            context.Canvas.DrawLine(rect.TopLeft, new Offset(rect.Left, rect.Bottom), paint);
             return;
         }
 
         if (rect.Height == 0.0)
         {
-            context.Canvas.DrawLine(new Pen(brush, 0.0), rect.TopLeft, new Offset(rect.Right, rect.Top));
+            context.Canvas.DrawLine(rect.TopLeft, new Offset(rect.Right, rect.Top), paint);
             return;
         }
 
-        context.Canvas.DrawRectangle(brush, null, rect);
+        context.Canvas.DrawRect(rect, paint);
     }
 }

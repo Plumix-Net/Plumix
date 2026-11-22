@@ -1,4 +1,3 @@
-using Avalonia.Media;
 using Plumix.Foundation;
 using Plumix.Rendering;
 using Plumix.UI;
@@ -734,16 +733,13 @@ internal sealed class RenderCupertinoSegmentedControl : RenderBox,
     public override void Paint(PaintingContext context, Offset offset)
     {
         int childIndex = 0;
-        var borderPen = new Pen(new SolidColorBrush(BorderColor.ToAvalonia()), 1.0);
+        var borderPaint = new Paint { Color = BorderColor, Style = PaintingStyle.Stroke, StrokeWidth = 1.0 };
         for (RenderBox? child = FirstChild; child is not null; child = ChildAfter(child))
         {
             var data = (CupertinoSegmentedControlParentData)child.parentData!;
             RSuperellipse shape = data.SurroundingRect.Shift(offset);
-            context.Canvas.DrawRSuperellipse(
-                shape,
-                new SolidColorBrush(BackgroundColors[childIndex].ToAvalonia()),
-                null);
-            context.Canvas.DrawRSuperellipse(shape, null, borderPen);
+            context.Canvas.DrawRSuperellipse(shape, new Paint { Color = BackgroundColors[childIndex] });
+            context.Canvas.DrawRSuperellipse(shape, borderPaint);
             context.PaintChild(child, offset + (Offset)data.offset);
             childIndex++;
         }

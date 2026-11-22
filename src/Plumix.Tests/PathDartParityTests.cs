@@ -154,7 +154,7 @@ public sealed class PathDartParityTests
         path.Reset();
         path.MoveTo(0, 0);
         path.QuadraticBezierTo(10, 20, 20, 0);
-        Path scaled = path.Transform(Matrix.CreateScale(2, 3));
+        Path scaled = path.Transform(2, 0, 0, 3, 0, 0);
         Assert.Equal(Rect.FromLTWH(0, 0, 40, 60), scaled.GetBounds());
         Assert.True(scaled.Contains(new Offset(20, 29.99)));
         Assert.False(scaled.Contains(new Offset(20, 30.01)));

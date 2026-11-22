@@ -1,4 +1,3 @@
-using Avalonia.Threading;
 using Plumix.UI;
 
 // C#-only infrastructure; no Dart parity source. A Dart isolate's event loop owns the timer queue
@@ -112,7 +111,7 @@ internal sealed class TimerQueue
     private readonly object _sync = new();
     private readonly bool _fake;
     private TimeSpan _fakeNow;
-    private DispatcherTimer? _wakeUp;
+    private IPlatformTimer? _wakeUp;
     private TimeSpan? _wakeUpDeadline;
 
     public TimerQueue(bool fake)
@@ -348,19 +347,14 @@ internal sealed class TimerQueue
             }
 
             _wakeUpDeadline = deadline;
-            // A timer armed before the host claimed the UI thread belongs to another thread's dispatcher.
-            Dispatcher uiThread = Dispatcher.UIThread;
-            if (_wakeUp is not null && !ReferenceEquals(_wakeUp.Dispatcher, uiThread))
+            // A timer armed before the host claimed the UI thread belongs to another thread.
+            if (_wakeUp is not null && !_wakeUp.IsOnCurrentUIThread)
             {
                 _wakeUp.Stop();
                 _wakeUp = null;
             }
 
-            if (_wakeUp is null)
-            {
-                _wakeUp = new DispatcherTimer(PlatformDispatcher.EventLoopTaskPriority, uiThread);
-                _wakeUp.Tick += (_, _) => WakeUp();
-            }
+            _wakeUp ??= PlatformThread.Current.CreateTimer(PlatformTaskPriority.Task, WakeUp);
 
             _wakeUp.Stop();
             _wakeUp.Interval = delay;

@@ -1,5 +1,4 @@
 using System.Diagnostics;
-using Avalonia.Media;
 using Plumix.UI;
 using Plumix.Foundation;
 
@@ -551,14 +550,14 @@ public abstract class RenderViewportBase<TParentData> : RenderBox,
     {
         ArgumentNullException.ThrowIfNull(context);
         base.DebugPaintSize(context, offset);
-        var pen = new Pen(new SolidColorBrush(new Color(0xFF00FF00).ToAvalonia()), 1.0);
+        var paint = new Paint { Color = new Color(0xFF00FF00), Style = PaintingStyle.Stroke, StrokeWidth = 1.0 };
         for (RenderSliver? child = FirstChild; child is not null; child = ChildAfter(child))
         {
             Size size = Axis == Axis.Vertical
                 ? new Size(child.Constraints.CrossAxisExtent, child.Geometry!.LayoutExtent)
                 : new Size(child.Geometry!.LayoutExtent, child.Constraints.CrossAxisExtent);
             var rect = offset + PaintOffsetOf(child) & size;
-            context.Canvas.DrawGeometry(null, pen, new RectangleGeometry(rect.Deflate(0.5).ToAvalonia()));
+            context.Canvas.DrawRect(rect.Deflate(0.5), paint);
         }
     }
 

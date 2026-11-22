@@ -1,5 +1,4 @@
 using System.Diagnostics;
-using Avalonia.Media;
 using Plumix.Foundation;
 using Plumix.Rendering;
 using Plumix.UI;
@@ -73,21 +72,16 @@ internal sealed class InspectorMulticastCanvas : Canvas
         _screenshot.ClipRect(rect, doAntiAlias, clipOp);
     }
 
-    internal override void ClipGeometry(Geometry geometry, bool doAntiAlias = true, Offset geometryOffset = default)
-    {
-        _main.ClipGeometry(geometry, doAntiAlias, geometryOffset);
-        _screenshot.ClipGeometry(geometry, doAntiAlias, geometryOffset);
-    }
-
     public override void ClipRSuperellipse(RSuperellipse rsuperellipse, bool doAntiAlias = true)
     {
         throw NoSuchMethod(nameof(ClipRSuperellipse));
     }
 
-    internal override void DrawArc(IPen pen, Rect rect, double startAngleRadians, double sweepAngleRadians)
+
+    public override void DrawArc(Rect rect, double startAngle, double sweepAngle, bool useCenter, Paint paint)
     {
-        _main.DrawArc(pen, rect, startAngleRadians, sweepAngleRadians);
-        _screenshot.DrawArc(pen, rect, startAngleRadians, sweepAngleRadians);
+        _main.DrawArc(rect, startAngle, sweepAngle, useCenter, paint);
+        _screenshot.DrawArc(rect, startAngle, sweepAngle, useCenter, paint);
     }
 
     public override void DrawCircle(Offset center, double radius, Paint paint)
@@ -96,11 +90,6 @@ internal sealed class InspectorMulticastCanvas : Canvas
         _screenshot.DrawCircle(center, radius, paint);
     }
 
-    internal override void DrawCircle(IBrush? brush, IPen? pen, Offset center, double radius)
-    {
-        _main.DrawCircle(brush, pen, center, radius);
-        _screenshot.DrawCircle(brush, pen, center, radius);
-    }
 
     public override void DrawDRRect(RRect outer, RRect inner, Paint paint)
     {
@@ -108,11 +97,6 @@ internal sealed class InspectorMulticastCanvas : Canvas
         _screenshot.DrawDRRect(outer, inner, paint);
     }
 
-    internal override void DrawDRRect(RRect outer, RRect inner, IBrush brush)
-    {
-        _main.DrawDRRect(outer, inner, brush);
-        _screenshot.DrawDRRect(outer, inner, brush);
-    }
 
     public override void DrawImage(RasterImage image, Offset offset, Paint paint)
     {
@@ -138,11 +122,6 @@ internal sealed class InspectorMulticastCanvas : Canvas
         _screenshot.DrawLine(startPoint, endPoint, paint);
     }
 
-    internal override void DrawLine(IPen pen, Offset startPoint, Offset endPoint)
-    {
-        _main.DrawLine(pen, startPoint, endPoint);
-        _screenshot.DrawLine(pen, startPoint, endPoint);
-    }
 
     public override void DrawOval(Rect oval, Paint paint)
     {
@@ -150,11 +129,6 @@ internal sealed class InspectorMulticastCanvas : Canvas
         _screenshot.DrawOval(oval, paint);
     }
 
-    internal override void DrawOval(Rect oval, IBrush? brush, IPen? pen)
-    {
-        _main.DrawOval(oval, brush, pen);
-        _screenshot.DrawOval(oval, brush, pen);
-    }
 
     public override void DrawPaint(Paint paint)
     {
@@ -162,11 +136,6 @@ internal sealed class InspectorMulticastCanvas : Canvas
         _screenshot.DrawPaint(paint);
     }
 
-    internal override void DrawPaint(IBrush brush)
-    {
-        _main.DrawPaint(brush);
-        _screenshot.DrawPaint(brush);
-    }
 
     public override void DrawParagraph(Paragraph paragraph, Offset offset)
     {
@@ -180,23 +149,8 @@ internal sealed class InspectorMulticastCanvas : Canvas
         _screenshot.DrawPath(path, paint);
     }
 
-    internal override void DrawPath(Path path, IBrush? brush, IPen? pen)
-    {
-        _main.DrawPath(path, brush, pen);
-        _screenshot.DrawPath(path, brush, pen);
-    }
 
-    internal override void DrawPolygon(IBrush? brush, IPen? pen, IReadOnlyList<Offset> points)
-    {
-        _main.DrawPolygon(brush, pen, points);
-        _screenshot.DrawPolygon(brush, pen, points);
-    }
 
-    internal override void DrawGeometry(IBrush? brush, IPen? pen, Geometry geometry, Offset geometryOffset = default)
-    {
-        _main.DrawGeometry(brush, pen, geometry, geometryOffset);
-        _screenshot.DrawGeometry(brush, pen, geometry, geometryOffset);
-    }
 
     public override void DrawRRect(RRect rrect, Paint paint)
     {
@@ -204,21 +158,12 @@ internal sealed class InspectorMulticastCanvas : Canvas
         _screenshot.DrawRRect(rrect, paint);
     }
 
-    internal override void DrawRRect(RRect rrect, IBrush? brush, IPen? pen)
-    {
-        _main.DrawRRect(rrect, brush, pen);
-        _screenshot.DrawRRect(rrect, brush, pen);
-    }
 
     public override void DrawRSuperellipse(RSuperellipse rsuperellipse, Paint paint)
     {
         throw NoSuchMethod("DrawRSuperellipse");
     }
 
-    internal override void DrawRSuperellipse(RSuperellipse rsuperellipse, IBrush? brush, IPen? pen)
-    {
-        throw NoSuchMethod("DrawRSuperellipse");
-    }
 
     public override void DrawRSuperellipseShadow(RSuperellipse rsuperellipse, Plumix.Rendering.BoxShadow shadow)
     {
@@ -236,29 +181,7 @@ internal sealed class InspectorMulticastCanvas : Canvas
         _screenshot.DrawRect(rect, paint);
     }
 
-    internal override void DrawRectangle(
-        IBrush? brush,
-        IPen? pen,
-        Rect rect,
-        double radiusX = 0,
-        double radiusY = 0,
-        BoxShadows boxShadows = default,
-        bool isAntiAlias = true)
-    {
-        _main.DrawRectangle(brush, pen, rect, radiusX, radiusY, boxShadows, isAntiAlias);
-        _screenshot.DrawRectangle(brush, pen, rect, radiusX, radiusY, boxShadows, isAntiAlias);
-    }
 
-    internal override void DrawRectangle(
-        IBrush? brush,
-        IPen? pen,
-        Rect rect,
-        BorderRadius borderRadius,
-        BoxShadows boxShadows = default)
-    {
-        _main.DrawRectangle(brush, pen, rect, borderRadius, boxShadows);
-        _screenshot.DrawRectangle(brush, pen, rect, borderRadius, boxShadows);
-    }
 
     public override void DrawShadow(
         Path path,
@@ -271,16 +194,6 @@ internal sealed class InspectorMulticastCanvas : Canvas
         _screenshot.DrawShadow(path, color, elevation, transparentOccluder, geometryOffset);
     }
 
-    internal override void DrawShadow(
-        Geometry geometry,
-        Color color,
-        double elevation,
-        bool transparentOccluder,
-        Offset geometryOffset = default)
-    {
-        _main.DrawShadow(geometry, color, elevation, transparentOccluder, geometryOffset);
-        _screenshot.DrawShadow(geometry, color, elevation, transparentOccluder, geometryOffset);
-    }
 
     public override void Restore()
     {
@@ -350,16 +263,16 @@ internal sealed class InspectorMulticastCanvas : Canvas
         _screenshot.Translate(dx, dy);
     }
 
-    internal override void PushOpacityMask(IBrush mask, Rect bounds)
+    internal override void PushFadeMask(Offset from, Offset to, Size size, Rect bounds)
     {
-        _main.PushOpacityMask(mask, bounds);
-        _screenshot.PushOpacityMask(mask, bounds);
+        _main.PushFadeMask(from, to, size, bounds);
+        _screenshot.PushFadeMask(from, to, size, bounds);
     }
 
-    internal override void AddDrawCommand(Action<DrawingContext> draw)
+    internal override void AddOp(CanvasOp op)
     {
-        _main.AddDrawCommand(draw);
-        _screenshot.AddDrawCommand(draw);
+        _main.AddOp(op);
+        _screenshot.AddOp(op);
     }
 
     // The main canvas is guaranteed to be consistent with the canvas expected by the normal paint

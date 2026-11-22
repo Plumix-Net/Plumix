@@ -175,10 +175,11 @@ public sealed class MaterialIconsTests
     public void BundledFont_ResolvesRepresentativeCatalogGlyphs()
     {
         _ = Icons.Add;
-        var assetLoader = new StandardAssetLoader();
-        using Stream font = assetLoader.Open(
-            new Uri("avares://Plumix.Material/Assets/Fonts/MaterialIcons-Regular.otf"),
-            baseUri: null);
+        // The bundled font resolves through the framework's own asset bundle, with no host involved.
+        using Stream font = PlatformAssetBundle.Root
+            .LoadAsync("packages/Plumix.Material/Assets/Fonts/MaterialIcons-Regular.otf")
+            .GetAwaiter()
+            .GetResult();
         Assert.True(font.Length > 0);
         using var fontBytes = new MemoryStream();
         font.CopyTo(fontBytes);

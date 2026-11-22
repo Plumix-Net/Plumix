@@ -1,4 +1,3 @@
-using Avalonia.Media;
 using Plumix.Foundation;
 using Plumix.Rendering;
 using Plumix.UI;
@@ -207,7 +206,7 @@ internal sealed class CupertinoActivityIndicatorPainter : CustomPainter
                 ActiveColor.Blue);
             context.Canvas.Save();
             context.Canvas.Rotate(i * TwoPi / tickCount);
-            context.Canvas.DrawRRect(TickFundamentalShape, new SolidColorBrush(tickColor.ToAvalonia()), pen: null);
+            context.Canvas.DrawRRect(TickFundamentalShape, new Paint { Color = tickColor });
             context.Canvas.Restore();
         }
 
@@ -294,8 +293,8 @@ internal sealed class CupertinoLinearActivityIndicatorPainter : CustomPainter
     {
         Progress = progress;
         Color = color;
-        BackgroundPaint = new SolidColorBrush(CupertinoColors.SystemFill.ToAvalonia());
-        ProgressPaint = new SolidColorBrush((color ?? CupertinoColors.ActiveBlue).ToAvalonia());
+        BackgroundPaint = new Paint { Color = CupertinoColors.SystemFill };
+        ProgressPaint = new Paint { Color = color ?? CupertinoColors.ActiveBlue };
     }
 
     public double Progress { get; }
@@ -306,21 +305,20 @@ internal sealed class CupertinoLinearActivityIndicatorPainter : CustomPainter
     /// The background paint used to draw the full width of the progress bar. This paint object is
     /// created once and reused to fill the background with a system fill color.
     /// </summary>
-    public SolidColorBrush BackgroundPaint { get; }
+    public Paint BackgroundPaint { get; }
 
     /// <summary>
     /// The paint used to draw the progress portion of the progress bar. This paint object is
     /// created once and reused to fill the progress area.
     /// </summary>
-    public SolidColorBrush ProgressPaint { get; }
+    public Paint ProgressPaint { get; }
 
     public override void Paint(PaintingContext context, Size size)
     {
         // Draw the background of the progress bar.
         context.Canvas.DrawRRect(
             RRect.FromRectAndRadius((Offset.Zero & size), Radius.Circular(size.Height / 2)),
-            BackgroundPaint,
-            pen: null);
+            BackgroundPaint);
 
         // Draw the progress portion of the bar.
         if (Progress > 0)
@@ -329,8 +327,7 @@ internal sealed class CupertinoLinearActivityIndicatorPainter : CustomPainter
                 RRect.FromRectAndRadius(
                     (Offset.Zero & new Size(Math.Clamp(Progress, 0.0, 1.0) * size.Width, size.Height)),
                     Radius.Circular(size.Height / 2)),
-                ProgressPaint,
-                pen: null);
+                ProgressPaint);
         }
     }
 

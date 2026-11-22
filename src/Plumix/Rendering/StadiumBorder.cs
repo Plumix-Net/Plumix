@@ -99,7 +99,7 @@ public sealed record StadiumBorder : OutlinedBorder
         }
 
         RRect borderRect = RRect.FromRectAndRadius(rect, BoxBorder.ShortestSide(rect) / 2.0);
-        context.Canvas.DrawRRect(borderRect.Inflate(Side.StrokeOffset / 2.0), null, Side.ToPen());
+        context.Canvas.DrawRRect(borderRect.Inflate(Side.StrokeOffset / 2.0), Side.ToPaint());
     }
 
     public override string ToString()
@@ -213,7 +213,7 @@ internal sealed record StadiumToCircleBorder : OutlinedBorder
         }
 
         RRect borderRect = AdjustBorderRadius(rect).ToRRect(AdjustRect(rect));
-        context.Canvas.DrawRRect(borderRect.Inflate(Side.StrokeOffset / 2.0), null, Side.ToPen());
+        context.Canvas.DrawRRect(borderRect.Inflate(Side.StrokeOffset / 2.0), Side.ToPaint());
     }
 
     public override string ToString()
@@ -412,7 +412,7 @@ internal sealed record StadiumToRoundedRectangleBorder : OutlinedBorder
         }
 
         RRect borderRect = AdjustBorderRadius(rect).Resolve(textDirection ?? TextDirection.Ltr).ToRRect(rect);
-        context.Canvas.DrawRRect(borderRect.Inflate(Side.StrokeOffset / 2.0), null, Side.ToPen());
+        context.Canvas.DrawRRect(borderRect.Inflate(Side.StrokeOffset / 2.0), Side.ToPaint());
     }
 
     public override string ToString()

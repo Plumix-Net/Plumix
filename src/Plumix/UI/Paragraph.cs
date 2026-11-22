@@ -1,5 +1,4 @@
 using System.Globalization;
-using Avalonia.Media;
 using Plumix.Foundation;
 using Plumix.Painting;
 using Plumix.Widgets;
@@ -457,9 +456,9 @@ public abstract class Paragraph : IDisposable
     {
     }
 
-    /// Captures the current layout as a draw call with its origin at `offset`, or null when this
-    /// paragraph has nothing a backend can draw.
-    internal abstract Action<DrawingContext>? CreateDrawAction(Offset offset);
+    /// Captures the current layout as a recorded canvas entry with its origin at `offset`, or null when
+    /// this paragraph has nothing a backend can draw.
+    internal abstract CanvasOp? CreateDrawOp(Offset offset);
 
     public override string ToString() => _disposed ? "Paragraph(DISPOSED)" : "Paragraph()";
 }

@@ -1,4 +1,3 @@
-using Avalonia.Media;
 using Plumix.Foundation;
 using Plumix.Rendering;
 using Plumix.UI;
@@ -160,21 +159,23 @@ internal sealed class CupertinoTextSelectionHandlePainter : CustomPainter
 
     public override void Paint(PaintingContext context, Size size)
     {
-        context.Canvas.DrawGeometry(new SolidColorBrush(Color.ToAvalonia()), pen: null, BuildPath(size));
+        context.Canvas.DrawPath(BuildPath(size), new Paint { Color = Color });
     }
 
-    internal static Geometry BuildPath(Size size)
+    internal static Plumix.UI.Path BuildPath(Size size)
     {
         const double halfStrokeWidth = 1.0;
         double radius = CupertinoTextSelectionControls.SelectionHandleRadius;
-        var circle = new EllipseGeometry(Rect.FromLTWH(0.0, 0.0, radius * 2.0, radius * 2.0).ToAvalonia());
-        var line = new RectangleGeometry(Rect.FromLTWH(
+        var path = new Plumix.UI.Path();
+        path.AddOval(Rect.FromLTWH(0.0, 0.0, radius * 2.0, radius * 2.0));
+        // Draw line so it slightly overlaps the circle.
+        path.AddRect(Rect.FromLTWH(
             radius - halfStrokeWidth,
             radius * 2.0 - CupertinoTextSelectionControls.SelectionHandleOverlap,
             halfStrokeWidth * 2.0,
             Math.Max(0.0, size.Height - radius * 2.0
-                + CupertinoTextSelectionControls.SelectionHandleOverlap)).ToAvalonia());
-        return new CombinedGeometry(GeometryCombineMode.Union, circle, line);
+                + CupertinoTextSelectionControls.SelectionHandleOverlap)));
+        return path;
     }
 
     public override bool ShouldRepaint(CustomPainter oldDelegate)
