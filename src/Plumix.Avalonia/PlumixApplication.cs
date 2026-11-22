@@ -1,5 +1,7 @@
+using System.Reflection;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
+using Plumix.Rendering;
 using Plumix.Widgets;
 
 // C#-only infrastructure: the Avalonia application and lifetime adapter around runApp.
@@ -32,6 +34,11 @@ public abstract class PlumixApplication : Avalonia.Application
         where T : Widget
     {
         options ??= new PlumixOptions();
+        // .NET for Android has no entry assembly: relative asset keys belong to the assembly that defines
+        // the Avalonia application. Set before the first build, which may run before any Activity exists.
+        PlatformAssetBundle.ApplicationAssemblyName ??= DeriveApplicationAssemblyName(
+            Current?.GetType(),
+            Assembly.GetEntryAssembly());
 
         var host = new WidgetHost();
 
@@ -64,6 +71,18 @@ public abstract class PlumixApplication : Avalonia.Application
         }
 
         host.RunApplication(application);
+    }
+
+    // The application assembly for a runtime without an entry assembly; null where the entry assembly
+    // answers (desktop, browser), so that the resolution there stays unchanged.
+    internal static string? DeriveApplicationAssemblyName(Type? applicationType, Assembly? entryAssembly)
+    {
+        if (entryAssembly is not null || applicationType is null || applicationType == typeof(Avalonia.Application))
+        {
+            return null;
+        }
+
+        return applicationType.Assembly.GetName().Name;
     }
 
     // An Activity normally clears its content in onDestroy before its successor asks for the view; if

@@ -130,6 +130,12 @@ public sealed class PlatformAssetBundle : AssetBundle
     public static PlatformAssetBundle Root { get; } = new();
     public Uri? BaseUri { get; }
 
+    /// <summary>
+    /// The assembly that owns the app's relative asset keys, set by a host whose runtime has no entry
+    /// assembly (.NET for Android); null falls back to the entry assembly.
+    /// </summary>
+    internal static string? ApplicationAssemblyName { get; set; }
+
     public override Task<Stream> LoadAsync(string key, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
@@ -190,11 +196,20 @@ public sealed class PlatformAssetBundle : AssetBundle
             return new Uri($"avares://{key[packagesPrefix.Length..end]}/{key[(end + 1)..]}");
         }
 
-        string assemblyName = System.Reflection.Assembly.GetEntryAssembly()?.GetName().Name
-                              ?? throw new InvalidOperationException(
-                                  "A relative asset key requires an entry assembly or an explicit PlatformAssetBundle baseUri.");
+        string assemblyName = ResolveApplicationAssemblyName(
+            ApplicationAssemblyName,
+            System.Reflection.Assembly.GetEntryAssembly());
         return new Uri($"avares://{assemblyName}/{key.TrimStart('/')}");
     }
+
+    // The assembly a relative key belongs to: the host's application assembly, else the entry assembly.
+    internal static string ResolveApplicationAssemblyName(
+        string? applicationAssemblyName,
+        System.Reflection.Assembly? entryAssembly) =>
+        applicationAssemblyName
+        ?? entryAssembly?.GetName().Name
+        ?? throw new InvalidOperationException(
+            "A relative asset key requires an entry assembly or an explicit PlatformAssetBundle baseUri.");
 }
 
 public abstract class ImageProvider
