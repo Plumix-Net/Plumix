@@ -28,7 +28,7 @@ public sealed class MainActivity : Activity, ISurfaceHolderCallback
         _host = new ImpellerHost();
         _lifecycle = new AndroidLifecycleChannel(_host.LifecycleChanged);
 
-        var surfaceView = new SurfaceView(this);
+        var surfaceView = new PlumixSurfaceView(this);
         surfaceView.Holder!.AddCallback(this);
         surfaceView.Touch += (_, e) => e.Handled = _host.Touch(e.Event!);
         surfaceView.SetOnApplyWindowInsetsListener(new InsetsListener(_host));
@@ -105,7 +105,8 @@ public sealed class MainActivity : Activity, ISurfaceHolderCallback
             {
                 global::Android.Graphics.Insets bars = insets.GetInsets(
                     WindowInsets.Type.SystemBars() | WindowInsets.Type.DisplayCutout());
-                host.InsetsChanged(bars.Left, bars.Top, bars.Right, bars.Bottom);
+                global::Android.Graphics.Insets ime = insets.GetInsets(WindowInsets.Type.Ime());
+                host.InsetsChanged(bars.Left, bars.Top, bars.Right, bars.Bottom, ime.Bottom);
             }
 
             return insets;

@@ -30,6 +30,7 @@ internal sealed class ImpellerHost : IDisposable
     private int _height;
     private double _density = 1.0;
     private ViewPadding _viewPadding;
+    private ViewPadding _viewInsets;
 
     public ImpellerHost()
     {
@@ -59,6 +60,8 @@ internal sealed class ImpellerHost : IDisposable
     public void Run(Widget app, double density)
     {
         _density = density;
+        // The platform side of `flutter/textinput`; PlumixSurfaceView is its Android editor.
+        HostTextInputPlugin.Instance.Attach();
         WidgetsBinding.Instance.SetImplicitView(_view, _pipeline, _root, MediaQueryData());
         PlatformDispatcher.Instance.AddView(_view);
         WidgetsBinding.Instance.HandleAppLifecycleStateChanged(AppLifecycleState.Resumed);
@@ -91,9 +94,11 @@ internal sealed class ImpellerHost : IDisposable
     }
 
     /// <summary>The system bars and cutout, in physical pixels.</summary>
-    public void InsetsChanged(int left, int top, int right, int bottom)
+    public void InsetsChanged(int left, int top, int right, int bottom, int imeBottom)
     {
         _viewPadding = new ViewPadding(left, top, right, bottom);
+        // The keyboard covers the bottom: the engine reports it as view insets.
+        _viewInsets = new ViewPadding(0, 0, 0, imeBottom);
         UpdateMetrics();
     }
 
@@ -160,10 +165,12 @@ internal sealed class ImpellerHost : IDisposable
         var size = new Size(_width / _density, _height / _density);
         var viewPadding = new EdgeInsets(_viewPadding.Left / _density, _viewPadding.Top / _density,
             _viewPadding.Right / _density, _viewPadding.Bottom / _density);
+        var viewInsets = new EdgeInsets(0, 0, 0, _viewInsets.Bottom / _density);
         return new MediaQueryData(
             Size: size,
             DevicePixelRatio: _density,
-            Padding: viewPadding,
+            Padding: Plumix.Widgets.MediaQueryData.ComputePadding(viewPadding, viewInsets),
+            ViewInsets: viewInsets,
             ViewPadding: viewPadding,
             ViewId: _view.ViewId);
     }
@@ -178,11 +185,16 @@ internal sealed class ImpellerHost : IDisposable
         _view.UpdateMetrics(
             physicalSize: new Size(_width, _height),
             devicePixelRatio: _density,
-            padding: _viewPadding,
+            padding: Padding(),
+            viewInsets: _viewInsets,
             viewPadding: _viewPadding);
         PlatformDispatcher.Instance.UpdateImplicitViewPlatformData(_view, MediaQueryData());
         PlatformDispatcher.Instance.OnMetricsChanged?.Invoke();
     }
+
+    // The engine's padding: the view padding minus what the keyboard already covers.
+    private ViewPadding Padding() => new(_viewPadding.Left, _viewPadding.Top, _viewPadding.Right,
+        Math.Max(0, _viewPadding.Bottom - _viewInsets.Bottom));
 
     private void HandleRenderRequested(Scene scene, Size? physicalSize)
     {

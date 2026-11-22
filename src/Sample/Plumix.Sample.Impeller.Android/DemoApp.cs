@@ -58,6 +58,9 @@ internal static class DemoApp
                         maxLines: 1, overflow: TextOverflow.Ellipsis),
                     new Text("fi fl ffi — ligatures, kerning AVAWAY, fallback ☺ ✓ ∑ 😀 中文 العربية"),
                     new SizedBox(height: 12),
+                    new TextField(decoration: new InputDecoration(labelText: "Type here", border:
+                        new OutlineInputBorder())),
+                    new SizedBox(height: 12),
                     new Row(children:
                     [
                         // An Android asset, decoded by BitmapFactory, drawn from an Impeller texture.
