@@ -30,6 +30,7 @@ internal sealed unsafe class GlesSurface : IDisposable
     private IntPtr _glesLibrary;
     private IntPtr _eglSurface;
     private IntPtr _pbuffer;
+    private Gles? _gles;
     private ImpellerSurface? _surface;
     private (int Width, int Height) _surfaceSize;
     private PendingFrame? _pendingFrame;
@@ -309,6 +310,95 @@ internal sealed unsafe class GlesSurface : IDisposable
         _surface.DrawDisplayList(displayList);
         Egl.eglSwapBuffers(_display, _eglSurface);
         frame.Presented?.Invoke();
+    }
+
+    /// <summary>
+    /// Draws <paramref name="displayList"/> into an offscreen framebuffer and reads it back as premultiplied
+    /// RGBA8888 rows, top to bottom: the pixel readback Impeller's C API lacks (Scene.toImage), done with GLES.
+    /// </summary>
+    public byte[]? ReadPixels(ImpellerDisplayList displayList, int width, int height) =>
+        Invoke(() => ReadPixelsOnRasterThread(displayList, width, height));
+
+    private byte[]? ReadPixelsOnRasterThread(ImpellerDisplayList displayList, int width, int height)
+    {
+        if (ImpellerBackend.Context is not { } context || width <= 0 || height <= 0)
+        {
+            return null;
+        }
+
+        Gles gl = _gles ??= new Gles(name =>
+        {
+            IntPtr ansi = Marshal.StringToHGlobalAnsi(name);
+            try
+            {
+                return GetProcAddress(ansi);
+            }
+            finally
+            {
+                Marshal.FreeHGlobal(ansi);
+            }
+        });
+        uint framebuffer = 0;
+        uint* renderbuffers = stackalloc uint[2];
+        gl.GenFramebuffers(1, &framebuffer);
+        gl.GenRenderbuffers(2, renderbuffers);
+        try
+        {
+            gl.BindFramebuffer(Gles.GL_FRAMEBUFFER, framebuffer);
+            gl.BindRenderbuffer(Gles.GL_RENDERBUFFER, renderbuffers[0]);
+            gl.RenderbufferStorage(Gles.GL_RENDERBUFFER, Gles.GL_RGBA8, width, height);
+            gl.FramebufferRenderbuffer(Gles.GL_FRAMEBUFFER, Gles.GL_COLOR_ATTACHMENT0, Gles.GL_RENDERBUFFER,
+                renderbuffers[0]);
+            // Impeller clips with depth and stencil, as on the window's framebuffer.
+            gl.BindRenderbuffer(Gles.GL_RENDERBUFFER, renderbuffers[1]);
+            gl.RenderbufferStorage(Gles.GL_RENDERBUFFER, Gles.GL_DEPTH24_STENCIL8, width, height);
+            gl.FramebufferRenderbuffer(Gles.GL_FRAMEBUFFER, Gles.GL_DEPTH_STENCIL_ATTACHMENT, Gles.GL_RENDERBUFFER,
+                renderbuffers[1]);
+            if (gl.CheckFramebufferStatus(Gles.GL_FRAMEBUFFER) != Gles.GL_FRAMEBUFFER_COMPLETE)
+            {
+                return null;
+            }
+
+            using (ImpellerSurface? surface = context.SurfaceCreateWrappedFBONew(framebuffer,
+                       ImpellerPixelFormat.kImpellerPixelFormatRGBA8888, new ImpellerISize(width, height)))
+            {
+                if (surface is null)
+                {
+                    return null;
+                }
+
+                surface.DrawDisplayList(displayList);
+            }
+
+            gl.BindFramebuffer(Gles.GL_FRAMEBUFFER, framebuffer);
+            byte[] pixels = new byte[width * height * 4];
+            gl.PixelStorei(Gles.GL_PACK_ALIGNMENT, 1);
+            fixed (byte* destination = pixels)
+            {
+                gl.ReadPixels(0, 0, width, height, Gles.GL_RGBA, Gles.GL_UNSIGNED_BYTE, destination);
+            }
+
+            FlipRows(pixels, width * 4, height);
+            return pixels;
+        }
+        finally
+        {
+            gl.BindFramebuffer(Gles.GL_FRAMEBUFFER, 0);
+            gl.DeleteRenderbuffers(2, renderbuffers);
+            gl.DeleteFramebuffers(1, &framebuffer);
+        }
+    }
+
+    // glReadPixels returns the bottom row first.
+    private static void FlipRows(byte[] pixels, int stride, int height)
+    {
+        byte[] row = new byte[stride];
+        for (int top = 0, bottom = height - 1; top < bottom; top++, bottom--)
+        {
+            Buffer.BlockCopy(pixels, top * stride, row, 0, stride);
+            Buffer.BlockCopy(pixels, bottom * stride, pixels, top * stride, stride);
+            Buffer.BlockCopy(row, 0, pixels, bottom * stride, stride);
+        }
     }
 
     private IntPtr GetProcAddress(IntPtr name)

@@ -23,7 +23,7 @@ internal static partial class HarfBuzzInstancer
             ? (info.MinValue, info.DefaultValue, info.MaxValue)
             : null;
 
-    /// <summary>The font file of <paramref name="face"/> with its weight axis pinned at <paramref name="weight"/>.</summary>
+    /// <summary>The font file of <paramref name="face"/>, weight axis pinned at <paramref name="weight"/>.</summary>
     public static byte[]? Instantiate(Face face, float weight)
     {
         IntPtr input = hb_subset_input_create_or_fail();

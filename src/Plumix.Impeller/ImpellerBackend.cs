@@ -4,8 +4,8 @@ using Plumix.UI;
 namespace Plumix.Impeller;
 
 // C#-only infrastructure: no Dart parity source. The Impeller implementation of the core's render seam
-// (UI/RenderBackend.cs) for the stage 4 prototype. Impeller's C API cannot read pixels back, so
-// Scene.toImage has no implementation (docs/product/avalonia-free-core.md, risks); fragment programs run when
+// (UI/RenderBackend.cs) for the stage 4 prototype. Impeller's C API cannot read pixels back, so Scene.toImage goes
+// through the host's readback (ReadPixels; GLES: an offscreen framebuffer and glReadPixels); fragment programs run when
 // an impellerc bundle of their source is embedded (ImpellerShaders) and draw nothing otherwise.
 
 /// <summary>Installs the Impeller backend and holds the host's Impeller context.</summary>
@@ -21,6 +21,13 @@ internal static class ImpellerBackend
     /// </summary>
     internal static Func<Func<ImpellerTexture?>, ImpellerTexture?> OnContextThread { get; set; } =
         create => create();
+
+    /// <summary>
+    /// Draws a display list offscreen and returns its premultiplied RGBA8888 rows, top to bottom; null when it
+    /// cannot. Impeller's C API has no readback, so the host provides one for its graphics API (GLES: an offscreen
+    /// framebuffer and glReadPixels). Without it Scene.toImage is unavailable.
+    /// </summary>
+    internal static Func<ImpellerDisplayList, int, int, byte[]?>? ReadPixels { get; set; }
 
     /// <summary>Installs the Impeller render backend into the core.</summary>
     internal static void Install()
@@ -44,8 +51,20 @@ internal static class ImpellerBackend
     {
         internal static readonly RenderBackendImpl Instance = new();
 
-        public RasterImage RasterizeScene(ContainerFlowLayer root, int width, int height) =>
-            throw new NotSupportedException("Impeller's C API cannot read pixels back: Scene.toImage is unavailable.");
+        public RasterImage RasterizeScene(ContainerFlowLayer root, int width, int height)
+        {
+            if (ReadPixels is not { } readPixels)
+            {
+                throw new NotSupportedException(
+                    "Impeller's C API cannot read pixels back and the host provides no readback: "
+                    + "Scene.toImage is unavailable.");
+            }
+
+            using ImpellerDisplayList displayList = ImpellerLayerPainter.Build(root, width, height);
+            byte[] pixels = readPixels(displayList, width, height)
+                ?? throw new InvalidOperationException("The host could not read the scene's pixels back.");
+            return ImpellerImage.Wrap(pixels, width, height);
+        }
 
         public void CompileFragmentProgram(RuntimeFragmentProgram program)
         {

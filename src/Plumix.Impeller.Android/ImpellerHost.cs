@@ -81,6 +81,7 @@ internal sealed class ImpellerHost : IDisposable
 
         s_surface = new GlesSurface();
         ImpellerBackend.OnContextThread = s_surface.Invoke;
+        ImpellerBackend.ReadPixels = s_surface.ReadPixels;
         PlatformThread.Current = new AndroidPlatformThread();
         ImageBackend.Current = new AndroidImageBackend();
         ImageBackend.Assets = new AndroidAssetSource(assets);
