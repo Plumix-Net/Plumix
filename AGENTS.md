@@ -113,7 +113,7 @@ ln -s ~/.pub-cache/hosted/pub.dev/material_ui-1.0.0 material-ui-src    # Materia
 ln -s ~/.pub-cache/hosted/pub.dev/cupertino_ui-1.0.0 cupertino-ui-src  # Cupertino pub package
 ln -s /path/to/your/Avalonia avalonia-src   # optional, for host/backend questions
 ln -s /path/to/your/skia skia-src           # optional: google/skia chrome/m119 (SkiaSharp 3.119), for Path ports
-ln -s /path/to/your/NImpeller nimpeller-src # optional: AvaloniaUI/NImpeller HEAD, for the Impeller prototype
+ln -s /path/to/your/NImpeller nimpeller-src # optional: Plumix-Net/NImpeller, to work on the Impeller bindings
 ```
 
 - `material-ui-src` / `cupertino-ui-src` — source of truth for Material/Cupertino controls. Flutter
@@ -128,8 +128,9 @@ ln -s /path/to/your/NImpeller nimpeller-src # optional: AvaloniaUI/NImpeller HEA
 - `skia-src` — Skia at `chrome/m119`, the version inside SkiaSharp 3.119 (a sparse checkout of `src/pathops`
   and the `SkPath`/`SkGeometry` sources is enough). Source of truth for `Path`'s managed geometry
   (`src/Plumix/UI/Path*.cs`), which must match the Skia the engine ships.
-- `nimpeller-src` — AvaloniaUI/NImpeller at HEAD (branch `proto/impeller` only): the published NuGet lacks
-  `ImpellerTypeface` and glyph runs, so the prototype references `src/NImpeller` by project path.
+- `nimpeller-src` — Plumix-Net/NImpeller, the fork of AvaloniaUI/NImpeller (branch `plumix/packages`) the
+  Impeller prototype's `Plumix.NImpeller` package is built from (upstream's NuGet lacks `ImpellerTypeface` and
+  glyph runs). Only needed to change the bindings; branch `proto/impeller` consumes the package.
 
 **Pinned Flutter revision: 3.47.0 (`4cf24164269`, `flutter-3.47-candidate.0`). Pinned packages:
 `material_ui` 1.0.0, `cupertino_ui` 1.0.0, `intl` 0.20.3** (what `dart_sample` resolves; at these pins the package

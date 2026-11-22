@@ -2,7 +2,7 @@
 
     <!-- Stage 4 prototype (docs/product/avalonia-free-core.md): the native Android host without Avalonia,
          rendering through Impeller (GLES on EGL): ImpellerActivity, the raster thread, input, IME, images and
-         system fonts. Branch proto/impeller only; never packed. Apps import Impeller.targets for libimpeller.so. -->
+         system fonts. Branch proto/impeller only; never packed. libimpeller.so comes with Plumix.NImpeller.Native. -->
     <PropertyGroup>
         <TargetFramework>net11.0-android</TargetFramework>
         <SupportedOSPlatformVersion>29</SupportedOSPlatformVersion>

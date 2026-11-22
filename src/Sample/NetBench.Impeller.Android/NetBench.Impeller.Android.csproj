@@ -74,7 +74,5 @@
         </ItemGroup>
     </Target>
 
-    <!-- Packages libimpeller.so per RuntimeIdentifier from nimpeller-src/external/impeller_sdk. -->
-    <Import Project="..\..\..\nimpeller-src\samples\Sandbox.Android\Impeller.targets" />
 
 </Project>
