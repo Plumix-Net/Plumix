@@ -36,17 +36,21 @@ internal sealed class ImpellerImage
     {
         get
         {
-            if (_texture is null && ImpellerBackend.Context is { } context)
+            if (_texture is null && ImpellerBackend.Context is not null)
             {
-                using var contents = new ImpellerUnmanagedMemory(Rgba);
-                _texture = context.TextureCreateWithContentsNew(
-                    new ImpellerTextureDescriptor
-                    {
-                        Pixel_format = ImpellerPixelFormat.kImpellerPixelFormatRGBA8888,
-                        Size = new ImpellerISize(Width, Height),
-                        Mip_count = 1,
-                    },
-                    contents);
+                // GLES uploads run on the context's thread (Impeller's reactor reacts only there).
+                _texture = ImpellerBackend.OnContextThread(() =>
+                {
+                    using var contents = new ImpellerUnmanagedMemory(Rgba);
+                    return ImpellerBackend.Context?.TextureCreateWithContentsNew(
+                        new ImpellerTextureDescriptor
+                        {
+                            Pixel_format = ImpellerPixelFormat.kImpellerPixelFormatRGBA8888,
+                            Size = new ImpellerISize(Width, Height),
+                            Mip_count = 1,
+                        },
+                        contents);
+                });
             }
 
             return _texture;

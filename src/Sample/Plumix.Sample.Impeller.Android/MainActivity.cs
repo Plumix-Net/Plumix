@@ -1,12 +1,13 @@
 using Android.App;
 using Android.Content.PM;
-using Android.OS;
-using Android.Views;
+using Plumix.Impeller.Android;
+using Plumix.Widgets;
 
 namespace Plumix.Sample.Impeller.Android;
 
-// C#-only host infrastructure; no Dart parity source. The prototype's only Activity: a full-screen
-// SurfaceView the ImpellerHost renders into, with lifecycle, insets, touches and back forwarded to it.
+// C#-only host infrastructure; no Dart parity source. The Sample gallery on the Impeller host.
+// Launch extras: `--es app demo` opens the prototype's demo, `--es route /tabs` opens one gallery page (for
+// walking the routes from a script), `--ez perf true` logs startup and frame timings.
 
 [Activity(
     Label = "Plumix Impeller",
@@ -16,108 +17,17 @@ namespace Plumix.Sample.Impeller.Android;
     ConfigurationChanges = ConfigChanges.Orientation | ConfigChanges.ScreenSize | ConfigChanges.ScreenLayout
                            | ConfigChanges.SmallestScreenSize | ConfigChanges.Keyboard | ConfigChanges.KeyboardHidden
                            | ConfigChanges.UiMode | ConfigChanges.Density)]
-public sealed class MainActivity : Activity, ISurfaceHolderCallback
+public sealed class MainActivity : ImpellerActivity
 {
-    private ImpellerHost? _host;
-    private AndroidLifecycleChannel? _lifecycle;
+    protected override Widget CreateApp() =>
+        Intent?.GetStringExtra("app") == "demo" ? DemoApp.Create() : new CounterApp();
 
-    protected override void OnCreate(Bundle? savedInstanceState)
+    protected override void OnAppScheduled()
     {
-        base.OnCreate(savedInstanceState);
-        ImpellerHost.InstallBackend(Assets!);
-        _host = new ImpellerHost();
-        _lifecycle = new AndroidLifecycleChannel(_host.LifecycleChanged);
-
-        var surfaceView = new PlumixSurfaceView(this);
-        surfaceView.Holder!.AddCallback(this);
-        surfaceView.Touch += (_, e) => e.Handled = _host.Touch(e.Event!);
-        surfaceView.SetOnApplyWindowInsetsListener(new InsetsListener(_host));
-        SetContentView(surfaceView);
-        if (OperatingSystem.IsAndroidVersionAtLeast(30))
-        {
-            Window!.SetDecorFitsSystemWindows(false);
-        }
-
-        // The Sample gallery by default; `adb shell am start ... --es app demo` opens the prototype's demo.
-        Widgets.Widget app = Intent?.GetStringExtra("app") == "demo" ? DemoApp.Create() : new CounterApp();
-        _host.Run(app, Resources!.DisplayMetrics!.Density);
-        // `--es route /tabs` opens one gallery page, for walking the routes from a script.
         if (Intent?.GetStringExtra("route") is { } route)
         {
             SchedulerBinding.Instance.AddPostFrameCallback(timeStamp =>
                 _ = SampleNavigationObservers.PageRoutes.Navigator?.PushNamed(route));
-        }
-    }
-
-    protected override void OnResume()
-    {
-        base.OnResume();
-        _lifecycle?.AppIsResumed();
-    }
-
-    protected override void OnPause()
-    {
-        _lifecycle?.AppIsInactive();
-        base.OnPause();
-    }
-
-    protected override void OnStop()
-    {
-        _lifecycle?.AppIsPaused();
-        base.OnStop();
-    }
-
-    public override void OnWindowFocusChanged(bool hasFocus)
-    {
-        base.OnWindowFocusChanged(hasFocus);
-        if (hasFocus)
-        {
-            _lifecycle?.AWindowIsFocused();
-        }
-        else
-        {
-            _lifecycle?.NoWindowsAreFocused();
-        }
-    }
-
-#pragma warning disable CA1422, CS0672, CS0618 // The prototype keeps the pre-predictive back path.
-    public override async void OnBackPressed()
-    {
-        if (_host is null || !await _host.HandleBackAsync())
-        {
-            Finish();
-        }
-    }
-#pragma warning restore CA1422, CS0672, CS0618
-
-    protected override void OnDestroy()
-    {
-        _lifecycle?.AppIsDetached();
-        _host?.Dispose();
-        _host = null;
-        base.OnDestroy();
-    }
-
-    public void SurfaceCreated(ISurfaceHolder holder) => _host?.SurfaceCreated(holder.Surface!);
-
-    public void SurfaceChanged(ISurfaceHolder holder, global::Android.Graphics.Format format, int width, int height) =>
-        _host?.SurfaceChanged(width, height);
-
-    public void SurfaceDestroyed(ISurfaceHolder holder) => _host?.SurfaceDestroyed();
-
-    private sealed class InsetsListener(ImpellerHost host) : Java.Lang.Object, View.IOnApplyWindowInsetsListener
-    {
-        public WindowInsets OnApplyWindowInsets(View view, WindowInsets insets)
-        {
-            if (OperatingSystem.IsAndroidVersionAtLeast(30))
-            {
-                global::Android.Graphics.Insets bars = insets.GetInsets(
-                    WindowInsets.Type.SystemBars() | WindowInsets.Type.DisplayCutout());
-                global::Android.Graphics.Insets ime = insets.GetInsets(WindowInsets.Type.Ime());
-                host.InsetsChanged(bars.Left, bars.Top, bars.Right, bars.Bottom, ime.Bottom);
-            }
-
-            return insets;
         }
     }
 }

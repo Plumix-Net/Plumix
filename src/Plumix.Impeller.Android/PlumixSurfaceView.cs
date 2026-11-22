@@ -7,7 +7,7 @@ using Plumix.UI;
 using KeyEvent = Android.Views.KeyEvent;
 using Math = System.Math;
 
-namespace Plumix.Sample.Impeller.Android;
+namespace Plumix.Impeller.Android;
 
 // C#-only host infrastructure; no Dart parity source. The prototype's text input: the SurfaceView is the
 // IME's editor, and its InputConnection forwards commits, composing text, deletions and editor actions to the
@@ -26,11 +26,28 @@ internal sealed class PlumixSurfaceView : SurfaceView
         Focusable = true;
         FocusableInTouchMode = true;
         _ime = (InputMethodManager)context.GetSystemService(Context.InputMethodService)!;
+    }
+
+    // The plugin is process-wide and outlives this view's Activity: only an attached view listens to it.
+    protected override void OnAttachedToWindow()
+    {
+        base.OnAttachedToWindow();
         _plugin.ShowRequested += ShowKeyboard;
         _plugin.HideRequested += HideKeyboard;
-        _plugin.ClientChanged += () => _ime.RestartInput(this);
+        _plugin.ClientChanged += RestartInput;
         _plugin.EditingStateChanged += ReportSelection;
     }
+
+    protected override void OnDetachedFromWindow()
+    {
+        _plugin.ShowRequested -= ShowKeyboard;
+        _plugin.HideRequested -= HideKeyboard;
+        _plugin.ClientChanged -= RestartInput;
+        _plugin.EditingStateChanged -= ReportSelection;
+        base.OnDetachedFromWindow();
+    }
+
+    private void RestartInput() => _ime.RestartInput(this);
 
     public override bool OnCheckIsTextEditor() => _plugin.ClientId is not null;
 

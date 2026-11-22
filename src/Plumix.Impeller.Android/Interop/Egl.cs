@@ -3,7 +3,7 @@
 // C#-only host infrastructure; no Dart parity source.
 using System.Runtime.InteropServices;
 
-namespace Plumix.Sample.Impeller.Android.Interop;
+namespace Plumix.Impeller.Android.Interop;
 
 /// <summary>The slice of libEGL the GLES backend needs.</summary>
 internal static unsafe partial class Egl

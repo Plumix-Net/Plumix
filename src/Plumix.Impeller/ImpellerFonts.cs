@@ -10,9 +10,10 @@ namespace Plumix.Impeller;
 // C#-only infrastructure: no Dart parity source. The Impeller prototype's text engine (PRD decision 5): fonts
 // are loaded once into both a HarfBuzz face (shaping, metrics) and an Impeller typeface (glyph runs), and
 // HeadlessParagraph does the line layout over the shaped runs (UI/TextShaping.cs). Font matching is
-// deliberately small: registered families, then the platform's default sans-serif, with a per-cluster
-// fallback to the default face for code points the chosen face lacks. Weights a face lacks are synthesized
-// (fake bold), as SkParagraph does; variable-font axes are not applied yet.
+// deliberately small: registered families, then the platform's named families (fonts.xml), then the default
+// sans-serif, with a per-cluster fallback for code points the chosen face lacks. A face's weight and style
+// come from its OS/2 table; weights a family lacks are synthesized (fake bold), as SkParagraph does;
+// variable-font axes are not applied yet.
 
 /// <summary>One loaded font face.</summary>
 internal sealed class ImpellerFontFace
@@ -46,9 +47,12 @@ internal sealed class ImpellerFontFace
 
     public double Descent { get; }
 
-    /// <summary>Loads <paramref name="bytes"/>' first face, or null when neither engine can read it.</summary>
+    /// <summary>
+    /// Loads <paramref name="bytes"/>' face <paramref name="faceIndex"/>, or null when neither engine can read
+    /// it. A weight or style not given is read from the face's OS/2 table, as Skia's typeface does.
+    /// </summary>
     public static ImpellerFontFace? Load(
-        byte[] bytes, string family, int weight = 400, bool italic = false, int faceIndex = 0)
+        byte[] bytes, string family, int? weight = null, bool? italic = null, int faceIndex = 0)
     {
         using var memory = new ImpellerUnmanagedMemory(bytes);
         if (ImpellerTypeface.New(memory, (uint)faceIndex) is not { } typeface)
@@ -63,7 +67,23 @@ internal sealed class ImpellerFontFace
         var font = new HBFont(face);
         font.SetFunctionsOpenType();
         font.SetScale(unitsPerEm, unitsPerEm);
-        return new ImpellerFontFace(family, font, unitsPerEm, typeface, weight, italic);
+        (int os2Weight, bool os2Italic) = StyleOf(face);
+        return new ImpellerFontFace(family, font, unitsPerEm, typeface, weight ?? os2Weight, italic ?? os2Italic);
+    }
+
+    // OS/2 usWeightClass (offset 4) and fsSelection's ITALIC bit (offset 62, bit 0); regular without the table.
+    private static (int Weight, bool Italic) StyleOf(Face face)
+    {
+        using Blob table = face.ReferenceTable(Tag.Parse("OS/2"));
+        ReadOnlySpan<byte> os2 = table.AsSpan();
+        if (os2.Length < 64)
+        {
+            return (400, false);
+        }
+
+        int weight = (os2[4] << 8) | os2[5];
+        bool italic = (os2[63] & 1) != 0;
+        return (weight is >= 1 and <= 1000 ? weight : 400, italic);
     }
 
     /// <summary>Whether the face maps <paramref name="codePoint"/> to a glyph.</summary>
@@ -110,6 +130,9 @@ internal sealed class ImpellerTextShaper : ITextShaper
     private readonly Dictionary<string, List<ImpellerFontFace>> _families = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<(ImpellerFontFace, bool, bool), ShapingFace> _shapingFaces = [];
     private readonly List<(string Path, int Index, Lazy<ImpellerFontFace?> Face)> _fallbacks = [];
+    private readonly Dictionary<string, List<SystemFace>> _systemFamilies = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<string, string> _aliases = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<(string, int, int?, bool), Lazy<ImpellerFontFace?>> _systemFaceCache = [];
     private ImpellerFontFace? _default;
 
     /// <summary>The face used when no requested family is registered, and for missing code points.</summary>
@@ -147,6 +170,44 @@ internal sealed class ImpellerTextShaper : ITextShaper
             _fallbacks.Add((path, faceIndex, new Lazy<ImpellerFontFace?>(() => File.Exists(path)
                 ? ImpellerFontFace.Load(File.ReadAllBytes(path), string.Empty, faceIndex: faceIndex)
                 : null)));
+        }
+    }
+
+    /// <summary>
+    /// Declares a named platform family's face (Android's named fonts.xml families: sans-serif, serif,
+    /// monospace...), loaded the first time a style asks for that family. <paramref name="weight"/> is the
+    /// weight the configuration declares; a variable instance (declared through axes the prototype cannot
+    /// apply) passes <paramref name="actualWeight"/> null, so the file's own weight decides fake bold.
+    /// </summary>
+    public void AddSystemFace(string family, string path, int faceIndex, int weight, bool italic, int? actualWeight)
+    {
+        lock (_gate)
+        {
+            if (!_systemFamilies.TryGetValue(family, out List<SystemFace>? faces))
+            {
+                _systemFamilies[family] = faces = [];
+            }
+
+            // A variable font is listed once per instance: its instances share one loaded face.
+            var key = (path, faceIndex, actualWeight, italic);
+            if (!_systemFaceCache.TryGetValue(key, out Lazy<ImpellerFontFace?>? face))
+            {
+                _systemFaceCache[key] = face = new Lazy<ImpellerFontFace?>(() =>
+                    File.Exists(path)
+                        ? ImpellerFontFace.Load(File.ReadAllBytes(path), family, actualWeight, italic, faceIndex)
+                        : null);
+            }
+
+            faces.Add(new SystemFace(weight, italic, face));
+        }
+    }
+
+    /// <summary>Makes <paramref name="name"/> another name of the platform family <paramref name="family"/>.</summary>
+    public void AddSystemAlias(string name, string family)
+    {
+        lock (_gate)
+        {
+            _aliases.TryAdd(name, family);
         }
     }
 
@@ -262,11 +323,35 @@ internal sealed class ImpellerTextShaper : ITextShaper
                         .ThenBy(face => Math.Abs(face.Weight - weight))
                         .First();
                 }
+
+                if (SystemFaceOf(family, style) is { } systemFace)
+                {
+                    return systemFace;
+                }
             }
         }
 
         return Default;
     }
+
+    // A platform family (through its aliases): the declared face closest in style, loaded on first use.
+    private ImpellerFontFace? SystemFaceOf(string family, ResolvedTextStyle style)
+    {
+        string name = _aliases.TryGetValue(family, out string? target) ? target : family;
+        if (!_systemFamilies.TryGetValue(name, out List<SystemFace>? faces))
+        {
+            return null;
+        }
+
+        bool italic = style.FontStyle == FontStyle.Italic;
+        int weight = style.FontWeight.Value;
+        return faces.OrderBy(face => face.Italic == italic ? 0 : 1)
+            .ThenBy(face => Math.Abs(face.Weight - weight))
+            .Select(face => face.Face.Value)
+            .FirstOrDefault(face => face is not null);
+    }
+
+    private sealed record SystemFace(int Weight, bool Italic, Lazy<ImpellerFontFace?> Face);
 
     // A package's family is registered and requested as `packages/<package>/<family>` (FontLoader,
     // TextStyle.package); the bare family is tried too, for fonts a package registered without the prefix.

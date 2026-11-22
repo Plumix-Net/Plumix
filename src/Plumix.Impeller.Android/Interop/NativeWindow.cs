@@ -3,7 +3,7 @@
 // C#-only host infrastructure; no Dart parity source.
 using System.Runtime.InteropServices;
 
-namespace Plumix.Sample.Impeller.Android.Interop;
+namespace Plumix.Impeller.Android.Interop;
 
 /// <summary>ANativeWindow functions from libandroid.</summary>
 internal static partial class NativeWindow

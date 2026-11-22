@@ -2,9 +2,10 @@ using Android.Graphics;
 using Java.Nio;
 using Plumix.Foundation;
 using Plumix.Impeller;
+using Plumix.Rendering;
 using Plumix.UI;
 
-namespace Plumix.Sample.Impeller.Android;
+namespace Plumix.Impeller.Android;
 
 // C#-only host infrastructure; no Dart parity source. The core's image seam (UI/ImageBackend.cs) on the
 // platform decoder, the way the engine's Android embedding can hand decoding to android.graphics: images are
@@ -174,13 +175,16 @@ internal sealed class AndroidImageBackend : IImageBackend
     }
 }
 
-/// <summary>The app's Android assets (the AndroidAsset items) as the core's asset source.</summary>
+/// <summary>
+/// The app's Android assets (the AndroidAsset items) as the core's asset source: the app's own assets
+/// (`avares://<app>/<path>`) at `<path>`, another package's (`avares://<package>/<path>`, a Dart
+/// `packages/<package>/<path>` key) at `<package>/<path>`.
+/// </summary>
 internal sealed class AndroidAssetSource(global::Android.Content.Res.AssetManager assets) : IAssetSource
 {
     public Stream Open(Uri uri, Uri? baseUri)
     {
-        Uri absolute = uri.IsAbsoluteUri ? uri : new Uri(baseUri!, uri);
-        using Stream asset = assets.Open(Uri.UnescapeDataString(absolute.AbsolutePath).TrimStart('/'));
+        using Stream asset = assets.Open(AssetPath(uri.IsAbsoluteUri ? uri : new Uri(baseUri!, uri)));
         var copy = new MemoryStream();
         asset.CopyTo(copy);
         copy.Position = 0;
@@ -190,7 +194,30 @@ internal sealed class AndroidAssetSource(global::Android.Content.Res.AssetManage
     public IEnumerable<Uri> GetAssets(Uri directory, Uri? baseUri)
     {
         Uri absolute = directory.IsAbsoluteUri ? directory : new Uri(baseUri!, directory);
-        string path = Uri.UnescapeDataString(absolute.AbsolutePath).Trim('/');
-        return (assets.List(path) ?? []).Select(name => new Uri(absolute, name));
+        return (assets.List(AssetPath(absolute).TrimEnd('/')) ?? []).Select(name => new Uri(absolute, name));
+    }
+
+    private static string AssetPath(Uri absolute)
+    {
+        string path = Uri.UnescapeDataString(absolute.AbsolutePath).TrimStart('/');
+        string package = PackageOf(absolute);
+        bool ownAsset = package.Length == 0
+            || string.Equals(package, PlatformAssetBundle.ApplicationAssemblyName, StringComparison.OrdinalIgnoreCase);
+        return ownAsset ? path : $"{package}/{path}";
+    }
+
+    // Uri.Host is lower-cased, and Android asset paths are case-sensitive: the authority as written.
+    private static string PackageOf(Uri absolute)
+    {
+        string original = absolute.OriginalString;
+        int start = original.IndexOf("://", StringComparison.Ordinal);
+        if (start < 0)
+        {
+            return absolute.Host;
+        }
+
+        start += 3;
+        int end = original.IndexOf('/', start);
+        return end < 0 ? original[start..] : original[start..end];
     }
 }

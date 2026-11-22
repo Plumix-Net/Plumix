@@ -1,7 +1,7 @@
 using Android.OS;
 using Android.Views;
 
-namespace Plumix.Sample.Impeller.Android;
+namespace Plumix.Impeller.Android;
 
 // C#-only host infrastructure; no Dart parity source. The core's UI-thread seam (Plumix/PlatformThread.cs)
 // on the Android main Looper, the way the engine's platform task runner is: microtasks jump the queue,

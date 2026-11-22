@@ -3,16 +3,16 @@ using NImpeller;
 using Plumix.Gestures;
 using Plumix.Impeller;
 using Plumix.Rendering;
-using Plumix.Sample.Impeller.Android.Interop;
+using Plumix.Impeller.Android.Interop;
 using Plumix.UI;
 using Plumix.Widgets;
 
-namespace Plumix.Sample.Impeller.Android;
+namespace Plumix.Impeller.Android;
 
 // C#-only host infrastructure; no Dart parity source. The engine embedder of the stage 4 prototype: owns the
 // implicit FlutterView, reports metrics, lifecycle and touches to the framework, and rasterizes each
 // composited layer tree through Impeller into the window, the way the engine's shell does for Android.
-// The framework and the raster work share the main thread here (no separate raster thread yet).
+// The UI thread records each frame's display list; GlesSurface draws it on a raster thread, as the engine does.
 
 /// <summary>Hosts one Plumix app in an Android SurfaceView, rendered by Impeller.</summary>
 internal sealed class ImpellerHost : IDisposable
@@ -23,7 +23,12 @@ internal sealed class ImpellerHost : IDisposable
     // Instantiating the binding installs its packet handler on the platform dispatcher.
     private readonly GestureBinding _gestures = GestureBinding.Instance;
     private readonly HostPointerPacketEncoder _pointers = new();
-    private readonly GlesSurface _surface = new();
+    // The process's raster thread and Impeller context, started by InstallBackend so the context is created
+    // while the app starts. Like the engine's shell, they outlive an Activity: images in the framework's cache
+    // keep textures of this context, and the framework's fonts are registered with the backend once.
+    private static GlesSurface? s_surface;
+    private readonly GlesSurface _surface;
+    private readonly Action _contextCreated;
     private ContainerFlowLayer? _tree;
     private FrameTimingsRecorder? _pendingTimings;
     private bool _drawPosted;
@@ -32,12 +37,17 @@ internal sealed class ImpellerHost : IDisposable
     private int _height;
     private double _density = 1.0;
     private Widget? _pendingApp;
-    private bool _presentedFirstFrame;
+    private bool _builtFirstFrame;
+    private int _presentedFirstFrame;
     private ViewPadding _viewPadding;
     private ViewPadding _viewInsets;
 
     public ImpellerHost()
     {
+        _surface = s_surface ?? throw new InvalidOperationException("Call InstallBackend first.");
+        // The first frame may be ready before the context; it is drawn once the context exists.
+        _contextCreated = () => PlatformThread.Current.Post(Draw, PlatformTaskPriority.Task);
+        _surface.ContextCreated += _contextCreated;
         _root = new ReusableRenderView(_view);
         _pipeline = new PipelineOwner(
             onSemanticsOwnerCreated: () => (_pipeline!.RootNode as RenderView)?.ScheduleInitialSemantics(),
@@ -47,17 +57,28 @@ internal sealed class ImpellerHost : IDisposable
     }
 
     /// <summary>Installs the platform seams this host provides; call once, before any binding is touched.</summary>
-    public static void InstallBackend(global::Android.Content.Res.AssetManager assets)
+    public static void InstallBackend(global::Android.Content.Res.AssetManager assets, string applicationAssembly)
     {
+        // Once per process: an Activity created again (after back finished the last one) reuses it all.
+        if (s_surface is not null)
+        {
+            return;
+        }
+
+        s_surface = new GlesSurface();
+        ImpellerBackend.OnContextThread = s_surface.Invoke;
         PlatformThread.Current = new AndroidPlatformThread();
         ImageBackend.Current = new AndroidImageBackend();
         ImageBackend.Assets = new AndroidAssetSource(assets);
-        // .NET for Android has no entry assembly: relative asset keys belong to this app.
-        PlatformAssetBundle.ApplicationAssemblyName = typeof(ImpellerHost).Assembly.GetName().Name;
+        // .NET for Android has no entry assembly: relative asset keys belong to the app.
+        PlatformAssetBundle.ApplicationAssemblyName = applicationAssembly;
         ImpellerBackend.Install();
+        PerfProbe.Mark("render-backend");
         ImpellerTextShaper shaper =
             ImpellerBackend.InstallText("/system/fonts/Roboto-Regular.ttf", "/system/fonts/DroidSans.ttf");
-        AndroidFontConfig.AddFallbacks(shaper);
+        PerfProbe.Mark("default-font");
+        AndroidFontConfig.AddSystemFonts(shaper);
+        PerfProbe.Mark("fonts-xml");
     }
 
     /// <summary>
@@ -85,12 +106,15 @@ internal sealed class ImpellerHost : IDisposable
         WidgetsBinding.Instance.SetImplicitView(_view, _pipeline, _root, MediaQueryData());
         PlatformDispatcher.Instance.AddView(_view);
         WidgetsBinding.Instance.HandleAppLifecycleStateChanged(AppLifecycleState.Resumed);
+        PerfProbe.Mark("run-app");
         PlumixExtensions.RunApp(app);
+        PerfProbe.Mark("run-app-returned");
     }
 
     public void SurfaceCreated(Surface surface)
     {
         _window = NativeWindow.ANativeWindow_fromSurface(global::Android.Runtime.JNIEnv.Handle, surface.Handle);
+        PerfProbe.Mark("surface-created");
         _surface.Attach(_window);
         SurfaceChanged(NativeWindow.ANativeWindow_getWidth(_window), NativeWindow.ANativeWindow_getHeight(_window));
     }
@@ -224,11 +248,17 @@ internal sealed class ImpellerHost : IDisposable
             return;
         }
 
+        if (_tree is null)
+        {
+            PerfProbe.Mark("first-scene");
+        }
+
         _tree = tree;
         // The engine's Animator::Render ends the frame's build phase; Draw reports the raster phase.
         _pendingTimings = FrameTimingsRecorder.ForRender();
-        // The engine rasterizes after the frame, on its raster thread; here the next main-thread message
-        // does, ahead of any other queued work, so the frame has finished before its timings are reported.
+        // The engine hands the layer tree to its raster thread after the frame; here the next main-thread
+        // message records the display list (ahead of other queued work, once the frame has finished) and
+        // GlesSurface's raster thread draws it.
         if (!_drawPosted)
         {
             _drawPosted = true;
@@ -242,7 +272,7 @@ internal sealed class ImpellerHost : IDisposable
 
     private void Draw()
     {
-        if (_tree is null || !_surface.IsAttached || _width <= 0 || _height <= 0)
+        if (_tree is null || !_surface.IsAttached || !_surface.IsContextReady || _width <= 0 || _height <= 0)
         {
             return;
         }
@@ -250,16 +280,36 @@ internal sealed class ImpellerHost : IDisposable
         FrameTimingsRecorder? timings = _pendingTimings;
         _pendingTimings = null;
         timings?.RecordRasterStart();
-        using ImpellerDisplayList displayList = ImpellerLayerPainter.Build(_tree, _width, _height);
-        _surface.Present(displayList, _width, _height);
+        if (!_builtFirstFrame)
+        {
+            PerfProbe.Mark("first-raster-start");
+        }
+
+        // Recording the display list is CPU work on the UI thread; the raster thread draws and swaps it.
+        ImpellerDisplayList displayList = ImpellerLayerPainter.Build(_tree, _width, _height);
+        if (!_builtFirstFrame)
+        {
+            _builtFirstFrame = true;
+            PerfProbe.Mark("first-display-list-built");
+        }
+
+        _surface.Present(displayList, _width, _height, () => Presented(timings));
+    }
+
+    // On the raster thread, after the swap.
+    private void Presented(FrameTimingsRecorder? timings)
+    {
         if (timings is not null)
         {
             // Shell::OnFrameRasterized: timings for `onReportTimings`, and the first-frame-rasterized signal.
-            FrameTimingsReporter.OnFrameRasterized(timings.RecordRasterEnd());
+            FrameTiming timing = timings.RecordRasterEnd();
+            PlatformThread.Current.Post(() => FrameTimingsReporter.OnFrameRasterized(timing),
+                PlatformTaskPriority.Task);
         }
-        if (!_presentedFirstFrame)
+
+        if (Interlocked.Exchange(ref _presentedFirstFrame, 1) == 0)
         {
-            _presentedFirstFrame = true;
+            PerfProbe.Mark("first-frame-presented");
             // A marker for scripts that walk the app (the engine's "first frame rasterized" event).
             global::Android.Util.Log.Info("PlumixImpeller", "first frame presented");
         }
@@ -267,7 +317,7 @@ internal sealed class ImpellerHost : IDisposable
 
     public void Dispose()
     {
+        _surface.ContextCreated -= _contextCreated;
         SurfaceDestroyed();
-        _surface.Dispose();
     }
 }

@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-    <!-- Stage 4 prototype (docs/product/avalonia-free-core.md): a native Android host without Avalonia,
-         rendering through Impeller (GLES on EGL). Branch proto/impeller only; never packed. -->
+    <!-- Stage 4 prototype (docs/product/avalonia-free-core.md): the Sample gallery on the native Android host
+         without Avalonia (src/Plumix.Impeller.Android), rendering through Impeller. Branch proto/impeller only. -->
     <PropertyGroup>
         <OutputType>Exe</OutputType>
         <TargetFramework>net11.0-android</TargetFramework>
@@ -9,7 +9,6 @@
         <RuntimeIdentifiers>android-arm64;android-x64</RuntimeIdentifiers>
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
-        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
         <ApplicationId>com.plumix.impeller</ApplicationId>
         <ApplicationTitle>Plumix Impeller</ApplicationTitle>
         <ApplicationVersion>1</ApplicationVersion>
@@ -30,7 +29,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\..\Plumix.Impeller\Plumix.Impeller.csproj" />
+        <ProjectReference Include="..\..\Plumix.Impeller.Android\Plumix.Impeller.Android.csproj" />
         <ProjectReference Include="..\..\Plumix.Material\Plumix.Material.csproj" />
     </ItemGroup>
 

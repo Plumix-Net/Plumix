@@ -6,8 +6,8 @@ using Path = Plumix.UI.Path;
 namespace Plumix.Impeller;
 
 // C#-only infrastructure: no Dart parity source. Framework paints to Impeller paints for the stage 4
-// prototype. Image filters, inverted colours and fragment shaders are not converted yet:
-// they draw without the effect (Unsupported lists each one once).
+// prototype. Fragment shaders run through ImpellerShaders; image filters and inverted colours are not
+// converted yet: they draw without the effect (Unsupported lists each one once).
 
 /// <summary>Builds Impeller paints from framework paints.</summary>
 internal static class ImpellerPaints
@@ -42,6 +42,18 @@ internal static class ImpellerPaints
         if (paint.Shader is GradientShader gradient && CreateGradient(gradient) is { } source)
         {
             native.SetColorSource(source);
+        }
+        else if (FragmentProgramOf(paint.Shader) is ({ } program, { } uniforms))
+        {
+            if (ImpellerShaders.ColorSource(program, uniforms) is { } fragment)
+            {
+                native.SetColorSource(fragment);
+            }
+            else
+            {
+                // A shader Impeller cannot run draws nothing, not the paint's plain color.
+                native.SetColor(new ImpellerColor { Red = 0, Green = 0, Blue = 0, Alpha = 0 });
+            }
         }
         else if (paint.Shader is { } shader)
         {
@@ -103,6 +115,14 @@ internal static class ImpellerPaints
                 return null;
         }
     }
+
+    private static (RuntimeFragmentProgram? Program, float[]? Uniforms) FragmentProgramOf(Shader? shader) =>
+        shader switch
+        {
+            RuntimeFragmentShader live => (live.Program, live.Values),
+            FrozenFragmentShader frozen => (frozen.Program, frozen.Values),
+            _ => (null, null),
+        };
 
     internal static void Unsupported(string feature)
     {

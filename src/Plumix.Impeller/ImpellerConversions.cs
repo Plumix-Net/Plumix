@@ -38,13 +38,35 @@ internal static class ImpellerConversions
         Blue = (argb & 0xFF) / 255f,
     };
 
-    internal static ImpellerRoundingRadii Radii(this RRect rrect) => new()
+    // Radii that overflow a side are scaled down together, as SkRRect::setRectRadii does for the engine
+    // (Flutter's RRect.scaleRadii); Impeller's C API takes them as given, and an overflowing pair (a pill made
+    // with BorderRadius.circular(100)) would not clip or fill as a rounded rect.
+    internal static ImpellerRoundingRadii Radii(this RRect rrect)
     {
-        Top_left = new ImpellerPoint { X = (float)rrect.TopLeft.X, Y = (float)rrect.TopLeft.Y },
-        Top_right = new ImpellerPoint { X = (float)rrect.TopRight.X, Y = (float)rrect.TopRight.Y },
-        Bottom_right = new ImpellerPoint { X = (float)rrect.BottomRight.X, Y = (float)rrect.BottomRight.Y },
-        Bottom_left = new ImpellerPoint { X = (float)rrect.BottomLeft.X, Y = (float)rrect.BottomLeft.Y },
-    };
+        double width = rrect.Width;
+        double height = rrect.Height;
+        double scale = 1.0;
+        scale = Fit(scale, width, rrect.TopLeft.X + rrect.TopRight.X);
+        scale = Fit(scale, width, rrect.BottomLeft.X + rrect.BottomRight.X);
+        scale = Fit(scale, height, rrect.TopLeft.Y + rrect.BottomLeft.Y);
+        scale = Fit(scale, height, rrect.TopRight.Y + rrect.BottomRight.Y);
+        return new ImpellerRoundingRadii
+        {
+            Top_left = Corner(rrect.TopLeft, scale),
+            Top_right = Corner(rrect.TopRight, scale),
+            Bottom_right = Corner(rrect.BottomRight, scale),
+            Bottom_left = Corner(rrect.BottomLeft, scale),
+        };
+
+        static double Fit(double scale, double side, double radii) =>
+            radii > side && radii > 0 ? Math.Min(scale, side / radii) : scale;
+
+        static ImpellerPoint Corner(Radius radius, double scale) => new()
+        {
+            X = (float)Math.Max(0, radius.X * scale),
+            Y = (float)Math.Max(0, radius.Y * scale),
+        };
+    }
 
     // Both Matrix4's storage and Matrix4x4's fields are column-major in memory (translation at 12..14).
     internal static ImpellerMatrix ToImpeller(this Matrix4 matrix)
