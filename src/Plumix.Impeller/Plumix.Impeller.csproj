@@ -17,31 +17,16 @@
         <PackageReference Include="Plumix.NImpeller" />
     </ItemGroup>
 
-    <!-- Fragment programs (ImpellerShaders): the pinned Flutter sources of the shaders the framework ships, compiled
-         by the Flutter SDK's impellerc (flutter-src, AGENTS.md) into runtime-stage bundles and embedded with their
-         sources. Without the SDK the programs are missing and draw nothing. -->
-    <PropertyGroup>
-        <FlutterEngineArtifacts>$(MSBuildThisFileDirectory)..\..\flutter-src\bin\cache\artifacts\engine\darwin-x64\</FlutterEngineArtifacts>
-        <Impellerc>$(FlutterEngineArtifacts)impellerc</Impellerc>
-        <ImpellerShaderDirectory>$(MSBuildProjectDirectory)\$(BaseIntermediateOutputPath)shaders\</ImpellerShaderDirectory>
-    </PropertyGroup>
-
+    <!-- Fragment programs (ImpellerShaders): runtime-stage bundles of the framework's pinned shader sources, compiled
+         by scripts/compile_impeller_shaders.py with the impellerc of Plumix.NImpeller's pinned tools archive, each
+         embedded with its GLSL source (the backend matches core programs by its uniforms). -->
     <ItemGroup>
-        <ImpellerShader Include="..\..\material-ui-src\lib\src\shaders\ink_sparkle.frag" />
+        <EmbeddedResource Include="Shaders\*.frag;Shaders\*.iplr" LogicalName="Plumix.Impeller.Shaders.%(Filename)%(Extension)" />
     </ItemGroup>
-
-    <Target Name="_CompileImpellerShaders" BeforeTargets="BeforeBuild" Condition="Exists('$(Impellerc)')">
-        <MakeDir Directories="$(ImpellerShaderDirectory)" />
-        <Exec Command="&quot;$(Impellerc)&quot; --runtime-stage-gles --runtime-stage-gles3 --runtime-stage-vulkan --iplr --input=&quot;%(ImpellerShader.FullPath)&quot; --sl=&quot;$(ImpellerShaderDirectory)%(ImpellerShader.Filename).frag.iplr&quot; --spirv=&quot;$(ImpellerShaderDirectory)%(ImpellerShader.Filename).spv&quot; --include=&quot;$(FlutterEngineArtifacts)shader_lib&quot;" />
-        <ItemGroup>
-            <_ImpellerShaderBundle Include="@(ImpellerShader->'$(ImpellerShaderDirectory)%(Filename).frag.iplr')" />
-            <EmbeddedResource Include="@(ImpellerShader)" LogicalName="Plumix.Impeller.Shaders.%(ImpellerShader.Filename).frag" />
-            <EmbeddedResource Include="@(_ImpellerShaderBundle)" LogicalName="Plumix.Impeller.Shaders.%(_ImpellerShaderBundle.Filename).iplr" />
-        </ItemGroup>
-    </Target>
 
     <ItemGroup>
         <InternalsVisibleTo Include="Plumix.Impeller.Android" />
+        <InternalsVisibleTo Include="Plumix.Impeller.Tests" />
         <InternalsVisibleTo Include="Plumix.Sample.Impeller.Android" />
     </ItemGroup>
 

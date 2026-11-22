@@ -14,6 +14,18 @@ internal static class ImpellerPaints
 {
     private static readonly HashSet<string> s_reported = [];
 
+    /// <summary>The features reported unsupported so far (tests compare it around a playback).</summary>
+    internal static IReadOnlyCollection<string> ReportedUnsupported
+    {
+        get
+        {
+            lock (s_reported)
+            {
+                return [.. s_reported];
+            }
+        }
+    }
+
     /// <summary>A new Impeller paint carrying <paramref name="paint"/>'s state.</summary>
     internal static ImpellerPaint Create(Paint paint)
     {

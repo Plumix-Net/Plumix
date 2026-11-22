@@ -7,11 +7,11 @@ namespace Plumix.Impeller;
 
 // C#-only infrastructure: no Dart parity source. Fragment programs for the Impeller prototype. The core's
 // runtime-effect programs are SkSL (UI/RuntimeFragmentShader.cs), which Impeller cannot compile; Impeller
-// takes impellerc's runtime-stage bundles, as Flutter's own `shaders:` assets are. The build compiles the
-// pinned Flutter sources of the programs the framework ships (material_ui's ink_sparkle.frag) with the Flutter
-// SDK's impellerc and embeds each bundle next to its GLSL source; a core program is matched to the bundle
-// whose source declares the same uniforms in the same order, so its float uniforms (FragmentShader.setFloat
-// order) feed the bundle unchanged.
+// takes impellerc's runtime-stage bundles, as Flutter's own `shaders:` assets are. The pinned Flutter sources of
+// the programs the framework ships (material_ui's ink_sparkle.frag) are compiled by
+// scripts/compile_impeller_shaders.py with the impellerc matching Plumix.NImpeller and embedded from Shaders/
+// next to their GLSL sources; a core program is matched to the bundle whose source declares the same uniforms
+// in the same order, so its float uniforms (FragmentShader.setFloat order) feed the bundle unchanged.
 
 /// <summary>The impellerc-compiled fragment programs this backend embeds.</summary>
 internal static partial class ImpellerShaders

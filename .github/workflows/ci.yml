@@ -44,6 +44,13 @@ jobs:
           dotnet test src/Plumix.Tests/Plumix.Tests.csproj -c Debug --logger "console;verbosity=normal" \
             --logger trx --results-directory TestResults
 
+      # The Impeller backend's managed side against the real libimpeller (Plumix.NImpeller.Native.linux-x64);
+      # building display lists needs no GPU.
+      - name: Test (Impeller backend)
+        run: |
+          dotnet test src/Plumix.Impeller.Tests/Plumix.Impeller.Tests.csproj -c Debug \
+            --logger trx --results-directory TestResults
+
       - name: Test (build-mode gates, Profile)
         run: |
           dotnet test src/Plumix.Tests/Plumix.Tests.csproj -c Profile --filter BuildModeGates \

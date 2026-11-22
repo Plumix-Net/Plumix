@@ -31,6 +31,7 @@
         <InternalsVisibleTo Include="Plumix.Avalonia" />
         <InternalsVisibleTo Include="Plumix.Impeller" />
         <InternalsVisibleTo Include="Plumix.Impeller.Android" />
+        <InternalsVisibleTo Include="Plumix.Impeller.Tests" />
         <InternalsVisibleTo Include="Plumix.Sample.Impeller.Android" />
         <InternalsVisibleTo Include="Plumix.Material" />
         <InternalsVisibleTo Include="Plumix.Cupertino" />

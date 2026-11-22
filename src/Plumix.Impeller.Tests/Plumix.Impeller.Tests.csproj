@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <!-- Tests of the Impeller backend's managed side (branch proto/impeller): command playback, fonts and shaping,
+         fragment-program matching. They run against the real libimpeller of Plumix.NImpeller.Native for the host;
+         building display lists needs no GPU context. -->
+    <PropertyGroup>
+        <TargetFramework>net11.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <IsPackable>false</IsPackable>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Microsoft.NET.Test.Sdk" />
+        <PackageReference Include="xunit" />
+        <PackageReference Include="xunit.runner.visualstudio">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+    </ItemGroup>
+
+    <ItemGroup>
+        <None Include="..\Plumix.Tests\Fixtures\Fonts\ahem.ttf" Link="Fonts\ahem.ttf" CopyToOutputDirectory="PreserveNewest" />
+        <None Include="..\Plumix\UI\Assets\FlutterTest.ttf" Link="Fonts\FlutterTest.ttf" CopyToOutputDirectory="PreserveNewest" />
+        <ProjectReference Include="..\Plumix.Impeller\Plumix.Impeller.csproj" />
+        <ProjectReference Include="..\Plumix.Material\Plumix.Material.csproj" />
+    </ItemGroup>
+
+</Project>
