@@ -1,0 +1,78 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <!-- Stage 4 prototype (docs/product/avalonia-free-core.md): NetBench's mobile app on the native Android host
+         without Avalonia (src/Plumix.Impeller.Android). It compiles the NetBench checkout's sources unchanged
+         (NetBenchSrc, the sibling repository by default) and its Plumix.Packages siblings by project, so the
+         app runs against this branch's Plumix. Branch proto/impeller only; never packed. -->
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>net11.0-android</TargetFramework>
+        <SupportedOSPlatformVersion>29</SupportedOSPlatformVersion>
+        <RuntimeIdentifiers>android-arm64;android-x64</RuntimeIdentifiers>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <AssemblyName>NetBench.Impeller</AssemblyName>
+        <RootNamespace>NetBench</RootNamespace>
+        <ApplicationId>net.plumix.netbench.impeller</ApplicationId>
+        <ApplicationTitle>NetBench Impeller</ApplicationTitle>
+        <ApplicationVersion>1</ApplicationVersion>
+        <ApplicationDisplayVersion>1.0.1</ApplicationDisplayVersion>
+        <Version>1.0.1</Version>
+        <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
+        <AndroidPackageFormat>apk</AndroidPackageFormat>
+        <IsPackable>false</IsPackable>
+        <!-- NetBench's own packages are not in this repository's central versions. -->
+        <ManagePackageVersionsCentrally>false</ManagePackageVersionsCentrally>
+        <NoWarn>$(NoWarn);CS1591;CS1573;NU1608</NoWarn>
+        <NetBenchSrc Condition="'$(NetBenchSrc)' == ''">$(MSBuildThisFileDirectory)..\..\..\..\NetBench\NetBench\NetBench\</NetBenchSrc>
+        <PlumixPackagesSrc Condition="'$(PlumixPackagesSrc)' == ''">$(MSBuildThisFileDirectory)..\..\..\..\Plumix.Packages\src\</PlumixPackagesSrc>
+        <InterFontsVersion>12.1.4</InterFontsVersion>
+        <InterFontsDirectory>$(MSBuildProjectDirectory)\$(BaseIntermediateOutputPath)inter-fonts\</InterFontsDirectory>
+    </PropertyGroup>
+
+    <!-- What NetBench.csproj compiles for its mobile targets, minus the Avalonia bootstrap (MobileApp.axaml.cs). -->
+    <ItemGroup>
+        <Compile Remove="tools\**" />
+        <Compile Include="$(NetBenchSrc)**\*.cs"
+                 Exclude="$(NetBenchSrc)Desktop\**;$(NetBenchSrc)Features\**\Presentation\Desktop\**;$(NetBenchSrc)Mobile\MobileApp.axaml.cs;$(NetBenchSrc)obj\**;$(NetBenchSrc)bin\**"
+                 LinkBase="NetBench" />
+        <EmbeddedResource Include="$(NetBenchSrc)Mobile\Licenses\*.txt" LogicalName="NetBench.Licenses.%(Filename).txt" />
+        <AdditionalFiles Include="$(NetBenchSrc)Localization\i18n\*.i18n.json;$(NetBenchSrc)Localization\slang.json" />
+        <AssemblyMetadata Include="BuildNumber" Value="1" />
+        <!-- Android's implicit namespaces clash with Plumix widget names (ListView, Switch, Dialog...). -->
+        <Using Remove="Android.Widget" />
+        <Using Remove="Android.App" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="HdrHistogram" Version="2.5.0" />
+        <PackageReference Include="Slang.Net" Version="9.8.0" />
+        <ProjectReference Include="..\..\Plumix.Impeller.Android\Plumix.Impeller.Android.csproj" />
+        <ProjectReference Include="..\..\Plumix.Material\Plumix.Material.csproj" />
+        <ProjectReference Include="$(PlumixPackagesSrc)Plumix.Bloc\Plumix.Bloc.csproj" />
+        <ProjectReference Include="$(PlumixPackagesSrc)Plumix.Slang\Plumix.Slang.csproj" />
+    </ItemGroup>
+
+    <!-- NetBench loads Inter from `packages/Avalonia.Fonts.Inter/Assets/Inter-*.ttf`: the faces are copied out of
+         that package's resource blob into Android assets at `Avalonia.Fonts.Inter/Assets/`, without referencing
+         its assembly (which would bring Avalonia back). -->
+    <ItemGroup>
+        <PackageDownload Include="Avalonia.Fonts.Inter" Version="[$(InterFontsVersion)]" />
+    </ItemGroup>
+
+    <Target Name="_ExtractInterFonts" BeforeTargets="BeforeBuild"
+            Condition="!Exists('$(InterFontsDirectory)Assets\Inter-Regular.ttf')">
+        <Exec Command="dotnet run --file &quot;$(MSBuildThisFileDirectory)tools/extract-avalonia-resources.cs&quot; -- &quot;$(NuGetPackageRoot)avalonia.fonts.inter/$(InterFontsVersion)/lib/net10.0/Avalonia.Fonts.Inter.dll&quot; &quot;$(InterFontsDirectory)&quot; .ttf"
+              WorkingDirectory="$(MSBuildThisFileDirectory)tools" />
+    </Target>
+
+    <Target Name="_AddInterFonts" AfterTargets="_ExtractInterFonts" BeforeTargets="BeforeBuild">
+        <ItemGroup>
+            <_InterFont Include="$(InterFontsDirectory)Assets\*.ttf" />
+            <AndroidAsset Include="@(_InterFont)"
+                          Link="Assets\Avalonia.Fonts.Inter\Assets\%(_InterFont.Filename)%(_InterFont.Extension)" />
+        </ItemGroup>
+    </Target>
+
+
+</Project>

@@ -23,6 +23,7 @@ internal sealed class HeadlessParagraph : Paragraph
     private const int FlutterTestFontWeight = 400;
 
     private readonly ParagraphContent _content;
+    private readonly ITextShaper? _shaper;
     private readonly List<Cluster> _clusters = [];
     private readonly int _baseLevel;
     private readonly bool _strutEnabled;
@@ -42,10 +43,11 @@ internal sealed class HeadlessParagraph : Paragraph
     private double _minLineLeft;
     private bool _didExceedMaxLines;
 
-    public HeadlessParagraph(ParagraphContent content)
+    public HeadlessParagraph(ParagraphContent content, ITextShaper? shaper = null)
         : base(content.Text)
     {
         _content = content;
+        _shaper = shaper;
         _baseLevel = content.TextDirection == TextDirection.Rtl ? 1 : 0;
         BuildClusters();
         ResolveBidiLevels();
@@ -83,6 +85,9 @@ internal sealed class HeadlessParagraph : Paragraph
         IReadOnlyList<ParagraphPlaceholder> placeholders = _content.Placeholders;
         int placeholderIndex = 0;
         int index = 0;
+        IReadOnlyList<ShapedGlyphInfo> shapedRun = [];
+        int shapedRunEnd = 0;
+        int shapedCursor = 0;
         while (index < text.Length)
         {
             ResolvedTextStyle style = _content.StyleAt(index);
@@ -112,9 +117,19 @@ internal sealed class HeadlessParagraph : Paragraph
             bool hardBreak = UnicodeText.IsHardBreak(firstCodePoint);
             double width = 0.0;
             ShapedGlyph[] glyphs = [];
+            if (_shaper is not null && !hardBreak && index >= shapedRunEnd)
+            {
+                // The host shapes each style run once, so kerning and ligatures span its clusters.
+                shapedRun = _shaper.Shape(text, index, limit, style);
+                shapedRunEnd = limit;
+                shapedCursor = 0;
+            }
+
             if (!hardBreak)
             {
-                glyphs = ShapeGlyphs(text, index, index + length, style.FontSize);
+                glyphs = _shaper is null
+                    ? ShapeGlyphs(text, index, index + length, style.FontSize)
+                    : TakeShapedGlyphs(shapedRun, ref shapedCursor, index + length, firstCodePoint);
                 // SkParagraph's `Run::addLetterSpacesEvenly` spaces every glyph of a cluster.
                 double letterSpacing = LetterSpacingOf(firstCodePoint, style);
                 foreach (ShapedGlyph glyph in glyphs)
@@ -139,6 +154,30 @@ internal sealed class HeadlessParagraph : Paragraph
             index += length;
         }
     }
+
+    /// <summary>The run's glyphs whose clusters start before <paramref name="clusterEnd"/>.</summary>
+    private static ShapedGlyph[] TakeShapedGlyphs(
+        IReadOnlyList<ShapedGlyphInfo> run,
+        ref int cursor,
+        int clusterEnd,
+        int firstCodePoint)
+    {
+        var glyphs = new List<ShapedGlyph>(1);
+        while (cursor < run.Count && run[cursor].Cluster < clusterEnd)
+        {
+            ShapedGlyphInfo info = run[cursor++];
+            glyphs.Add(new ShapedGlyph(
+                firstCodePoint, info.Advance, info.GlyphId, info.OffsetX, info.OffsetY, info.Face));
+        }
+
+        return [.. glyphs];
+    }
+
+    private double AscentRatioOf(ResolvedTextStyle? style) =>
+        style is not null && _shaper is not null ? _shaper.Face(style).Ascent : AscentRatio;
+
+    private double DescentRatioOf(ResolvedTextStyle? style) =>
+        style is not null && _shaper is not null ? _shaper.Face(style).Descent : DescentRatio;
 
     private void ResolveBidiLevels()
     {
@@ -253,7 +292,9 @@ internal sealed class HeadlessParagraph : Paragraph
         }
 
         double fontSize = strut.FontSize ?? TextDefaults.DefaultFontSize;
+        // The prototype's shapers do not resolve the strut's own family: it keeps FlutterTest proportions.
         (double ascent, double descent) = VerticalMetrics(
+            null,
             fontSize,
             strut.Height ?? TextDefaults.TextHeightNone,
             strut.LeadingDistribution);
@@ -308,10 +349,16 @@ internal sealed class HeadlessParagraph : Paragraph
     }
 
     private (double Ascent, double Descent) VerticalMetrics(
+        ResolvedTextStyle? style,
         double fontSize,
         double height,
         TextLeadingDistribution? distribution)
     {
+        if (_shaper is not null)
+        {
+            return ShapedVerticalMetrics(style, fontSize, height, distribution);
+        }
+
         double ascent = fontSize * AscentRatio;
         double descent = fontSize * DescentRatio;
         if (height != TextDefaults.TextHeightNone)
@@ -327,6 +374,38 @@ internal sealed class HeadlessParagraph : Paragraph
             {
                 ascent = total * AscentRatio;
                 descent = total * DescentRatio;
+            }
+        }
+
+        return (ascent, descent);
+    }
+
+    // SkParagraph's `InternalLineMetrics` for a real face: the height multiplier's leading is what the face's
+    // own ascent and descent leave of `height * fontSize`.
+    private (double Ascent, double Descent) ShapedVerticalMetrics(
+        ResolvedTextStyle? style,
+        double fontSize,
+        double height,
+        TextLeadingDistribution? distribution)
+    {
+        double ascentRatio = AscentRatioOf(style);
+        double descentRatio = DescentRatioOf(style);
+        double ascent = fontSize * ascentRatio;
+        double descent = fontSize * descentRatio;
+        if (height != TextDefaults.TextHeightNone)
+        {
+            double total = height * fontSize;
+            if ((distribution ?? _content.DefaultLeadingDistribution) == TextLeadingDistribution.Even)
+            {
+                double leading = total - (ascent + descent);
+                ascent += leading / 2.0;
+                descent += leading / 2.0;
+            }
+            else
+            {
+                double sum = ascentRatio + descentRatio;
+                ascent = total * ascentRatio / sum;
+                descent = total * descentRatio / sum;
             }
         }
 
@@ -665,8 +744,14 @@ internal sealed class HeadlessParagraph : Paragraph
         };
     }
 
-    private static double EllipsisWidth(string ellipsis, ResolvedTextStyle style)
+    private double EllipsisWidth(string ellipsis, ResolvedTextStyle style)
     {
+        if (_shaper is not null)
+        {
+            return _shaper.Shape(ellipsis, 0, ellipsis.Length, style).Sum(static glyph => glyph.Advance)
+                + style.LetterSpacing;
+        }
+
         double width = 0.0;
         int index = 0;
         while (index < ellipsis.Length)
@@ -756,7 +841,10 @@ internal sealed class HeadlessParagraph : Paragraph
                     // metrics, which carry no height multiplier.
                     double fontSize = cluster.Style.FontSize;
                     (double placeholderAscent, double placeholderDescent) =
-                        PlaceholderMetrics(placeholder, fontSize * AscentRatio, fontSize * DescentRatio);
+                        PlaceholderMetrics(
+                            placeholder,
+                            fontSize * AscentRatioOf(cluster.Style),
+                            fontSize * DescentRatioOf(cluster.Style));
                     cluster.PlaceholderAscent = placeholderAscent;
                     metrics.Ascent = Math.Max(metrics.Ascent, placeholderAscent);
                     metrics.Descent = Math.Max(metrics.Descent, placeholderDescent);
@@ -801,8 +889,8 @@ internal sealed class HeadlessParagraph : Paragraph
     private void Accumulate(ref LineTextMetrics metrics, ResolvedTextStyle style)
     {
         double fontSize = style.FontSize;
-        (double ascent, double descent) = VerticalMetrics(fontSize, style.Height, style.LeadingDistribution);
-        AddMetrics(ref metrics, fontSize, ascent, descent);
+        (double ascent, double descent) = VerticalMetrics(style, fontSize, style.Height, style.LeadingDistribution);
+        AddMetrics(ref metrics, fontSize, ascent, descent, AscentRatioOf(style), DescentRatioOf(style));
     }
 
     /// `ParagraphImpl::computeEmptyMetrics`: the style's font with its height override distributed by the
@@ -811,18 +899,25 @@ internal sealed class HeadlessParagraph : Paragraph
     {
         double fontSize = style.FontSize;
         (double ascent, double descent) = VerticalMetrics(
+            style,
             fontSize,
             style.Height,
             _content.EmptyLineLeadingDistribution);
-        AddMetrics(ref metrics, fontSize, ascent, descent);
+        AddMetrics(ref metrics, fontSize, ascent, descent, AscentRatioOf(style), DescentRatioOf(style));
     }
 
-    private static void AddMetrics(ref LineTextMetrics metrics, double fontSize, double ascent, double descent)
+    private static void AddMetrics(
+        ref LineTextMetrics metrics,
+        double fontSize,
+        double ascent,
+        double descent,
+        double ascentRatio,
+        double descentRatio)
     {
         metrics.Ascent = metrics.HasText ? Math.Max(metrics.Ascent, ascent) : ascent;
         metrics.Descent = metrics.HasText ? Math.Max(metrics.Descent, descent) : descent;
-        metrics.UnscaledAscent = Math.Max(metrics.UnscaledAscent, fontSize * AscentRatio);
-        metrics.UnscaledDescent = Math.Max(metrics.UnscaledDescent, fontSize * DescentRatio);
+        metrics.UnscaledAscent = Math.Max(metrics.UnscaledAscent, fontSize * ascentRatio);
+        metrics.UnscaledDescent = Math.Max(metrics.UnscaledDescent, fontSize * descentRatio);
         metrics.HasText = true;
     }
 
@@ -1133,8 +1228,8 @@ internal sealed class HeadlessParagraph : Paragraph
 
         double fontSize = item.Style.FontSize;
         (double Top, double Bottom) tight = (
-            line.Baseline - (fontSize * AscentRatio),
-            line.Baseline + (fontSize * DescentRatio));
+            line.Baseline - (fontSize * AscentRatioOf(item.Style)),
+            line.Baseline + (fontSize * DescentRatioOf(item.Style)));
         return boxHeightStyle switch
         {
             BoxHeightStyle.Tight => tight,
@@ -1326,7 +1421,7 @@ internal sealed class HeadlessParagraph : Paragraph
         return best is null ? null : GlyphInfoFor(bestLine, best);
     }
 
-    private static GlyphInfo GlyphInfoFor(Line line, Placed item)
+    private GlyphInfo GlyphInfoFor(Line line, Placed item)
     {
         Cluster cluster = item.Cluster!;
         TextDirection direction = item.Level % 2 == 1 ? TextDirection.Rtl : TextDirection.Ltr;
@@ -1342,9 +1437,9 @@ internal sealed class HeadlessParagraph : Paragraph
         double fontSize = item.Style.FontSize;
         var bounds = Rect.FromLTRB(
             item.X,
-            line.Baseline - (fontSize * AscentRatio),
+            line.Baseline - (fontSize * AscentRatioOf(item.Style)),
             item.X + item.Width,
-            line.Baseline + (fontSize * DescentRatio));
+            line.Baseline + (fontSize * DescentRatioOf(item.Style)));
         return new GlyphInfo(bounds, new TextRange(cluster.Start, cluster.End), direction);
     }
 
@@ -1503,7 +1598,7 @@ internal sealed class HeadlessParagraph : Paragraph
 
                 Include(run.Clip.ExpandToInclude(Rect.FromLTWH(
                     run.Left,
-                    baseline - (run.Style.FontSize * AscentRatio),
+                    baseline - (run.Style.FontSize * AscentRatioOf(run.Style)),
                     run.Right - run.Left + run.Style.FontSize,
                     run.Style.FontSize)));
             }
@@ -1519,7 +1614,7 @@ internal sealed class HeadlessParagraph : Paragraph
                 AddOperation(new DecorationOperation(
                     run.Clip,
                     run.CorrectAscent,
-                    style.FontSize * AscentRatio,
+                    style.FontSize * AscentRatioOf(style),
                     style.FontSize,
                     style.Decoration,
                     style.DecorationStyle,
@@ -1578,9 +1673,10 @@ internal sealed class HeadlessParagraph : Paragraph
 
             ResolvedTextStyle style = item.Style;
             double fontSize = style.FontSize;
-            (double ascent, double descent) = VerticalMetrics(fontSize, style.Height, style.LeadingDistribution);
-            ascent = trimAscent ? fontSize * AscentRatio : ascent;
-            descent = trimDescent ? fontSize * DescentRatio : descent;
+            (double ascent, double descent) =
+                VerticalMetrics(style, fontSize, style.Height, style.LeadingDistribution);
+            ascent = trimAscent ? fontSize * AscentRatioOf(style) : ascent;
+            descent = trimDescent ? fontSize * DescentRatioOf(style) : descent;
             // LineMetrics::runTop and Run::calculateHeight (CSS metric style).
             double top = offset.Dy + line.Top + line.Ascent - ascent + delta;
             double left = offset.Dx + item.X;
@@ -1615,6 +1711,18 @@ internal sealed class HeadlessParagraph : Paragraph
                 double letterSpacing = LetterSpacingOf(cluster.FirstCodePoint, style);
                 foreach (ShapedGlyph glyph in cluster.Glyphs)
                 {
+                    if (glyph.Face is { } face)
+                    {
+                        if (!Rune.IsValid(glyph.CodePoint) || !Rune.IsWhiteSpace(new Rune(glyph.CodePoint)))
+                        {
+                            glyphs.Add(new Glyph(glyph.CodePoint, x + glyph.OffsetX, baseline - glyph.OffsetY,
+                                style.FontSize, color, face.FakeBold, face.FakeItalic, glyph.GlyphId, face.Typeface));
+                        }
+
+                        x += glyph.Advance + letterSpacing;
+                        continue;
+                    }
+
                     // Zero-width glyphs paint nothing apart: hidden ignorables are blank, and a zeroed
                     // mark's `.notdef` frame lands on its base.
                     if (glyph.Advance > 0.0
@@ -1625,6 +1733,20 @@ internal sealed class HeadlessParagraph : Paragraph
                     }
 
                     x += glyph.Advance + letterSpacing;
+                }
+
+                continue;
+            }
+
+            if (_shaper is not null)
+            {
+                foreach (ShapedGlyphInfo info in _shaper.Shape(ellipsis, 0, ellipsis.Length, style))
+                {
+                    ShapingFace face = info.Face;
+                    glyphs.Add(new Glyph(UnicodeText.CodePointAt(ellipsis, info.Cluster), x + info.OffsetX,
+                        baseline - info.OffsetY, style.FontSize, color, face.FakeBold, face.FakeItalic,
+                        info.GlyphId, face.Typeface));
+                    x += info.Advance + style.LetterSpacing;
                 }
 
                 continue;
@@ -1694,7 +1816,7 @@ internal sealed class HeadlessParagraph : Paragraph
         (0x91D1, 0x91D1), (0xF000, 0xF002),
     ];
 
-    private static GlyphShape ShapeOf(int codePoint)
+    internal static GlyphShape ShapeOf(int codePoint)
     {
         if (codePoint == 'p')
         {
@@ -1792,7 +1914,17 @@ internal sealed class HeadlessParagraph : Paragraph
         public List<Placed> Visual { get; set; } = [];
     }
 
-    private readonly record struct ShapedGlyph(int CodePoint, double Advance);
+    /// <summary>
+    /// A glyph of a cluster: FlutterTest's code point and advance, plus the host shaper's glyph id, offset
+    /// and face when a shaper laid the paragraph out.
+    /// </summary>
+    private readonly record struct ShapedGlyph(
+        int CodePoint,
+        double Advance,
+        int GlyphId = -1,
+        double OffsetX = 0.0,
+        double OffsetY = 0.0,
+        ShapingFace? Face = null);
 
     private sealed class Placed
     {
