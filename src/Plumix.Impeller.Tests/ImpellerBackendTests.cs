@@ -153,6 +153,38 @@ public sealed class ImpellerBackendTests
     }
 
     [Fact]
+    public void FadeInvertAndImageFilters_PlayWithoutUnsupportedFeatures()
+    {
+        _ = ImpellerTestBackend.Shaper;
+        var recorder = new PictureRecorder();
+        var canvas = new Canvas(recorder);
+        canvas.Save();
+        canvas.PushFadeMask(new Offset(60, 0), new Offset(100, 0), new Size(100, 20), Rect.FromLTRB(0, 0, 100, 20));
+        canvas.DrawRect(Rect.FromLTRB(0, 0, 100, 20), new Paint { Color = new Color(0xFF000000) });
+        canvas.Restore();
+        canvas.DrawRect(Rect.FromLTRB(0, 30, 50, 60), new Paint
+        {
+            Color = new Color(0xFF2196F3),
+            InvertColors = true,
+            ColorFilter = new ColorFilter.Matrix([0.5, 0, 0, 0, 0, 0, 0.5, 0, 0, 0, 0, 0, 0.5, 0, 0, 0, 0, 0, 1, 0]),
+            ImageFilter = new ImageFilter.Blur(2, 2),
+        });
+        canvas.SaveLayer(null, new Paint { InvertColors = true });
+        canvas.DrawCircle(new Offset(80, 80), 10, new Paint { Color = new Color(0xFFFF0000) });
+        canvas.Restore();
+        int unsupported = ImpellerPaints.ReportedUnsupported.Count;
+
+        using ImpellerDisplayListBuilder builder = ImpellerDisplayListBuilder.New(
+            new ImpellerRect { X = 0, Y = 0, Width = 100, Height = 100 })!;
+        ImpellerCanvasPlayer.Play(recorder.EndRecording(), builder, Offset.Zero);
+        using ImpellerDisplayList? displayList = builder.CreateDisplayListNew();
+
+        Assert.NotNull(displayList);
+        Assert.Equal(unsupported, ImpellerPaints.ReportedUnsupported.Count);
+        Assert.Equal(1u, builder.GetSaveCount());
+    }
+
+    [Fact]
     public void LayerTree_BuildsADisplayList()
     {
         _ = ImpellerTestBackend.Shaper;

@@ -6,8 +6,9 @@ using Path = Plumix.UI.Path;
 namespace Plumix.Impeller;
 
 // C#-only infrastructure: no Dart parity source. Framework paints to Impeller paints for the stage 4
-// prototype. Fragment shaders run through ImpellerShaders; image filters and inverted colours are not
-// converted yet: they draw without the effect (Unsupported lists each one once).
+// prototype. Fragment shaders run through ImpellerShaders; image filters through the layer painter's filter
+// conversion; inverted colours fold into the colour matrix. What Impeller cannot express draws without the effect
+// (Unsupported lists each one once).
 
 /// <summary>Builds Impeller paints from framework paints.</summary>
 internal static class ImpellerPaints
@@ -78,19 +79,14 @@ internal static class ImpellerPaints
             native.SetMaskFilter(blur);
         }
 
-        if (paint.ColorFilter is { } colorFilter && CreateColorFilter(colorFilter) is { } nativeFilter)
+        if (CreateColorFilter(paint.ColorFilter, paint.InvertColors) is { } nativeFilter)
         {
             native.SetColorFilter(nativeFilter);
         }
 
-        if (paint.ImageFilter is not null)
+        if (paint.ImageFilter is { } imageFilter && ImpellerLayerPainter.CreateFilter(imageFilter) is { } filter)
         {
-            Unsupported("ImageFilter");
-        }
-
-        if (paint.InvertColors)
-        {
-            Unsupported("InvertColors");
+            native.SetImageFilter(filter);
         }
 
         return native;
@@ -102,6 +98,59 @@ internal static class ImpellerPaints
         ImpellerPaint native = ImpellerPaint.New() ?? throw new InvalidOperationException("No Impeller paint.");
         native.SetColor(color.ToImpeller());
         return native;
+    }
+
+    // DisplayList's invert-colors matrix, translation in 0..255 like ColorFilter.matrix.
+    private static readonly double[] InvertMatrix =
+    [
+        -1, 0, 0, 0, 255,
+        0, -1, 0, 0, 255,
+        0, 0, -1, 0, 255,
+        0, 0, 0, 1, 0,
+    ];
+
+    /// <summary>
+    /// A paint's or layer's colour filter followed by <c>invertColors</c>, as the engine composes them: the inversion
+    /// folds into a matrix filter; a blend filter cannot be composed by Impeller's C API and keeps the filter alone.
+    /// </summary>
+    internal static ImpellerColorFilter? CreateColorFilter(ColorFilter? filter, bool invertColors)
+    {
+        if (!invertColors)
+        {
+            return filter is null ? null : CreateColorFilter(filter);
+        }
+
+        switch (filter)
+        {
+            case null:
+                return CreateColorFilter(new ColorFilter.Matrix(InvertMatrix));
+            case ColorFilter.Matrix matrix:
+                return CreateColorFilter(new ColorFilter.Matrix(Compose(InvertMatrix, matrix.Values)));
+            default:
+                Unsupported("invertColors over a blend color filter");
+                return CreateColorFilter(filter);
+        }
+    }
+
+    // outer ∘ inner for 4x5 colour matrices acting on (r, g, b, a, 1).
+    private static double[] Compose(IReadOnlyList<double> outer, IReadOnlyList<double> inner)
+    {
+        double[] result = new double[20];
+        for (int row = 0; row < 4; row++)
+        {
+            for (int column = 0; column < 5; column++)
+            {
+                double sum = column == 4 ? outer[(row * 5) + 4] : 0;
+                for (int k = 0; k < 4; k++)
+                {
+                    sum += outer[(row * 5) + k] * inner[(k * 5) + column];
+                }
+
+                result[(row * 5) + column] = sum;
+            }
+        }
+
+        return result;
     }
 
     /// <summary>

@@ -31,6 +31,8 @@ internal static class ImpellerCanvasPlayer
     internal static void Play(IReadOnlyList<CanvasOp> ops, ImpellerDisplayListBuilder builder)
     {
         uint baseCount = builder.GetSaveCount();
+        // Open TextOverflow.fade layers: the save count inside each, and the fade to draw before its restore.
+        Stack<(uint SaveCount, FadeMaskOp Fade)>? fades = null;
         foreach (CanvasOp op in ops)
         {
             switch (op)
@@ -44,6 +46,11 @@ internal static class ImpellerCanvasPlayer
                 case RestoreOp:
                     if (builder.GetSaveCount() > baseCount)
                     {
+                        if (fades is { Count: > 0 } && fades.Peek().SaveCount == builder.GetSaveCount())
+                        {
+                            DrawFade(builder, fades.Pop().Fade);
+                        }
+
                         builder.Restore();
                     }
 
@@ -63,10 +70,10 @@ internal static class ImpellerCanvasPlayer
                 case ClipPathOp clipPath:
                     builder.ClipPath(clipPath.Path.ToImpeller(), ImpellerClipOperation.kImpellerClipOperationIntersect);
                     break;
-                case FadeMaskOp:
-                    // The fade is an alpha mask until the matching restore; a plain save keeps the nesting.
-                    ImpellerPaints.Unsupported("TextOverflow.fade mask");
-                    builder.Save();
+                case FadeMaskOp fade:
+                    // RenderParagraph's fade: an isolated layer, faded by the gradient drawn before its restore.
+                    builder.SaveLayer(fade.Bounds.ToImpeller(), null, null);
+                    (fades ??= new()).Push((builder.GetSaveCount(), fade));
                     break;
                 case BackendOp:
                     break;
@@ -98,6 +105,14 @@ internal static class ImpellerCanvasPlayer
             }
         }
 
+        while (fades is { Count: > 0 } && builder.GetSaveCount() > baseCount)
+        {
+            (uint saveCount, FadeMaskOp fade) = fades.Pop();
+            builder.RestoreToCount(saveCount);
+            DrawFade(builder, fade);
+            builder.Restore();
+        }
+
         if (builder.GetSaveCount() > baseCount)
         {
             builder.RestoreToCount(baseCount);
@@ -112,7 +127,7 @@ internal static class ImpellerCanvasPlayer
         ImpellerPaint paint = ImpellerPaint.New() ?? throw new InvalidOperationException("No Impeller paint.");
         paint.SetColor(new ImpellerColor { Alpha = layer.Alpha / 255f, Red = 0, Green = 0, Blue = 0 });
         paint.SetBlendMode(layer.BlendMode.ToImpeller());
-        if (layer.ColorFilter is { } colorFilter && ImpellerPaints.CreateColorFilter(colorFilter) is { } native)
+        if (ImpellerPaints.CreateColorFilter(layer.ColorFilter, layer.InvertColors) is { } native)
         {
             paint.SetColorFilter(native);
         }
@@ -120,11 +135,6 @@ internal static class ImpellerCanvasPlayer
         if (layer.ImageFilter is { } imageFilter && ImpellerLayerPainter.CreateFilter(imageFilter) is { } filter)
         {
             paint.SetImageFilter(filter);
-        }
-
-        if (layer.InvertColors)
-        {
-            ImpellerPaints.Unsupported("saveLayer invertColors");
         }
 
         ImpellerRect bounds = layer.Bounds is { } rect
@@ -223,9 +233,59 @@ internal static class ImpellerCanvasPlayer
         ImpellerTextureSampling sampling = image.Paint.FilterQuality.ToSampling();
         if (image.Kind == ImageDrawKind.ImageNine)
         {
-            ImpellerPaints.Unsupported("drawImageNine");
+            DrawImageNine(builder, texture, image, sampling, paint);
+            return;
         }
 
         builder.DrawTextureRect(texture, image.Source.ToImpeller(), image.Destination.ToImpeller(), sampling, paint);
+    }
+
+    // Skia's drawImageNine (SkLatticeIter::Nine): the corners keep their size, the edges stretch along one axis and
+    // the centre in both; corners that do not fit the destination shrink in proportion.
+    // The white-to-transparent gradient Dart's RenderParagraph modulates its text with, over the fade's bounds.
+    private static void DrawFade(ImpellerDisplayListBuilder builder, FadeMaskOp fade)
+    {
+        Offset origin = fade.Bounds.TopLeft;
+        var paint = new Paint
+        {
+            BlendMode = BlendMode.Modulate,
+            Shader = GradientShader.Linear(origin + fade.From, origin + fade.To,
+                [new Color(0xFFFFFFFF), new Color(0x00FFFFFF)], [0.0, 1.0], TileMode.Clamp, null),
+        };
+        builder.DrawRect(fade.Bounds.ToImpeller(), ImpellerPaints.Create(paint));
+    }
+
+    private static void DrawImageNine(ImpellerDisplayListBuilder builder, ImpellerTexture texture, DrawImageOp image,
+        ImpellerTextureSampling sampling, ImpellerPaint paint)
+    {
+        double width = image.Image.Width;
+        double height = image.Image.Height;
+        Rect center = image.Source;
+        Rect destination = image.Destination;
+        double[] sourceX = [0, center.Left, center.Right, width];
+        double[] sourceY = [0, center.Top, center.Bottom, height];
+        double[] destinationX = Divisions(destination.Left, destination.Right, center.Left, width - center.Right);
+        double[] destinationY = Divisions(destination.Top, destination.Bottom, center.Top, height - center.Bottom);
+        for (int row = 0; row < 3; row++)
+        {
+            for (int column = 0; column < 3; column++)
+            {
+                Rect source = Rect.FromLTRB(sourceX[column], sourceY[row], sourceX[column + 1], sourceY[row + 1]);
+                Rect target = Rect.FromLTRB(destinationX[column], destinationY[row], destinationX[column + 1],
+                    destinationY[row + 1]);
+                if (source.Width > 0 && source.Height > 0 && target.Width > 0 && target.Height > 0)
+                {
+                    builder.DrawTextureRect(texture, source.ToImpeller(), target.ToImpeller(), sampling, paint);
+                }
+            }
+        }
+    }
+
+    private static double[] Divisions(double start, double end, double first, double last)
+    {
+        double available = end - start;
+        double fixedSize = first + last;
+        double scale = fixedSize > available && fixedSize > 0 ? available / fixedSize : 1.0;
+        return [start, start + (first * scale), end - (last * scale), end];
     }
 }
