@@ -15,6 +15,7 @@ public abstract class ImpellerActivity : Activity, ISurfaceHolderCallback
 {
     private ImpellerHost? _host;
     private AndroidLifecycleChannel? _lifecycle;
+    private AndroidAccessibilityFeatures? _accessibilityFeatures;
 
     /// <summary>The app's root widget, created once the backend is installed.</summary>
     protected abstract Widget CreateApp();
@@ -36,6 +37,7 @@ public abstract class ImpellerActivity : Activity, ISurfaceHolderCallback
         _lifecycle = new AndroidLifecycleChannel(_host.LifecycleChanged);
 
         var surfaceView = new PlumixSurfaceView(this);
+        surfaceView.AccessibilityProvider = new PlumixAccessibilityNodeProvider(surfaceView, _host.Accessibility);
         surfaceView.Holder!.AddCallback(this);
         surfaceView.Touch += (_, e) => e.Handled = _host.Touch(e.Event!);
         surfaceView.SetOnApplyWindowInsetsListener(new InsetsListener(_host));
@@ -46,6 +48,7 @@ public abstract class ImpellerActivity : Activity, ISurfaceHolderCallback
         }
 
         _host.Run(CreateApp(), Resources!.DisplayMetrics!.Density);
+        _accessibilityFeatures = new AndroidAccessibilityFeatures(this, _host.Accessibility);
         if (PerfProbe.Enabled)
         {
             PerfProbe.Start();
@@ -98,6 +101,8 @@ public abstract class ImpellerActivity : Activity, ISurfaceHolderCallback
     protected override void OnDestroy()
     {
         _lifecycle?.AppIsDetached();
+        _accessibilityFeatures?.Dispose();
+        _accessibilityFeatures = null;
         _host?.Dispose();
         _host = null;
         base.OnDestroy();

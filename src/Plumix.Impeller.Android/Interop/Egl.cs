@@ -22,6 +22,9 @@ internal static unsafe partial class Egl
     public const int EGL_SURFACE_TYPE = 0x3033;
     public const int EGL_RENDERABLE_TYPE = 0x3040;
     public const int EGL_WINDOW_BIT = 0x0004;
+    public const int EGL_PBUFFER_BIT = 0x0001;
+    public const int EGL_WIDTH = 0x3057;
+    public const int EGL_HEIGHT = 0x3056;
     public const int EGL_OPENGL_ES3_BIT = 0x0040;
     public const int EGL_CONTEXT_CLIENT_VERSION = 0x3098;
 
@@ -36,6 +39,8 @@ internal static unsafe partial class Egl
     [LibraryImport(Lib)] public static partial uint eglDestroyContext(IntPtr display, IntPtr context);
     [LibraryImport(Lib)]
     public static partial IntPtr eglCreateWindowSurface(IntPtr display, IntPtr config, IntPtr window, int* attribs);
+    [LibraryImport(Lib)]
+    public static partial IntPtr eglCreatePbufferSurface(IntPtr display, IntPtr config, int* attribs);
     [LibraryImport(Lib)] public static partial uint eglDestroySurface(IntPtr display, IntPtr surface);
     [LibraryImport(Lib)]
     public static partial uint eglMakeCurrent(IntPtr display, IntPtr draw, IntPtr read, IntPtr context);

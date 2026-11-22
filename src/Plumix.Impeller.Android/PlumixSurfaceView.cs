@@ -1,6 +1,7 @@
 using Android.Content;
 using Android.Text;
 using Android.Views;
+using Android.Views.Accessibility;
 using Android.Views.InputMethods;
 using Java.Lang;
 using Plumix.UI;
@@ -48,6 +49,17 @@ internal sealed class PlumixSurfaceView : SurfaceView
     }
 
     private void RestartInput() => _ime.RestartInput(this);
+
+    /// <summary>The virtual-view tree accessibility services read; set by the Activity.</summary>
+    public PlumixAccessibilityNodeProvider? AccessibilityProvider { get; set; }
+
+    // FlutterView.getAccessibilityNodeProvider: the bridge only while an accessibility service is on.
+    public override AccessibilityNodeProvider? AccessibilityNodeProvider =>
+        AccessibilityProvider is { IsAccessibilityEnabled: true } provider ? provider : base.AccessibilityNodeProvider;
+
+    // FlutterView.onHoverEvent: touch exploration goes to the accessibility bridge.
+    public override bool OnHoverEvent(MotionEvent? e) =>
+        (e is not null && AccessibilityProvider?.OnHoverEvent(e) == true) || base.OnHoverEvent(e);
 
     public override bool OnCheckIsTextEditor() => _plugin.ClientId is not null;
 

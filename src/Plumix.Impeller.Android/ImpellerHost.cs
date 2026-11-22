@@ -1,5 +1,6 @@
 using Android.Views;
 using NImpeller;
+using Plumix.Accessibility;
 using Plumix.Gestures;
 using Plumix.Impeller;
 using Plumix.Rendering;
@@ -48,13 +49,23 @@ internal sealed class ImpellerHost : IDisposable
         // The first frame may be ready before the context; it is drawn once the context exists.
         _contextCreated = () => PlatformThread.Current.Post(Draw, PlatformTaskPriority.Task);
         _surface.ContextCreated += _contextCreated;
+        // The engine's per-view accessibility bridge: the platform-agnostic tree the Android node provider reads.
+        Accessibility = new AccessibilityBridge(_view.ViewId, () => _view.DevicePixelRatio);
         _root = new ReusableRenderView(_view);
         _pipeline = new PipelineOwner(
             onSemanticsOwnerCreated: () => (_pipeline!.RootNode as RenderView)?.ScheduleInitialSemantics(),
             onSemanticsUpdate: update => (_pipeline!.RootNode as RenderView)?.UpdateSemantics(update),
-            onSemanticsOwnerDisposed: () => (_pipeline!.RootNode as RenderView)?.ClearSemantics());
+            onSemanticsOwnerDisposed: () =>
+            {
+                (_pipeline!.RootNode as RenderView)?.ClearSemantics();
+                Accessibility.Clear();
+            });
+        _view.SemanticsUpdated += Accessibility.AddSemanticsUpdate;
         _view.RenderRequested += HandleRenderRequested;
     }
+
+    /// <summary>The semantics tree of this host's view, for <see cref="PlumixAccessibilityNodeProvider"/>.</summary>
+    public AccessibilityBridge Accessibility { get; }
 
     /// <summary>Installs the platform seams this host provides; call once, before any binding is touched.</summary>
     public static void InstallBackend(global::Android.Content.Res.AssetManager assets, string applicationAssembly)

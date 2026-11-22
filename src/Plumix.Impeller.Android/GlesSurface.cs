@@ -29,6 +29,7 @@ internal sealed unsafe class GlesSurface : IDisposable
     private IntPtr _context;
     private IntPtr _glesLibrary;
     private IntPtr _eglSurface;
+    private IntPtr _pbuffer;
     private ImpellerSurface? _surface;
     private (int Width, int Height) _surfaceSize;
     private PendingFrame? _pendingFrame;
@@ -101,7 +102,7 @@ internal sealed unsafe class GlesSurface : IDisposable
             _surface = null;
             // Keep the context current without a surface (EGL_KHR_surfaceless_context, always on Android) so
             // Impeller can still release GL objects.
-            Egl.eglMakeCurrent(_display, IntPtr.Zero, IntPtr.Zero, _context);
+            MakeCurrentWithoutWindow();
             Egl.eglDestroySurface(_display, _eglSurface);
             _eglSurface = IntPtr.Zero;
         });
@@ -211,8 +212,8 @@ internal sealed unsafe class GlesSurface : IDisposable
                 throw Egl.Failure("eglCreateContext");
             }
 
-            // Surfaceless until a window arrives; Impeller resolves GL entry points while the context is current.
-            if (Egl.eglMakeCurrent(_display, IntPtr.Zero, IntPtr.Zero, _context) == 0)
+            // Current without a window until one arrives; Impeller resolves GL entry points while it is current.
+            if (!MakeCurrentWithoutWindow())
             {
                 throw Egl.Failure("eglMakeCurrent");
             }
@@ -236,12 +237,30 @@ internal sealed unsafe class GlesSurface : IDisposable
         }
     }
 
+    // EGL_KHR_surfaceless_context where the driver has it (devices); otherwise a 1x1 pbuffer, as engines fall back
+    // to (the emulator's EGL answers a surfaceless eglMakeCurrent with EGL_BAD_MATCH).
+    private bool MakeCurrentWithoutWindow()
+    {
+        if (Egl.eglMakeCurrent(_display, IntPtr.Zero, IntPtr.Zero, _context) != 0)
+        {
+            return true;
+        }
+
+        if (_pbuffer == IntPtr.Zero)
+        {
+            int* attribs = stackalloc int[] { Egl.EGL_WIDTH, 1, Egl.EGL_HEIGHT, 1, Egl.EGL_NONE };
+            _pbuffer = Egl.eglCreatePbufferSurface(_display, _config, attribs);
+        }
+
+        return _pbuffer != IntPtr.Zero && Egl.eglMakeCurrent(_display, _pbuffer, _pbuffer, _context) != 0;
+    }
+
     private IntPtr? ChooseConfig(int samples)
     {
         int* attribs = stackalloc int[]
         {
             Egl.EGL_RENDERABLE_TYPE, Egl.EGL_OPENGL_ES3_BIT,
-            Egl.EGL_SURFACE_TYPE, Egl.EGL_WINDOW_BIT,
+            Egl.EGL_SURFACE_TYPE, Egl.EGL_WINDOW_BIT | Egl.EGL_PBUFFER_BIT,
             Egl.EGL_RED_SIZE, 8,
             Egl.EGL_GREEN_SIZE, 8,
             Egl.EGL_BLUE_SIZE, 8,
@@ -330,6 +349,11 @@ internal sealed unsafe class GlesSurface : IDisposable
                 if (_context != IntPtr.Zero)
                 {
                     Egl.eglDestroyContext(_display, _context);
+                }
+
+                if (_pbuffer != IntPtr.Zero)
+                {
+                    Egl.eglDestroySurface(_display, _pbuffer);
                 }
 
                 Egl.eglTerminate(_display);
