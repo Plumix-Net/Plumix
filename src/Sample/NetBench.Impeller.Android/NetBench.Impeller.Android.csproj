@@ -3,7 +3,7 @@
     <!-- Stage 4 prototype (docs/product/avalonia-free-core.md): NetBench's mobile app on the native Android host
          without Avalonia (src/Plumix.Impeller.Android). It compiles the NetBench checkout's sources unchanged
          (NetBenchSrc, the sibling repository by default) and its Plumix.Packages siblings by project, so the
-         app runs against this branch's Plumix. Branch proto/impeller only; never packed. -->
+         app runs against this repository's Plumix. Never packed. -->
     <PropertyGroup>
         <OutputType>Exe</OutputType>
         <TargetFramework>net11.0-android</TargetFramework>

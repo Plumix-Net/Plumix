@@ -31,7 +31,7 @@
     <!-- Match Avalonia.Skia's shaper ABI; needed for variable-font instances. -->
     <PackageVersion Include="HarfBuzzSharp" Version="8.3.1.3" />
     <PackageVersion Include="Avalonia.HarfBuzz" Version="$(AvaloniaVersion)" />
-    <!-- Impeller prototype (branch proto/impeller): NImpeller packaged from the Plumix-Net/NImpeller fork, which has
+    <!-- Impeller backend (native host prototype): NImpeller packaged from the Plumix-Net/NImpeller fork, which has
          ImpellerTypeface and glyph runs that upstream's NImpeller 3.50.0.1 lacks; the assembly is NImpeller.dll. -->
     <PackageVersion Include="Plumix.NImpeller" Version="3.50.0.5" />
     <PackageVersion Include="Plumix.Bloc" Version="0.3.0-alpha.3" />

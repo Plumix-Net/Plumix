@@ -8,6 +8,8 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased]
+- Native host prototype: `Plumix.Impeller` backend and `Plumix.Impeller.Android` host without Avalonia (not packed).
+- Text can shape through a backend `ITextShaper`: `HeadlessParagraph` lays out HarfBuzz-shaped runs when one is given.
 - Relative asset keys resolve on Android: `PlumixApplication` names its assembly when there is no entry assembly.
 - Breaking: `Plumix` no longer depends on Avalonia, SkiaSharp or HarfBuzzSharp; they come with `Plumix.Avalonia`.
 - Material/Cupertino icon fonts are plain embedded resources; `PlatformAssetBundle` resolves them without a host.

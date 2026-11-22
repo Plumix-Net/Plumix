@@ -47,6 +47,12 @@ normative may live only there.
 - `src/Plumix.Android`: Android host package (`PlumixMainActivity` over `AndroidActivityDelegate`).
 - `src/Sample/Plumix.Sample.Android`: Android sample host.
 - `src/Sample/Plumix.iOS`: iOS host.
+- `src/Plumix.Impeller`, `src/Plumix.Impeller.Android`: native host prototype without Avalonia (not packed until
+  the gates in the umbrella's `docs/product/native-host.md`): the Impeller backend behind the core's seams (NImpeller
+  from the `Plumix.NImpeller` package, glyph-run text over HarfBuzz, `impellerc` shader bundles in
+  `Plumix.Impeller/Shaders`) and the Android host (`ImpellerActivity`, raster thread, IME, images, system fonts);
+  tests in `src/Plumix.Impeller.Tests`; apps `src/Sample/Plumix.Sample.Impeller.Android` and
+  `src/Sample/NetBench.Impeller.Android`.
 
 ## Progress Source of Truth
 
@@ -130,7 +136,7 @@ ln -s /path/to/your/NImpeller nimpeller-src # optional: Plumix-Net/NImpeller, to
   (`src/Plumix/UI/Path*.cs`), which must match the Skia the engine ships.
 - `nimpeller-src` — Plumix-Net/NImpeller, the fork of AvaloniaUI/NImpeller (branch `plumix/packages`) the
   Impeller prototype's `Plumix.NImpeller` package is built from (upstream's NuGet lacks `ImpellerTypeface` and
-  glyph runs). Only needed to change the bindings; branch `proto/impeller` consumes the package.
+  glyph runs). Only needed to change the bindings; the repository consumes the package.
 
 **Pinned Flutter revision: 3.47.0 (`4cf24164269`, `flutter-3.47-candidate.0`). Pinned packages:
 `material_ui` 1.0.0, `cupertino_ui` 1.0.0, `intl` 0.20.3** (what `dart_sample` resolves; at these pins the package

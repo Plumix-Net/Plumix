@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Compile the framework's pinned fragment shaders into Impeller runtime-stage bundles.
 
-The Impeller backend (src/Plumix.Impeller, branch proto/impeller) runs a core program by the bundle compiled
+The Impeller backend (src/Plumix.Impeller) runs a core program by the bundle compiled
 from the same GLSL source (ImpellerShaders matches them by uniform list). Bundles must come from the impellerc
 of the Impeller the backend links, so this uses the tools archive pinned by Plumix.NImpeller's lock file:
 

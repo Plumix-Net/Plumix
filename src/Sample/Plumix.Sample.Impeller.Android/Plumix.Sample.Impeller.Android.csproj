@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <!-- Stage 4 prototype (docs/product/avalonia-free-core.md): the Sample gallery on the native Android host
-         without Avalonia (src/Plumix.Impeller.Android), rendering through Impeller. Branch proto/impeller only. -->
+         without Avalonia (src/Plumix.Impeller.Android), rendering through Impeller. Never packed. -->
     <PropertyGroup>
         <OutputType>Exe</OutputType>
         <TargetFramework>net11.0-android</TargetFramework>

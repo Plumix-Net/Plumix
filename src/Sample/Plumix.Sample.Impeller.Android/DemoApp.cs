@@ -56,7 +56,8 @@ internal static class DemoApp
                         ])),
                     new Text("A long line that does not fit on one line and ends with an ellipsis at the end",
                         maxLines: 1, overflow: TextOverflow.Ellipsis),
-                    new Text("fi fl ffi — ligatures, kerning AVAWAY, fallback ☺ ✓ ∑ 😀 中文 العربية"),
+                    new Text("fi fl ffi — ligatures, kerning AVAWAY, "
+                             + "fallback ☺ ✓ ∑ 😀 中文 العربية"),
                     new SizedBox(height: 12),
                     new TextField(decoration: new InputDecoration(labelText: "Type here", border:
                         new OutlineInputBorder())),

@@ -8,9 +8,9 @@ Use this block as the fastest machine-readable status summary.
 
 ```yaml
 framework_plan_version: 2
-last_updated: 2026-11-21
+last_updated: 2026-11-22
 north_star: "Flutter-like widget/rendering framework in C# with Avalonia as host infrastructure."
-current_phase: "RC preparation: Avalonia-free core (avalonia-free-core.md) stages 0-3 done 2026-11-21; NImpeller prototype next."
+current_phase: "RC preparation: Avalonia-free core (avalonia-free-core.md) stages 0-4 done (merged 2026-11-22); native host on Impeller accepted (native-host.md), stage 1 in progress."
 latest_release: "v1.0.0-preview.5 (2026-11-21); next: v1.0.0-rc.1, criteria in the Release Candidate section"
 flutter_pin: "3.47.0 (4cf24164269); material_ui 1.0.0; cupertino_ui 1.0.0 — see AGENTS.md"
 open_work_outside_controls: "docs/ai/BACKLOG.md (control-level gaps, host-level gaps; the 3.44->3.47 re-port table is down to subsystem-blocked rows)"

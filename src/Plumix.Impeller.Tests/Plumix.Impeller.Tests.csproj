@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-    <!-- Tests of the Impeller backend's managed side (branch proto/impeller): command playback, fonts and shaping,
+    <!-- Tests of the Impeller backend's managed side (native host prototype): command playback, fonts and shaping,
          fragment-program matching. They run against the real libimpeller of Plumix.NImpeller.Native for the host;
          building display lists needs no GPU context. -->
     <PropertyGroup>
