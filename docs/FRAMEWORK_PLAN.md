@@ -111,8 +111,8 @@ Blockers (all must close):
   fully managed (SkPath data, containment, measurement, perspective clip and a line-for-line port of
   Skia's PathOps); `Shader`/filters as data; UI thread, images and assets, scene rasterization and text
   behind internal `IPlatformThread`/`IImageBackend`/`IAssetSource`/`IRenderBackend`/`ITextBackend`;
-  `Plumix.csproj` has no package references. Frame-time comparison with `v1.0.0-preview.5` is still to
-  be measured.
+  `Plumix.csproj` has no package references. Frame time matches `v1.0.0-preview.5` within noise on a
+  scrolling Material list (allocations about 0.5% higher; numbers in the product doc).
 
 Release gates (on the commit that gets the tag):
 
