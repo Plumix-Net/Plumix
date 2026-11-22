@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <!-- Stage 4 prototype (docs/product/avalonia-free-core.md): an Impeller backend for the core's seams.
+         Branch proto/impeller only; never packed. NImpeller comes from the nimpeller-src checkout (AGENTS.md). -->
+    <PropertyGroup>
+        <TargetFramework>net11.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+        <IsPackable>false</IsPackable>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Plumix\Plumix.csproj" />
+        <PackageReference Include="HarfBuzzSharp" />
+        <ProjectReference Include="..\..\nimpeller-src\src\NImpeller\NImpeller.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <InternalsVisibleTo Include="Plumix.Sample.Impeller.Android" />
+    </ItemGroup>
+
+</Project>

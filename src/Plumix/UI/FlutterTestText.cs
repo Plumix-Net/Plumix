@@ -36,7 +36,8 @@ internal static class FlutterTestText
     /// <summary>
     /// One code point at its pen position on the baseline. <paramref name="FakeBold"/> and
     /// <paramref name="FakeItalic"/> are SkParagraph's synthetic styles for a typeface (here the regular,
-    /// upright `FlutterTest`) that lacks the requested weight or slant.
+    /// upright `FlutterTest`) that lacks the requested weight or slant. A paragraph a host shaper laid out
+    /// (TextShaping.cs) also carries the backend's <paramref name="Typeface"/> and <paramref name="GlyphId"/>.
     /// </summary>
     internal readonly record struct Glyph(
         int CodePoint,
@@ -45,7 +46,9 @@ internal static class FlutterTestText
         double FontSize,
         Color Color,
         bool FakeBold = false,
-        bool FakeItalic = false);
+        bool FakeItalic = false,
+        int GlyphId = -1,
+        object? Typeface = null);
 
     /// <summary>One paint step of a paragraph line.</summary>
     internal union Operation(BackgroundOperation, GlyphsOperation, DecorationOperation);

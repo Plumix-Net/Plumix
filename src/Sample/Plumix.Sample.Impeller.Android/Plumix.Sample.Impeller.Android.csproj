@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <!-- Stage 4 prototype (docs/product/avalonia-free-core.md): a native Android host without Avalonia,
+         rendering through Impeller (GLES on EGL). Branch proto/impeller only; never packed. -->
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>net11.0-android</TargetFramework>
+        <SupportedOSPlatformVersion>29</SupportedOSPlatformVersion>
+        <RuntimeIdentifiers>android-arm64;android-x64</RuntimeIdentifiers>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+        <ApplicationId>com.plumix.impeller</ApplicationId>
+        <ApplicationTitle>Plumix Impeller</ApplicationTitle>
+        <ApplicationVersion>1</ApplicationVersion>
+        <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
+        <AndroidPackageFormat>apk</AndroidPackageFormat>
+        <IsPackable>false</IsPackable>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\Plumix.Impeller\Plumix.Impeller.csproj" />
+        <ProjectReference Include="..\..\Plumix.Material\Plumix.Material.csproj" />
+    </ItemGroup>
+
+    <!-- Packages libimpeller.so per RuntimeIdentifier from nimpeller-src/external/impeller_sdk. -->
+    <Import Project="..\..\..\nimpeller-src\samples\Sandbox.Android\Impeller.targets" />
+
+</Project>
