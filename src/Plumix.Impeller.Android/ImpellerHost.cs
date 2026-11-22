@@ -42,6 +42,9 @@ internal sealed class ImpellerHost : IDisposable
     private int _presentedFirstFrame;
     private ViewPadding _viewPadding;
     private ViewPadding _viewInsets;
+    private Brightness _platformBrightness = Brightness.Light;
+    private bool _alwaysUse24HourFormat;
+    private double? _physicalTouchSlop;
 
     public ImpellerHost()
     {
@@ -158,6 +161,24 @@ internal sealed class ImpellerHost : IDisposable
         UpdateMetrics();
     }
 
+    /// <summary>
+    /// The user settings the engine sends with <c>FlutterView.sendUserSettingsToFlutter</c> and its viewport
+    /// metrics: platform brightness, the 24-hour format and the touch slop (physical pixels).
+    /// </summary>
+    public void SettingsChanged(Brightness platformBrightness, bool alwaysUse24HourFormat, double? physicalTouchSlop)
+    {
+        PlatformDispatcher dispatcher = PlatformDispatcher.Instance;
+        Brightness previous = dispatcher.PlatformBrightness;
+        _platformBrightness = platformBrightness;
+        _alwaysUse24HourFormat = alwaysUse24HourFormat;
+        _physicalTouchSlop = physicalTouchSlop;
+        UpdateMetrics();
+        if (WidgetsBinding.IsImplicitView(_view) && dispatcher.PlatformBrightness != previous)
+        {
+            dispatcher.NotifyPlatformBrightnessChanged();
+        }
+    }
+
     public void LifecycleChanged(AppLifecycleState state) =>
         WidgetsBinding.Instance.HandleAppLifecycleStateChanged(state);
 
@@ -228,7 +249,13 @@ internal sealed class ImpellerHost : IDisposable
             Padding: Plumix.Widgets.MediaQueryData.ComputePadding(viewPadding, viewInsets),
             ViewInsets: viewInsets,
             ViewPadding: viewPadding,
-            ViewId: _view.ViewId);
+            PlatformBrightness: _platformBrightness,
+            AlwaysUse24HourFormat: _alwaysUse24HourFormat,
+            ViewId: _view.ViewId,
+            // DeviceGestureSettings.fromView: the view's physical touch slop in logical pixels.
+            GestureSettings: _physicalTouchSlop is { } touchSlop
+                ? new DeviceGestureSettings(TouchSlop: touchSlop / _density)
+                : null);
     }
 
     private void UpdateMetrics()
