@@ -38,7 +38,15 @@ public sealed class MainActivity : Activity, ISurfaceHolderCallback
             Window!.SetDecorFitsSystemWindows(false);
         }
 
-        _host.Run(DemoApp.Create(), Resources!.DisplayMetrics!.Density);
+        // The Sample gallery by default; `adb shell am start ... --es app demo` opens the prototype's demo.
+        Widgets.Widget app = Intent?.GetStringExtra("app") == "demo" ? DemoApp.Create() : new CounterApp();
+        _host.Run(app, Resources!.DisplayMetrics!.Density);
+        // `--es route /tabs` opens one gallery page, for walking the routes from a script.
+        if (Intent?.GetStringExtra("route") is { } route)
+        {
+            SchedulerBinding.Instance.AddPostFrameCallback(timeStamp =>
+                _ = SampleNavigationObservers.PageRoutes.Navigator?.PushNamed(route));
+        }
     }
 
     protected override void OnResume()

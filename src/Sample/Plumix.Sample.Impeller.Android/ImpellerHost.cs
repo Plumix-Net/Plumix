@@ -25,10 +25,14 @@ internal sealed class ImpellerHost : IDisposable
     private readonly HostPointerPacketEncoder _pointers = new();
     private readonly GlesSurface _surface = new();
     private ContainerFlowLayer? _tree;
+    private FrameTimingsRecorder? _pendingTimings;
+    private bool _drawPosted;
     private IntPtr _window;
     private int _width;
     private int _height;
     private double _density = 1.0;
+    private Widget? _pendingApp;
+    private bool _presentedFirstFrame;
     private ViewPadding _viewPadding;
     private ViewPadding _viewInsets;
 
@@ -56,10 +60,26 @@ internal sealed class ImpellerHost : IDisposable
         AndroidFontConfig.AddFallbacks(shaper);
     }
 
-    /// <summary>Runs <paramref name="app"/> as the implicit view's root widget.</summary>
+    /// <summary>
+    /// Runs <paramref name="app"/> as the implicit view's root widget once the surface has a size: the
+    /// engine knows the window metrics before `runApp`, so the first frame never lays out at 0x0.
+    /// </summary>
     public void Run(Widget app, double density)
     {
         _density = density;
+        _pendingApp = app;
+        StartIfReady();
+    }
+
+    private void StartIfReady()
+    {
+        if (_pendingApp is not { } app || _width <= 0 || _height <= 0)
+        {
+            return;
+        }
+
+        _pendingApp = null;
+        UpdateMetrics();
         // The platform side of `flutter/textinput`; PlumixSurfaceView is its Android editor.
         HostTextInputPlugin.Instance.Attach();
         WidgetsBinding.Instance.SetImplicitView(_view, _pipeline, _root, MediaQueryData());
@@ -80,6 +100,7 @@ internal sealed class ImpellerHost : IDisposable
         _width = width;
         _height = height;
         UpdateMetrics();
+        StartIfReady();
         Draw();
     }
 
@@ -204,7 +225,19 @@ internal sealed class ImpellerHost : IDisposable
         }
 
         _tree = tree;
-        Draw();
+        // The engine's Animator::Render ends the frame's build phase; Draw reports the raster phase.
+        _pendingTimings = FrameTimingsRecorder.ForRender();
+        // The engine rasterizes after the frame, on its raster thread; here the next main-thread message
+        // does, ahead of any other queued work, so the frame has finished before its timings are reported.
+        if (!_drawPosted)
+        {
+            _drawPosted = true;
+            PlatformThread.Current.Post(() =>
+            {
+                _drawPosted = false;
+                Draw();
+            }, PlatformTaskPriority.Microtask);
+        }
     }
 
     private void Draw()
@@ -214,8 +247,22 @@ internal sealed class ImpellerHost : IDisposable
             return;
         }
 
+        FrameTimingsRecorder? timings = _pendingTimings;
+        _pendingTimings = null;
+        timings?.RecordRasterStart();
         using ImpellerDisplayList displayList = ImpellerLayerPainter.Build(_tree, _width, _height);
         _surface.Present(displayList, _width, _height);
+        if (timings is not null)
+        {
+            // Shell::OnFrameRasterized: timings for `onReportTimings`, and the first-frame-rasterized signal.
+            FrameTimingsReporter.OnFrameRasterized(timings.RecordRasterEnd());
+        }
+        if (!_presentedFirstFrame)
+        {
+            _presentedFirstFrame = true;
+            // A marker for scripts that walk the app (the engine's "first frame rasterized" event).
+            global::Android.Util.Log.Info("PlumixImpeller", "first frame presented");
+        }
     }
 
     public void Dispose()

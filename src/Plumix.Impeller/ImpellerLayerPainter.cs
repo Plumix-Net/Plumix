@@ -102,8 +102,38 @@ internal static class ImpellerLayerPainter
                 }
 
                 break;
+            case ColorFilterFlowLayer colorFilter:
+                if (ImpellerPaints.CreateColorFilter(colorFilter.Filter) is { } nativeFilter)
+                {
+                    using ImpellerPaint paint = ImpellerPaint.New()!;
+                    paint.SetColorFilter(nativeFilter);
+                    builder.SaveLayer(colorFilter.Bounds?.ToImpeller() ?? Unbounded, paint, null);
+                    PaintChildren(builder, colorFilter);
+                    builder.Restore();
+                }
+                else
+                {
+                    PaintChildren(builder, colorFilter);
+                }
+
+                break;
+            case ShaderMaskFlowLayer mask:
+                // ShaderMaskLayer: the children in a layer, then the shader drawn over the mask rect with the
+                // mask's blend mode (dstIn and friends) before the layer composites.
+                builder.SaveLayer(Unbounded, null, null);
+                PaintChildren(builder, mask);
+                using (ImpellerPaint maskPaint = ImpellerPaints.Create(new Paint
+                       {
+                           Shader = mask.Shader, BlendMode = mask.BlendMode, FilterQuality = mask.FilterQuality,
+                       }))
+                {
+                    builder.DrawRect(mask.MaskRect.ToImpeller(), maskPaint);
+                }
+
+                builder.Restore();
+                break;
             case ContainerFlowLayer container:
-                if (container is ColorFilterFlowLayer or ShaderMaskFlowLayer or MagnifierFlowLayer)
+                if (container is MagnifierFlowLayer)
                 {
                     ImpellerPaints.Unsupported(container.GetType().Name);
                 }
@@ -170,6 +200,18 @@ internal static class ImpellerLayerPainter
                 return ImpellerImageFilter.CreateDilateNew((float)dilate.RadiusX, (float)dilate.RadiusY);
             case ImageFilter.Erode erode:
                 return ImpellerImageFilter.CreateErodeNew((float)erode.RadiusX, (float)erode.RadiusY);
+            case ImageFilter.Matrix matrix:
+            {
+                // dart:ui's 16 column-major values, which Matrix4x4's fields hold in the same order.
+                IReadOnlyList<double> m = matrix.Values;
+                var transform = new System.Numerics.Matrix4x4(
+                    (float)m[0], (float)m[1], (float)m[2], (float)m[3],
+                    (float)m[4], (float)m[5], (float)m[6], (float)m[7],
+                    (float)m[8], (float)m[9], (float)m[10], (float)m[11],
+                    (float)m[12], (float)m[13], (float)m[14], (float)m[15]);
+                return ImpellerImageFilter.CreateMatrixNew(transform, matrix.FilterQuality.ToSampling());
+            }
+
             case ImageFilter.Compose compose:
                 ImpellerImageFilter? outer = CreateFilter(compose.Outer);
                 ImpellerImageFilter? inner = CreateFilter(compose.Inner);

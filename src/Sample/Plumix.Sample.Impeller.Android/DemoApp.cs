@@ -82,8 +82,8 @@ internal static class DemoApp
                     BorderRadius: BorderRadius.Circular(16),
                     Gradient: new LinearGradient(colors:
                     [
-                        Colors.Primaries[index % Colors.Primaries.Count],
-                        Colors.Primaries[(index + 3) % Colors.Primaries.Count],
+                        MaterialColors.Primaries[index % MaterialColors.Primaries.Count],
+                        MaterialColors.Primaries[(index + 3) % MaterialColors.Primaries.Count],
                     ]),
                     BoxShadows: [new BoxShadow(color: new Color(0x40000000), blurRadius: 8, offset: new Offset(0, 4))]),
                 child: new Row(children:

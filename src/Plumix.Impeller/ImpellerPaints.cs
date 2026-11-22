@@ -6,7 +6,7 @@ using Path = Plumix.UI.Path;
 namespace Plumix.Impeller;
 
 // C#-only infrastructure: no Dart parity source. Framework paints to Impeller paints for the stage 4
-// prototype. Colour filters, image filters, inverted colours and fragment shaders are not converted yet:
+// prototype. Image filters, inverted colours and fragment shaders are not converted yet:
 // they draw without the effect (Unsupported lists each one once).
 
 /// <summary>Builds Impeller paints from framework paints.</summary>
@@ -54,9 +54,9 @@ internal static class ImpellerPaints
             native.SetMaskFilter(blur);
         }
 
-        if (paint.ColorFilter is not null)
+        if (paint.ColorFilter is { } colorFilter && CreateColorFilter(colorFilter) is { } nativeFilter)
         {
-            Unsupported("ColorFilter");
+            native.SetColorFilter(nativeFilter);
         }
 
         if (paint.ImageFilter is not null)
@@ -78,6 +78,30 @@ internal static class ImpellerPaints
         ImpellerPaint native = ImpellerPaint.New() ?? throw new InvalidOperationException("No Impeller paint.");
         native.SetColor(color.ToImpeller());
         return native;
+    }
+
+    /// <summary>
+    /// dart:ui's colour filters as Impeller's: a blend with a colour, or a 5x4 matrix whose translation column
+    /// Flutter states in 0..255 and the engine (DlMatrixColorFilter) hands Impeller normalized.
+    /// </summary>
+    internal static unsafe ImpellerColorFilter? CreateColorFilter(ColorFilter filter)
+    {
+        switch (filter)
+        {
+            case ColorFilter.Mode mode:
+                return ImpellerColorFilter.CreateBlendNew(mode.Color.ToImpeller(), mode.BlendMode.ToImpeller());
+            case ColorFilter.Matrix matrix:
+                var values = new ImpellerColorMatrix();
+                for (int i = 0; i < 20; i++)
+                {
+                    values.m[i] = (float)(i % 5 == 4 ? matrix.Values[i] / 255.0 : matrix.Values[i]);
+                }
+
+                return ImpellerColorFilter.CreateColorMatrixNew(values);
+            default:
+                Unsupported(filter.GetType().Name);
+                return null;
+        }
     }
 
     internal static void Unsupported(string feature)

@@ -112,9 +112,19 @@ internal static class ImpellerCanvasPlayer
         ImpellerPaint paint = ImpellerPaint.New() ?? throw new InvalidOperationException("No Impeller paint.");
         paint.SetColor(new ImpellerColor { Alpha = layer.Alpha / 255f, Red = 0, Green = 0, Blue = 0 });
         paint.SetBlendMode(layer.BlendMode.ToImpeller());
-        if (layer.ColorFilter is not null || layer.ImageFilter is not null || layer.InvertColors)
+        if (layer.ColorFilter is { } colorFilter && ImpellerPaints.CreateColorFilter(colorFilter) is { } native)
         {
-            ImpellerPaints.Unsupported("saveLayer filters");
+            paint.SetColorFilter(native);
+        }
+
+        if (layer.ImageFilter is { } imageFilter && ImpellerLayerPainter.CreateFilter(imageFilter) is { } filter)
+        {
+            paint.SetImageFilter(filter);
+        }
+
+        if (layer.InvertColors)
+        {
+            ImpellerPaints.Unsupported("saveLayer invertColors");
         }
 
         ImpellerRect bounds = layer.Bounds is { } rect

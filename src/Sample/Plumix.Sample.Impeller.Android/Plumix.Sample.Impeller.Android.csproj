@@ -18,6 +18,17 @@
         <IsPackable>false</IsPackable>
     </PropertyGroup>
 
+    <!-- The Sample gallery's widget code, compiled into this host (its App.axaml.cs is the Avalonia bootstrap). -->
+    <ItemGroup>
+        <Compile Include="..\Plumix.Sample\**\*.cs"
+                 Exclude="..\Plumix.Sample\App.axaml.cs;..\Plumix.Sample\obj\**;..\Plumix.Sample\bin\**"
+                 LinkBase="Sample" />
+        <PackageReference Include="Plumix.Bloc" />
+        <!-- Android's implicit namespaces clash with Plumix widget names (ListView, Switch, Dialog...). -->
+        <Using Remove="Android.Widget" />
+        <Using Remove="Android.App" />
+    </ItemGroup>
+
     <ItemGroup>
         <ProjectReference Include="..\..\Plumix.Impeller\Plumix.Impeller.csproj" />
         <ProjectReference Include="..\..\Plumix.Material\Plumix.Material.csproj" />

@@ -268,18 +268,17 @@ internal sealed class ImpellerTextShaper : ITextShaper
         return Default;
     }
 
+    // A package's family is registered and requested as `packages/<package>/<family>` (FontLoader,
+    // TextStyle.package); the bare family is tried too, for fonts a package registered without the prefix.
     private static IEnumerable<string> Families(ResolvedTextStyle style)
     {
-        if (style.FontFamily is { } family)
+        IEnumerable<string> requested = style.FontFamily is { } family ? [family] : [];
+        foreach (string name in requested.Concat(style.FontFamilyFallback ?? []))
         {
-            yield return StripPackage(family);
-        }
-
-        if (style.FontFamilyFallback is { } fallbacks)
-        {
-            foreach (string fallback in fallbacks)
+            yield return name;
+            if (StripPackage(name) is { } bare && bare != name)
             {
-                yield return StripPackage(fallback);
+                yield return bare;
             }
         }
     }
