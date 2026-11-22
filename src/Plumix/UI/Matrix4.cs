@@ -1,5 +1,3 @@
-using Avalonia;
-
 // Port of the `vector_math` pub package (version 2.4.2), the matrix library Flutter itself depends on:
 // vector_math/lib/src/vector_math_64/{vector3,vector4,matrix4,quad}.dart. It is not part of the Flutter
 // repository, so it carries no `Dart parity source:` marker; the members ported here are the subset
@@ -1262,28 +1260,6 @@ public sealed class Matrix4
         _storage[14] = translation.Z;
         _storage[15] = 1.0;
     }
-
-    /// <summary>
-    /// This matrix as an Avalonia 3x3 projective matrix, dropping the z row and column.
-    /// </summary>
-    /// <remarks>
-    /// Avalonia maps points as row vectors (`p * M`) while this matrix maps them as column vectors,
-    /// so the 3x3 is the transpose of the (x, y, w) sub-matrix. Skia's `SkM44::asM33` drops the same
-    /// row and column, which is why a perspective transform survives the conversion.
-    /// </remarks>
-    internal Matrix ToAvaloniaMatrix() =>
-        new(
-            _storage[0], _storage[1], _storage[3],
-            _storage[4], _storage[5], _storage[7],
-            _storage[12], _storage[13], _storage[15]);
-
-    /// <summary>The 4x4 matrix that agrees with the given Avalonia 3x3 on the z = 0 plane.</summary>
-    internal static Matrix4 FromAvaloniaMatrix(Matrix matrix) =>
-        new(
-            matrix.M11, matrix.M12, 0.0, matrix.M13,
-            matrix.M21, matrix.M22, 0.0, matrix.M23,
-            0.0, 0.0, 1.0, 0.0,
-            matrix.M31, matrix.M32, 0.0, matrix.M33);
 
     public static bool operator ==(Matrix4? left, Matrix4? right)
     {

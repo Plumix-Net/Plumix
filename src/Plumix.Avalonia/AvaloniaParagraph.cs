@@ -5,13 +5,14 @@ using Plumix.Painting;
 using Plumix.Rendering;
 using Plumix.Widgets;
 
-// C#-only infrastructure: the dart:ui `Paragraph` engine over Avalonia's text formatter. The builder's
+// C#-only host infrastructure: the dart:ui `Paragraph` engine over Avalonia's text formatter. The builder's
 // styled runs are shaped with per-run spacing/axes, then wrapped by TextLayout. Framework-owned
 // vertical metrics and glyph painting implement the dart:ui contracts. No Dart source maps to this file.
+// The framework reaches it through ITextBackend (src/Plumix/UI/TextBackend.cs; AvaloniaTextBackend).
 
 namespace Plumix.UI;
 
-/// Chooses the paragraph engine for a built paragraph.
+/// Chooses the paragraph engine for a built paragraph (AvaloniaTextBackend.CreateParagraph).
 internal static class ParagraphBackend
 {
     /// Creates the Avalonia-backed paragraph when a font manager is registered, the headless
@@ -942,5 +943,19 @@ internal sealed class PlaceholderTextRun : DrawableTextRun
     public override void Draw(DrawingContext drawingContext, global::Avalonia.Point origin)
     {
         // Intentionally empty: RenderParagraph paints the inline child itself.
+    }
+}
+
+/// Records paragraph geometry (glyph outlines, backgrounds) on a framework canvas.
+internal static class TextGeometryDrawing
+{
+    /// Draws <paramref name="geometry"/> with <paramref name="paint"/> through the canvas's shape pipeline;
+    /// its render bounds are computed only when the paint needs a layer.
+    internal static void DrawTextGeometry(this Canvas canvas, Geometry geometry, Paint paint)
+    {
+        Rect renderBounds = Canvas.TextShapeNeedsLayer(paint)
+            ? geometry.GetRenderBounds(new Pen(Brushes.Black, paint.StrokeWidth)).ToPlumix()
+            : Rect.Zero;
+        canvas.DrawTextShape(geometry, renderBounds, paint);
     }
 }

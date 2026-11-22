@@ -81,10 +81,11 @@ public sealed class CupertinoIconsTests
     public void BundledFont_ResolvesRepresentativeCatalogGlyphs()
     {
         _ = CupertinoIcons.Heart;
-        var assetLoader = new StandardAssetLoader();
-        using Stream font = assetLoader.Open(
-            new Uri("avares://Plumix.Cupertino/Assets/Fonts/CupertinoIcons.ttf"),
-            baseUri: null);
+        // The bundled font resolves through the framework's own asset bundle, with no host involved.
+        using Stream font = PlatformAssetBundle.Root
+            .LoadAsync("packages/Plumix.Cupertino/Assets/Fonts/CupertinoIcons.ttf")
+            .GetAwaiter()
+            .GetResult();
         Assert.True(font.Length > 0);
         using var fontBytes = new MemoryStream();
         font.CopyTo(fontBytes);

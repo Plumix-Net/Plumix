@@ -3,7 +3,7 @@ using SkiaSharp;
 namespace Plumix.UI;
 
 // C#-only host infrastructure for CanvasPlayback. The INativeShader transport it implements is declared
-// beside SkiaShaders in src/Plumix/UI/SkiaShaders.cs until that file moves here (stage 3f).
+// beside SkiaShaders (SkiaShaders.cs).
 
 // A paint's solid color as a native shader, so shapes Avalonia's geometry would approximate (conic
 // corners, superellipses) reach Skia as the exact path Dart's canvas hands it. The paint's alpha is

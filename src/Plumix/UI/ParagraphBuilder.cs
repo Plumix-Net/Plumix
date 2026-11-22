@@ -106,7 +106,7 @@ public sealed class ParagraphBuilder
         _built = true;
         var content = new ParagraphContent(
             _style, _text.ToString(), _runs, _placeholders, _styleStack[0], _styleStack[^1]);
-        return ParagraphBackend.Create(content);
+        return TextBackend.Current.CreateParagraph(content);
     }
 
     public override string ToString() => "ParagraphBuilder";

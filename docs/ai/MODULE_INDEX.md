@@ -79,10 +79,12 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
   side with `TestTextInput.cs` (flutter_test's) or drive the real plugin with its `HostTextInput` helper. Coverage:
   `HostTextInputPluginTests.cs`, `TextInputModelTests.cs`, `EditableTextInputConnectionDartParityTests.cs`.
 - Text layout enters through `Painting/TextPainter.cs`, which builds a dart:ui-shaped `UI/Paragraph.cs` with
-  `UI/ParagraphBuilder.cs`; `UI/AvaloniaParagraph.cs` owns native run/strut/selection metrics,
-  `UI/ParagraphShaping.cs` resolves per-run spacing/features and `UI/VariableFont.cs` shapes and draws
-  the same HarfBuzz variable instance. `UI/ParagraphDecorations.cs` follows pinned SkParagraph patterns.
-  `UI/HeadlessParagraph.cs` supplies FlutterTest metrics without a platform. `RenderParagraph.cs` delegates
+  `UI/ParagraphBuilder.cs`, which asks the host's `UI/TextBackend.cs` for an engine. In `src/Plumix.Avalonia`,
+  `AvaloniaParagraph.cs` owns native run/strut/selection metrics, `ParagraphShaping.cs` resolves per-run
+  spacing/features and `VariableFont.cs` shapes and draws the same HarfBuzz variable instance;
+  `ParagraphDecorations.cs` follows pinned SkParagraph patterns, `AvaloniaFonts.cs`/`HostSystemFonts.cs` own fonts.
+  `UI/HeadlessParagraph.cs` (core) supplies FlutterTest metrics without a platform and records
+  `UI/FlutterTestText.cs` entries that the host's `FlutterTestGlyphDraw.cs` paints. `RenderParagraph.cs` delegates
   to the painter. Coverage: `TextPainterTests.cs`, `RenderParagraphTests.cs`, `ParagraphEngineTests.cs`,
   `AvaloniaParagraphDartParityTests.cs` (bundled Ahem and variable Roboto Slab, including raster pixels).
 - Material read-only selection enters through `SelectableText.cs` + `SelectionArea.cs` + `TextSelectionTheme.cs`;

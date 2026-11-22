@@ -27,11 +27,10 @@ public sealed class HostBinaryCompatibilityTests
     private static readonly string[] FrameworkAssemblies =
         ["Plumix", "Plumix.Material", "Plumix.Cupertino", "Plumix.Avalonia"];
 
-    // Plumix.Material and Plumix.Cupertino reference no host member at all; HostDependencyBudgetTests
-    // keeps them that way.
+    // Plumix, Plumix.Material and Plumix.Cupertino reference no host assembly at all;
+    // HostDependencyBudgetTests keeps them that way.
     public static TheoryData<string> ShippedAssemblies() =>
     [
-        typeof(Plumix.Widgets.Widget).Assembly.GetName().Name!,
         typeof(PlumixHost).Assembly.GetName().Name!,
     ];
 

@@ -133,8 +133,7 @@ public sealed class PlatformAssetBundle : AssetBundle
     public override Task<Stream> LoadAsync(string key, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        var uri = ResolveUri(key);
-        return Task.FromResult(ImageBackend.Assets.Open(uri, BaseUri));
+        return Task.FromResult(Open(ResolveUri(key)));
     }
 
     // Embedded resources are already in memory: hand the bytes over without a continuation, so a
@@ -144,7 +143,7 @@ public sealed class PlatformAssetBundle : AssetBundle
         CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        using Stream stream = ImageBackend.Assets.Open(ResolveUri(key), BaseUri);
+        using Stream stream = Open(ResolveUri(key));
         using var buffer = new MemoryStream();
         stream.CopyTo(buffer);
         return Task.FromResult<ReadOnlyMemory<byte>>(buffer.ToArray());
@@ -160,9 +159,18 @@ public sealed class PlatformAssetBundle : AssetBundle
         int slash = path.LastIndexOf('/');
         string directoryPath = slash >= 0 ? path[..(slash + 1)] : "/";
         var directory = new UriBuilder(uri) { Path = directoryPath }.Uri;
-        string[] assets = ImageBackend.Assets.GetAssets(directory, BaseUri).Select(asset => asset.ToString()).ToArray();
+        IEnumerable<Uri> found = EmbeddedAssets.GetAssets(directory, BaseUri);
+        if (ImageBackend.HasHostAssets)
+        {
+            found = found.Concat(ImageBackend.Assets.GetAssets(directory, BaseUri));
+        }
+
+        string[] assets = found.Select(asset => asset.ToString()).Distinct().ToArray();
         return Task.FromResult<IReadOnlyList<string>>(assets);
     }
+
+    // Assets a package embeds as manifest resources resolve without a host; the rest are the host's.
+    private Stream Open(Uri uri) => EmbeddedAssets.TryOpen(uri, BaseUri) ?? ImageBackend.Assets.Open(uri, BaseUri);
 
     private Uri ResolveUri(string key)
     {

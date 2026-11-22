@@ -1,6 +1,4 @@
 using System.Diagnostics;
-using Avalonia;
-using Avalonia.Media;
 using Plumix.Gestures;
 using Plumix.UI;
 using Plumix.Foundation;

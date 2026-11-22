@@ -337,8 +337,8 @@ internal sealed class DrawPictureOp(Picture picture, Offset offset) : CanvasOp
 }
 
 /// <summary>
-/// Plumix-only: an entry whose content only the backend that recorded it can interpret — a laid-out
-/// paragraph. It goes once text is typed data too (docs/product avalonia-free-core.md, stage 3).
+/// Plumix-only: an entry whose content only the backend that recorded it can interpret — the native
+/// glyph runs of a paragraph the host's text engine laid out (Plumix.Avalonia's AvaloniaParagraph).
 /// </summary>
 internal sealed class BackendOp(object payload, bool isDraw) : CanvasOp
 {

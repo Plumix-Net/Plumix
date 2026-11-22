@@ -5,14 +5,14 @@ using TileMode = Plumix.Rendering.TileMode;
 
 namespace Plumix.UI;
 
-// C#-only infrastructure: the Avalonia/Skia backend's view of a Shader. Engine adapter:
+// C#-only host infrastructure: the Avalonia/Skia backend's view of a Shader. Engine adapter:
 // engine/src/flutter/display_list/skia/dl_sk_conversions.cc (gradients) and
 // engine/src/flutter/lib/ui/painting/fragment_shader.cc (runtime effects). A shader is framework data; this
 // builds the IBrush the Avalonia drawing pipeline carries (an INativeShader, which ShaderDrawing draws
 // through Skia) once per shader and keeps it on the shader.
 
-// C#-only transport for engine shaders through the published Avalonia IBrush slots. It lives here, beside
-// its brushes, until SkiaShaders moves to Plumix.Avalonia with the text backend (stage 3f).
+// C#-only transport for engine shaders through the published Avalonia IBrush slots: SkiaShaders' brushes and
+// NativeShader's solid color implement it, and ShaderDrawing draws it through Skia.
 internal interface INativeShader
 {
     SKShader? CreateNativeShader();

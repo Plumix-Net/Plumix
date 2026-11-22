@@ -21,5 +21,6 @@ internal static class AvaloniaBackend
         UI.ImageBackend.Current = AvaloniaImageBackend.Instance;
         UI.ImageBackend.Assets = AvaloniaAssetSource.Instance;
         UI.RenderBackend.Current = AvaloniaRenderBackend.Instance;
+        UI.TextBackend.Current = AvaloniaTextBackend.Instance;
     }
 }

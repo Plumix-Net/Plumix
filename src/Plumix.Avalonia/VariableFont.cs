@@ -9,9 +9,9 @@ using RunGlyph = Avalonia.Media.TextFormatting.GlyphInfo;
 
 namespace Plumix.UI;
 
-// C#-only infrastructure: HarfBuzz variable instances over Avalonia's resolved fallback face. The
-// native draw bridge supplies outlines from the SAME instance that shapes advances. HarfBuzzSharp
-// exposes shaping but not hb_font_set_variations/hb_font_draw_glyph; hosts already ship this ABI.
+// C#-only host infrastructure (AvaloniaParagraph): HarfBuzz variable instances over Avalonia's resolved fallback face.
+// The native draw bridge supplies outlines from the SAME instance that shapes advances. HarfBuzzSharp exposes shaping
+// but not hb_font_set_variations/hb_font_draw_glyph; hosts already ship this ABI.
 internal sealed class VariableFont : IDisposable
 {
     // One HarfBuzz face per typeface, shared by every instance: a face copies the tables it reads and

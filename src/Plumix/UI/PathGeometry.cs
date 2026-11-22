@@ -144,6 +144,25 @@ internal static class PathGeometry
         return 0;
     }
 
+    // SkChopQuadAtXExtrema: SkChopQuadAtYExtrema with the axes swapped (each coordinate is computed on
+    // its own, so swapping is exact).
+    internal static int ChopQuadAtXExtrema(ReadOnlySpan<PathPoint> source, Span<PathPoint> destination)
+    {
+        Span<PathPoint> swapped = stackalloc PathPoint[3];
+        Transpose(source[..3], swapped);
+        int chops = ChopQuadAtYExtrema(swapped, destination);
+        Transpose(destination[..(3 + (2 * chops))], destination);
+        return chops;
+    }
+
+    private static void Transpose(ReadOnlySpan<PathPoint> source, Span<PathPoint> destination)
+    {
+        for (int index = 0; index < source.Length; index++)
+        {
+            destination[index] = new PathPoint(source[index].Y, source[index].X);
+        }
+    }
+
     // SkChopCubicAt(src, dst, t).
     internal static void ChopCubicAt(ReadOnlySpan<PathPoint> source, Span<PathPoint> destination, float t)
     {
@@ -289,6 +308,16 @@ internal static class PathGeometry
         return roots;
     }
 
+    // SkChopCubicAtXExtrema: SkChopCubicAtYExtrema with the axes swapped.
+    internal static int ChopCubicAtXExtrema(ReadOnlySpan<PathPoint> source, Span<PathPoint> destination)
+    {
+        Span<PathPoint> swapped = stackalloc PathPoint[4];
+        Transpose(source[..4], swapped);
+        int chops = ChopCubicAtYExtrema(swapped, destination);
+        Transpose(destination[..(4 + (3 * chops))], destination);
+        return chops;
+    }
+
     private static void FlattenCubicExtrema(Span<PathPoint> points, int start)
     {
         float y = points[start + 3].Y;
@@ -424,6 +453,183 @@ internal static class PathGeometry
         float y = destination[2].Y;
         destination[1] = destination[1] with { Y = y };
         destination[3] = destination[3] with { Y = y };
+        return true;
+    }
+
+    // SkAutoConicToQuads::computeQuads: the quads approximating a conic to within tolerance, sharing end
+    // points (quad i is quads[2i..2i+3)); returns the quad count.
+    internal static int ConicToQuads(ReadOnlySpan<PathPoint> points, float weight, float tolerance,
+        out PathPoint[] quads)
+    {
+        int pow2 = ComputeQuadPow2(points, weight, tolerance);
+        quads = new PathPoint[1 + (2 * (1 << pow2))];
+        return ChopIntoQuadsPow2(points, weight, quads, pow2);
+    }
+
+    // kMaxConicToQuadPOW2: the most quads a conic is split into is 2^5.
+    private const int MaxConicToQuadPow2 = 5;
+
+    // SkConic::computeQuadPOW2 over AS_QUAD_ERROR_SETUP ("High order approximation of conic sections by
+    // quadratic splines", Floater 1993).
+    private static int ComputeQuadPow2(ReadOnlySpan<PathPoint> points, float weight, float tolerance)
+    {
+        if (tolerance < 0 || !float.IsFinite(tolerance) || !AreFinite(points[..3]))
+        {
+            return 0;
+        }
+
+        float a = weight - 1;
+        float k = a / (4 * (2 + a));
+        float x = k * (points[0].X - (2 * points[1].X) + points[2].X);
+        float y = k * (points[0].Y - (2 * points[1].Y) + points[2].Y);
+        float error = MathF.Sqrt((x * x) + (y * y));
+        int pow2;
+        for (pow2 = 0; pow2 < MaxConicToQuadPow2; ++pow2)
+        {
+            if (error <= tolerance)
+            {
+                break;
+            }
+
+            error *= 0.25f;
+        }
+
+        return pow2;
+    }
+
+    // SkConic::chopIntoQuadsPOW2.
+    private static int ChopIntoQuadsPow2(ReadOnlySpan<PathPoint> points, float weight, Span<PathPoint> quads,
+        int pow2)
+    {
+        quads[0] = points[0];
+        Span<PathPoint> halves = stackalloc PathPoint[6];
+        bool lines = false;
+        if (pow2 == MaxConicToQuadPow2)
+        {
+            // An extreme weight generates many quads: check whether the first chop makes a pair of lines.
+            ChopConic(points, weight, halves, out _);
+            if (EqualsWithinTolerance(halves[1], halves[2]) && EqualsWithinTolerance(halves[3], halves[4]))
+            {
+                // Control equal to end makes lines.
+                quads[1] = quads[2] = quads[3] = halves[1];
+                quads[4] = halves[5];
+                pow2 = 1;
+                lines = true;
+            }
+        }
+
+        if (!lines)
+        {
+            SubdivideConic(points[0], points[1], points[2], weight, quads, 1, pow2);
+        }
+
+        int quadCount = 1 << pow2;
+        int pointCount = (2 * quadCount) + 1;
+        if (!AreFinite(quads[..pointCount]))
+        {
+            // A non-finite point: pin to the middle of the hull, as the first and last are already on the
+            // hull's ends.
+            for (int index = 1; index < pointCount - 1; ++index)
+            {
+                quads[index] = points[1];
+            }
+        }
+
+        return quadCount;
+    }
+
+    // SkGeometry.cpp's subdivide: writes the conic's quads' control and end points from index on.
+    private static int SubdivideConic(PathPoint p0, PathPoint p1, PathPoint p2, float weight,
+        Span<PathPoint> quads, int index, int level)
+    {
+        if (level == 0)
+        {
+            quads[index] = p1;
+            quads[index + 1] = p2;
+            return index + 2;
+        }
+
+        Span<PathPoint> halves = stackalloc PathPoint[6];
+        ReadOnlySpan<PathPoint> source = [p0, p1, p2];
+        ChopConic(source, weight, halves, out float newWeight);
+        float startY = p0.Y;
+        float endY = p2.Y;
+        if (Between(startY, p1.Y, endY))
+        {
+            // If the input is monotonic and the output is not, the scan converter hangs: keep the chopped
+            // conics' y order.
+            float midY = halves[2].Y;
+            if (!Between(startY, midY, endY))
+            {
+                // Move a midpoint outside the ends to the closer one.
+                float closerY = Math.Abs(midY - startY) < Math.Abs(midY - endY) ? startY : endY;
+                halves[2] = halves[2] with { Y = closerY };
+                halves[3] = halves[3] with { Y = closerY };
+            }
+
+            if (!Between(startY, halves[1].Y, halves[2].Y))
+            {
+                // The first control outside its ends goes to the start, reducing the quad to a line.
+                halves[1] = halves[1] with { Y = startY };
+            }
+
+            if (!Between(halves[3].Y, halves[4].Y, endY))
+            {
+                halves[4] = halves[4] with { Y = endY };
+            }
+        }
+
+        --level;
+        index = SubdivideConic(halves[0], halves[1], halves[2], newWeight, quads, index, level);
+        return SubdivideConic(halves[3], halves[4], halves[5], newWeight, quads, index, level);
+    }
+
+    // SkConic::chop (not SK_SUPPORT_LEGACY_CONIC_CHOP): halves[0..3) and halves[3..6) at t = 1/2.
+    private static void ChopConic(ReadOnlySpan<PathPoint> points, float weight, Span<PathPoint> halves,
+        out float newWeight)
+    {
+        // The scale is below 1 since the weight is positive, so the terms below do not overflow.
+        float scale = 1 / (1 + weight);
+        float weightScale = weight * scale;
+        var t0 = new PathPoint(points[0].X * scale, points[0].Y * scale);
+        var t1 = new PathPoint(points[1].X * weightScale, points[1].Y * weightScale);
+        var t2 = new PathPoint(points[2].X * scale, points[2].Y * scale);
+        PathPoint p1 = t0 + t1;
+        PathPoint p3 = t1 + t2;
+        // (t0 + 2 t1 + t2) / 2, halving the terms first.
+        var p2 = new PathPoint((0.5f * t0.X) + t1.X + (0.5f * t2.X), (0.5f * t0.Y) + t1.Y + (0.5f * t2.Y));
+        halves[0] = points[0];
+        halves[1] = p1;
+        halves[2] = p2;
+        halves[3] = p2;
+        halves[4] = p3;
+        halves[5] = points[2];
+        // subdivide_w_value.
+        newWeight = MathF.Sqrt(0.5f + (weight * 0.5f));
+    }
+
+    // SkGeometry.cpp's between: (a <= b <= c) || (a >= b >= c).
+    private static bool Between(float a, float b, float c) => (a - b) * (c - b) <= 0;
+
+    // SkPointPriv::EqualsWithinTolerance(p1, p2): !CanNormalize(p1 - p2).
+    private static bool EqualsWithinTolerance(PathPoint a, PathPoint b)
+    {
+        float dx = a.X - b.X;
+        float dy = a.Y - b.Y;
+        return !(float.IsFinite(dx) && float.IsFinite(dy) && (dx != 0 || dy != 0));
+    }
+
+    // SkPointPriv::AreFinite.
+    internal static bool AreFinite(ReadOnlySpan<PathPoint> points)
+    {
+        foreach (PathPoint point in points)
+        {
+            if (!float.IsFinite(point.X) || !float.IsFinite(point.Y))
+            {
+                return false;
+            }
+        }
+
         return true;
     }
 

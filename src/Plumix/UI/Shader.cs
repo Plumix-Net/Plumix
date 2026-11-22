@@ -9,7 +9,7 @@ namespace Plumix.UI;
 /// </summary>
 /// <remarks>
 /// A shader is a description: framework data only (<see cref="GradientShader"/>, the fragment shaders).
-/// The drawing backend builds its own native shader from it (<see cref="SkiaShaders"/>).
+/// The drawing backend builds its own native shader from it (Plumix.Avalonia's SkiaShaders).
 /// </remarks>
 public abstract class Shader : IDisposable
 {

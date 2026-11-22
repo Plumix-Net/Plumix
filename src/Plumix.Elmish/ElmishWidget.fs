@@ -1,7 +1,7 @@
 namespace Plumix.Elmish
 
-open Avalonia.Threading
 open Elmish
+open Plumix
 open Plumix.Foundation
 open Plumix.Widgets
 
@@ -31,13 +31,15 @@ and internal ElmishWidgetState<'arg, 'model, 'msg>() =
         view <- Program.view widget.Program
 
         // Commands may dispatch from background threads while rebuilds must
-        // happen on the UI thread, so the dispatch loop is marshaled there.
+        // happen on the framework thread, so the dispatch loop is marshaled
+        // there through the microtask queue, the one queue a foreign thread
+        // may reach.
         let uiDispatch (innerDispatch: Dispatch<'msg>) : Dispatch<'msg> =
             fun msg ->
-                if Dispatcher.UIThread.CheckAccess() then
+                if EventLoop.IsFrameworkThread then
                     innerDispatch msg
                 else
-                    Dispatcher.UIThread.Post(fun () -> innerDispatch msg)
+                    EventLoop.ScheduleMicrotask(fun () -> innerDispatch msg)
 
         let setState newModel newDispatch =
             model <- newModel

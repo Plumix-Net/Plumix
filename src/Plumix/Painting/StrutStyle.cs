@@ -12,9 +12,8 @@ namespace Plumix.Widgets;
 /// the engine default (`fontSize` 14, `fontWeight` w400, `fontStyle` normal, `forceStrutHeight`
 /// false, font-specified leading).
 ///
-/// Dart's `fontFamily` is a `String`; Plumix types it as <see cref="Avalonia.Media.FontFamily"/>,
-/// the same way <see cref="TextStyle.FontFamily"/> is typed, and applies the `packages/` prefix to
-/// the family name.
+/// As in Dart, `fontFamily` is a family name, typed the same way as <see cref="TextStyle.FontFamily"/>,
+/// and the `packages/` prefix is applied to it.
 public sealed class StrutStyle : Diagnosticable, IEquatable<StrutStyle>
 {
     private readonly IReadOnlyList<string>? _fontFamilyFallback;

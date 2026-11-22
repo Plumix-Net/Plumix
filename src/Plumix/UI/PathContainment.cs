@@ -4,7 +4,10 @@ namespace Plumix.UI;
 // SkPath::Iter with forceClose). Path.Contains answers exactly as the engine's Skia does, boundary points
 // included (PathSkiaParityTests).
 
-/// <summary>Skia's <c>SkPath::Iter</c>: segments with their start point, every contour closed by a line.</summary>
+/// <summary>
+/// Skia's <c>SkPath::Iter</c>: segments with their start point; every contour is closed by a line when
+/// <c>forceClose</c> is set, and closed contours get their closing line either way.
+/// </summary>
 internal struct ClosingPathIterator
 {
     private readonly IReadOnlyList<PathVerb> _verbs;
@@ -15,13 +18,15 @@ internal struct ClosingPathIterator
     private int _weight;
     private PathPoint _moveTo;
     private PathPoint _lastPoint;
+    private readonly bool _forceClose;
     private bool _needClose;
 
-    internal ClosingPathIterator(Path path)
+    internal ClosingPathIterator(Path path, bool forceClose = true)
     {
         _verbs = path.Verbs;
         _points = path.Points;
         _weights = path.ConicWeights;
+        _forceClose = forceClose;
     }
 
     /// <summary>The weight of the conic <see cref="Next"/> last returned.</summary>
@@ -75,7 +80,7 @@ internal struct ClosingPathIterator
                 _moveTo = _points[_point++];
                 points[0] = _moveTo;
                 _lastPoint = _moveTo;
-                _needClose = true;
+                _needClose = _forceClose;
                 return verb;
             case PathVerb.Line:
                 points[0] = _lastPoint;

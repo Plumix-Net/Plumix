@@ -29,7 +29,10 @@
     </ItemGroup>
 
     <ItemGroup>
-        <AvaloniaResource Include="Assets\**" />
+        <!-- Package assets, addressed as packages/<assembly>/<path>: the logical name is the path, which
+             PlatformAssetBundle (src/Plumix/Rendering/ImageProvider.cs) looks up before asking the host. -->
+        <EmbeddedResource Include="Assets\Fonts\MaterialIcons-Regular.otf" LogicalName="Assets/Fonts/MaterialIcons-Regular.otf" />
+        <None Include="Assets\Fonts\MaterialIcons_LICENSE.txt" Pack="true" PackagePath="licenses" />
         <EmbeddedResource Include="Assets\Shaders\ink_sparkle.sksl" />
         <None Update="Assets\Shaders\LICENSE" Pack="true" PackagePath="licenses\Flutter-Shaders-LICENSE.txt" />
     </ItemGroup>

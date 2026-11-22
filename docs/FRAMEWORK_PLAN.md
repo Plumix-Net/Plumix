@@ -10,7 +10,7 @@ Use this block as the fastest machine-readable status summary.
 framework_plan_version: 2
 last_updated: 2026-11-21
 north_star: "Flutter-like widget/rendering framework in C# with Avalonia as host infrastructure."
-current_phase: "RC preparation: Avalonia-free core (avalonia-free-core.md) is the open blocker; stages 0-1 done 2026-11-21."
+current_phase: "RC preparation: Avalonia-free core (avalonia-free-core.md) stages 0-3 done 2026-11-21; NImpeller prototype next."
 latest_release: "v1.0.0-preview.5 (2026-11-21); next: v1.0.0-rc.1, criteria in the Release Candidate section"
 flutter_pin: "3.47.0 (4cf24164269); material_ui 1.0.0; cupertino_ui 1.0.0 — see AGENTS.md"
 open_work_outside_controls: "docs/ai/BACKLOG.md (control-level gaps, host-level gaps; the 3.44->3.47 re-port table is down to subsystem-blocked rows)"
@@ -107,14 +107,12 @@ Blockers (all must close):
 - The `Plumix` assembly references no `Avalonia*`, `SkiaSharp` or `HarfBuzzSharp` member: drawing is
   typed command data played back by a host backend, and the Avalonia/Skia backend lives in
   `Plumix.Avalonia` (product doc `avalonia-free-core.md`, stages 0–3; `HostDependencyBudgetTests` at
-  zero). In progress: stages 0–1 done 2026-11-21 — Material and Cupertino at zero, Canvas brush/pen
-  overloads removed; stage 2a (typed `Canvas` entries, one Avalonia/Skia playback) and 2b-1 (managed
-  `Path` data and builders), 2b-2 (containment), 2b-3 (measurement) and 2b-4 (boolean operations, a
-  port of Skia's PathOps) and 2c (`Shader`/filters as data) done; stage 3 under way: 3a (incidental
-  Avalonia uses), 3b (UI thread and timers behind `IPlatformThread`), 3c (keyboard maps) and 3d
-  (images and assets behind `IImageBackend`/`IAssetSource`) and 3e (scene and picture rasterization
-  behind `IRenderBackend`) done, their Avalonia code in `Plumix.Avalonia`, core at 432; next is text.
-  Perspective transforms of paths are the one native path operation left.
+  zero). Met 2026-11-21 (stages 0–3): typed `Canvas` entries with one Avalonia/Skia playback; `Path`
+  fully managed (SkPath data, containment, measurement, perspective clip and a line-for-line port of
+  Skia's PathOps); `Shader`/filters as data; UI thread, images and assets, scene rasterization and text
+  behind internal `IPlatformThread`/`IImageBackend`/`IAssetSource`/`IRenderBackend`/`ITextBackend`;
+  `Plumix.csproj` has no package references. Frame-time comparison with `v1.0.0-preview.5` is still to
+  be measured.
 
 Release gates (on the commit that gets the tag):
 

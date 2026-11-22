@@ -208,16 +208,30 @@ public partial class Canvas
     // Skia's three-sigma blur pad, as the host's mask-filter rasterizer (PaintRasterizer.BlurExtent) pads.
     private static double BlurExtent(double sigma) => sigma > 0.0 ? Math.Ceiling(sigma * 3.0) : 0.0;
 
-    // Paragraph glyph outlines use the same Paint pipeline as framework-owned shapes.
-    internal void DrawTextGeometry(Avalonia.Media.Geometry geometry, Paint paint)
+    /// <summary>
+    /// Whether <see cref="DrawTextShape"/> draws <paramref name="paint"/> through a layer, and so reads the
+    /// shape's render bounds.
+    /// </summary>
+    internal static bool TextShapeNeedsLayer(Paint paint) =>
+        paint.ColorFilter is not null || paint.ImageFilter is not null || paint.InvertColors;
+
+    /// <summary>
+    /// Draws a paragraph glyph outline, background or decoration the text backend built (its geometry,
+    /// opaque to the framework) with the same Paint pipeline as framework-owned shapes.
+    /// </summary>
+    /// <param name="shape">The backend's shape, played back by the backend that built it.</param>
+    /// <param name="renderBounds">
+    /// The shape's bounds stroked with <paramref name="paint"/>'s stroke width; read only when
+    /// <see cref="TextShapeNeedsLayer"/> is true.
+    /// </param>
+    /// <param name="paint">The paint to fill the shape with.</param>
+    internal void DrawTextShape(object shape, Rect renderBounds, Paint paint)
     {
-        bool filter = paint.ColorFilter is not null || paint.ImageFilter is not null || paint.InvertColors;
+        bool filter = TextShapeNeedsLayer(paint);
         if (filter)
         {
-            Avalonia.Rect bounds = geometry.GetRenderBounds(
-                new Avalonia.Media.Pen(Avalonia.Media.Brushes.Black, paint.StrokeWidth));
             SaveLayer(
-                bounds.Inflate(BlurExtent(paint.MaskFilter?.Sigma ?? 0.0) + 1.0).ToPlumix(),
+                renderBounds.Inflate(BlurExtent(paint.MaskFilter?.Sigma ?? 0.0) + 1.0),
                 new Paint
                 {
                     ColorFilter = paint.ColorFilter,
@@ -229,7 +243,7 @@ public partial class Canvas
 
         Paint effective = filter ? new Paint(paint) { BlendMode = BlendMode.SourceOver } : paint;
         DrawShape("drawTextGeometry", call => call, CanvasShapeKind.BackendShape, effective,
-            op => op.BackendShape = geometry);
+            op => op.BackendShape = shape);
         if (filter)
         {
             Restore();

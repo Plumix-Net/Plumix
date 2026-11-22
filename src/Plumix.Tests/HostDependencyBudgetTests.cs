@@ -14,17 +14,16 @@ namespace Plumix.Tests;
 /// down (docs/product <c>avalonia-free-core.md</c>, stage 0).
 /// </summary>
 /// <remarks>
-/// The widget packages are moving off the Avalonia/Skia backend: drawing becomes data that a host
-/// backend plays back, and the Avalonia/Skia backend moves to <c>Plumix.Avalonia</c>. A count above its
-/// budget means new code reached for a backend type directly; a count below it means a migration
-/// step landed, and the budget is lowered to the new count in the same change. The target is zero
-/// for every package listed here.
+/// The widget packages are off the Avalonia/Skia backend: drawing is data that a host backend plays
+/// back, and the Avalonia/Skia backend lives in <c>Plumix.Avalonia</c>. Every budget reached zero in
+/// stage 3g, when the core dropped its Avalonia/SkiaSharp/HarfBuzzSharp package references; a count
+/// above zero means new code reached for a backend type directly.
 /// </remarks>
 public sealed class HostDependencyBudgetTests
 {
     private static readonly Dictionary<string, int> Budgets = new(StringComparer.Ordinal)
     {
-        ["Plumix"] = 432,
+        ["Plumix"] = 0,
         ["Plumix.Material"] = 0,
         ["Plumix.Cupertino"] = 0,
     };
@@ -52,6 +51,28 @@ public sealed class HostDependencyBudgetTests
         Assert.True(references.Count == budget,
             $"{assemblyName} references {references.Count} host types and members, under its budget of "
             + $"{budget}: lower the budget in {nameof(HostDependencyBudgetTests)} to {references.Count}.");
+    }
+
+    /// <summary>
+    /// The widget packages do not even reference a host assembly, so they load and run with no
+    /// Avalonia, SkiaSharp or HarfBuzzSharp present.
+    /// </summary>
+    [Theory]
+    [MemberData(nameof(Packages))]
+    public void PackageReferencesNoHostAssembly(string assemblyName)
+    {
+        Assembly assembly = AppDomain.CurrentDomain.GetAssemblies()
+            .Single(item => item.GetName().Name == assemblyName);
+        using FileStream stream = File.OpenRead(assembly.Location);
+        using var reader = new PEReader(stream);
+        MetadataReader metadata = reader.GetMetadataReader();
+
+        string[] hostReferences = metadata.AssemblyReferences
+            .Select(handle => metadata.GetString(metadata.GetAssemblyReference(handle).Name))
+            .Where(HostBinaryCompatibilityTests.IsHostAssembly)
+            .ToArray();
+        Assert.True(hostReferences.Length == 0,
+            $"{assemblyName} references host assemblies: {string.Join(", ", hostReferences)}.");
     }
 
     /// <summary>

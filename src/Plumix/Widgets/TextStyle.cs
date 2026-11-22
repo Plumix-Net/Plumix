@@ -12,11 +12,10 @@ namespace Plumix.Widgets;
 
 /// An immutable style describing how to format and paint text.
 ///
-/// Dart's `fontFamily` is a `String` and `fontWeight`/`fontStyle`/`color` are dart:ui types; Plumix
-/// uses Avalonia's <see cref="Avalonia.Media.FontFamily"/>, <see cref="Avalonia.Media.FontWeight"/>,
-/// <see cref="Avalonia.Media.FontStyle"/> and <see cref="Avalonia.Media.Color"/>, the same way
-/// <see cref="StrutStyle"/> does, and applies the `packages/` prefix to the family name. A
-/// <see cref="Avalonia.Media.FontWeight"/> may hold any value from 1 to 1000, as Dart's does.
+/// As in Dart, `fontFamily` is a family name and `fontWeight`/`fontStyle`/`color` are the dart:ui types
+/// (<see cref="Plumix.UI.FontWeight"/>, <see cref="Plumix.UI.FontStyle"/>, <see cref="Plumix.UI.Color"/>),
+/// the same way <see cref="StrutStyle"/> types them, and the `packages/` prefix is applied to the family
+/// name. A <see cref="Plumix.UI.FontWeight"/> may hold any value from 1 to 1000, as Dart's does.
 public class TextStyle : Diagnosticable, IEquatable<TextStyle>
 {
     // Dart's `_kDefaultDebugLabel`.

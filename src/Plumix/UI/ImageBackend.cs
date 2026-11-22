@@ -35,6 +35,9 @@ internal static class ImageBackend
 
     internal static IAssetSource Assets { get; set; } = Missing.Instance;
 
+    /// <summary>Whether a host installed its asset source.</summary>
+    internal static bool HasHostAssets => !ReferenceEquals(Assets, Missing.Instance);
+
     private sealed class Missing : IImageBackend, IAssetSource
     {
         internal static readonly Missing Instance = new();

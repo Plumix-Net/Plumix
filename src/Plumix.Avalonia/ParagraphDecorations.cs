@@ -5,8 +5,8 @@ using Plumix.Painting;
 
 namespace Plumix.UI;
 
-// C#-only infrastructure: SkParagraph Decorations.cpp at Flutter's pinned Skia revision
-// 8df24be66531469e576a806749a0202ae26b8d08. Flutter uses the default Through mode (no skip-ink).
+// C#-only host infrastructure (AvaloniaParagraph's decorations): SkParagraph Decorations.cpp at Flutter's pinned Skia
+// revision 8df24be66531469e576a806749a0202ae26b8d08. Flutter uses the default Through mode (no skip-ink).
 internal static class ParagraphDecorations
 {
     internal static void Paint(Canvas canvas, ShapedTextRun run, ResolvedTextStyle style)

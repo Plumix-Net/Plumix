@@ -9,7 +9,7 @@ namespace Plumix.Rendering;
 /// <remarks>
 /// Flutter's <c>RenderBox</c>. Two debug mechanisms take a different shape here (see
 /// <c>docs/ai/DIVERGENCES.md</c>): Dart's <c>_DebugSize</c> subclass of <c>Size</c> becomes a flag
-/// captured next to the size, because Avalonia's <see cref="Size"/> is a sealed value type.
+/// captured next to the size, because <see cref="Size"/> is a value type.
 /// </remarks>
 public abstract class RenderBox : RenderObject
 {
@@ -459,11 +459,11 @@ public abstract class RenderBox : RenderObject
         throw new FlutterError(information);
     }
 
-    /// <summary>Claims ownership of the given <see cref="Avalonia.Size"/>.</summary>
+    /// <summary>Claims ownership of the given <see cref="Size"/>.</summary>
     /// <remarks>
     /// Flutter's <c>RenderBox.debugAdoptSize</c>. In Dart a size read from a child carries its owner, so
     /// adopting it can report a size taken from a non-child or from a child laid out without
-    /// <c>parentUsesSize</c>. Avalonia's <see cref="Avalonia.Size"/> is a sealed value type that carries
+    /// <c>parentUsesSize</c>. <see cref="Size"/> is a value type that carries
     /// no owner, so those two checks have no counterpart and this returns <paramref name="value"/>
     /// unchanged; the parent-access rule is still enforced when the child's size is read.
     /// </remarks>

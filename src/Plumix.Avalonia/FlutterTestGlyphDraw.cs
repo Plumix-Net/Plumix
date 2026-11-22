@@ -4,64 +4,23 @@ using Avalonia.Media.Immutable;
 using Avalonia.Rendering.SceneGraph;
 using Avalonia.Skia;
 using SkiaSharp;
+using static Plumix.UI.FlutterTestText;
 
 namespace Plumix.UI;
 
-// C#-only backend bridge: draws HeadlessParagraph lines with Skia and the engine's own `FlutterTest`
-// font (`kFlutterTestFont` in flutter/runtime/test_font_data.cc, embedded as Assets/FlutterTest.ttf), so
-// glyph positioning (quarter-pixel x, whole-pixel baselines) and coverage match what flutter_tester paints.
-// The operations follow SkParagraph's `TextLine::paint` (modules/skparagraph/src/TextLine.cpp): backgrounds,
+// C#-only host backend bridge: draws HeadlessParagraph lines (the operations of a FlutterTestTextOp,
+// src/Plumix/UI/FlutterTestText.cs) with Skia and the engine's own `FlutterTest` font (`kFlutterTestFont` in
+// flutter/runtime/test_font_data.cc, embedded in the core assembly as Assets/FlutterTest.ttf), so glyph
+// positioning (quarter-pixel x, whole-pixel baselines) and coverage match what flutter_tester paints. The
+// operations follow SkParagraph's `TextLine::paint` (modules/skparagraph/src/TextLine.cpp): backgrounds,
 // shadows, glyphs, then decorations (`Decorations.cpp`), each drawn the way Flutter's
-// `DisplayListParagraphPainter` (txt/src/skia/paragraph_skia.cc) hands them to Skia.
-internal sealed class FlutterTestGlyphDraw(IReadOnlyList<FlutterTestGlyphDraw.Operation> operations, Rect bounds)
+// `DisplayListParagraphPainter` (txt/src/skia/paragraph_skia.cc) hands them to Skia. CanvasPlayback plays
+// the op: a FlutterTestGlyphDraw per glyph batch, and FlutterTestGlyph geometry for shader-painted glyphs.
+internal sealed class FlutterTestGlyphDraw(IReadOnlyList<Operation> operations, Rect bounds)
     : ICustomDrawOperation
 {
     // Decorations.cpp: kDoubleDecorationSpacing.
     private const float DoubleDecorationSpacing = 3.0f;
-
-    /// <summary>
-    /// One code point at its pen position on the baseline. <paramref name="FakeBold"/> and
-    /// <paramref name="FakeItalic"/> are SkParagraph's synthetic styles for a typeface (here the regular,
-    /// upright `FlutterTest`) that lacks the requested weight or slant.
-    /// </summary>
-    internal readonly record struct Glyph(
-        int CodePoint,
-        double X,
-        double Baseline,
-        double FontSize,
-        Color Color,
-        bool FakeBold = false,
-        bool FakeItalic = false);
-
-    /// <summary>One paint step of a paragraph line.</summary>
-    internal union Operation(BackgroundOperation, GlyphsOperation, DecorationOperation);
-
-    /// <summary>`TextLine::paintBackground`: the run's clip rectangle filled with the background paint.</summary>
-    internal sealed record BackgroundOperation(Rect Rect, Color Color);
-
-    /// <summary>
-    /// Glyph runs (`TextBlobRecord::paint`), or a text shadow (`paintShadow`) when <see cref="Shadow"/> is set:
-    /// the same glyphs offset, recolored and blurred with a normal blur mask filter of the shadow's sigma.
-    /// </summary>
-    internal sealed record GlyphsOperation(IReadOnlyList<Glyph> Glyphs, TextShadowDraw? Shadow = null);
-
-    /// <summary>A text shadow's offset, color and blur sigma.</summary>
-    internal readonly record struct TextShadowDraw(Offset Offset, Color Color, double BlurSigma);
-
-    /// <summary>
-    /// `Decorations::paint` for one style run. <see cref="Clip"/> is the run's clip rectangle (`ClipContext.clip`
-    /// in paragraph coordinates); <see cref="CorrectAscent"/> and <see cref="RawAscent"/> are the run's
-    /// height-adjusted and font ascents as positive distances above the baseline.
-    /// </summary>
-    internal sealed record DecorationOperation(
-        Rect Clip,
-        double CorrectAscent,
-        double RawAscent,
-        double FontSize,
-        TextDecoration Decoration,
-        TextDecorationStyle Style,
-        double ThicknessMultiplier,
-        Color Color);
 
     private static readonly Lazy<SKTypeface?> Typeface = new(LoadTypeface);
 
@@ -332,8 +291,36 @@ internal sealed class FlutterTestGlyphDraw(IReadOnlyList<FlutterTestGlyphDraw.Op
 
     private static SKTypeface? LoadTypeface()
     {
-        using Stream? stream = typeof(FlutterTestGlyphDraw).Assembly
+        using Stream? stream = typeof(FlutterTestText).Assembly
             .GetManifestResourceStream("Plumix.UI.Assets.FlutterTest.ttf");
         return stream is null ? null : SKTypeface.FromStream(stream);
+    }
+
+    /// <summary>
+    /// A `FlutterTest` glyph's outline as geometry: the outlines in font units (1024 per em, ascent 768,
+    /// descent 256) scaled to <paramref name="fontSize"/>.
+    /// </summary>
+    internal static Geometry FlutterTestGlyph(GlyphShape shape, double x, double width, double baseline,
+        double fontSize)
+    {
+        double ascent = fontSize * AscentRatio;
+        double descent = fontSize * DescentRatio;
+        switch (shape)
+        {
+            case GlyphShape.DescentOnly:
+                return new RectangleGeometry(Rect.FromLTWH(x, baseline, Math.Max(width, 0.0), descent).ToAvalonia());
+            case GlyphShape.AscentOnly:
+                return new RectangleGeometry(
+                    Rect.FromLTWH(x, baseline - ascent, Math.Max(width, 0.0), ascent).ToAvalonia());
+            case GlyphShape.NotDef:
+                double unit = fontSize / 1024.0;
+                var outer = Rect.FromLTWH(x + (128 * unit), baseline - (768 * unit), 768 * unit, 768 * unit);
+                var inner = Rect.FromLTWH(x + (256 * unit), baseline - (640 * unit), 512 * unit, 512 * unit);
+                return new CombinedGeometry(GeometryCombineMode.Exclude,
+                    new RectangleGeometry(outer.ToAvalonia()), new RectangleGeometry(inner.ToAvalonia()));
+            default:
+                return new RectangleGeometry(
+                    Rect.FromLTWH(x, baseline - ascent, Math.Max(width, 0.0), ascent + descent).ToAvalonia());
+        }
     }
 }

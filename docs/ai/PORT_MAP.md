@@ -78,7 +78,7 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `engine/src/flutter/lib/ui/compositing.dart` | `src/Plumix/UI/Compositing.cs` | `src/Plumix.Tests/CompositingLayerTests.cs` | `dart_sample/lib/demos/general/scene_compositing_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/SceneCompositingDemoPage.cs` |
 | `engine/src/flutter/lib/ui/geometry.dart` | `src/Plumix/Rendering/Decoration.cs`<br>`src/Plumix/UI/Geometry.cs`<br>`src/Plumix/UI/RRect.cs`<br>`src/Plumix/UI/RSTransform.cs`<br>`src/Plumix/UI/RSuperellipse.cs`<br>`src/Plumix/UI/RoundRectGeometry.cs`<br>`src/Plumix/UI/SuperellipseGeometry.cs` | `src/Plumix.Tests/AlignmentGeometryTests.cs`<br>`src/Plumix.Tests/BoxDecorationDartParityTests.cs`<br>`src/Plumix.Tests/DecorationImageDartParityTests.cs`<br>`src/Plumix.Tests/ImageProviderDecorationTests.cs`<br>`src/Plumix.Tests/InputDecorationDartParityTests.cs`<br>`src/Plumix.Tests/MaterialScaffoldGeometryTests.cs`<br>`src/Plumix.Tests/RSuperellipseGeometryTests.cs`<br>`src/Plumix.Tests/ShapeDecorationDartParityTests.cs`<br>`src/Plumix.Tests/SliverGeometryTests.cs`<br>`src/Plumix.Tests/UiGeometryDartParityTests.cs` | — |
 | `engine/src/flutter/lib/ui/key.dart` | `src/Plumix/UI/Key.cs` | `src/Plumix.Tests/FocusOnKeyDartParityTests.cs`<br>`src/Plumix.Tests/GlobalKeysDuplicatedDartParityTests.cs`<br>`src/Plumix.Tests/GlobalKeysMovingDartParityTests.cs`<br>`src/Plumix.Tests/HardwareKeyboardDartParityTests.cs`<br>`src/Plumix.Tests/HardwareKeyboardTests.cs`<br>`src/Plumix.Tests/HostKeyEventMessageTests.cs`<br>`src/Plumix.Tests/KeyDartParityTests.cs`<br>`src/Plumix.Tests/KeyParityTests.cs`<br>`src/Plumix.Tests/KeyboardListenerTests.cs`<br>`src/Plumix.Tests/KeyboardMapsTests.cs`<br>`src/Plumix.Tests/LayoutBuilderAndGlobalKeysDartParityTests.cs`<br>`src/Plumix.Tests/RawKeyEventDataAppleAndroidDartParityTests.cs`<br>`src/Plumix.Tests/RawKeyEventDataDesktopWebDartParityTests.cs`<br>`src/Plumix.Tests/RawKeyboardDartParityTests.cs` | `dart_sample/lib/demos/general/keyboard_listener_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/KeyboardListenerDemoPage.cs` |
-| `engine/src/flutter/lib/ui/painting.dart` | `src/Plumix/UI/GradientShader.cs`<br>`src/Plumix/UI/Path.cs`<br>`src/Plumix/UI/PathMetrics.cs`<br>`src/Plumix/UI/RasterImage.cs`<br>`src/Plumix/UI/Shader.cs`<br>`src/Plumix/UI/ShadowDraw.cs`<br>`src/Plumix/UI/ShadowTessellator.cs` | `src/Plumix.Tests/FragmentShaderBackendTests.cs`<br>`src/Plumix.Tests/GradientShaderTests.cs`<br>`src/Plumix.Tests/PathDartParityTests.cs`<br>`src/Plumix.Tests/PathSkiaParityTests.cs` | — |
+| `engine/src/flutter/lib/ui/painting.dart` | `src/Plumix.Avalonia/ShadowDraw.cs`<br>`src/Plumix.Avalonia/ShadowTessellator.cs`<br>`src/Plumix/UI/GradientShader.cs`<br>`src/Plumix/UI/Path.cs`<br>`src/Plumix/UI/PathMetrics.cs`<br>`src/Plumix/UI/RasterImage.cs`<br>`src/Plumix/UI/Shader.cs` | `src/Plumix.Tests/FragmentShaderBackendTests.cs`<br>`src/Plumix.Tests/GradientShaderTests.cs`<br>`src/Plumix.Tests/PathDartParityTests.cs`<br>`src/Plumix.Tests/PathSkiaParityTests.cs` | — |
 | `engine/src/flutter/lib/ui/platform_dispatcher.dart` | `src/Plumix/UI/ViewPadding.cs` | — | — |
 | `engine/src/flutter/lib/ui/text.dart` | `src/Plumix/UI/FontWeight.cs` | — | — |
 | `engine/src/flutter/lib/ui/window.dart` | `src/Plumix/UI/AccessibilityFeatures.cs`<br>`src/Plumix/UI/Brightness.cs` | `src/Plumix.Tests/AccessibilityFeaturesDartParityTests.cs` | — |
@@ -639,7 +639,6 @@ Either C#-only infrastructure (fine — say so in a header comment) or an undocu
 - `src/Plumix/Accessibility/WebSemantics.cs`
 - `src/Plumix/AndroidLifecycleChannel.cs`
 - `src/Plumix/AndroidRestorationChannel.cs`
-- `src/Plumix/AvaloniaDispatcherClock.cs`
 - `src/Plumix/DesktopLocales.cs`
 - `src/Plumix/Developer/DeveloperService.cs`
 - `src/Plumix/Developer/Timeline.cs`
@@ -662,58 +661,45 @@ Either C#-only infrastructure (fine — say so in a header comment) or an undocu
 - `src/Plumix/FrameworkSynchronizationContext.cs`
 - `src/Plumix/Gestures/GestureTimer.cs`
 - `src/Plumix/GlobalUsings.cs`
-- `src/Plumix/HostKeyEventMessage.cs`
-- `src/Plumix/HostKeyboardMap.cs`
 - `src/Plumix/HostPointerPacketEncoder.cs`
-- `src/Plumix/HostSystemFonts.cs`
 - `src/Plumix/HotReload.cs`
 - `src/Plumix/IOSRestorationPlugin.cs`
 - `src/Plumix/Painting/ColorUtilities.cs`
 - `src/Plumix/PipelineOwner.Headless.cs`
+- `src/Plumix/PlatformThread.cs`
 - `src/Plumix/RenderAnimatedBox.cs`
 - `src/Plumix/RenderButton.cs`
 - `src/Plumix/Rendering/CanvasPaintingContext.cs`
 - `src/Plumix/Rendering/ColorFilter.cs`
-- `src/Plumix/Rendering/FilterLayerRasterizer.SaveLayer.cs`
-- `src/Plumix/Rendering/FilterLayerRasterizer.cs`
 - `src/Plumix/Rendering/ImageFilter.cs`
 - `src/Plumix/Rendering/ShapeBorderGeometry.cs`
 - `src/Plumix/Timer.cs`
 - `src/Plumix/TrackpadPanZoomSynthesizer.cs`
-- `src/Plumix/UI/ApngImageCodec.cs`
 - `src/Plumix/UI/AppLifecycle.cs`
-- `src/Plumix/UI/AvaloniaConversions.cs`
-- `src/Plumix/UI/AvaloniaFonts.cs`
-- `src/Plumix/UI/AvaloniaParagraph.cs`
 - `src/Plumix/UI/BrowserDetection.cs`
 - `src/Plumix/UI/Canvas.Draw.cs`
 - `src/Plumix/UI/Canvas.cs`
 - `src/Plumix/UI/CanvasOps.cs`
-- `src/Plumix/UI/CanvasPlayback.cs`
 - `src/Plumix/UI/Clip.cs`
 - `src/Plumix/UI/Color.cs`
 - `src/Plumix/UI/Display.cs`
-- `src/Plumix/UI/FilteredImages.cs`
+- `src/Plumix/UI/EmbeddedAssets.cs`
 - `src/Plumix/UI/FlowLayers.cs`
-- `src/Plumix/UI/FlutterTestGlyphDraw.cs`
+- `src/Plumix/UI/FlutterTestText.cs`
 - `src/Plumix/UI/FontFeature.cs`
-- `src/Plumix/UI/FrameStopwatch.cs`
 - `src/Plumix/UI/FrameTiming.cs`
 - `src/Plumix/UI/FrameTimingsRecorder.cs`
-- `src/Plumix/UI/HairlineDraw.cs`
 - `src/Plumix/UI/HeadlessParagraph.cs`
 - `src/Plumix/UI/HitTestRequest.cs`
 - `src/Plumix/UI/HostTextInputPlugin.cs`
+- `src/Plumix/UI/ImageBackend.cs`
 - `src/Plumix/UI/ImageCodec.cs`
 - `src/Plumix/UI/Matrix4.cs`
-- `src/Plumix/UI/NativeShader.cs`
 - `src/Plumix/UI/Paint.cs`
-- `src/Plumix/UI/PaintRasterizer.cs`
 - `src/Plumix/UI/Paragraph.cs`
 - `src/Plumix/UI/ParagraphBuilder.cs`
-- `src/Plumix/UI/ParagraphDecorations.cs`
-- `src/Plumix/UI/ParagraphShaping.cs`
 - `src/Plumix/UI/PathContainment.cs`
+- `src/Plumix/UI/PathEdgeClipper.cs`
 - `src/Plumix/UI/PathGeometry.cs`
 - `src/Plumix/UI/PathMatrix.cs`
 - `src/Plumix/UI/PathOps/SkAddIntersections.cs`
@@ -755,23 +741,67 @@ Either C#-only infrastructure (fine — say so in a header comment) or an undocu
 - `src/Plumix/UI/PathOps/SkRect.cs`
 - `src/Plumix/UI/PathOps/SkReduceOrder.cs`
 - `src/Plumix/UI/PathOps/SkTSort.cs`
+- `src/Plumix/UI/PathPerspective.cs`
 - `src/Plumix/UI/PlatformDispatcher.cs`
 - `src/Plumix/UI/PointerData.cs`
+- `src/Plumix/UI/RenderBackend.cs`
 - `src/Plumix/UI/RuntimeFragmentShader.cs`
-- `src/Plumix/UI/ShaderDrawing.cs`
-- `src/Plumix/UI/SkiaImageCodec.cs`
-- `src/Plumix/UI/SkiaPathInterop.cs`
 - `src/Plumix/UI/Text.cs`
+- `src/Plumix/UI/TextBackend.cs`
 - `src/Plumix/UI/TextBox.cs`
 - `src/Plumix/UI/TextInputModel.cs`
 - `src/Plumix/UI/TextSegmentation.cs`
 - `src/Plumix/UI/TextureRegistry.cs`
 - `src/Plumix/UI/UnicodeText.cs`
-- `src/Plumix/UI/VariableFont.cs`
 - `src/Plumix/UI/ViewConstraints.cs`
 - `src/Plumix/UI/ViewFocus.cs`
 - `src/Plumix/Widgets/FlutterView.cs`
 - `src/Plumix/Widgets/TextClipboard.cs`
+- `src/Plumix.Avalonia/Accessibility/SemanticsAutomationPeers.cs`
+- `src/Plumix.Avalonia/AndroidActivityDelegate.cs`
+- `src/Plumix.Avalonia/ApngImageCodec.cs`
+- `src/Plumix.Avalonia/AvaloniaAssetSource.cs`
+- `src/Plumix.Avalonia/AvaloniaBackend.cs`
+- `src/Plumix.Avalonia/AvaloniaConversions.cs`
+- `src/Plumix.Avalonia/AvaloniaDispatcherClock.cs`
+- `src/Plumix.Avalonia/AvaloniaFonts.cs`
+- `src/Plumix.Avalonia/AvaloniaImageBackend.cs`
+- `src/Plumix.Avalonia/AvaloniaImages.cs`
+- `src/Plumix.Avalonia/AvaloniaInterop.cs`
+- `src/Plumix.Avalonia/AvaloniaParagraph.cs`
+- `src/Plumix.Avalonia/AvaloniaPlatformThread.cs`
+- `src/Plumix.Avalonia/AvaloniaRenderBackend.cs`
+- `src/Plumix.Avalonia/AvaloniaTextBackend.cs`
+- `src/Plumix.Avalonia/AvaloniaWindowing.cs`
+- `src/Plumix.Avalonia/CanvasPlayback.cs`
+- `src/Plumix.Avalonia/DesktopPlatformPlugin.cs`
+- `src/Plumix.Avalonia/FilterLayerRasterizer.SaveLayer.cs`
+- `src/Plumix.Avalonia/FilterLayerRasterizer.cs`
+- `src/Plumix.Avalonia/FilteredImages.cs`
+- `src/Plumix.Avalonia/FlowLayerPainter.cs`
+- `src/Plumix.Avalonia/FlutterHost.PlatformPlugin.cs`
+- `src/Plumix.Avalonia/FlutterHost.cs`
+- `src/Plumix.Avalonia/FlutterTestGlyphDraw.cs`
+- `src/Plumix.Avalonia/FrameStopwatch.cs`
+- `src/Plumix.Avalonia/GlobalUsings.cs`
+- `src/Plumix.Avalonia/HairlineDraw.cs`
+- `src/Plumix.Avalonia/HostKeyEventMessage.cs`
+- `src/Plumix.Avalonia/HostKeyboardMap.cs`
+- `src/Plumix.Avalonia/HostSystemFonts.cs`
+- `src/Plumix.Avalonia/Matrix4Conversions.cs`
+- `src/Plumix.Avalonia/NativeShader.cs`
+- `src/Plumix.Avalonia/PaintRasterizer.cs`
+- `src/Plumix.Avalonia/ParagraphDecorations.cs`
+- `src/Plumix.Avalonia/ParagraphShaping.cs`
+- `src/Plumix.Avalonia/PlumixApplication.cs`
+- `src/Plumix.Avalonia/PlumixOptions.cs`
+- `src/Plumix.Avalonia/SceneRasterizer.cs`
+- `src/Plumix.Avalonia/ShaderDrawing.cs`
+- `src/Plumix.Avalonia/SkiaImageCodec.cs`
+- `src/Plumix.Avalonia/SkiaPathInterop.cs`
+- `src/Plumix.Avalonia/SkiaShaders.cs`
+- `src/Plumix.Avalonia/VariableFont.cs`
+- `src/Plumix.Avalonia/WidgetHost.cs`
 - `src/Plumix.Cupertino/GlobalUsings.cs`
 - `src/Plumix.Material/GlobalUsings.cs`
 - `src/Plumix.Material/MaterialThemeLerp.cs`
@@ -782,7 +812,7 @@ Either C#-only infrastructure (fine — say so in a header comment) or an undocu
 
 - Flutter files mapped: 604
 - C# files carrying a marker: 814
-- C# files without a marker: 144
+- C# files without a marker: 174
 - Markers not resolvable in the pinned checkout: 0
 - C# files with a qualified (non-strict) marker: 0
 

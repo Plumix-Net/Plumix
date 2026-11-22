@@ -5,8 +5,8 @@ using RunGlyph = Avalonia.Media.TextFormatting.GlyphInfo;
 
 namespace Plumix.UI;
 
-// C#-only infrastructure: Avalonia resolves script/bidi/fallback runs first, then each resolved run
-// is shaped with its own spacing, features and variable instance before wrapping. Vertical paragraph
+// C#-only host infrastructure (AvaloniaParagraph's shaper): Avalonia resolves script/bidi/fallback runs first, then
+// each resolved run is shaped with its own spacing, features and variable instance before wrapping. Vertical paragraph
 // metrics belong to AvaloniaParagraph, not to the host formatter's paragraph-wide line height.
 internal sealed class ParagraphShaping : ITextSource, IDisposable
 {

@@ -4,8 +4,7 @@ using SkiaSharp;
 namespace Plumix.UI;
 
 // C#-only infrastructure: the bridge between the framework's Path (SkPath's data in managed code) and a
-// native SKPath. Drawing backends get a native copy here; boolean operations and perspective transforms
-// still run on it until they are ported (docs/product avalonia-free-core.md, stage 2b).
+// native SKPath. Drawing backends get a native copy here; every path operation runs in managed code.
 
 /// <summary>Converts paths to and from native Skia paths.</summary>
 internal static class SkiaPathInterop
@@ -107,66 +106,10 @@ internal static class SkiaPathInterop
         return native;
     }
 
-    /// <summary>Reads a native path back into a framework path, and disposes it.</summary>
-    internal static Path FromNative(SKPath native)
-    {
-        using (native)
-        {
-            PathFillType fillType = native.FillType == SKPathFillType.EvenOdd
-                ? PathFillType.EvenOdd
-                : PathFillType.NonZero;
-            return Path.FromSegments(fillType, ReadSegments(native));
-        }
-    }
-
-    private static List<(PathVerb Verb, PathPoint[] Points, float Weight)> ReadSegments(SKPath native)
-    {
-        var segments = new List<(PathVerb, PathPoint[], float)>();
-        using SKPath.RawIterator iterator = native.CreateRawIterator();
-        var points = new SKPoint[4];
-        SKPathVerb verb;
-        while ((verb = iterator.Next(points)) != SKPathVerb.Done)
-        {
-            switch (verb)
-            {
-                case SKPathVerb.Move:
-                    segments.Add((PathVerb.Move, [Point(points[0])], 0.0f));
-                    break;
-                case SKPathVerb.Line:
-                    segments.Add((PathVerb.Line, [Point(points[1])], 0.0f));
-                    break;
-                case SKPathVerb.Quad:
-                    segments.Add((PathVerb.Quad, [Point(points[1]), Point(points[2])], 0.0f));
-                    break;
-                case SKPathVerb.Conic:
-                    segments.Add((PathVerb.Conic, [Point(points[1]), Point(points[2])], iterator.ConicWeight()));
-                    break;
-                case SKPathVerb.Cubic:
-                    segments.Add((PathVerb.Cubic, [Point(points[1]), Point(points[2]), Point(points[3])], 0.0f));
-                    break;
-                case SKPathVerb.Close:
-                    segments.Add((PathVerb.Close, [], 0.0f));
-                    break;
-            }
-        }
-
-        return segments;
-    }
-
-    // SkPath::transform with perspective (curves promoted, perspective-clipped).
-    internal static Path TransformWithPerspective(Path path, PathMatrix matrix)
-    {
-        var result = new SKPath();
-        ToNative(path).Transform(ToNative(matrix), result);
-        return FromNative(result);
-    }
-
     private static SKMatrix ToNative(PathMatrix matrix) => new(
         matrix[0], matrix[1], matrix[2],
         matrix[3], matrix[4], matrix[5],
         matrix[6], matrix[7], matrix[8]);
-
-    private static PathPoint Point(SKPoint point) => new(point.X, point.Y);
 
     private static Offset FromNative(SKPoint point) => new(point.X, point.Y);
 

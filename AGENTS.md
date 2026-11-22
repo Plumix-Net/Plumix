@@ -19,7 +19,8 @@ normative may live only there.
 - Build a Flutter-like framework in C# where `Widget`/`Element`/`RenderObject` concepts stay close to Flutter.
 - Keep render object behavior and APIs close enough to Flutter to simplify rewriting controls from Dart to C#.
 - Reuse Avalonia mainly as platform infrastructure: windowing/app host, lifecycle, input plumbing, and drawing backend abstractions.
-- Keep Avalonia types out of the public API of `Plumix`, `Plumix.Material` and `Plumix.Cupertino`; host integration goes in `Plumix.Avalonia`.
+- Keep Avalonia, SkiaSharp and HarfBuzzSharp out of `Plumix`, `Plumix.Material` and `Plumix.Cupertino` entirely (not
+  even a package reference); host integration and the drawing/text backend go in `Plumix.Avalonia`.
 - Keep layout/paint logic in the new framework, not in Avalonia control implementations (except thin host adapters).
 
 ## Expected End State (Definition of Done)
@@ -32,10 +33,13 @@ normative may live only there.
 
 ## Repository Map
 
-- `src/Plumix`: core framework (`Foundation`, `Widgets`, `Rendering`, `UI`, scheduler/ticker pipeline). Its public API
-  names no Avalonia type (`PublicApiAvaloniaFreeTests`); Avalonia stays an internal backend.
+- `src/Plumix`: core framework (`Foundation`, `Widgets`, `Rendering`, `UI`, scheduler/ticker pipeline). It references
+  no Avalonia/SkiaSharp/HarfBuzzSharp assembly (`HostDependencyBudgetTests`); drawing, text, images and
+  the UI thread go through internal seams (`RenderBackend`, `TextBackend`, `ImageBackend`, `PlatformThread`).
 - `src/Plumix.Avalonia`: the Avalonia host package (`PlumixHost`, `PlumixApplication`, windowing, automation peers,
-  `Plumix.Hosting.AvaloniaInterop` conversions); types keep the `Plumix` namespace.
+  `Plumix.Hosting.AvaloniaInterop` conversions) and the Avalonia/Skia backend behind the core's seams
+  (`AvaloniaBackend` installs it: canvas playback, scene rasterizer, paragraphs and fonts, codecs); types keep the
+  `Plumix` namespace.
 - `src/Sample/Plumix.Sample`: shared sample app/widgets.
 - `dart_sample`: reference sample app on real Flutter (Dart), kept in lockstep with `src/Sample/Plumix.Sample`.
 - `src/Sample/Plumix.Desktop`: desktop entry point.

@@ -25,11 +25,12 @@ Allowed dependency direction (mirrors Flutter's `widgets <- cupertino <- materia
 
 - No public or protected member of those three packages names a type from an `Avalonia*` assembly
   (`PublicApiAvaloniaFreeTests`). Backend types stay `internal`; host-facing API goes in `Plumix.Avalonia`.
-- The number of `Avalonia*`/`SkiaSharp`/`HarfBuzzSharp` types and members each of those packages references
-  only goes down (`HostDependencyBudgetTests`; zero for `Plumix.Material` and `Plumix.Cupertino`). Draw through
-  `Paint`/`Path`, never a backend brush, pen or geometry; lower the budget when a change removes references.
-- Host services the framework needs (UI thread and timers, image codecs and assets, scene rasterization;
-  text next) are internal interfaces in `Plumix` with a static `Current` the host installs;
+- None of those three packages references an `Avalonia*`, `SkiaSharp` or `HarfBuzzSharp` assembly or package
+  (`HostDependencyBudgetTests`, every budget zero). Draw through `Paint`/`Path`, never a backend brush, pen or
+  geometry; backend code goes in `Plumix.Avalonia`. Package assets are `EmbeddedResource` items whose logical
+  name is the asset path, so `packages/<assembly>/<path>` resolves without a host.
+- Host services the framework needs (UI thread and timers, image codecs and assets, scene rasterization,
+  text and fonts) are internal interfaces in `Plumix` with a static `Current` the host installs;
   `Plumix.Avalonia`'s `AvaloniaBackend` registers the Avalonia implementations from a module initializer,
   and the test assembly calls it first.
 

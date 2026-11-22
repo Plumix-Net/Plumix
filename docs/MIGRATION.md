@@ -4,6 +4,17 @@ Updated 2026-11-21. Before 1.0 the public API of `Plumix`, `Plumix.Material` and
 naming Avalonia types, so the widget API can outlive the Avalonia host. Hosting moved to a new package,
 `Plumix.Avalonia`. Most widget code compiles unchanged; this note lists what does not.
 
+## Since 1.0.0-preview.5 (unreleased)
+
+- `Plumix` no longer brings Avalonia, SkiaSharp or HarfBuzzSharp with it; `Plumix.Avalonia` does. Applications
+  already reference `Plumix.Avalonia` and are unaffected. A library that references only `Plumix` and also uses
+  Avalonia directly (calls `Dispatcher.UIThread`, say) adds `Plumix.Avalonia` or the Avalonia packages it uses;
+  framework code can marshal to the UI thread with `EventLoop.IsFrameworkThread`/`EventLoop.ScheduleMicrotask`.
+- Such a library's `AvaloniaResource` items are no longer compiled, since Avalonia's build targets come with
+  Avalonia. Embed package assets as `EmbeddedResource` with `LogicalName` equal to the asset path
+  (`Assets/Fonts/MyIcons.ttf`); `packages/<assembly>/<path>` then resolves through `PlatformAssetBundle` without a
+  host, as the Material and Cupertino icon fonts do.
+
 ## Packages
 
 - Add `Plumix.Avalonia` to the application project (desktop, browser, iOS). It holds `PlumixApplication`,

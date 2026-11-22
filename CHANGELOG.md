@@ -8,6 +8,11 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased]
+- Breaking: `Plumix` no longer depends on Avalonia, SkiaSharp or HarfBuzzSharp; they come with `Plumix.Avalonia`.
+- Material/Cupertino icon fonts are plain embedded resources; `PlatformAssetBundle` resolves them without a host.
+- `Plumix.Elmish` marshals background dispatches through `EventLoop` instead of Avalonia's dispatcher.
+- `Path.Transform` with perspective ports Skia's perspective clip (SkPath.cpp, SkEdgeClipper) to managed code.
+- Text (paragraphs, fonts, HarfBuzz shaping, system fonts) moves to `Plumix.Avalonia` behind an internal `ITextBackend`.
 - Scene and picture rasterization move to `Plumix.Avalonia`; core flow layers are data, `IRenderBackend` rasterizes.
 - `Paragraph` hands the canvas a typed draw entry (`DrawPictureOp` for laid-out text) instead of an Avalonia action.
 - `RasterImage` is an opaque backend image; decoding, `toByteData` and assets go through host-installed seams.

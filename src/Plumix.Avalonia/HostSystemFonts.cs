@@ -1,4 +1,4 @@
-// C#-only infrastructure: the Avalonia host's analogue of the engine's system-font notification.
+// C#-only host infrastructure: the Avalonia host's analogue of the engine's system-font notification.
 // Flutter's engine sends `{'type': 'fontsChange'}` on the `flutter/system` channel from
 // `Shell::ReloadSystemFonts` (shell/common/shell.cc); on Windows the runner calls
 // `FlutterEngine::ReloadSystemFonts` from its `WM_FONTCHANGE` handler. `PaintingBinding.HandleSystemMessage`

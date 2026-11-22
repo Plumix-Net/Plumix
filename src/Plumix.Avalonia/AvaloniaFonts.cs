@@ -3,15 +3,14 @@ using Avalonia.Media.Fonts;
 
 namespace Plumix.UI;
 
-// C#-only infrastructure: no Dart parity source.
+// C#-only host infrastructure: no Dart parity source.
 //
-// The engine side of `loadFontFromList`: fonts registered at run time live in one Avalonia font
-// collection (`fonts:Plumix`) under the family name they were loaded with, and the paragraph
-// builders turn a style's family strings into an Avalonia `FontFamily` here. Registration can come
-// before Avalonia's platform is set up (a `FontLoader` in `Main`), so fonts wait in a queue until
-// the collection can be created. A process can also see more than one Avalonia font manager
-// (headless test sessions each set up their own), so every loaded font is kept and registered
-// again with a new manager.
+// The Avalonia engine side of `loadFontFromList` (ITextBackend.RegisterFont, through AvaloniaTextBackend): fonts
+// registered at run time live in one Avalonia font collection (`fonts:Plumix`) under the family name they were loaded
+// with, and the paragraph builders turn a style's family strings into an Avalonia `FontFamily` here. Registration can
+// come before Avalonia's platform is set up (a `FontLoader` in `Main`), so fonts wait in a queue until the collection
+// can be created. A process can also see more than one Avalonia font manager (headless test sessions each set up their
+// own), so every loaded font is kept and registered again with a new manager.
 internal static class AvaloniaFonts
 {
     private static readonly Uri CollectionKey = new("fonts:Plumix");

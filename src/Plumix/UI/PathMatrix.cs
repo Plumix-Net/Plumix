@@ -165,6 +165,105 @@ internal struct PathMatrix
         return result;
     }
 
+    // SkMatrix::invert: false when the matrix is singular or its inverse is not finite.
+    internal readonly bool TryInvert(out PathMatrix inverse)
+    {
+        if (IsIdentity)
+        {
+            inverse = Identity;
+            return true;
+        }
+
+        if (!HasPerspective && !IsAffine)
+        {
+            if (HasScale)
+            {
+                float invX = 1.0f / _m0;
+                float invY = 1.0f / _m4;
+                // Denormalized (non-zero) scale factors overflow when inverted.
+                if (!float.IsFinite(invX) || !float.IsFinite(invY))
+                {
+                    inverse = default;
+                    return false;
+                }
+
+                inverse = FromValues(invX, 0.0f, -_m2 * invX, 0.0f, invY, -_m5 * invY, 0.0f, 0.0f, 1.0f);
+                return true;
+            }
+
+            inverse = Translate(-_m2, -_m5);
+            return true;
+        }
+
+        bool isPerspective = HasPerspective;
+        double invDet = InvDeterminant(isPerspective);
+        if (invDet == 0)
+        {
+            // Underflow.
+            inverse = default;
+            return false;
+        }
+
+        inverse = ComputeInv(invDet, isPerspective);
+        if (!inverse.IsFinite)
+        {
+            inverse = default;
+            return false;
+        }
+
+        return true;
+    }
+
+    private readonly bool IsFinite =>
+        float.IsFinite(_m0) && float.IsFinite(_m1) && float.IsFinite(_m2)
+        && float.IsFinite(_m3) && float.IsFinite(_m4) && float.IsFinite(_m5)
+        && float.IsFinite(_m6) && float.IsFinite(_m7) && float.IsFinite(_m8);
+
+    // sk_inv_determinant: zero when the determinant is nearly zero (against the cube of
+    // SK_ScalarNearlyZero, since the determinant is on the order of the cube of the members).
+    private readonly double InvDeterminant(bool isPerspective)
+    {
+        double determinant = isPerspective
+            ? (_m0 * DCross(_m4, _m8, _m5, _m7)) + (_m1 * DCross(_m5, _m6, _m3, _m8))
+                                                 + (_m2 * DCross(_m3, _m7, _m4, _m6))
+            : DCross(_m0, _m4, _m1, _m3);
+        const float tolerance = PathMath.NearlyZero * PathMath.NearlyZero * PathMath.NearlyZero;
+        return Math.Abs((float)determinant) <= tolerance ? 0 : 1.0 / determinant;
+    }
+
+    // SkMatrix::ComputeInv.
+    private readonly PathMatrix ComputeInv(double invDet, bool isPerspective)
+    {
+        if (isPerspective)
+        {
+            return FromValues(
+                SCrossDScale(_m4, _m8, _m5, _m7, invDet),
+                SCrossDScale(_m2, _m7, _m1, _m8, invDet),
+                SCrossDScale(_m1, _m5, _m2, _m4, invDet),
+                SCrossDScale(_m5, _m6, _m3, _m8, invDet),
+                SCrossDScale(_m0, _m8, _m2, _m6, invDet),
+                SCrossDScale(_m2, _m3, _m0, _m5, invDet),
+                SCrossDScale(_m3, _m7, _m4, _m6, invDet),
+                SCrossDScale(_m1, _m6, _m0, _m7, invDet),
+                SCrossDScale(_m0, _m4, _m1, _m3, invDet));
+        }
+
+        return FromValues(
+            (float)(_m4 * invDet),
+            (float)(-_m1 * invDet),
+            (float)(DCross(_m1, _m5, _m4, _m2) * invDet),
+            (float)(-_m3 * invDet),
+            (float)(_m0 * invDet),
+            (float)(DCross(_m3, _m2, _m0, _m5) * invDet),
+            0.0f, 0.0f, 1.0f);
+    }
+
+    private static double DCross(double a, double b, double c, double d) => (a * b) - (c * d);
+
+    // scross_dscale: the cross product in float, scaled in double.
+    private static float SCrossDScale(float a, float b, float c, float d, double scale) =>
+        (float)(((a * b) - (c * d)) * scale);
+
     // SkMatrix::mapPoints, through the proc its type mask selects (Identity/Trans/Scale/Affine/Persp_pts).
     internal readonly PathPoint Map(PathPoint point)
     {
@@ -172,9 +271,10 @@ internal struct PathMatrix
         float y = point.Y;
         if (HasPerspective)
         {
-            float mappedX = (x * _m0) + ((y * _m1) + _m2);
-            float mappedY = (x * _m3) + ((y * _m4) + _m5);
-            float z = (x * _m6) + ((y * _m7) + _m8);
+            // Persp_pts: sdot(x, m0, y, m1) + m2, in that order.
+            float mappedX = ((x * _m0) + (y * _m1)) + _m2;
+            float mappedY = ((x * _m3) + (y * _m4)) + _m5;
+            float z = ((x * _m6) + (y * _m7)) + _m8;
             if (z != 0.0f)
             {
                 z = 1.0f / z;

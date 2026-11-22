@@ -10,7 +10,7 @@ namespace Plumix.UI;
 
 /// <summary>
 /// Dart's <c>ui.Gradient</c>: a linear, radial, two-point conical or sweep gradient, as data. The
-/// backend builds the native gradient from it (<see cref="SkiaShaders"/>).
+/// backend builds the native gradient from it (Plumix.Avalonia's SkiaShaders).
 /// </summary>
 internal sealed class GradientShader : Shader
 {

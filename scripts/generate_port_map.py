@@ -29,7 +29,7 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parent.parent
 OUT = REPO / "docs" / "ai" / "PORT_MAP.md"
 
-FRAMEWORK_DIRS = ["src/Plumix", "src/Plumix.Cupertino", "src/Plumix.Material"]
+FRAMEWORK_DIRS = ["src/Plumix", "src/Plumix.Avalonia", "src/Plumix.Cupertino", "src/Plumix.Material"]
 TESTS_DIR = REPO / "src" / "Plumix.Tests"
 CS_DEMOS = REPO / "src" / "Sample" / "Plumix.Sample"
 DART_DEMOS = REPO / "dart_sample" / "lib"

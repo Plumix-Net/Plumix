@@ -5,7 +5,8 @@ namespace Plumix.UI;
 // C#-only infrastructure for the float-uniform runtime-effect path used by InkSparkle.
 // Engine contract: flutter/engine/src/flutter/lib/ui/painting/fragment_{program,shader}.cc.
 // This internal program consumes SkSL, not Flutter's compiled asset container or image samplers. It is data
-// (the source and its uniform layout); the backend compiles it (SkiaShaders.CompileProgram).
+// (the source and its uniform layout); the backend compiles it (IRenderBackend.CompileFragmentProgram;
+// Plumix.Avalonia's SkiaShaders.CompileProgram).
 internal sealed class RuntimeFragmentProgram
 {
     private RuntimeFragmentProgram(string source)
@@ -31,7 +32,7 @@ internal sealed class RuntimeFragmentProgram
     internal static RuntimeFragmentProgram Compile(string source)
     {
         var program = new RuntimeFragmentProgram(source);
-        SkiaShaders.CompileProgram(program);
+        RenderBackend.Current.CompileFragmentProgram(program);
         return program;
     }
 

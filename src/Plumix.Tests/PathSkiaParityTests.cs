@@ -701,6 +701,183 @@ public sealed class PathSkiaParityTests
             $"{failures.Count} of {compared} ops differ:\n" + string.Join("\n", failures.Take(6)));
     }
 
+    // SkPath::transform with a perspective matrix: the part of the path behind the camera (w below
+    // kW0PlaneDistance) is clipped away, quads and conics become conics with projected weights, cubics are
+    // subdivided. Matrices whose w plane misses the path (in front), crosses it (mixed) or has the whole
+    // path behind it (clipped out to an empty path) run on random paths and on ovals and rrects.
+    [Fact]
+    public void PerspectiveTransform_MatchesSkia()
+    {
+        var random = new Random(119);
+        List<Path> paths = PerspectivePaths(random).ToList();
+        int compared = 0;
+        int clippedOut = 0;
+        int mixed = 0;
+        var failures = new List<string>();
+        foreach (Path path in paths)
+        {
+            Rect bounds = path.GetBounds();
+            foreach ((string family, double[] matrix) in PerspectiveMatrices(random, bounds))
+            {
+                Path actual = path.Transform(matrix);
+                using var expected = new SKPath();
+                SkiaPathInterop.ToNative(path).Transform(ToSk(matrix), expected);
+                compared++;
+                if (expected.IsEmpty)
+                {
+                    clippedOut++;
+                }
+                else if (family == "mixed")
+                {
+                    mixed++;
+                }
+
+                PathFillType expectedFill = expected.FillType == SKPathFillType.EvenOdd
+                    ? PathFillType.EvenOdd : PathFillType.NonZero;
+                if (expectedFill != actual.FillType || !Matches(Describe(expected), Describe(actual)))
+                {
+                    failures.Add($"{family} [{string.Join(", ", new[] { 0, 4, 12, 1, 5, 13, 3, 7, 15 }
+                                     .Select(index => F(N(matrix[index]))))}]:\n"
+                                 + $"  path     {string.Join(" ", Describe(path))}\n"
+                                 + $"  expected {string.Join(" ", Describe(expected))}\n"
+                                 + $"  actual   {string.Join(" ", Describe(actual))}");
+                }
+            }
+        }
+
+        Assert.True(compared > 2000, $"only {compared} transforms compared");
+        Assert.True(clippedOut > 100 && mixed > 500, $"clipped out {clippedOut}, mixed {mixed}");
+        Assert.True(failures.Count == 0,
+            $"{failures.Count} of {compared} transforms differ:\n" + string.Join("\n", failures.Take(6)));
+    }
+
+    private static IEnumerable<Path> PerspectivePaths(Random random)
+    {
+        foreach (Path shape in Shapes())
+        {
+            yield return shape;
+        }
+
+        var stadium = new Path { FillType = PathFillType.EvenOdd };
+        stadium.AddRRect(RRect.FromRectXY(Rect.FromLTWH(-20, 10, 120, 40), 20, 20));
+        yield return stadium;
+        var circle = new Path();
+        circle.AddOval(Rect.FromLTWH(-30, -30, 60, 60));
+        yield return circle;
+        var trailingMove = new Path();
+        trailingMove.AddRect(Rect.FromLTWH(0, 0, 50, 30));
+        trailingMove.MoveTo(80, 80);
+        yield return trailingMove;
+        yield return new Path();
+
+        for (int index = 0; index < 160; index++)
+        {
+            var path = new Path { FillType = random.Next(2) == 0 ? PathFillType.NonZero : PathFillType.EvenOdd };
+            double Coordinate() => random.Next(5) == 0 ? random.Next(-2, 9) * 20.0 : random.NextDouble() * 200 - 50;
+            int kind = random.Next(6);
+            if (kind == 0)
+            {
+                Rect oval = Rect.FromLTRB(Coordinate(), Coordinate(), Coordinate(), Coordinate());
+                path.AddOval(oval);
+            }
+            else if (kind == 1)
+            {
+                Rect rect = Rect.FromLTRB(Coordinate(), Coordinate(), Coordinate(), Coordinate());
+                path.AddRRect(RRect.FromRectXY(rect, random.NextDouble() * 30, random.NextDouble() * 30));
+            }
+            else
+            {
+                int contours = random.Next(1, 3);
+                for (int contour = 0; contour < contours; contour++)
+                {
+                    path.MoveTo(Coordinate(), Coordinate());
+                    int segments = random.Next(1, 6);
+                    for (int segment = 0; segment < segments; segment++)
+                    {
+                        switch (random.Next(4))
+                        {
+                            case 0:
+                                path.LineTo(Coordinate(), Coordinate());
+                                break;
+                            case 1:
+                                path.QuadraticBezierTo(Coordinate(), Coordinate(), Coordinate(), Coordinate());
+                                break;
+                            case 2:
+                                path.ConicTo(Coordinate(), Coordinate(), Coordinate(), Coordinate(),
+                                    0.1 + random.NextDouble() * 4);
+                                break;
+                            default:
+                                path.CubicTo(Coordinate(), Coordinate(), Coordinate(), Coordinate(), Coordinate(),
+                                    Coordinate());
+                                break;
+                        }
+                    }
+
+                    if (random.Next(2) == 0)
+                    {
+                        path.Close();
+                    }
+                }
+            }
+
+            yield return path;
+        }
+    }
+
+    // 3x3 perspective matrices as Matrix4 storage (column-major; Path reads entries 0, 4, 12, 1, 5, 13,
+    // 3, 7, 15), with w = p0 x + p1 y + p2 placed against the path's bounds.
+    private static IEnumerable<(string Family, double[] Matrix)> PerspectiveMatrices(Random random, Rect bounds)
+    {
+        double centerX = (bounds.Left + bounds.Right) / 2;
+        double centerY = (bounds.Top + bounds.Bottom) / 2;
+        double[] Make(double p0, double p1, double p2)
+        {
+            double[] matrix = Matrix4.Identity().Storage.ToArray();
+            matrix[0] = 0.5 + random.NextDouble() * 1.5;
+            matrix[4] = random.NextDouble() * 0.6 - 0.3;
+            matrix[12] = random.NextDouble() * 40 - 20;
+            matrix[1] = random.NextDouble() * 0.6 - 0.3;
+            matrix[5] = 0.5 + random.NextDouble() * 1.5;
+            matrix[13] = random.NextDouble() * 40 - 20;
+            matrix[3] = p0;
+            matrix[7] = p1;
+            matrix[15] = p2;
+            return matrix;
+        }
+
+        double Small() => (random.NextDouble() * 2 - 1) * 0.002;
+        double Steep() => (random.NextDouble() * 2 - 1) * 0.05;
+        for (int index = 0; index < 4; index++)
+        {
+            // In front: w stays near 1 over the path.
+            yield return ("front", Make(Small(), Small(), 1));
+        }
+
+        for (int index = 0; index < 6; index++)
+        {
+            // Mixed: the w = 0 plane runs through the path, near its center.
+            double p0 = Steep();
+            double p1 = Steep();
+            double offset = (random.NextDouble() * 2 - 1) * 0.3;
+            yield return ("mixed", Make(p0, p1, -(p0 * centerX) - (p1 * centerY) + offset));
+        }
+
+        // Mixed with an axis-aligned plane, through the center.
+        yield return ("mixed", Make(0.01, 0, -0.01 * centerX));
+        yield return ("mixed", Make(0, -0.01, 0.01 * centerY));
+        // Behind the camera: w is negative over the whole path.
+        yield return ("behind", Make(Small() / 10, Small() / 10, -1));
+        yield return ("behind", Make(0, 0, -1));
+        // Only p2 set: no clip plane at all.
+        yield return ("front", Make(0, 0, 0.5));
+        // A 3D rotation about the y axis seen through a perspective divide.
+        double angle = random.NextDouble() * Math.PI;
+        Matrix4 rotation = Matrix4.Identity();
+        rotation.SetEntry(3, 2, -0.002);
+        rotation.RotateY(angle);
+        yield return ("rotation", rotation.Storage.ToArray());
+    }
+
     private static IEnumerable<Path> OpOperands(Random random)
     {
         var rect = new Path();

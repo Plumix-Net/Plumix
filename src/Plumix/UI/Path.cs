@@ -9,8 +9,8 @@ namespace Plumix.UI;
 // SkPath's own data — verbs, float points, conic weights, the last-move index and the oval/rrect shape
 // it was built as — and every builder appends exactly what SkPath's does (PathSkiaParityTests checks
 // this against the Skia the engine ships); containment ports SkPath::contains (PathContainment) and
-// measurement SkContourMeasure (PathMetrics). Boolean operations and perspective transforms still run on
-// a native copy (SkiaPathInterop).
+// measurement SkContourMeasure (PathMetrics), boolean operations SkPathOps (PathOps) and perspective
+// transforms SkPath::transform's perspective clip (PathPerspective).
 public enum PathFillType
 {
     NonZero,
@@ -387,7 +387,7 @@ public sealed class Path
     public Path Transform(IReadOnlyList<double> matrix4)
     {
         PathMatrix matrix = ToPathMatrix(matrix4);
-        return matrix.HasPerspective ? SkiaPathInterop.TransformWithPerspective(this, matrix) : TransformAffine(matrix);
+        return matrix.HasPerspective ? PathPerspective.Transform(this, matrix) : TransformAffine(matrix);
     }
 
     // SkPath::transform without perspective (SkPathRef::CreateTransformedCopy).

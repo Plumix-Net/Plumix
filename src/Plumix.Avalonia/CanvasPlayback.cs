@@ -105,6 +105,9 @@ internal static class CanvasPlayback
                         break;
                     case BackendOp nothing when ReferenceEquals(nothing.Payload, BackendOp.NothingToDraw):
                         break;
+                    case FlutterTestTextOp text:
+                        DrawFlutterTestText(context, text);
+                        break;
                     case DrawPictureOp picture:
                         Play(picture.Picture, context, picture.Offset);
                         break;
@@ -139,6 +142,35 @@ internal static class CanvasPlayback
             Unwind(pushed, 0);
         }
     }
+
+    // A headless paragraph's steps in order: a FlutterTestGlyphDraw per glyph batch, over the op's bounds, and
+    // each shader-painted glyph as its FlutterTest outline filled with the shader's brush. The draws are built
+    // on first playback and kept on the entry.
+    private static void DrawFlutterTestText(DrawingContext context, FlutterTestTextOp text)
+    {
+        var draws = (Action<DrawingContext>[])(text.BackendState ??= text.Steps
+            .Select(step => FlutterTestTextStepDraw(step, text.Bounds))
+            .ToArray());
+        foreach (Action<DrawingContext> draw in draws)
+        {
+            draw(context);
+        }
+    }
+
+    private static Action<DrawingContext> FlutterTestTextStepDraw(FlutterTestText.Step step, Rect bounds) =>
+        step switch
+        {
+            FlutterTestText.GlyphBatch batch => CustomDraw(new FlutterTestGlyphDraw(batch.Operations, bounds)),
+            FlutterTestText.ShaderGlyph glyph => GeometryDraw(
+                FlutterTestGlyphDraw.FlutterTestGlyph(
+                    glyph.Shape, glyph.X, glyph.Width, glyph.Baseline, glyph.FontSize),
+                SkiaShaders.ToBrush(glyph.Shader)),
+        };
+
+    private static Action<DrawingContext> CustomDraw(FlutterTestGlyphDraw draw) => context => context.Custom(draw);
+
+    private static Action<DrawingContext> GeometryDraw(Geometry shape, IBrush brush) =>
+        context => context.DrawGeometry(brush, null, shape);
 
     // The white-to-transparent gradient Dart builds for TextOverflow.fade, relative to the fade's box.
     private static IBrush FadeBrush(FadeMaskOp fade)

@@ -1,7 +1,7 @@
 using Plumix.UI;
 
-// C#-only engine adapter: Scene.toImage/toImageSync over the Avalonia scene rasterizer (IRenderBackend,
-// src/Plumix/UI/RenderBackend.cs).
+// C#-only engine adapter: Scene.toImage/toImageSync over the Avalonia scene rasterizer, and fragment
+// programs compiled into Skia runtime effects (IRenderBackend, src/Plumix/UI/RenderBackend.cs).
 
 namespace Plumix;
 
@@ -16,4 +16,6 @@ internal sealed class AvaloniaRenderBackend : IRenderBackend
 
     public RasterImage RasterizeScene(ContainerFlowLayer root, int width, int height) =>
         AvaloniaImages.Wrap(SceneRasterizer.RasterizeToImage(root, width, height));
+
+    public void CompileFragmentProgram(RuntimeFragmentProgram program) => SkiaShaders.CompileProgram(program);
 }

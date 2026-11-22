@@ -78,7 +78,7 @@ public static class PlatformFonts
     /// </summary>
     public static Task LoadFontFromList(ReadOnlyMemory<byte> list, string? fontFamily = null)
     {
-        if (!AvaloniaFonts.Register(list, fontFamily))
+        if (!TextBackend.Current.RegisterFont(list, fontFamily))
         {
             throw new ArgumentException("Invalid font data", nameof(list));
         }
