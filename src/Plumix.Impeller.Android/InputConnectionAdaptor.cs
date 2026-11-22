@@ -13,10 +13,9 @@ namespace Plumix.Impeller.Android;
 // C#-only host infrastructure parity source:
 // flutter/engine/src/flutter/shell/platform/android/io/flutter/plugin/editing/InputConnectionAdaptor.java: the IME
 // edits the mirrored editable (AndroidEditingState) through BaseInputConnection's own implementations, each
-// wrapped in a batch edit; the editable then reports the change to the framework. Not ported: the keyboard
-// delegate (sendKeyEvent goes straight to handleKeyEvent, since this host does not send key events to the
-// framework yet, which is also why Delete is handled here), the up/down arrows (they need a text layout),
-// cursor anchor info, commitContent, private commands and Scribe.
+// wrapped in a batch edit; the editable then reports the change to the framework, and key events go through
+// the view's keyboard manager (AndroidKeyboardManager). Not ported: the up/down arrows (they need a text
+// layout), cursor anchor info, commitContent, private commands and Scribe.
 
 /// <summary>The IME's connection to the text input client.</summary>
 internal sealed class InputConnectionAdaptor : BaseInputConnection
@@ -28,7 +27,7 @@ internal sealed class InputConnectionAdaptor : BaseInputConnection
     private const int ExtractedTextMonitor = 1;
     private const int ImeMaskAction = 0xFF;
 
-    private readonly View _view;
+    private readonly PlumixSurfaceView _view;
     private readonly AndroidEditingState _editable;
     private readonly EditorInfo _editorInfo;
     private readonly HostTextInputPlugin _plugin;
@@ -37,7 +36,7 @@ internal sealed class InputConnectionAdaptor : BaseInputConnection
     private int _batchEditNestDepth;
 
     public InputConnectionAdaptor(
-        View view,
+        PlumixSurfaceView view,
         AndroidEditingState editable,
         EditorInfo editorInfo,
         HostTextInputPlugin plugin,
@@ -107,11 +106,12 @@ internal sealed class InputConnectionAdaptor : BaseInputConnection
         return result;
     }
 
-    public override bool SendKeyEvent(KeyEvent? e) => e is not null && HandleKeyEvent(e);
+    // Soft keyboard key events get the framework's chance first, as hardware keys do.
+    public override bool SendKeyEvent(KeyEvent? e) => e is not null && _view.KeyboardManager.HandleEvent(e);
 
     /// <summary>
-    /// <c>handleKeyEvent</c>: arrows move the selection, Enter in a single-line field is the editor action,
-    /// other printable keys replace the selection. Delete removes the selection or the character before it.
+    /// <c>handleKeyEvent</c>, for keys the framework left: arrows move the selection, Enter in a single-line
+    /// field is the editor action, other printable keys replace the selection.
     /// </summary>
     public bool HandleKeyEvent(KeyEvent e)
     {
@@ -126,8 +126,6 @@ internal sealed class InputConnectionAdaptor : BaseInputConnection
                 return HandleHorizontalMovement(isLeft: true, e.IsShiftPressed);
             case Keycode.DpadRight:
                 return HandleHorizontalMovement(isLeft: false, e.IsShiftPressed);
-            case Keycode.Del:
-                return HandleDelete();
             case Keycode.Enter or Keycode.NumpadEnter
                 when (_editorInfo.InputType & InputTypes.TextFlagMultiLine) == 0:
                 PerformEditorAction((ImeAction)((int)_editorInfo.ImeOptions & ImeMaskAction));
@@ -222,35 +220,6 @@ internal sealed class InputConnectionAdaptor : BaseInputConnection
             : Math.Min(OffsetAfter(selectionEnd), _editable.Editable.Length());
         bool shouldCollapse = selectionStart == selectionEnd && !isShiftPressed;
         SetSelection(shouldCollapse ? newSelectionEnd : selectionStart, newSelectionEnd);
-        return true;
-    }
-
-    // What the framework's DeleteCharacterIntent does for Backspace: the selection, else the character before.
-    private bool HandleDelete()
-    {
-        int selectionStart = _editable.SelectionStart;
-        int selectionEnd = _editable.SelectionEnd;
-        if (selectionStart < 0 || selectionEnd < 0)
-        {
-            return false;
-        }
-
-        int selectionMin = Math.Min(selectionStart, selectionEnd);
-        int selectionMax = Math.Max(selectionStart, selectionEnd);
-        if (selectionMin == selectionMax)
-        {
-            selectionMin = Math.Max(OffsetBefore(selectionMax), 0);
-        }
-
-        if (selectionMin == selectionMax)
-        {
-            return true;
-        }
-
-        BeginBatchEdit();
-        _editable.Editable.Delete(selectionMin, selectionMax);
-        SetSelection(selectionMin, selectionMin);
-        EndBatchEdit();
         return true;
     }
 

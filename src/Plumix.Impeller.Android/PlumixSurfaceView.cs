@@ -25,6 +25,7 @@ internal sealed class PlumixSurfaceView : SurfaceView
     private readonly AndroidEditingState _editable;
     private InputConnectionAdaptor? _connection;
     private bool _restartInputPending;
+    private readonly AndroidKeyboardManager _keyboardManager;
 
     public PlumixSurfaceView(Context context)
         : base(context)
@@ -34,7 +35,11 @@ internal sealed class PlumixSurfaceView : SurfaceView
         _ime = (InputMethodManager)context.GetSystemService(Context.InputMethodService)!;
         _editable = new AndroidEditingState(this);
         _editable.Changed += SendEditableState;
+        _keyboardManager = new AndroidKeyboardManager(this, OnTextInputKeyEvent);
     }
+
+    /// <summary>The engine's keyboard manager for this view; the IME's key events go through it too.</summary>
+    public AndroidKeyboardManager KeyboardManager => _keyboardManager;
 
     // The plugin is process-wide and outlives this view's Activity: only an attached view listens to it.
     protected override void OnAttachedToWindow()
@@ -44,6 +49,7 @@ internal sealed class PlumixSurfaceView : SurfaceView
         _plugin.HideRequested += HideKeyboard;
         _plugin.ClientChanged += OnClientChanged;
         _plugin.EditingStateChanged += ApplyFrameworkState;
+        SystemChannels.Keyboard.SetPlatformMethodCallHandler(HandleKeyboardMethodCall);
     }
 
     protected override void OnDetachedFromWindow()
@@ -52,6 +58,7 @@ internal sealed class PlumixSurfaceView : SurfaceView
         _plugin.HideRequested -= HideKeyboard;
         _plugin.ClientChanged -= OnClientChanged;
         _plugin.EditingStateChanged -= ApplyFrameworkState;
+        SystemChannels.Keyboard.SetPlatformMethodCallHandler(null);
         base.OnDetachedFromWindow();
     }
 
@@ -68,14 +75,35 @@ internal sealed class PlumixSurfaceView : SurfaceView
 
     public override bool OnCheckIsTextEditor() => _plugin.ClientId is not null;
 
-    /// <summary>
-    /// Hardware keys (and the key events `adb shell input` injects) while a client is attached go to the
-    /// connection's key handling, as the engine's keyboard manager hands the framework's unhandled keys to
-    /// <c>InputConnectionAdaptor.handleKeyEvent</c>.
-    /// </summary>
-    public override bool OnKeyDown(Keycode keyCode, KeyEvent? e) =>
-        (e is not null && _plugin.ActiveModel is not null && _connection?.HandleKeyEvent(e) == true)
-        || base.OnKeyDown(keyCode, e);
+    // FlutterView.dispatchKeyEvent: every key goes to the keyboard manager first; Android handles it only when
+    // the manager sends it back through the view tree.
+    public override bool DispatchKeyEvent(KeyEvent? e)
+    {
+        if (e is null)
+        {
+            return base.DispatchKeyEvent(e);
+        }
+
+        if (e.Action == KeyEventActions.Down && e.RepeatCount == 0)
+        {
+            KeyDispatcherState?.StartTracking(e, this);
+        }
+        else if (e.Action == KeyEventActions.Up)
+        {
+            KeyDispatcherState?.HandleUpEvent(e);
+        }
+
+        return _keyboardManager.HandleEvent(e) || base.DispatchKeyEvent(e);
+    }
+
+    // TextInputPlugin.handleKeyEvent: what the framework left goes to the connection while the IME takes text.
+    private bool OnTextInputKeyEvent(KeyEvent e) =>
+        _ime.IsAcceptingText && _plugin.ActiveModel is not null && _connection?.HandleKeyEvent(e) == true;
+
+    // KeyboardChannel: the framework asks for the pressed keys when it starts listening.
+    private Task<object?> HandleKeyboardMethodCall(MethodCall call) => call.Method == "getKeyboardState"
+        ? Task.FromResult<object?>(_keyboardManager.GetKeyboardState())
+        : throw new MissingPluginException(call.Method);
 
     // TextInputPlugin.createInputConnection.
     public override IInputConnection? OnCreateInputConnection(EditorInfo? outAttrs)

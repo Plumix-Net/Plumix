@@ -8,6 +8,7 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased]
+- Native Android host: key events reach the framework (KeyData and `flutter/keyevent`), as the engine's KeyboardManager.
 - Native Android host: IME edits a mirrored `Editable` through an `InputConnectionAdaptor` port; taps keep the caret.
 - `HostTextInputPlugin.UpdateEditingStateFromHost` and `PerformAction` for hosts that mirror the client's text.
 - Opacity/image-filter render objects start as non-repaint-boundaries, as Dart's constructor does (object.dart).
