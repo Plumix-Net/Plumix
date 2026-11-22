@@ -2,6 +2,7 @@ using NImpeller;
 using Plumix.Material;
 using Plumix.Rendering;
 using Plumix.UI;
+using TextPosition = Plumix.Widgets.TextPosition;
 using Xunit;
 using Path = Plumix.UI.Path;
 
@@ -115,6 +116,17 @@ public sealed class ImpellerBackendTests
 
         Assert.Equal(40, monospace.LongestLine, 3);
         Assert.Equal(40, alias.LongestLine, 3);
+    }
+
+    [Fact]
+    public void Paragraph_MapsAnOffsetToTheGlyphUnderIt()
+    {
+        // Ahem glyphs are 10 px wide at 10 px: x = 23 lies in the third glyph, nearer its leading edge.
+        Paragraph paragraph = ImpellerTestBackend.Paragraph("Hello", "Ahem");
+
+        TextPosition position = paragraph.GetPositionForOffset(new Offset(23, 5));
+
+        Assert.Equal(2, position.Offset);
     }
 
     [Fact]

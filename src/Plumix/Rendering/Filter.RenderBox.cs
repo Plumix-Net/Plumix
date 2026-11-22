@@ -74,6 +74,7 @@ public sealed class RenderImageFilter : RenderProxyBox
         _imageFilter = imageFilter ?? throw new ArgumentNullException(nameof(imageFilter));
         _enabled = enabled;
         Child = child;
+        InitializeCompositingWithoutChild();
     }
 
     public bool Enabled

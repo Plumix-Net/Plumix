@@ -152,6 +152,7 @@ public class RenderAnimatedOpacity : RenderProxyBox
         _animatedOpacity = new RenderAnimatedOpacityMixin(this, () => Child != null);
         Opacity = opacity;
         AlwaysIncludeSemantics = alwaysIncludeSemantics;
+        InitializeCompositingWithoutChild();
     }
 
     /// <inheritdoc />

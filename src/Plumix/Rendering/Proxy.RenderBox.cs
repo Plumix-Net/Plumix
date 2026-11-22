@@ -944,6 +944,7 @@ public class RenderOpacity : RenderProxyBox
         _opacity = opacity;
         _alwaysIncludeSemantics = alwaysIncludeSemantics;
         _alpha = Color.GetAlphaFromOpacity(opacity);
+        InitializeCompositingWithoutChild();
     }
 
     /// <inheritdoc />

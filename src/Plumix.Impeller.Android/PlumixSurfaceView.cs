@@ -10,16 +10,21 @@ using Math = System.Math;
 
 namespace Plumix.Impeller.Android;
 
-// C#-only host infrastructure; no Dart parity source. The prototype's text input: the SurfaceView is the
-// IME's editor, and its InputConnection forwards commits, composing text, deletions and editor actions to the
-// core's text input plugin (UI/HostTextInputPlugin.cs), the way the engine's Android embedding forwards an
-// InputConnectionAdaptor to `flutter/textinput`. The keyboard is shown and hidden when the framework asks.
+// C#-only host infrastructure parity source:
+// flutter/engine/src/flutter/shell/platform/android/io/flutter/plugin/editing/TextInputPlugin.java (the editor
+// side: createInputConnection, setTextInputClient, setTextInputEditingState, didChangeEditingState). The
+// SurfaceView is the IME's editor over a mirrored editable (AndroidEditingState) that the IME edits through
+// InputConnectionAdaptor; the editable's changes go to the core's text input plugin (UI/HostTextInputPlugin.cs)
+// and the framework's state comes back into it. The keyboard is shown and hidden when the framework asks.
 
 /// <summary>The surface Plumix renders into, and the soft keyboard's editor.</summary>
 internal sealed class PlumixSurfaceView : SurfaceView
 {
     private readonly HostTextInputPlugin _plugin = HostTextInputPlugin.Instance;
     private readonly InputMethodManager _ime;
+    private readonly AndroidEditingState _editable;
+    private InputConnectionAdaptor? _connection;
+    private bool _restartInputPending;
 
     public PlumixSurfaceView(Context context)
         : base(context)
@@ -27,6 +32,8 @@ internal sealed class PlumixSurfaceView : SurfaceView
         Focusable = true;
         FocusableInTouchMode = true;
         _ime = (InputMethodManager)context.GetSystemService(Context.InputMethodService)!;
+        _editable = new AndroidEditingState(this);
+        _editable.Changed += SendEditableState;
     }
 
     // The plugin is process-wide and outlives this view's Activity: only an attached view listens to it.
@@ -35,20 +42,18 @@ internal sealed class PlumixSurfaceView : SurfaceView
         base.OnAttachedToWindow();
         _plugin.ShowRequested += ShowKeyboard;
         _plugin.HideRequested += HideKeyboard;
-        _plugin.ClientChanged += RestartInput;
-        _plugin.EditingStateChanged += ReportSelection;
+        _plugin.ClientChanged += OnClientChanged;
+        _plugin.EditingStateChanged += ApplyFrameworkState;
     }
 
     protected override void OnDetachedFromWindow()
     {
         _plugin.ShowRequested -= ShowKeyboard;
         _plugin.HideRequested -= HideKeyboard;
-        _plugin.ClientChanged -= RestartInput;
-        _plugin.EditingStateChanged -= ReportSelection;
+        _plugin.ClientChanged -= OnClientChanged;
+        _plugin.EditingStateChanged -= ApplyFrameworkState;
         base.OnDetachedFromWindow();
     }
-
-    private void RestartInput() => _ime.RestartInput(this);
 
     /// <summary>The virtual-view tree accessibility services read; set by the Activity.</summary>
     public PlumixAccessibilityNodeProvider? AccessibilityProvider { get; set; }
@@ -64,81 +69,95 @@ internal sealed class PlumixSurfaceView : SurfaceView
     public override bool OnCheckIsTextEditor() => _plugin.ClientId is not null;
 
     /// <summary>
-    /// Hardware keys (and the key events `adb shell input` injects) while a client is attached: the
-    /// editing keys go to the plugin's key handling, printable keys are inserted as text.
+    /// Hardware keys (and the key events `adb shell input` injects) while a client is attached go to the
+    /// connection's key handling, as the engine's keyboard manager hands the framework's unhandled keys to
+    /// <c>InputConnectionAdaptor.handleKeyEvent</c>.
     /// </summary>
-    public override bool OnKeyDown(Keycode keyCode, KeyEvent? e)
-    {
-        if (_plugin.ActiveModel is null || e is null)
-        {
-            return base.OnKeyDown(keyCode, e);
-        }
+    public override bool OnKeyDown(Keycode keyCode, KeyEvent? e) =>
+        (e is not null && _plugin.ActiveModel is not null && _connection?.HandleKeyEvent(e) == true)
+        || base.OnKeyDown(keyCode, e);
 
-        LogicalKeyboardKey? key = keyCode switch
-        {
-            Keycode.Enter or Keycode.NumpadEnter => LogicalKeyboardKey.Enter,
-            Keycode.DpadLeft => LogicalKeyboardKey.ArrowLeft,
-            Keycode.DpadRight => LogicalKeyboardKey.ArrowRight,
-            Keycode.DpadUp => LogicalKeyboardKey.ArrowUp,
-            Keycode.DpadDown => LogicalKeyboardKey.ArrowDown,
-            Keycode.MoveHome => LogicalKeyboardKey.Home,
-            Keycode.MoveEnd => LogicalKeyboardKey.End,
-            _ => null,
-        };
-        if (keyCode == Keycode.Del)
-        {
-            _plugin.DeleteBackward();
-            return true;
-        }
-
-        if (key is not null)
-        {
-            return _plugin.HandleKeyEvent(key, e.IsCtrlPressed, e.IsShiftPressed, e.IsAltPressed, e.IsMetaPressed);
-        }
-
-        int unicode = e.UnicodeChar;
-        if (unicode > 0 && !e.IsCtrlPressed)
-        {
-            _plugin.InsertText(char.ConvertFromUtf32(unicode));
-            return true;
-        }
-
-        return base.OnKeyDown(keyCode, e);
-    }
-
+    // TextInputPlugin.createInputConnection.
     public override IInputConnection? OnCreateInputConnection(EditorInfo? outAttrs)
     {
         if (outAttrs is null || _plugin.ActiveModel is null)
         {
+            _connection = null;
             return null;
         }
 
         outAttrs.InputType = InputTypeOf(_plugin.InputType);
         outAttrs.ImeOptions = (ImeFlags)ImeActionOf(_plugin.InputAction) | ImeFlags.NoExtractUi;
-        TextInputModel.Range selection = _plugin.ActiveModel.Selection;
-        outAttrs.InitialSelStart = selection.Start;
-        outAttrs.InitialSelEnd = selection.End;
-        return new Connection(this, _plugin);
+        outAttrs.InitialSelStart = _editable.SelectionStart;
+        outAttrs.InitialSelEnd = _editable.SelectionEnd;
+        _connection = new InputConnectionAdaptor(this, _editable, outAttrs, _plugin, _ime);
+        return _connection;
     }
 
+    // TextInputPlugin.showTextInput.
     private void ShowKeyboard()
     {
         RequestFocus();
-        _ime.RestartInput(this);
-        _ime.ShowSoftInput(this, ShowFlags.Implicit);
+        _ime.ShowSoftInput(this, 0);
     }
 
     private void HideKeyboard() => _ime.HideSoftInputFromWindow(WindowToken, HideSoftInputFlags.None);
 
-    private void ReportSelection()
+    // TextInputPlugin.setTextInputClient restarts the IME once the client's state arrives;
+    // clearTextInputClient restarts it at once, so the IME drops the old configuration.
+    private void OnClientChanged()
+    {
+        if (_plugin.ClientId is null)
+        {
+            PostRestartInput();
+        }
+        else
+        {
+            _restartInputPending = true;
+        }
+    }
+
+    // The engine restarts the IME on the platform thread, after the framework's channel call returned; here the
+    // call is synchronous, and restarting closes the connection, which finishes composing and would send the
+    // editable back into the framework while it is still mid-update.
+    private void PostRestartInput() => Post(() => _ime.RestartInput(this));
+
+    // TextInputPlugin.didChangeEditingState: the IME's edits go to the framework (nothing is sent when they
+    // match what it already has).
+    private void SendEditableState() => _plugin.UpdateEditingStateFromHost(
+        _editable.ToString(),
+        _editable.SelectionStart,
+        _editable.SelectionEnd,
+        _editable.ComposingStart,
+        _editable.ComposingEnd);
+
+    // TextInputPlugin.setTextInputEditingState: the framework's state replaces the editable's, restarting the
+    // IME when the framework moved a composing region itself (IMEs do not expect editors to commit it).
+    private void ApplyFrameworkState()
     {
         if (_plugin.ActiveModel is not { } model)
         {
             return;
         }
 
-        TextInputModel.Range composing = model.Composing ? model.ComposingRange : new TextInputModel.Range(-1);
-        _ime.UpdateSelection(this, model.Selection.Start, model.Selection.End, composing.Start, composing.End);
+        string text = model.GetText();
+        TextInputModel.Range selection = model.Selection;
+        (int Start, int End) composing = model.Composing
+            ? (model.ComposingRange.Start, model.ComposingRange.End)
+            : (-1, -1);
+        (int Start, int End) editableComposing = (_editable.ComposingStart, _editable.ComposingEnd);
+        if (text != _editable.ToString() || selection.Base != _editable.SelectionStart
+            || selection.Extent != _editable.SelectionEnd || composing != editableComposing)
+        {
+            _restartInputPending |= editableComposing.Start >= 0 && composing != editableComposing;
+            _editable.SetEditingState(text, selection.Base, selection.Extent, composing.Start, composing.End);
+        }
+
+        if (_restartInputPending)
+        {
+            _restartInputPending = false;
+            PostRestartInput();
+        }
     }
 
     private static InputTypes InputTypeOf(string? inputType) => inputType switch
@@ -164,106 +183,4 @@ internal sealed class PlumixSurfaceView : SurfaceView
         "TextInputAction.newline" => ImeAction.None,
         _ => ImeAction.Done,
     };
-
-    /// <summary>The IME's view of the attached client's text, edited through the plugin.</summary>
-    private sealed class Connection(View view, HostTextInputPlugin plugin) : BaseInputConnection(view, false)
-    {
-        public override bool CommitText(ICharSequence? text, int newCursorPosition)
-        {
-            plugin.InsertText(text?.ToString() ?? string.Empty);
-            return true;
-        }
-
-        public override bool SetComposingText(ICharSequence? text, int newCursorPosition)
-        {
-            string value = text?.ToString() ?? string.Empty;
-            plugin.SetMarkedText(value, value.Length);
-            return true;
-        }
-
-        public override bool FinishComposingText()
-        {
-            plugin.UnmarkText();
-            return true;
-        }
-
-        public override bool DeleteSurroundingText(int beforeLength, int afterLength)
-        {
-            if (plugin.ActiveModel is not { } model)
-            {
-                return false;
-            }
-
-            // InputConnection.deleteSurroundingText keeps the selection: the text after it goes first, so the
-            // range before it keeps its offsets.
-            TextInputModel.Range selection = model.Selection;
-            int end = Math.Min(model.GetText().Length, selection.End + afterLength);
-            if (end > selection.End)
-            {
-                plugin.InsertText(string.Empty, (selection.End, end - selection.End));
-            }
-
-            int start = Math.Max(0, selection.Start - beforeLength);
-            if (start < selection.Start)
-            {
-                plugin.InsertText(string.Empty, (start, selection.Start - start));
-            }
-
-            return true;
-        }
-
-        public override bool SetSelection(int start, int end) => plugin.SetSelection(start, end);
-
-        public override bool PerformEditorAction(ImeAction actionCode) =>
-            plugin.HandleKeyEvent(LogicalKeyboardKey.Enter);
-
-        public override bool SendKeyEvent(KeyEvent? e)
-        {
-            if (e is null || e.Action != KeyEventActions.Down)
-            {
-                return true;
-            }
-
-            switch (e.KeyCode)
-            {
-                case Keycode.Del:
-                    plugin.DeleteBackward();
-                    return true;
-                case Keycode.Enter:
-                case Keycode.NumpadEnter:
-                    return plugin.HandleKeyEvent(LogicalKeyboardKey.Enter);
-                default:
-                    int unicode = e.UnicodeChar;
-                    if (unicode > 0)
-                    {
-                        plugin.InsertText(char.ConvertFromUtf32(unicode));
-                    }
-
-                    return true;
-            }
-        }
-
-        public override ICharSequence? GetTextBeforeCursorFormatted(int length, GetTextFlags flags)
-        {
-            if (plugin.ActiveModel is not { } model)
-            {
-                return null;
-            }
-
-            int cursor = model.Selection.Start;
-            return new Java.Lang.String(model.GetText()[Math.Max(0, cursor - length)..cursor]);
-        }
-
-        public override ICharSequence? GetTextAfterCursorFormatted(int length, GetTextFlags flags)
-        {
-            if (plugin.ActiveModel is not { } model)
-            {
-                return null;
-            }
-
-            string text = model.GetText();
-            int cursor = model.Selection.End;
-            return new Java.Lang.String(text[cursor..Math.Min(text.Length, cursor + length)]);
-        }
-    }
 }

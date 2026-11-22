@@ -165,6 +165,26 @@ public sealed class ProxyBoxParityTests
     }
 
     [Fact]
+    public void ChildDependentRepaintBoundaries_StartAsNonBoundaries()
+    {
+        // Dart's RenderObject constructor reads isRepaintBoundary before super(child) attaches the child, so
+        // a first paint at opacity 0 (no longer a boundary) must not expect a layer it never had.
+        var opacity = new RenderOpacity(opacity: 1.0, child: new DesiredSizeBox(new Size(10, 10)));
+        var animated = new RenderAnimatedOpacity(
+            new AnimationValue(1.0), child: new DesiredSizeBox(new Size(10, 10)));
+        var filter = new RenderImageFilter(
+            new ImageFilter.Blur(2.0, 2.0), child: new DesiredSizeBox(new Size(10, 10)));
+        LayoutRoot(opacity, new Size(10, 10));
+        LayoutRoot(animated, new Size(10, 10));
+        LayoutRoot(filter, new Size(10, 10));
+
+        Assert.True(opacity.IsRepaintBoundary);
+        Assert.False(opacity._wasRepaintBoundary);
+        Assert.False(animated._wasRepaintBoundary);
+        Assert.False(filter._wasRepaintBoundary);
+    }
+
+    [Fact]
     public void RenderOpacity_PaintsNothingWhenFullyTransparent()
     {
         var child = new PaintCountingBox(new Size(10, 10));

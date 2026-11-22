@@ -506,6 +506,85 @@ public sealed class HostTextInputPlugin
     }
 
     /// <summary>
+    /// The Android engine's <c>TextInputPlugin.didChangeEditingState</c>, for a host that mirrors the client in
+    /// a platform editable (<c>ListenableEditingState</c>) and lets the IME edit that: the editable's text,
+    /// selection and composing region become the model's and go to the framework, as one delta in the delta
+    /// model. Nothing is sent when they already match (a negative offset is "none").
+    /// </summary>
+    public void UpdateEditingStateFromHost(
+        string text,
+        int selectionBase,
+        int selectionExtent,
+        int composingStart,
+        int composingEnd)
+    {
+        TextInputModel? model = _activeModel;
+        if (model is null)
+        {
+            return;
+        }
+
+        TextInputModel.Range selection = selectionBase < 0 || selectionExtent < 0
+            ? new TextInputModel.Range(0)
+            : new TextInputModel.Range(selectionBase, selectionExtent);
+        TextInputModel.Range composing = composingStart < 0 || composingEnd <= composingStart
+            ? new TextInputModel.Range(0)
+            : new TextInputModel.Range(composingStart, composingEnd);
+        string textBeforeChange = model.GetText();
+        TextInputModel.Range composingBeforeChange = model.Composing
+            ? model.ComposingRange
+            : new TextInputModel.Range(0);
+        if (text == textBeforeChange && selection == model.Selection && composing == composingBeforeChange)
+        {
+            return;
+        }
+
+        model.SetText(text, selection, composing);
+        if (!_enableDeltaModel)
+        {
+            UpdateEditState();
+        }
+        else if (text == textBeforeChange)
+        {
+            UpdateEditStateWithNonTextDelta();
+        }
+        else
+        {
+            // The replaced range: what lies between the common prefix and the common suffix.
+            int prefix = 0;
+            int shorter = Math.Min(text.Length, textBeforeChange.Length);
+            while (prefix < shorter && text[prefix] == textBeforeChange[prefix])
+            {
+                prefix++;
+            }
+
+            int suffix = 0;
+            while (suffix < shorter - prefix
+                   && text[text.Length - 1 - suffix] == textBeforeChange[textBeforeChange.Length - 1 - suffix])
+            {
+                suffix++;
+            }
+
+            UpdateEditStateWithDelta(
+                textBeforeChange,
+                new TextInputModel.Range(prefix, textBeforeChange.Length - suffix),
+                text[prefix..(text.Length - suffix)]);
+        }
+    }
+
+    /// <summary>
+    /// Tells the framework the IME chose <paramref name="inputAction"/> (a <c>TextInputAction.*</c> name):
+    /// the Android engine's <c>TextInputChannel</c> action calls behind <c>performEditorAction</c>.
+    /// </summary>
+    public void PerformAction(string inputAction)
+    {
+        if (_clientId is { } clientId)
+        {
+            InvokeMethod("TextInputClient.performAction", new List<object?> { clientId, inputAction });
+        }
+    }
+
+    /// <summary>
     /// Moves the selection on behalf of the platform IME (Android's <c>InputConnection.setSelection</c>,
     /// Avalonia's <c>TextInputMethodClient.Selection</c> setter). Returns false, sending nothing, when
     /// the model rejects the range.

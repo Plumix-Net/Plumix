@@ -56,6 +56,20 @@ public abstract partial class RenderObject : DiagnosticableTree, IRenderObject, 
         _wasRepaintBoundaryStorage = IsRepaintBoundary;
     }
 
+    /// <summary>
+    /// The compositing state Dart's constructor gives a render object whose repaint-boundary status needs a
+    /// child: the <c>RenderObject</c> constructor runs before <c>super(child)</c> attaches the child, so both
+    /// flags start false. The deferred read would see the child and start <c>_wasRepaintBoundary</c> true,
+    /// and a first paint as a non-boundary (opacity 0 by then) would expect a layer it never had. Called
+    /// from such constructors.
+    /// </summary>
+    private protected void InitializeCompositingWithoutChild()
+    {
+        _didInitializeCompositing = true;
+        _needsCompositingStorage = false;
+        _wasRepaintBoundaryStorage = false;
+    }
+
     internal bool _wasRepaintBoundary
     {
         get

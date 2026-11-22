@@ -2002,6 +2002,7 @@ public sealed class RenderSliverAnimatedOpacity : RenderProxySliver
         _animatedOpacity = new RenderAnimatedOpacityMixin(this, () => Child != null);
         Opacity = opacity;
         AlwaysIncludeSemantics = alwaysIncludeSemantics;
+        InitializeCompositingWithoutChild();
     }
 
     public Animation<double> Opacity
