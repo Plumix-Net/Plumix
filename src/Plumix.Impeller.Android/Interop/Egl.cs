@@ -17,6 +17,8 @@ internal static unsafe partial class Egl
     public const int EGL_ALPHA_SIZE = 0x3021;
     public const int EGL_DEPTH_SIZE = 0x3025;
     public const int EGL_STENCIL_SIZE = 0x3026;
+    public const int EGL_SAMPLES = 0x3031;
+    public const int EGL_SAMPLE_BUFFERS = 0x3032;
     public const int EGL_SURFACE_TYPE = 0x3033;
     public const int EGL_RENDERABLE_TYPE = 0x3040;
     public const int EGL_WINDOW_BIT = 0x0004;

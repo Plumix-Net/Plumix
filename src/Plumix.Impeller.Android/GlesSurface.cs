@@ -199,26 +199,11 @@ internal sealed unsafe class GlesSurface : IDisposable
                 throw Egl.Failure("eglInitialize");
             }
 
-            int* configAttribs = stackalloc int[]
-            {
-                Egl.EGL_RENDERABLE_TYPE, Egl.EGL_OPENGL_ES3_BIT,
-                Egl.EGL_SURFACE_TYPE, Egl.EGL_WINDOW_BIT,
-                Egl.EGL_RED_SIZE, 8,
-                Egl.EGL_GREEN_SIZE, 8,
-                Egl.EGL_BLUE_SIZE, 8,
-                Egl.EGL_ALPHA_SIZE, 8,
-                Egl.EGL_DEPTH_SIZE, 0,
-                Egl.EGL_STENCIL_SIZE, 8,
-                Egl.EGL_NONE,
-            };
-            IntPtr config;
-            int count;
-            if (Egl.eglChooseConfig(_display, configAttribs, &config, 1, &count) == 0 || count == 0)
-            {
-                throw Egl.Failure("eglChooseConfig");
-            }
-
-            _config = config;
+            // Flutter's Android embedder for Impeller (android_context_gl_impeller.cc): RGBA8888 with a 24-bit depth
+            // and 8-bit stencil buffer, which Impeller clips with on the onscreen pass (without depth no clip
+            // applies), and 4x MSAA when the device has it, for antialiased paths and clips.
+            _config = ChooseConfig(samples: 4) ?? ChooseConfig(samples: 1)
+                ?? throw Egl.Failure("eglChooseConfig");
             int* contextAttribs = stackalloc int[] { Egl.EGL_CONTEXT_CLIENT_VERSION, 3, Egl.EGL_NONE };
             _context = Egl.eglCreateContext(_display, _config, IntPtr.Zero, contextAttribs);
             if (_context == IntPtr.Zero)
@@ -249,6 +234,27 @@ internal sealed unsafe class GlesSurface : IDisposable
         {
             ContextCreated?.Invoke();
         }
+    }
+
+    private IntPtr? ChooseConfig(int samples)
+    {
+        int* attribs = stackalloc int[]
+        {
+            Egl.EGL_RENDERABLE_TYPE, Egl.EGL_OPENGL_ES3_BIT,
+            Egl.EGL_SURFACE_TYPE, Egl.EGL_WINDOW_BIT,
+            Egl.EGL_RED_SIZE, 8,
+            Egl.EGL_GREEN_SIZE, 8,
+            Egl.EGL_BLUE_SIZE, 8,
+            Egl.EGL_ALPHA_SIZE, 8,
+            Egl.EGL_DEPTH_SIZE, 24,
+            Egl.EGL_STENCIL_SIZE, 8,
+            Egl.EGL_SAMPLE_BUFFERS, samples > 1 ? 1 : 0,
+            Egl.EGL_SAMPLES, samples > 1 ? samples : 0,
+            Egl.EGL_NONE,
+        };
+        IntPtr config;
+        int count;
+        return Egl.eglChooseConfig(_display, attribs, &config, 1, &count) != 0 && count > 0 ? config : null;
     }
 
     private void DrawPendingFrame()
