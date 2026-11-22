@@ -57,6 +57,18 @@ internal static class DemoApp
                     new Text("A long line that does not fit on one line and ends with an ellipsis at the end",
                         maxLines: 1, overflow: TextOverflow.Ellipsis),
                     new Text("fi fl ffi — ligatures, kerning AVAWAY, fallback ☺ ✓ ∑ 😀 中文 العربية"),
+                    new SizedBox(height: 12),
+                    new Row(children:
+                    [
+                        // An Android asset, decoded by BitmapFactory, drawn from an Impeller texture.
+                        Plumix.Widgets.Image.Asset("plumix.png", width: 96, height: 96),
+                        new SizedBox(width: 12),
+                        new ClipOval(child: Plumix.Widgets.Image.Asset("plumix.png", width: 64, height: 64,
+                            cacheWidth: 32)),
+                        new SizedBox(width: 12),
+                        new Opacity(opacity: 0.5,
+                            child: Plumix.Widgets.Image.Asset("plumix.png", width: 48, height: 48)),
+                    ]),
                 ]));
 
         private Widget Tile(int index) => new Padding(

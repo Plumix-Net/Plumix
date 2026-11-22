@@ -42,9 +42,13 @@ internal sealed class ImpellerHost : IDisposable
     }
 
     /// <summary>Installs the platform seams this host provides; call once, before any binding is touched.</summary>
-    public static void InstallBackend()
+    public static void InstallBackend(global::Android.Content.Res.AssetManager assets)
     {
         PlatformThread.Current = new AndroidPlatformThread();
+        ImageBackend.Current = new AndroidImageBackend();
+        ImageBackend.Assets = new AndroidAssetSource(assets);
+        // .NET for Android has no entry assembly: relative asset keys belong to this app.
+        PlatformAssetBundle.ApplicationAssemblyName = typeof(ImpellerHost).Assembly.GetName().Name;
         ImpellerBackend.Install();
         ImpellerTextShaper shaper =
             ImpellerBackend.InstallText("/system/fonts/Roboto-Regular.ttf", "/system/fonts/DroidSans.ttf");

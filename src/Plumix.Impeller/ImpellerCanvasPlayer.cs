@@ -197,7 +197,13 @@ internal static class ImpellerCanvasPlayer
 
     private static void DrawImage(ImpellerDisplayListBuilder builder, DrawImageOp image)
     {
-        if (image.Image.Native is not ImpellerTexture texture)
+        ImpellerTexture? texture = image.Image.Native switch
+        {
+            ImpellerImage pixels => pixels.Texture,
+            ImpellerTexture native => native,
+            _ => null,
+        };
+        if (texture is null)
         {
             ImpellerPaints.Unsupported($"image {image.Image.Native.GetType().Name}");
             return;

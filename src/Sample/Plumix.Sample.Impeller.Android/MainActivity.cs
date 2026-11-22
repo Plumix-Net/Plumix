@@ -24,7 +24,7 @@ public sealed class MainActivity : Activity, ISurfaceHolderCallback
     protected override void OnCreate(Bundle? savedInstanceState)
     {
         base.OnCreate(savedInstanceState);
-        ImpellerHost.InstallBackend();
+        ImpellerHost.InstallBackend(Assets!);
         _host = new ImpellerHost();
         _lifecycle = new AndroidLifecycleChannel(_host.LifecycleChanged);
 
