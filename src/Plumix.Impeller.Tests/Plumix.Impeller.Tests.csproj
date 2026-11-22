@@ -23,6 +23,7 @@
 
     <ItemGroup>
         <None Include="..\Plumix.Tests\Fixtures\Fonts\ahem.ttf" Link="Fonts\ahem.ttf" CopyToOutputDirectory="PreserveNewest" />
+        <None Include="..\Plumix.Tests\Fixtures\Fonts\RobotoSlab-VariableFont_wght.ttf" Link="Fonts\RobotoSlab-VariableFont_wght.ttf" CopyToOutputDirectory="PreserveNewest" />
         <None Include="..\Plumix\UI\Assets\FlutterTest.ttf" Link="Fonts\FlutterTest.ttf" CopyToOutputDirectory="PreserveNewest" />
         <ProjectReference Include="..\Plumix.Impeller\Plumix.Impeller.csproj" />
         <ProjectReference Include="..\Plumix.Material\Plumix.Material.csproj" />

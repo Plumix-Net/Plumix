@@ -71,6 +71,33 @@ public sealed class ImpellerBackendTests
     }
 
     [Fact]
+    public void VariableFont_IsInstancedAtTheRequestedWeight()
+    {
+        ImpellerFontFace face = ImpellerFontFace.Load(File.ReadAllBytes(ImpellerTestBackend.RobotoSlab), "Slab")!;
+
+        ImpellerFontFace bold = face.WithWeight(700);
+
+        Assert.NotNull(face.WeightAxis);
+        Assert.NotSame(face, bold);
+        Assert.Equal(700, bold.Weight);
+        Assert.Null(bold.WeightAxis);
+        Assert.Same(bold, face.WithWeight(700));
+        Assert.Same(face, face.WithWeight(face.WeightAxis!.Value.Default));
+    }
+
+    [Fact]
+    public void Paragraph_DrawsAVariableFontsBoldInstance()
+    {
+        // RobotoSlab's bold glyphs are wider than its regular ones; a fake-bold regular face would keep the advances.
+        Paragraph regular = ImpellerTestBackend.Paragraph("Weights", "RobotoSlab", fontSize: 40);
+        Paragraph bold = ImpellerTestBackend.Paragraph("Weights", "RobotoSlab", fontSize: 40,
+            fontWeight: FontWeight.Bold);
+
+        Assert.True(bold.LongestLine > regular.LongestLine + 1,
+            $"bold {bold.LongestLine} vs regular {regular.LongestLine}");
+    }
+
+    [Fact]
     public void Paragraph_ShapesARegisteredFamily()
     {
         // Ahem's glyphs are one em wide: five at 10 px are 50 px.

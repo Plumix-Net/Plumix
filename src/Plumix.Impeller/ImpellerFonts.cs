@@ -12,8 +12,8 @@ namespace Plumix.Impeller;
 // HeadlessParagraph does the line layout over the shaped runs (UI/TextShaping.cs). Font matching is
 // deliberately small: registered families, then the platform's named families (fonts.xml), then the default
 // sans-serif, with a per-cluster fallback for code points the chosen face lacks. A face's weight and style
-// come from its OS/2 table; weights a family lacks are synthesized (fake bold), as SkParagraph does;
-// variable-font axes are not applied yet.
+// come from its OS/2 table; a variable face is instanced at the requested weight (HarfBuzzInstancer), and weights
+// a static family lacks are synthesized (fake bold), as SkParagraph does.
 
 /// <summary>One loaded font face.</summary>
 internal sealed class ImpellerFontFace
@@ -21,10 +21,14 @@ internal sealed class ImpellerFontFace
     private readonly HBFont _font;
     private readonly int _unitsPerEm;
 
-    private ImpellerFontFace(string family, HBFont font, int unitsPerEm, ImpellerTypeface typeface,
+    private readonly Face _face;
+    private readonly Dictionary<int, ImpellerFontFace?> _instances = [];
+
+    private ImpellerFontFace(string family, Face face, HBFont font, int unitsPerEm, ImpellerTypeface typeface,
         int weight, bool italic)
     {
         Family = family;
+        _face = face;
         _font = font;
         _unitsPerEm = unitsPerEm;
         Typeface = typeface;
@@ -33,6 +37,40 @@ internal sealed class ImpellerFontFace
         _font.TryGetHorizontalFontExtents(out FontExtents extents);
         Ascent = extents.Ascender / (double)unitsPerEm;
         Descent = -extents.Descender / (double)unitsPerEm;
+        WeightAxis = HarfBuzzInstancer.WeightAxis(face);
+    }
+
+    /// <summary>The variable font's weight axis (minimum, default, maximum); null for a static face.</summary>
+    public (float Min, float Default, float Max)? WeightAxis { get; }
+
+    /// <summary>
+    /// This face at <paramref name="weight"/>: itself when static or already that weight, otherwise a static
+    /// instance with the weight axis pinned (made once per weight; null when HarfBuzz cannot instance it).
+    /// </summary>
+    public ImpellerFontFace WithWeight(double weight)
+    {
+        if (WeightAxis is not { } axis)
+        {
+            return this;
+        }
+
+        int pinned = (int)Math.Round(Math.Clamp(weight, axis.Min, axis.Max));
+        if (Math.Abs(pinned - axis.Default) < 0.5f)
+        {
+            return this;
+        }
+
+        lock (_instances)
+        {
+            if (!_instances.TryGetValue(pinned, out ImpellerFontFace? instance))
+            {
+                _instances[pinned] = instance = HarfBuzzInstancer.Instantiate(_face, pinned) is { } bytes
+                    ? Load(bytes, Family, pinned, Italic)
+                    : null;
+            }
+
+            return instance ?? this;
+        }
     }
 
     public string Family { get; }
@@ -68,7 +106,8 @@ internal sealed class ImpellerFontFace
         font.SetFunctionsOpenType();
         font.SetScale(unitsPerEm, unitsPerEm);
         (int os2Weight, bool os2Italic) = StyleOf(face);
-        return new ImpellerFontFace(family, font, unitsPerEm, typeface, weight ?? os2Weight, italic ?? os2Italic);
+        return new ImpellerFontFace(family, face, font, unitsPerEm, typeface, weight ?? os2Weight,
+            italic ?? os2Italic);
     }
 
     // OS/2 usWeightClass (offset 4) and fsSelection's ITALIC bit (offset 62, bit 0); regular without the table.
@@ -309,7 +348,16 @@ internal sealed class ImpellerTextShaper : ITextShaper
         }
     }
 
+    // The matched face, at the requested weight when it is variable: a `wght` font variation wins over the weight,
+    // as in SkParagraph.
     private ImpellerFontFace Resolve(ResolvedTextStyle style)
+    {
+        double weight = style.FontVariations?.LastOrDefault(variation => variation.Axis == "wght")?.Value
+                        ?? style.FontWeight.Value;
+        return Match(style).WithWeight(weight);
+    }
+
+    private ImpellerFontFace Match(ResolvedTextStyle style)
     {
         lock (_gate)
         {
