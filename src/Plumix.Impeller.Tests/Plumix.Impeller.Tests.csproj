@@ -12,6 +12,8 @@
 
     <ItemGroup>
         <PackageReference Include="Microsoft.NET.Test.Sdk" />
+        <!-- libHarfBuzzSharp for the Linux CI runner (the macOS and Windows binaries ship with HarfBuzzSharp). -->
+        <PackageReference Include="HarfBuzzSharp.NativeAssets.Linux" />
         <PackageReference Include="xunit" />
         <PackageReference Include="xunit.runner.visualstudio">
             <PrivateAssets>all</PrivateAssets>
