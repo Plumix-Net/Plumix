@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Android: Plumix's native host (PlumixActivity), rendering through Impeller. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net11.0-android</TargetFramework>
+    <SupportedOSPlatformVersion>24</SupportedOSPlatformVersion>
+    <RuntimeIdentifiers>android-arm64;android-x64</RuntimeIdentifiers>
+    <ApplicationId>com.companyname.plumixapp</ApplicationId>
+    <ApplicationTitle>PlumixTemplateApp</ApplicationTitle>
+    <ApplicationVersion>1</ApplicationVersion>
+    <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Plumix.Android" />
+    <!-- Android's implicit namespaces clash with Plumix widget names (ListView, Switch, Dialog...). -->
+    <Using Remove="Android.Widget" />
+    <Using Remove="Android.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\PlumixTemplateApp\PlumixTemplateApp.csproj" />
+  </ItemGroup>
+
+</Project>

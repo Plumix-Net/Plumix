@@ -8,6 +8,9 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased]
+- New template package `Plumix.Templates`: `dotnet new plumix-app` creates shared widgets with Desktop (Avalonia),
+  Android and iOS (native hosts) projects; `--desktop/--android/--ios false` drop a head, `--application-id` sets
+  the id.
 - `Plumix.iOS` reads pixels back: `Scene.toImage` draws into a stand-in drawable over a shared texture, the way the
   engine's `FlutterMetalLayer` drawables learn when Impeller's work completes (`FlutterMetalDrawable`).
 

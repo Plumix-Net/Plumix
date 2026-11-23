@@ -8,7 +8,8 @@ normative may live only there.
 ## Project Snapshot
 
 - Platform: .NET 11
-- UI stack: Avalonia
+- Hosts: native Android/iOS hosts on Impeller (`Plumix.Android`, `Plumix.iOS`); Avalonia on desktop and browser
+  (`Plumix.Avalonia`)
 - Purpose: Flutter-like widget/rendering layer implemented in C#
 - Main library: `src/Plumix`
 - Example hosts: `src/Sample/*`
@@ -61,6 +62,10 @@ normative may live only there.
   (`PlumixSceneDelegate`, core `IOSRestorationPlugin`), pixel readback for `Scene.toImage` (`MetalReadback`). It
   packs only on macOS (the CI's `pack-ios` job). App `src/Sample/Plumix.Sample.Impeller.iOS` (build with
   `-r iossimulator-arm64`).
+- `src/Plumix.Templates`: the `dotnet new` template package (`plumix-app`: shared widgets plus Desktop, Android and
+  iOS heads, in `content/plumix-app`, placeholder name `PlumixTemplateApp`). Packing stamps the package version and
+  `AvaloniaVersion` into the template's `Directory.Packages.props`; check a change by packing it, `dotnet new install`
+  into a `--debug:custom-hive` and building the generated heads.
 
 ## Progress Source of Truth
 

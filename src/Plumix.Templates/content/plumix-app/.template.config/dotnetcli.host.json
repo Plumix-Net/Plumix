@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json.schemastore.org/dotnetcli.host",
+  "symbolInfo": {
+    "desktop": { "longName": "desktop", "shortName": "" },
+    "android": { "longName": "android", "shortName": "" },
+    "ios": { "longName": "ios", "shortName": "" },
+    "applicationId": { "longName": "application-id", "shortName": "" }
+  },
+  "usageExamples": [
+    "",
+    "--ios false",
+    "--android false --ios false"
+  ]
+}

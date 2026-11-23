@@ -14,17 +14,45 @@ Flutter-inspired UI framework for .NET — build declarative, widget-based UIs i
 
 **[plumix.net](https://plumix.net/)** · [NuGet packages](https://github.com/Plumix-Net/Plumix.Packages)
 
+## Getting started
+
+```bash
+dotnet new install Plumix.Templates
+dotnet new plumix-app -n HelloPlumix
+cd HelloPlumix
+dotnet run --project HelloPlumix.Desktop
+```
+
+`plumix-app` creates a shared widget project and one thin host project per platform. `--android false`,
+`--ios false` or `--desktop false` leave a platform out; `--application-id` sets the Android application id and
+iOS bundle id.
+
+## Platforms
+
+The framework owns layout, paint, gestures, semantics and focus; a host only provides the surface, input and the
+platform's services, the split Flutter has between framework and engine.
+
+| Platform | Host package | Host |
+| --- | --- | --- |
+| Android 7.0+ | `Plumix.Android` | Plumix's native host on Impeller (`PlumixActivity`): ports of the Flutter engine's Android embedding |
+| iOS 15+ | `Plumix.iOS` | Plumix's native host on Impeller and Metal (`PlumixViewController`): ports of the Flutter engine's iOS embedding |
+| Windows, macOS, Linux | `Plumix.Avalonia` | Avalonia (`PlumixApplication`) with Skia |
+| Browser (WebAssembly) | `Plumix.Avalonia` | Avalonia.Browser |
+
+`Plumix.Avalonia.Android` keeps an Avalonia-based Android host (`PlumixMainActivity`) for apps that need Avalonia
+on Android. All Plumix packages share one version.
+
 ## Vision
 
 - Keep `Widget`/`Element`/`RenderObject` architecture as close as practical to Flutter.
 - Make rewriting controls from Flutter (Dart) to C# straightforward, with minimal conceptual translation.
-- Reuse Avalonia mostly as platform infrastructure: app/window host, lifecycle, input plumbing, and drawing backend abstractions.
-- Keep layout and paint behavior inside this framework's render layer.
+- Keep hosts thin: window, input, lifecycle and the drawing backend; layout and paint stay in the framework's render
+  layer.
 
 ## Definition of Done
 
 1. App UI is built with Flutter-like widgets and lifecycle primitives (`StatefulWidget`, `State`, `SetState`, reconciliation).
-2. Render/layout/paint behavior is framework-owned (`RenderObject`/`RenderBox`/render pipeline), not Avalonia-control-driven UI logic.
+2. Render/layout/paint behavior is framework-owned (`RenderObject`/`RenderBox`/render pipeline), not host-control-driven UI logic.
 3. Samples demonstrate real framework usage via widget host flow, not only low-level render demos.
 4. Core primitives are stable and close enough to Flutter semantics for practical Dart-to-C# control porting.
 
@@ -40,7 +68,9 @@ Flutter-inspired UI framework for .NET — build declarative, widget-based UIs i
 ### C#
 
 ```csharp
-using Avalonia.Media;
+using Plumix.Material;
+using Plumix.Rendering;
+using Plumix.UI;
 using Plumix.Widgets;
 
 namespace MyApp;
@@ -49,24 +79,26 @@ public sealed class MyApp : StatelessWidget
 {
     public override Widget Build(BuildContext context)
     {
-        return new Scaffold(
-            body: new Center(
-                child: new Column(
-                    mainAxisAlignment: MainAxisAlignment.Center,
-                    children:
-                    [
-                        new Text(
-                            "Hello, Plumix!",
-                            style: new TextStyle(fontSize: 32, fontWeight: FontWeight.Bold)
-                        ),
-                        new SizedBox(height: 16),
-                        new Text("Flutter-like widgets, powered by .NET and Avalonia."),
-                        new SizedBox(height: 24),
-                        new ElevatedButton(
-                            onPressed: () => { /* handle tap */ },
-                            child: new Text("Get Started")
-                        )
-                    ]
+        return new MaterialApp(
+            home: new Scaffold(
+                body: new Center(
+                    child: new Column(
+                        mainAxisAlignment: MainAxisAlignment.Center,
+                        children:
+                        [
+                            new Text(
+                                "Hello, Plumix!",
+                                style: new TextStyle(FontSize: 32, FontWeight: FontWeight.Bold)
+                            ),
+                            new SizedBox(height: 16),
+                            new Text("Flutter's widget model, written in C#."),
+                            new SizedBox(height: 24),
+                            new ElevatedButton(
+                                onPressed: () => { /* handle tap */ },
+                                child: new Text("Get Started")
+                            )
+                        ]
+                    )
                 )
             )
         );
@@ -102,7 +134,7 @@ let view model dispatch =
                     spacing = 12.0,
                     children = [
                         Ui.text ("Hello, Plumix!", fontSize = 32.0, fontWeight = FontWeight.Bold)
-                        Ui.text "Flutter-like widgets, powered by .NET and Avalonia."
+                        Ui.text "Flutter's widget model, written in F#."
                         Ui.text (string model.Count, fontSize = 24.0)
                     ])),
         floatingActionButton =

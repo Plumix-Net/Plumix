@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- The app's widgets, shared by every platform project. -->
+  <PropertyGroup>
+    <TargetFramework>net11.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Plumix" />
+    <PackageReference Include="Plumix.Material" />
+  </ItemGroup>
+
+</Project>

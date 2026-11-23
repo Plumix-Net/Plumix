@@ -1,0 +1,45 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <!-- `dotnet new` templates for Plumix apps. Nothing is compiled: the package carries content/<template> folders.
+         Packing stamps the package's own version (all Plumix packages share it) and the minimum Avalonia version
+         into the template's Directory.Packages.props. -->
+    <PropertyGroup>
+        <TargetFramework>netstandard2.0</TargetFramework>
+        <IsPackable>true</IsPackable>
+        <PackageType>Template</PackageType>
+        <PackageId>Plumix.Templates</PackageId>
+        <Title>Plumix templates</Title>
+        <Description>dotnet new templates for Plumix apps: plumix-app creates shared Flutter-style widgets with a desktop project on Avalonia and Android and iOS projects on Plumix's native Impeller hosts.</Description>
+        <PackageTags>plumix;flutter;ui;templates;dotnet-new;android;ios;avalonia</PackageTags>
+        <IncludeBuildOutput>false</IncludeBuildOutput>
+        <IncludeContentInPack>true</IncludeContentInPack>
+        <ContentTargetFolders>content</ContentTargetFolders>
+        <NoDefaultExcludes>true</NoDefaultExcludes>
+        <EnableDefaultItems>false</EnableDefaultItems>
+        <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
+        <!-- No lib/ folder: a template package has none. -->
+        <NoWarn>$(NoWarn);NU5128</NoWarn>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <Content Include="content\**\*"
+                 Exclude="content\**\bin\**;content\**\obj\**;content\plumix-app\Directory.Packages.props"
+                 PackagePath="content\%(RecursiveDir)%(Filename)%(Extension)" />
+        <None Include="..\..\README.md" Pack="true" PackagePath="\" />
+        <None Include="..\..\LICENSE" Pack="true" PackagePath="\" />
+        <None Include="..\..\icon.png" Pack="true" PackagePath="\" />
+    </ItemGroup>
+
+    <Target Name="StampTemplateVersions" BeforeTargets="_GetPackageFiles">
+        <PropertyGroup>
+            <_TemplatePackages>$([System.IO.File]::ReadAllText('$(MSBuildProjectDirectory)/content/plumix-app/Directory.Packages.props').Replace('PLUMIX_VERSION', '$(PackageVersion)').Replace('AVALONIA_VERSION', '$(AvaloniaVersion)'))</_TemplatePackages>
+            <_StampedTemplatePackages>$(IntermediateOutputPath)plumix-app/Directory.Packages.props</_StampedTemplatePackages>
+        </PropertyGroup>
+        <WriteLinesToFile File="$(_StampedTemplatePackages)" Lines="$([MSBuild]::Escape($(_TemplatePackages)))"
+                          Overwrite="true" WriteOnlyWhenDifferent="true" />
+        <ItemGroup>
+            <Content Include="$(_StampedTemplatePackages)" PackagePath="content\plumix-app\Directory.Packages.props" />
+        </ItemGroup>
+    </Target>
+
+</Project>

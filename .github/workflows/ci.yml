@@ -194,6 +194,9 @@ jobs:
             -p:Version="$PKG_VERSION" --output "$NUGET_OUTPUT"
           dotnet pack src/Plumix.Android/Plumix.Android.csproj -c Release \
             -p:Version="$PKG_VERSION" --output "$NUGET_OUTPUT"
+          # The template stamps PKG_VERSION into the apps it creates (Directory.Packages.props).
+          dotnet pack src/Plumix.Templates/Plumix.Templates.csproj -c Release \
+            -p:Version="$PKG_VERSION" --output "$NUGET_OUTPUT"
 
       - uses: actions/download-artifact@v4
         with:
@@ -225,6 +228,7 @@ jobs:
             "Plumix.Impeller"
             "Plumix.Android"
             "Plumix.iOS"
+            "Plumix.Templates"
           )
           for package_id in "${package_ids[@]}"; do
             package="$NUGET_OUTPUT/${package_id}.${PKG_VERSION}.nupkg"

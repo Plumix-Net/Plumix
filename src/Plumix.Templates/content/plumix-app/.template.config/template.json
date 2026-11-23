@@ -1,0 +1,126 @@
+{
+  "$schema": "http://json.schemastore.org/template",
+  "author": "Plumix",
+  "classifications": [ "Plumix", "Desktop", "Mobile", "Android", "iOS" ],
+  "identity": "Plumix.Templates.App",
+  "groupIdentity": "Plumix.Templates.App",
+  "name": "Plumix App",
+  "description": "A Plumix app: shared Flutter-style widgets with Desktop (Avalonia), Android and iOS (native Impeller hosts) projects.",
+  "shortName": "plumix-app",
+  "tags": {
+    "language": "C#",
+    "type": "solution"
+  },
+  "sourceName": "PlumixTemplateApp",
+  "preferNameDirectory": true,
+  "symbols": {
+    "desktop": {
+      "type": "parameter",
+      "datatype": "bool",
+      "defaultValue": "true",
+      "description": "Include the desktop project (Windows, macOS, Linux on Avalonia)."
+    },
+    "android": {
+      "type": "parameter",
+      "datatype": "bool",
+      "defaultValue": "true",
+      "description": "Include the Android project (needs the android workload)."
+    },
+    "ios": {
+      "type": "parameter",
+      "datatype": "bool",
+      "defaultValue": "true",
+      "description": "Include the iOS project (needs macOS, Xcode and the ios workload)."
+    },
+    "applicationId": {
+      "type": "parameter",
+      "datatype": "string",
+      "defaultValue": "",
+      "description": "The Android application id and iOS bundle id. Defaults to com.companyname.<name>."
+    },
+    "nameAppIdSegment": {
+      "type": "derived",
+      "valueSource": "name",
+      "valueTransform": "appIdSegment"
+    },
+    "defaultApplicationId": {
+      "type": "generated",
+      "generator": "join",
+      "parameters": {
+        "symbols": [
+          { "type": "const", "value": "com.companyname" },
+          { "type": "ref", "value": "nameAppIdSegment" }
+        ],
+        "separator": "."
+      }
+    },
+    "resolvedApplicationId": {
+      "type": "generated",
+      "generator": "coalesce",
+      "parameters": {
+        "sourceVariableName": "applicationId",
+        "fallbackVariableName": "defaultApplicationId"
+      },
+      "replaces": "com.companyname.plumixapp"
+    }
+  },
+  "forms": {
+    "appIdSegment": {
+      "identifier": "chain",
+      "steps": [ "lowerCaseInvariant", "alphanumericOnly" ]
+    },
+    "lowerCaseInvariant": {
+      "identifier": "lowerCaseInvariant"
+    },
+    "alphanumericOnly": {
+      "identifier": "replace",
+      "pattern": "[^a-z0-9]",
+      "replacement": ""
+    }
+  },
+  "sources": [
+    {
+      "modifiers": [
+        { "condition": "(!desktop)", "exclude": [ "PlumixTemplateApp.Desktop/**" ] },
+        { "condition": "(!android)", "exclude": [ "PlumixTemplateApp.Android/**" ] },
+        { "condition": "(!ios)", "exclude": [ "PlumixTemplateApp.iOS/**" ] }
+      ]
+    }
+  ],
+  "SpecialCustomOperations": {
+    "**/*.slnx": {
+      "operations": [
+        {
+          "type": "conditional",
+          "configuration": {
+            "actionableIf": [ "<!--#if" ],
+            "actionableElse": [ "#else", "<!--#else" ],
+            "actionableElseif": [ "#elseif", "<!--#elseif" ],
+            "endif": [ "#endif", "<!--#endif" ],
+            "trim": "true",
+            "wholeLine": "true"
+          }
+        }
+      ]
+    },
+    "**/*.md": {
+      "operations": [
+        {
+          "type": "conditional",
+          "configuration": {
+            "actionableIf": [ "<!--#if" ],
+            "actionableElse": [ "#else", "<!--#else" ],
+            "actionableElseif": [ "#elseif", "<!--#elseif" ],
+            "endif": [ "#endif", "<!--#endif" ],
+            "trim": "true",
+            "wholeLine": "true"
+          }
+        }
+      ]
+    }
+  },
+  "primaryOutputs": [
+    { "path": "PlumixTemplateApp.slnx" }
+  ],
+  "postActions": []
+}

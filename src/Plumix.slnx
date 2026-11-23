@@ -37,6 +37,7 @@
   <Project Path="Plumix.Impeller/Plumix.Impeller.csproj" />
   <Project Path="Plumix.iOS/Plumix.iOS.csproj" />
   <Project Path="Plumix.Material/Plumix.Material.csproj" />
+  <Project Path="Plumix.Templates/Plumix.Templates.csproj" />
   <Project Path="Plumix.Tests/Plumix.Tests.csproj" />
   <Project Path="Plumix/Plumix.csproj" />
 </Solution>

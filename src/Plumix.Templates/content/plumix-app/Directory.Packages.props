@@ -1,0 +1,23 @@
+<Project>
+  <!-- Central package versions: every Plumix package shares one version. -->
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <PlumixVersion>PLUMIX_VERSION</PlumixVersion>
+    <AvaloniaVersion>AVALONIA_VERSION</AvaloniaVersion>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageVersion Include="Plumix" Version="$(PlumixVersion)" />
+    <PackageVersion Include="Plumix.Material" Version="$(PlumixVersion)" />
+<!--#if (desktop)-->
+    <PackageVersion Include="Plumix.Avalonia" Version="$(PlumixVersion)" />
+    <PackageVersion Include="Avalonia.Desktop" Version="$(AvaloniaVersion)" />
+    <PackageVersion Include="Avalonia.Fonts.Inter" Version="$(AvaloniaVersion)" />
+<!--#endif-->
+<!--#if (android)-->
+    <PackageVersion Include="Plumix.Android" Version="$(PlumixVersion)" />
+<!--#endif-->
+<!--#if (ios)-->
+    <PackageVersion Include="Plumix.iOS" Version="$(PlumixVersion)" />
+<!--#endif-->
+  </ItemGroup>
+</Project>

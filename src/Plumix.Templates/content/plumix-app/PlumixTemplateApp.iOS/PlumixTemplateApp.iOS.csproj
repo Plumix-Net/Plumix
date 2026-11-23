@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- iOS: Plumix's native host (PlumixViewController), rendering through Impeller on Metal. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net11.0-ios</TargetFramework>
+    <SupportedOSPlatformVersion>15.0</SupportedOSPlatformVersion>
+    <ApplicationId>com.companyname.plumixapp</ApplicationId>
+    <ApplicationTitle>PlumixTemplateApp</ApplicationTitle>
+    <ApplicationVersion>1</ApplicationVersion>
+    <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Plumix.iOS" />
+    <!-- UIKit's implicit namespace clashes with Plumix widget names. -->
+    <Using Remove="UIKit" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\PlumixTemplateApp\PlumixTemplateApp.csproj" />
+  </ItemGroup>
+
+</Project>

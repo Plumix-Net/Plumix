@@ -1,0 +1,12 @@
+<Solution>
+  <Project Path="PlumixTemplateApp/PlumixTemplateApp.csproj" />
+<!--#if (desktop)-->
+  <Project Path="PlumixTemplateApp.Desktop/PlumixTemplateApp.Desktop.csproj" />
+<!--#endif-->
+<!--#if (android)-->
+  <Project Path="PlumixTemplateApp.Android/PlumixTemplateApp.Android.csproj" />
+<!--#endif-->
+<!--#if (ios)-->
+  <Project Path="PlumixTemplateApp.iOS/PlumixTemplateApp.iOS.csproj" />
+<!--#endif-->
+</Solution>
