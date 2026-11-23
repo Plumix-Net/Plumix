@@ -7,7 +7,7 @@ namespace Plumix.iOS;
 
 // C#-only host infrastructure; no Dart parity source. The engine's raster thread on iOS: the UI thread records each
 // frame's display list (CPU work) and hands the latest one over; this thread takes the layer's next drawable, draws the
-// list through Impeller's Metal backend and presents it, so waiting for a drawable or encoding GPU work never blocks
+// list through Impeller's Metal backend and has Impeller present it, so waiting for a drawable or encoding GPU work never blocks
 // the UI thread. Metal and CAMetalLayer.nextDrawable are thread-safe, so unlike the Android GLES surface no context is
 // bound to the thread. As on Android, a frame the raster thread has not started yet is replaced by the newer one.
 
@@ -100,9 +100,11 @@ internal sealed class MetalRasterThread : IDisposable
                    ?? throw new InvalidOperationException("Impeller could not wrap the drawable."))
         {
             surface.DrawDisplayList(displayList);
+            // SurfaceMTL::Present: the drawable is presented once Impeller's command buffer is scheduled on its own
+            // queue, after the frame's rendering (presenting it directly could show it before the GPU finished).
+            surface.Present();
         }
 
-        drawable.Present();
         frame.Presented?.Invoke();
     }
 

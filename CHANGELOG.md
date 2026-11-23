@@ -8,13 +8,12 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased]
-- New native iOS host `Plumix.iOS` (`PlumixViewController`) on Impeller/Metal with its own raster thread.
-- iOS host: platform plugin, user settings, locales, accessibility features (FlutterPlatformPlugin.mm, …).
-- iOS host: text input, keyboard inset and hardware keys (FlutterTextInputPlugin.mm, FlutterKeyboardManager.mm).
-- iOS host: VoiceOver bridge with scroll-view and text-field surrogates (accessibility_bridge.mm, SemanticsObject.mm).
-- iOS host: state restoration, saved with the scene by `PlumixSceneDelegate` (FlutterRestorationPlugin.mm).
-- Avalonia 12.1.6 compatibility: its new `Avalonia.Media.FontVariation` no longer clashes with Plumix's.
+
+## v1.0.0-preview.8 — 2026-11-23
+- New native iOS host `Plumix.iOS` (`PlumixViewController`, `PlumixSceneDelegate`) on Impeller/Metal, without
+  Avalonia: raster thread, ports of the engine's platform plugin, text input, keyboard, VoiceOver and state restoration.
 - `Plumix.Impeller` finds HarfBuzz as an embedded framework on iOS, tvOS and Mac Catalyst.
+- Avalonia 12.1.6 compatibility: its new `Avalonia.Media.FontVariation` no longer clashes with Plumix's.
 - The Avalonia iOS sample moves to `src/Sample/Plumix.Sample.iOS`; the name `Plumix.iOS` is the native host's.
 
 ## v1.0.0-preview.7 — 2026-11-23
