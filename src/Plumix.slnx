@@ -35,6 +35,7 @@
   <Project Path="Plumix.Android/Plumix.Android.csproj" />
   <Project Path="Plumix.Impeller.Tests/Plumix.Impeller.Tests.csproj" />
   <Project Path="Plumix.Impeller/Plumix.Impeller.csproj" />
+  <Project Path="Plumix.Impeller.iOS/Plumix.Impeller.iOS.csproj" />
   <Project Path="Plumix.Material/Plumix.Material.csproj" />
   <Project Path="Plumix.Tests/Plumix.Tests.csproj" />
   <Project Path="Plumix/Plumix.csproj" />

@@ -1,0 +1,34 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <!-- Stage 5 prototype (docs/product/native-host.md): the Sample gallery on the native iOS host without Avalonia
+         (src/Plumix.Impeller.iOS), rendering through Impeller on Metal. -->
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>net11.0-ios</TargetFramework>
+        <SupportedOSPlatformVersion>15.0</SupportedOSPlatformVersion>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <ApplicationId>com.plumix.impeller</ApplicationId>
+        <ApplicationTitle>Plumix Impeller</ApplicationTitle>
+        <ApplicationVersion>1</ApplicationVersion>
+        <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
+        <IsPackable>false</IsPackable>
+    </PropertyGroup>
+
+    <!-- The Sample gallery's widget code, compiled into this host (its App.axaml.cs is the Avalonia bootstrap). -->
+    <ItemGroup>
+        <Compile Include="..\Plumix.Sample\**\*.cs"
+                 Exclude="..\Plumix.Sample\App.axaml.cs;..\Plumix.Sample\obj\**;..\Plumix.Sample\bin\**"
+                 LinkBase="Sample" />
+        <PackageReference Include="Plumix.Bloc" />
+        <!-- UIKit's implicit namespace clashes with Plumix widget names. -->
+        <Using Remove="UIKit" />
+        <BundleResource Include="plumix.png" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\Plumix.Impeller.iOS\Plumix.Impeller.iOS.csproj" />
+        <ProjectReference Include="..\..\Plumix.Material\Plumix.Material.csproj" />
+    </ItemGroup>
+
+</Project>

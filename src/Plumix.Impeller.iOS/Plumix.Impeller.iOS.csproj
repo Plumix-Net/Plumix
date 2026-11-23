@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <!-- Stage 5 prototype (umbrella docs/product/native-host.md): the native iOS host without Avalonia, rendering
+         through the shared Impeller backend (Plumix.Impeller) with Metal into a CAMetalLayer. impeller.framework
+         comes with Plumix.NImpeller.Native.ios. Not packed. -->
+    <PropertyGroup>
+        <TargetFramework>net11.0-ios</TargetFramework>
+        <SupportedOSPlatformVersion>15.0</SupportedOSPlatformVersion>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+        <IsPackable>false</IsPackable>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Plumix.Impeller\Plumix.Impeller.csproj" />
+    </ItemGroup>
+
+</Project>

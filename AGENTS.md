@@ -54,6 +54,10 @@ normative may live only there.
   the engine's pointer packet converter) and the Android host (`PlumixActivity`, raster thread, ports of the engine
   embedding's input, IME, autofill, accessibility and platform channels); tests in `src/Plumix.Impeller.Tests`; apps
   `src/Sample/Plumix.Sample.Impeller.Android` and `src/Sample/NetBench.Impeller.Android`.
+- `src/Plumix.Impeller.iOS`: stage 5 prototype of the native iOS host (not packed): Metal through `CAMetalLayer`,
+  `CADisplayLink` vsync, CoreText fonts, ImageIO images, touches, `PlumixViewController`; no text input,
+  accessibility or platform channels yet. App `src/Sample/Plumix.Sample.Impeller.iOS` (build with
+  `-r iossimulator-arm64`).
 
 ## Progress Source of Truth
 

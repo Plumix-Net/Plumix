@@ -24,13 +24,15 @@ internal sealed class AndroidImageBackend : IImageBackend
             byte[] bytes = buffer.Bytes.ToArray();
             if (ApngCodec.TryCreate(bytes, DecodePng, Scale) is { } apng)
             {
-                (apng.TargetWidth, apng.TargetHeight) = TargetSize(apng.Width, apng.Height, getTargetSize);
+                (apng.TargetWidth, apng.TargetHeight) =
+                    DecodedImages.TargetSize(apng.Width, apng.Height, getTargetSize);
                 return Task.FromResult<Codec>(apng);
             }
 
             if (OperatingSystem.IsAndroidVersionAtLeast(31)
                 && AndroidAnimatedImageCodec.TryCreate(
-                    bytes, (width, height) => TargetSize(width, height, getTargetSize), Scale) is { } animated)
+                    bytes, (width, height) => DecodedImages.TargetSize(width, height, getTargetSize), Scale)
+                    is { } animated)
             {
                 return Task.FromResult<Codec>(animated);
             }
@@ -44,7 +46,7 @@ internal sealed class AndroidImageBackend : IImageBackend
                 throw new ArgumentException("Invalid image data", nameof(buffer));
             }
 
-            (int targetWidth, int targetHeight) = TargetSize(width, height, getTargetSize);
+            (int targetWidth, int targetHeight) = DecodedImages.TargetSize(width, height, getTargetSize);
             var options = new BitmapFactory.Options
             {
                 InPreferredConfig = Bitmap.Config.Argb8888,
@@ -56,7 +58,7 @@ internal sealed class AndroidImageBackend : IImageBackend
                 ? decoded
                 : Bitmap.CreateScaledBitmap(decoded, targetWidth, targetHeight, true)!;
             byte[] rgba = ReadPixels(scaled);
-            return Task.FromResult<Codec>(new SingleFrameCodec(rgba, scaled.Width, scaled.Height));
+            return Task.FromResult<Codec>(DecodedImages.SingleFrame(rgba, scaled.Width, scaled.Height));
         }
         finally
         {
@@ -64,59 +66,8 @@ internal sealed class AndroidImageBackend : IImageBackend
         }
     }
 
-    public Task<ByteData?> ToByteData(RasterImage image, ImageByteFormat format)
-    {
-        if (image.Native is not ImpellerImage pixels)
-        {
-            throw new NotSupportedException("Only decoded images can be read back.");
-        }
-
-        byte[] rgba = pixels.Rgba;
-        byte[] result;
-        switch (format)
-        {
-            case ImageByteFormat.RawRgba:
-            case ImageByteFormat.RawUnmodified:
-                result = (byte[])rgba.Clone();
-                break;
-            case ImageByteFormat.RawStraightRgba:
-                result = Unpremultiply(rgba);
-                break;
-            case ImageByteFormat.RawExtendedRgba128:
-            {
-                byte[] straight = Unpremultiply(rgba);
-                result = new byte[straight.Length * 4];
-                for (int i = 0; i < straight.Length; i++)
-                {
-                    BitConverter.TryWriteBytes(result.AsSpan(i * 4), straight[i] / 255f);
-                }
-
-                break;
-            }
-            default:
-                result = EncodePng(rgba, pixels.Width, pixels.Height);
-                break;
-        }
-
-        return Task.FromResult<ByteData?>(ByteData.View(result, 0));
-    }
-
-    // Dart's `_getDefaultImageSizes`/`ImageDescriptor.instantiateCodec`: a missing dimension keeps the
-    // aspect ratio.
-    private static (int Width, int Height) TargetSize(int width, int height, TargetImageSizeCallback? getTargetSize)
-    {
-        TargetImageSize target = getTargetSize?.Invoke(width, height) ?? new TargetImageSize();
-        int? targetWidth = target.Width > 0 ? target.Width : null;
-        int? targetHeight = target.Height > 0 ? target.Height : null;
-        double aspectRatio = (double)width / height;
-        return (targetWidth, targetHeight) switch
-        {
-            (null, null) => (width, height),
-            (null, int h) => ((int)Math.Round(h * aspectRatio, MidpointRounding.AwayFromZero), h),
-            (int w, null) => (w, (int)(w / aspectRatio)),
-            (int w, int h) => (w, h),
-        };
-    }
+    public Task<ByteData?> ToByteData(RasterImage image, ImageByteFormat format) =>
+        DecodedImages.ToByteData(image, format, EncodePng);
 
     // An APNG frame as a standalone PNG.
     private static (byte[] Rgba, int Width, int Height) DecodePng(byte[] png)
@@ -165,51 +116,7 @@ internal sealed class AndroidImageBackend : IImageBackend
         return png.ToArray();
     }
 
-    private static byte[] Unpremultiply(byte[] rgba)
-    {
-        byte[] straight = (byte[])rgba.Clone();
-        for (int i = 0; i < straight.Length; i += 4)
-        {
-            int alpha = straight[i + 3];
-            if (alpha is > 0 and < 255)
-            {
-                for (int channel = 0; channel < 3; channel++)
-                {
-                    straight[i + channel] = (byte)Math.Min(255, ((straight[i + channel] * 255) + (alpha / 2)) / alpha);
-                }
-            }
-        }
 
-        return straight;
-    }
-
-    /// <summary>The engine's SingleFrameCodec over decoded pixels.</summary>
-    private sealed class SingleFrameCodec(byte[] rgba, int width, int height) : Codec
-    {
-        private bool _decoded;
-        private bool _disposed;
-
-        public override int FrameCount => 1;
-
-        public override int RepetitionCount => 0;
-
-        public override Task<FrameInfo> GetNextFrame()
-        {
-            ObjectDisposedException.ThrowIf(_disposed, this);
-            Task<FrameInfo> frame =
-                Task.FromResult(new FrameInfo(TimeSpan.Zero, ImpellerImage.Wrap(rgba, width, height)));
-            // SingleFrameCodec decodes on the first call only; later calls answer from its cached image.
-            if (_decoded)
-            {
-                return frame;
-            }
-
-            _decoded = true;
-            return Codec.CompleteOnLaterTurn(frame);
-        }
-
-        public override void Dispose() => _disposed = true;
-    }
 }
 
 /// <summary>

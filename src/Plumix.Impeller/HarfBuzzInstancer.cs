@@ -14,6 +14,19 @@ internal static partial class HarfBuzzInstancer
 {
     private const string Library = "libHarfBuzzSharp";
 
+    // On Apple mobile platforms the library ships as an embedded framework, which HarfBuzzSharp's own iOS build names
+    // by its rpath; this assembly targets plain .NET, so the same path is resolved here.
+    static HarfBuzzInstancer()
+    {
+        if (OperatingSystem.IsIOS() || OperatingSystem.IsTvOS() || OperatingSystem.IsMacCatalyst())
+        {
+            NativeLibrary.SetDllImportResolver(typeof(HarfBuzzInstancer).Assembly, (name, assembly, searchPath) =>
+                name == Library
+                    ? NativeLibrary.Load("@rpath/libHarfBuzzSharp.framework/libHarfBuzzSharp", assembly, searchPath)
+                    : IntPtr.Zero);
+        }
+    }
+
     // HB_TAG('w','g','h','t').
     private const uint WeightTag = ('w' << 24) | ('g' << 16) | ('h' << 8) | 't';
 
