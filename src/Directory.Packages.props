@@ -23,7 +23,6 @@
     <PackageVersion Include="Avalonia.Diagnostics" Version="11.3.13" />
     <PackageVersion Include="Avalonia.Desktop" Version="$(AvaloniaVersion)" />
     <PackageVersion Include="Avalonia.Skia" Version="$(AvaloniaVersion)" />
-    <PackageVersion Include="Avalonia.iOS" Version="$(AvaloniaVersion)" />
     <PackageVersion Include="Avalonia.Browser" Version="$(AvaloniaVersion)" />
     <!-- Match Avalonia.Skia's decoder ABI; no separate native renderer is introduced. -->
     <PackageVersion Include="SkiaSharp" Version="3.119.4" />

@@ -1,17 +1,18 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-    <!-- Stage 5 prototype (docs/product/native-host.md): the Sample gallery on the native iOS host without Avalonia
-         (src/Plumix.iOS), rendering through Impeller on Metal. -->
+    <!-- The Sample gallery on the native Android host (src/Plumix.Android), rendering through Impeller. -->
     <PropertyGroup>
         <OutputType>Exe</OutputType>
-        <TargetFramework>net11.0-ios</TargetFramework>
-        <SupportedOSPlatformVersion>15.0</SupportedOSPlatformVersion>
+        <TargetFramework>net11.0-android</TargetFramework>
+        <SupportedOSPlatformVersion>24</SupportedOSPlatformVersion>
+        <RuntimeIdentifiers>android-arm64;android-x64</RuntimeIdentifiers>
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
-        <ApplicationId>com.plumix.impeller</ApplicationId>
-        <ApplicationTitle>Plumix Impeller</ApplicationTitle>
+        <ApplicationId>com.plumix.sample</ApplicationId>
+        <ApplicationTitle>Plumix Sample</ApplicationTitle>
         <ApplicationVersion>1</ApplicationVersion>
         <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
+        <AndroidPackageFormat>apk</AndroidPackageFormat>
         <IsPackable>false</IsPackable>
     </PropertyGroup>
 
@@ -21,14 +22,15 @@
                  Exclude="..\Plumix.Sample\App.axaml.cs;..\Plumix.Sample\obj\**;..\Plumix.Sample\bin\**"
                  LinkBase="Sample" />
         <PackageReference Include="Plumix.Bloc" />
-        <!-- UIKit's implicit namespace clashes with Plumix widget names. -->
-        <Using Remove="UIKit" />
-        <BundleResource Include="plumix.png" />
+        <!-- Android's implicit namespaces clash with Plumix widget names (ListView, Switch, Dialog...). -->
+        <Using Remove="Android.Widget" />
+        <Using Remove="Android.App" />
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\..\Plumix.iOS\Plumix.iOS.csproj" />
+        <ProjectReference Include="..\..\Plumix.Android\Plumix.Android.csproj" />
         <ProjectReference Include="..\..\Plumix.Material\Plumix.Material.csproj" />
     </ItemGroup>
+
 
 </Project>

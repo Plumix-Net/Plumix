@@ -5,18 +5,17 @@ using Plumix.UI;
 using Plumix.Widgets;
 using ListView = Plumix.Widgets.ListView;
 
-namespace Plumix.Sample.Impeller.Android;
+namespace Plumix.Sample.Android;
 
-// C#-only sample code; no Dart parity source. Milestone 1 of the stage 4 prototype: shapes, paths, clips,
-// gradients, shadows, opacity and scrolling through the Impeller backend (text still draws as FlutterTest
-// boxes until the glyph-run text stack lands).
+// C#-only sample code; no Dart parity source. A smoke test of the Impeller backend: shapes, paths, clips,
+// gradients, shadows, opacity, text, images and scrolling.
 
-/// <summary>The prototype's demo app.</summary>
+/// <summary>The Impeller backend demo app.</summary>
 internal static class DemoApp
 {
     public static Widget Create() => new MaterialApp(
         debugShowCheckedModeBanner: false,
-        title: "Plumix Impeller",
+        title: "Plumix Sample",
         home: new CounterPage());
 
     private sealed class CounterPage : StatefulWidget

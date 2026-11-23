@@ -39,7 +39,7 @@
         <InternalsVisibleTo Include="Plumix.Android" />
         <InternalsVisibleTo Include="Plumix.iOS" />
         <InternalsVisibleTo Include="Plumix.Impeller.Tests" />
-        <InternalsVisibleTo Include="Plumix.Sample.Impeller.Android" />
+        <InternalsVisibleTo Include="Plumix.Sample.Android" />
     </ItemGroup>
 
 </Project>

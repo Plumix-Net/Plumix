@@ -10,6 +10,8 @@ Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 ## [Unreleased]
 - Breaking: `Plumix.Avalonia.Android` (`PlumixMainActivity`) and `AndroidActivityDelegate` are removed; Android apps
   use the native host `Plumix.Android` (`PlumixActivity`). The Avalonia Android sample is gone too.
+- Samples: the Avalonia iOS head and `NetBench.Impeller.Android` are removed; the native heads are
+  `Plumix.Sample.Android` and `Plumix.Sample.iOS` (were `Plumix.Sample.Impeller.*`).
 
 ## v1.0.0-preview.9 — 2026-11-23
 - New template package `Plumix.Templates`: `dotnet new plumix-app` creates shared widgets with Desktop (Avalonia),

@@ -45,19 +45,18 @@ normative may live only there.
 - `dart_sample`: reference sample app on real Flutter (Dart), kept in lockstep with `src/Sample/Plumix.Sample`.
 - `src/Sample/Plumix.Desktop`: desktop entry point.
 - `src/Sample/Plumix.Browser`: WebAssembly host.
-- `src/Sample/Plumix.Sample.iOS`: iOS sample host on Avalonia (was `src/Sample/Plumix.iOS`).
 - `src/Plumix.Impeller`, `src/Plumix.Android`: the native host without Avalonia (umbrella
   `docs/product/native-host.md`): the Impeller backend behind the core's seams (NImpeller from the
   `Plumix.NImpeller` package, glyph-run text over HarfBuzz, `impellerc` shader bundles in `Plumix.Impeller/Shaders`,
   the engine's pointer packet converter) and the Android host (`PlumixActivity`, raster thread, ports of the engine
-  embedding's input, IME, autofill, accessibility and platform channels); tests in `src/Plumix.Impeller.Tests`; apps
-  `src/Sample/Plumix.Sample.Impeller.Android` and `src/Sample/NetBench.Impeller.Android`.
+  embedding's input, IME, autofill, accessibility and platform channels); tests in `src/Plumix.Impeller.Tests`; app
+  `src/Sample/Plumix.Sample.Android`.
 - `src/Plumix.iOS`: the native iOS host package (`PlumixViewController`): Metal through `CAMetalLayer` on a raster
   thread, `CADisplayLink` vsync, CoreText fonts, ImageIO images, touches, ports of the engine's platform plugin,
   settings, text input (it owns `flutter/textinput`; HostTextInputPlugin is not used), keyboard inset, hardware keys
   and the accessibility bridge (core `IOSAccessibility.cs` decides what nodes read), state restoration
   (`PlumixSceneDelegate`, core `IOSRestorationPlugin`), pixel readback for `Scene.toImage` (`MetalReadback`). It
-  packs only on macOS (the CI's `pack-ios` job). App `src/Sample/Plumix.Sample.Impeller.iOS` (build with
+  packs only on macOS (the CI's `pack-ios` job). App `src/Sample/Plumix.Sample.iOS` (build with
   `-r iossimulator-arm64`).
 - `src/Plumix.Templates`: the `dotnet new` template package (`plumix-app`: shared widgets plus Desktop, Android and
   iOS heads, in `content/plumix-app`, placeholder name `PlumixTemplateApp`). Packing stamps the package version and
@@ -199,8 +198,8 @@ substituted at run time (`-p:AvaloniaTestVersion=$(scripts/latest_avalonia_versi
 Platform-specific builds:
 
 ```bash
-dotnet build src/Sample/Plumix.Sample.Impeller.Android/Plumix.Sample.Impeller.Android.csproj -c Debug
-dotnet build src/Sample/Plumix.Sample.iOS/Plumix.Sample.iOS.csproj -c Debug
+dotnet build src/Sample/Plumix.Sample.Android/Plumix.Sample.Android.csproj -c Debug
+dotnet build src/Sample/Plumix.Sample.iOS/Plumix.Sample.iOS.csproj -c Debug -r iossimulator-arm64
 ```
 
 ## Change Guidelines
