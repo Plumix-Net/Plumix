@@ -1,6 +1,6 @@
 // C#-only infrastructure: the Avalonia host's analogue of the engine embedders' raw key channel
 // responders (`FlutterChannelKeyResponder` on macOS, `KeyboardKeyChannelHandler` on Windows,
-// `FlKeyChannelResponder` on Linux, `KeyChannelResponder` on Android, ...). Each embedder encodes a
+// `FlKeyChannelResponder` on Linux, the web engine's `KeyboardBinding`). Each embedder encodes a
 // native key event as a `flutter/keyevent` JSON message in its own `keymap`, which the framework
 // decodes with `RawKeyEvent.fromMessage`. Plumix's host receives Avalonia key events instead of
 // native ones, so this encoder rebuilds the running platform's message from them: native codes come
@@ -33,19 +33,12 @@ internal static class HostKeyEventMessage
         PhysicalKeyboardKey physicalKey = HostKeyboardMap.PhysicalKeyFor(e.PhysicalKey);
         LogicalKeyboardKey logicalKey = HostKeyboardMap.LogicalKeyFor(e.Key, e.KeySymbol);
         KeyEventDeviceType deviceType = HostKeyboardMap.DeviceTypeFor(e.KeyDeviceType);
-        if (keymap == "android" && isDown && e.PhysicalKey == PhysicalKey.None
-            && deviceType == KeyEventDeviceType.Keyboard)
-        {
-            ReleaseAndroidKeyWithoutScanCode(physicalKey, e.KeyModifiers, deviceType);
-        }
-
         Dictionary<string, object?> message = Encode(
             keymap,
             physicalKey,
             logicalKey,
             e.KeySymbol,
             e.KeyModifiers,
-            deviceType,
             isDown);
 
         if (keymap == "windows")
@@ -56,32 +49,6 @@ internal static class HostKeyEventMessage
         }
 
         return Send(message);
-    }
-
-    /// <summary>
-    /// Releases the key an earlier Android key event without a scan code left pressed.
-    /// </summary>
-    /// <remarks>
-    /// IMEs synthesize their key events (<c>InputConnection.sendKeyEvent</c>, and Avalonia's own
-    /// FORWARD_DEL for <c>deleteSurroundingText</c>) without a scan code, so every one of them decodes to
-    /// the same physical key, <c>androidPlane + 0</c>; and Avalonia never sends that FORWARD_DEL's key
-    /// up. The stuck key would turn the next IME key into a repeat of it. The Android embedder's
-    /// <c>KeyEmbedderResponder</c> synthesizes an up for a non-repeated down of a pressed physical key;
-    /// IME key events never repeat, so this does the same for them.
-    /// </remarks>
-    private static void ReleaseAndroidKeyWithoutScanCode(
-        PhysicalKeyboardKey physicalKey, KeyModifiers modifiers, KeyEventDeviceType deviceType)
-    {
-        LogicalKeyboardKey? recorded;
-        using (EventLoop.EnterFrameworkThread())
-        {
-            recorded = HardwareKeyboard.Instance.LookUpLayout(new PhysicalKeyboardKey(LogicalKeyboardKey.AndroidPlane));
-        }
-
-        if (recorded is not null)
-        {
-            Send(Encode("android", physicalKey, recorded, null, modifiers, deviceType, isDown: false));
-        }
     }
 
     private static bool Send(Dictionary<string, object?> message)
@@ -175,11 +142,6 @@ internal static class HostKeyEventMessage
             return "ios";
         }
 
-        if (OperatingSystem.IsAndroid())
-        {
-            return "android";
-        }
-
         return OperatingSystem.IsWindows() ? "windows" : "linux";
     }
 
@@ -193,7 +155,6 @@ internal static class HostKeyEventMessage
         LogicalKeyboardKey logicalKey,
         string? keySymbol,
         KeyModifiers keyModifiers,
-        KeyEventDeviceType deviceType,
         bool isDown)
     {
         // GTK reports the modifier state from before the event (X11 semantics) and lets
@@ -251,21 +212,6 @@ internal static class HostKeyEventMessage
                 message["unicodeScalarValues"] = unicodeScalarValues;
                 message["modifiers"] = GtkModifiers(modifiersBefore, capsLockBefore, numLockBefore);
                 message["specifiedLogicalKey"] = logicalKey.KeyId;
-                break;
-            case "android":
-                int codePoint = isDown && characters.Length > 0 ? char.ConvertToUtf32(characters, 0) : 0;
-                message["keyCode"] = NativeCode(KeyboardMaps.KAndroidNumPadMap, logicalKey)
-                                     ?? NativeCode(KeyboardMaps.KAndroidToLogicalKey, logicalKey) ?? 0;
-                message["scanCode"] = NativeCode(KeyboardMaps.KAndroidToPhysicalKey, physicalKey);
-                message["codePoint"] = codePoint;
-                message["plainCodePoint"] = printable == null ? 0 : char.ConvertToUtf32(printable, 0);
-                message["metaState"] = AndroidMetaState();
-                message["source"] = AndroidSource(deviceType);
-                if (codePoint != 0)
-                {
-                    message["character"] = characters;
-                }
-
                 break;
             default:
                 (string key, int location) = WebKeyAndLocation(logicalKey, characters);
@@ -419,23 +365,6 @@ internal static class HostKeyEventMessage
         return modifiers;
     }
 
-    private static int AndroidMetaState()
-    {
-        int metaState = SidedFlags(
-            RawKeyEventDataAndroid.ModifierShift, RawKeyEventDataAndroid.ModifierLeftShift,
-            RawKeyEventDataAndroid.ModifierRightShift,
-            RawKeyEventDataAndroid.ModifierControl, RawKeyEventDataAndroid.ModifierLeftControl,
-            RawKeyEventDataAndroid.ModifierRightControl,
-            RawKeyEventDataAndroid.ModifierAlt, RawKeyEventDataAndroid.ModifierLeftAlt,
-            RawKeyEventDataAndroid.ModifierRightAlt,
-            RawKeyEventDataAndroid.ModifierMeta, RawKeyEventDataAndroid.ModifierLeftMeta,
-            RawKeyEventDataAndroid.ModifierRightMeta);
-        metaState |= _capsLockOn ? RawKeyEventDataAndroid.ModifierCapsLock : 0;
-        metaState |= _numLockOn ? RawKeyEventDataAndroid.ModifierNumLock : 0;
-        metaState |= _scrollLockOn ? RawKeyEventDataAndroid.ModifierScrollLock : 0;
-        return metaState;
-    }
-
     private static int GtkModifiers(HashSet<PhysicalKeyboardKey> modifiersDown, bool capsLockOn, bool numLockOn)
     {
         int modifiers = 0;
@@ -526,15 +455,6 @@ internal static class HostKeyEventMessage
     // `0x01000000 | codePoint` (gdk_unicode_to_keyval).
     private static int GdkKeyvalForCodePoint(int codePoint) =>
         codePoint is >= 0x20 and <= 0x7e or >= 0xa0 and <= 0xff ? codePoint : 0x01000000 | codePoint;
-
-    private static int AndroidSource(KeyEventDeviceType deviceType) => deviceType switch
-    {
-        KeyEventDeviceType.DirectionalPad => 0x00000201,
-        KeyEventDeviceType.Gamepad => 0x00000401,
-        KeyEventDeviceType.Joystick => 0x01000010,
-        KeyEventDeviceType.Hdmi => 0x02000001,
-        _ => 0x00000101,
-    };
 
     private static string WebCode(PhysicalKeyboardKey physicalKey) =>
         WebCodes.Value.GetValueOrDefault(physicalKey.UsbHidUsage) ?? "Unidentified";

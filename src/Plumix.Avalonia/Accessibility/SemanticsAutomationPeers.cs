@@ -7,9 +7,9 @@ using Avalonia.Controls;
 using Plumix.Rendering;
 using Plumix.Widgets;
 
-// C#-only infrastructure: the desktop and Android accessibility bridge over Avalonia's automation peers.
-// Avalonia hands these peers to UI Automation (Windows), the macOS accessibility API, AT-SPI (Linux)
-// and Android's accessibility node provider. The tree, roles, states, the focus-is-an-action rule
+// C#-only infrastructure: the desktop accessibility bridge over Avalonia's automation peers.
+// Avalonia hands these peers to UI Automation (Windows), the macOS accessibility API and AT-SPI (Linux).
+// The tree, roles, states, the focus-is-an-action rule
 // and the activation-on-first-query rule follow the engine's common bridge
 // (engine/src/flutter/shell/platform/common/accessibility_bridge.cc, flutter_platform_node_delegate.cc)
 // and its Windows embedder (shell/platform/windows/flutter_window.cc `OnGetObject`,
@@ -340,9 +340,6 @@ internal abstract class SemanticsNodeAutomationPeer : AutomationPeer
 
     public SemanticsPeerShape Shape { get; }
 
-    /// <summary>Whether the peers fill Avalonia's Android node info (widget classes, text field hints).</summary>
-    internal static bool FillsAndroidNodeInfo { get; set; } = OperatingSystem.IsAndroid();
-
     public static SemanticsNodeAutomationPeer Create(
         PlumixHostAutomationPeer host,
         AccessibilityNode node,
@@ -449,30 +446,7 @@ internal abstract class SemanticsNodeAutomationPeer : AutomationPeer
         return _children = children;
     }
 
-    // Avalonia's Android backend reads the class name as the node's Android widget class, which is
-    // how TalkBack describes a node's role; the engine's Android bridge names the same classes.
-    protected override string GetClassNameCore()
-    {
-        if (!FillsAndroidNodeInfo)
-        {
-            return "FlutterSemanticsNode";
-        }
-
-        return Node.Role switch
-        {
-            AccessibilityRole.Button => "android.widget.Button",
-            AccessibilityRole.TextField => "android.widget.EditText",
-            AccessibilityRole.Image => "android.widget.ImageView",
-            AccessibilityRole.RadioButton => "android.widget.RadioButton",
-            AccessibilityRole.CheckBox => "android.widget.CheckBox",
-            AccessibilityRole.Switch => "android.widget.Switch",
-            AccessibilityRole.Slider => "android.widget.SeekBar",
-            _ when Node.IsScrollable => Node.HasAction(SemanticsActions.ScrollLeft | SemanticsActions.ScrollRight)
-                ? "android.widget.HorizontalScrollView"
-                : "android.widget.ScrollView",
-            _ => "android.view.View",
-        };
-    }
+    protected override string GetClassNameCore() => "FlutterSemanticsNode";
 
     protected override AutomationPeer? GetLabeledByCore() => null;
 
@@ -489,19 +463,7 @@ internal abstract class SemanticsNodeAutomationPeer : AutomationPeer
         return label.Length == 0 ? tooltip : label + "\n" + tooltip;
     }
 
-    // Avalonia's Android value provider makes a text field's value the node text, which hides the name,
-    // so there the help text (the content description) carries the engine's text field hint, "label,
-    // hint". An Android head that wants the engine's node hint text moves it there itself.
-    protected override string? GetHelpTextCore()
-    {
-        if (FillsAndroidNodeInfo && (Shape & SemanticsPeerShape.Value) != 0)
-        {
-            string hint = string.Join(", ", new[] { Node.Label, Node.Hint }.Where(word => word.Length > 0));
-            return hint.Length == 0 ? null : hint;
-        }
-
-        return Node.Hint.Length == 0 ? null : Node.Hint;
-    }
+    protected override string? GetHelpTextCore() => Node.Hint.Length == 0 ? null : Node.Hint;
 
     // The web bridge's heading rule: an explicit level, else level 2 for a header.
     protected override int GetHeadingLevelCore()

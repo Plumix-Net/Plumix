@@ -49,58 +49,6 @@ public partial class PlumixHost : Control, ICustomHitTest
     private static PlumixHost? s_platformChannelHost;
     private static bool s_isMouseCursorHandlerInstalled;
 
-    // The Android engine's back callback state (`PlatformPlugin.setFrameworkHandlesBack`). Only the
-    // Android framework reports it; elsewhere back keys always go to the framework.
-    private static bool s_frameworkHandlesBack = true;
-
-    // Avalonia raises `TopLevel.BackRequested` for the platform's system back only on Android; the
-    // desktop backends raise it for Alt+Left and the mouse back button, which Flutter's desktop
-    // embedders do not treat as back (Alt+Left moves by word in macOS text fields).
-    private static readonly bool s_listensToSystemBack = OperatingSystem.IsAndroid();
-
-    /// <summary>
-    /// Whether the Escape and BrowserBack keys run <c>popRoute</c> (C#-only, see <c>docs/ai/DIVERGENCES.md</c>):
-    /// everywhere but Android, whose system back reaches the framework through <c>TopLevel.BackRequested</c>
-    /// (and the predictive back callback), as it reaches <c>FlutterActivity.onBackPressed</c>. Test-settable.
-    /// </summary>
-    internal static bool MapsBackKeysToPopRoute { get; set; } = !OperatingSystem.IsAndroid();
-
-    /// <summary>Resets the process-wide back callback state the Android framework reported. Test-only.</summary>
-    internal static void ResetFrameworkHandlesBackForTests()
-    {
-        s_frameworkHandlesBack = true;
-        MapsBackKeysToPopRoute = !OperatingSystem.IsAndroid();
-        ResetPlatformPluginForTests();
-    }
-
-    // The Android embedder's `ViewportMetrics.physicalTouchSlop` (`ViewConfiguration.getScaledTouchSlop`),
-    // which its `FlutterView` sends with every metrics update. The other embedders send none, so
-    // `FlutterView.gestureSettings` carries no touch slop there and recognizers use `kTouchSlop`.
-    private static double? s_physicalTouchSlop;
-
-    /// <summary>
-    /// Records the platform's touch slop in physical pixels, or <see langword="null"/> where the platform
-    /// reports none, and republishes the metrics of every attached host with it.
-    /// </summary>
-    internal static void UpdatePhysicalTouchSlop(double? physicalTouchSlop)
-    {
-        if (physicalTouchSlop is { } slop && (!double.IsFinite(slop) || slop < 0))
-        {
-            throw new ArgumentOutOfRangeException(nameof(physicalTouchSlop));
-        }
-
-        if (s_physicalTouchSlop == physicalTouchSlop)
-        {
-            return;
-        }
-
-        s_physicalTouchSlop = physicalTouchSlop;
-        foreach (PlumixHost host in s_attachedHosts.ToArray())
-        {
-            host.OnMetricsChanged();
-        }
-    }
-
     // Dart's engine numbers its views and hands the implicit one id 0; every Plumix host is a view of
     // its own, so ids are taken from a process-wide counter (the `RendererBinding` registry is keyed
     // by them).
@@ -201,7 +149,7 @@ public partial class PlumixHost : Control, ICustomHitTest
         ClipToBounds = true;
         Focusable = true;
         // The framework paints its own focus highlights; the theme's focus-visible adorner (Fluent: 2 dp
-        // black + 1 dp white) would frame the whole view, as it did on Android 14 after startup.
+        // black + 1 dp white) would frame the whole view.
         FocusAdorner = null;
     }
 
@@ -331,54 +279,27 @@ public partial class PlumixHost : Control, ICustomHitTest
             return;
         }
 
-        // Avalonia's `Key.Back` is Backspace on every platform (Android's KEYCODE_DEL); Android's
-        // KEYCODE_BACK arrives as `Key.Escape`, and, left unhandled, comes back as the system back.
+        // Avalonia's `Key.Back` is Backspace on every platform.
         bool isBackKey = e.Key is Key.Escape or Key.BrowserBack;
-        if (isBackKey && MapsBackKeysToPopRoute && HandleBackButton(fromKey: true))
+        if (isBackKey && HandleBackKey())
         {
             e.Handled = true;
         }
     }
 
     /// <summary>
-    /// Answers the system back request Avalonia raises on the <see cref="TopLevel"/>: Android's
-    /// <c>OnBackPressedDispatcher</c> callback.
+    /// A back key (Escape, BrowserBack) as the engine's back button: a <c>popRoute</c> message (C#-only, see
+    /// <c>docs/ai/DIVERGENCES.md</c>). Returns whether the host must treat the key as consumed. Its unanswered
+    /// pop does not reach the platform's <c>SystemNavigator.pop</c> (see <see cref="SystemNavigatorPopHandler"/>).
     /// </summary>
-    /// <remarks>
-    /// The request is left unhandled when the framework does not handle back, so the platform closes the
-    /// app itself, as the engine's disabled back callback lets it.
-    /// </remarks>
-    internal void HandleBackRequested(RoutedEventArgs e)
+    private static bool HandleBackKey()
     {
-        if (!e.Handled && HandleBackButton(fromKey: false))
-        {
-            e.Handled = true;
-        }
-    }
-
-    private void HandleTopLevelBackRequested(object? sender, RoutedEventArgs e) => HandleBackRequested(e);
-
-    /// <summary>
-    /// The engine's back button: a <c>popRoute</c> message, sent only while the framework reported it
-    /// handles back (<c>SystemNavigator.setFrameworkHandlesBack</c>). Returns whether the host must
-    /// treat the back press as consumed. A back key's unanswered pop does not reach the platform's
-    /// <c>SystemNavigator.pop</c> (see <see cref="SystemNavigatorPopHandler"/>).
-    /// </summary>
-    private static bool HandleBackButton(bool fromKey)
-    {
-        if (!s_frameworkHandlesBack)
-        {
-            return false;
-        }
-
         // The platform does not wait on `popRoute`; Avalonia needs the answer now: a pop an observer is
         // still deciding stays with the framework.
         Task<bool> handled;
         using (EventLoop.EnterFrameworkThread())
         {
-            handled = fromKey
-                ? RunKeyPopRoute(WidgetsBinding.Instance.HandlePopRoute)
-                : WidgetsBinding.Instance.HandlePopRoute();
+            handled = RunKeyPopRoute(WidgetsBinding.Instance.HandlePopRoute);
         }
 
         return !handled.IsCompleted || handled is { IsCompletedSuccessfully: true, Result: true };
@@ -991,10 +912,8 @@ public partial class PlumixHost : Control, ICustomHitTest
             ViewPadding: viewPadding,
             PlatformBrightness: ResolvePlatformBrightness(),
             ViewId: _view.ViewId,
-            // `DeviceGestureSettings.fromView`: the view's physical touch slop in logical pixels.
-            GestureSettings: s_physicalTouchSlop is { } touchSlop
-                ? new DeviceGestureSettings(TouchSlop: touchSlop / scale)
-                : null);
+            // Only the Android embedder reports a physical touch slop; without it recognizers use `kTouchSlop`.
+            GestureSettings: null);
     }
 
     protected void ScheduleVisualUpdate()
@@ -1123,11 +1042,6 @@ public partial class PlumixHost : Control, ICustomHitTest
 
         _attachedTopLevel.ActualThemeVariantChanged += HandleActualThemeVariantChanged;
         HostSystemFonts.Attach(_attachedTopLevel);
-        if (s_listensToSystemBack)
-        {
-            _attachedTopLevel.BackRequested += HandleTopLevelBackRequested;
-        }
-
         _insetsManager = _attachedTopLevel.InsetsManager;
         if (_insetsManager != null)
         {
@@ -1170,7 +1084,6 @@ public partial class PlumixHost : Control, ICustomHitTest
         if (_attachedTopLevel != null)
         {
             _attachedTopLevel.ActualThemeVariantChanged -= HandleActualThemeVariantChanged;
-            _attachedTopLevel.BackRequested -= HandleTopLevelBackRequested;
         }
 
         _attachedTopLevel = null;
@@ -1512,7 +1425,7 @@ public partial class PlumixHost : Control, ICustomHitTest
                 OnFrameworkHapticFeedback(call.Arguments as string);
                 return Task.FromResult<object?>(null);
             case "SystemNavigator.setFrameworkHandlesBack":
-                s_frameworkHandlesBack = call.Arguments is true;
+                // Only the Android embedder acts on it (the framework sends it only there).
                 return Task.FromResult<object?>(null);
             case "SystemNavigator.pop":
                 return PopSystemNavigator(call.Arguments);
@@ -1645,14 +1558,7 @@ public partial class PlumixHost : Control, ICustomHitTest
         }
 
         // The platform's own answer runs last, over whatever the insets manager did to the window.
-        if (SystemUiOverlayStyleHandler is { } setSystemUiOverlayStyle)
-        {
-            setSystemUiOverlayStyle(style);
-        }
-        else if (_insetsManager != null)
-        {
-            TryApplyAndroidSystemBarColors(_insetsManager, style.StatusBarColor, style.SystemNavigationBarColor);
-        }
+        SystemUiOverlayStyleHandler?.Invoke(style);
     }
 
     private void ApplyInsetsManagerSystemUiOverlayStyle(IInsetsManager insetsManager, SystemUiOverlayStyle style)
@@ -1715,89 +1621,6 @@ public partial class PlumixHost : Control, ICustomHitTest
         {
             property.SetValue(insetsManager, theme);
         }
-    }
-
-    private static void TryApplyAndroidSystemBarColors(
-        IInsetsManager insetsManager,
-        Color? statusBarColor,
-        Color? navigationBarColor)
-    {
-        if (statusBarColor == null && navigationBarColor == null)
-        {
-            return;
-        }
-
-        var activityField = insetsManager.GetType().GetField(
-            "_activity",
-            BindingFlags.Instance | BindingFlags.NonPublic);
-        object? activity = activityField?.GetValue(insetsManager);
-        if (activity == null)
-        {
-            return;
-        }
-
-        var windowProperty = activity.GetType().GetProperty(
-            "Window",
-            BindingFlags.Instance | BindingFlags.Public);
-        object? window = windowProperty?.GetValue(activity);
-        if (window == null)
-        {
-            return;
-        }
-
-        if (statusBarColor != null)
-        {
-            TrySetAndroidWindowColor(window, "SetStatusBarColor", statusBarColor!);
-        }
-
-        if (navigationBarColor != null)
-        {
-            TrySetAndroidWindowColor(window, "SetNavigationBarColor", navigationBarColor!);
-        }
-    }
-
-    private static void TrySetAndroidWindowColor(object window, string methodName, Color color)
-    {
-        var method = window.GetType()
-            .GetMethods(BindingFlags.Instance | BindingFlags.Public)
-            .FirstOrDefault(candidate =>
-                string.Equals(candidate.Name, methodName, StringComparison.Ordinal)
-                && candidate.GetParameters().Length == 1);
-        if (method == null)
-        {
-            return;
-        }
-
-        var parameterType = method.GetParameters()[0].ParameterType;
-        object? argument = CreateAndroidColorArgument(parameterType, color);
-        if (argument == null)
-        {
-            return;
-        }
-
-        method.Invoke(window, [argument]);
-    }
-
-    private static object? CreateAndroidColorArgument(Type parameterType, Color color)
-    {
-        int argb = unchecked((int)ToArgb(color));
-        if (parameterType == typeof(int))
-        {
-            return argb;
-        }
-
-        var constructor = parameterType.GetConstructor([typeof(int)]);
-        if (constructor != null)
-        {
-            return constructor.Invoke([argb]);
-        }
-
-        return null;
-    }
-
-    private static uint ToArgb(Color color)
-    {
-        return color.ToARGB32();
     }
 
     /// <summary>

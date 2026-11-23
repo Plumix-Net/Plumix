@@ -1,6 +1,5 @@
 using Avalonia.Controls;
 using Avalonia.Input;
-using Avalonia.Interactivity;
 using Plumix.UI;
 using Plumix.Widgets;
 using Xunit;
@@ -16,11 +15,11 @@ public sealed class PlumixHostPlatformPluginTests : IDisposable
 {
     private readonly int _originalFeatures = PlatformDispatcher.Instance.ReportedAccessibilityFeatures;
 
-    public PlumixHostPlatformPluginTests() => PlumixHost.ResetFrameworkHandlesBackForTests();
+    public PlumixHostPlatformPluginTests() => PlumixHost.ResetPlatformPluginForTests();
 
     public void Dispose()
     {
-        PlumixHost.ResetFrameworkHandlesBackForTests();
+        PlumixHost.ResetPlatformPluginForTests();
         PlatformDispatcher.Instance.UpdateAccessibilityFeatures(_originalFeatures);
     }
 
@@ -142,7 +141,7 @@ public sealed class PlumixHostPlatformPluginTests : IDisposable
     }
 
     // C#-only: the Escape key's popRoute that no route took does not reach SystemNavigator.pop (Flutter maps
-    // no key to popRoute), while the system back's does.
+    // no key to popRoute), while a pop the framework asks for itself does.
     [Fact]
     public void BackKeyPopRoute_ThatNothingPopped_DoesNotPopTheSystemNavigator()
     {
@@ -168,38 +167,12 @@ public sealed class PlumixHostPlatformPluginTests : IDisposable
             Assert.Equal(2, observer.Calls);
             Assert.Empty(pops);
 
-            observer.Result = Task.FromResult(false);
-            Assert.False(host.DispatchBackRequested());
-            Assert.Equal(3, observer.Calls);
+            SystemNavigator.Pop(animated: false).GetAwaiter().GetResult();
             Assert.Equal([false], pops);
         }
         finally
         {
             host.DetachPlatformChannelHandler();
-            WidgetsBinding.Instance.RemoveObserver(observer);
-        }
-    }
-
-    // Android delivers its system back through TopLevel.BackRequested only, as FlutterActivity receives it
-    // in onBackPressed; an unhandled KEYCODE_BACK key comes back that way.
-    [Fact]
-    public void BackKeys_WhenNotMapped_DoNotRunPopRoute()
-    {
-        PlumixHost.MapsBackKeysToPopRoute = false;
-        var observer = new PopRouteObserver { Result = Task.FromResult(true) };
-        WidgetsBinding.Instance.AddObserver(observer);
-        try
-        {
-            var host = new TestPlumixHost();
-            Assert.False(host.DispatchKeyDown(Key.Escape));
-            Assert.False(host.DispatchKeyDown(Key.BrowserBack));
-            Assert.Equal(0, observer.Calls);
-
-            Assert.True(host.DispatchBackRequested());
-            Assert.Equal(1, observer.Calls);
-        }
-        finally
-        {
             WidgetsBinding.Instance.RemoveObserver(observer);
         }
     }
@@ -240,13 +213,6 @@ public sealed class PlumixHostPlatformPluginTests : IDisposable
         public new void AttachPlatformChannelHandler() => base.AttachPlatformChannelHandler();
 
         public new void DetachPlatformChannelHandler() => base.DetachPlatformChannelHandler();
-
-        public bool DispatchBackRequested()
-        {
-            var args = new RoutedEventArgs(TopLevel.BackRequestedEvent);
-            HandleBackRequested(args);
-            return args.Handled;
-        }
 
         public bool DispatchKeyDown(Key key)
         {

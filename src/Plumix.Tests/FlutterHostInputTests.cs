@@ -1,6 +1,5 @@
 using Avalonia.Controls;
 using Avalonia.Input;
-using Avalonia.Interactivity;
 using Avalonia.Rendering;
 using Plumix.UI;
 using Plumix.Widgets;
@@ -17,13 +16,13 @@ public sealed class PlumixHostInputTests : IDisposable
     public PlumixHostInputTests()
     {
         FrameworkFocusManager.Instance.ResetForTests();
-        PlumixHost.ResetFrameworkHandlesBackForTests();
+        PlumixHost.ResetPlatformPluginForTests();
     }
 
     public void Dispose()
     {
         FrameworkFocusManager.Instance.ResetForTests();
-        PlumixHost.ResetFrameworkHandlesBackForTests();
+        PlumixHost.ResetPlatformPluginForTests();
     }
 
     [Fact]
@@ -243,126 +242,6 @@ public sealed class PlumixHostInputTests : IDisposable
         }
     }
 
-    [Fact]
-    public void PlumixHost_BackRequested_PopsTheRouteWhileTheFrameworkHandlesBack()
-    {
-        var observer = new PopRouteObserver();
-        var errors = new List<Plumix.Foundation.FlutterErrorDetails>();
-        Plumix.Foundation.FlutterExceptionHandler? previousOnError = Plumix.Foundation.FlutterError.OnError;
-        Plumix.Foundation.FlutterError.OnError = errors.Add;
-        WidgetsBinding.Instance.AddObserver(observer);
-        var host = new TestPlumixHost();
-        host.AttachPlatformChannelHandler();
-        var pending = new TaskCompletionSource<bool>();
-        try
-        {
-            observer.Result = Task.FromResult(true);
-            Assert.True(host.DispatchBackRequested());
-            Assert.Equal(1, observer.Calls);
-
-            // A pop an observer is still deciding stays with the framework.
-            observer.Result = pending.Task;
-            Assert.True(host.DispatchBackRequested());
-            Assert.Equal(2, observer.Calls);
-
-            // Nothing popped: the platform keeps the back press.
-            observer.Result = Task.FromResult(false);
-            Assert.False(host.DispatchBackRequested());
-            Assert.Equal(3, observer.Calls);
-
-            // A request another Avalonia handler took never reaches the framework.
-            observer.Result = Task.FromResult(true);
-            Assert.True(host.DispatchBackRequested(alreadyHandled: true));
-            Assert.Equal(3, observer.Calls);
-
-            // At the root the framework tells the engine it does not handle back, and Android closes
-            // the app itself.
-            SetFrameworkHandlesBack(false);
-            Assert.False(host.DispatchBackRequested());
-            Assert.False(host.DispatchKeyDown(Key.Escape, physicalKey: PhysicalKey.Escape));
-            host.DispatchKeyUp(Key.Escape, physicalKey: PhysicalKey.Escape);
-            Assert.Equal(3, observer.Calls);
-
-            SetFrameworkHandlesBack(true);
-            Assert.True(host.DispatchBackRequested());
-            Assert.Equal(4, observer.Calls);
-        }
-        finally
-        {
-            pending.SetResult(true);
-            SetFrameworkHandlesBack(true);
-            EventLoop.FlushMicrotasks();
-            host.DetachPlatformChannelHandler();
-            WidgetsBinding.Instance.RemoveObserver(observer);
-            // The unanswered pop asked the engine for `SystemNavigator.pop`, which this host leaves to
-            // the platform's own back handling.
-            Plumix.Foundation.FlutterError.OnError = previousOnError;
-        }
-    }
-
-    [Fact]
-    public void PlumixHost_AndroidKeysWithoutAScanCode_ReleaseTheKeyLeftPressed()
-    {
-        var events = new List<Plumix.UI.KeyEvent>();
-        var focusNode = new FocusNode
-        {
-            OnKeyEvent = (_, @event) =>
-            {
-                events.Add(@event);
-                return KeyEventResult.Handled;
-            }
-        };
-        FrameworkFocusManager.Instance.RegisterNode(focusNode);
-        FrameworkFocusManager.Instance.RequestFocus(focusNode);
-        EventLoop.FlushMicrotasks();
-
-        // Avalonia turns an IME's `deleteSurroundingText` into a FORWARD_DEL key down without an up;
-        // IME key events carry no scan code.
-        Assert.True(DispatchAndroid(Key.Delete, isDown: true));
-        Assert.True(DispatchAndroid(Key.Back, isDown: true));
-        Assert.True(DispatchAndroid(Key.Back, isDown: false));
-        Assert.True(DispatchAndroid(Key.Back, isDown: true));
-        Assert.True(DispatchAndroid(Key.Back, isDown: false));
-
-        Assert.Collection(events,
-            down => AssertKey<Plumix.UI.KeyDownEvent>(down, LogicalKeyboardKey.Delete),
-            release => AssertKey<Plumix.UI.KeyUpEvent>(release, LogicalKeyboardKey.Delete),
-            down => AssertKey<Plumix.UI.KeyDownEvent>(down, LogicalKeyboardKey.Backspace),
-            up => AssertKey<Plumix.UI.KeyUpEvent>(up, LogicalKeyboardKey.Backspace),
-            down => AssertKey<Plumix.UI.KeyDownEvent>(down, LogicalKeyboardKey.Backspace),
-            up => AssertKey<Plumix.UI.KeyUpEvent>(up, LogicalKeyboardKey.Backspace));
-        Assert.Empty(HardwareKeyboard.Instance.PhysicalKeysPressed);
-
-        // A key with a scan code still repeats while it is held.
-        events.Clear();
-        Assert.True(DispatchAndroid(Key.Back, isDown: true, PhysicalKey.Backspace));
-        Assert.True(DispatchAndroid(Key.Back, isDown: true, PhysicalKey.Backspace));
-        Assert.True(DispatchAndroid(Key.Back, isDown: false, PhysicalKey.Backspace));
-        Assert.Collection(events,
-            down => AssertKey<Plumix.UI.KeyDownEvent>(down, LogicalKeyboardKey.Backspace),
-            repeat => AssertKey<Plumix.UI.KeyRepeatEvent>(repeat, LogicalKeyboardKey.Backspace),
-            up => AssertKey<Plumix.UI.KeyUpEvent>(up, LogicalKeyboardKey.Backspace));
-
-        static bool DispatchAndroid(Key key, bool isDown, PhysicalKey physicalKey = PhysicalKey.None) =>
-            HostKeyEventMessage.Dispatch(
-                new KeyEventArgs { Key = key, PhysicalKey = physicalKey },
-                isDown,
-                "android");
-
-        static void AssertKey<T>(Plumix.UI.KeyEvent @event, LogicalKeyboardKey logicalKey)
-            where T : Plumix.UI.KeyEvent
-        {
-            Assert.IsType<T>(@event);
-            Assert.Equal(logicalKey, @event.LogicalKey);
-        }
-    }
-
-    private static void SetFrameworkHandlesBack(bool value) =>
-        SystemChannels.Platform
-            .InvokeMethod<object>("SystemNavigator.setFrameworkHandlesBack", value)
-            .GetAwaiter()
-            .GetResult();
-
     private sealed class PopRouteObserver : WidgetsBindingObserver
     {
         public Task<bool> Result { get; set; } = Task.FromResult(false);
@@ -391,13 +270,6 @@ public sealed class PlumixHostInputTests : IDisposable
         public new void AttachPlatformChannelHandler() => base.AttachPlatformChannelHandler();
 
         public new void DetachPlatformChannelHandler() => base.DetachPlatformChannelHandler();
-
-        public bool DispatchBackRequested(bool alreadyHandled = false)
-        {
-            var args = new RoutedEventArgs(TopLevel.BackRequestedEvent) { Handled = alreadyHandled };
-            HandleBackRequested(args);
-            return args.Handled;
-        }
 
         public void DispatchGotFocus(NavigationMethod method, KeyModifiers modifiers)
         {

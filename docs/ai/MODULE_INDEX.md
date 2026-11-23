@@ -657,7 +657,7 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
 - Read First:
   - `src/Plumix/Accessibility/AccessibilityBridge.cs` (tree mirror, events, actions, `flutter/accessibility`)
   - `src/Plumix/Accessibility/AccessibilityNode.cs` (desktop role ladder, states, bounds)
-  - `src/Plumix.Avalonia/Accessibility/SemanticsAutomationPeers.cs` (Avalonia peers: Windows, macOS, Linux, Android)
+  - `src/Plumix.Avalonia/Accessibility/SemanticsAutomationPeers.cs` (Avalonia peers: Windows, macOS, Linux)
   - `src/Plumix/Accessibility/IOSAccessibility.cs` + `src/Plumix.iOS/IosAccessibilityBridge.cs`
   - `src/Plumix/Accessibility/WebSemantics.cs` + `src/Sample/Plumix.Browser/BrowserAccessibilityBridge.cs`,
     `wwwroot/plumix-semantics.js`

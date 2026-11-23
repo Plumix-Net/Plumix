@@ -14,7 +14,7 @@ namespace Plumix;
 public partial class PlumixHost
 {
     // `popRoute`s a back key started (Escape, BrowserBack) that have not completed yet; see
-    // HandleBackButton. Their fall-through `SystemNavigator.pop` is dropped.
+    // HandleBackKey. Their fall-through `SystemNavigator.pop` is dropped.
     private static int s_pendingKeyPopRoutes;
 
     // The accessibility feature bits an embedder reported through UpdatePlatformAccessibilityFeatures,

@@ -27,15 +27,14 @@ public abstract class PlumixApplication : Avalonia.Application
     protected virtual PlumixOptions CreateOptions() => new PlumixOptions();
 
     /// <summary>
-    /// Shows <paramref name="application"/> in the Avalonia lifetime's main window, main view or
-    /// Android activity.
+    /// Shows <paramref name="application"/> in the Avalonia lifetime's main window or main view.
     /// </summary>
     public static void Run<T>(T application, IApplicationLifetime? applicationLifetime, PlumixOptions? options = null)
         where T : Widget
     {
         options ??= new PlumixOptions();
-        // .NET for Android has no entry assembly: relative asset keys belong to the assembly that defines
-        // the Avalonia application. Set before the first build, which may run before any Activity exists.
+        // Without an entry assembly, relative asset keys belong to the assembly that defines the Avalonia
+        // application. Set before the first build.
         PlatformAssetBundle.ApplicationAssemblyName ??= DeriveApplicationAssemblyName(
             Current?.GetType(),
             Assembly.GetEntryAssembly());
@@ -59,12 +58,6 @@ public abstract class PlumixApplication : Avalonia.Application
 
                 desktop.MainWindow = window;
                 break;
-            case IActivityApplicationLifetime activityLifetime:
-                // Android creates a view per Activity and asks the factory for its content each time.
-                // The host — and with it the widget tree and its state — belongs to the process, so a
-                // recreated Activity gets the same host instead of a new application.
-                activityLifetime.MainViewFactory = () => DetachFromPreviousTopLevel(host);
-                break;
             case ISingleViewApplicationLifetime singleViewPlatform:
                 singleViewPlatform.MainView = host;
                 break;
@@ -83,17 +76,5 @@ public abstract class PlumixApplication : Avalonia.Application
         }
 
         return applicationType.Assembly.GetName().Name;
-    }
-
-    // An Activity normally clears its content in onDestroy before its successor asks for the view; if
-    // the old one is still alive (a second instance), the host moves to the new Activity.
-    private static Control DetachFromPreviousTopLevel(WidgetHost host)
-    {
-        if (host.Parent is ContentControl previous && ReferenceEquals(previous.Content, host))
-        {
-            previous.Content = null;
-        }
-
-        return host;
     }
 }

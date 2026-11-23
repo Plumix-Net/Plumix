@@ -24,10 +24,10 @@ public sealed class HostKeyEventMessageTests : IDisposable
         FocusManager.Instance.ResetForTests();
     }
 
-    public static TheoryData<string> Keymaps => new() { "macos", "ios", "windows", "linux", "android", "web" };
+    public static TheoryData<string> Keymaps => new() { "macos", "ios", "windows", "linux", "web" };
 
     // The keymaps whose raw data reports which side of a modifier is down.
-    public static TheoryData<string> SidedKeymaps => new() { "macos", "ios", "windows", "android" };
+    public static TheoryData<string> SidedKeymaps => new() { "macos", "ios", "windows" };
 
     public static TheoryData<string, string> RoundTripKeys
     {
@@ -93,7 +93,6 @@ public sealed class HostKeyEventMessageTests : IDisposable
     [InlineData("macos")]
     [InlineData("ios")]
     [InlineData("linux")]
-    [InlineData("android")]
     public void AShiftedKeyCarriesItsTypedCharacterAndKeepsItsLogicalKey(string keymap)
     {
         // Windows carries the shifted character in its KeyData packet instead (`DispatchWindowsKeyData`);
@@ -278,7 +277,6 @@ public sealed class HostKeyEventMessageTests : IDisposable
             logical,
             keySymbol,
             modifiers,
-            KeyEventDeviceType.Keyboard,
             isDown);
 
     private static RawKeyEvent Decode(

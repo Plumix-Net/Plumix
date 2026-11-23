@@ -128,11 +128,10 @@ Release gates (on the commit that gets the tag):
 Known limitations (listed in the RC release notes, not blockers):
 
 - `docs/ai/BACKLOG.md` > Host-level gaps: platform views, `flutter/menu`,
-  the rest of `SystemChrome.*`, accessibility features and semantics focus on desktop/Android,
-  `GestureSettings`, text spacing overrides, windowing-owner gaps, the iOS system context menu.
+  the rest of `SystemChrome.*`, accessibility features and semantics focus on desktop,
+  text spacing overrides, windowing-owner gaps, the iOS system context menu.
 - The upstream re-port row (platform-view hit-test), blocked on platform views.
-- Additive control-level gaps (service extensions, missing `EditableText` parameters, the Avalonia
-  FORWARD_DEL report).
+- Additive control-level gaps (service extensions, missing `EditableText` parameters).
 - Every row of `docs/ai/DIVERGENCES.md`.
 
 ## Backlog Candidates (After M5–M6)
