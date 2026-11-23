@@ -1,0 +1,23 @@
+<Project>
+  <!--
+    Package versions — the single source of truth (policy: docs/VERSIONING.md).
+
+    Each package line carries the version of the upstream it ports:
+      PlumixVersion          Flutter SDK (flutter-src pin) — Plumix and every host/F#/template package
+      PlumixMaterialVersion  material_ui on pub.dev (material-ui-src pin)
+      PlumixCupertinoVersion cupertino_ui on pub.dev (cupertino-ui-src pin)
+
+    `-preview.N` while the port has not reached full parity with that upstream version; the bare
+    upstream version once it has; a fourth segment (X.Y.Z.N) for Plumix-only fixes after parity.
+
+    A release tag must match its line here (CI checks): `v<PlumixVersion>`,
+    `material-v<PlumixMaterialVersion>`, `cupertino-v<PlumixCupertinoVersion>`. Packages that depend on
+    each other through ProjectReference declare these values as their nuspec floor, so bump a line here
+    in the commit that is tagged for it.
+  -->
+  <PropertyGroup>
+    <PlumixVersion>3.47.0-preview.1</PlumixVersion>
+    <PlumixMaterialVersion>1.11.1-preview.1</PlumixMaterialVersion>
+    <PlumixCupertinoVersion>1.1.7-preview.1</PlumixCupertinoVersion>
+  </PropertyGroup>
+</Project>

@@ -1,8 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <!-- `dotnet new` templates for Plumix apps. Nothing is compiled: the package carries content/<template> folders.
-         Packing stamps the package's own version (all Plumix packages share it) and the minimum Avalonia version
-         into the template's Directory.Packages.props. -->
+         Packing stamps the Flutter-line version (PlumixVersion, also the template's own), the material_ui-line
+         version of Plumix.Material (src/Versions.props) and the minimum Avalonia version into the template's
+         Directory.Packages.props. CI warns when the stamped Plumix.Material is not on NuGet yet. -->
     <PropertyGroup>
         <TargetFramework>netstandard2.0</TargetFramework>
         <IsPackable>true</IsPackable>
@@ -32,7 +33,7 @@
 
     <Target Name="StampTemplateVersions" BeforeTargets="_GetPackageFiles">
         <PropertyGroup>
-            <_TemplatePackages>$([System.IO.File]::ReadAllText('$(MSBuildProjectDirectory)/content/plumix-app/Directory.Packages.props').Replace('PLUMIX_VERSION', '$(PackageVersion)').Replace('AVALONIA_VERSION', '$(AvaloniaVersion)'))</_TemplatePackages>
+            <_TemplatePackages>$([System.IO.File]::ReadAllText('$(MSBuildProjectDirectory)/content/plumix-app/Directory.Packages.props').Replace('PLUMIX_VERSION', '$(PackageVersion)').Replace('PLUMIX_MATERIAL_VERSION', '$(PlumixMaterialVersion)').Replace('AVALONIA_VERSION', '$(AvaloniaVersion)'))</_TemplatePackages>
             <_StampedTemplatePackages>$(IntermediateOutputPath)plumix-app/Directory.Packages.props</_StampedTemplatePackages>
         </PropertyGroup>
         <WriteLinesToFile File="$(_StampedTemplatePackages)" Lines="$([MSBuild]::Escape($(_TemplatePackages)))"

@@ -1,13 +1,15 @@
 <Project>
-  <!-- Central package versions: every Plumix package shares one version. -->
+  <!-- Central package versions. Plumix packages carry the version of the Flutter release they port;
+       Plumix.Material carries the version of the material_ui package it ports. -->
   <PropertyGroup>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
     <PlumixVersion>PLUMIX_VERSION</PlumixVersion>
+    <PlumixMaterialVersion>PLUMIX_MATERIAL_VERSION</PlumixMaterialVersion>
     <AvaloniaVersion>AVALONIA_VERSION</AvaloniaVersion>
   </PropertyGroup>
   <ItemGroup>
     <PackageVersion Include="Plumix" Version="$(PlumixVersion)" />
-    <PackageVersion Include="Plumix.Material" Version="$(PlumixVersion)" />
+    <PackageVersion Include="Plumix.Material" Version="$(PlumixMaterialVersion)" />
 <!--#if (desktop)-->
     <PackageVersion Include="Plumix.Avalonia" Version="$(PlumixVersion)" />
     <PackageVersion Include="Avalonia.Desktop" Version="$(AvaloniaVersion)" />

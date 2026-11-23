@@ -39,7 +39,10 @@ platform's services, the split Flutter has between framework and engine.
 | Windows, macOS, Linux | `Plumix.Avalonia` | Avalonia (`PlumixApplication`) with Skia |
 | Browser (WebAssembly) | `Plumix.Avalonia` | Avalonia.Browser |
 
-All Plumix packages share one version.
+Each package carries the version of the upstream it ports: `Plumix` and the host packages follow the Flutter release
+(3.47.0), `Plumix.Material` follows [`material_ui`](https://pub.dev/packages/material_ui) (1.11.1) and
+`Plumix.Cupertino` follows [`cupertino_ui`](https://pub.dev/packages/cupertino_ui) (1.1.7). A `-preview.N` suffix
+means the port has not reached full parity with that release yet. See [docs/VERSIONING.md](docs/VERSIONING.md).
 
 ## Vision
 

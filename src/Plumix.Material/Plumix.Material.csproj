@@ -9,6 +9,8 @@
     <PropertyGroup>
         <IsPackable>true</IsPackable>
         <PackageId>Plumix.Material</PackageId>
+        <!-- Versioned after the material_ui pub package it ports (src/Versions.props, docs/VERSIONING.md). -->
+        <Version>$(PlumixMaterialVersion)</Version>
         <Description>Material Design 3 component library for Plumix — a Flutter-inspired UI framework for .NET. Includes buttons, app bars, navigation, dialogs, and full Material theming.</Description>
     </PropertyGroup>
 

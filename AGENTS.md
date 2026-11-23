@@ -59,9 +59,9 @@ normative may live only there.
   packs only on macOS (the CI's `pack-ios` job). App `src/Sample/Plumix.Sample.iOS` (build with
   `-r iossimulator-arm64`).
 - `src/Plumix.Templates`: the `dotnet new` template package (`plumix-app`: shared widgets plus Desktop, Android and
-  iOS heads, in `content/plumix-app`, placeholder name `PlumixTemplateApp`). Packing stamps the package version and
-  `AvaloniaVersion` into the template's `Directory.Packages.props`; check a change by packing it, `dotnet new install`
-  into a `--debug:custom-hive` and building the generated heads.
+  iOS heads, in `content/plumix-app`, placeholder name `PlumixTemplateApp`). Packing stamps `PlumixVersion`,
+  `PlumixMaterialVersion` and `AvaloniaVersion` into the template's `Directory.Packages.props`; check a change by
+  packing it, `dotnet new install` into a `--debug:custom-hive` and building the generated heads.
 
 ## Progress Source of Truth
 
@@ -72,6 +72,8 @@ normative may live only there.
 - Module entry points by task: `docs/ai/MODULE_INDEX.md`
 - Flutter file -> C# files/tests/demos (generated; also lists ports whose marker says `(reference)`/`(approximate)`): `docs/ai/PORT_MAP.md`
 - Non-negotiable behavior rules (architecture, package boundaries, versioning): `docs/ai/INVARIANTS.md`
+- Package versions and releases (upstream-matching version lines, tags): `docs/VERSIONING.md`; the numbers live in
+  `src/Versions.props`
 - Mandatory Dart-to-C# porting workflow: `docs/ai/PORTING_MODE.md`
 - Step-by-step execution of that workflow: `docs/ai/PORT_PLAYBOOK.md`
 - Reading large Dart sources without exhausting context: `docs/ai/DART_SPEC_PROTOCOL.md`
@@ -150,7 +152,10 @@ ln -s /path/to/your/NImpeller nimpeller-src # optional: Plumix-Net/NImpeller, to
 **Pinned Flutter revision: 3.47.0 (`4cf24164269`, `flutter-3.47-candidate.0`). Pinned packages:
 `material_ui` 1.0.0, `cupertino_ui` 1.0.0, `intl` 0.20.3** (what `dart_sample` resolves; at these pins the package
 sources are code-identical to the SDK's frozen `src/material`/`src/cupertino` copies, modulo doc
-comments and constructor-style modernization). Parity is defined against these pins. Material
+comments and constructor-style modernization). Parity is defined against these pins. **Target pins** (the
+package versions in `src/Versions.props`, `docs/VERSIONING.md`): Flutter 3.47.0, `material_ui` 1.11.1,
+`cupertino_ui` 1.1.7 — moving the two package pins to them is open work; until the port matches a target, its
+package ships as `-preview.N`. Material
 defaults change between releases, so a port validated against a different checkout is not validated.
 When a pin moves, update this line, re-point the symlink(s), and re-run
 `python3 scripts/generate_port_map.py` (it flags markers whose Dart file no longer exists) and

@@ -3,7 +3,8 @@ name: CI
 on:
   push:
     branches: [main]
-    tags: ['v*.*.*']
+    # Release tags, one per package line (docs/VERSIONING.md, scripts/release_plan.sh).
+    tags: ['v*.*.*', 'material-v*.*.*', 'cupertino-v*.*.*']
   pull_request:
     branches: [main]
   # Avalonia ships breaking removals in patch releases (ShapedTextRun.IsReversed left in 12.0.5);
@@ -104,13 +105,13 @@ jobs:
         if: failure()
         run: python3 scripts/report_failed_tests.py TestResults
 
-  # ─── Pack Plumix.iOS (tags only) ───────────────────────────────────────────
+  # ─── Pack Plumix.iOS (release tags only) ───────────────────────────────────
   # The iOS workload builds only on macOS; the package goes to the publish job as an artifact.
   pack-ios:
     name: Pack Plumix.iOS
     runs-on: xcode-27
     needs: [test]
-    if: startsWith(github.ref, 'refs/tags/v')
+    if: startsWith(github.ref, 'refs/tags/')
     env:
       NUGET_OUTPUT: ${{ github.workspace }}/artifacts/nuget
 
@@ -126,16 +127,12 @@ jobs:
         with:
           dotnet-version: '11.x'
 
-      - name: Extract version from tag
-        run: echo "PKG_VERSION=${GITHUB_REF_NAME#v}" >> "$GITHUB_ENV"
-
       - name: Install iOS workload
         run: dotnet workload install ios
 
+      # Versions come from src/Versions.props; never -p:Version (it would restamp ProjectReference floors).
       - name: Pack
-        run: >-
-          dotnet pack src/Plumix.iOS/Plumix.iOS.csproj -c Release -p:Version="$PKG_VERSION"
-          --output "$NUGET_OUTPUT"
+        run: dotnet pack src/Plumix.iOS/Plumix.iOS.csproj -c Release --output "$NUGET_OUTPUT"
 
       - uses: actions/upload-artifact@v4
         with:
@@ -143,12 +140,18 @@ jobs:
           path: ${{ env.NUGET_OUTPUT }}/Plumix.iOS.*.nupkg
           if-no-files-found: error
 
-  # ─── Pack & Publish (tags only) ────────────────────────────────────────────
+  # ─── Pack & Publish (release tags only) ────────────────────────────────────
+  # Any release tag (v*, cupertino-v*, material-v*) pushes every package at its src/Versions.props
+  # version; lines already on nuget.org are skipped as duplicates. scripts/release_plan.sh checks the tag
+  # and that every unpublished line is tagged. Runs for tags of one commit queue behind each other.
   publish:
     name: Pack & Publish to NuGet
     runs-on: ubuntu-latest
     needs: [test, avalonia-compat, pack-ios]
-    if: startsWith(github.ref, 'refs/tags/v')
+    if: startsWith(github.ref, 'refs/tags/')
+    concurrency:
+      group: publish-${{ github.sha }}
+      cancel-in-progress: false
     permissions:
       contents: read
       id-token: write   # NuGet trusted publishing: GitHub OIDC token -> short-lived API key
@@ -163,37 +166,34 @@ jobs:
         with:
           dotnet-version: '11.x'
 
-      - name: Extract version from tag
-        run: echo "PKG_VERSION=${GITHUB_REF_NAME#v}" >> "$GITHUB_ENV"
+      - name: Check tag and plan the release
+        run: scripts/release_plan.sh "$GITHUB_REF_NAME" >> "$GITHUB_ENV"
 
       # Plumix.Android targets net11.0-android; the runner image ships the Android SDK and a JDK.
       - name: Install Android workload
         run: dotnet workload install android
 
+      # Versions come from src/Versions.props; never -p:Version (it would restamp ProjectReference floors).
       - name: Pack
         shell: bash
         run: |
           set -euo pipefail
           mkdir -p "$NUGET_OUTPUT"
-          dotnet pack src/Plumix/Plumix.csproj -c Release -p:Version="$PKG_VERSION" \
-            --output "$NUGET_OUTPUT"
-          dotnet pack src/Plumix.Avalonia/Plumix.Avalonia.csproj -c Release \
-            -p:Version="$PKG_VERSION" --output "$NUGET_OUTPUT"
-          dotnet pack src/Plumix.Material/Plumix.Material.csproj -c Release \
-            -p:Version="$PKG_VERSION" --output "$NUGET_OUTPUT"
-          dotnet pack src/Plumix.Cupertino/Plumix.Cupertino.csproj -c Release \
-            -p:Version="$PKG_VERSION" --output "$NUGET_OUTPUT"
-          dotnet pack src/Plumix.FSharp/Plumix.FSharp.fsproj -c Release \
-            -p:Version="$PKG_VERSION" --output "$NUGET_OUTPUT"
-          dotnet pack src/Plumix.Elmish/Plumix.Elmish.fsproj -c Release \
-            -p:Version="$PKG_VERSION" --output "$NUGET_OUTPUT"
-          dotnet pack src/Plumix.Impeller/Plumix.Impeller.csproj -c Release \
-            -p:Version="$PKG_VERSION" --output "$NUGET_OUTPUT"
-          dotnet pack src/Plumix.Android/Plumix.Android.csproj -c Release \
-            -p:Version="$PKG_VERSION" --output "$NUGET_OUTPUT"
-          # The template stamps PKG_VERSION into the apps it creates (Directory.Packages.props).
-          dotnet pack src/Plumix.Templates/Plumix.Templates.csproj -c Release \
-            -p:Version="$PKG_VERSION" --output "$NUGET_OUTPUT"
+          projects=(
+            src/Plumix/Plumix.csproj
+            src/Plumix.Avalonia/Plumix.Avalonia.csproj
+            src/Plumix.Cupertino/Plumix.Cupertino.csproj
+            src/Plumix.Material/Plumix.Material.csproj
+            src/Plumix.FSharp/Plumix.FSharp.fsproj
+            src/Plumix.Elmish/Plumix.Elmish.fsproj
+            src/Plumix.Impeller/Plumix.Impeller.csproj
+            src/Plumix.Android/Plumix.Android.csproj
+            # The template stamps PlumixVersion and PlumixMaterialVersion into the apps it creates.
+            src/Plumix.Templates/Plumix.Templates.csproj
+          )
+          for project in "${projects[@]}"; do
+            dotnet pack "$project" -c Release --output "$NUGET_OUTPUT"
+          done
 
       - uses: actions/download-artifact@v4
         with:
@@ -214,20 +214,8 @@ jobs:
           NUGET_API_KEY: ${{ steps.nuget-login.outputs.NUGET_API_KEY }}
         run: |
           set -euo pipefail
-          package_ids=(
-            "Plumix"
-            "Plumix.Avalonia"
-            "Plumix.Material"
-            "Plumix.Cupertino"
-            "Plumix.FSharp"
-            "Plumix.Elmish"
-            "Plumix.Impeller"
-            "Plumix.Android"
-            "Plumix.iOS"
-            "Plumix.Templates"
-          )
-          for package_id in "${package_ids[@]}"; do
-            package="$NUGET_OUTPUT/${package_id}.${PKG_VERSION}.nupkg"
+          for stem in $RELEASE_PACKAGES; do
+            package="$NUGET_OUTPUT/${stem}.nupkg"
             if [[ ! -f "$package" ]]; then
               echo "::error::NuGet package was not created: $package"
               exit 1

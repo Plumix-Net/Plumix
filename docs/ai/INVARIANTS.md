@@ -36,10 +36,13 @@ Allowed dependency direction (mirrors Flutter's `widgets <- cupertino <- materia
   `Plumix.Avalonia`'s `AvaloniaBackend` registers the Avalonia implementations from a module initializer,
   and the test assembly calls it first.
 
-- Versioning follows SemVer: breaking public API/behavior changes require a major bump; new API is minor; fixes are patch.
+- Versions follow the upstream each package ports, not our own SemVer (`docs/VERSIONING.md`): `X.Y.Z-preview.N`
+  until parity with upstream `X.Y.Z`, then `X.Y.Z`, then `X.Y.Z.N` for our fixes. Numbers live only in
+  `src/Versions.props`; never `-p:Version` (it restamps ProjectReference floors). After parity a fourth-segment
+  release must not break the public API.
 - Breaking changes must be called out explicitly in `CHANGELOG.md` (a `Breaking:` prefix on the entry) — never shipped silently inside a parity pass.
 - Parity fixes that change existing public defaults/behavior count as breaking for consumers even when they move closer to Flutter; call them out the same way.
-- CI gate: `dotnet test src/Plumix.Tests/Plumix.Tests.csproj` must be green before any change is considered done; releases are tag-driven (`v*.*.*`) via `.github/workflows/ci.yml`.
+- CI gate: `dotnet test src/Plumix.Tests/Plumix.Tests.csproj` must be green before any change is considered done; releases are tag-driven (`v*`, `cupertino-v*`, `material-v*`, checked by `scripts/release_plan.sh`) via `.github/workflows/ci.yml`.
 
 ## Dart Porting Invariants
 

@@ -8,11 +8,12 @@ Use this block as the fastest machine-readable status summary.
 
 ```yaml
 framework_plan_version: 2
-last_updated: 2026-11-22
+last_updated: 2026-11-23
 north_star: "Flutter-like widget/rendering framework in C# with Avalonia as host infrastructure."
 current_phase: "RC preparation: Avalonia-free core (avalonia-free-core.md) stages 0-4 done (merged 2026-11-22); native host on Impeller accepted (native-host.md), stage 1 in progress."
-latest_release: "v1.0.0-preview.5 (2026-11-21); next: v1.0.0-rc.1, criteria in the Release Candidate section"
+latest_release: "v1.0.0-preview.9 (2026-11-23); next: 3.47.0-preview.1 — versions now follow upstream (docs/VERSIONING.md)"
 flutter_pin: "3.47.0 (4cf24164269); material_ui 1.0.0; cupertino_ui 1.0.0 — see AGENTS.md"
+target_pins: "Flutter 3.47.0; material_ui 1.11.1; cupertino_ui 1.1.7 (src/Versions.props); -preview until parity"
 open_work_outside_controls: "docs/ai/BACKLOG.md (control-level gaps, host-level gaps; the 3.44->3.47 re-port table is down to subsystem-blocked rows)"
 status:
   widget_element_state_lifecycle: done
@@ -36,7 +37,7 @@ milestones:
   - { id: M4, title: "Material library rewrite", status: done }
   - { id: M5, title: "Cross-host sample parity and stability", status: done }
   - { id: M6, title: "Cupertino library port", status: done }
-  - { id: RC, title: "v1.0.0-rc.1 API freeze (criteria: Release Candidate section)", status: planned }
+  - { id: RC, title: "API freeze, then parity releases 3.47.0 / material 1.11.1 / cupertino 1.1.7 (Release Candidate section)", status: planned }
 ```
 
 ## Confirmed Done (Repository Baseline)
@@ -88,6 +89,10 @@ Cupertino tab and `CupertinoApp` shell.
 
 Status: `planned`. The RC freezes the public API of the published packages: after it only fixes land
 until `1.0.0`, and any `Breaking:` entry means a new RC.
+
+Versioning changed 2026-11-23 (`docs/VERSIONING.md`): there is no `1.0.0` line any more. The freeze below still
+applies, but the releases it leads to are the parity releases — `Plumix 3.47.0`, `Plumix.Material 1.11.1`,
+`Plumix.Cupertino 1.1.7` — each shipping as `-preview.N` until it matches its upstream in full.
 
 Blockers (all must close):
 
