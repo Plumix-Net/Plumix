@@ -53,16 +53,6 @@ internal sealed class PlumixMetalView : UIView
             (int)(insets.Bottom * scale));
     }
 
-    // The engine also observes traitCollectionDidChange; the iOS 17 trait-change registration replaces it later.
-#pragma warning disable CA1422
-    public override void TraitCollectionDidChange(UITraitCollection? previousTraitCollection)
-    {
-        base.TraitCollectionDidChange(previousTraitCollection);
-        _host.BrightnessChanged(
-            TraitCollection.UserInterfaceStyle == UIUserInterfaceStyle.Dark ? Brightness.Dark : Brightness.Light);
-    }
-#pragma warning restore CA1422
-
     public override void TouchesBegan(NSSet touches, UIEvent? evt) => Dispatch(touches, evt);
 
     public override void TouchesMoved(NSSet touches, UIEvent? evt) => Dispatch(touches, evt);

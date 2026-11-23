@@ -9,6 +9,8 @@ Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased]
 - Prototype native iOS host `Plumix.Impeller.iOS` (not packed) on Impeller/Metal, with the gallery sample.
+- iOS host: platform plugin, user settings, locales, accessibility features (FlutterPlatformPlugin.mm, …).
+- iOS host: text input, keyboard inset and hardware keys (FlutterTextInputPlugin.mm, FlutterKeyboardManager.mm).
 - `Plumix.Impeller` finds HarfBuzz as an embedded framework on iOS, tvOS and Mac Catalyst.
 
 ## v1.0.0-preview.7 — 2026-11-23

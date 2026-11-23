@@ -33,6 +33,8 @@ internal sealed class IosImpellerHost
     private Widget? _pendingApp;
     private ViewPadding _viewPadding;
     private Brightness _platformBrightness = Brightness.Light;
+    private bool _alwaysUse24HourFormat;
+    private double _viewInsetBottom;
 
     public IosImpellerHost()
     {
@@ -110,11 +112,13 @@ internal sealed class IosImpellerHost
         UpdateMetrics();
     }
 
-    public void BrightnessChanged(Brightness brightness)
+    /// <summary>The user settings the engine sends on <c>flutter/settings</c> that live in the view's data.</summary>
+    public void SettingsChanged(Brightness brightness, bool alwaysUse24HourFormat)
     {
         PlatformDispatcher dispatcher = PlatformDispatcher.Instance;
         Brightness previous = dispatcher.PlatformBrightness;
         _platformBrightness = brightness;
+        _alwaysUse24HourFormat = alwaysUse24HourFormat;
         UpdateMetrics();
         if (WidgetsBinding.IsImplicitView(_view) && dispatcher.PlatformBrightness != previous)
         {
@@ -122,8 +126,29 @@ internal sealed class IosImpellerHost
         }
     }
 
+    /// <summary>The keyboard's physical bottom inset (updateViewportMetricsWithInset:).</summary>
+    public double ViewInsetBottom
+    {
+        get => _viewInsetBottom;
+        set
+        {
+            if (value != _viewInsetBottom)
+            {
+                _viewInsetBottom = value;
+                UpdateMetrics();
+            }
+        }
+    }
+
     public void LifecycleChanged(AppLifecycleState state) =>
         WidgetsBinding.Instance.HandleAppLifecycleStateChanged(state);
+
+    /// <summary>FlutterEngine.onStatusBarTap: <c>handleScrollToTop</c> on <c>flutter/status_bar</c>.</summary>
+    public void StatusBarTapped() =>
+        _ = SystemChannels.StatusBar.BinaryMessenger.HandlePlatformMessage(
+            SystemChannels.StatusBar.Name,
+            SystemChannels.StatusBar.Codec.EncodeMethodCall(new MethodCall("handleScrollToTop")),
+            null);
 
     private void StartIfReady()
     {
@@ -134,7 +159,6 @@ internal sealed class IosImpellerHost
 
         _pendingApp = null;
         UpdateMetrics();
-        HostTextInputPlugin.Instance.Attach();
         WidgetsBinding.Instance.SetImplicitView(_view, _pipeline, _root, MediaQueryData());
         PlatformDispatcher.Instance.AddView(_view);
         WidgetsBinding.Instance.HandleAppLifecycleStateChanged(AppLifecycleState.Resumed);
@@ -145,12 +169,15 @@ internal sealed class IosImpellerHost
     {
         var viewPadding = new EdgeInsets(_viewPadding.Left / _density, _viewPadding.Top / _density,
             _viewPadding.Right / _density, _viewPadding.Bottom / _density);
+        var viewInsets = new EdgeInsets(0, 0, 0, _viewInsetBottom / _density);
         return new MediaQueryData(
             Size: new Size(_width / _density, _height / _density),
             DevicePixelRatio: _density,
-            Padding: viewPadding,
+            Padding: Plumix.Widgets.MediaQueryData.ComputePadding(viewPadding, viewInsets),
+            ViewInsets: viewInsets,
             ViewPadding: viewPadding,
             PlatformBrightness: _platformBrightness,
+            AlwaysUse24HourFormat: _alwaysUse24HourFormat,
             ViewId: _view.ViewId);
     }
 
@@ -164,8 +191,9 @@ internal sealed class IosImpellerHost
         _view.UpdateMetrics(
             physicalSize: new Size(_width, _height),
             devicePixelRatio: _density,
-            padding: _viewPadding,
-            viewInsets: default,
+            padding: new ViewPadding(_viewPadding.Left, _viewPadding.Top, _viewPadding.Right,
+                Math.Max(0, _viewPadding.Bottom - _viewInsetBottom)),
+            viewInsets: new ViewPadding(0, 0, 0, _viewInsetBottom),
             viewPadding: _viewPadding);
         PlatformDispatcher.Instance.UpdateImplicitViewPlatformData(_view, MediaQueryData());
         PlatformDispatcher.Instance.OnMetricsChanged?.Invoke();
