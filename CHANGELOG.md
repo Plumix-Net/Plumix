@@ -8,6 +8,8 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased]
+
+## v3.47.0-preview.2 (Plumix.Material 1.11.1-preview.2, Plumix.Cupertino 1.1.7-preview.2) — 2026-11-23
 - Trim/Native AOT clean: `IsAotCompatible` on every package; service-extension, navigation-event and inspector
   JSON go through the Dart-shaped `Json.Encode` instead of reflection-based `JsonSerializer`.
 - Pins moved to `material_ui` 1.11.1 / `cupertino_ui` 1.1.7 (`dart_sample`, `AGENTS.md`); the open delta is the
