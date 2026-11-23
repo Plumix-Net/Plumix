@@ -1,7 +1,7 @@
 // C#-only host infrastructure; no Dart parity source.
 using System.Runtime.InteropServices;
 
-namespace Plumix.Impeller.Android.Interop;
+namespace Plumix.Android.Interop;
 
 /// <summary>The slice of OpenGL ES 3 the raster thread's pixel readback needs, resolved through EGL.</summary>
 internal sealed unsafe class Gles

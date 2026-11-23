@@ -8,7 +8,7 @@ using AndroidX.Core.View.Accessibility;
 // flutter/engine/src/flutter/shell/platform/android/io/flutter/view/BaseRoleConfigurator.java
 // (configureLabelAndValue: a text field's node text is its value, its hint text is "label, hint").
 
-namespace Plumix.Android;
+namespace Plumix.Avalonia.Android;
 
 /// <summary>
 /// Wraps the accessibility delegate Avalonia installs on its <c>AvaloniaView</c> so that every text field node

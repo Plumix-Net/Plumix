@@ -6,23 +6,23 @@ using Android.Database;
 using Android.OS;
 using Android.Provider;
 using Android.Views.Accessibility;
+using Plumix.Accessibility;
+using Plumix.UI;
 
 // C#-only host infrastructure parity source:
 // flutter/engine/src/flutter/shell/platform/android/io/flutter/view/AccessibilityBridge.java (the
 // accessibility feature flags: the state and touch-exploration listeners, the transition-animation-scale and
-// display-inversion setting observers, setBoldTextFlag and the Android 14 contrast listener).
+// display-inversion setting observers, setBoldTextFlag and the Android 14 contrast listener). The native
+// host's copy of Plumix.Avalonia.Android's reader: it reports to the platform dispatcher itself and turns semantics on
+// and off with the accessibility state, as the engine's accessibilityStateChangeListener does.
 
 namespace Plumix.Android;
 
 /// <summary>
-/// Reads the platform settings behind dart:ui's accessibility features and reports them to the
-/// <see cref="AndroidActivityDelegate"/> whenever one changes.
+/// Reads the platform settings behind dart:ui's accessibility features, reports them to the platform dispatcher
+/// whenever one changes, and activates the view's accessibility bridge while an accessibility service runs.
 /// </summary>
-/// <remarks>
-/// Accessible navigation follows <c>AccessibilityManager.isEnabled</c>: the engine sets it when an
-/// accessibility service first asks its node provider for a node, but Avalonia owns the provider here. Every
-/// report reads all settings again, which also covers the bold-text configuration change.
-/// </remarks>
+/// <remarks>Every report reads all settings again, which also covers the bold-text configuration change.</remarks>
 internal sealed class AndroidAccessibilityFeatures : IDisposable
 {
     // AccessibilityBridge.BOLD_TEXT_WEIGHT_ADJUSTMENT, DISABLED_TRANSITION_ANIMATION_SCALE and
@@ -34,18 +34,28 @@ internal sealed class AndroidAccessibilityFeatures : IDisposable
     // Settings.Secure.ACCESSIBILITY_DISPLAY_INVERSION_ENABLED.
     private const string DisplayInversionEnabled = "accessibility_display_inversion_enabled";
 
+    // The accessibility feature bits the Android engine reports: its `AccessibilityFeature`s not marked
+    // "NOT SUPPORTED", and the no-announce bit it always sets.
+    private const int ReportedFeatures =
+        AccessibilityFeatures.KAccessibleNavigationIndex
+        | AccessibilityFeatures.KInvertColorsIndex
+        | AccessibilityFeatures.KDisableAnimationsIndex
+        | AccessibilityFeatures.KBoldTextIndex
+        | AccessibilityFeatures.KHighContrastIndex
+        | AccessibilityFeatures.KNoAnnounceIndex;
+
     private readonly Activity _activity;
-    private readonly AndroidActivityDelegate _delegate;
+    private readonly AccessibilityBridge _bridge;
     private readonly AccessibilityManager? _accessibilityManager;
     private readonly ContentResolver? _contentResolver;
     private readonly StateListener _stateListener;
     private readonly SettingObserver _settingObserver;
     private readonly Java.Lang.Object? _contrastListener;
 
-    public AndroidAccessibilityFeatures(Activity activity, AndroidActivityDelegate activityDelegate)
+    public AndroidAccessibilityFeatures(Activity activity, AccessibilityBridge bridge)
     {
         _activity = activity;
-        _delegate = activityDelegate;
+        _bridge = bridge;
         _accessibilityManager = activity.GetSystemService(Context.AccessibilityService) as AccessibilityManager;
         _contentResolver = activity.ContentResolver;
 
@@ -75,15 +85,35 @@ internal sealed class AndroidAccessibilityFeatures : IDisposable
         Report();
     }
 
-    /// <summary>Reads every setting and reports the features.</summary>
+    /// <summary>Reads every setting, reports the features and follows the accessibility state.</summary>
     public void Report()
     {
-        _delegate.OnAccessibilityFeaturesChanged(
-            accessibleNavigation: _accessibilityManager?.IsEnabled == true,
-            invertColors: ReadSecureInt(DisplayInversionEnabled) == 1,
-            disableAnimations: ReadTransitionAnimationScale() == DisabledTransitionAnimationScale,
-            boldText: OperatingSystem.IsAndroidVersionAtLeast(31) && IsBoldText(_activity.Resources?.Configuration),
-            highContrast: OperatingSystem.IsAndroidVersionAtLeast(34) && IsHighContrast());
+        bool accessibilityEnabled = _accessibilityManager?.IsEnabled == true;
+        int features = AccessibilityFeatures.KNoAnnounceIndex;
+        features |= accessibilityEnabled ? AccessibilityFeatures.KAccessibleNavigationIndex : 0;
+        features |= ReadSecureInt(DisplayInversionEnabled) == 1 ? AccessibilityFeatures.KInvertColorsIndex : 0;
+        features |= ReadTransitionAnimationScale() == DisabledTransitionAnimationScale
+            ? AccessibilityFeatures.KDisableAnimationsIndex
+            : 0;
+        features |= OperatingSystem.IsAndroidVersionAtLeast(31) && IsBoldText(_activity.Resources?.Configuration)
+            ? AccessibilityFeatures.KBoldTextIndex
+            : 0;
+        features |= OperatingSystem.IsAndroidVersionAtLeast(34) && IsHighContrast()
+            ? AccessibilityFeatures.KHighContrastIndex
+            : 0;
+        PlatformDispatcher dispatcher = PlatformDispatcher.Instance;
+        dispatcher.UpdateAccessibilityFeatures(
+            (dispatcher.ReportedAccessibilityFeatures & ~ReportedFeatures) | features);
+
+        // The engine's accessibilityStateChangeListener: semantics follow the accessibility state.
+        if (accessibilityEnabled)
+        {
+            _bridge.Activate();
+        }
+        else
+        {
+            _bridge.Deactivate();
+        }
     }
 
     public void Dispose()

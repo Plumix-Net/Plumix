@@ -5,7 +5,7 @@ using Plumix.Impeller;
 using Plumix.Rendering;
 using Plumix.UI;
 
-namespace Plumix.Impeller.Android;
+namespace Plumix.Android;
 
 // C#-only host infrastructure; no Dart parity source. The core's image seam (UI/ImageBackend.cs) on the
 // platform decoder, the way the engine's Android embedding can hand decoding to android.graphics: images are

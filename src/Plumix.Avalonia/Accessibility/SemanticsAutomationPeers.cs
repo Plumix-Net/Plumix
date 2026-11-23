@@ -491,7 +491,7 @@ internal abstract class SemanticsNodeAutomationPeer : AutomationPeer
 
     // Avalonia's Android value provider makes a text field's value the node text, which hides the name,
     // so there the help text (the content description) carries the engine's text field hint, "label,
-    // hint"; Plumix.Android's AndroidTextFieldHints moves it to the node's hint text, as the engine does.
+    // hint"; Plumix.Avalonia.Android's AndroidTextFieldHints moves it to the node's hint text, as the engine does.
     protected override string? GetHelpTextCore()
     {
         if (FillsAndroidNodeInfo && (Shape & SemanticsPeerShape.Value) != 0)

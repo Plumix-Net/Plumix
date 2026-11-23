@@ -27,12 +27,12 @@
     <File Path="../docs/ai/rendering-2026-03-10-layout-exception-surfacing.md" />
     <File Path="../docs/ai/TEST_MATRIX.md" />
   </Folder>
-  <Project Path="Plumix.Android/Plumix.Android.csproj" />
+  <Project Path="Plumix.Avalonia.Android/Plumix.Avalonia.Android.csproj" />
   <Project Path="Plumix.Avalonia/Plumix.Avalonia.csproj" />
   <Project Path="Plumix.Cupertino/Plumix.Cupertino.csproj" />
   <Project Path="Plumix.Elmish/Plumix.Elmish.fsproj" />
   <Project Path="Plumix.FSharp/Plumix.FSharp.fsproj" />
-  <Project Path="Plumix.Impeller.Android/Plumix.Impeller.Android.csproj" />
+  <Project Path="Plumix.Android/Plumix.Android.csproj" />
   <Project Path="Plumix.Impeller.Tests/Plumix.Impeller.Tests.csproj" />
   <Project Path="Plumix.Impeller/Plumix.Impeller.csproj" />
   <Project Path="Plumix.Material/Plumix.Material.csproj" />

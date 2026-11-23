@@ -250,7 +250,7 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
     `BindingBase.ReassembleApplication`)
   - `src/Plumix.Avalonia/AndroidActivityDelegate.cs` (Activity lifecycle/restoration/back forwarding) over
     `src/Plumix/AndroidLifecycleChannel.cs` and `src/Plumix/AndroidRestorationChannel.cs`;
-    `src/Plumix.Android/PlumixMainActivity.cs` is its Android Activity
+    `src/Plumix.Avalonia.Android/PlumixMainActivity.cs` is its Android Activity
   - `src/Plumix.Avalonia/WidgetHost.cs`
   - `src/Plumix/Widgets/AppLifecycleListener.cs`
   - `src/Plumix/UI/AppLifecycle.cs`

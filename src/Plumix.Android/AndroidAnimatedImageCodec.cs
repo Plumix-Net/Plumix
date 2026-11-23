@@ -1,8 +1,9 @@
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
+using Plumix.Impeller;
 using Plumix.UI;
 
-namespace Plumix.Impeller.Android;
+namespace Plumix.Android;
 
 // C#-only host infrastructure parity source: engine/src/flutter/lib/ui/painting/multi_frame_codec.cc. The engine
 // decodes animated GIF and WebP with Skia's codecs; this host asks the platform's NDK decoder (AImageDecoder,

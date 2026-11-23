@@ -14,7 +14,7 @@ using Locale = Plumix.Widgets.Locale;
 // flutter/engine/src/flutter/shell/platform/android/io/flutter/plugin/localization/LocalizationPlugin.java
 // (resolveNativeLocale) with FlutterJNI.computePlatformResolvedLocale's conversions.
 
-namespace Plumix.Android;
+namespace Plumix.Avalonia.Android;
 
 /// <summary>The Android engine's platform plugin answers that need an Activity.</summary>
 internal static class AndroidPlatformPlugin

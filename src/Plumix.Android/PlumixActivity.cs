@@ -9,7 +9,7 @@ using Plumix.Widgets;
 using View = Android.Views.View;
 using Widget = Plumix.Widgets.Widget;
 
-namespace Plumix.Impeller.Android;
+namespace Plumix.Android;
 
 // C#-only host infrastructure; no Dart parity source. The prototype's Activity, the role FlutterActivity plays
 // in the engine's Android embedding: a full-screen SurfaceView the ImpellerHost renders into, with lifecycle,
@@ -20,7 +20,7 @@ namespace Plumix.Impeller.Android;
 // frame timings (PerfProbe).
 
 /// <summary>Runs a Plumix app in an Android Activity, rendered by Impeller.</summary>
-public abstract class ImpellerActivity : Activity, ISurfaceHolderCallback
+public abstract class PlumixActivity : Activity, ISurfaceHolderCallback
 {
     private const string FrameworkRestorationBundleKey = "framework";
 

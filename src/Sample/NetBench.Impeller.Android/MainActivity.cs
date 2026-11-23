@@ -4,7 +4,7 @@ using Android.Content.PM;
 using Android.Views;
 using NetBench.Features.Shell.Presentation.Mobile;
 using NetBench.Mobile.Platform;
-using Plumix.Impeller.Android;
+using Plumix.Android;
 using Widget = Plumix.Widgets.Widget;
 
 namespace NetBench.Impeller.Android;
@@ -22,7 +22,7 @@ namespace NetBench.Impeller.Android;
     ConfigurationChanges = ConfigChanges.Orientation | ConfigChanges.ScreenSize | ConfigChanges.ScreenLayout
                            | ConfigChanges.SmallestScreenSize | ConfigChanges.Keyboard | ConfigChanges.KeyboardHidden
                            | ConfigChanges.UiMode | ConfigChanges.Density)]
-public sealed class MainActivity : ImpellerActivity
+public sealed class MainActivity : PlumixActivity
 {
     protected override Widget CreateApp()
     {

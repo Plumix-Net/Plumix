@@ -1,10 +1,16 @@
 # Migrating from 1.0.0-preview.4
 
-Updated 2026-11-21. Before 1.0 the public API of `Plumix`, `Plumix.Material` and `Plumix.Cupertino` stopped
+Updated 2026-11-23. Before 1.0 the public API of `Plumix`, `Plumix.Material` and `Plumix.Cupertino` stopped
 naming Avalonia types, so the widget API can outlive the Avalonia host. Hosting moved to a new package,
 `Plumix.Avalonia`. Most widget code compiles unchanged; this note lists what does not.
 
-## Since 1.0.0-preview.5 (unreleased)
+## 1.0.0-preview.6
+
+- The Android host on Avalonia is now the package `Plumix.Avalonia.Android` with the namespace
+  `Plumix.Avalonia.Android` (`PlumixMainActivity` is unchanged): an Avalonia Android head replaces the
+  `Plumix.Android` package reference and `using Plumix.Android;`. The name `Plumix.Android` now belongs to the native
+  host without Avalonia: derive the Activity from `PlumixActivity`, return the app from `CreateApp()` and drop the
+  Avalonia `Application`; it renders through `Plumix.Impeller`.
 
 - `Plumix` no longer brings Avalonia, SkiaSharp or HarfBuzzSharp with it; `Plumix.Avalonia` does. Applications
   already reference `Plumix.Avalonia` and are unaffected. A library that references only `Plumix` and also uses
@@ -18,7 +24,7 @@ naming Avalonia types, so the widget API can outlive the Avalonia host. Hosting 
 ## Packages
 
 - Add `Plumix.Avalonia` to the application project (desktop, browser, iOS). It holds `PlumixApplication`,
-  `PlumixHost`, `WidgetHost` and `PlumixOptions`, still in the `Plumix` namespace. `Plumix.Android` references it.
+  `PlumixHost`, `WidgetHost` and `PlumixOptions`, still in the `Plumix` namespace. `Plumix.Android` references it (renamed `Plumix.Avalonia.Android`, see above).
 - `PlumixExtensions.Run(widget, lifetime, options)` is now `PlumixApplication.Run(...)`.
   `PlumixExtensions.RunApp`/`RunWidget` are unchanged.
 

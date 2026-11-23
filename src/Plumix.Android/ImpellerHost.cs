@@ -4,11 +4,11 @@ using Plumix.Accessibility;
 using Plumix.Gestures;
 using Plumix.Impeller;
 using Plumix.Rendering;
-using Plumix.Impeller.Android.Interop;
+using Plumix.Android.Interop;
 using Plumix.UI;
 using Plumix.Widgets;
 
-namespace Plumix.Impeller.Android;
+namespace Plumix.Android;
 
 // C#-only host infrastructure; no Dart parity source. The engine embedder of the stage 4 prototype: owns the
 // implicit FlutterView, reports metrics, lifecycle and touches to the framework, and rasterizes each

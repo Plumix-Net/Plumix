@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <!-- Stage 4 prototype (docs/product/avalonia-free-core.md): the Sample gallery on the native Android host
-         without Avalonia (src/Plumix.Impeller.Android), rendering through Impeller. Never packed. -->
+         without Avalonia (src/Plumix.Android), rendering through Impeller. -->
     <PropertyGroup>
         <OutputType>Exe</OutputType>
         <TargetFramework>net11.0-android</TargetFramework>
@@ -29,7 +29,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\..\Plumix.Impeller.Android\Plumix.Impeller.Android.csproj" />
+        <ProjectReference Include="..\..\Plumix.Android\Plumix.Android.csproj" />
         <ProjectReference Include="..\..\Plumix.Material\Plumix.Material.csproj" />
     </ItemGroup>
 

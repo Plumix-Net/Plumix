@@ -1,22 +1,31 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
+    <!-- The native Android host, without Avalonia: PlumixActivity, rendering through the Impeller backend
+         (Plumix.Impeller, GLES on EGL) on its own raster thread, with the engine embedding's input, IME, autofill,
+         accessibility, platform channels, images and system fonts. libimpeller.so comes with
+         Plumix.NImpeller.Native. -->
     <PropertyGroup>
         <TargetFramework>net11.0-android</TargetFramework>
-        <SupportedOSPlatformVersion>24</SupportedOSPlatformVersion>
-        <ImplicitUsings>enable</ImplicitUsings>
+        <SupportedOSPlatformVersion>29</SupportedOSPlatformVersion>
         <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     </PropertyGroup>
 
     <PropertyGroup>
         <IsPackable>true</IsPackable>
         <PackageId>Plumix.Android</PackageId>
-        <Description>Android host for Plumix — a Flutter-inspired UI framework for .NET. PlumixMainActivity connects the Activity lifecycle, state restoration and predictive back to the framework.</Description>
+        <Description>Native Android host for Plumix, without Avalonia: PlumixActivity renders through Impeller (Plumix.Impeller) and ports the Flutter engine's Android embedding — input, keyboard, IME, autofill, accessibility, platform channels, predictive back and state restoration.</Description>
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Avalonia.Android" />
-        <ProjectReference Include="..\Plumix\Plumix.csproj" />
-        <ProjectReference Include="..\Plumix.Avalonia\Plumix.Avalonia.csproj" />
+        <!-- Android's implicit namespaces clash with Plumix widget names (ListView, Switch, Dialog...). -->
+        <Using Remove="Android.Widget" />
+        <Using Remove="Android.App" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Plumix.Impeller\Plumix.Impeller.csproj" />
     </ItemGroup>
 
     <ItemGroup>

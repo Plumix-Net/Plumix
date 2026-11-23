@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net11.0-android</TargetFramework>
+        <SupportedOSPlatformVersion>24</SupportedOSPlatformVersion>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <PropertyGroup>
+        <IsPackable>true</IsPackable>
+        <PackageId>Plumix.Avalonia.Android</PackageId>
+        <Description>Android Activity for a Plumix app hosted on Avalonia: PlumixMainActivity connects the Activity lifecycle, state restoration and predictive back to the framework. Formerly Plumix.Android, which is now the native host.</Description>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Avalonia.Android" />
+        <ProjectReference Include="..\Plumix\Plumix.csproj" />
+        <ProjectReference Include="..\Plumix.Avalonia\Plumix.Avalonia.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <None Include="..\..\README.md" Pack="true" PackagePath="\" />
+        <None Include="..\..\LICENSE" Pack="true" PackagePath="\" />
+        <None Include="..\..\icon.png" Pack="true" PackagePath="\" />
+    </ItemGroup>
+
+</Project>

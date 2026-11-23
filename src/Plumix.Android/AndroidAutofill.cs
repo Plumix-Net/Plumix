@@ -7,7 +7,7 @@ using Plumix.UI;
 using Rect = Android.Graphics.Rect;
 using View = Android.Views.View;
 
-namespace Plumix.Impeller.Android;
+namespace Plumix.Android;
 
 // C#-only host infrastructure parity sources:
 // flutter/engine/src/flutter/shell/platform/android/io/flutter/plugin/editing/TextInputPlugin.java (the

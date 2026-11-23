@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Predictive back: ImpellerActivity registers its back callback only while the framework handles back. -->
+<!-- Predictive back: PlumixActivity registers its back callback only while the framework handles back. -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <application android:enableOnBackInvokedCallback="true" />
 </manifest>

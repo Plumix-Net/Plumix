@@ -44,15 +44,16 @@ normative may live only there.
 - `dart_sample`: reference sample app on real Flutter (Dart), kept in lockstep with `src/Sample/Plumix.Sample`.
 - `src/Sample/Plumix.Desktop`: desktop entry point.
 - `src/Sample/Plumix.Browser`: WebAssembly host.
-- `src/Plumix.Android`: Android host package (`PlumixMainActivity` over `AndroidActivityDelegate`).
-- `src/Sample/Plumix.Sample.Android`: Android sample host.
+- `src/Plumix.Avalonia.Android`: Android host package on Avalonia (`PlumixMainActivity` over
+  `AndroidActivityDelegate`).
+- `src/Sample/Plumix.Sample.Android`: Android sample host on Avalonia.
 - `src/Sample/Plumix.iOS`: iOS host.
-- `src/Plumix.Impeller`, `src/Plumix.Impeller.Android`: native host prototype without Avalonia (not packed until
-  the gates in the umbrella's `docs/product/native-host.md`): the Impeller backend behind the core's seams (NImpeller
-  from the `Plumix.NImpeller` package, glyph-run text over HarfBuzz, `impellerc` shader bundles in
-  `Plumix.Impeller/Shaders`) and the Android host (`ImpellerActivity`, raster thread, IME, images, system fonts);
-  tests in `src/Plumix.Impeller.Tests`; apps `src/Sample/Plumix.Sample.Impeller.Android` and
-  `src/Sample/NetBench.Impeller.Android`.
+- `src/Plumix.Impeller`, `src/Plumix.Android`: the native host without Avalonia (umbrella
+  `docs/product/native-host.md`): the Impeller backend behind the core's seams (NImpeller from the
+  `Plumix.NImpeller` package, glyph-run text over HarfBuzz, `impellerc` shader bundles in `Plumix.Impeller/Shaders`,
+  the engine's pointer packet converter) and the Android host (`PlumixActivity`, raster thread, ports of the engine
+  embedding's input, IME, autofill, accessibility and platform channels); tests in `src/Plumix.Impeller.Tests`; apps
+  `src/Sample/Plumix.Sample.Impeller.Android` and `src/Sample/NetBench.Impeller.Android`.
 
 ## Progress Source of Truth
 
@@ -178,7 +179,7 @@ dotnet run --project src/Sample/Plumix.Desktop/Plumix.Desktop.csproj
 dotnet run --project src/Sample/Plumix.Browser/Plumix.Browser.csproj
 ```
 
-`src/Plumix.Ci.slnf` excludes the Browser/Android/iOS hosts and the `Plumix.Android` package (they need
+`src/Plumix.Ci.slnf` excludes the Browser/Android/iOS hosts and the Android host packages (they need
 workloads CI's test job does not have); build `src/Plumix.sln` locally when you touch those hosts.
 
 Avalonia versions come from `AvaloniaVersion` in `src/Directory.Packages.props`: the minimum the packages

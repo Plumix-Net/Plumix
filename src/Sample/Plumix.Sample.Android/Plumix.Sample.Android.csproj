@@ -23,6 +23,6 @@
 
     <ItemGroup>
         <ProjectReference Include="..\Plumix.Sample\Plumix.Sample.csproj" />
-        <ProjectReference Include="..\..\Plumix.Android\Plumix.Android.csproj" />
+        <ProjectReference Include="..\..\Plumix.Avalonia.Android\Plumix.Avalonia.Android.csproj" />
     </ItemGroup>
 </Project>

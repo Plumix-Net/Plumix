@@ -14,7 +14,7 @@ using Locale = Plumix.Widgets.Locale;
 // flutter/engine/src/flutter/shell/platform/android/io/flutter/embedding/android/FlutterActivity.java
 // (Activity callbacks forwarded to FlutterActivityAndFragmentDelegate, OnBackAnimationCallback).
 
-namespace Plumix.Android;
+namespace Plumix.Avalonia.Android;
 
 /// <summary>
 /// The Activity of a Plumix application on Android: an <see cref="AvaloniaMainActivity"/> that hands the

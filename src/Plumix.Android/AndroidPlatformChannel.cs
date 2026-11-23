@@ -4,13 +4,13 @@ using Android.Views;
 using Plumix.UI;
 using Color = Plumix.UI.Color;
 
-namespace Plumix.Impeller.Android;
+namespace Plumix.Android;
 
 // C#-only host infrastructure parity source:
 // flutter/engine/src/flutter/shell/platform/android/io/flutter/plugin/platform/PlatformPlugin.java (the
 // `flutter/platform` methods: clipboard, playSystemSound, vibrateHapticFeedback, setSystemChromeSystemUIOverlayStyle,
 // setSystemChromeApplicationSwitcherDescription, popSystemNavigator, setFrameworkHandlesBack). The sound, haptic
-// and system-bar parts follow Plumix.Android's AndroidPlatformPlugin, without AndroidX: the window's own
+// and system-bar parts follow Plumix.Avalonia.Android's AndroidPlatformPlugin, without AndroidX: the window's own
 // WindowInsetsController (Android 11+) or the decor view's light-bar flags (Android 10).
 
 /// <summary>Answers the framework's <c>flutter/platform</c> calls for the Activity.</summary>

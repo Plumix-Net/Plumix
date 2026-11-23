@@ -2,7 +2,7 @@
 using Android.Runtime;
 using Avalonia.Android;
 
-namespace Plumix.Android
+namespace Plumix.Sample.Android
 {
     [Application]
     public class Application : AvaloniaAndroidApplication<App>

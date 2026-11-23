@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <!-- Stage 4 prototype (docs/product/avalonia-free-core.md): NetBench's mobile app on the native Android host
-         without Avalonia (src/Plumix.Impeller.Android). It compiles the NetBench checkout's sources unchanged
+         without Avalonia (src/Plumix.Android). It compiles the NetBench checkout's sources unchanged
          (NetBenchSrc, the sibling repository by default) and its Plumix.Packages siblings by project, so the
          app runs against this repository's Plumix. Never packed. -->
     <PropertyGroup>
@@ -47,7 +47,7 @@
     <ItemGroup>
         <PackageReference Include="HdrHistogram" Version="2.5.0" />
         <PackageReference Include="Slang.Net" Version="9.8.0" />
-        <ProjectReference Include="..\..\Plumix.Impeller.Android\Plumix.Impeller.Android.csproj" />
+        <ProjectReference Include="..\..\Plumix.Android\Plumix.Android.csproj" />
         <ProjectReference Include="..\..\Plumix.Material\Plumix.Material.csproj" />
         <ProjectReference Include="$(PlumixPackagesSrc)Plumix.Bloc\Plumix.Bloc.csproj" />
         <ProjectReference Include="$(PlumixPackagesSrc)Plumix.Slang\Plumix.Slang.csproj" />

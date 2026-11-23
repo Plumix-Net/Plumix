@@ -3,7 +3,7 @@ using Plumix.Foundation;
 using Plumix.UI;
 using KeyEvent = Android.Views.KeyEvent;
 
-namespace Plumix.Impeller.Android;
+namespace Plumix.Android;
 
 // C#-only host infrastructure parity sources, all under flutter/engine/src/flutter/shell/platform/android/
 // io/flutter/embedding: android/KeyboardManager.java (both responders get every event; an event neither handles

@@ -1,6 +1,6 @@
 using Android.App;
 using Android.Content.PM;
-using Plumix.Impeller.Android;
+using Plumix.Android;
 using Plumix.Widgets;
 
 namespace Plumix.Sample.Impeller.Android;
@@ -17,7 +17,7 @@ namespace Plumix.Sample.Impeller.Android;
     ConfigurationChanges = ConfigChanges.Orientation | ConfigChanges.ScreenSize | ConfigChanges.ScreenLayout
                            | ConfigChanges.SmallestScreenSize | ConfigChanges.Keyboard | ConfigChanges.KeyboardHidden
                            | ConfigChanges.UiMode | ConfigChanges.Density)]
-public sealed class MainActivity : ImpellerActivity
+public sealed class MainActivity : PlumixActivity
 {
     protected override Widget CreateApp() =>
         Intent?.GetStringExtra("app") == "demo" ? DemoApp.Create() : new CounterApp();

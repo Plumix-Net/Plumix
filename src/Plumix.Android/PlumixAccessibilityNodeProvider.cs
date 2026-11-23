@@ -8,7 +8,7 @@ using AndroidRect = Android.Graphics.Rect;
 using AccessibilityAction = Android.Views.Accessibility.AccessibilityNodeInfo.AccessibilityAction;
 using AccessibilityEvent = Android.Views.Accessibility.AccessibilityEvent;
 
-namespace Plumix.Impeller.Android;
+namespace Plumix.Android;
 
 // C#-only host infrastructure parity source:
 // flutter/engine/src/flutter/shell/platform/android/io/flutter/view/AccessibilityBridge.java and its role

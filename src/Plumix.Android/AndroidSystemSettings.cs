@@ -6,14 +6,14 @@ using Locale = Plumix.Widgets.Locale;
 using AndroidViewConfiguration = Android.Views.ViewConfiguration;
 using JavaLocale = Java.Util.Locale;
 
-namespace Plumix.Impeller.Android;
+namespace Plumix.Android;
 
 // C#-only host infrastructure parity sources:
 // flutter/engine/src/flutter/shell/platform/android/io/flutter/embedding/android/FlutterView.java
 // (sendUserSettingsToFlutter: text scale factor with the Android 14 font scaling, 24-hour format, platform
 // brightness; the viewport metrics' physicalTouchSlop),
 // .../io/flutter/plugin/localization/LocalizationPlugin.java (sendLocalesToFlutter, resolveNativeLocale) and
-// FlutterJNI.computePlatformResolvedLocale's conversions. Ported from Plumix.Android's PlumixMainActivity and
+// FlutterJNI.computePlatformResolvedLocale's conversions. Ported from Plumix.Avalonia.Android's PlumixMainActivity and
 // AndroidPlatformPlugin, which do the same over the Avalonia host.
 
 /// <summary>Reports the Activity's configuration to the framework, as the engine's settings and locales.</summary>

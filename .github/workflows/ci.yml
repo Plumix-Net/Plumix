@@ -127,7 +127,8 @@ jobs:
       - name: Extract version from tag
         run: echo "PKG_VERSION=${GITHUB_REF_NAME#v}" >> "$GITHUB_ENV"
 
-      # Plumix.Android targets net11.0-android; the runner image ships the Android SDK and a JDK.
+      # Plumix.Android and Plumix.Avalonia.Android target net11.0-android; the runner image ships the
+      # Android SDK and a JDK.
       - name: Install Android workload
         run: dotnet workload install android
 
@@ -147,6 +148,10 @@ jobs:
           dotnet pack src/Plumix.FSharp/Plumix.FSharp.fsproj -c Release \
             -p:Version="$PKG_VERSION" --output "$NUGET_OUTPUT"
           dotnet pack src/Plumix.Elmish/Plumix.Elmish.fsproj -c Release \
+            -p:Version="$PKG_VERSION" --output "$NUGET_OUTPUT"
+          dotnet pack src/Plumix.Avalonia.Android/Plumix.Avalonia.Android.csproj -c Release \
+            -p:Version="$PKG_VERSION" --output "$NUGET_OUTPUT"
+          dotnet pack src/Plumix.Impeller/Plumix.Impeller.csproj -c Release \
             -p:Version="$PKG_VERSION" --output "$NUGET_OUTPUT"
           dotnet pack src/Plumix.Android/Plumix.Android.csproj -c Release \
             -p:Version="$PKG_VERSION" --output "$NUGET_OUTPUT"
@@ -172,6 +177,8 @@ jobs:
             "Plumix.Cupertino"
             "Plumix.FSharp"
             "Plumix.Elmish"
+            "Plumix.Avalonia.Android"
+            "Plumix.Impeller"
             "Plumix.Android"
           )
           for package_id in "${package_ids[@]}"; do

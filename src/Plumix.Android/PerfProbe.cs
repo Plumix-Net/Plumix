@@ -5,7 +5,7 @@ using Android.Util;
 using Plumix.UI;
 using AndroidProcess = Android.OS.Process;
 
-namespace Plumix.Impeller.Android;
+namespace Plumix.Android;
 
 // C#-only host infrastructure; no Dart parity source. Stage 4 measurement probe (`--ez perf true`): logs the
 // time from process start to the first rasterized frame, then every frame's build and raster durations from

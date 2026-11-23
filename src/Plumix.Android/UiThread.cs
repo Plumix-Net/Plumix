@@ -1,4 +1,4 @@
-namespace Plumix.Impeller.Android;
+namespace Plumix.Android;
 
 // C#-only host infrastructure; no Dart parity source. A public way for app code to reach the framework's UI
 // thread from a background thread (a network engine's callbacks), which Plumix's public API does not offer:

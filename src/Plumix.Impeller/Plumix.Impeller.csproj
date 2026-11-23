@@ -1,14 +1,19 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-    <!-- Stage 4 prototype (docs/product/avalonia-free-core.md): an Impeller backend for the core's seams.
-         Not packed until the native host's publishing gates. NImpeller comes from the Plumix.NImpeller package (the
-         Plumix-Net/NImpeller fork). -->
+    <!-- The Impeller backend behind the core's seams, shared by the native hosts: display-list playback, glyph-run
+         text over HarfBuzz, images, fragment programs, the engine's pointer packet converter and APNG codec.
+         NImpeller comes from the Plumix.NImpeller package (the Plumix-Net/NImpeller fork). -->
     <PropertyGroup>
         <TargetFramework>net11.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-        <IsPackable>false</IsPackable>
+    </PropertyGroup>
+
+    <PropertyGroup>
+        <IsPackable>true</IsPackable>
+        <PackageId>Plumix.Impeller</PackageId>
+        <Description>Impeller rendering backend for Plumix's native hosts — display lists, layers, HarfBuzz text as Impeller glyph runs, images and fragment programs on Flutter's renderer, through NImpeller (Plumix.NImpeller).</Description>
     </PropertyGroup>
 
     <ItemGroup>
@@ -25,7 +30,13 @@
     </ItemGroup>
 
     <ItemGroup>
-        <InternalsVisibleTo Include="Plumix.Impeller.Android" />
+        <None Include="..\..\README.md" Pack="true" PackagePath="\" />
+        <None Include="..\..\LICENSE" Pack="true" PackagePath="\" />
+        <None Include="..\..\icon.png" Pack="true" PackagePath="\" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <InternalsVisibleTo Include="Plumix.Android" />
         <InternalsVisibleTo Include="Plumix.Impeller.Tests" />
         <InternalsVisibleTo Include="Plumix.Sample.Impeller.Android" />
     </ItemGroup>

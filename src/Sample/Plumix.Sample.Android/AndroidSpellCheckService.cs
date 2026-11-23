@@ -6,7 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace Plumix.Android;
+namespace Plumix.Sample.Android;
 
 // Dart parity source (host implementation):
 // flutter/engine/src/flutter/shell/platform/android/io/flutter/plugin/editing/SpellCheckPlugin.java

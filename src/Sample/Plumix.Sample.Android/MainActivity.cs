@@ -4,8 +4,9 @@ using Android.OS;
 using Plumix.Widgets;
 
 // Dart parity source (reference): dart_sample/lib/main.dart (platform host bootstrap, adapted)
+using Plumix.Avalonia.Android;
 
-namespace Plumix.Android;
+namespace Plumix.Sample.Android;
 
 [Activity(
     Label = "Plumix.Sample.Android",

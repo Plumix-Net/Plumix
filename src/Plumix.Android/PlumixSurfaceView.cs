@@ -10,7 +10,7 @@ using Plumix.UI;
 using KeyEvent = Android.Views.KeyEvent;
 using Math = System.Math;
 
-namespace Plumix.Impeller.Android;
+namespace Plumix.Android;
 
 // C#-only host infrastructure parity source:
 // flutter/engine/src/flutter/shell/platform/android/io/flutter/plugin/editing/TextInputPlugin.java (the editor

@@ -12,7 +12,7 @@ namespace Plumix;
 /// the binding, as Flutter's <c>FlutterActivityAndFragmentDelegate</c> does for a <c>FlutterActivity</c>.
 /// </summary>
 /// <remarks>
-/// <c>PlumixMainActivity</c> (the <c>Plumix.Android</c> package) owns one and calls it from every
+/// <c>PlumixMainActivity</c> (the <c>Plumix.Avalonia.Android</c> package) owns one and calls it from every
 /// Activity callback. An Activity that cannot derive from it creates one in its constructor and makes
 /// the same calls. The class has no Android dependency, so the core package stays platform neutral.
 /// <para>

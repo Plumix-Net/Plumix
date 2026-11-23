@@ -2,9 +2,9 @@ using System.Collections.Concurrent;
 using System.Runtime.InteropServices;
 using NImpeller;
 using Plumix.Impeller;
-using Plumix.Impeller.Android.Interop;
+using Plumix.Android.Interop;
 
-namespace Plumix.Impeller.Android;
+namespace Plumix.Android;
 
 // C#-only host infrastructure; no Dart parity source. Adapted from AvaloniaUI/NImpeller
 // samples/Sandbox.Android/Rendering/GlesBackend.cs (MIT License, Copyright (c) AvaloniaUI OÜ): OpenGL ES 3

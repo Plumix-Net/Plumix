@@ -2,7 +2,7 @@ using Android.Text;
 using Android.Views;
 using Android.Views.InputMethods;
 
-namespace Plumix.Impeller.Android;
+namespace Plumix.Android;
 
 // C#-only host infrastructure parity source:
 // flutter/engine/src/flutter/shell/platform/android/io/flutter/plugin/editing/ListenableEditingState.java: the

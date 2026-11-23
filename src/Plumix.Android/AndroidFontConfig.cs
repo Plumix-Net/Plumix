@@ -1,7 +1,7 @@
 using System.Xml.Linq;
 using Plumix.Impeller;
 
-namespace Plumix.Impeller.Android;
+namespace Plumix.Android;
 
 // C#-only host infrastructure; no Dart parity source. Android's font configuration (/system/etc/fonts.xml),
 // read the way Skia's Android font manager reads it: named families (sans-serif, serif, monospace...) and

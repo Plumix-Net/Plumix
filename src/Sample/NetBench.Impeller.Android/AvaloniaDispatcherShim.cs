@@ -1,4 +1,4 @@
-using Plumix.Impeller.Android;
+using Plumix.Android;
 
 // C#-only host infrastructure; no Dart parity source. NetBench's cubits post background engine callbacks with
 // Avalonia's `Dispatcher.UIThread.Post` (Avalonia is its mobile host today). The prototype keeps NetBench's
@@ -16,5 +16,5 @@ internal sealed class Dispatcher
 
     public static Dispatcher UIThread { get; } = new();
 
-    public void Post(Action action) => Plumix.Impeller.Android.UiThread.Post(action);
+    public void Post(Action action) => Plumix.Android.UiThread.Post(action);
 }

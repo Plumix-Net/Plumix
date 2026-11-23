@@ -1,9 +1,10 @@
 using Android.Content;
 using Android.OS;
 using Android.Views;
+using Plumix.Impeller;
 using Plumix.UI;
 
-namespace Plumix.Impeller.Android;
+namespace Plumix.Android;
 
 // C#-only host infrastructure parity source:
 // flutter/engine/src/flutter/shell/platform/android/io/flutter/embedding/android/AndroidTouchProcessor.java: each
