@@ -30,4 +30,7 @@
         <ProjectReference Include="..\..\Plumix.Material\Plumix.Material.csproj" />
     </ItemGroup>
 
+    <!-- What package consumers get through buildTransitive; a ProjectReference brings no package targets. -->
+    <Import Project="..\..\Plumix.iOS\buildTransitive\Plumix.iOS.targets" />
+
 </Project>

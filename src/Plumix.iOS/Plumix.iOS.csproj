@@ -28,6 +28,8 @@
         <None Include="..\..\README.md" Pack="true" PackagePath="\" />
         <None Include="..\..\LICENSE" Pack="true" PackagePath="\" />
         <None Include="..\..\icon.png" Pack="true" PackagePath="\" />
+        <!-- Drops the private-data frameworks the iOS SDK links under Native AOT (see the file). -->
+        <None Include="buildTransitive\Plumix.iOS.targets" Pack="true" PackagePath="buildTransitive\" />
     </ItemGroup>
 
 </Project>

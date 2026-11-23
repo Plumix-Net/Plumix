@@ -56,7 +56,10 @@ normative may live only there.
   settings, text input (it owns `flutter/textinput`; HostTextInputPlugin is not used), keyboard inset, hardware keys
   and the accessibility bridge (core `IOSAccessibility.cs` decides what nodes read), state restoration
   (`PlumixSceneDelegate`, core `IOSRestorationPlugin`), pixel readback for `Scene.toImage` (`MetalReadback`). It
-  packs only on macOS (the CI's `pack-ios` job). App `src/Sample/Plumix.Sample.iOS` (build with
+  packs only on macOS (the CI's `pack-ios` job). The package's `buildTransitive/Plumix.iOS.targets` drops the
+  private-data frameworks (CoreBluetooth, Contacts, CoreLocation, Photos, HealthKit…) that the SDK links under Native
+  AOT before ILC trims — App Store Connect asked purpose strings for them (ITMS-90683); an app keeps one with
+  `<PlumixKeepFramework Include="…" />` or all with `PlumixKeepAllFrameworks=true`; the iOS sample imports the file. App `src/Sample/Plumix.Sample.iOS` (build with
   `-r iossimulator-arm64`).
 - `src/Plumix.Templates`: the `dotnet new` template package (`plumix-app`: shared widgets plus Desktop, Android and
   iOS heads, in `content/plumix-app`, placeholder name `PlumixTemplateApp`). Packing stamps `PlumixVersion`,

@@ -8,6 +8,8 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased]
+- Plumix.iOS ships `buildTransitive/Plumix.iOS.targets`: Native AOT apps no longer link the private-data frameworks
+  (CoreBluetooth, Contacts, CoreLocation, Photos, HealthKit…) the SDK adds, which drew App Store ITMS-90683.
 
 ## v3.47.0-preview.2 (Plumix.Material 1.11.1-preview.2, Plumix.Cupertino 1.1.7-preview.2) — 2026-11-23
 - Trim/Native AOT clean: `IsAotCompatible` on every package; service-extension, navigation-event and inspector

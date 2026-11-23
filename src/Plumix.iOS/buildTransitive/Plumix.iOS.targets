@@ -1,0 +1,33 @@
+<Project>
+
+  <!--
+    Shipped in the Plumix.iOS package (buildTransitive), so every iOS app on the native host gets it.
+
+    With Native AOT and the trimmable-static registrar (.NET 11) the iOS SDK links every framework Microsoft.iOS
+    binds, ~110 of them: `_LoadLinkerOutput` reads a framework list computed before ILC trims. The binary then carries
+    load commands for CoreBluetooth, Contacts, CoreLocation, Photos, HealthKit… with no symbol of theirs in use, and
+    App Store Connect asks for purpose strings for APIs the app never calls (ITMS-90683, e.g.
+    NSBluetoothAlwaysUsageDescription). The frameworks that touch private data are dropped from the native link here.
+    Nothing is hidden: if code does reference one of them, the native link fails on its undefined symbols.
+
+    An app that uses one of them keeps it:   <PlumixKeepFramework Include="CoreLocation" />
+    An app that wants the SDK's list as is:  <PlumixKeepAllFrameworks>true</PlumixKeepAllFrameworks>
+  -->
+  <ItemGroup>
+    <_PlumixPrivacyFramework Include="AddressBook;AddressBookUI;AdServices;AdSupport;AppTrackingTransparency" />
+    <_PlumixPrivacyFramework Include="CallKit;Contacts;ContactsUI;CoreBluetooth;CoreLocation;CoreLocationUI" />
+    <_PlumixPrivacyFramework Include="CoreMotion;CoreNFC;CoreTelephony;EventKit;EventKitUI;ExternalAccessory" />
+    <_PlumixPrivacyFramework Include="HealthKit;HealthKitUI;HomeKit;Intents;IntentsUI;LocalAuthentication" />
+    <_PlumixPrivacyFramework Include="MapKit;MediaPlayer;NearbyInteraction;Photos;PhotosUI;SensorKit;Speech" />
+  </ItemGroup>
+
+  <Target Name="_PlumixDropUnusedPrivacyFrameworks"
+          AfterTargets="_LoadLinkerOutput"
+          Condition="'$(_UseNativeAot)' == 'true' and '$(PlumixKeepAllFrameworks)' != 'true'">
+    <ItemGroup>
+      <_PlumixDroppedFramework Include="@(_PlumixPrivacyFramework)" Exclude="@(PlumixKeepFramework)" />
+      <_LinkerFrameworks Remove="@(_PlumixDroppedFramework)" />
+    </ItemGroup>
+  </Target>
+
+</Project>
