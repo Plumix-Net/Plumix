@@ -80,10 +80,10 @@ public sealed class CupertinoMagnifierTests : IDisposable
     }
 
     [Fact]
-    public void CupertinoMagnifier_FocalPointDoesNotScaleWithTheInOutAnimation()
+    public void CupertinoMagnifier_FocalPointCancelsTheInOutTranslation()
     {
-        // `magnifier.dart` discards the result of `focalPointOffset.scale(...)`, so the focal point
-        // is the static above-focal-point shift plus the caller's adjustment at every animation value.
+        // The focal point shifts by `kMagnifierAboveFocalPoint * (1 - value)`, cancelling the lens's
+        // downward translation so it keeps showing the focal point while it animates.
         using var animation = new AnimationController(duration: TimeSpan.FromMilliseconds(150));
         animation.SetValue(0.5);
         using var harness = new CupertinoThemeTestHarness(Host(new CupertinoMagnifier(
@@ -93,6 +93,7 @@ public sealed class CupertinoMagnifierTests : IDisposable
 
         double expectedY = (CupertinoMagnifier.DefaultSize.Height / 2.0)
                            - CupertinoMagnifier.MagnifierAboveFocalPoint
+                           + (CupertinoMagnifier.MagnifierAboveFocalPoint * 0.5)
                            + 3;
         RawMagnifier raw = Assert.Single(harness.FindWidgets<RawMagnifier>());
         Assert.Equal(2.0, raw.FocalPointOffset.Dx, 3);

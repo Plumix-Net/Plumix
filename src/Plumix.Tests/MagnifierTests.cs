@@ -318,11 +318,11 @@ public sealed class MagnifierTests : IDisposable
         Assert.Equal(1, render.MagnificationScale);
         Assert.Equal(2, render.FocalPointOffset.Dx);
 
-        // The focal point does not follow the in / out animation: `magnifier.dart` throws away the
-        // result of `focalPointOffset.scale(...)`.
+        // The focal point cancels the in / out translation: `kMagnifierAboveFocalPoint * (1 - value)`.
         Assert.Equal(
             (CupertinoMagnifier.DefaultSize.Height / 2.0)
             - CupertinoMagnifier.MagnifierAboveFocalPoint
+            + (CupertinoMagnifier.MagnifierAboveFocalPoint * 0.5)
             + 3,
             render.FocalPointOffset.Dy,
             3);

@@ -1222,7 +1222,7 @@ internal static class SwitchDefaults
                 if (states.Contains(WidgetState.Disabled))
                 {
                     return states.Contains(WidgetState.Selected)
-                        ? colors.Surface.WithOpacity(1.0)
+                        ? colors.Surface
                         : colors.OnSurface.WithOpacity(0.38);
                 }
 

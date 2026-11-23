@@ -21,6 +21,9 @@ public sealed class CupertinoSlider : StatefulWidget
     /// </summary>
     internal const double VelocityThreshold = 1.0;
 
+    // Matches the disabled visual opacity of the native iOS UISlider.
+    internal const double DisabledOpacity = 0.5;
+
     /// <summary>Creates an iOS-style slider.</summary>
     public CupertinoSlider(
         double value,
@@ -101,17 +104,19 @@ public sealed class CupertinoSlider : StatefulWidget
 
         public override Widget Build(BuildContext context)
         {
-            return new CupertinoSliderRenderWidget(
-                value: (CurrentWidget.Value - CurrentWidget.Min) / (CurrentWidget.Max - CurrentWidget.Min),
-                divisions: CurrentWidget.Divisions,
-                activeColor: CupertinoDynamicColor.Resolve(
-                    CurrentWidget.ActiveColor ?? CupertinoTheme.Of(context).PrimaryColor,
-                    context),
-                thumbColor: CurrentWidget.ThumbColor,
-                onChanged: CurrentWidget.OnChanged is null ? null : HandleChanged,
-                onChangeStart: CurrentWidget.OnChangeStart is null ? null : HandleDragStart,
-                onChangeEnd: CurrentWidget.OnChangeEnd is null ? null : HandleDragEnd,
-                vsync: this);
+            return new Opacity(
+                CurrentWidget.OnChanged is null ? DisabledOpacity : 1.0,
+                new CupertinoSliderRenderWidget(
+                    value: (CurrentWidget.Value - CurrentWidget.Min) / (CurrentWidget.Max - CurrentWidget.Min),
+                    divisions: CurrentWidget.Divisions,
+                    activeColor: CupertinoDynamicColor.Resolve(
+                        CurrentWidget.ActiveColor ?? CupertinoTheme.Of(context).PrimaryColor,
+                        context),
+                    thumbColor: CurrentWidget.ThumbColor,
+                    onChanged: CurrentWidget.OnChanged is null ? null : HandleChanged,
+                    onChangeStart: CurrentWidget.OnChangeStart is null ? null : HandleDragStart,
+                    onChangeEnd: CurrentWidget.OnChangeEnd is null ? null : HandleDragEnd,
+                    vsync: this));
         }
 
         private void HandleChanged(double value, bool isFastDrag)

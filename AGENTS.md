@@ -126,8 +126,8 @@ stable relative path. Create them once after cloning:
 
 ```bash
 ln -s /path/to/your/flutter flutter-src     # Flutter checkout (see pin below)
-ln -s ~/.pub-cache/hosted/pub.dev/material_ui-1.0.0 material-ui-src    # Material pub package
-ln -s ~/.pub-cache/hosted/pub.dev/cupertino_ui-1.0.0 cupertino-ui-src  # Cupertino pub package
+ln -s ~/.pub-cache/hosted/pub.dev/material_ui-1.11.1 material-ui-src   # Material pub package
+ln -s ~/.pub-cache/hosted/pub.dev/cupertino_ui-1.1.7 cupertino-ui-src  # Cupertino pub package
 ln -s /path/to/your/Avalonia avalonia-src   # optional, for host/backend questions
 ln -s /path/to/your/skia skia-src           # optional: google/skia chrome/m119 (SkiaSharp 3.119), for Path ports
 ln -s /path/to/your/NImpeller nimpeller-src # optional: Plumix-Net/NImpeller, to work on the Impeller bindings
@@ -150,12 +150,11 @@ ln -s /path/to/your/NImpeller nimpeller-src # optional: Plumix-Net/NImpeller, to
   glyph runs). Only needed to change the bindings; the repository consumes the package.
 
 **Pinned Flutter revision: 3.47.0 (`4cf24164269`, `flutter-3.47-candidate.0`). Pinned packages:
-`material_ui` 1.0.0, `cupertino_ui` 1.0.0, `intl` 0.20.3** (what `dart_sample` resolves; at these pins the package
-sources are code-identical to the SDK's frozen `src/material`/`src/cupertino` copies, modulo doc
-comments and constructor-style modernization). Parity is defined against these pins. **Target pins** (the
-package versions in `src/Versions.props`, `docs/VERSIONING.md`): Flutter 3.47.0, `material_ui` 1.11.1,
-`cupertino_ui` 1.1.7 — moving the two package pins to them is open work; until the port matches a target, its
-package ships as `-preview.N`. Material
+`material_ui` 1.11.1, `cupertino_ui` 1.1.7, `intl` 0.20.3** (what `dart_sample` resolves; they match the package
+versions in `src/Versions.props`, `docs/VERSIONING.md`). Parity is defined against these pins. The ports were
+validated against `material_ui`/`cupertino_ui` 1.0.0 (code-identical to the SDK's frozen `src/material`/`src/cupertino`
+copies); the 1.0.0 → 1.11.1 / 1.1.7 delta is the open re-port table in `docs/ai/BACKLOG.md`, and until it is closed
+both packages ship as `-preview.N`. Material
 defaults change between releases, so a port validated against a different checkout is not validated.
 When a pin moves, update this line, re-point the symlink(s), and re-run
 `python3 scripts/generate_port_map.py` (it flags markers whose Dart file no longer exists) and

@@ -8,6 +8,17 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased]
+- Pins moved to `material_ui` 1.11.1 / `cupertino_ui` 1.1.7 (`dart_sample`, `AGENTS.md`); the open delta is the
+  re-port table in `docs/ai/BACKLOG.md`. The ink-sparkle shader source moved to `material_ui/lib/shaders/`.
+- Breaking: Cupertino deltas absorbed — tinted button light opacity 0.12 → 0.18 (`constants.dart`), disabled
+  `CupertinoSlider` at 0.5 opacity (`slider.dart`), magnifier focal point follows the in/out animation
+  (`magnifier.dart`), localized action-sheet label (`dialog.dart`), `NoDefaultCupertinoThemeData` equality
+  includes `selectionHandleColor` (`theme.dart`); `CupertinoTabBar` accepts one item (`bottom_tab_bar.dart`).
+- Breaking: Material deltas absorbed — weighted carousel max scroll extent (`carousel.dart`), snack bar overflow
+  spacer and scaled action width (`snack_bar.dart`), header/button/selected/container semantics (`drawer_header`,
+  `popup_menu`, `autocomplete`, `expansion_tile`), indicator repaints its `Material` (`navigation_bar.dart`),
+  bottom sheet closes within tolerance and disposes drag-end curves (`bottom_sheet.dart`), contrast-level
+  tolerance (`color_scheme.dart`), disabled selected switch thumb uses `surface` (`switch.dart`).
 
 ## v3.47.0-preview.1 (Plumix.Material 1.11.1-preview.1, Plumix.Cupertino 1.1.7-preview.1) — 2026-11-23
 - Breaking: versions follow the ported upstream (`docs/VERSIONING.md`): Plumix and hosts `3.47.0-preview.N` (Flutter),

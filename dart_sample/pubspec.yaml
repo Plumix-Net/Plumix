@@ -40,8 +40,8 @@ dependencies:
 
   # Exact pins: parity is defined against these versions (AGENTS.md > Local Reference Paths).
   # When bumping, re-point material-ui-src/cupertino-ui-src and re-run generate_port_map.py.
-  material_ui: 1.0.0
-  cupertino_ui: 1.0.0
+  material_ui: 1.11.1
+  cupertino_ui: 1.1.7
 dev_dependencies:
   flutter_test:
     sdk: flutter

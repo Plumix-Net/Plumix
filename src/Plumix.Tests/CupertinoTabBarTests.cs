@@ -56,8 +56,8 @@ public sealed class CupertinoTabBarTests : IDisposable
         Assert.Same(callback, copy.OnTap);
         Assert.Same(tabBar.Border, copy.Border);
 
-        Assert.Throws<ArgumentException>(() => new CupertinoTabBar(
-            [new BottomNavigationBarItem(new Text("Only"), "Only")]));
+        Assert.Throws<ArgumentException>(() => new CupertinoTabBar([]));
+        Assert.Single(new CupertinoTabBar([new BottomNavigationBarItem(new Text("Only"), "Only")]).Items);
         Assert.Throws<ArgumentOutOfRangeException>(() => new CupertinoTabBar(items, currentIndex: 2));
         Assert.Throws<ArgumentOutOfRangeException>(() => new CupertinoTabBar(items, height: -1.0));
     }

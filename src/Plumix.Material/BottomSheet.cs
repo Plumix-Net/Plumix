@@ -216,7 +216,8 @@ public sealed class BottomSheet : StatefulWidget
 
         private bool ExtentChanged(DraggableScrollableNotification notification)
         {
-            if (notification.Extent == notification.MinExtent && notification.ShouldCloseOnMinExtent)
+            if (Math.Abs(notification.Extent - notification.MinExtent) < Constants.PrecisionErrorTolerance
+                && notification.ShouldCloseOnMinExtent)
             {
                 CurrentWidget.OnClosing();
             }
@@ -579,6 +580,10 @@ internal sealed class ModalBottomSheetWidgetState<T> : State<ModalBottomSheetWid
     private CurvedAnimation _curvedSheetAnimation = null!;
     private ProxyAnimation _sheetAnimation = null!;
 
+    // The CurvedAnimation created for the most recent drag end, tracked so it can
+    // be disposed when it is replaced or the state is disposed.
+    private CurvedAnimation? _dragEndCurvedAnimation;
+
     private ModalBottomSheetWidget<T> CurrentWidget => (ModalBottomSheetWidget<T>)StateWidget;
 
     public override void InitState()
@@ -596,6 +601,7 @@ internal sealed class ModalBottomSheetWidgetState<T> : State<ModalBottomSheetWid
     {
         _sheetAnimation.Parent = AlwaysDismissedAnimation;
         _curvedSheetAnimation.Dispose();
+        _dragEndCurvedAnimation?.Dispose();
         base.Dispose();
     }
 
@@ -651,6 +657,10 @@ internal sealed class ModalBottomSheetWidgetState<T> : State<ModalBottomSheetWid
     {
         // Allow the sheet to track the user's finger accurately.
         _sheetAnimation.Parent = CurrentWidget.Route.Animation;
+        // The CurvedAnimation from the previous drag end is no longer the parent of
+        // _sheetAnimation, so dispose it to avoid leaking its listeners on the route animation.
+        _dragEndCurvedAnimation?.Dispose();
+        _dragEndCurvedAnimation = null;
     }
 
     private void HandleDragEnd(DragEndDetails details, bool isClosing)
@@ -658,7 +668,8 @@ internal sealed class ModalBottomSheetWidgetState<T> : State<ModalBottomSheetWid
         // Smooth out the animation from the current position of the sheet.
         var style = CurrentWidget.AnimationStyle;
         double currentProgress = CurrentWidget.Route.Animation.Value;
-        _sheetAnimation.Parent = new CurvedAnimation(
+        CurvedAnimation? oldDragEndCurvedAnimation = _dragEndCurvedAnimation;
+        _dragEndCurvedAnimation = new CurvedAnimation(
             CurrentWidget.Route.Animation,
             curve: new Split(
                 currentProgress,
@@ -666,6 +677,9 @@ internal sealed class ModalBottomSheetWidgetState<T> : State<ModalBottomSheetWid
             reverseCurve: new Split(
                 currentProgress,
                 endCurve: style?.ReverseCurve ?? BottomSheet.ModalBottomSheetCurve));
+        _sheetAnimation.Parent = _dragEndCurvedAnimation;
+        // Dispose the previous drag-end CurvedAnimation only after detaching it from _sheetAnimation.
+        oldDragEndCurvedAnimation?.Dispose();
     }
 }
 

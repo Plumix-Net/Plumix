@@ -346,6 +346,13 @@ public sealed class NavigationIndicator : StatelessWidget
             : 0.4 + (0.6 * Curves.EaseInOutCubicEmphasized.Transform(AnimationValue));
         var shape = Shape ?? new RoundedRectangleBorder(borderRadius:
             Plumix.Rendering.BorderRadius.Circular(BorderRadius.Radius));
+
+        // The indicator is drawn by the Ink widget below, which paints on the nearest ancestor
+        // Material rather than locally. When the animation ticks without an accompanying pointer
+        // interaction (for example, the selected index was changed programmatically), that Material
+        // is not otherwise notified and would keep showing the indicator's previous frame.
+        Material.Of(context).MarkNeedsPaint();
+
         return Plumix.Widgets.Transform.Scale(
             scaleX: scale,
             scaleY: 1.0,

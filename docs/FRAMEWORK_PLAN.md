@@ -12,9 +12,9 @@ last_updated: 2026-11-23
 north_star: "Flutter-like widget/rendering framework in C# with Avalonia as host infrastructure."
 current_phase: "RC preparation: Avalonia-free core (avalonia-free-core.md) stages 0-4 done (merged 2026-11-22); native host on Impeller accepted (native-host.md), stage 1 in progress."
 latest_release: "3.47.0-preview.1 / material 1.11.1-preview.1 / cupertino 1.1.7-preview.1 (2026-11-23); versions follow upstream (docs/VERSIONING.md)"
-flutter_pin: "3.47.0 (4cf24164269); material_ui 1.0.0; cupertino_ui 1.0.0 — see AGENTS.md"
+flutter_pin: "3.47.0 (4cf24164269); material_ui 1.11.1; cupertino_ui 1.1.7 (validated at 1.0.0; delta in docs/ai/BACKLOG.md) — see AGENTS.md"
 target_pins: "Flutter 3.47.0; material_ui 1.11.1; cupertino_ui 1.1.7 (src/Versions.props); -preview until parity"
-open_work_outside_controls: "docs/ai/BACKLOG.md (control-level gaps, host-level gaps; the 3.44->3.47 re-port table is down to subsystem-blocked rows)"
+open_work_outside_controls: "docs/ai/BACKLOG.md (control-level gaps, host-level gaps; the 3.44->3.47 re-port table is down to subsystem-blocked rows; the material_ui 1.0.0->1.11.1 / cupertino_ui 1.0.0->1.1.7 re-port table is open)"
 status:
   widget_element_state_lifecycle: done
   render_pipeline_layout_paint_compositing_semantics: done

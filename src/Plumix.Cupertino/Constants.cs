@@ -34,7 +34,7 @@ public static class CupertinoConstants
     /// Flutter's `kCupertinoButtonTintedOpacityLight`: the background opacity of a
     /// <see cref="CupertinoButton"/> created with <see cref="CupertinoButton.Tinted"/> in light mode.
     /// </summary>
-    public const double CupertinoButtonTintedOpacityLight = 0.12;
+    public const double CupertinoButtonTintedOpacityLight = 0.18;
 
     /// <summary>
     /// Flutter's `kCupertinoButtonTintedOpacityDark`: the background opacity of a

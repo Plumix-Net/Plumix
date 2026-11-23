@@ -1159,6 +1159,7 @@ internal sealed class RenderSliverWeightedCarousel : RenderSliverFixedExtentBoxA
                 _weights[^1] * ExtentUnit,
                 BuildItemExtent(lastIndex, LayoutDimensions) ?? 0);
             trailingScrollOffset += extraLayoutOffset;
+            estimatedMaxScrollOffset = trailingScrollOffset;
         }
         else
         {
