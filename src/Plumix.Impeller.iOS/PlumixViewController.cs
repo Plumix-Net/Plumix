@@ -27,6 +27,7 @@ public abstract class PlumixViewController : UIViewController
     private StatusBarTapDelegate? _statusBarTapDelegate;
     private IosTextInputPlugin? _textInputPlugin;
     private IosKeyboardInsetManager? _keyboardInsetManager;
+    private IosAccessibilityBridge? _accessibilityBridge;
     private readonly IosKeyboardManager _keyboardManager = new();
     private UIStatusBarStyle _statusBarStyle = UIStatusBarStyle.Default;
     private bool _flutterPrefersStatusBarHidden;
@@ -40,7 +41,7 @@ public abstract class PlumixViewController : UIViewController
     {
         IosImpellerHost.InstallBackend(GetType().Assembly.GetName().Name ?? string.Empty);
         _host = new IosImpellerHost();
-        View = new PlumixMetalView(_host)
+        View = new PlumixMetalView(_host, this)
         {
             AutoresizingMask = UIViewAutoresizing.FlexibleWidth | UIViewAutoresizing.FlexibleHeight,
         };
@@ -64,6 +65,8 @@ public abstract class PlumixViewController : UIViewController
         _platformChannel = new IosPlatformChannel(this);
         _textInputPlugin = new IosTextInputPlugin(this, View!);
         _platformChannel.TextInput = _textInputPlugin;
+        _accessibilityBridge = new IosAccessibilityBridge(
+            host.Accessibility, this, View!, () => _textInputPlugin?.ActiveView);
         _keyboardInsetManager = new IosKeyboardInsetManager(
             this, () => host.ViewInsetBottom, inset => host.ViewInsetBottom = inset);
         foreach (NSString name in new[]
@@ -275,6 +278,8 @@ public abstract class PlumixViewController : UIViewController
             _textInputPlugin = null;
             _keyboardInsetManager?.Dispose();
             _keyboardInsetManager = null;
+            _accessibilityBridge?.Dispose();
+            _accessibilityBridge = null;
         }
 
         base.Dispose(disposing);
@@ -288,7 +293,50 @@ public abstract class PlumixViewController : UIViewController
         }
     }
 
-    private void ReportAccessibilityFeatures() => IosSystemSettings.ReportAccessibilityFeatures();
+    // onAccessibilityStatusChanged: semantics follow VoiceOver, Switch Control and Speak Screen.
+    private void ReportAccessibilityFeatures()
+    {
+        bool enabled = IosSystemSettings.ReportAccessibilityFeatures();
+        if (_host is not { } host)
+        {
+            return;
+        }
+
+        if (enabled)
+        {
+            host.Accessibility.Activate();
+        }
+        else
+        {
+            host.Accessibility.Deactivate();
+        }
+    }
+
+    /// <summary>
+    /// flutterViewAccessibilityDidCall: UIKit asking the view about accessibility means some assistive technology runs
+    /// (Voice Control has no status API), so semantics turn on while no tree is shown yet.
+    /// </summary>
+    internal void FlutterViewAccessibilityDidCall()
+    {
+        if (ViewIfLoaded is not { } view || IosAccessibilityBridge.GetAccessibilityElements(view) is null)
+        {
+            _host?.Accessibility.Activate();
+        }
+    }
+
+    /// <summary>isPresentingViewControllerAnimating: set while a presentation runs.</summary>
+    internal bool IsPresentingViewControllerAnimating { get; private set; }
+
+    public override void PresentViewController(
+        UIViewController viewControllerToPresent, bool animated, Action? completionHandler)
+    {
+        IsPresentingViewControllerAnimating = true;
+        base.PresentViewController(viewControllerToPresent, animated, () =>
+        {
+            IsPresentingViewControllerAnimating = false;
+            completionHandler?.Invoke();
+        });
+    }
 
     private void Observe(NSString name, Action handler) =>
         _observers.Add(NSNotificationCenter.DefaultCenter.AddObserver(name, _ => handler()));

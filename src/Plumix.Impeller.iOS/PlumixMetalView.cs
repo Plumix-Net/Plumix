@@ -16,10 +16,12 @@ namespace Plumix.Impeller.iOS;
 internal sealed class PlumixMetalView : UIView
 {
     private readonly IosImpellerHost _host;
+    private readonly WeakReference<PlumixViewController> _viewController;
 
-    public PlumixMetalView(IosImpellerHost host)
+    public PlumixMetalView(IosImpellerHost host, PlumixViewController viewController)
     {
         _host = host;
+        _viewController = new WeakReference<PlumixViewController>(viewController);
         MultipleTouchEnabled = true;
         ContentScaleFactor = UIScreen.MainScreen.Scale;
         var layer = (CAMetalLayer)Layer;
@@ -51,6 +53,23 @@ internal sealed class PlumixMetalView : UIView
         _host.SafeAreaChanged(
             (int)(insets.Left * scale), (int)(insets.Top * scale), (int)(insets.Right * scale),
             (int)(insets.Bottom * scale));
+    }
+
+    // FlutterView.isAccessibilityElement: never an element itself; the call tells the engine an assistive technology
+    // is asking.
+    public override bool IsAccessibilityElement
+    {
+        get
+        {
+            if (_viewController.TryGetTarget(out PlumixViewController? viewController))
+            {
+                viewController.FlutterViewAccessibilityDidCall();
+            }
+
+            return false;
+        }
+
+        set { }
     }
 
     public override void TouchesBegan(NSSet touches, UIEvent? evt) => Dispatch(touches, evt);

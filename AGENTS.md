@@ -57,7 +57,7 @@ normative may live only there.
 - `src/Plumix.Impeller.iOS`: stage 5 prototype of the native iOS host (not packed): Metal through `CAMetalLayer`,
   `CADisplayLink` vsync, CoreText fonts, ImageIO images, touches, `PlumixViewController`, ports of the engine's
   platform plugin, settings, text input (it owns `flutter/textinput`; HostTextInputPlugin is not used), keyboard
-  inset and hardware keys; no accessibility bridge yet. App `src/Sample/Plumix.Sample.Impeller.iOS` (build with
+  inset, hardware keys and the accessibility bridge (core `IOSAccessibility.cs` decides what nodes read). App `src/Sample/Plumix.Sample.Impeller.iOS` (build with
   `-r iossimulator-arm64`).
 
 ## Progress Source of Truth

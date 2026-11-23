@@ -48,6 +48,7 @@ internal class IosTextInputView : UIView, IUITextInput, IUITextInputTraits
     private NSObject? _editMenuInteraction;
     private CGRect _editMenuTargetRect;
     private IList? _editMenuItems;
+    private WeakReference<NSObject>? _backingAccessibilityObject;
 
     public IosTextInputView(IosTextInputPlugin plugin)
         : base(CGRect.Empty)
@@ -86,6 +87,17 @@ internal class IosTextInputView : UIView, IUITextInput, IUITextInputTraits
 
     /// <summary>The engine's preventCursorDismissWhenResignFirstResponder.</summary>
     public bool PreventCursorDismissWhenResignFirstResponder { get; set; }
+
+    /// <summary>
+    /// backingTextInputAccessibilityObject: the semantics element of the focused field, where a stray VoiceOver focus
+    /// on this view is sent back.
+    /// </summary>
+    public NSObject? BackingTextInputAccessibilityObject
+    {
+        get => _backingAccessibilityObject is not null
+               && _backingAccessibilityObject.TryGetTarget(out NSObject? target) ? target : null;
+        set => _backingAccessibilityObject = value is null ? null : new WeakReference<NSObject>(value);
+    }
 
     /// <summary>The view touches are forwarded to: the Flutter view.</summary>
     public UIView? ViewResponder { get; set; }
@@ -225,6 +237,18 @@ internal class IosTextInputView : UIView, IUITextInput, IUITextInputTraits
     public bool HasText => Text.Length > 0;
 
     public override bool CanBecomeFirstResponder => TextInputClient != 0;
+
+    // accessibilityElementDidBecomeFocused: this view should never get VoiceOver's focus; when it does, the focus goes
+    // back to the field's semantics element.
+    [Export("accessibilityElementDidBecomeFocused")]
+    public void AccessibilityElementDidBecomeFocusedValue()
+    {
+        if (this.AccessibilityElementIsFocused())
+        {
+            UIAccessibility.PostNotification(
+                UIAccessibilityPostNotification.ScreenChanged, BackingTextInputAccessibilityObject!);
+        }
+    }
 
     [Export("accessibilityElementsHidden")]
     public override bool AccessibilityElementsHidden
