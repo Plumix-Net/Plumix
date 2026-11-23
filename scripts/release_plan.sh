@@ -12,6 +12,8 @@
 # version with --skip-duplicate, and lines already on nuget.org are skipped. Every line whose version
 # is not on nuget.org yet must carry its own tag on origin, so no version ships untagged — push all
 # release tags of a commit in one `git push origin <tag> <tag>...`.
+# GitHub creates no events for a push of more than three tags: then re-push one tag on its own
+# (docs/VERSIONING.md, Releasing).
 #
 # Usage:
 #   scripts/release_plan.sh v3.47.0-preview.1 >> "$GITHUB_ENV"

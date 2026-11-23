@@ -49,7 +49,10 @@ Never pass `-p:Version` to `dotnet pack`: as a global property it restamps every
 
 1. Bump the line(s) in `src/Versions.props` and collapse `CHANGELOG.md`; commit.
 2. Tag the commit once per bumped line and push the tags together:
-   `git push origin v3.47.0-preview.2 material-v1.11.1-preview.2`.
+   `git push --atomic origin main v3.47.0-preview.2 material-v1.11.1-preview.2`. GitHub creates no events when
+   more than three tags are pushed at once; then no run starts — delete one of the tags on origin and push it
+   again on its own (`git push origin :refs/tags/<tag>` then `git push origin <tag>`): that single run sees all
+   the tags and releases every line.
 3. CI (`scripts/release_plan.sh`) checks that the tag matches `Versions.props` and that every line whose version
    is not on nuget.org has its tag on origin, then pushes every package with `--skip-duplicate`: lines already
    published are skipped, and lines that depend on each other (Material on core, the F# DSL and the template on
