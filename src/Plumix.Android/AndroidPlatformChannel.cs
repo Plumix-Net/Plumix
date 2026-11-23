@@ -11,7 +11,7 @@ namespace Plumix.Android;
 // `flutter/platform` methods: clipboard, playSystemSound, vibrateHapticFeedback, setSystemChromeSystemUIOverlayStyle,
 // setSystemChromeApplicationSwitcherDescription, popSystemNavigator, setFrameworkHandlesBack). The sound, haptic
 // and system-bar parts follow Plumix.Avalonia.Android's AndroidPlatformPlugin, without AndroidX: the window's own
-// WindowInsetsController (Android 11+) or the decor view's light-bar flags (Android 10).
+// WindowInsetsController (Android 11+) or the decor view's light-bar flags (before Android 11).
 
 /// <summary>Answers the framework's <c>flutter/platform</c> calls for the Activity.</summary>
 internal sealed class AndroidPlatformChannel : IDisposable
@@ -138,7 +138,7 @@ internal sealed class AndroidPlatformChannel : IDisposable
         }
 
         bool api35 = OperatingSystem.IsAndroidVersionAtLeast(35);
-        if (!api35)
+        if (!OperatingSystem.IsAndroidVersionAtLeast(30))
         {
             window.AddFlags(WindowManagerFlags.DrawsSystemBarBackgrounds);
             window.ClearFlags(WindowManagerFlags.TranslucentStatus | WindowManagerFlags.TranslucentNavigation);
@@ -149,40 +149,47 @@ internal sealed class AndroidPlatformChannel : IDisposable
             SetLightBars(window, view, status: true, light: statusIcons == Brightness.Dark);
         }
 
-        if (style.SystemNavigationBarIconBrightness is { } navigationIcons)
-        {
-            SetLightBars(window, view, status: false, light: navigationIcons == Brightness.Dark);
-        }
-
 #pragma warning disable CA1422 // Ignored from Android 15, where the app draws behind the bars.
         if (style.StatusBarColor is { } statusBarColor && !api35)
         {
             window.SetStatusBarColor(ToAndroidColor(statusBarColor));
         }
 
-        if (style.SystemNavigationBarColor is { } navigationBarColor && !api35)
+        if (style.SystemStatusBarContrastEnforced is { } statusContrast && OperatingSystem.IsAndroidVersionAtLeast(29))
         {
-            window.SetNavigationBarColor(ToAndroidColor(navigationBarColor));
+            window.StatusBarContrastEnforced = statusContrast;
         }
 
-        if (style.SystemNavigationBarDividerColor is { } dividerColor && !api35)
+        // Navigation bar icons and colour from Android 8, as the engine does.
+        if (OperatingSystem.IsAndroidVersionAtLeast(26))
+        {
+            if (style.SystemNavigationBarIconBrightness is { } navigationIcons)
+            {
+                SetLightBars(window, view, status: false, light: navigationIcons == Brightness.Dark);
+            }
+
+            if (style.SystemNavigationBarColor is { } navigationBarColor && !api35)
+            {
+                window.SetNavigationBarColor(ToAndroidColor(navigationBarColor));
+            }
+        }
+
+        if (style.SystemNavigationBarDividerColor is { } dividerColor && OperatingSystem.IsAndroidVersionAtLeast(28)
+            && !api35)
         {
             window.NavigationBarDividerColor = ToAndroidColor(dividerColor);
         }
 #pragma warning restore CA1422
 
-        if (style.SystemStatusBarContrastEnforced is { } statusContrast)
-        {
-            window.StatusBarContrastEnforced = statusContrast;
-        }
-
-        if (style.SystemNavigationBarContrastEnforced is { } navigationContrast)
+        if (style.SystemNavigationBarContrastEnforced is { } navigationContrast
+            && OperatingSystem.IsAndroidVersionAtLeast(29))
         {
             window.NavigationBarContrastEnforced = navigationContrast;
         }
     }
 
-    // Dark icons on a light bar: WindowInsetsController appearance on Android 11+, the decor view's flags on 10.
+    // Dark icons on a light bar: WindowInsetsController appearance on Android 11+, the decor view's flags before
+    // (WindowInsetsControllerCompat; light navigation bars from Android 8, which the caller checks).
     private static void SetLightBars(Window window, View view, bool status, bool light)
     {
         if (OperatingSystem.IsAndroidVersionAtLeast(30) && window.InsetsController is { } controller)
@@ -195,7 +202,9 @@ internal sealed class AndroidPlatformChannel : IDisposable
         }
 
 #pragma warning disable CA1422, CS0618 // The pre-Android 11 light-bar flags.
-        var flag = status ? SystemUiFlags.LightStatusBar : SystemUiFlags.LightNavigationBar;
+        SystemUiFlags flag = status ? SystemUiFlags.LightStatusBar
+            : OperatingSystem.IsAndroidVersionAtLeast(26) ? SystemUiFlags.LightNavigationBar
+            : 0;
         var flags = (SystemUiFlags)view.SystemUiVisibility;
         view.SystemUiVisibility = (StatusBarVisibility)(light ? flags | flag : flags & ~flag);
 #pragma warning restore CA1422, CS0618

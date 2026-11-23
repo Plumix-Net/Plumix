@@ -177,6 +177,11 @@ internal sealed class PlumixSurfaceView : SurfaceView
     // FlutterView.onProvideAutofillVirtualStructure and autofill: the text input plugin's autofill group.
     public override void OnProvideAutofillVirtualStructure(ViewStructure? structure, AutofillFlags flags)
     {
+        if (!OperatingSystem.IsAndroidVersionAtLeast(26))
+        {
+            return;
+        }
+
         base.OnProvideAutofillVirtualStructure(structure, flags);
         if (structure is not null)
         {

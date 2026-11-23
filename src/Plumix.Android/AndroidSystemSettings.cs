@@ -97,6 +97,18 @@ internal static class AndroidSystemSettings
             supported.Add(builder.Build()!);
         }
 
+        JavaLocale resolved = (OperatingSystem.IsAndroidVersionAtLeast(26)
+            ? LookUp(activity, supported)
+            : MatchBeforeOreo(activity, supported)) ?? supported[0];
+        return string.IsNullOrEmpty(resolved.Language)
+            ? null
+            : new Locale(resolved.Language, resolved.Country, resolved.Script);
+    }
+
+    // Android 8+: Locale.lookup over each preferred locale's full, language-only and language-wildcard ranges.
+    [System.Runtime.Versioning.SupportedOSPlatform("android26.0")]
+    private static JavaLocale? LookUp(Activity activity, List<JavaLocale> supported)
+    {
         List<JavaLocale.LanguageRange> languageRanges = [];
         foreach (JavaLocale locale in PreferredLocales(activity.Resources?.Configuration))
         {
@@ -116,10 +128,32 @@ internal static class AndroidSystemSettings
             languageRanges.Add(new JavaLocale.LanguageRange(locale.Language + "-*"));
         }
 
-        JavaLocale resolved = JavaLocale.Lookup(languageRanges, supported) ?? supported[0];
-        return string.IsNullOrEmpty(resolved.Language)
-            ? null
-            : new Locale(resolved.Language, resolved.Country, resolved.Script);
+        return JavaLocale.Lookup(languageRanges, supported);
+    }
+
+    // Before Android 8: per preferred locale, an equal supported locale, then one whose language tag is the
+    // preferred language, then one with the same language.
+    private static JavaLocale? MatchBeforeOreo(Activity activity, List<JavaLocale> supported)
+    {
+        foreach (JavaLocale preferred in PreferredLocales(activity.Resources?.Configuration))
+        {
+            if (supported.FirstOrDefault(locale => preferred.Equals(locale)) is { } equal)
+            {
+                return equal;
+            }
+
+            if (supported.FirstOrDefault(locale => preferred.Language == locale.ToLanguageTag()) is { } tagged)
+            {
+                return tagged;
+            }
+
+            if (supported.FirstOrDefault(locale => preferred.Language == locale.Language) is { } sameLanguage)
+            {
+                return sameLanguage;
+            }
+        }
+
+        return null;
     }
 
     private static IEnumerable<JavaLocale> PreferredLocales(Configuration? configuration)

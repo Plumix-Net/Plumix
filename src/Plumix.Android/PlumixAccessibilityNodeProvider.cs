@@ -340,7 +340,10 @@ internal sealed class PlumixAccessibilityNodeProvider : AccessibilityNodeProvide
         }
 
         info.Selected = node.HasFlag(SemanticsFlags.IsSelected);
-        info.Heading = node.Data.HeadingLevel > 0 || node.HasFlag(SemanticsFlags.IsHeader);
+        if (OperatingSystem.IsAndroidVersionAtLeast(28))
+        {
+            info.Heading = node.Data.HeadingLevel > 0 || node.HasFlag(SemanticsFlags.IsHeader);
+        }
         foreach (CustomSemanticsActionUpdate custom in customActions)
         {
             info.AddAction(new AccessibilityAction(FirstResourceId + custom.Id, custom.Label));
@@ -492,19 +495,34 @@ internal sealed class PlumixAccessibilityNodeProvider : AccessibilityNodeProvide
         return !insideImplicitScroller;
     }
 
+    // BaseRoleConfigurator.configureLabelAndValue: hint and tooltip texts from Android 9; before it the tooltip
+    // ends the content description.
     private static void ConfigureText(AccessibilityNodeInfo info, AccessibilityNode node)
     {
+        bool api28 = OperatingSystem.IsAndroidVersionAtLeast(28);
         if (node.HasFlag(SemanticsFlags.IsTextField))
         {
             info.Text = node.Value;
-            info.HintText = Join(node.Label, node.Hint);
+            if (api28)
+            {
+                info.HintText = Join(node.Label, node.Hint);
+            }
         }
-        else if (!node.HasFlag(SemanticsFlags.ScopesRoute) && Join(node.Value, node.Label, node.Hint) is { } text)
+        else if (!node.HasFlag(SemanticsFlags.ScopesRoute))
         {
-            info.ContentDescription = text;
+            string? content = Join(node.Value, node.Label, node.Hint);
+            if (!api28 && node.Tooltip.Length > 0)
+            {
+                content = (content ?? string.Empty) + "\n" + node.Tooltip;
+            }
+
+            if (content is not null)
+            {
+                info.ContentDescription = content;
+            }
         }
 
-        if (node.Tooltip.Length > 0)
+        if (api28 && node.Tooltip.Length > 0)
         {
             info.TooltipText = node.Tooltip;
             if (Join(node.Value, node.Label, node.Hint) is null)
@@ -683,7 +701,16 @@ internal sealed class PlumixAccessibilityNodeProvider : AccessibilityNodeProvide
         if (lastAdded is not null && (lastAdded.Id != _previousRouteId || routes.Count != _routes.Count))
         {
             _previousRouteId = lastAdded.Id;
-            _view.AccessibilityPaneTitle = RouteName(lastAdded) ?? " ";
+            string routeName = RouteName(lastAdded) ?? " ";
+            if (OperatingSystem.IsAndroidVersionAtLeast(28))
+            {
+                _view.AccessibilityPaneTitle = routeName;
+            }
+            else
+            {
+                // Before Android 9 the engine announces the route with a window state change.
+                SendEvent(lastAdded.Id, EventTypes.WindowStateChanged, routeName);
+            }
         }
 
         _routes = [.. routes.Select(route => route.Id)];

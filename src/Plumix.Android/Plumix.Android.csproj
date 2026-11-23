@@ -6,7 +6,7 @@
          Plumix.NImpeller.Native. -->
     <PropertyGroup>
         <TargetFramework>net11.0-android</TargetFramework>
-        <SupportedOSPlatformVersion>29</SupportedOSPlatformVersion>
+        <SupportedOSPlatformVersion>24</SupportedOSPlatformVersion>
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>

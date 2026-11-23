@@ -9,6 +9,10 @@ Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased]
 
+## v1.0.0-preview.7 — 2026-11-23
+- `Plumix.Android` supports Android 7.0 (API 24): the engine's version checks and fallbacks for API 26–29 calls.
+- `Plumix.Android` before Android 11: draws behind the status bar and reports bars and keyboard as FlutterView does.
+
 ## v1.0.0-preview.6 — 2026-11-23
 - Migration notes for this release: `docs/MIGRATION.md`.
 - Breaking: the Avalonia Android host package is `Plumix.Avalonia.Android` (namespace `Plumix.Avalonia.Android`).

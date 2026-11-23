@@ -67,6 +67,16 @@ public abstract class PlumixActivity : Activity, ISurfaceHolderCallback
         {
             Window!.SetDecorFitsSystemWindows(false);
         }
+        else
+        {
+            ConfigureStatusBarForFullscreen(Window!);
+        }
+
+        // The engine's app template asks for adjustResize: the keyboard then arrives as a window inset.
+        if ((Window!.Attributes!.SoftInputMode & SoftInput.MaskAdjust) == SoftInput.AdjustUnspecified)
+        {
+            Window.SetSoftInputMode(SoftInput.AdjustResize);
+        }
 
         _host.Run(CreateApp(), Resources!.DisplayMetrics!.Density);
         _accessibilityFeatures = new AndroidAccessibilityFeatures(this, _host.Accessibility);
@@ -210,8 +220,24 @@ public abstract class PlumixActivity : Activity, ISurfaceHolderCallback
             touchOffset: new Offset(backEvent.TouchX, backEvent.TouchY));
     }
 
+    // FlutterActivity.configureStatusBarForFullscreenFlutterExperience, before Android 11: the app lays out
+    // behind a translucent status bar and receives the bars as insets.
+    private static void ConfigureStatusBarForFullscreen(Window window)
+    {
+        window.AddFlags(WindowManagerFlags.DrawsSystemBarBackgrounds);
+#pragma warning disable CA1422, CS0618 // The pre-Android 11 status bar colour and layout flags.
+        window.SetStatusBarColor(new global::Android.Graphics.Color(0x40000000));
+        window.DecorView.SystemUiVisibility =
+            (StatusBarVisibility)(SystemUiFlags.LayoutStable | SystemUiFlags.LayoutFullscreen);
+#pragma warning restore CA1422, CS0618
+    }
+
+    // FlutterView.onApplyWindowInsets: the system bars as view padding and the keyboard as view insets.
     private sealed class InsetsListener(ImpellerHost host) : Java.Lang.Object, View.IOnApplyWindowInsetsListener
     {
+        // FlutterView.guessBottomKeyboardInset: a bottom inset taller than this share of the screen is a keyboard.
+        private const double KeyboardHeightRatioHeuristic = 0.18;
+
         public WindowInsets OnApplyWindowInsets(View view, WindowInsets insets)
         {
             if (OperatingSystem.IsAndroidVersionAtLeast(30))
@@ -221,8 +247,54 @@ public abstract class PlumixActivity : Activity, ISurfaceHolderCallback
                 global::Android.Graphics.Insets ime = insets.GetInsets(WindowInsets.Type.Ime());
                 host.InsetsChanged(bars.Left, bars.Top, bars.Right, bars.Bottom, ime.Bottom);
             }
+            else
+            {
+                ReportBeforeAndroid11(view, insets);
+            }
 
             return insets;
         }
+
+#pragma warning disable CA1422, CS0618 // The pre-Android 11 system window insets and visibility flags.
+        private void ReportBeforeAndroid11(View view, WindowInsets insets)
+        {
+            var visibility = (SystemUiFlags)view.WindowSystemUiVisibility;
+            bool statusBarVisible = (visibility & SystemUiFlags.Fullscreen) == 0;
+            bool navigationBarVisible = (visibility & SystemUiFlags.HideNavigation) == 0;
+            (bool zeroLeft, bool zeroRight) = navigationBarVisible ? (false, false) : ShouldZeroSides(view);
+            int keyboard = GuessBottomKeyboardInset(view, insets);
+            host.InsetsChanged(
+                zeroLeft ? 0 : insets.SystemWindowInsetLeft,
+                statusBarVisible ? insets.SystemWindowInsetTop : 0,
+                zeroRight ? 0 : insets.SystemWindowInsetRight,
+                navigationBarVisible && keyboard == 0 ? insets.SystemWindowInsetBottom : 0,
+                keyboard);
+        }
+
+        private static int GuessBottomKeyboardInset(View view, WindowInsets insets)
+        {
+            int screenHeight = view.RootView?.Height ?? 0;
+            return insets.SystemWindowInsetBottom < screenHeight * KeyboardHeightRatioHeuristic
+                ? 0
+                : insets.SystemWindowInsetBottom;
+        }
+
+        // FlutterView.calculateShouldZeroSides: in landscape the hidden navigation bar's side gets no padding.
+        private static (bool Left, bool Right) ShouldZeroSides(View view)
+        {
+            if (view.Context?.Resources?.Configuration?.Orientation
+                != global::Android.Content.Res.Orientation.Landscape)
+            {
+                return (false, false);
+            }
+
+            return view.Display?.Rotation switch
+            {
+                SurfaceOrientation.Rotation90 => (false, true),
+                SurfaceOrientation.Rotation270 => (true, false),
+                _ => (true, true),
+            };
+        }
+#pragma warning restore CA1422, CS0618
     }
 }
