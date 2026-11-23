@@ -8,6 +8,8 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased]
+
+## v1.0.0-preview.9 — 2026-11-23
 - New template package `Plumix.Templates`: `dotnet new plumix-app` creates shared widgets with Desktop (Avalonia),
   Android and iOS (native hosts) projects; `--desktop/--android/--ios false` drop a head, `--application-id` sets
   the id.
