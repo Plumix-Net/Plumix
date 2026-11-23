@@ -10,7 +10,9 @@ namespace Plumix.Impeller.Android;
 // C#-only host infrastructure; no Dart parity source. The core's image seam (UI/ImageBackend.cs) on the
 // platform decoder, the way the engine's Android embedding can hand decoding to android.graphics: images are
 // decoded by BitmapFactory into premultiplied RGBA8888 at the requested size, and Image.toByteData reads the
-// kept pixels (PNG through Bitmap.compress). Stage 4 prototype: animated images decode their first frame only.
+// kept pixels (PNG through Bitmap.compress). Animated PNG goes through ApngCodec (frames decoded here), animated
+// GIF and WebP through AImageDecoder from Android 12 (AndroidAnimatedImageCodec); before it they show their
+// first frame.
 
 /// <summary>Decodes images with Android's BitmapFactory.</summary>
 internal sealed class AndroidImageBackend : IImageBackend
@@ -20,6 +22,19 @@ internal sealed class AndroidImageBackend : IImageBackend
         try
         {
             byte[] bytes = buffer.Bytes.ToArray();
+            if (ApngCodec.TryCreate(bytes, DecodePng, Scale) is { } apng)
+            {
+                (apng.TargetWidth, apng.TargetHeight) = TargetSize(apng.Width, apng.Height, getTargetSize);
+                return Task.FromResult<Codec>(apng);
+            }
+
+            if (OperatingSystem.IsAndroidVersionAtLeast(31)
+                && AndroidAnimatedImageCodec.TryCreate(
+                    bytes, (width, height) => TargetSize(width, height, getTargetSize), Scale) is { } animated)
+            {
+                return Task.FromResult<Codec>(animated);
+            }
+
             var bounds = new BitmapFactory.Options { InJustDecodeBounds = true };
             BitmapFactory.DecodeByteArray(bytes, 0, bytes.Length, bounds);
             int width = bounds.OutWidth;
@@ -101,6 +116,28 @@ internal sealed class AndroidImageBackend : IImageBackend
             (int w, null) => (w, (int)(w / aspectRatio)),
             (int w, int h) => (w, h),
         };
+    }
+
+    // An APNG frame as a standalone PNG.
+    private static (byte[] Rgba, int Width, int Height) DecodePng(byte[] png)
+    {
+        var options = new BitmapFactory.Options { InPreferredConfig = Bitmap.Config.Argb8888, InPremultiplied = true };
+        using Bitmap decoded = BitmapFactory.DecodeByteArray(png, 0, png.Length, options)
+            ?? throw new InvalidOperationException("Invalid animated PNG frame.");
+        return (ReadPixels(decoded), decoded.Width, decoded.Height);
+    }
+
+    // Animation frames at the target size, filtered as single images are (Bitmap.createScaledBitmap).
+    private static byte[] Scale(byte[] rgba, int width, int height, int targetWidth, int targetHeight)
+    {
+        using Bitmap bitmap = Bitmap.CreateBitmap(width, height, Bitmap.Config.Argb8888!)!;
+        using (ByteBuffer pixels = ByteBuffer.Wrap(rgba)!)
+        {
+            bitmap.CopyPixelsFromBuffer(pixels);
+        }
+
+        using Bitmap scaled = Bitmap.CreateScaledBitmap(bitmap, targetWidth, targetHeight, true)!;
+        return ReadPixels(scaled);
     }
 
     // ARGB_8888 is RGBA bytes in memory, premultiplied, which is Impeller's RGBA8888.
