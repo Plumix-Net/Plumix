@@ -74,6 +74,46 @@ public sealed class MagnifierTests : IDisposable
     }
 
     [Fact]
+    public void RawMagnifier_WithBackdropFilters_ComposesAsFlutterDoes()
+    {
+        IRenderBackend previous = RenderBackend.Current;
+        RenderBackend.Current = new BackdropFilteringBackend(previous);
+        try
+        {
+            using var harness = new WidgetRenderHarness(new Align(
+                alignment: Alignment.TopLeft,
+                child: new Padding(
+                    EdgeInsets.FromLTRB(20, 10, 0, 0),
+                    child: new RawMagnifier(
+                        size: new Size(80, 40),
+                        focalPointOffset: new Offset(3, 12),
+                        magnificationScale: 1.5,
+                        decoration: new MagnifierDecoration(
+                            shadows: [new Plumix.Rendering.BoxShadow(color: Colors.Black, blurRadius: 2)])))));
+
+            harness.Pump(new Size(240, 160));
+
+            // _RenderMagnification: the backdrop scaled by 1.5 about the lens center, shifted by the focal point.
+            // The center is (40, 20) in the Opacity layer's space, which the padding offsets; the lens layer of the
+            // Avalonia path is not used.
+            Assert.Null(FindDescendant<RenderMagnifier>(harness.RenderView));
+            Assert.Null(FindLayer<MagnifierLayer>(harness.Pipeline.RootLayer));
+            var backdrop = FindLayer<BackdropFilterLayer>(harness.Pipeline.RootLayer);
+            var matrix = Assert.IsType<ImageFilter.Matrix>(backdrop!.ImageFilter);
+            Assert.Equal(FilterQuality.High, matrix.FilterQuality);
+            IReadOnlyList<double> storage = matrix.Values;
+            Assert.Equal(1.5, storage[0], 9);
+            Assert.Equal(1.5, storage[5], 9);
+            Assert.Equal((1.5 * (-3 - 40)) + 40, storage[12], 9);
+            Assert.Equal((1.5 * (-12 - 20)) + 20, storage[13], 9);
+        }
+        finally
+        {
+            RenderBackend.Current = previous;
+        }
+    }
+
+    [Fact]
     public void MagnifierController_ShiftWithinBoundsUsesShortestTranslationAndGuardsSize()
     {
         var bounds = Rect.FromLTWH(10, 20, 100, 80);
@@ -343,6 +383,16 @@ public sealed class MagnifierTests : IDisposable
         }
 
         return null;
+    }
+
+    private sealed class BackdropFilteringBackend(IRenderBackend inner) : IRenderBackend
+    {
+        public RasterImage RasterizeScene(ContainerFlowLayer root, int width, int height) =>
+            inner.RasterizeScene(root, width, height);
+
+        public void CompileFragmentProgram(RuntimeFragmentProgram program) => inner.CompileFragmentProgram(program);
+
+        public bool SupportsBackdropFilters => true;
     }
 
     private sealed class WidgetRenderHarness : IDisposable

@@ -51,6 +51,8 @@ internal static class ImpellerBackend
     {
         internal static readonly RenderBackendImpl Instance = new();
 
+        public bool SupportsBackdropFilters => true;
+
         public RasterImage RasterizeScene(ContainerFlowLayer root, int width, int height)
         {
             if (ReadPixels is not { } readPixels)

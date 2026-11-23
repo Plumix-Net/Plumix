@@ -8,6 +8,7 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased]
+- Breaking: `RawMagnifier` is a `StatelessWidget`; with backdrop filters it builds Flutter's composition (magnifier.dart).
 - Native Android host: autofill groups as the engine's TextInputPlugin; `HostTextInputPlugin` exposes autofill hooks.
 - Native Android host: touch, mouse, stylus and wheel input as the engine's AndroidTouchProcessor and packet converter.
 - Native Android host: key events reach the framework (KeyData and `flutter/keyevent`), as the engine's KeyboardManager.

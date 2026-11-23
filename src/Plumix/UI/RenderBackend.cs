@@ -21,6 +21,13 @@ internal interface IRenderBackend
     /// backend does not support, as the engine's <c>FragmentProgram</c> does when it is created.
     /// </summary>
     void CompileFragmentProgram(RuntimeFragmentProgram program);
+
+    /// <summary>
+    /// Whether the backend filters what lies behind a layer (<c>BackdropFilterLayer</c>) with any image filter,
+    /// including <c>ImageFilter.matrix</c>, as the engine does. Widgets that Plumix composes differently without
+    /// one (<c>RawMagnifier</c>) take Flutter's composition when it is true.
+    /// </summary>
+    bool SupportsBackdropFilters => false;
 }
 
 /// <summary>The render backend the host installed.</summary>

@@ -1,6 +1,7 @@
 using Plumix.Foundation;
 using Plumix.Rendering;
 using Plumix.UI;
+using Path = Plumix.UI.Path;
 
 // Dart parity source: flutter/packages/flutter/lib/src/widgets/magnifier.dart
 
@@ -170,7 +171,16 @@ public sealed class MagnifierController
     }
 }
 
-public sealed class RawMagnifier : SingleChildRenderObjectWidget
+/// <summary>
+/// A magnifier that enlarges what lies behind it: Dart's <c>RawMagnifier</c>.
+/// </summary>
+/// <remarks>
+/// With a backend that filters backdrops (the native Impeller host) it builds Dart's composition: the magnified
+/// backdrop clipped to the shape, then the decoration in a younger sibling. Otherwise (Avalonia) it lays out a
+/// <see cref="RenderMagnifier"/>, whose Plumix-only lens layer the host fills from a lens-free snapshot
+/// (docs/ai/DIVERGENCES.md).
+/// </remarks>
+public sealed class RawMagnifier : StatelessWidget
 {
     public RawMagnifier(
         Size size,
@@ -179,7 +189,7 @@ public sealed class RawMagnifier : SingleChildRenderObjectWidget
         Clip clipBehavior = Clip.None,
         Offset focalPointOffset = default,
         double magnificationScale = 1.0,
-        Key? key = null) : base(child, key)
+        Key? key = null) : base(key)
     {
         if (!double.IsFinite(size.Width) || !double.IsFinite(size.Height)
             || size.Width < 0 || size.Height < 0)
@@ -193,6 +203,7 @@ public sealed class RawMagnifier : SingleChildRenderObjectWidget
         }
 
         Size = size;
+        Child = child;
         Decoration = decoration ?? new MagnifierDecoration();
         ClipBehavior = clipBehavior;
         FocalPointOffset = focalPointOffset;
@@ -200,6 +211,8 @@ public sealed class RawMagnifier : SingleChildRenderObjectWidget
     }
 
     public Size Size { get; }
+
+    public Widget? Child { get; }
 
     public MagnifierDecoration Decoration { get; }
 
@@ -209,23 +222,91 @@ public sealed class RawMagnifier : SingleChildRenderObjectWidget
 
     public double MagnificationScale { get; }
 
-    public override RenderObject CreateRenderObject(BuildContext context)
+    public override Widget Build(BuildContext context)
     {
-        return new RenderMagnifier(
-            Size,
-            Decoration,
-            ClipBehavior,
-            FocalPointOffset,
-            MagnificationScale);
+        if (!RenderBackend.Current.SupportsBackdropFilters)
+        {
+            return new LensMagnifier(this);
+        }
+
+        return new Stack(
+            clipBehavior: Clip.None,
+            alignment: Alignment.Center,
+            children:
+            [
+                // The magnified image is clipped to the outer path of the shape.
+                ClipPath.Shape(
+                    shape: Decoration.Shape,
+                    child: new Opacity(
+                        Decoration.Opacity,
+                        child: new Magnification(
+                            FocalPointOffset,
+                            MagnificationScale,
+                            child: SizedBox.FromSize(Size, Child)))),
+                // Because `BackdropFilter` will filter any widgets before it, we apply these styles after (i.e. in
+                // a younger sibling) to avoid the magnifier from seeing its own styling.
+                new IgnorePointer(
+                    child: new Opacity(
+                        Decoration.Opacity,
+                        child: new ClipPath(
+                            clipBehavior: ClipBehavior,
+                            clipper: new NegativeClip(Decoration.Shape),
+                            child: new DecoratedBox(
+                                new ShapeDecoration(Decoration.Shape, Shadows: Decoration.Shadows),
+                                child: SizedBox.FromSize(Size))))),
+            ]);
     }
 
-    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    // Dart's `_NegativeClip`: a clip that renders everything except the inside of a shape.
+    private sealed class NegativeClip(ShapeBorder shape) : CustomClipper<Path>
     {
-        var magnifier = (RenderMagnifier)renderObject;
-        magnifier.RequestedSize = Size;
-        magnifier.Decoration = Decoration;
-        magnifier.ClipBehavior = ClipBehavior;
-        magnifier.FocalPointOffset = FocalPointOffset;
-        magnifier.MagnificationScale = MagnificationScale;
+        private readonly ShapeBorder _shape = shape;
+
+        public override Path GetClip(Size size)
+        {
+            var path = new Path { FillType = PathFillType.EvenOdd };
+            path.AddRect(Rect.Largest);
+            path.AddPath(_shape.GetInnerPath(Offset.Zero & size), Offset.Zero);
+            return path;
+        }
+
+        public override bool ShouldReclip(CustomClipper<Path> oldClipper) =>
+            oldClipper is not NegativeClip old || !Equals(old._shape, _shape);
+    }
+
+    // Dart's `_Magnifier`.
+    private sealed class Magnification(Offset focalPointOffset, double magnificationScale, Widget? child)
+        : SingleChildRenderObjectWidget(child)
+    {
+        public override RenderObject CreateRenderObject(BuildContext context) =>
+            new RenderMagnification(focalPointOffset, magnificationScale);
+
+        public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+        {
+            var magnification = (RenderMagnification)renderObject;
+            magnification.FocalPointOffset = focalPointOffset;
+            magnification.MagnificationScale = magnificationScale;
+        }
+    }
+
+    // The Plumix-only lens for backends without backdrop filters.
+    private sealed class LensMagnifier(RawMagnifier magnifier) : SingleChildRenderObjectWidget(magnifier.Child)
+    {
+        public override RenderObject CreateRenderObject(BuildContext context) => new RenderMagnifier(
+            magnifier.Size,
+            magnifier.Decoration,
+            magnifier.ClipBehavior,
+            magnifier.FocalPointOffset,
+            magnifier.MagnificationScale);
+
+        public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+        {
+            var render = (RenderMagnifier)renderObject;
+            render.RequestedSize = magnifier.Size;
+            render.Decoration = magnifier.Decoration;
+            render.ClipBehavior = magnifier.ClipBehavior;
+            render.FocalPointOffset = magnifier.FocalPointOffset;
+            render.MagnificationScale = magnifier.MagnificationScale;
+        }
     }
 }
