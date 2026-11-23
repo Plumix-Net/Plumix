@@ -25,8 +25,8 @@ Xamarin.AndroidX bindings use the upstream version plus a fourth segment.
 | `Plumix.Cupertino` | [`cupertino_ui`](https://pub.dev/packages/cupertino_ui) | 1.1.7 | `PlumixCupertinoVersion` | `cupertino-v<version>` |
 | `Plumix.Material` | [`material_ui`](https://pub.dev/packages/material_ui) | 1.11.1 | `PlumixMaterialVersion` | `material-v<version>` |
 | `Plumix.Provider` | [`provider`](https://pub.dev/packages/provider) | 6.1.5 | `Plumix.Packages/src/Versions.props` `PlumixProviderVersion` | `provider-v<version>` |
-| `Plumix.Bloc` | [`bloc`](https://pub.dev/packages/bloc) | 9.2.1 | `PlumixBlocVersion` | `bloc-v<version>` |
-| `Plumix.Flutter.Bloc` | [`flutter_bloc`](https://pub.dev/packages/flutter_bloc) | 9.1.1 | `PlumixFlutterBlocVersion` | `flutter-bloc-v<version>` |
+| `Plumix.Bloc` | [`flutter_bloc`](https://pub.dev/packages/flutter_bloc) | 9.1.1 | `PlumixBlocVersion` | `bloc-v<version>` |
+| `Plumix.Bloc.Core` | [`bloc`](https://pub.dev/packages/bloc) | 9.2.1 | `PlumixBlocCoreVersion` | `bloc-core-v<version>` |
 | `Plumix.Slang` | [`slang_flutter`](https://pub.dev/packages/slang_flutter) | 4.19.0 | `PlumixSlangVersion` | `slang-v<version>` |
 
 Hosts, the F# DSL and the template have no upstream of their own and follow the Flutter line.
