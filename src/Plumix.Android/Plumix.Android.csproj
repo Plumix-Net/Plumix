@@ -8,6 +8,8 @@
         <TargetFramework>net11.0-android</TargetFramework>
         <SupportedOSPlatformVersion>24</SupportedOSPlatformVersion>
         <Nullable>enable</Nullable>
+        <!-- Trim/AOT analyzers keep the assembly Native-AOT-clean (consumers publish mobile heads with PublishAot). -->
+        <IsAotCompatible>true</IsAotCompatible>
         <ImplicitUsings>enable</ImplicitUsings>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     </PropertyGroup>

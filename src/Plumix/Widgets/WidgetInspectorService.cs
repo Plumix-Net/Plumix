@@ -1179,7 +1179,7 @@ public abstract partial class WidgetInspectorService
     /// service protocol and when the client takes the value.</summary>
     private string SafeJsonEncode(object? @object)
     {
-        string jsonString = JsonSerializer.Serialize(@object);
+        string jsonString = Json.Encode(@object);
         _serializeRing[_serializeRingIndex] = jsonString;
         _serializeRingIndex = (_serializeRingIndex + 1) % _serializeRing.Length;
         return jsonString;

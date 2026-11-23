@@ -1,5 +1,6 @@
 // Dart parity source: flutter/packages/flutter/lib/src/widgets/navigator.dart
 
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using Plumix.Foundation;
 using Plumix.UI;
@@ -194,6 +195,16 @@ internal sealed class AnonymousRestorationInformation : RestorationInformation
         return typeName is null ? null : $"{typeName}|{method.Name}";
     }
 
+    // The described method is the target of a delegate the app created (RestorablePush* only accepts a
+    // static method, see IsStaticCallback), so its code and its declaring type are reachable from that
+    // creation site and survive trimming; NativeAOT also keeps reflection metadata for delegate targets
+    // because DescribeCallback reads Delegate.Method. The name lookup below therefore resolves under
+    // ILLink and ILC alike, which the analyzer cannot prove for a string read from restoration data.
+    [UnconditionalSuppressMessage(
+        "Trimming",
+        "IL2057",
+        Justification = "The type is the declaring type of a static delegate target the app references; "
+                        + "see the comment above.")]
     private static RestorableRouteBuilder ResolveCallback(string description)
     {
         int separator = description.LastIndexOf('|');

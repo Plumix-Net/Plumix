@@ -561,6 +561,13 @@ internal static class Json
             case double doubleValue:
                 WriteDouble(builder, doubleValue);
                 return;
+            case float floatValue:
+                WriteDouble(builder, floatValue);
+                return;
+            case byte or sbyte or short or ushort or uint or ulong or decimal:
+                // Dart has a single int type; the other C# integer widths encode as integers too.
+                builder.Append(((IFormattable)value).ToString(null, CultureInfo.InvariantCulture));
+                return;
             case IDictionary map:
                 WriteMap(builder, map);
                 return;
@@ -578,6 +585,26 @@ internal static class Json
 
                 builder.Append(']');
                 return;
+            case IEnumerable sequence:
+            {
+                // A lazy C# sequence stands where Dart code would hold a List.
+                builder.Append('[');
+                bool first = true;
+                foreach (object? item in sequence)
+                {
+                    if (!first)
+                    {
+                        builder.Append(',');
+                    }
+
+                    first = false;
+                    Write(builder, item);
+                }
+
+                builder.Append(']');
+                return;
+            }
+
             default:
                 throw new ArgumentException($"Converting object to an encodable object failed: {value}");
         }

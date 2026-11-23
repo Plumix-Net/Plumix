@@ -55,9 +55,13 @@ internal static class AvaloniaDispatcherClock
 
         FieldInfo? timeProviderField = typeof(Dispatcher).GetField("_timeProvider", Instance);
         FieldInfo? implField = typeof(Dispatcher).GetField("_impl", Instance);
+        // IDispatcherImpl is [PrivateApi]; a constant name keeps it (and its Now) analyzable for the trimmer.
+        Type? implType = Type.GetType("Avalonia.Threading.IDispatcherImpl, Avalonia.Base");
         if (timeProviderField?.FieldType != typeof(Func<long>)
-            || implField?.GetValue(dispatcher) is not { } impl
-            || implField.FieldType.GetProperty("Now")?.GetMethod is not { } nowGetter
+            || implType is null
+            || implField?.FieldType != implType
+            || implField.GetValue(dispatcher) is not { } impl
+            || implType.GetProperty("Now")?.GetMethod is not { } nowGetter
             || nowGetter.ReturnType != typeof(long))
         {
             return false;

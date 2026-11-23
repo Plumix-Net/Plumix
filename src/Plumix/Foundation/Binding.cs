@@ -1,5 +1,4 @@
 using System.Globalization;
-using System.Text.Json;
 using Plumix.UI;
 
 // Dart parity source: flutter/packages/flutter/lib/src/foundation/binding.dart
@@ -486,7 +485,7 @@ public static class BindingBase
                     context: new ErrorDescription($"during a service extension callback for \"{methodName}\"")));
                 return ServiceExtensionResponse.FromError(
                     ServiceExtensionResponse.ExtensionError,
-                    JsonSerializer.Serialize(new Dictionary<string, string>
+                    Json.Encode(new Dictionary<string, string>
                     {
                         ["exception"] = exception.ToString(),
                         ["stack"] = exception.StackTrace ?? string.Empty,
@@ -496,7 +495,7 @@ public static class BindingBase
 
             result["type"] = "_extensionType";
             result["method"] = methodName;
-            return ServiceExtensionResponse.FromResult(JsonSerializer.Serialize(result));
+            return ServiceExtensionResponse.FromResult(Json.Encode(result));
         };
     }
 
@@ -520,7 +519,7 @@ public static class BindingBase
         {
             return Task.FromResult(ServiceExtensionResponse.FromError(
                 ServiceExtensionResponse.MethodNotFound,
-                JsonSerializer.Serialize(new Dictionary<string, string> { ["method"] = method })));
+                Json.Encode(new Dictionary<string, string> { ["method"] = method })));
         }
 
         using EventLoop.FrameworkThreadScope scope = EventLoop.EnterFrameworkThread();

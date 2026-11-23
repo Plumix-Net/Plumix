@@ -118,6 +118,27 @@ public sealed class MessageCodecsTests
             new StringCodec().DecodeMessage(codec.EncodeMessage(message)));
     }
 
+    [Fact]
+    public void Json_EncodesOtherCSharpNumbersAndSequencesTheWayDartWould()
+    {
+        // Service extensions, navigation events and the inspector encode through Json (trim/AOT-safe), so
+        // the C# shapes they hand it — narrower integers, float, lazy sequences, non-ASCII text — must encode.
+        var message = new Dictionary<string, object?>
+        {
+            ["uint"] = 3u,
+            ["short"] = (short)-2,
+            ["float"] = 2f,
+            ["set"] = new HashSet<string> { "a" },
+            ["lazy"] = Enumerable.Range(1, 2).Select(i => i * 10),
+            ["text"] = "é ☺ <b>",
+        };
+
+        Assert.Equal(
+            "{\"uint\":3,\"short\":-2,\"float\":2.0,\"set\":[\"a\"],\"lazy\":[10,20],\"text\":\"é ☺ <b>\"}",
+            Json.Encode(message));
+        Assert.Throws<ArgumentException>(() => Json.Encode(new object()));
+    }
+
     // --------------------------------------------------------- JSON method codec
 
     [Fact]

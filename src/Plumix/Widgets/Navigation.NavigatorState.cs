@@ -1,8 +1,6 @@
 // Dart parity source: flutter/packages/flutter/lib/src/widgets/navigator.dart
 
 using System.Collections;
-using System.Text.Json;
-using System.Text.Encodings.Web;
 using Plumix.Foundation;
 using Plumix.Rendering;
 using Plumix.UI;
@@ -242,9 +240,7 @@ public sealed partial class NavigatorState : RestorationState<Navigator>
                 var settings = new Dictionary<string, object?> { ["name"] = route.Settings.Name };
                 if (route.Settings.Arguments is { } arguments)
                 {
-                    settings["arguments"] = JsonSerializer.Serialize(
-                        JsonArgument(arguments),
-                        new JsonSerializerOptions { Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping });
+                    settings["arguments"] = Json.Encode(JsonArgument(arguments));
                 }
 
                 routeData = new Dictionary<string, object?>

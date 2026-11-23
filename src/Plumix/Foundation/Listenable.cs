@@ -57,10 +57,12 @@ public static class Listenable
                 return "null";
             }
 
+            // Dart's default Object.toString is "Instance of 'T'"; .NET's object.ToString() returns
+            // GetType().ToString(), which is how a child without its own ToString override shows here.
             string? description = child.ToString();
-            return child.GetType().GetMethod(nameof(ToString), Type.EmptyTypes)?.DeclaringType == typeof(object)
+            return description is null || description == child.GetType().ToString()
                 ? $"Instance of '{Diagnostics.DescribeType(child.GetType())}'"
-                : description ?? $"Instance of '{Diagnostics.DescribeType(child.GetType())}'";
+                : description;
         }
     }
 }

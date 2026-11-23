@@ -4,6 +4,8 @@
         <TargetFramework>net11.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
+        <!-- Trim/AOT analyzers keep the assembly Native-AOT-clean (consumers publish mobile heads with PublishAot). -->
+        <IsAotCompatible>true</IsAotCompatible>
     </PropertyGroup>
 
     <PropertyGroup>

@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using Plumix.Foundation;
@@ -243,6 +244,11 @@ public abstract class State : Diagnosticable, ITickerProvider
     /// one, so the same mistake is an <c>async void</c> override; this reads the compiler's
     /// state-machine marker off the most-derived override.
     /// </summary>
+    [UnconditionalSuppressMessage(
+        "Trimming",
+        "IL2080",
+        Justification = "Debug-only check (callers run it under KDebugMode). A trimmed override has no "
+                        + "metadata, GetMethod returns null and the check reports false, so it only skips the hint.")]
     protected bool DebugOverrideIsAsync(string name, Type[] parameterTypes)
     {
         return DebugAsyncOverrides.GetOrAdd(

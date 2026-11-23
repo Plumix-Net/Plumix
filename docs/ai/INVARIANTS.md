@@ -20,6 +20,9 @@ Allowed dependency direction (mirrors Flutter's `widgets <- cupertino <- materia
   on `Plumix.Impeller`, never on Avalonia.
 - `Plumix.Sample` and platform hosts may depend on any of the above.
 - Never introduce a reverse edge (core referencing Material, Cupertino referencing Material). If core needs a Material concept, port the underlying primitive into `Plumix` instead.
+- Every package is `IsAotCompatible` (apps publish mobile heads with Native AOT): no IL2xxx/IL3xxx warnings. Encode
+  JSON with the internal `Json` helper (Dart's `json.encode` shape), not reflection-based `JsonSerializer`;
+  `[UnconditionalSuppressMessage]` only with a justification why the trimmed path still works or is debug-only.
 
 ## Public API and Versioning
 

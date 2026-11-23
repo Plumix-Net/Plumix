@@ -8,6 +8,8 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased]
+- Trim/Native AOT clean: `IsAotCompatible` on every package; service-extension, navigation-event and inspector
+  JSON go through the Dart-shaped `Json.Encode` instead of reflection-based `JsonSerializer`.
 - Pins moved to `material_ui` 1.11.1 / `cupertino_ui` 1.1.7 (`dart_sample`, `AGENTS.md`); the open delta is the
   re-port table in `docs/ai/BACKLOG.md`. The ink-sparkle shader source moved to `material_ui/lib/shaders/`.
 - Breaking: Cupertino deltas absorbed — tinted button light opacity 0.12 → 0.18 (`constants.dart`), disabled

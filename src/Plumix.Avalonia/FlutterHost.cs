@@ -1600,6 +1600,11 @@ public partial class PlumixHost : Control, ICustomHitTest
                && IsTransparentOrUnset(style.SystemNavigationBarColor);
     }
 
+    [UnconditionalSuppressMessage(
+        "Trimming",
+        "IL2075",
+        Justification = "Best-effort probe: SystemBarTheme exists only on some platform insets managers (not on "
+                        + "IInsetsManager). If trimming removed it, the property is not found and nothing is set.")]
     private static void TrySetInsetsManagerSystemBarTheme(IInsetsManager insetsManager, SystemBarTheme theme)
     {
         var property = insetsManager.GetType().GetProperty(
