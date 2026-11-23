@@ -15,7 +15,7 @@ using Locale = Plumix.Widgets.Locale;
 // flutter/engine/src/flutter/shell/platform/darwin/ios/platform_view_ios.mm
 // (ComputePlatformResolvedLocales).
 
-namespace Plumix.iOS;
+namespace Plumix.Sample.iOS;
 
 /// <summary>The iOS engine's platform plugin answers on <c>flutter/platform</c> and its locale resolution.</summary>
 internal static class IOSPlatformPlugin

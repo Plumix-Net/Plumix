@@ -2,7 +2,7 @@ using Plumix.Foundation;
 using Plumix.UI;
 using UIKit;
 
-namespace Plumix.Impeller.iOS;
+namespace Plumix.iOS;
 
 // C#-only host infrastructure parity sources, all under
 // flutter/engine/src/flutter/shell/platform/darwin/ios/framework/Source/: FlutterKeyboardManager.mm (both primary

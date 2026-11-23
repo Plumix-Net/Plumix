@@ -8,7 +8,7 @@ using Plumix.UI;
 using UIKit;
 using Rect = Plumix.UI.Rect;
 
-namespace Plumix.Impeller.iOS;
+namespace Plumix.iOS;
 
 // C#-only host infrastructure parity sources, all under
 // flutter/engine/src/flutter/shell/platform/darwin/ios/framework/Source/: accessibility_bridge.mm (objects per node,

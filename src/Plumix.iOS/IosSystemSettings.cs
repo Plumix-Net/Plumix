@@ -6,7 +6,7 @@ using Plumix.UI;
 using UIKit;
 using Locale = Plumix.Widgets.Locale;
 
-namespace Plumix.Impeller.iOS;
+namespace Plumix.iOS;
 
 // C#-only host infrastructure parity sources:
 // flutter/engine/src/flutter/shell/platform/darwin/ios/framework/Source/FlutterViewController.mm
@@ -64,6 +64,8 @@ internal static class IosSystemSettings
     public static void ReportUserSettings(IosImpellerHost host, UITraitCollection traits)
     {
         PlatformDispatcher.Instance.UpdateTextScaleFactor(TextScaleFactor());
+        // supportsShowingSystemContextMenu: UIEditMenuInteraction needs iOS 16.
+        PlatformDispatcher.Instance.UpdateSupportsShowingSystemContextMenu(OperatingSystem.IsIOSVersionAtLeast(16));
         host.SettingsChanged(
             traits.UserInterfaceStyle == UIUserInterfaceStyle.Dark ? Brightness.Dark : Brightness.Light,
             AlwaysUse24HourFormat());

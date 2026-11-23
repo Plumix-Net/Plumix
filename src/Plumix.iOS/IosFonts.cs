@@ -1,7 +1,8 @@
 using CoreText;
 using Foundation;
+using Plumix.Impeller;
 
-namespace Plumix.Impeller.iOS;
+namespace Plumix.iOS;
 
 // C#-only host infrastructure; no Dart parity source. The engine's iOS font manager (Skia's CoreText manager) answers
 // "CupertinoSystemText"/"CupertinoSystemDisplay" and the .SF names with the system UI font and falls back through

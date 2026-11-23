@@ -4,7 +4,7 @@ using Plumix.UI;
 using Plumix.Widgets;
 using UIKit;
 
-namespace Plumix.Impeller.iOS;
+namespace Plumix.iOS;
 
 // C#-only host infrastructure parity source:
 // flutter/engine/src/flutter/shell/platform/darwin/ios/framework/Source/FlutterViewController.mm: the platform seams

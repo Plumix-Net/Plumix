@@ -6,8 +6,9 @@ using Plumix.Rendering;
 using Plumix.UI;
 using UIKit;
 using IOPath = System.IO.Path;
+using Plumix.Impeller;
 
-namespace Plumix.Impeller.iOS;
+namespace Plumix.iOS;
 
 // C#-only host infrastructure; no Dart parity source. The core's image seam (UI/ImageBackend.cs) on ImageIO and
 // CoreGraphics: images decode into premultiplied RGBA8888 at the requested size, animated PNG goes through

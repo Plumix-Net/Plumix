@@ -1,19 +1,31 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-    <!-- Stage 5 prototype (umbrella docs/product/native-host.md): the native iOS host without Avalonia, rendering
-         through the shared Impeller backend (Plumix.Impeller) with Metal into a CAMetalLayer. impeller.framework
-         comes with Plumix.NImpeller.Native.ios. Not packed. -->
+    <!-- The native iOS host, without Avalonia: PlumixViewController, rendering through the Impeller backend
+         (Plumix.Impeller, Metal into a CAMetalLayer) on its own raster thread, with the engine embedding's platform
+         plugin, text input, keyboard, accessibility, images and system fonts. impeller.framework comes with
+         Plumix.NImpeller.Native.ios. -->
     <PropertyGroup>
         <TargetFramework>net11.0-ios</TargetFramework>
         <SupportedOSPlatformVersion>15.0</SupportedOSPlatformVersion>
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-        <IsPackable>false</IsPackable>
+    </PropertyGroup>
+
+    <PropertyGroup>
+        <IsPackable>true</IsPackable>
+        <PackageId>Plumix.iOS</PackageId>
+        <Description>Native iOS host for Plumix, without Avalonia: PlumixViewController renders through Impeller on Metal (Plumix.Impeller) and ports the Flutter engine's iOS embedding — platform plugin, text input, keyboard, accessibility and user settings.</Description>
     </PropertyGroup>
 
     <ItemGroup>
         <ProjectReference Include="..\Plumix.Impeller\Plumix.Impeller.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <None Include="..\..\README.md" Pack="true" PackagePath="\" />
+        <None Include="..\..\LICENSE" Pack="true" PackagePath="\" />
+        <None Include="..\..\icon.png" Pack="true" PackagePath="\" />
     </ItemGroup>
 
 </Project>

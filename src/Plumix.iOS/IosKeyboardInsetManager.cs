@@ -3,7 +3,7 @@ using CoreGraphics;
 using Foundation;
 using UIKit;
 
-namespace Plumix.Impeller.iOS;
+namespace Plumix.iOS;
 
 // C#-only host infrastructure parity sources:
 // flutter/engine/src/flutter/shell/platform/darwin/ios/framework/Source/FlutterKeyboardInsetManager.mm and

@@ -6,7 +6,7 @@ using ObjCRuntime;
 using Plumix.UI;
 using UIKit;
 
-namespace Plumix.Impeller.iOS;
+namespace Plumix.iOS;
 
 // C#-only host infrastructure; no Dart parity source. The engine's FlutterView on iOS: a UIView backed by a
 // CAMetalLayer (FlutterMetalLayer) that Impeller draws into, the source of touches and of the metrics the view

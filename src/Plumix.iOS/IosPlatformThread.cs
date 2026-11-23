@@ -2,7 +2,7 @@ using CoreAnimation;
 using CoreFoundation;
 using Foundation;
 
-namespace Plumix.Impeller.iOS;
+namespace Plumix.iOS;
 
 // C#-only host infrastructure; no Dart parity source. The core's UI-thread seam (PlatformThread.cs) on the iOS
 // main thread, as the engine's platform task runner is the main run loop: tasks and timers go through the main

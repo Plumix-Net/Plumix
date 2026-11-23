@@ -5,18 +5,20 @@ using Plumix.Gestures;
 using Plumix.Rendering;
 using Plumix.UI;
 using Plumix.Widgets;
+using Plumix.Impeller;
 
-namespace Plumix.Impeller.iOS;
+namespace Plumix.iOS;
 
 // C#-only host infrastructure; no Dart parity source. The engine embedder of the stage 5 prototype: owns the implicit
 // FlutterView, reports metrics, lifecycle and touches to the framework, and rasterizes each composited layer tree
-// through Impeller's Metal backend into the view's CAMetalLayer, as the engine's iOS shell does. The prototype draws
-// on the main thread (the engine has a raster thread); Metal needs no thread-bound context.
+// through Impeller's Metal backend into the view's CAMetalLayer, as the engine's iOS shell does: the UI thread records
+// the display list and MetalRasterThread draws and presents it.
 
 /// <summary>Hosts one Plumix app in a CAMetalLayer, rendered by Impeller.</summary>
 internal sealed class IosImpellerHost
 {
     private static ImpellerContext? s_context;
+    private static MetalRasterThread? s_rasterThread;
 
     private readonly FlutterView _view = new(new Size(0, 0), 1.0, 1);
     private readonly ReusableRenderView _root;
@@ -230,20 +232,15 @@ internal sealed class IosImpellerHost
         FrameTimingsRecorder? timings = _pendingTimings;
         _pendingTimings = null;
         timings?.RecordRasterStart();
-        using ICAMetalDrawable? drawable = _layer.NextDrawable();
-        if (drawable is null)
-        {
-            return;
-        }
+        // Recording the display list is CPU work on the UI thread; the raster thread draws and presents it.
+        ImpellerDisplayList displayList = ImpellerLayerPainter.Build(_tree, _width, _height);
+        s_rasterThread ??= new MetalRasterThread();
+        s_rasterThread.Present(_layer, displayList, () => Presented(timings));
+    }
 
-        using (ImpellerDisplayList displayList = ImpellerLayerPainter.Build(_tree, _width, _height))
-        using (ImpellerSurface surface = s_context.SurfaceCreateWrappedMetalDrawableNew(drawable.Handle)
-                   ?? throw new InvalidOperationException("Impeller could not wrap the drawable."))
-        {
-            surface.DrawDisplayList(displayList);
-        }
-
-        drawable.Present();
+    // On the raster thread, after the present: Shell::OnFrameRasterized's timings for `onReportTimings`.
+    private static void Presented(FrameTimingsRecorder? timings)
+    {
         if (timings is not null)
         {
             FrameTiming timing = timings.RecordRasterEnd();

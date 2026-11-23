@@ -31,12 +31,12 @@
         <InternalsVisibleTo Include="Plumix.Avalonia" />
         <InternalsVisibleTo Include="Plumix.Impeller" />
         <InternalsVisibleTo Include="Plumix.Android" />
-        <InternalsVisibleTo Include="Plumix.Impeller.iOS" />
         <InternalsVisibleTo Include="Plumix.Impeller.Tests" />
         <InternalsVisibleTo Include="Plumix.Sample.Impeller.Android" />
         <InternalsVisibleTo Include="Plumix.Material" />
         <InternalsVisibleTo Include="Plumix.Cupertino" />
         <InternalsVisibleTo Include="Plumix.iOS" />
+        <InternalsVisibleTo Include="Plumix.Sample.iOS" />
     </ItemGroup>
 
     <ItemGroup>

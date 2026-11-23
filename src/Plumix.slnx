@@ -9,7 +9,7 @@
     <Project Path="Sample/Plumix.Browser/Plumix.Browser.csproj" />
     <Project Path="Sample/Plumix.Desktop/Plumix.Desktop.csproj" />
     <Project Path="Sample/Plumix.FSharpSample/Plumix.FSharpSample.fsproj" />
-    <Project Path="Sample/Plumix.iOS/Plumix.iOS.csproj" />
+    <Project Path="Sample/Plumix.Sample.iOS/Plumix.Sample.iOS.csproj" />
     <Project Path="Sample/Plumix.Sample/Plumix.Sample.csproj" />
   </Folder>
   <Folder Name="/Solution Items/">
@@ -35,7 +35,7 @@
   <Project Path="Plumix.Android/Plumix.Android.csproj" />
   <Project Path="Plumix.Impeller.Tests/Plumix.Impeller.Tests.csproj" />
   <Project Path="Plumix.Impeller/Plumix.Impeller.csproj" />
-  <Project Path="Plumix.Impeller.iOS/Plumix.Impeller.iOS.csproj" />
+  <Project Path="Plumix.iOS/Plumix.iOS.csproj" />
   <Project Path="Plumix.Material/Plumix.Material.csproj" />
   <Project Path="Plumix.Tests/Plumix.Tests.csproj" />
   <Project Path="Plumix/Plumix.csproj" />

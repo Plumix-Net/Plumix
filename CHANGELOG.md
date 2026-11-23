@@ -8,11 +8,12 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased]
-- Prototype native iOS host `Plumix.Impeller.iOS` (not packed) on Impeller/Metal, with the gallery sample.
+- New native iOS host `Plumix.iOS` (`PlumixViewController`) on Impeller/Metal with its own raster thread.
 - iOS host: platform plugin, user settings, locales, accessibility features (FlutterPlatformPlugin.mm, …).
 - iOS host: text input, keyboard inset and hardware keys (FlutterTextInputPlugin.mm, FlutterKeyboardManager.mm).
 - iOS host: VoiceOver bridge with scroll-view and text-field surrogates (accessibility_bridge.mm, SemanticsObject.mm).
 - `Plumix.Impeller` finds HarfBuzz as an embedded framework on iOS, tvOS and Mac Catalyst.
+- The Avalonia iOS sample moves to `src/Sample/Plumix.Sample.iOS`; the name `Plumix.iOS` is the native host's.
 
 ## v1.0.0-preview.7 — 2026-11-23
 - `Plumix.Android` supports Android 7.0 (API 24): the engine's version checks and fallbacks for API 26–29 calls.

@@ -17,7 +17,7 @@ using Rect = Plumix.UI.Rect;
 // departures (no native scroll view or UISwitch forwarding, no text-input surrogate) are listed in
 // docs/ai/DIVERGENCES.md.
 
-namespace Plumix.iOS;
+namespace Plumix.Sample.iOS;
 
 /// <summary>
 /// Exposes a <see cref="PlumixHost"/>'s semantics tree to VoiceOver and the other iOS assistive technologies.

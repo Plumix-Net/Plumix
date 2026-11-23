@@ -2,7 +2,7 @@ using UIKit;
 
 // Dart parity source (reference): dart_sample/lib/main.dart (platform host bootstrap, adapted)
 
-namespace Plumix.iOS;
+namespace Plumix.Sample.iOS;
 
 public class Application
 {

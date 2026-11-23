@@ -104,11 +104,50 @@ jobs:
         if: failure()
         run: python3 scripts/report_failed_tests.py TestResults
 
+  # ─── Pack Plumix.iOS (tags only) ───────────────────────────────────────────
+  # The iOS workload builds only on macOS; the package goes to the publish job as an artifact.
+  pack-ios:
+    name: Pack Plumix.iOS
+    runs-on: xcode-27
+    needs: [test]
+    if: startsWith(github.ref, 'refs/tags/v')
+    env:
+      NUGET_OUTPUT: ${{ github.workspace }}/artifacts/nuget
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # The .NET 11 iOS workload is built against Xcode 27.2; the image defaults to an earlier one.
+      - name: Select Xcode 27.2
+        run: sudo xcode-select -s /Applications/Xcode_27.2.app
+
+      - name: Setup .NET 11
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '11.x'
+
+      - name: Extract version from tag
+        run: echo "PKG_VERSION=${GITHUB_REF_NAME#v}" >> "$GITHUB_ENV"
+
+      - name: Install iOS workload
+        run: dotnet workload install ios
+
+      - name: Pack
+        run: >-
+          dotnet pack src/Plumix.iOS/Plumix.iOS.csproj -c Release -p:Version="$PKG_VERSION"
+          --output "$NUGET_OUTPUT"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: plumix-ios-nupkg
+          path: ${{ env.NUGET_OUTPUT }}/Plumix.iOS.*.nupkg
+          if-no-files-found: error
+
   # ─── Pack & Publish (tags only) ────────────────────────────────────────────
   publish:
     name: Pack & Publish to NuGet
     runs-on: ubuntu-latest
-    needs: [test, avalonia-compat]
+    needs: [test, avalonia-compat, pack-ios]
     if: startsWith(github.ref, 'refs/tags/v')
     permissions:
       contents: read
@@ -156,6 +195,11 @@ jobs:
           dotnet pack src/Plumix.Android/Plumix.Android.csproj -c Release \
             -p:Version="$PKG_VERSION" --output "$NUGET_OUTPUT"
 
+      - uses: actions/download-artifact@v4
+        with:
+          name: plumix-ios-nupkg
+          path: ${{ env.NUGET_OUTPUT }}
+
       # Trusted publishing policy on nuget.org (owner Plumix, repo Plumix-Net/Plumix, workflow ci.yml).
       # NUGET_USER is the nuget.org profile name of the policy's creator; the key lives one hour.
       - name: NuGet login (OIDC)
@@ -180,6 +224,7 @@ jobs:
             "Plumix.Avalonia.Android"
             "Plumix.Impeller"
             "Plumix.Android"
+            "Plumix.iOS"
           )
           for package_id in "${package_ids[@]}"; do
             package="$NUGET_OUTPUT/${package_id}.${PKG_VERSION}.nupkg"

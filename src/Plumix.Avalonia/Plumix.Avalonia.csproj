@@ -31,7 +31,7 @@
 
     <ItemGroup>
         <InternalsVisibleTo Include="Plumix.Tests" />
-        <InternalsVisibleTo Include="Plumix.iOS" />
+        <InternalsVisibleTo Include="Plumix.Sample.iOS" />
     </ItemGroup>
 
     <ItemGroup>

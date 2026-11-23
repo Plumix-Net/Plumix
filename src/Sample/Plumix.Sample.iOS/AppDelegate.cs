@@ -13,7 +13,7 @@ using Locale = Plumix.Widgets.Locale;
 
 // Dart parity source (reference): dart_sample/lib/main.dart (platform host bootstrap, adapted)
 
-namespace Plumix.iOS;
+namespace Plumix.Sample.iOS;
 
 // The UIApplicationDelegate for the application. This class is responsible for launching the 
 // User Interface of the application, as well as listening (and optionally responding) to 
