@@ -138,7 +138,7 @@ internal sealed class CupertinoActionSheetState : State<CupertinoActionSheet>
                     scopesRoute: true,
                     explicitChildNodes: true,
                     role: SemanticsRole.Dialog,
-                    label: "Alert",
+                    label: CupertinoLocalizations.Of(context).AlertDialogLabel,
                     child: new CupertinoUserInterfaceLevel(
                         CupertinoUserInterfaceLevelData.Elevated,
                         new Padding(

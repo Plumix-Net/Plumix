@@ -412,13 +412,13 @@ public sealed class CupertinoActionSheetTests : IDisposable
         light.Pump(PhoneSize);
         Assert.DoesNotContain(
             DecorationColors(light),
-            color => ColorMatchers.IsSameColorAs(color, TintedFocus(0xFF007AFF, 0.12)));
+            color => ColorMatchers.IsSameColorAs(color, TintedFocus(0xFF007AFF, 0.18)));
 
         Assert.Single(light.FindWidgets<FocusableActionDetector>()).OnShowFocusHighlight!(true);
         light.Pump(PhoneSize);
         Assert.Contains(
             DecorationColors(light),
-            color => ColorMatchers.IsSameColorAs(color, TintedFocus(0xFF007AFF, 0.12)));
+            color => ColorMatchers.IsSameColorAs(color, TintedFocus(0xFF007AFF, 0.18)));
 
         using var dark = new CupertinoThemeTestHarness(Wrap(
             Sheet(actions: [Action("One")]),

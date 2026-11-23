@@ -258,6 +258,7 @@ internal sealed class AutocompleteOptionsListState<T> : State<AutocompleteOption
                 T option = Current.Options[index];
                 return new Semantics(
                     button: true,
+                    selected: highlightedIndex == index,
                     child: new InkWell(
                         key: KeyForOption(option),
                         onTap: () => Current.OnSelected(option),

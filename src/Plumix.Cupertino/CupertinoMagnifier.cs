@@ -315,10 +315,13 @@ public sealed class CupertinoMagnifier : StatelessWidget
     {
         double animationValue = InOutAnimation?.Value ?? 1.0;
 
-        // Dart calls `focalPointOffset.scale(1, inOutAnimation?.value ?? 1)` and discards the result
-        // (`Offset.scale` returns a new offset), so the focal point does not animate upstream either.
+        double defaultYOffset = (Size.Height / 2.0) - MagnifierAboveFocalPoint;
+
+        // Cancel the downward translation below so the lens keeps showing the focal
+        // point during the in/out animation, matching the native iOS loupe.
         var focalPointOffset =
-            new Offset(0, (DefaultSize.Height / 2.0) - MagnifierAboveFocalPoint) + AdditionalFocalPointOffset;
+            new Offset(0, defaultYOffset + (MagnifierAboveFocalPoint * (1 - animationValue)))
+            + AdditionalFocalPointOffset;
 
         return Widgets.Transform.Translate(
             offset: LerpOffset(new Offset(0, -MagnifierAboveFocalPoint), default, animationValue),

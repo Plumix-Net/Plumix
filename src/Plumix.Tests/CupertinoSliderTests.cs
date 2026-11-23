@@ -450,6 +450,8 @@ public sealed class CupertinoSliderTests : IDisposable
         Drag(harness, ThumbCenter(0.0, TextDirection.Ltr), 3.0 * Unit);
 
         Assert.Equal(0.0, Render(harness).Value);
+        // A disabled slider is drawn at the native UISlider's disabled opacity.
+        Assert.Equal(0.5, Assert.IsType<RenderOpacity>(harness.FindRenderObject<CupertinoSlider>()).Opacity);
     }
 
     private static void Invoke(RenderCupertinoSlider render, SemanticsActions action)
@@ -466,7 +468,7 @@ public sealed class CupertinoSliderTests : IDisposable
 
     private static RenderCupertinoSlider Render(CupertinoThemeTestHarness harness)
     {
-        return Assert.IsType<RenderCupertinoSlider>(harness.FindRenderObject<CupertinoSlider>());
+        return Assert.IsType<RenderCupertinoSlider>(harness.FindRenderObject<CupertinoSliderRenderWidget>());
     }
 
     /// <summary>The global centre of the thumb for a normalized value, in the harness' layout.</summary>

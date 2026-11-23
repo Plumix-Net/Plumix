@@ -493,7 +493,11 @@ public sealed class PopupMenuButtonState<T> : State<PopupMenuButton<T>>
                     new BoxConstraints(MinWidth: 48, MinHeight: 48),
                     button);
             }
-            button = new Semantics(expanded: _isMenuExpanded, child: button);
+            button = new Semantics(
+                button: true,
+                enabled: widget.Enabled,
+                expanded: _isMenuExpanded,
+                child: button);
         }
         else
         {

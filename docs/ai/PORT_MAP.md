@@ -15,8 +15,8 @@ or `(baseline subset)` is shown with that text — the port is not a strict 1:1 
 candidate for a tightening pass (see the *Ports with a qualified marker* section).
 
 Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
-`material_ui` package used for validation: version 1.0.0 at `/Users/egorozh/Plumix/Plumix/material-ui-src`
-`cupertino_ui` package used for validation: version 1.0.0 at `/Users/egorozh/Plumix/Plumix/cupertino-ui-src`
+`material_ui` package used for validation: version 1.11.1 at `/Users/egorozh/Plumix/Plumix/material-ui-src`
+`cupertino_ui` package used for validation: version 1.1.7 at `/Users/egorozh/Plumix/Plumix/cupertino-ui-src`
 
 ## Index
 

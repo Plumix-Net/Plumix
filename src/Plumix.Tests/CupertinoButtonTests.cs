@@ -503,7 +503,7 @@ public sealed class CupertinoButtonTests : IDisposable
             CupertinoButton.Tinted(child: Box(0.0, 0.0), onPressed: () => { })));
         ColorMatchers.AssertSameColorAs(CupertinoColors.ActiveBlue.Color, TextStyleOf(light).Color);
         Assert.Equal(
-            WithOpacity(CupertinoColors.ActiveBlue.Color, 0.12),
+            WithOpacity(CupertinoColors.ActiveBlue.Color, 0.18),
             Decoration(light).Color);
 
         using var dark = new CupertinoThemeTestHarness(Wrap(

@@ -351,8 +351,6 @@ public class NoDefaultCupertinoThemeData
             return false;
         }
 
-        // Flutter's `NoDefaultCupertinoThemeData` leaves `selectionHandleColor` out of `==` and
-        // `hashCode`; kept as-is so the two implementations agree member for member.
         var other = (NoDefaultCupertinoThemeData)obj;
         return other._brightness == _brightness
                && other._primaryColor == _primaryColor
@@ -360,6 +358,7 @@ public class NoDefaultCupertinoThemeData
                && Equals(other._textTheme, _textTheme)
                && other._barBackgroundColor == _barBackgroundColor
                && other._scaffoldBackgroundColor == _scaffoldBackgroundColor
+               && other._selectionHandleColor == _selectionHandleColor
                && other._applyThemeToAll == _applyThemeToAll;
     }
 
@@ -372,6 +371,7 @@ public class NoDefaultCupertinoThemeData
         hash.Add(_textTheme);
         hash.Add(_barBackgroundColor);
         hash.Add(_scaffoldBackgroundColor);
+        hash.Add(_selectionHandleColor);
         hash.Add(_applyThemeToAll);
         return hash.ToHashCode();
     }

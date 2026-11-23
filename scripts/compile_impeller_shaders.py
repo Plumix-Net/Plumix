@@ -17,7 +17,7 @@ import subprocess
 import sys
 
 ROOT = Path(__file__).resolve().parent.parent
-SHADERS = [ROOT / "material-ui-src/lib/src/shaders/ink_sparkle.frag"]
+SHADERS = [ROOT / "material-ui-src/lib/shaders/ink_sparkle.frag"]
 TARGET = ROOT / "src/Plumix.Impeller/Shaders"
 
 

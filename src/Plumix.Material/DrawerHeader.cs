@@ -67,12 +67,14 @@ public sealed class DrawerHeader : StatelessWidget
             decoration: Decoration,
             child: child);
 
-        return new Container(
-            height: statusBarHeight + DrawerHeaderHeight,
-            margin: Margin?.Resolve(direction),
-            decoration: new BoxDecoration(
-                Border: new Plumix.Rendering.Border(bottom: divider)),
-            child: animated);
+        return new Semantics(
+            header: true,
+            child: new Container(
+                height: statusBarHeight + DrawerHeaderHeight,
+                margin: Margin?.Resolve(direction),
+                decoration: new BoxDecoration(
+                    Border: new Plumix.Rendering.Border(bottom: divider)),
+                child: animated));
     }
 }
 

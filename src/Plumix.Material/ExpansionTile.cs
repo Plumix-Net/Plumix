@@ -259,6 +259,7 @@ public sealed class ExpansionTile : StatefulWidget
                 child: child);
             return platform == TargetPlatform.Android
                 ? new Semantics(
+                    container: true,
                     label: semanticsHint,
                     liveRegion: true,
                     child: child)

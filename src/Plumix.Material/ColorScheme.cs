@@ -1,4 +1,5 @@
 using MaterialTheming;
+using Plumix.Foundation;
 using Plumix.UI;
 
 namespace Plumix.Material;
@@ -541,7 +542,9 @@ public sealed record ColorScheme
         Color? onBackground = null,
         Color? surfaceVariant = null)
     {
-        if (!double.IsFinite(contrastLevel) || contrastLevel is < -1.0 or > 1.0)
+        if (!double.IsFinite(contrastLevel)
+            || contrastLevel + Constants.PrecisionErrorTolerance < -1.0
+            || contrastLevel - Constants.PrecisionErrorTolerance > 1.0)
         {
             throw new ArgumentOutOfRangeException(
                 nameof(contrastLevel),

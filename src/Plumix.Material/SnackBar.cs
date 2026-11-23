@@ -496,7 +496,8 @@ public sealed class SnackBar : StatefulWidget
             using var actionTextPainter = new TextPainter(
                 text: new TextSpan(text: widget.Action?.Label ?? string.Empty, style: theme.TextTheme.LabelLarge),
                 maxLines: 1,
-                textDirection: TextDirection.Ltr);
+                textDirection: TextDirection.Ltr,
+                textScaler: MediaQuery.TextScalerOf(context));
             actionTextPainter.Layout();
             double actionAndIconWidth = actionTextPainter.Size.Width
                                         + (widget.Action is not null ? actionHorizontalMargin : 0)
@@ -544,9 +545,9 @@ public sealed class SnackBar : StatefulWidget
             {
                 rowChildren.AddRange(maybeActionAndIcon);
             }
-            else
+            else if (widget.Padding is null)
             {
-                rowChildren.Add(new SizedBox(width: snackBarWidth * 0.4));
+                rowChildren.Add(new SizedBox(width: horizontalPadding));
             }
 
             var wrapChildren = new List<Widget> { new Row(children: rowChildren) };

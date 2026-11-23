@@ -33,8 +33,8 @@ Hosts, the F# DSL and the template have no upstream of their own and follow the 
 Dart's build suffix (`provider 6.1.5+1`) is dropped: NuGet ignores `+metadata`.
 
 The Material and Cupertino ports were validated against `material_ui` 1.0.0 and `cupertino_ui` 1.0.0; the
-lines above set the target. The `-preview` label stays until the 1.0.0 → 1.11.1 / 1.1.7 deltas are ported
-(the pin move itself is described in `AGENTS.md`, Local Reference Paths).
+reference pins moved to 1.11.1 / 1.1.7 on 2026-11-23 (`AGENTS.md`, Local Reference Paths). The `-preview` label
+stays until the 1.0.0 → 1.11.1 / 1.1.7 re-port table in `docs/ai/BACKLOG.md` is closed.
 
 ## Dependencies between packages
 

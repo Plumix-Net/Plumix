@@ -57,10 +57,10 @@ public sealed class CupertinoTabBar : StatelessWidget, IPreferredSizeWidget
         Key? key = null) : base(key)
     {
         ArgumentNullException.ThrowIfNull(items);
-        if (items.Count < 2)
+        if (items.Count == 0)
         {
             throw new ArgumentException(
-                "Tabs need at least 2 items to conform to Apple's HIG.",
+                "CupertinoTabBar requires at least one tab.",
                 nameof(items));
         }
 
