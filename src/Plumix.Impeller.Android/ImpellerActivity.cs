@@ -60,7 +60,7 @@ public abstract class ImpellerActivity : Activity, ISurfaceHolderCallback
         var surfaceView = new PlumixSurfaceView(this);
         surfaceView.AccessibilityProvider = new PlumixAccessibilityNodeProvider(surfaceView, _host.Accessibility);
         surfaceView.Holder!.AddCallback(this);
-        surfaceView.Touch += (_, e) => e.Handled = _host.Touch(e.Event!);
+        surfaceView.TouchProcessor = _host.TouchProcessor;
         surfaceView.SetOnApplyWindowInsetsListener(new InsetsListener(_host));
         SetContentView(surfaceView);
         if (OperatingSystem.IsAndroidVersionAtLeast(30))

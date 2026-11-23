@@ -69,9 +69,33 @@ internal sealed class PlumixSurfaceView : SurfaceView
     public override AccessibilityNodeProvider? AccessibilityNodeProvider =>
         AccessibilityProvider is { IsAccessibilityEnabled: true } provider ? provider : base.AccessibilityNodeProvider;
 
-    // FlutterView.onHoverEvent: touch exploration goes to the accessibility bridge.
+    /// <summary>The view's pointer input; set by the Activity.</summary>
+    public AndroidTouchProcessor? TouchProcessor { get; set; }
+
+    // FlutterView.onHoverEvent: touch exploration goes to the accessibility bridge. An unhandled hover falls
+    // through to onGenericMotionEvent, where a mouse or stylus hover reaches the framework.
     public override bool OnHoverEvent(MotionEvent? e) =>
-        (e is not null && AccessibilityProvider?.OnHoverEvent(e) == true) || base.OnHoverEvent(e);
+        e is not null && AccessibilityProvider?.OnHoverEvent(e) == true;
+
+    // FlutterView.onTouchEvent: unbuffered from Android 10, so moves arrive as they happen, not once a frame.
+    public override bool OnTouchEvent(MotionEvent? e)
+    {
+        if (e is null || TouchProcessor is not { } touchProcessor)
+        {
+            return base.OnTouchEvent(e);
+        }
+
+        if (OperatingSystem.IsAndroidVersionAtLeast(29))
+        {
+            RequestUnbufferedDispatch(e);
+        }
+
+        return touchProcessor.OnTouchEvent(e);
+    }
+
+    // FlutterView.onGenericMotionEvent: mouse and stylus hovers and wheel scrolls.
+    public override bool OnGenericMotionEvent(MotionEvent? e) =>
+        (e is not null && TouchProcessor?.OnGenericMotionEvent(e, Context!) == true) || base.OnGenericMotionEvent(e);
 
     public override bool OnCheckIsTextEditor() => _plugin.ClientId is not null;
 

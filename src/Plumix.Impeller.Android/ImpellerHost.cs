@@ -23,7 +23,6 @@ internal sealed class ImpellerHost : IDisposable
     private readonly PipelineOwner _pipeline;
     // Instantiating the binding installs its packet handler on the platform dispatcher.
     private readonly GestureBinding _gestures = GestureBinding.Instance;
-    private readonly HostPointerPacketEncoder _pointers = new();
     // The process's raster thread and Impeller context, started by InstallBackend so the context is created
     // while the app starts. Like the engine's shell, they outlive an Activity: images in the framework's cache
     // keep textures of this context, and the framework's fonts are registered with the backend once.
@@ -54,6 +53,7 @@ internal sealed class ImpellerHost : IDisposable
         _surface.ContextCreated += _contextCreated;
         // The engine's per-view accessibility bridge: the platform-agnostic tree the Android node provider reads.
         Accessibility = new AccessibilityBridge(_view.ViewId, () => _view.DevicePixelRatio);
+        TouchProcessor = new AndroidTouchProcessor(_view.ViewId);
         _root = new ReusableRenderView(_view);
         _pipeline = new PipelineOwner(
             onSemanticsOwnerCreated: () => (_pipeline!.RootNode as RenderView)?.ScheduleInitialSemantics(),
@@ -69,6 +69,9 @@ internal sealed class ImpellerHost : IDisposable
 
     /// <summary>The semantics tree of this host's view, for <see cref="PlumixAccessibilityNodeProvider"/>.</summary>
     public AccessibilityBridge Accessibility { get; }
+
+    /// <summary>The view's touch, mouse and stylus input, as the engine's <c>AndroidTouchProcessor</c>.</summary>
+    public AndroidTouchProcessor TouchProcessor { get; }
 
     /// <summary>Installs the platform seams this host provides; call once, before any binding is touched.</summary>
     public static void InstallBackend(global::Android.Content.Res.AssetManager assets, string applicationAssembly)
@@ -182,54 +185,6 @@ internal sealed class ImpellerHost : IDisposable
 
     public void LifecycleChanged(AppLifecycleState state) =>
         WidgetsBinding.Instance.HandleAppLifecycleStateChanged(state);
-
-    /// <summary>Reports a touch event; returns whether it was consumed.</summary>
-    public bool Touch(MotionEvent motion)
-    {
-        MotionEventActions action = motion.ActionMasked;
-        DateTime now = FrameClock.UtcNow;
-        switch (action)
-        {
-            case MotionEventActions.Down:
-            case MotionEventActions.PointerDown:
-            case MotionEventActions.Up:
-            case MotionEventActions.PointerUp:
-            {
-                int index = motion.ActionIndex;
-                int pointer = motion.GetPointerId(index);
-                var position = new Offset(motion.GetX(index) / _density, motion.GetY(index) / _density);
-                PointerEvent pointerEvent = action is MotionEventActions.Down or MotionEventActions.PointerDown
-                    ? new PointerDownEvent(pointer: pointer, kind: PointerDeviceKind.Touch, position: position,
-                        timestampUtc: now, viewId: _view.ViewId)
-                    : new PointerUpEvent(pointer: pointer, kind: PointerDeviceKind.Touch, position: position,
-                        timestampUtc: now, viewId: _view.ViewId);
-                _pointers.Report(pointerEvent, _view.ViewId, _density);
-                return true;
-            }
-            case MotionEventActions.Move:
-                for (int index = 0; index < motion.PointerCount; index++)
-                {
-                    var position = new Offset(motion.GetX(index) / _density, motion.GetY(index) / _density);
-                    _pointers.Report(new PointerMoveEvent(pointer: motion.GetPointerId(index),
-                        kind: PointerDeviceKind.Touch, position: position, timestampUtc: now,
-                        viewId: _view.ViewId), _view.ViewId, _density);
-                }
-
-                return true;
-            case MotionEventActions.Cancel:
-                for (int index = 0; index < motion.PointerCount; index++)
-                {
-                    var position = new Offset(motion.GetX(index) / _density, motion.GetY(index) / _density);
-                    _pointers.Report(new PointerCancelEvent(pointer: motion.GetPointerId(index),
-                        kind: PointerDeviceKind.Touch, position: position, timestampUtc: now,
-                        viewId: _view.ViewId), _view.ViewId, _density);
-                }
-
-                return true;
-            default:
-                return false;
-        }
-    }
 
     /// <summary>Lets the framework handle a back press; false means the app should finish.</summary>
     public async Task<bool> HandleBackAsync()
