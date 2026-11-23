@@ -16,7 +16,7 @@
     in the commit that is tagged for it.
   -->
   <PropertyGroup>
-    <PlumixVersion>3.47.0-preview.2</PlumixVersion>
+    <PlumixVersion>3.47.0-preview.3</PlumixVersion>
     <PlumixMaterialVersion>1.11.1-preview.2</PlumixMaterialVersion>
     <PlumixCupertinoVersion>1.1.7-preview.2</PlumixCupertinoVersion>
   </PropertyGroup>
