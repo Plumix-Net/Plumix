@@ -39,8 +39,7 @@ platform's services, the split Flutter has between framework and engine.
 | Windows, macOS, Linux | `Plumix.Avalonia` | Avalonia (`PlumixApplication`) with Skia |
 | Browser (WebAssembly) | `Plumix.Avalonia` | Avalonia.Browser |
 
-`Plumix.Avalonia.Android` keeps an Avalonia-based Android host (`PlumixMainActivity`) for apps that need Avalonia
-on Android. All Plumix packages share one version.
+All Plumix packages share one version.
 
 ## Vision
 

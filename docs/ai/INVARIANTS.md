@@ -15,7 +15,7 @@ Allowed dependency direction (mirrors Flutter's `widgets <- cupertino <- materia
 - `Plumix` (core) depends on no other Plumix package.
 - `Plumix.Cupertino` depends only on `Plumix`.
 - `Plumix.Material` depends on `Plumix` and `Plumix.Cupertino` (adaptive controls).
-- `Plumix.Avalonia` (the Avalonia host) depends only on `Plumix`; `Plumix.Avalonia.Android` depends on `Plumix.Avalonia`.
+- `Plumix.Avalonia` (the Avalonia host) depends only on `Plumix`.
 - `Plumix.Impeller` (the Impeller backend) depends only on `Plumix` and NImpeller; the native host `Plumix.Android` depends
   on `Plumix.Impeller`, never on Avalonia.
 - `Plumix.Sample` and platform hosts may depend on any of the above.

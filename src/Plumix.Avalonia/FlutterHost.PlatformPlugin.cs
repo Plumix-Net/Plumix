@@ -27,8 +27,8 @@ public partial class PlumixHost
     /// where the platform host installs none.
     /// </summary>
     /// <remarks>
-    /// The engine's <c>PlatformPlugin.popSystemNavigator</c>: the Android embedder finishes the Activity
-    /// (<see cref="AndroidActivityDelegate.PopSystemNavigator"/> installs it), the iOS embedder pops its
+    /// The engine's <c>PlatformPlugin.popSystemNavigator</c>: the Android embedder finishes the Activity,
+    /// the iOS embedder pops its
     /// navigation controller or dismisses its view controller, the web engine leaves the page through
     /// the browser history. Without a handler, the macOS and Linux desktop embedders' answer applies
     /// (the application quits; macOS asks the framework first through <c>System.requestAppExit</c>) and
@@ -62,11 +62,10 @@ public partial class PlumixHost
     /// installs none.
     /// </summary>
     /// <remarks>
-    /// The engine's <c>PlatformPlugin.setSystemChromeSystemUIOverlayStyle</c>: the Android embedder
-    /// (<see cref="AndroidActivityDelegate.SetSystemUIOverlayStyle"/> installs it) styles the Activity's
-    /// window itself. It runs after the host has handed Avalonia's insets manager the edge-to-edge
-    /// preference, so it has the last word on the window flags. Without a handler, the host only sets
-    /// the insets manager's bar colour and theme.
+    /// The engine's <c>PlatformPlugin.setSystemChromeSystemUIOverlayStyle</c>: the Android embedder styles the
+    /// Activity's window itself. It runs after the host has handed Avalonia's insets manager the edge-to-edge
+    /// preference, so it has the last word on the window flags. Without a handler, the host only sets the insets
+    /// manager's bar colour and theme.
     /// </remarks>
     public static Action<SystemUiOverlayStyle>? SystemUiOverlayStyleHandler { get; set; }
 

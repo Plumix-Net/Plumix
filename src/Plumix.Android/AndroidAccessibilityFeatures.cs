@@ -12,9 +12,9 @@ using Plumix.UI;
 // C#-only host infrastructure parity source:
 // flutter/engine/src/flutter/shell/platform/android/io/flutter/view/AccessibilityBridge.java (the
 // accessibility feature flags: the state and touch-exploration listeners, the transition-animation-scale and
-// display-inversion setting observers, setBoldTextFlag and the Android 14 contrast listener). The native
-// host's copy of Plumix.Avalonia.Android's reader: it reports to the platform dispatcher itself and turns semantics on
-// and off with the accessibility state, as the engine's accessibilityStateChangeListener does.
+// display-inversion setting observers, setBoldTextFlag and the Android 14 contrast listener). It reports to the
+// platform dispatcher itself and turns semantics on and off with the accessibility state, as the engine's
+// accessibilityStateChangeListener does.
 
 namespace Plumix.Android;
 

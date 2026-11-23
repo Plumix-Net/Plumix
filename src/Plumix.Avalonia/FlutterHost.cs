@@ -65,31 +65,13 @@ public partial class PlumixHost : Control, ICustomHitTest
     /// </summary>
     internal static bool MapsBackKeysToPopRoute { get; set; } = !OperatingSystem.IsAndroid();
 
-    // What the framework last reported through `SystemNavigator.setFrameworkHandlesBack`; null until it
-    // reports, so an Activity created later can register the engine's back callback to match.
-    private static bool? s_reportedFrameworkHandlesBack;
-
     /// <summary>Resets the process-wide back callback state the Android framework reported. Test-only.</summary>
     internal static void ResetFrameworkHandlesBackForTests()
     {
         s_frameworkHandlesBack = true;
-        s_reportedFrameworkHandlesBack = null;
-        FrameworkHandlesBackChanged = null;
         MapsBackKeysToPopRoute = !OperatingSystem.IsAndroid();
         ResetPlatformPluginForTests();
     }
-
-    /// <summary>
-    /// The last <c>SystemNavigator.setFrameworkHandlesBack</c> value, or null before the framework sent one.
-    /// </summary>
-    internal static bool? ReportedFrameworkHandlesBack => s_reportedFrameworkHandlesBack;
-
-    /// <summary>
-    /// Raised for every <c>SystemNavigator.setFrameworkHandlesBack</c>: the Android engine's
-    /// <c>PlatformPluginDelegate.setFrameworkHandlesBack</c>, which <c>FlutterActivity</c> answers by
-    /// registering or unregistering its back callback.
-    /// </summary>
-    internal static event Action<bool>? FrameworkHandlesBackChanged;
 
     // The Android embedder's `ViewportMetrics.physicalTouchSlop` (`ViewConfiguration.getScaledTouchSlop`),
     // which its `FlutterView` sends with every metrics update. The other embedders send none, so
@@ -1236,9 +1218,8 @@ public partial class PlumixHost : Control, ICustomHitTest
     /// </summary>
     /// <remarks>
     /// An embedder that can read the OS's preferred-language list calls this at start-up and whenever the
-    /// list changes (Android's <c>Configuration.getLocales</c> through <see cref="AndroidActivityDelegate"/>,
-    /// iOS's <c>NSLocale.preferredLanguages</c> on <c>NSCurrentLocaleDidChangeNotification</c>). From then on
-    /// the hosts report this list instead of the system UI culture. An empty list is ignored, as the iOS
+    /// list changes (iOS's <c>NSLocale.preferredLanguages</c> on <c>NSCurrentLocaleDidChangeNotification</c>). From
+    /// then on the hosts report this list instead of the system UI culture. An empty list is ignored, as the iOS
     /// engine sends none.
     /// </remarks>
     public static void UpdatePlatformLocales(IReadOnlyList<Locale> locales)
@@ -1532,8 +1513,6 @@ public partial class PlumixHost : Control, ICustomHitTest
                 return Task.FromResult<object?>(null);
             case "SystemNavigator.setFrameworkHandlesBack":
                 s_frameworkHandlesBack = call.Arguments is true;
-                s_reportedFrameworkHandlesBack = s_frameworkHandlesBack;
-                FrameworkHandlesBackChanged?.Invoke(s_frameworkHandlesBack);
                 return Task.FromResult<object?>(null);
             case "SystemNavigator.pop":
                 return PopSystemNavigator(call.Arguments);

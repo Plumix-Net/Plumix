@@ -751,6 +751,7 @@ Either C#-only infrastructure (fine — say so in a header comment) or an undocu
 - `src/Plumix/UI/TextBox.cs`
 - `src/Plumix/UI/TextInputModel.cs`
 - `src/Plumix/UI/TextSegmentation.cs`
+- `src/Plumix/UI/TextShaping.cs`
 - `src/Plumix/UI/TextureRegistry.cs`
 - `src/Plumix/UI/UnicodeText.cs`
 - `src/Plumix/UI/ViewConstraints.cs`
@@ -758,7 +759,6 @@ Either C#-only infrastructure (fine — say so in a header comment) or an undocu
 - `src/Plumix/Widgets/FlutterView.cs`
 - `src/Plumix/Widgets/TextClipboard.cs`
 - `src/Plumix.Avalonia/Accessibility/SemanticsAutomationPeers.cs`
-- `src/Plumix.Avalonia/AndroidActivityDelegate.cs`
 - `src/Plumix.Avalonia/ApngImageCodec.cs`
 - `src/Plumix.Avalonia/AvaloniaAssetSource.cs`
 - `src/Plumix.Avalonia/AvaloniaBackend.cs`

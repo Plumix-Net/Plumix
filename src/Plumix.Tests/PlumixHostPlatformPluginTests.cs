@@ -21,7 +21,6 @@ public sealed class PlumixHostPlatformPluginTests : IDisposable
     public void Dispose()
     {
         PlumixHost.ResetFrameworkHandlesBackForTests();
-        AndroidActivityDelegate.ResetForTests();
         PlatformDispatcher.Instance.UpdateAccessibilityFeatures(_originalFeatures);
     }
 
@@ -221,88 +220,6 @@ public sealed class PlumixHostPlatformPluginTests : IDisposable
         Assert.Equal(boldText | reduceMotion, dispatcher.ReportedAccessibilityFeatures);
         Assert.True(dispatcher.AccessibilityFeatures.ReduceMotion);
         Assert.False(dispatcher.AccessibilityFeatures.HighContrast);
-    }
-
-    [Fact]
-    public void AndroidActivityDelegate_InstallsAndRemovesItsPlatformPluginAnswers()
-    {
-        var sounds = new List<SystemSoundType>();
-        var haptics = new List<string?>();
-        var resolver = new Locale("fr", "CA");
-        var styles = new List<SystemUiOverlayStyle>();
-        int pops = 0;
-        AndroidActivityDelegate activity = new(
-            new AndroidRestorationChannel(true, new PlatformBinaryMessenger()),
-            static _ => { })
-        {
-            PlaySystemSound = sounds.Add,
-            VibrateHapticFeedback = haptics.Add,
-            ResolveLocale = _ => resolver,
-            PopSystemNavigator = () => pops++,
-            SetSystemUIOverlayStyle = styles.Add,
-        };
-        activity.OnCreate(null);
-        var host = new TestPlumixHost();
-        host.AttachPlatformChannelHandler();
-        try
-        {
-            SystemSound.Play(SystemSoundType.Click).GetAwaiter().GetResult();
-            HapticFeedback.LightImpact().GetAwaiter().GetResult();
-            SystemNavigator.Pop().GetAwaiter().GetResult();
-
-            Assert.Equal([SystemSoundType.Click], sounds);
-            Assert.Equal(["HapticFeedbackType.lightImpact"], haptics);
-            Assert.Equal(1, pops);
-            Assert.Same(PlumixHost.SystemUiOverlayStyleHandler?.Target, activity);
-            Assert.Same(resolver, PlatformDispatcher.Instance.ComputePlatformResolvedLocale([new Locale("fr")]));
-
-            activity.OnDestroy();
-            Assert.Null(PlumixHost.SystemSoundHandler);
-            Assert.Null(PlumixHost.HapticFeedbackHandler);
-            Assert.Null(PlumixHost.SystemUiOverlayStyleHandler);
-            Assert.Null(PlumixHost.SystemNavigatorPopHandler);
-            Assert.Null(PlatformDispatcher.Instance.ComputePlatformResolvedLocale([new Locale("fr")]));
-        }
-        finally
-        {
-            host.DetachPlatformChannelHandler();
-        }
-    }
-
-    // AccessibilityBridge.java: the Android engine reports its supported features and always the
-    // no-announce bit; unsupported bits keep their value.
-    [Fact]
-    public void AndroidActivityDelegate_ReportsTheAndroidAccessibilityFeatures()
-    {
-        PlatformDispatcher dispatcher = PlatformDispatcher.Instance;
-        const int onOffSwitchLabels = 1 << 6;
-        dispatcher.UpdateAccessibilityFeatures(onOffSwitchLabels);
-        AndroidActivityDelegate activity = new(
-            new AndroidRestorationChannel(true, new PlatformBinaryMessenger()),
-            static _ => { });
-
-        activity.OnAccessibilityFeaturesChanged(
-            accessibleNavigation: true,
-            invertColors: false,
-            disableAnimations: true,
-            boldText: false,
-            highContrast: true);
-
-        AccessibilityFeatures features = dispatcher.AccessibilityFeatures;
-        Assert.True(features.AccessibleNavigation);
-        Assert.False(features.InvertColors);
-        Assert.True(features.DisableAnimations);
-        Assert.False(features.BoldText);
-        Assert.True(features.HighContrast);
-        Assert.False(features.SupportsAnnounce);
-        Assert.True(features.OnOffSwitchLabels);
-
-        activity.OnAccessibilityFeaturesChanged(false, true, false, true, false);
-        features = dispatcher.AccessibilityFeatures;
-        Assert.False(features.AccessibleNavigation);
-        Assert.True(features.InvertColors);
-        Assert.True(features.BoldText);
-        Assert.False(features.HighContrast);
     }
 
     private sealed class PopRouteObserver : WidgetsBindingObserver

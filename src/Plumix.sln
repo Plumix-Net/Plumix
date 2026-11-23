@@ -11,14 +11,16 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Plumix.Browser", "Sample\Pl
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Plumix.Sample.iOS", "Sample\Plumix.Sample.iOS\Plumix.Sample.iOS.csproj", "{EBD9022F-BC83-4846-9A11-6F7F3772DC64}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Plumix.Sample.Android", "Sample\Plumix.Sample.Android\Plumix.Sample.Android.csproj", "{7AD1DAC8-7FBE-49D5-8614-7321233DB82E}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{3DA99C4E-89E3-4049-9C22-0A7EC60D83D8}"
 	ProjectSection(SolutionItems) = preProject
+		Directory.Build.props = Directory.Build.props
 		Directory.Packages.props = Directory.Packages.props
 		..\AGENTS.md = ..\AGENTS.md
 		..\CHANGELOG.md = ..\CHANGELOG.md
+		..\README.md = ..\README.md
+		..\docs\CUPERTINO_TODO.md = ..\docs\CUPERTINO_TODO.md
 		..\docs\FRAMEWORK_PLAN.md = ..\docs\FRAMEWORK_PLAN.md
+		..\docs\MIGRATION.md = ..\docs\MIGRATION.md
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Plumix", "Plumix\Plumix.csproj", "{326C3424-9279-4043-ACA2-2ED611A15254}"
@@ -29,12 +31,16 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Plumix.Tests", "Plumix.Test
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ai", "ai", "{55D8FD4B-7A91-4067-BFEA-E80B0F767D4E}"
 	ProjectSection(SolutionItems) = preProject
-		..\docs\ai\rendering-2026-03-10-layout-exception-surfacing.md = ..\docs\ai\rendering-2026-03-10-layout-exception-surfacing.md
-		..\docs\ai\TEST_MATRIX.md = ..\docs\ai\TEST_MATRIX.md
-		..\docs\ai\FEATURE_TEMPLATE.md = ..\docs\ai\FEATURE_TEMPLATE.md
+		..\docs\ai\BACKLOG.md = ..\docs\ai\BACKLOG.md
+		..\docs\ai\DART_SPEC_PROTOCOL.md = ..\docs\ai\DART_SPEC_PROTOCOL.md
+		..\docs\ai\DIVERGENCES.md = ..\docs\ai\DIVERGENCES.md
 		..\docs\ai\INVARIANTS.md = ..\docs\ai\INVARIANTS.md
 		..\docs\ai\MODULE_INDEX.md = ..\docs\ai\MODULE_INDEX.md
 		..\docs\ai\PARITY_MATRIX.md = ..\docs\ai\PARITY_MATRIX.md
+		..\docs\ai\PORT_MAP.md = ..\docs\ai\PORT_MAP.md
+		..\docs\ai\PORT_PLAYBOOK.md = ..\docs\ai\PORT_PLAYBOOK.md
+		..\docs\ai\PORTING_MODE.md = ..\docs\ai\PORTING_MODE.md
+		..\docs\ai\TEST_MATRIX.md = ..\docs\ai\TEST_MATRIX.md
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Plumix.Material", "Plumix.Material\Plumix.Material.csproj", "{43264679-E820-44D5-8F7B-9E70ACF5F191}"
@@ -113,18 +119,6 @@ Global
 		{EBD9022F-BC83-4846-9A11-6F7F3772DC64}.Release|x64.Build.0 = Release|Any CPU
 		{EBD9022F-BC83-4846-9A11-6F7F3772DC64}.Release|x86.ActiveCfg = Release|Any CPU
 		{EBD9022F-BC83-4846-9A11-6F7F3772DC64}.Release|x86.Build.0 = Release|Any CPU
-		{7AD1DAC8-7FBE-49D5-8614-7321233DB82E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{7AD1DAC8-7FBE-49D5-8614-7321233DB82E}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{7AD1DAC8-7FBE-49D5-8614-7321233DB82E}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{7AD1DAC8-7FBE-49D5-8614-7321233DB82E}.Debug|x64.Build.0 = Debug|Any CPU
-		{7AD1DAC8-7FBE-49D5-8614-7321233DB82E}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{7AD1DAC8-7FBE-49D5-8614-7321233DB82E}.Debug|x86.Build.0 = Debug|Any CPU
-		{7AD1DAC8-7FBE-49D5-8614-7321233DB82E}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{7AD1DAC8-7FBE-49D5-8614-7321233DB82E}.Release|Any CPU.Build.0 = Release|Any CPU
-		{7AD1DAC8-7FBE-49D5-8614-7321233DB82E}.Release|x64.ActiveCfg = Release|Any CPU
-		{7AD1DAC8-7FBE-49D5-8614-7321233DB82E}.Release|x64.Build.0 = Release|Any CPU
-		{7AD1DAC8-7FBE-49D5-8614-7321233DB82E}.Release|x86.ActiveCfg = Release|Any CPU
-		{7AD1DAC8-7FBE-49D5-8614-7321233DB82E}.Release|x86.Build.0 = Release|Any CPU
 		{326C3424-9279-4043-ACA2-2ED611A15254}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{326C3424-9279-4043-ACA2-2ED611A15254}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{326C3424-9279-4043-ACA2-2ED611A15254}.Debug|x64.ActiveCfg = Debug|Any CPU
@@ -266,7 +260,6 @@ Global
 		{ABC31E74-02FF-46EB-B3B2-4E6AE43B456C} = {46D891D7-0DAC-4F08-BA48-49F968F1EDCE}
 		{1C1A049E-235C-4CD0-B6FA-D53AC418F4DA} = {46D891D7-0DAC-4F08-BA48-49F968F1EDCE}
 		{EBD9022F-BC83-4846-9A11-6F7F3772DC64} = {46D891D7-0DAC-4F08-BA48-49F968F1EDCE}
-		{7AD1DAC8-7FBE-49D5-8614-7321233DB82E} = {46D891D7-0DAC-4F08-BA48-49F968F1EDCE}
 		{55D8FD4B-7A91-4067-BFEA-E80B0F767D4E} = {3DA99C4E-89E3-4049-9C22-0A7EC60D83D8}
 		{A4BA1E58-9E5A-42A7-A6A7-AF9BCDB06F86} = {46D891D7-0DAC-4F08-BA48-49F968F1EDCE}
 	EndGlobalSection

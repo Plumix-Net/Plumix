@@ -25,7 +25,6 @@
     <PackageVersion Include="Avalonia.Skia" Version="$(AvaloniaVersion)" />
     <PackageVersion Include="Avalonia.iOS" Version="$(AvaloniaVersion)" />
     <PackageVersion Include="Avalonia.Browser" Version="$(AvaloniaVersion)" />
-    <PackageVersion Include="Avalonia.Android" Version="$(AvaloniaVersion)" />
     <!-- Match Avalonia.Skia's decoder ABI; no separate native renderer is introduced. -->
     <PackageVersion Include="SkiaSharp" Version="3.119.4" />
     <!-- Match Avalonia.Skia's shaper ABI; needed for variable-font instances. -->
@@ -41,7 +40,6 @@
     <!-- F# projects: with CPM the F# SDK disables the implicit FSharp.Core reference -->
     <PackageVersion Include="FSharp.Core" Version="11.0.101" />
     <PackageVersion Include="Elmish" Version="5.0.2" />
-    <PackageVersion Include="Xamarin.AndroidX.Core.SplashScreen" Version="1.2.0.2" />
     <!-- Tests -->
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.4.0" />
     <PackageVersion Include="xunit" Version="2.9.3" />

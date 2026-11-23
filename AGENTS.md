@@ -45,9 +45,6 @@ normative may live only there.
 - `dart_sample`: reference sample app on real Flutter (Dart), kept in lockstep with `src/Sample/Plumix.Sample`.
 - `src/Sample/Plumix.Desktop`: desktop entry point.
 - `src/Sample/Plumix.Browser`: WebAssembly host.
-- `src/Plumix.Avalonia.Android`: Android host package on Avalonia (`PlumixMainActivity` over
-  `AndroidActivityDelegate`).
-- `src/Sample/Plumix.Sample.Android`: Android sample host on Avalonia.
 - `src/Sample/Plumix.Sample.iOS`: iOS sample host on Avalonia (was `src/Sample/Plumix.iOS`).
 - `src/Plumix.Impeller`, `src/Plumix.Android`: the native host without Avalonia (umbrella
   `docs/product/native-host.md`): the Impeller backend behind the core's seams (NImpeller from the
@@ -191,7 +188,7 @@ dotnet run --project src/Sample/Plumix.Desktop/Plumix.Desktop.csproj
 dotnet run --project src/Sample/Plumix.Browser/Plumix.Browser.csproj
 ```
 
-`src/Plumix.Ci.slnf` excludes the Browser/Android/iOS hosts and the Android host packages (they need
+`src/Plumix.Ci.slnf` excludes the Browser/Android/iOS hosts and the native host packages (they need
 workloads CI's test job does not have); build `src/Plumix.sln` locally when you touch those hosts.
 
 Avalonia versions come from `AvaloniaVersion` in `src/Directory.Packages.props`: the minimum the packages
@@ -202,7 +199,7 @@ substituted at run time (`-p:AvaloniaTestVersion=$(scripts/latest_avalonia_versi
 Platform-specific builds:
 
 ```bash
-dotnet build src/Sample/Plumix.Sample.Android/Plumix.Sample.Android.csproj -c Debug
+dotnet build src/Sample/Plumix.Sample.Impeller.Android/Plumix.Sample.Impeller.Android.csproj -c Debug
 dotnet build src/Sample/Plumix.Sample.iOS/Plumix.Sample.iOS.csproj -c Debug
 ```
 
