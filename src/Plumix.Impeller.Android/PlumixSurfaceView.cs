@@ -1,5 +1,7 @@
 using Android.Content;
 using Android.Text;
+using Android.Util;
+using Android.Views.Autofill;
 using Android.Views;
 using Android.Views.Accessibility;
 using Android.Views.InputMethods;
@@ -26,6 +28,8 @@ internal sealed class PlumixSurfaceView : SurfaceView
     private InputConnectionAdaptor? _connection;
     private bool _restartInputPending;
     private readonly AndroidKeyboardManager _keyboardManager;
+    private readonly AndroidAutofill _autofill;
+    private string _notifiedText = string.Empty;
 
     public PlumixSurfaceView(Context context)
         : base(context)
@@ -36,6 +40,12 @@ internal sealed class PlumixSurfaceView : SurfaceView
         _editable = new AndroidEditingState(this);
         _editable.Changed += SendEditableState;
         _keyboardManager = new AndroidKeyboardManager(this, OnTextInputKeyEvent);
+        _autofill = new AndroidAutofill(this, _plugin);
+        if (OperatingSystem.IsAndroidVersionAtLeast(26))
+        {
+            // FlutterView: the text input client's fields are reported as this view's virtual children.
+            ImportantForAutofill = ImportantForAutofill.Yes;
+        }
     }
 
     /// <summary>The engine's keyboard manager for this view; the IME's key events go through it too.</summary>
@@ -49,6 +59,8 @@ internal sealed class PlumixSurfaceView : SurfaceView
         _plugin.HideRequested += HideKeyboard;
         _plugin.ClientChanged += OnClientChanged;
         _plugin.EditingStateChanged += ApplyFrameworkState;
+        _plugin.AutofillRequested += _autofill.NotifyViewEntered;
+        _plugin.AutofillContextFinished += _autofill.FinishAutofillContext;
         SystemChannels.Keyboard.SetPlatformMethodCallHandler(HandleKeyboardMethodCall);
     }
 
@@ -58,6 +70,8 @@ internal sealed class PlumixSurfaceView : SurfaceView
         _plugin.HideRequested -= HideKeyboard;
         _plugin.ClientChanged -= OnClientChanged;
         _plugin.EditingStateChanged -= ApplyFrameworkState;
+        _plugin.AutofillRequested -= _autofill.NotifyViewEntered;
+        _plugin.AutofillContextFinished -= _autofill.FinishAutofillContext;
         SystemChannels.Keyboard.SetPlatformMethodCallHandler(null);
         base.OnDetachedFromWindow();
     }
@@ -153,12 +167,38 @@ internal sealed class PlumixSurfaceView : SurfaceView
         _ime.ShowSoftInput(this, 0);
     }
 
-    private void HideKeyboard() => _ime.HideSoftInputFromWindow(WindowToken, HideSoftInputFlags.None);
+    // TextInputPlugin.hideTextInput.
+    private void HideKeyboard()
+    {
+        _autofill.NotifyViewExited();
+        _ime.HideSoftInputFromWindow(WindowToken, HideSoftInputFlags.None);
+    }
+
+    // FlutterView.onProvideAutofillVirtualStructure and autofill: the text input plugin's autofill group.
+    public override void OnProvideAutofillVirtualStructure(ViewStructure? structure, AutofillFlags flags)
+    {
+        base.OnProvideAutofillVirtualStructure(structure, flags);
+        if (structure is not null)
+        {
+            _autofill.OnProvideAutofillVirtualStructure(structure, _editable.ToString());
+        }
+    }
+
+    public override void Autofill(SparseArray? values)
+    {
+        if (values is not null)
+        {
+            _autofill.Autofill(values, text => _editable.SetEditingState(text, text.Length, text.Length, -1, -1));
+        }
+    }
 
     // TextInputPlugin.setTextInputClient restarts the IME once the client's state arrives;
     // clearTextInputClient restarts it at once, so the IME drops the old configuration.
     private void OnClientChanged()
     {
+        // The previous field is left; the new configuration replaces the autofill group.
+        _autofill.NotifyViewExited();
+        _autofill.UpdateConfiguration(_plugin.Configuration);
         if (_plugin.ClientId is null)
         {
             PostRestartInput();
@@ -176,12 +216,23 @@ internal sealed class PlumixSurfaceView : SurfaceView
 
     // TextInputPlugin.didChangeEditingState: the IME's edits go to the framework (nothing is sent when they
     // match what it already has).
-    private void SendEditableState() => _plugin.UpdateEditingStateFromHost(
-        _editable.ToString(),
-        _editable.SelectionStart,
-        _editable.SelectionEnd,
-        _editable.ComposingStart,
-        _editable.ComposingEnd);
+    private void SendEditableState()
+    {
+        string text = _editable.ToString();
+        if (text != _notifiedText)
+        {
+            // Notify the autofill manager of the value change.
+            _notifiedText = text;
+            _autofill.NotifyValueChanged(text);
+        }
+
+        _plugin.UpdateEditingStateFromHost(
+            text,
+            _editable.SelectionStart,
+            _editable.SelectionEnd,
+            _editable.ComposingStart,
+            _editable.ComposingEnd);
+    }
 
     // TextInputPlugin.setTextInputEditingState: the framework's state replaces the editable's, restarting the
     // IME when the framework moved a composing region itself (IMEs do not expect editors to commit it).

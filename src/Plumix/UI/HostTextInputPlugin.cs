@@ -53,6 +53,7 @@ public sealed class HostTextInputPlugin
     private TextAffinity _textAffinity = TextAffinity.Upstream;
     private bool _shown;
     private Matrix4 _editableTransform = Matrix4.Identity();
+    private Size? _editableSize;
     private Rect? _caretRect;
     private Rect? _markedTextRect;
 
@@ -88,6 +89,19 @@ public sealed class HostTextInputPlugin
     /// <summary>Raised when the platform IME must drop its marked (composing) text: AppKit's
     /// <c>discardMarkedText</c>, Windows' <c>OnResetImeComposing</c>.</summary>
     public event Action? MarkedTextDiscarded;
+
+    /// <summary>
+    /// Raised on <c>TextInput.requestAutofill</c>; Android's plugin tells the autofill manager the field was
+    /// entered. Without a listener the call is not implemented, as on the desktop plugins.
+    /// </summary>
+    public event Action? AutofillRequested;
+
+    /// <summary>
+    /// Raised on <c>TextInput.finishAutofillContext</c> with whether the platform should offer to save what was
+    /// entered (Android's <c>AutofillManager.commit</c>, else <c>cancel</c>). Without a listener the call is not
+    /// implemented.
+    /// </summary>
+    public event Action<bool>? AutofillContextFinished;
 
     /// <summary>The attached client's editing model, or null when no client is attached.</summary>
     public TextInputModel? ActiveModel => _activeModel;
@@ -188,7 +202,17 @@ public sealed class HostTextInputPlugin
                 SetEditingState((IDictionary)call.Arguments!);
                 break;
             case "TextInput.setEditableSizeAndTransform":
-                SetEditableTransform((IList)((IDictionary)call.Arguments!)["transform"]!);
+                var sizeAndTransform = (IDictionary)call.Arguments!;
+                _editableSize = new Size(
+                    Convert.ToDouble(sizeAndTransform["width"]),
+                    Convert.ToDouble(sizeAndTransform["height"]));
+                SetEditableTransform((IList)sizeAndTransform["transform"]!);
+                break;
+            case "TextInput.requestAutofill" when AutofillRequested is { } autofillRequested:
+                autofillRequested();
+                break;
+            case "TextInput.finishAutofillContext" when AutofillContextFinished is { } autofillContextFinished:
+                autofillContextFinished(call.Arguments is true);
                 break;
             case "TextInput.setCaretRect":
                 _caretRect = RectFromJson((IDictionary)call.Arguments!);
@@ -216,6 +240,7 @@ public sealed class HostTextInputPlugin
         }
 
         _clientId = Convert.ToInt32(arguments[0]);
+        _editableSize = null;
         ApplyConfiguration((IDictionary)arguments[1]!);
         _textAffinity = TextAffinity.Upstream;
         _activeModel = new TextInputModel();
@@ -248,6 +273,7 @@ public sealed class HostTextInputPlugin
         _enableDeltaModel = false;
         _inputType = null;
         _activeModel = null;
+        _editableSize = null;
         Configuration = null;
         if (hadClient)
         {
@@ -322,6 +348,40 @@ public sealed class HostTextInputPlugin
         Convert.ToDouble(rect["y"]),
         Convert.ToDouble(rect["width"]),
         Convert.ToDouble(rect["height"]));
+
+    /// <summary>
+    /// The editable's size and its transform to the view (logical pixels), from
+    /// <c>TextInput.setEditableSizeAndTransform</c>; null until the attached client sends them.
+    /// </summary>
+    public (Size Size, Matrix4 Transform)? EditableSizeAndTransform =>
+        _editableSize is { } size ? (size, _editableTransform) : null;
+
+    /// <summary>
+    /// Sends other fields' values by their autofill identifiers, each with the caret at its end: Android's
+    /// <c>TextInputChannel.updateEditingStateWithTag</c> after the autofill service filled an autofill group.
+    /// </summary>
+    public void UpdateEditingStateWithTag(IReadOnlyDictionary<string, string> textByAutofillId)
+    {
+        if (_clientId is not { } clientId)
+        {
+            return;
+        }
+
+        var states = new Dictionary<string, object?>();
+        foreach ((string autofillId, string text) in textByAutofillId)
+        {
+            states[autofillId] = new Dictionary<string, object?>
+            {
+                ["text"] = text,
+                ["selectionBase"] = text.Length,
+                ["selectionExtent"] = text.Length,
+                ["composingBase"] = -1,
+                ["composingExtent"] = -1,
+            };
+        }
+
+        InvokeMethod("TextInputClient.updateEditingStateWithTag", new List<object?> { clientId, states });
+    }
 
     /// <summary>
     /// The caret rect in the coordinate space the framework's editable transform maps into (the
