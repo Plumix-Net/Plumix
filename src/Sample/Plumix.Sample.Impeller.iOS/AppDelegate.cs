@@ -24,20 +24,18 @@ public sealed class AppDelegate : UIApplicationDelegate
 }
 
 [Register("SceneDelegate")]
-public sealed class SceneDelegate : UIResponder, IUIWindowSceneDelegate
+public sealed class SceneDelegate : PlumixSceneDelegate
 {
-    [Export("window")]
-    public UIWindow? Window { get; set; }
-
-    [Export("scene:willConnectToSession:options:")]
-    public void WillConnect(UIScene scene, UISceneSession session, UISceneConnectionOptions connectionOptions)
-    {
-        Window = new UIWindow((UIWindowScene)scene) { RootViewController = new GalleryViewController() };
-        Window.MakeKeyAndVisible();
-    }
+    protected override PlumixViewController CreateViewController() => new GalleryViewController();
 }
 
 public sealed class GalleryViewController : PlumixViewController
 {
+    // A restoration identifier turns on the framework's state restoration, as in the engine.
+    public GalleryViewController()
+    {
+        RestorationIdentifier = "gallery";
+    }
+
     protected override Widget CreateApp() => new CounterApp();
 }

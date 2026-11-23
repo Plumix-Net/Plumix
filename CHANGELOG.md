@@ -12,6 +12,8 @@ Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 - iOS host: platform plugin, user settings, locales, accessibility features (FlutterPlatformPlugin.mm, …).
 - iOS host: text input, keyboard inset and hardware keys (FlutterTextInputPlugin.mm, FlutterKeyboardManager.mm).
 - iOS host: VoiceOver bridge with scroll-view and text-field surrogates (accessibility_bridge.mm, SemanticsObject.mm).
+- iOS host: state restoration, saved with the scene by `PlumixSceneDelegate` (FlutterRestorationPlugin.mm).
+- Avalonia 12.1.6 compatibility: its new `Avalonia.Media.FontVariation` no longer clashes with Plumix's.
 - `Plumix.Impeller` finds HarfBuzz as an embedded framework on iOS, tvOS and Mac Catalyst.
 - The Avalonia iOS sample moves to `src/Sample/Plumix.Sample.iOS`; the name `Plumix.iOS` is the native host's.
 

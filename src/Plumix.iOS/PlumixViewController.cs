@@ -18,6 +18,9 @@ namespace Plumix.iOS;
 /// <summary>The view controller of a Plumix app on the native iOS host.</summary>
 public abstract class PlumixViewController : UIViewController
 {
+    // FlutterViewController.mm's kFlutterRestorationStateAppData.
+    private const string RestorationStateAppDataKey = "FlutterRestorationStateAppData";
+
     // FlutterViewController.mm's kScrollViewContentSize.
     private const double ScrollViewContentSize = 2.0;
 
@@ -28,6 +31,8 @@ public abstract class PlumixViewController : UIViewController
     private IosTextInputPlugin? _textInputPlugin;
     private IosKeyboardInsetManager? _keyboardInsetManager;
     private IosAccessibilityBridge? _accessibilityBridge;
+    private IOSRestorationPlugin? _restorationPlugin;
+    private byte[]? _pendingRestorationData;
     private readonly IosKeyboardManager _keyboardManager = new();
     private UIStatusBarStyle _statusBarStyle = UIStatusBarStyle.Default;
     private bool _flutterPrefersStatusBarHidden;
@@ -62,6 +67,14 @@ public abstract class PlumixViewController : UIViewController
     {
         base.ViewDidLoad();
         IosImpellerHost host = _host!;
+        // The engine enables restoration only for a view controller with a restoration identifier.
+        _restorationPlugin = new IOSRestorationPlugin(restorationEnabled: RestorationIdentifier is not null);
+        if (_pendingRestorationData is { } pending)
+        {
+            _restorationPlugin.RestorationData = pending;
+            _pendingRestorationData = null;
+        }
+
         _platformChannel = new IosPlatformChannel(this);
         _textInputPlugin = new IosTextInputPlugin(this, View!);
         _platformChannel.TextInput = _textInputPlugin;
@@ -94,6 +107,49 @@ public abstract class PlumixViewController : UIViewController
         ReportUserSettings();
         ReportAccessibilityFeatures();
         host.Run(CreateApp(), UIScreen.MainScreen.Scale);
+    }
+
+    // viewWillAppear: restoration data UIKit decoded before now is all there will be.
+    public override void ViewWillAppear(bool animated)
+    {
+        _restorationPlugin?.MarkRestorationComplete();
+        base.ViewWillAppear(animated);
+    }
+
+    /// <summary>
+    /// The framework's restoration data (the engine's restoration plugin); setting it hands saved data to the
+    /// framework. <see cref="PlumixSceneDelegate"/> saves and restores it with the scene.
+    /// </summary>
+    public byte[]? RestorationData
+    {
+        get => _restorationPlugin is { } plugin ? plugin.RestorationData : _pendingRestorationData;
+        set
+        {
+            // The scene restores before the view loads; the plugin, created with the view, takes the data then.
+            if (_restorationPlugin is { } plugin)
+            {
+                plugin.RestorationData = value;
+            }
+            else
+            {
+                _pendingRestorationData = value;
+            }
+        }
+    }
+
+    // encodeRestorableStateWithCoder:/decodeRestorableStateWithCoder: the app-delegate based state restoration.
+    public override void EncodeRestorableState(NSCoder coder)
+    {
+        coder.Encode(RestorationData ?? [], RestorationStateAppDataKey);
+        base.EncodeRestorableState(coder);
+    }
+
+    public override void DecodeRestorableState(NSCoder coder)
+    {
+        RestorationData = coder.ContainsKey(RestorationStateAppDataKey)
+            ? coder.DecodeBytes(RestorationStateAppDataKey)
+            : [];
+        base.DecodeRestorableState(coder);
     }
 
     // traitCollectionDidChange: → onUserSettingsChanged:. iOS 17 deprecates the override for trait registration.

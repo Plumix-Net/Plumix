@@ -4,6 +4,7 @@ using Avalonia.Media;
 using Avalonia.Media.TextFormatting;
 using HarfBuzzSharp;
 using HBBuffer = HarfBuzzSharp.Buffer;
+using FontVariation = Plumix.UI.FontVariation;
 using HBFont = HarfBuzzSharp.Font;
 using RunGlyph = Avalonia.Media.TextFormatting.GlyphInfo;
 

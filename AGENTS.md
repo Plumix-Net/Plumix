@@ -57,7 +57,8 @@ normative may live only there.
 - `src/Plumix.iOS`: the native iOS host package (`PlumixViewController`): Metal through `CAMetalLayer` on a raster
   thread, `CADisplayLink` vsync, CoreText fonts, ImageIO images, touches, ports of the engine's platform plugin,
   settings, text input (it owns `flutter/textinput`; HostTextInputPlugin is not used), keyboard inset, hardware keys
-  and the accessibility bridge (core `IOSAccessibility.cs` decides what nodes read). It packs only on macOS (the CI's
+  and the accessibility bridge (core `IOSAccessibility.cs` decides what nodes read), state restoration
+  (`PlumixSceneDelegate`, core `IOSRestorationPlugin`). It packs only on macOS (the CI's
   `pack-ios` job). App `src/Sample/Plumix.Sample.Impeller.iOS` (build with `-r iossimulator-arm64`).
 
 ## Progress Source of Truth

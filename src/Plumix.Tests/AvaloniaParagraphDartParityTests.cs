@@ -5,6 +5,7 @@ using Plumix.Rendering;
 using Plumix.UI;
 using Plumix.Widgets;
 using Xunit;
+using FontVariation = Plumix.UI.FontVariation;
 using RunGlyph = Avalonia.Media.TextFormatting.GlyphInfo;
 using TextStyle = Plumix.Widgets.TextStyle;
 
