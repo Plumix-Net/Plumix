@@ -45,6 +45,44 @@ internal sealed class MetalRasterThread : IDisposable
         }
     }
 
+    /// <summary>
+    /// Runs <paramref name="work"/> on the raster thread and waits for its result: drawing through the Impeller context
+    /// stays on one thread (Scene.toImage's readback).
+    /// </summary>
+    public T Invoke<T>(Func<T> work)
+    {
+        if (Thread.CurrentThread == _thread)
+        {
+            return work();
+        }
+
+        using var done = new ManualResetEventSlim();
+        T result = default!;
+        Exception? failure = null;
+        _queue.Add(() =>
+        {
+            try
+            {
+                result = work();
+            }
+            catch (Exception exception)
+            {
+                failure = exception;
+            }
+            finally
+            {
+                done.Set();
+            }
+        });
+        done.Wait();
+        if (failure is not null)
+        {
+            System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw(failure);
+        }
+
+        return result;
+    }
+
     /// <summary>Drops a frame that has not been drawn yet (the layer is going away).</summary>
     public void DropPendingFrame()
     {

@@ -79,6 +79,11 @@ internal sealed class IosImpellerHost
         s_context = ImpellerContext.CreateMetalNew()
             ?? throw new InvalidOperationException("Impeller could not create a Metal context.");
         ImpellerBackend.Context = s_context;
+        // Scene.toImage draws on the raster thread too: one thread draws through the Impeller context.
+        ImpellerContext context = s_context;
+        MetalRasterThread rasterThread = s_rasterThread = new MetalRasterThread();
+        ImpellerBackend.ReadPixels = (displayList, width, height) => rasterThread.Invoke(
+            () => MetalReadback.ReadPixels(context, displayList, width, height));
         ImpellerTextShaper shaper = ImpellerBackend.InstallText(IosFonts.SystemFontPath()
             ?? throw new InvalidOperationException("CoreText reports no system font file."));
         IosFonts.AddSystemFonts(shaper);

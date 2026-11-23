@@ -5,8 +5,9 @@ namespace Plumix.Impeller;
 
 // C#-only infrastructure: no Dart parity source. The Impeller implementation of the core's render seam
 // (UI/RenderBackend.cs) for the stage 4 prototype. Impeller's C API cannot read pixels back, so Scene.toImage goes
-// through the host's readback (ReadPixels; GLES: an offscreen framebuffer and glReadPixels); fragment programs run when
-// an impellerc bundle of their source is embedded (ImpellerShaders) and draw nothing otherwise.
+// through the host's readback (ReadPixels; GLES: an offscreen framebuffer and glReadPixels; Metal: a stand-in drawable
+// over a shared texture); fragment programs run when an impellerc bundle of their source is embedded (ImpellerShaders)
+// and draw nothing otherwise.
 
 /// <summary>Installs the Impeller backend and holds the host's Impeller context.</summary>
 internal static class ImpellerBackend
@@ -25,7 +26,8 @@ internal static class ImpellerBackend
     /// <summary>
     /// Draws a display list offscreen and returns its premultiplied RGBA8888 rows, top to bottom; null when it
     /// cannot. Impeller's C API has no readback, so the host provides one for its graphics API (GLES: an offscreen
-    /// framebuffer and glReadPixels). Without it Scene.toImage is unavailable.
+    /// framebuffer and glReadPixels; Metal: a stand-in drawable over a shared texture). Without it Scene.toImage is
+    /// unavailable.
     /// </summary>
     internal static Func<ImpellerDisplayList, int, int, byte[]?>? ReadPixels { get; set; }
 
