@@ -8,6 +8,8 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased]
+
+## v3.47.0-preview.1 (Plumix.Material 1.11.1-preview.1, Plumix.Cupertino 1.1.7-preview.1) — 2026-11-23
 - Breaking: versions follow the ported upstream (`docs/VERSIONING.md`): Plumix and hosts `3.47.0-preview.N` (Flutter),
   `Plumix.Material` `1.11.1-preview.N` (`material_ui`), `Plumix.Cupertino` `1.1.7-preview.N` (`cupertino_ui`).
 - Release: numbers live in `src/Versions.props`; tags `v*`, `material-v*`, `cupertino-v*` (`scripts/release_plan.sh`);
